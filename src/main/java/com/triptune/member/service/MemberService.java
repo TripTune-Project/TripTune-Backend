@@ -15,6 +15,7 @@ public class MemberService {
     private final MemberRepository memberRepository;
 
     public void join(MemberDTO.Request memberDTO) {
+
         Member member = Member.builder()
                 .userId(memberDTO.getUserId())
                 .password(null)

@@ -1,9 +1,6 @@
 package com.triptune.member.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.Builder;
 
 import java.time.LocalDateTime;
@@ -13,15 +10,34 @@ public class Member {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "member_id")
     private Long memberId;
+
+    @Column(name = "user_id")
     private String userId;
+
+    @Column(name = "password")
     private String password;
+
+    @Column(name = "refresh_token")
     private String refreshToken;
+
+    @Column(name = "is_social_login")
     private boolean isSocialLogin;
+
+    @Column(name = "nickname")
     private String nickname;
+
+    @Column(name = "email")
     private String email;
+
+    @Column(name = "created_at")
     private LocalDateTime createdAt;
+
+    @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @Column(name = "file_id")
     private Long fileId;
 
     @Builder
