@@ -13,8 +13,8 @@ public class ErrorResponse  {
     private String message;
 
     @Builder
-    public ErrorResponse(boolean success, int errorCode, String message) {
-        this.success = success;
+    public ErrorResponse(int errorCode, String message) {
+        this.success = false;
         this.errorCode = errorCode;
         this.message = message;
     }

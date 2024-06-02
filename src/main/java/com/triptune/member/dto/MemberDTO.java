@@ -34,7 +34,7 @@ public class MemberDTO {
         @Pattern(regexp = "^[a-zA-Z가-힣]{1,8}$", message = "닉네임은 영문, 한글 포함 8자 이하여야 합니다.")
         private String nickname;
 
-        @Email(message = "이메일 형식과 맞지 않습니다.")
+        @Email(message = "이메일 형식에 맞지 않습니다.")
         private String email;
 
         private Long fileId;

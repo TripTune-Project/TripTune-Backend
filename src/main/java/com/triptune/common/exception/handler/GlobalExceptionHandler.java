@@ -29,7 +29,6 @@ public class GlobalExceptionHandler {
 
 
         return ErrorResponse.builder()
-                .success(false)
                 .errorCode(HttpStatus.BAD_REQUEST.value())
                 .message(message).build();
     }

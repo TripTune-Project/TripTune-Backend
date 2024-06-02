@@ -4,6 +4,7 @@ import com.triptune.common.response.ApiResponse;
 import com.triptune.common.response.ErrorResponse;
 import com.triptune.member.dto.MemberDTO;
 import com.triptune.member.service.MemberService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/members")
+@Tag(name = "Member", description = "회원 관련 API")
 public class MemberApiController {
 
     private final MemberService memberService;
