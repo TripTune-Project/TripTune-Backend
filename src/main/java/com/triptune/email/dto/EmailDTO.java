@@ -19,10 +19,6 @@ public class EmailDTO {
         @Email(message = "이메일 형식에 맞지 않습니다.")
         private String email;
 
-        @Builder
-        public VerifyRequest(String email) {
-            this.email = email;
-        }
     }
 
 
@@ -36,13 +32,8 @@ public class EmailDTO {
         private String email;
 
         @NotBlank(message = "인증번호는 필수 입력 값입니다.")
-        private String verifyCode;
+        private String authCode;
 
-        @Builder
-        public Verify(String email, String verifyCode) {
-            this.email = email;
-            this.verifyCode = verifyCode;
-        }
     }
 
 

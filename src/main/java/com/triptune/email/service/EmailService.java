@@ -32,7 +32,7 @@ public class EmailService {
             return false;
         }
 
-        return codeFoundByEmail.equals(emailDTO.getVerifyCode());
+        return codeFoundByEmail.equals(emailDTO.getAuthCode());
     }
 
 
@@ -53,14 +53,16 @@ public class EmailService {
     private MimeMessage createEmailForm(String email) throws MessagingException {
         String authCode = createCode();
 
-        String content = "안녕하세요. TripTune 팀입니다.<br><br>" +
+        String content = "<br><br>" +
+                "안녕하세요. TripTune 팀입니다.<br><br>" +
                 "이메일 인증 절차에 따라 인증 번호를 발급해드립니다.<br>" +
                 "아래의 인증 번호를 확인란에 입력해 인증을 완료해 주시기 바랍니다.<br><br>" +
                 "<div style=\"background-color:#F2F2F2; padding:30px;  height:20px; width:600px; text-align:center;\">" +
                 "인증번호 :&emsp;&emsp;<b>" + authCode + "</b>" +
                 "</div>" +
-                "<br>" +
-                "이용해 주셔서 감사합니다.";
+                "<br><br>" +
+                "이용해 주셔서 감사합니다." +
+                "<br><br>";
 
 
         MimeMessage message = javaMailSender.createMimeMessage();

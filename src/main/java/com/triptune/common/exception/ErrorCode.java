@@ -9,7 +9,9 @@ import org.springframework.http.HttpStatus;
 public enum ErrorCode {
 
     // 입력 검증
-    INCORRECT_PASSWORD(HttpStatus.BAD_REQUEST, "비밀번호와 재입력 비밀번호가 일치하지 않습니다."),
+    INCORRECT_PASSWORD_REPASSWORD(HttpStatus.BAD_REQUEST, "비밀번호와 재입력 비밀번호가 일치하지 않습니다."),
+    ALREADY_EXISTED_USERID(HttpStatus.BAD_REQUEST, "이미 존재하는 아이디입니다."),
+    ALREADY_EXISTED_NICKNAME(HttpStatus.BAD_REQUEST, "이미 존재하는 닉네임입니다."),
     
     // 이메일
     EMAIL_VERIFY_FAIL(HttpStatus.BAD_REQUEST, "이메일 인증에 실패했습니다.");
