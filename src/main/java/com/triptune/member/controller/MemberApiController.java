@@ -2,6 +2,7 @@ package com.triptune.member.controller;
 
 import com.triptune.common.exception.ErrorCode;
 import com.triptune.common.response.ApiResponse;
+import com.triptune.member.dto.LoginDTO;
 import com.triptune.member.dto.MemberDTO;
 import com.triptune.member.exception.IncorrectPasswordException;
 import com.triptune.member.service.MemberService;
@@ -22,13 +23,20 @@ public class MemberApiController {
 
 
     @PostMapping("/join")
-    @Operation(summary = "회원가입(미완)", description = "회원가입을 요청합니다.")
+    @Operation(summary = "회원가입", description = "회원가입을 요청합니다.")
     public ApiResponse<?> join(@Valid @RequestBody MemberDTO.Request memberDTO){
         if(!memberDTO.getPassword().equals(memberDTO.getRepassword())){
             throw new IncorrectPasswordException(ErrorCode.INCORRECT_PASSWORD_REPASSWORD);
         }
 
         memberService.join(memberDTO);
+
+        return ApiResponse.okResponse();
+    }
+
+    @PostMapping("/login")
+    @Operation(summary = "로그인(미완)", description = "회원 로그인")
+    public ApiResponse<?> login(@Valid @RequestBody LoginDTO loginDTO){
 
         return ApiResponse.okResponse();
     }

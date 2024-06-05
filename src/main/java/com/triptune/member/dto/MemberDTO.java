@@ -26,8 +26,6 @@ public class MemberDTO {
         @NotBlank(message = "비밀번호 재입력은 필수 입력 값입니다.")
         private String repassword;
 
-        private boolean isSocialLogin;
-
         @NotBlank(message = "닉네임은 필수 입력 값입니다.")
         @Pattern(regexp = "^(?=.*[A-Za-z가-힣])[A-Za-z가-힣\\d]{1,8}$", message = "닉네임은 영문, 한글 포함 8자 이하여야 합니다.")
         private String nickname;
