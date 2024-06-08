@@ -1,6 +1,6 @@
-package com.triptune.member.repository;
+package com.triptune.domain.member.repository;
 
-import com.triptune.member.entity.Member;
+import com.triptune.domain.member.entity.Member;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -8,4 +8,5 @@ import org.springframework.stereotype.Repository;
 public interface MemberRepository extends JpaRepository<Member, Long> {
     boolean existsByUserId(String userId);
     boolean existsByNickname(String nickname);
+    Member findByUserId(String userId);
 }

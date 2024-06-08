@@ -1,11 +1,11 @@
-package com.triptune.member.controller;
+package com.triptune.domain.member.controller;
 
-import com.triptune.common.exception.ErrorCode;
-import com.triptune.common.response.ApiResponse;
-import com.triptune.member.dto.LoginDTO;
-import com.triptune.member.dto.MemberDTO;
-import com.triptune.member.exception.IncorrectPasswordException;
-import com.triptune.member.service.MemberService;
+import com.triptune.global.exception.ErrorCode;
+import com.triptune.global.response.ApiResponse;
+import com.triptune.domain.member.dto.MemberDTO;
+import com.triptune.domain.member.exception.IncorrectPasswordException;
+import com.triptune.domain.member.service.MemberService;
+import com.triptune.domain.member.dto.LoginDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -36,8 +36,8 @@ public class MemberApiController {
 
     @PostMapping("/login")
     @Operation(summary = "로그인(미완)", description = "회원 로그인")
-    public ApiResponse<?> login(@Valid @RequestBody LoginDTO loginDTO){
-
-        return ApiResponse.okResponse();
+    public ApiResponse<?> login(@Valid @RequestBody LoginDTO.Request loginDTO){
+        LoginDTO.Response response = memberService.login(loginDTO);
+        return ApiResponse.dataResponse(response);
     }
 }
