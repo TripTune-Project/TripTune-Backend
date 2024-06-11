@@ -33,7 +33,7 @@ public class SecurityConfig {
     private final CustomEntryPoint customEntryPoint;
 
     private static final String[] AUTH_WHITELIST = {
-            "/swagger-ui/**", "/api/members/join", "/api/members/login", "/api/members/refresh"
+            "/swagger-ui/**", "/v3/api-docs/**", "/api/members/join", "/api/members/login", "/api/members/refresh"
     };
 
     @Bean

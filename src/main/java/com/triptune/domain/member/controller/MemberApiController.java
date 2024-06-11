@@ -41,13 +41,14 @@ public class MemberApiController {
     }
 
     @PostMapping("/login")
-    @Operation(summary = "로그인(미완)", description = "회원 로그인")
+    @Operation(summary = "로그인", description = "로그인을 실행합니다.")
     public ApiResponse<LoginDTO.Response> login(@Valid @RequestBody LoginDTO.Request loginDTO){
         LoginDTO.Response response = memberService.login(loginDTO);
         return ApiResponse.dataResponse(response);
     }
 
     @PostMapping("/refresh")
+    @Operation(summary = "토큰 갱신", description = "Refresh Token 을 이용해 만료된 Access Token 갱신합니다.")
     public ApiResponse<TokenDTO> refreshToken(@RequestBody TokenDTO tokenDTO) throws ExpiredJwtException {
         TokenDTO response = memberService.refreshToken(tokenDTO);
         return ApiResponse.dataResponse(response);
