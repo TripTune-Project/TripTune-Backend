@@ -20,8 +20,8 @@ public class CustomAccessDeniedHandler implements AccessDeniedHandler {
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.setStatus(HttpStatus.FORBIDDEN.value());
         response.setCharacterEncoding(StandardCharsets.UTF_8.name());
-        //TODO: write ErrorResponse 로 변경
-        response.getWriter().write("권한 불충분 %s".formatted(accessDeniedException.getMessage()));
+        //TODO: write 변경
+        response.getWriter().write("CustomAccessDeniedHandler 권한 불충분 %s".formatted(accessDeniedException.getMessage()));
         response.getWriter().flush();
     }
 }

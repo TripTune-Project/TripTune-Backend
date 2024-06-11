@@ -14,7 +14,11 @@ public enum ErrorCode {
     ALREADY_EXISTED_NICKNAME(HttpStatus.BAD_REQUEST, "이미 존재하는 닉네임입니다."),
     
     // 이메일
-    EMAIL_VERIFY_FAIL(HttpStatus.BAD_REQUEST, "이메일 인증에 실패했습니다.");
+    EMAIL_VERIFY_FAIL(HttpStatus.BAD_REQUEST, "이메일 인증에 실패했습니다."),
+
+    // 토큰
+    EXPIRED_TOKEN(HttpStatus.UNAUTHORIZED, "토큰이 만료되었습니다."),
+    FAILED_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "토큰 갱신에 실패했습니다.");
 
     private final HttpStatus status;
     private final String message;

@@ -1,16 +1,22 @@
 package com.triptune.domain.member.controller;
 
+import com.triptune.domain.member.dto.TokenDTO;
 import com.triptune.global.exception.ErrorCode;
 import com.triptune.global.response.ApiResponse;
 import com.triptune.domain.member.dto.MemberDTO;
 import com.triptune.domain.member.exception.IncorrectPasswordException;
 import com.triptune.domain.member.service.MemberService;
 import com.triptune.domain.member.dto.LoginDTO;
+import com.triptune.global.service.CustomUserDetails;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
+import javax.security.auth.RefreshFailedException;
 
 
 @RestController
@@ -36,8 +42,20 @@ public class MemberApiController {
 
     @PostMapping("/login")
     @Operation(summary = "로그인(미완)", description = "회원 로그인")
-    public ApiResponse<?> login(@Valid @RequestBody LoginDTO.Request loginDTO){
+    public ApiResponse<LoginDTO.Response> login(@Valid @RequestBody LoginDTO.Request loginDTO){
         LoginDTO.Response response = memberService.login(loginDTO);
         return ApiResponse.dataResponse(response);
+    }
+
+    @PostMapping("/refresh")
+    public ApiResponse<TokenDTO> refreshToken(@RequestBody TokenDTO tokenDTO) throws ExpiredJwtException {
+        TokenDTO response = memberService.refreshToken(tokenDTO);
+        return ApiResponse.dataResponse(response);
+    }
+
+    @GetMapping("/test")
+    public String test(@AuthenticationPrincipal CustomUserDetails userDetails){
+        System.out.println(">>>>>>>>>>" + userDetails.getUsername());
+        return "hello";
     }
 }

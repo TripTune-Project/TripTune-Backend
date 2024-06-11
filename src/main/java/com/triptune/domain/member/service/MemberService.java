@@ -1,20 +1,25 @@
 package com.triptune.domain.member.service;
 
 import com.triptune.domain.member.dto.LoginDTO;
-import com.triptune.domain.member.exception.IncorrectPasswordException;
-import com.triptune.global.exception.ErrorCode;
 import com.triptune.domain.member.dto.MemberDTO;
-import com.triptune.domain.member.exception.DataExistException;
-import com.triptune.domain.member.repository.MemberRepository;
+import com.triptune.domain.member.dto.TokenDTO;
 import com.triptune.domain.member.entity.Member;
+import com.triptune.domain.member.exception.DataExistException;
+import com.triptune.domain.member.exception.RefreshTokenException;
+import com.triptune.domain.member.repository.MemberRepository;
+import com.triptune.global.exception.ErrorCode;
 import com.triptune.global.util.JwtUtil;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import javax.security.auth.RefreshFailedException;
 import java.time.LocalDateTime;
 
 @Service
@@ -63,6 +68,31 @@ public class MemberService {
         return LoginDTO.Response.builder()
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
+                .build();
+    }
+
+    public TokenDTO refreshToken(TokenDTO tokenDTO) throws ExpiredJwtException {
+        String refreshToken = tokenDTO.getRefreshToken();
+
+        if(!jwtUtil.validateToken(refreshToken)){
+            throw new RefreshTokenException(ErrorCode.EXPIRED_TOKEN);
+        }
+
+        Claims claims = jwtUtil.parseClaims(refreshToken);
+
+        Member member = memberRepository.findByUserId(claims.getSubject());
+
+        if(!refreshToken.equals(member.getRefreshToken())){
+            throw new RefreshTokenException(ErrorCode.FAILED_REFRESH_TOKEN);
+        }
+
+        String newAccessToken = jwtUtil.createAccessToken(member.getUserId());
+        String newRefreshToken = jwtUtil.createRefreshToken(member.getUserId());
+        member.setRefreshToken(newRefreshToken);
+
+        return TokenDTO.builder()
+                .accessToken(newAccessToken)
+                .refreshToken(newRefreshToken)
                 .build();
     }
 }

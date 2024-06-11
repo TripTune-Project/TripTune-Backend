@@ -1,13 +1,11 @@
 package com.triptune.global.service;
 
-import com.triptune.domain.member.dto.MemberDTO;
 import com.triptune.domain.member.entity.Member;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
-import java.util.List;
 
 @RequiredArgsConstructor
 public class CustomUserDetails implements UserDetails {

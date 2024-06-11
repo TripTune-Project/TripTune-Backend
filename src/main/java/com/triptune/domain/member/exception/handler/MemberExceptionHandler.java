@@ -1,5 +1,6 @@
 package com.triptune.domain.member.exception.handler;
 
+import com.triptune.domain.member.exception.RefreshTokenException;
 import com.triptune.global.response.ErrorResponse;
 import com.triptune.domain.member.exception.DataExistException;
 import com.triptune.domain.member.exception.IncorrectPasswordException;
@@ -33,6 +34,15 @@ public class MemberExceptionHandler {
     public ErrorResponse handleUsernameNotFoundException(UsernameNotFoundException ex){
         return ErrorResponse.builder()
                 .errorCode(HttpStatus.BAD_REQUEST.value())
+                .message(ex.getMessage())
+                .build();
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    public ErrorResponse handleRefreshTokenException(RefreshTokenException ex){
+        return ErrorResponse.builder()
+                .errorCode(ex.getHttpStatus().value())
                 .message(ex.getMessage())
                 .build();
     }

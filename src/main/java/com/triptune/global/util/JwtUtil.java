@@ -81,17 +81,26 @@ public class JwtUtil {
      * @return UserDetails 를 이용해 얻은 권한 정보 Authentication
      */
     public Authentication getAuthentication(String token){
-        String userPrincipal = Jwts.parserBuilder()
-                .setSigningKey(key)
-                .build()
-                .parseClaimsJws(token)
-                .getBody()
-                .getSubject();
+        Claims claims = parseClaims(token);
 
-        UserDetails userDetails = userDetailsService.loadUserByUsername(userPrincipal);
+        UserDetails userDetails = userDetailsService.loadUserByUsername(claims.getSubject());
 
         return new UsernamePasswordAuthenticationToken(userDetails, "", userDetails.getAuthorities());
     }
+
+
+    /**
+     * Jwt 토큰 복호화
+      * @param token
+     * @return token 을 이용해 복호화한 Claims
+     */ 
+   public Claims parseClaims(String token){
+       return Jwts.parserBuilder()
+               .setSigningKey(key)
+               .build()
+               .parseClaimsJws(token)
+               .getBody();
+   }
 
     /**
      * Access 토큰 생성

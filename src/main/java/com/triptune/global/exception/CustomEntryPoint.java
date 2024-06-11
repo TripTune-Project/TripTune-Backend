@@ -19,7 +19,7 @@ public class CustomEntryPoint implements AuthenticationEntryPoint {
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.setStatus(HttpStatus.UNAUTHORIZED.value());
         response.setCharacterEncoding(Charset.defaultCharset().name());
-        response.getWriter().write("권한 불충분 %s".formatted(authException.getMessage()));
+        response.getWriter().write("CustomEntryPoint 권한 불충분 %s".formatted(authException.getMessage()));
         response.getWriter().flush();
     }
 }
