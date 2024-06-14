@@ -87,12 +87,9 @@ public class MemberService {
         }
 
         String newAccessToken = jwtUtil.createAccessToken(member.getUserId());
-        String newRefreshToken = jwtUtil.createRefreshToken(member.getUserId());
-        member.setRefreshToken(newRefreshToken);
 
         return TokenDTO.builder()
                 .accessToken(newAccessToken)
-                .refreshToken(newRefreshToken)
                 .build();
     }
 }
