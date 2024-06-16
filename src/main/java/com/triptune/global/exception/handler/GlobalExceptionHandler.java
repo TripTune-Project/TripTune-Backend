@@ -1,5 +1,6 @@
 package com.triptune.global.exception.handler;
 
+import com.triptune.global.exception.BadRequestException;
 import com.triptune.global.response.ErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
@@ -32,5 +33,18 @@ public class GlobalExceptionHandler {
                 .errorCode(HttpStatus.BAD_REQUEST.value())
                 .message(message).build();
     }
+
+    @ExceptionHandler(BadRequestException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleBadRequestException(BadRequestException ex, HttpServletRequest request){
+        log.error("BadRequestException : {}", ex);
+
+        return ErrorResponse.builder()
+                .errorCode(HttpStatus.BAD_REQUEST.value())
+                .message(ex.getMessage())
+                .build();
+    }
+
+
 
 }

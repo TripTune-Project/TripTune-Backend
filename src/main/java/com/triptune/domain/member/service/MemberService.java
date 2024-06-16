@@ -11,15 +11,13 @@ import com.triptune.global.exception.ErrorCode;
 import com.triptune.global.util.JwtUtil;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import javax.security.auth.RefreshFailedException;
 import java.time.LocalDateTime;
 
 @Service
@@ -75,7 +73,7 @@ public class MemberService {
         String refreshToken = tokenDTO.getRefreshToken();
 
         if(!jwtUtil.validateToken(refreshToken)){
-            throw new RefreshTokenException(ErrorCode.EXPIRED_TOKEN);
+            throw new JwtException(ErrorCode.EXPIRED_JWT_TOKEN.getMessage());
         }
 
         Claims claims = jwtUtil.parseClaims(refreshToken);
