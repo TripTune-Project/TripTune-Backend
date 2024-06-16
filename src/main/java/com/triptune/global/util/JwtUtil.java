@@ -1,14 +1,12 @@
 package com.triptune.global.util;
 
-import com.triptune.domain.member.entity.Member;
-import com.triptune.domain.member.repository.MemberRepository;
-import com.triptune.global.service.CustomUserDetails;
+import com.triptune.global.exception.BadRequestException;
+import com.triptune.global.exception.ErrorCode;
 import com.triptune.global.service.CustomUserDetailsService;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.http.HttpServletRequest;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -64,15 +62,17 @@ public class JwtUtil {
             return true;
         } catch (SecurityException | MalformedJwtException e) {
             log.info("Invalid JWT Token ", e);
+            throw new BadRequestException(ErrorCode.INVALID_JWT_TOKEN);
         } catch (ExpiredJwtException e){
             log.info("Expired JWT Token ", e);
+            throw new JwtException(ErrorCode.EXPIRED_JWT_TOKEN.getMessage());
         } catch (UnsupportedJwtException e){
             log.info("Unsupported JWT Token ", e);
+            throw new BadRequestException(ErrorCode.UNSUPPORTED_JWT_TOKEN);
         } catch (IllegalArgumentException e){
             log.info("JWT claims string is empty ", e);
+            throw new BadRequestException(ErrorCode.EMPTY_JWT_CLAIMS);
         }
-        //TODO Excepiton 으로 처리해야하는지 아닌지 확인
-        return false;
     }
 
     /**
