@@ -29,9 +29,9 @@ public class CustomAccessDeniedHandler implements AccessDeniedHandler {
                 .message("접근 권한이 없습니다.")
                 .build();
 
-        String errorString = String.valueOf(errorResponse);
+        String result = new ObjectMapper().writeValueAsString(errorResponse);
 
-        response.getWriter().write(errorString);
+        response.getWriter().write(result);
         response.getWriter().flush();
     }
 }

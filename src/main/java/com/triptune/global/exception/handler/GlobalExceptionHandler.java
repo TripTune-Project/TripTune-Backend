@@ -1,6 +1,7 @@
 package com.triptune.global.exception.handler;
 
 import com.triptune.global.exception.BadRequestException;
+import com.triptune.global.exception.CustomExpiredJwtException;
 import com.triptune.global.response.ErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
@@ -20,8 +21,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleMethodArgumentNotValidException(MethodArgumentNotValidException ex, HttpServletRequest request){
-
-        log.error("MethodArgumentNotValidException : {}", ex);
+        log.error("MethodArgumentNotValidException : {}", ex.getMessage());
 
         String message = ex.getBindingResult().getFieldErrors()
                 .stream()
@@ -37,7 +37,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BadRequestException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleBadRequestException(BadRequestException ex, HttpServletRequest request){
-        log.error("BadRequestException : {}", ex);
+        log.error("BadRequestException : {}", ex.getMessage());
 
         return ErrorResponse.builder()
                 .errorCode(HttpStatus.BAD_REQUEST.value())
@@ -45,6 +45,15 @@ public class GlobalExceptionHandler {
                 .build();
     }
 
+    @ExceptionHandler(CustomExpiredJwtException.class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    public ErrorResponse handleCustomExpiredJwtException(CustomExpiredJwtException ex, HttpServletRequest request){
+        log.error("CustomExpiredJwtException : {}", ex.getMessage());
 
+        return ErrorResponse.builder()
+                .errorCode(HttpStatus.UNAUTHORIZED.value())
+                .message(ex.getMessage())
+                .build();
+    }
 
 }
