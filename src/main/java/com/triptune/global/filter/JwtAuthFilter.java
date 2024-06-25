@@ -1,6 +1,5 @@
 package com.triptune.global.filter;
 
-import com.triptune.global.service.CustomUserDetailsService;
 import com.triptune.global.util.JwtUtil;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

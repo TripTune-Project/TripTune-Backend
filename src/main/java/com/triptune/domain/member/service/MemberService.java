@@ -69,13 +69,10 @@ public class MemberService {
                 .build();
     }
 
-    public TokenDTO refreshToken(TokenDTO tokenDTO) throws ExpiredJwtException {
+    public TokenDTO.RefreshResponse refreshToken(TokenDTO.Request tokenDTO) throws ExpiredJwtException {
         String refreshToken = tokenDTO.getRefreshToken();
 
-        if(!jwtUtil.validateToken(refreshToken)){
-            throw new JwtException(ErrorCode.EXPIRED_JWT_TOKEN.getMessage());
-        }
-
+        jwtUtil.validateToken(refreshToken);
         Claims claims = jwtUtil.parseClaims(refreshToken);
 
         Member member = memberRepository.findByUserId(claims.getSubject());
@@ -86,7 +83,7 @@ public class MemberService {
 
         String newAccessToken = jwtUtil.createAccessToken(member.getUserId());
 
-        return TokenDTO.builder()
+        return TokenDTO.RefreshResponse.builder()
                 .accessToken(newAccessToken)
                 .build();
     }

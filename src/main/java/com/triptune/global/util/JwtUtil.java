@@ -1,6 +1,7 @@
 package com.triptune.global.util;
 
 import com.triptune.global.exception.BadRequestException;
+import com.triptune.global.exception.CustomExpiredJwtException;
 import com.triptune.global.exception.ErrorCode;
 import com.triptune.global.service.CustomUserDetailsService;
 import io.jsonwebtoken.*;
@@ -54,18 +55,18 @@ public class JwtUtil {
     /**
      * JWT 토큰 검증
      * @param token
-     * @return 토큰 유효한 경우 true, 아닌 경우 false
+     * @return 토큰 유효한 경우 true, 아닌 경우 exception 발생
      */
     public boolean validateToken(String token) {
         try {
             Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
             return true;
+        } catch (ExpiredJwtException e){
+            log.info("Expired JWT Token ", e);
+            throw new CustomExpiredJwtException(ErrorCode.EXPIRED_JWT_TOKEN);
         } catch (SecurityException | MalformedJwtException e) {
             log.info("Invalid JWT Token ", e);
             throw new BadRequestException(ErrorCode.INVALID_JWT_TOKEN);
-        } catch (ExpiredJwtException e){
-            log.info("Expired JWT Token ", e);
-            throw new JwtException(ErrorCode.EXPIRED_JWT_TOKEN.getMessage());
         } catch (UnsupportedJwtException e){
             log.info("Unsupported JWT Token ", e);
             throw new BadRequestException(ErrorCode.UNSUPPORTED_JWT_TOKEN);
@@ -73,6 +74,7 @@ public class JwtUtil {
             log.info("JWT claims string is empty ", e);
             throw new BadRequestException(ErrorCode.EMPTY_JWT_CLAIMS);
         }
+
     }
 
     /**
