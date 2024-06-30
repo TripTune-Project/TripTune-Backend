@@ -20,13 +20,13 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @Configuration
 public class SecurityConfig {
 
-    private final CustomUserDetailsService userDetailsService;
     private final JwtUtil jwtUtil;
     private final CustomAccessDeniedHandler customAccessDeniedHandler;
     private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
 
     private static final String[] AUTH_WHITELIST = {
-            "/swagger-ui/**", "/v3/api-docs/**", "/api/members/join", "/api/members/login", "/api/members/refresh", "/api/emails/**"
+            "/swagger-ui/**", "/v3/api-docs/**", "/api/members/join", "/api/members/login", "/api/members/refresh",
+            "/api/emails/**"
     };
 
     @Bean

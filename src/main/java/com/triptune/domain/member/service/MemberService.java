@@ -1,5 +1,7 @@
 package com.triptune.domain.member.service;
 
+import com.triptune.domain.email.dto.EmailDTO;
+import com.triptune.domain.email.service.EmailService;
 import com.triptune.domain.member.dto.LoginDTO;
 import com.triptune.domain.member.dto.MemberDTO;
 import com.triptune.domain.member.dto.TokenDTO;
@@ -8,10 +10,12 @@ import com.triptune.domain.member.exception.DataExistException;
 import com.triptune.domain.member.exception.RefreshTokenException;
 import com.triptune.domain.member.repository.MemberRepository;
 import com.triptune.global.exception.ErrorCode;
+import com.triptune.global.service.CustomUserDetails;
 import com.triptune.global.util.JwtUtil;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
+import jakarta.mail.MessagingException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -26,6 +30,7 @@ import java.time.LocalDateTime;
 public class MemberService {
 
     private final MemberRepository memberRepository;
+    private final EmailService emailService;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
 
@@ -86,5 +91,11 @@ public class MemberService {
         return TokenDTO.RefreshResponse.builder()
                 .accessToken(newAccessToken)
                 .build();
+    }
+
+
+    public void logout(CustomUserDetails userDetails) {
+        memberRepository.deleteRefreshToken(userDetails.getUsername());
+
     }
 }
