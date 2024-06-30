@@ -45,29 +45,31 @@ public class EmailService {
         }
 
         // 이메일 폼 생성
-        MimeMessage emailForm = createEmailForm(email);
-        
+        MimeMessage emailForm = createCertificationEmailForm(email);
+
         // 이메일 발송
-        log.info("email sent completed");
+        log.info("certification number email sent completed");
         javaMailSender.send(emailForm);
     }
 
-    private MimeMessage createEmailForm(String email) throws MessagingException {
+
+
+    private MimeMessage createCertificationEmailForm(String email) throws MessagingException {
         String authCode = createCode();
 
         String content = "<br><br>" +
                 "안녕하세요. TripTune 팀입니다.<br><br>" +
                 "이메일 인증 절차에 따라 인증 번호를 발급해드립니다.<br>" +
                 "아래의 인증 번호를 확인란에 입력해 인증을 완료해 주시기 바랍니다.<br><br>" +
-                "<div style=\"background-color:#F2F2F2; padding:30px;  height:20px; width:600px; text-align:center;\">" +
+                "<div style=\"background-color:#F2F2F2; padding:30px;  height:20px; width:60%; text-align:center;\">" +
                 "인증번호 :&emsp;&emsp;<b>" + authCode + "</b>" +
                 "</div>" +
                 "<br><br>" +
                 "이용해 주셔서 감사합니다." +
                 "<br><br>";
 
-
         MimeMessage message = javaMailSender.createMimeMessage();
+        // 수신자 메일 주소 설정
         message.addRecipients(MimeMessage.RecipientType.TO, email);
         message.setSubject("[TripTune] 이메일 인증 코드가 발급되었습니다.");
         message.setFrom(senderEmail);
@@ -77,6 +79,8 @@ public class EmailService {
 
         return message;
     }
+    
+
 
     private String createCode() {
         int leftLimit = 48;
