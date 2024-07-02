@@ -1,7 +1,6 @@
 package com.triptune.global.util;
 
-import com.triptune.global.exception.BadRequestException;
-import com.triptune.global.exception.CustomExpiredJwtException;
+import com.triptune.global.exception.CustomJwtException;
 import com.triptune.global.exception.ErrorCode;
 import com.triptune.global.service.CustomUserDetailsService;
 import io.jsonwebtoken.*;
@@ -30,17 +29,19 @@ public class JwtUtil {
 
     private final Key key;
     private final CustomUserDetailsService userDetailsService;
+    private final RedisUtil redisUtil;
 
-    public JwtUtil(@Value("${spring.jwt.secret}") String secretKey, CustomUserDetailsService userDetailsService){
+    public JwtUtil(@Value("${spring.jwt.secret}") String secretKey, CustomUserDetailsService userDetailsService, RedisUtil redisUtil){
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);
         this.key = Keys.hmacShaKeyFor(keyBytes);
         this.userDetailsService = userDetailsService;
+        this.redisUtil = redisUtil;
     }
 
     /**
-     * 요청 헤더에서 Bearer 토큰 추출
+     * 요청 헤더에서 Bearer Token 추출
      * @param request
-     * @return Bearer 토큰 문자열, 토큰이 없거나 유효하지 않은 경우 null
+     * @return Bearer Token 문자열, Token 이 없거나 유효하지 않은 경우 null
      */
     public String resolveToken(HttpServletRequest request){
         String bearerToken = request.getHeader("Authorization");
@@ -55,24 +56,30 @@ public class JwtUtil {
     /**
      * JWT 토큰 검증
      * @param token
-     * @return 토큰 유효한 경우 true, 아닌 경우 exception 발생
+     * @return Token 이 유효한 경우 true, 아닌 경우 exception 발생
      */
     public boolean validateToken(String token) {
         try {
             Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
+
+            if(redisUtil.existData(token)){
+                log.info("Already logged out user");
+                throw new CustomJwtException(ErrorCode.BLACKLIST_TOKEN);
+            }
+
             return true;
         } catch (ExpiredJwtException e){
             log.info("Expired JWT Token ", e);
-            throw new CustomExpiredJwtException(ErrorCode.EXPIRED_JWT_TOKEN);
+            throw e;
         } catch (SecurityException | MalformedJwtException e) {
             log.info("Invalid JWT Token ", e);
-            throw new BadRequestException(ErrorCode.INVALID_JWT_TOKEN);
+            throw e;
         } catch (UnsupportedJwtException e){
             log.info("Unsupported JWT Token ", e);
-            throw new BadRequestException(ErrorCode.UNSUPPORTED_JWT_TOKEN);
+            throw e;
         } catch (IllegalArgumentException e){
             log.info("JWT claims string is empty ", e);
-            throw new BadRequestException(ErrorCode.EMPTY_JWT_CLAIMS);
+            throw e;
         }
 
     }
@@ -92,8 +99,8 @@ public class JwtUtil {
 
 
     /**
-     * Jwt 토큰 복호화
-      * @param token
+     * JWT 토큰 복호화
+     * @param token
      * @return token 을 이용해 복호화한 Claims
      */ 
    public Claims parseClaims(String token){
@@ -105,9 +112,9 @@ public class JwtUtil {
    }
 
     /**
-     * Access 토큰 생성
+     * Access Token 생성
      * @param userId
-     * @return access token
+     * @return Access Token
      */
     public String createAccessToken(String userId){
         Claims claims = Jwts.claims().setSubject(userId);
@@ -122,6 +129,11 @@ public class JwtUtil {
                 .compact();
     }
 
+    /**
+     * Refresh Token 생성
+     * @param userId
+     * @return Refresh Token
+     */
     public String createRefreshToken(String userId){
         Claims claims = Jwts.claims().setSubject(userId);
         Date now = new Date();
@@ -133,6 +145,24 @@ public class JwtUtil {
                 .setExpiration(expireDate)
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
+    }
+
+    /**
+     * Token 의 유효기간 추출
+     * @param token
+     * @return Token 유효기간
+     */
+    public Long getExpiration(String token){
+        Date expiration = Jwts.parserBuilder()
+                .setSigningKey(key)
+                .build()
+                .parseClaimsJws(token)
+                .getBody()
+                .getExpiration();
+
+        long now = new Date().getTime();
+
+        return (expiration.getTime() - now);
     }
 
 }

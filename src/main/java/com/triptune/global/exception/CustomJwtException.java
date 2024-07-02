@@ -4,10 +4,10 @@ import lombok.Getter;
 import org.springframework.http.HttpStatus;
 
 @Getter
-public class CustomExpiredJwtException extends RuntimeException{
+public class CustomJwtException extends RuntimeException{
     private final HttpStatus httpStatus;
 
-    public CustomExpiredJwtException(ErrorCode errorCode){
+    public CustomJwtException(ErrorCode errorCode){
         super(errorCode.getMessage());
         this.httpStatus = errorCode.getStatus();
     }

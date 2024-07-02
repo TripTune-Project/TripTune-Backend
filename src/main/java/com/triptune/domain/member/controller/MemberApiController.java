@@ -56,8 +56,10 @@ public class MemberApiController {
 
     @PatchMapping("/logout")
     @Operation(summary = "로그아웃", description = "로그아웃을 실행합니다.")
-    public ApiResponse<?> logout(@AuthenticationPrincipal CustomUserDetails userDetails){
-        memberService.logout(userDetails);
+    public ApiResponse<?> logout(HttpServletRequest request, @AuthenticationPrincipal CustomUserDetails userDetails){
+        String accessToken = jwtUtil.resolveToken(request);
+
+        memberService.logout(userDetails, accessToken);
 
         return ApiResponse.okResponse();
     }
