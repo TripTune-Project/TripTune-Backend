@@ -56,8 +56,10 @@ public class MemberApiController {
 
     @PatchMapping("/logout")
     @Operation(summary = "로그아웃", description = "로그아웃을 실행합니다.")
-    public ApiResponse<?> logout(@AuthenticationPrincipal CustomUserDetails userDetails){
-        memberService.logout(userDetails);
+    public ApiResponse<?> logout(HttpServletRequest request, @AuthenticationPrincipal CustomUserDetails userDetails){
+        String accessToken = jwtUtil.resolveToken(request);
+
+        memberService.logout(userDetails, accessToken);
 
         return ApiResponse.okResponse();
     }
@@ -68,6 +70,14 @@ public class MemberApiController {
     public ApiResponse<TokenDTO.RefreshResponse> refreshToken(@RequestBody TokenDTO.Request tokenDTO) throws ExpiredJwtException {
         TokenDTO.RefreshResponse response = memberService.refreshToken(tokenDTO);
         return ApiResponse.dataResponse(response);
+    }
+
+    @PostMapping("/find-id")
+    @Operation(summary = "아이디 찾기", description = "아이디 찾기를 실행합니다.")
+    public ApiResponse<?> findId(@RequestBody EmailDTO.VerifyRequest emailDTO) throws MessagingException {
+        memberService.findId(emailDTO);
+
+        return ApiResponse.okResponse("아이디 정보가 이메일로 전송되었습니다.");
     }
 
 

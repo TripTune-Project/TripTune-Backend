@@ -12,6 +12,7 @@ import com.triptune.domain.member.repository.MemberRepository;
 import com.triptune.global.exception.ErrorCode;
 import com.triptune.global.service.CustomUserDetails;
 import com.triptune.global.util.JwtUtil;
+import com.triptune.global.util.RedisUtil;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
@@ -33,6 +34,7 @@ public class MemberService {
     private final EmailService emailService;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
+    private final RedisUtil redisUtil;
 
     public void join(MemberDTO.Request memberDTO) {
 
@@ -74,6 +76,18 @@ public class MemberService {
                 .build();
     }
 
+
+    public void logout(CustomUserDetails userDetails, String accessToken) {
+        memberRepository.deleteRefreshToken(userDetails.getUsername());
+
+        Long expiration = jwtUtil.getExpiration(accessToken);
+
+        if (expiration > 0) {
+            redisUtil.setDataExpire(accessToken, "logout", expiration);
+        }
+
+    }
+
     public TokenDTO.RefreshResponse refreshToken(TokenDTO.Request tokenDTO) throws ExpiredJwtException {
         String refreshToken = tokenDTO.getRefreshToken();
 
@@ -93,9 +107,16 @@ public class MemberService {
                 .build();
     }
 
+    public void findId(EmailDTO.VerifyRequest emailDTO) throws MessagingException {
+        Member member = memberRepository.findByEmail(emailDTO.getEmail());
 
-    public void logout(CustomUserDetails userDetails) {
-        memberRepository.deleteRefreshToken(userDetails.getUsername());
+        if (member == null){
+            throw new UsernameNotFoundException("가입정보가 존재하지 않습니다. 입력된 정보를 확인해주세요.");
+        }
+
+        emailService.findId(member.getUserId(), member.getEmail());
 
     }
+
+
 }

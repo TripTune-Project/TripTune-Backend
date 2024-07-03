@@ -25,19 +25,28 @@ public class EmailService {
     @Value("${spring.mail.username}")
     private String senderEmail;
 
+    /**
+     * 회원가입 인증번호 증명
+     * @param emailDTO
+     * @return 발급된 인증번호랑 사용자 입력이랑 같을 시 true, 다를 경우 false
+     */
     public Boolean verify(EmailDTO.Verify emailDTO){
-        String codeFoundByEmail = redisUtil.getData(emailDTO.getEmail());
+        String savedCode = redisUtil.getData(emailDTO.getEmail());
 
-        log.info("code found by email: {}", codeFoundByEmail);
+        log.info("code found by email: {}", savedCode);
 
-        if (codeFoundByEmail == null){
+        if (savedCode == null){
             return false;
         }
 
-        return codeFoundByEmail.equals(emailDTO.getAuthCode());
+        return savedCode.equals(emailDTO.getAuthCode());
     }
 
-
+    /**
+     * 회원가입 인증번호 이메일 전송
+     * @param email
+     * @throws MessagingException
+     */
     public void verifyRequest(String email) throws MessagingException {
 
         if(redisUtil.existData(email)){
@@ -52,21 +61,39 @@ public class EmailService {
         javaMailSender.send(emailForm);
     }
 
+    /**
+     * 아이디 찾기 이메일 전송
+     * @param userId
+     * @param email
+     * @throws MessagingException
+     */
+    public void findId(String userId, String email) throws MessagingException {
+        MimeMessage emailForm = createFindIdEmailForm(userId, email);
+
+        log.info("id search email sent completed");
+        javaMailSender.send(emailForm);
+    }
 
 
+    /**
+     * 이메일 인증코드 생성 요청 후 회원가입 인증번호 이메일 폼 생성
+     * @param email 수신자 이메일
+     * @return 이메일 객체 {@link MimeMessage}
+     * @throws MessagingException
+     */
     private MimeMessage createCertificationEmailForm(String email) throws MessagingException {
         String authCode = createCode();
 
-        String content = "<br><br>" +
+        String content = "<br>" +
                 "안녕하세요. TripTune 팀입니다.<br><br>" +
                 "이메일 인증 절차에 따라 인증 번호를 발급해드립니다.<br>" +
                 "아래의 인증 번호를 확인란에 입력해 인증을 완료해 주시기 바랍니다.<br><br>" +
-                "<div style=\"background-color:#F2F2F2; padding:30px;  height:20px; width:60%; text-align:center;\">" +
-                "인증번호 :&emsp;&emsp;<b>" + authCode + "</b>" +
+                "<div style=\"background-color:#F2F2F2; padding:30px; width:60%; text-align:center;\">" +
+                "<div>인증번호 :&emsp;<b>123456</b></div>" +
+                "<div style=\"font-size:3%; margin-top:3%; color:#FE2E2E;\">인증번호는 발송된 시점부터 3분간만 유효합니다.</div>" +
                 "</div>" +
                 "<br><br>" +
-                "이용해 주셔서 감사합니다." +
-                "<br><br>";
+                "이용해 주셔서 감사합니다.<br><br>";
 
         MimeMessage message = javaMailSender.createMimeMessage();
         // 수신자 메일 주소 설정
@@ -75,13 +102,45 @@ public class EmailService {
         message.setFrom(senderEmail);
         message.setText(content, "utf-8", "html");
 
-        redisUtil.setDataExpire(email, authCode, 60 * 30L);
+        // 유효기간 3분
+        redisUtil.setDataExpire(email, authCode, 180L);
 
         return message;
     }
-    
 
 
+    /**
+     * 아이디 찾기 이메일 폼 생성
+     * @param userId
+     * @param email 수신자 이메일
+     * @return 이메일 객체 {@link MimeMessage}
+     * @throws MessagingException
+     */
+    private MimeMessage createFindIdEmailForm(String userId, String email) throws MessagingException {
+        String content = "<br><br>" +
+                "안녕하세요. TripTune 팀입니다.<br><br>" +
+                "회원님께서 조회하신 아이디는 다음과 같습니다.<br><br>" +
+                "<div style=\"background-color:#F2F2F2; padding:30px;  height:20px; width:60%; text-align:center;\">" +
+                "아이디 :&emsp;&emsp;<b>" + userId + "</b>" +
+                "</div>" +
+                "<br><br>" +
+                "이용해 주셔서 감사합니다." +
+                "<br><br>";
+
+        MimeMessage message = javaMailSender.createMimeMessage();
+        message.addRecipients(MimeMessage.RecipientType.TO, email);
+        message.setSubject("[TripTune] 요청하신 아이디 정보 안내드립니다.");
+        message.setFrom(senderEmail);
+        message.setText(content, "utf-8", "html");
+
+        return message;
+    }
+
+
+    /**
+     * 인증 코드 생성
+     * @return 인증 코드
+     */
     private String createCode() {
         int leftLimit = 48;
         int rightLimit = 122;
