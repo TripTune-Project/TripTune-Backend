@@ -107,5 +107,16 @@ public class MemberService {
                 .build();
     }
 
+    public void findId(EmailDTO.VerifyRequest emailDTO) throws MessagingException {
+        Member member = memberRepository.findByEmail(emailDTO.getEmail());
+
+        if (member == null){
+            throw new UsernameNotFoundException("가입정보가 존재하지 않습니다. 입력된 정보를 확인해주세요.");
+        }
+
+        emailService.findId(member.getUserId(), member.getEmail());
+
+    }
+
 
 }
