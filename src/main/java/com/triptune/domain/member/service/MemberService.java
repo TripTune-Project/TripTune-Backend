@@ -46,6 +46,10 @@ public class MemberService {
             throw new DataExistException(ErrorCode.ALREADY_EXISTED_NICKNAME);
         }
 
+        if(memberRepository.existsByEmail(memberDTO.getEmail())){
+            throw new DataExistException(ErrorCode.ALREADY_EXISTED_EMAIL);
+        }
+
         Member member = Member.builder()
                 .userId(memberDTO.getUserId())
                 .password(passwordEncoder.encode(memberDTO.getPassword()))

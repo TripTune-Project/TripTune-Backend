@@ -1,5 +1,8 @@
 package com.triptune.domain.email.service;
 
+import com.triptune.domain.member.exception.DataExistException;
+import com.triptune.domain.member.repository.MemberRepository;
+import com.triptune.global.exception.ErrorCode;
 import com.triptune.global.util.RedisUtil;
 import com.triptune.domain.email.dto.EmailDTO;
 import jakarta.mail.MessagingException;
@@ -21,6 +24,7 @@ public class EmailService {
 
     private final RedisUtil redisUtil;
     private final JavaMailSender javaMailSender;
+    private final MemberRepository memberRepository;
 
     @Value("${spring.mail.username}")
     private String senderEmail;
@@ -48,6 +52,9 @@ public class EmailService {
      * @throws MessagingException
      */
     public void verifyRequest(String email) throws MessagingException {
+        if(memberRepository.existsByEmail(email)){
+            throw new DataExistException(ErrorCode.ALREADY_EXISTED_EMAIL);
+        }
 
         if(redisUtil.existData(email)){
             redisUtil.deleteData(email);
@@ -60,6 +67,8 @@ public class EmailService {
         log.info("certification number email sent completed");
         javaMailSender.send(emailForm);
     }
+
+
 
     /**
      * 아이디 찾기 이메일 전송

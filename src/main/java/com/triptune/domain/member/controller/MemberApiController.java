@@ -80,8 +80,6 @@ public class MemberApiController {
         return ApiResponse.okResponse("아이디 정보가 이메일로 전송되었습니다.");
     }
 
-
-
     @GetMapping("/test")
     public String test(@AuthenticationPrincipal CustomUserDetails userDetails){
         System.out.println(">>>>>>>>>>" + userDetails.getUsername());
