@@ -77,6 +77,7 @@ public class MemberService {
         return LoginDTO.Response.builder()
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
+                .userId(member.getUserId())
                 .build();
     }
 

@@ -30,11 +30,13 @@ public class LoginDTO {
     public static class Response{
         private String accessToken;
         private String refreshToken;
+        private String userId;
 
         @Builder
-        public Response(String accessToken, String refreshToken) {
+        public Response(String accessToken, String refreshToken, String userId) {
             this.accessToken = accessToken;
             this.refreshToken = refreshToken;
+            this.userId = userId;
         }
     }
 
