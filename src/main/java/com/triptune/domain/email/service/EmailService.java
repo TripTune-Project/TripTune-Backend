@@ -97,9 +97,9 @@ public class EmailService {
                 "안녕하세요. TripTune 팀입니다.<br><br>" +
                 "이메일 인증 절차에 따라 인증 번호를 발급해드립니다.<br>" +
                 "아래의 인증 번호를 확인란에 입력해 인증을 완료해 주시기 바랍니다.<br><br>" +
-                "<div style=\"background-color:#F2F2F2; padding:30px; width:60%; text-align:center;\">" +
-                "<div>인증번호 :&emsp;<b>123456</b></div>" +
-                "<div style=\"font-size:3%; margin-top:3%; color:#FE2E2E;\">인증번호는 발송된 시점부터 3분간만 유효합니다.</div>" +
+                "<div style=\"background-color:#F2F2F2; padding:30px; width:80%; text-align:center;\">" +
+                "<div>인증번호 :&emsp;<b>" + authCode + "</b></div>" +
+                "<div style=\"font-size:3%; margin-top:3%; color:#FE2E2E;\">인증번호는 발송된 시점부터 5분간만 유효합니다.</div>" +
                 "</div>" +
                 "<br><br>" +
                 "이용해 주셔서 감사합니다.<br><br>";
@@ -112,7 +112,7 @@ public class EmailService {
         message.setText(content, "utf-8", "html");
 
         // 유효기간 3분
-        redisUtil.setDataExpire(email, authCode, 180L);
+        redisUtil.setDataExpire(email, authCode, 300);
 
         return message;
     }
