@@ -25,10 +25,19 @@ import java.nio.charset.Charset;
 @RequiredArgsConstructor
 public class JwtAuthFilter extends OncePerRequestFilter {
 
+    private static final String LOGOUT_PATH = "/api/members/logout";
     private final JwtUtil jwtUtil;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+        String requestURI = request.getRequestURI();
+
+        // logout 요청일 경우 filter 통과
+        if(requestURI.equals(LOGOUT_PATH)){
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         String token = jwtUtil.resolveToken(request);
 
         try{

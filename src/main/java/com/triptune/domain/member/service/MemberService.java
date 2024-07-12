@@ -3,6 +3,7 @@ package com.triptune.domain.member.service;
 import com.triptune.domain.email.dto.EmailDTO;
 import com.triptune.domain.email.service.EmailService;
 import com.triptune.domain.member.dto.LoginDTO;
+import com.triptune.domain.member.dto.LogoutDTO;
 import com.triptune.domain.member.dto.MemberDTO;
 import com.triptune.domain.member.dto.TokenDTO;
 import com.triptune.domain.member.entity.Member;
@@ -82,15 +83,9 @@ public class MemberService {
     }
 
 
-    public void logout(CustomUserDetails userDetails, String accessToken) {
-        memberRepository.deleteRefreshToken(userDetails.getUsername());
-
-        Long expiration = jwtUtil.getExpiration(accessToken);
-
-        if (expiration > 0) {
-            redisUtil.setDataExpire(accessToken, "logout", expiration);
-        }
-
+    public void logout(LogoutDTO logoutDTO, String accessToken) {
+        memberRepository.deleteRefreshToken(logoutDTO.getUserId());
+        redisUtil.setDataExpire(accessToken, "logout", 3600);
     }
 
     public TokenDTO.RefreshResponse refreshToken(TokenDTO.Request tokenDTO) throws ExpiredJwtException {

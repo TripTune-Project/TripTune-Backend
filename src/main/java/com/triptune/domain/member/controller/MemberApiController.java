@@ -1,6 +1,7 @@
 package com.triptune.domain.member.controller;
 
 import com.triptune.domain.email.dto.EmailDTO;
+import com.triptune.domain.member.dto.LogoutDTO;
 import com.triptune.domain.member.dto.TokenDTO;
 import com.triptune.global.exception.ErrorCode;
 import com.triptune.global.response.ApiResponse;
@@ -56,10 +57,10 @@ public class MemberApiController {
 
     @PatchMapping("/logout")
     @Operation(summary = "로그아웃", description = "로그아웃을 실행합니다.")
-    public ApiResponse<?> logout(HttpServletRequest request, @AuthenticationPrincipal CustomUserDetails userDetails){
+    public ApiResponse<?> logout(HttpServletRequest request, @RequestBody LogoutDTO logoutDTO){
         String accessToken = jwtUtil.resolveToken(request);
 
-        memberService.logout(userDetails, accessToken);
+        memberService.logout(logoutDTO, accessToken);
 
         return ApiResponse.okResponse();
     }
