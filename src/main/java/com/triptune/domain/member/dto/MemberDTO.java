@@ -1,6 +1,8 @@
 package com.triptune.domain.member.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import jakarta.validation.constraints.*;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -36,21 +38,39 @@ public class MemberDTO {
     }
 
     @Getter
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public static class Response{
         private Long memberId;
         private String userId;
         private String password;
         private String refreshToken;
-        private boolean isSocialLogin;
+        private Boolean isSocialLogin;
         private String nickname;
         private String email;
         private LocalDateTime createdAt;
         private LocalDateTime updatedAt;
         private Long fileId;
+
+
+        @Builder
+        public Response(Long memberId, String userId, String password, String refreshToken, Boolean isSocialLogin, String nickname, String email, LocalDateTime createdAt, LocalDateTime updatedAt, Long fileId) {
+            this.memberId = memberId;
+            this.userId = userId;
+            this.password = password;
+            this.refreshToken = refreshToken;
+            this.isSocialLogin = isSocialLogin;
+            this.nickname = nickname;
+            this.email = email;
+            this.createdAt = createdAt;
+            this.updatedAt = updatedAt;
+            this.fileId = fileId;
+        }
+
+        public static Response of(String userId){
+            return Response.builder()
+                    .userId(userId)
+                    .build();
+        }
     }
-
-
-
-
 
 }
