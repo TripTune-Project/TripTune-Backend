@@ -76,9 +76,8 @@ public class MemberApiController {
     @PostMapping("/find-id")
     @Operation(summary = "아이디 찾기", description = "아이디 찾기를 실행합니다.")
     public ApiResponse<?> findId(@RequestBody EmailDTO.VerifyRequest emailDTO) throws MessagingException {
-        memberService.findId(emailDTO);
-
-        return ApiResponse.okResponse("아이디 정보가 이메일로 전송되었습니다.");
+        MemberDTO.Response response = memberService.findId(emailDTO);
+        return ApiResponse.dataResponse(response);
     }
 
     @GetMapping("/test")
