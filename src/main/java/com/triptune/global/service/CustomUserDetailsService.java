@@ -1,7 +1,9 @@
 package com.triptune.global.service;
 
 import com.triptune.domain.member.entity.Member;
+import com.triptune.domain.member.exception.CustomUsernameNotFoundException;
 import com.triptune.domain.member.repository.MemberRepository;
+import com.triptune.global.exception.ErrorCode;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -18,11 +20,8 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String userId) throws UsernameNotFoundException {
-        Member member = memberRepository.findByUserId(userId);
-
-        if (member == null){
-            throw new UsernameNotFoundException("사용자가 존재하지 않습니다.");
-        }
+        Member member = memberRepository.findByUserId(userId)
+                .orElseThrow(() -> new CustomUsernameNotFoundException(ErrorCode.NOT_FOUND_USER));
 
         return new CustomUserDetails(member);
     }

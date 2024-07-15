@@ -1,36 +1,30 @@
 package com.triptune.domain.member.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-
+@Getter
+@Setter
+@NoArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class TokenDTO {
 
-    @Getter
-    @Setter
-    @NoArgsConstructor
-    public static class Request{
-        private String accessToken;
-        private String refreshToken;
+    private String accessToken;
+    private String refreshToken;
 
-        @Builder
-        public Request(String accessToken, String refreshToken) {
-            this.accessToken = accessToken;
-            this.refreshToken = refreshToken;
-        }
+    @Builder
+    public TokenDTO(String accessToken, String refreshToken) {
+        this.accessToken = accessToken;
+        this.refreshToken = refreshToken;
     }
 
-    @Getter
-    @NoArgsConstructor
-    public static class RefreshResponse{
-        private String accessToken;
-
-        @Builder
-        public RefreshResponse(String accessToken){
-            this.accessToken = accessToken;
-        }
+    public static TokenDTO of(String accessToken){
+        return TokenDTO.builder()
+                .accessToken(accessToken)
+                .build();
     }
 
 }

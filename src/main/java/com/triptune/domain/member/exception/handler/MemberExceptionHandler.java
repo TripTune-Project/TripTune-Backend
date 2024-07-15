@@ -1,8 +1,8 @@
 package com.triptune.domain.member.exception.handler;
 
+import com.triptune.domain.member.exception.CustomUsernameNotFoundException;
 import com.triptune.domain.member.exception.DataExistException;
 import com.triptune.domain.member.exception.IncorrectPasswordException;
-import com.triptune.domain.member.exception.RefreshTokenException;
 import com.triptune.global.response.ErrorResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -37,19 +37,9 @@ public class MemberExceptionHandler {
                 .build();
     }
 
-    public ErrorResponse handleUsernameNotFoundException(UsernameNotFoundException ex){
-        log.error("UsernameNotFoundException : {}", ex.getMessage());
-
-        return ErrorResponse.builder()
-                .errorCode(HttpStatus.BAD_REQUEST.value())
-                .message(ex.getMessage())
-                .build();
-    }
-
     @ExceptionHandler
-    @ResponseStatus(HttpStatus.UNAUTHORIZED)
-    public ErrorResponse handleRefreshTokenException(RefreshTokenException ex){
-        log.error("RefreshTokenException : {}", ex.getMessage());
+    public ErrorResponse handleCustomUsernameNotFoundException(CustomUsernameNotFoundException ex){
+        log.error("CustomUsernameNotFoundException : {}", ex.getMessage());
 
         return ErrorResponse.builder()
                 .errorCode(ex.getHttpStatus().value())

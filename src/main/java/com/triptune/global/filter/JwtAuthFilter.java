@@ -47,29 +47,20 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             }
 
             filterChain.doFilter(request, response);
-
-        } catch (CustomJwtException ex) {
-            handleJwtException(response, ErrorCode.BLACKLIST_TOKEN);
-        } catch (ExpiredJwtException ex){
-            handleJwtException(response, ErrorCode.EXPIRED_JWT_TOKEN);
-        } catch (SecurityException | MalformedJwtException e) {
-            handleJwtException(response, ErrorCode.INVALID_JWT_TOKEN);
-        } catch (UnsupportedJwtException e){
-            handleJwtException(response, ErrorCode.UNSUPPORTED_JWT_TOKEN);
-        } catch (IllegalArgumentException e){
-            handleJwtException(response, ErrorCode.EMPTY_JWT_CLAIMS);
+        } catch (CustomJwtException ex){
+            handleJwtException(response, ex);
         }
 
     }
 
-    private void handleJwtException(HttpServletResponse response, ErrorCode errorCode) throws IOException {
+    private void handleJwtException(HttpServletResponse response, CustomJwtException ex) throws IOException {
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-        response.setStatus(errorCode.getStatus().value());
+        response.setStatus(ex.getHttpStatus().value());
         response.setCharacterEncoding(Charset.defaultCharset().name());
 
         ErrorResponse errorResponse = ErrorResponse.builder()
-                .errorCode(errorCode.getStatus().value())
-                .message(errorCode.getMessage())
+                .errorCode(ex.getHttpStatus().value())
+                .message(ex.getMessage())
                 .build();
 
         String result = new ObjectMapper().writeValueAsString(errorResponse);

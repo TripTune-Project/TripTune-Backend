@@ -7,17 +7,15 @@ import com.triptune.domain.member.dto.LogoutDTO;
 import com.triptune.domain.member.dto.MemberDTO;
 import com.triptune.domain.member.dto.TokenDTO;
 import com.triptune.domain.member.entity.Member;
+import com.triptune.domain.member.exception.CustomUsernameNotFoundException;
 import com.triptune.domain.member.exception.DataExistException;
-import com.triptune.domain.member.exception.RefreshTokenException;
 import com.triptune.domain.member.repository.MemberRepository;
+import com.triptune.global.exception.CustomJwtException;
 import com.triptune.global.exception.ErrorCode;
-import com.triptune.global.service.CustomUserDetails;
 import com.triptune.global.util.JwtUtil;
 import com.triptune.global.util.RedisUtil;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
-import io.jsonwebtoken.JwtException;
-import jakarta.mail.MessagingException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -64,10 +62,11 @@ public class MemberService {
     }
 
     public LoginDTO.Response login(LoginDTO.Request loginDTO) {
-        Member member = memberRepository.findByUserId(loginDTO.getUserId());
+        Member member = memberRepository.findByUserId(loginDTO.getUserId())
+                .orElseThrow(() -> new CustomUsernameNotFoundException(ErrorCode.FAILED_LOGIN));
 
-        if (member == null || !passwordEncoder.matches(loginDTO.getPassword(), member.getPassword())) {
-            throw new UsernameNotFoundException("아이디 또는 비밀번호가 일치하지 않습니다.");
+        if (!passwordEncoder.matches(loginDTO.getPassword(), member.getPassword())) {
+            throw new CustomUsernameNotFoundException(ErrorCode.FAILED_LOGIN);
         }
 
         String accessToken = jwtUtil.createAccessToken(loginDTO.getUserId());
@@ -88,26 +87,26 @@ public class MemberService {
         redisUtil.setDataExpire(accessToken, "logout", 3600);
     }
 
-    public TokenDTO.RefreshResponse refreshToken(TokenDTO.Request tokenDTO) throws ExpiredJwtException {
+    public TokenDTO refreshToken(TokenDTO tokenDTO) throws ExpiredJwtException {
         String refreshToken = tokenDTO.getRefreshToken();
 
         jwtUtil.validateToken(refreshToken);
+
         Claims claims = jwtUtil.parseClaims(refreshToken);
 
-        Member member = memberRepository.findByUserId(claims.getSubject());
+        Member member = memberRepository.findByUserId(claims.getSubject())
+                .orElseThrow(() -> new CustomUsernameNotFoundException(ErrorCode.NOT_FOUND_USER));
 
         if(!refreshToken.equals(member.getRefreshToken())){
-            throw new RefreshTokenException(ErrorCode.FAILED_REFRESH_TOKEN);
+            throw new CustomJwtException(ErrorCode.MISMATCH_REFRESH_TOKEN);
         }
 
         String newAccessToken = jwtUtil.createAccessToken(member.getUserId());
 
-        return TokenDTO.RefreshResponse.builder()
-                .accessToken(newAccessToken)
-                .build();
+        return TokenDTO.of(newAccessToken);
     }
 
-    public MemberDTO.Response findId(EmailDTO.VerifyRequest emailDTO) throws MessagingException {
+    public MemberDTO.Response findId(EmailDTO.VerifyRequest emailDTO) {
         Member member = memberRepository.findByEmail(emailDTO.getEmail());
 
         if (member == null){

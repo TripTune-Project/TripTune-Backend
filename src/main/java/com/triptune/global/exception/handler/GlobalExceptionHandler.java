@@ -32,4 +32,14 @@ public class GlobalExceptionHandler {
                 .message(message).build();
     }
 
+
+    @ExceptionHandler(CustomJwtException.class)
+    public ErrorResponse handleCustomJwtException(CustomJwtException ex, HttpServletRequest request){
+        log.info("CustomJwtException : {}", ex.getMessage());
+
+        return ErrorResponse.builder()
+                .errorCode(ex.getHttpStatus().value())
+                .message(ex.getMessage()).build();
+    }
+
 }
