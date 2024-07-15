@@ -70,18 +70,20 @@ public class JwtUtil {
             return true;
         } catch (ExpiredJwtException e){
             log.info("Expired JWT Token ", e);
-            throw e;
+            throw new CustomJwtException(ErrorCode.EXPIRED_JWT_TOKEN);
         } catch (SecurityException | MalformedJwtException e) {
             log.info("Invalid JWT Token ", e);
-            throw e;
+            throw new CustomJwtException(ErrorCode.INVALID_JWT_TOKEN);
         } catch (UnsupportedJwtException e){
             log.info("Unsupported JWT Token ", e);
-            throw e;
+            throw new CustomJwtException(ErrorCode.UNSUPPORTED_JWT_TOKEN);
         } catch (IllegalArgumentException e){
             log.info("JWT claims string is empty ", e);
-            throw e;
+            throw new CustomJwtException(ErrorCode.EMPTY_JWT_CLAIMS);
+        } catch (SignatureException e) {
+            log.info("JWT signature fail ", e);
+            throw new CustomJwtException(ErrorCode.INVALID_JWT_SIGNATURE);
         }
-
     }
 
     /**

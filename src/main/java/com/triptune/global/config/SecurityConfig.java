@@ -6,6 +6,7 @@ import com.triptune.global.filter.JwtAuthFilter;
 import com.triptune.global.service.CustomUserDetailsService;
 import com.triptune.global.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.autoconfigure.web.servlet.error.BasicErrorController;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
@@ -26,7 +27,7 @@ public class SecurityConfig {
 
     private static final String[] AUTH_WHITELIST = {
             "/swagger-ui/**", "/v3/api-docs/**", "/api/members/join", "/api/members/login", "/api/members/logout",
-            "/api/members/refresh", "/api/members/find-id", "/api/emails/**"
+            "/api/members/refresh", "/api/members/find-id", "/api/emails/**", "/error"
     };
 
     @Bean

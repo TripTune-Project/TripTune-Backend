@@ -68,8 +68,8 @@ public class MemberApiController {
 
     @PostMapping("/refresh")
     @Operation(summary = "토큰 갱신", description = "Refresh Token 을 이용해 만료된 Access Token을 갱신합니다.")
-    public ApiResponse<TokenDTO.RefreshResponse> refreshToken(@RequestBody TokenDTO.Request tokenDTO) throws ExpiredJwtException {
-        TokenDTO.RefreshResponse response = memberService.refreshToken(tokenDTO);
+    public ApiResponse<TokenDTO> refreshToken(@RequestBody TokenDTO tokenDTO) throws ExpiredJwtException {
+        TokenDTO response = memberService.refreshToken(tokenDTO);
         return ApiResponse.dataResponse(response);
     }
 
