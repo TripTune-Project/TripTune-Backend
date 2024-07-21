@@ -1,14 +1,11 @@
 package com.triptune.domain.member.service;
 
-import com.triptune.domain.email.dto.EmailDTO;
 import com.triptune.domain.email.service.EmailService;
-import com.triptune.domain.member.dto.LoginDTO;
-import com.triptune.domain.member.dto.LogoutDTO;
-import com.triptune.domain.member.dto.MemberDTO;
-import com.triptune.domain.member.dto.TokenDTO;
+import com.triptune.domain.member.dto.*;
 import com.triptune.domain.member.entity.Member;
 import com.triptune.domain.member.exception.CustomUsernameNotFoundException;
 import com.triptune.domain.member.exception.DataExistException;
+import com.triptune.domain.member.exception.ChangePasswordException;
 import com.triptune.domain.member.repository.MemberRepository;
 import com.triptune.global.exception.CustomJwtException;
 import com.triptune.global.exception.ErrorCode;
@@ -16,9 +13,9 @@ import com.triptune.global.util.JwtUtil;
 import com.triptune.global.util.RedisUtil;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
+import jakarta.mail.MessagingException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -106,15 +103,47 @@ public class MemberService {
         return TokenDTO.of(newAccessToken);
     }
 
-    public MemberDTO.Response findId(EmailDTO.VerifyRequest emailDTO) {
-        Member member = memberRepository.findByEmail(emailDTO.getEmail());
-
-        if (member == null){
-            throw new UsernameNotFoundException("가입정보가 존재하지 않습니다. 입력된 정보를 확인해주세요.");
-        }
+    /**
+     * 이메일 주소로 회원 정보 찾아서 아이디 반환
+     * @param  findIdDTO
+     * @return 사용자 정보 객체 {@link MemberDTO.Response}
+     * @throws CustomUsernameNotFoundException 이메일로 회원 정보를 찾기 못한 경우
+     */
+    public MemberDTO.Response findId(FindDTO.FindId findIdDTO) {
+        Member member = memberRepository.findByEmail(findIdDTO.getEmail())
+                .orElseThrow(() -> new CustomUsernameNotFoundException(ErrorCode.NOT_FOUND_USER));
 
         return MemberDTO.Response.of(member.getUserId());
     }
 
 
+    /**
+     * 이메일, 아이디 정보를 통해 비밀번호 찾기 이메일 요청
+     * @param findPasswordDTO
+     * @throws MessagingException
+     */
+    public void findPassword(FindDTO.FindPassword findPasswordDTO) throws MessagingException {
+        Member member = memberRepository.findByEmail(findPasswordDTO.getEmail())
+                .orElseThrow(() -> new CustomUsernameNotFoundException(ErrorCode.NOT_FOUND_USER));
+
+        if (!member.getUserId().equals(findPasswordDTO.getUserId())){
+            throw new CustomUsernameNotFoundException(ErrorCode.NOT_FOUND_USER);
+        }
+
+        emailService.findPassword(findPasswordDTO);
+    }
+
+
+    public void changePassword(PasswordDTO passwordDTO) {
+        String email = redisUtil.getData(passwordDTO.getPasswordToken());
+
+        if (email == null) {
+            throw new ChangePasswordException(ErrorCode.INVALID_CHANGE_PASSWORD);
+        }
+
+        Member member = memberRepository.findByEmail(email)
+                .orElseThrow(() -> new CustomUsernameNotFoundException(ErrorCode.NOT_FOUND_USER));
+
+        member.setPassword(passwordEncoder.encode(passwordDTO.getPassword()));
+    }
 }

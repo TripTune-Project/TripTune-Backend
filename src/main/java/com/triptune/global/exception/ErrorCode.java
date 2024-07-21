@@ -20,6 +20,7 @@ public enum ErrorCode {
     // 사용자
     FAILED_LOGIN(HttpStatus.BAD_REQUEST, "아이디 또는 비밀번호가 일치하지 않습니다."),
     NOT_FOUND_USER(HttpStatus.NOT_FOUND, "사용자 정보를 찾을 수 없습니다."),
+    INVALID_CHANGE_PASSWORD(HttpStatus.NOT_FOUND, "잘못된 요청입니다. 비밀번호 찾기를 다시 진행해주세요."),
 
 
     // 이메일
