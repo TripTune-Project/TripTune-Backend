@@ -1,14 +1,11 @@
 package com.triptune.domain.member.controller;
 
 import com.triptune.domain.email.dto.EmailDTO;
-import com.triptune.domain.member.dto.LogoutDTO;
-import com.triptune.domain.member.dto.TokenDTO;
+import com.triptune.domain.member.dto.*;
 import com.triptune.global.exception.ErrorCode;
 import com.triptune.global.response.ApiResponse;
-import com.triptune.domain.member.dto.MemberDTO;
 import com.triptune.domain.member.exception.IncorrectPasswordException;
 import com.triptune.domain.member.service.MemberService;
-import com.triptune.domain.member.dto.LoginDTO;
 import com.triptune.global.service.CustomUserDetails;
 import com.triptune.global.util.JwtUtil;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -75,9 +72,27 @@ public class MemberApiController {
 
     @PostMapping("/find-id")
     @Operation(summary = "아이디 찾기", description = "아이디 찾기를 실행합니다.")
-    public ApiResponse<?> findId(@RequestBody EmailDTO.VerifyRequest emailDTO) throws MessagingException {
-        MemberDTO.Response response = memberService.findId(emailDTO);
+    public ApiResponse<MemberDTO.Response> findId(@RequestBody FindDTO.FindId findIdDTO) {
+        MemberDTO.Response response = memberService.findId(findIdDTO);
         return ApiResponse.dataResponse(response);
+    }
+
+    @PostMapping("/find-password")
+    @Operation(summary = "비밀번호 찾기", description = "비밀번호 찾기를 요청합니다. 비밀번호 변경 화면으로 연결되는 링크가 이메일을 통해서 제공됩니다.")
+    public ApiResponse<?> findPassword(@RequestBody FindDTO.FindPassword findPasswordDTO) throws MessagingException {
+        memberService.findPassword(findPasswordDTO);
+        return ApiResponse.okResponse();
+    }
+
+    @PatchMapping("/change-password")
+    @Operation(summary = "비밀번호 변경", description = "비밀번호를 변경합니다.")
+    public ApiResponse<?> changePassword(@RequestBody PasswordDTO passwordDTO){
+        if(!passwordDTO.getPassword().equals(passwordDTO.getRepassword())){
+            throw new IncorrectPasswordException(ErrorCode.INCORRECT_PASSWORD_REPASSWORD);
+        }
+
+        memberService.changePassword(passwordDTO);
+        return ApiResponse.okResponse();
     }
 
     @GetMapping("/test")

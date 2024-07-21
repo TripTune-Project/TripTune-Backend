@@ -1,8 +1,10 @@
 package com.triptune.domain.email.service;
 
+import com.triptune.domain.member.dto.FindDTO;
 import com.triptune.domain.member.exception.DataExistException;
 import com.triptune.domain.member.repository.MemberRepository;
 import com.triptune.global.exception.ErrorCode;
+import com.triptune.global.util.JwtUtil;
 import com.triptune.global.util.RedisUtil;
 import com.triptune.domain.email.dto.EmailDTO;
 import jakarta.mail.MessagingException;
@@ -11,9 +13,15 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
+import org.thymeleaf.TemplateEngine;
+import org.thymeleaf.context.Context;
 
+import java.io.File;
+import java.util.HashMap;
 import java.util.Random;
 
 @Slf4j
@@ -25,9 +33,14 @@ public class EmailService {
     private final RedisUtil redisUtil;
     private final JavaMailSender javaMailSender;
     private final MemberRepository memberRepository;
+    private final JwtUtil jwtUtil;
+    private final TemplateEngine templateEngine;
 
     @Value("${spring.mail.username}")
     private String senderEmail;
+
+    @Value("${app.frontend.find-password.url}")
+    private String findPasswordURL;
 
     /**
      * 회원가입 인증번호 증명
@@ -69,17 +82,15 @@ public class EmailService {
     }
 
 
-
     /**
-     * 아이디 찾기 이메일 전송
-     * @param userId
-     * @param email
+     * 비밀번호 찾기 이메일 요청 : 비밀번호 변경 링크 제공
+     * @param findPasswordDTO
      * @throws MessagingException
      */
-    public void findId(String userId, String email) throws MessagingException {
-        MimeMessage emailForm = createFindIdEmailForm(userId, email);
+    public void findPassword(FindDTO.FindPassword findPasswordDTO) throws MessagingException {
+        MimeMessage emailForm = findPasswordEmailTemplate(findPasswordDTO);
 
-        log.info("id search email sent completed");
+        log.info("password recovery email sent completed");
         javaMailSender.send(emailForm);
     }
 
@@ -119,28 +130,38 @@ public class EmailService {
 
 
     /**
-     * 아이디 찾기 이메일 폼 생성
-     * @param userId
-     * @param email 수신자 이메일
+     * 비밀번호 변경 링크가 포함된 비밀번호 찾기 템플릿 생성
+     * @param findPasswordDTO
      * @return 이메일 객체 {@link MimeMessage}
      * @throws MessagingException
      */
-    private MimeMessage createFindIdEmailForm(String userId, String email) throws MessagingException {
-        String content = "<br><br>" +
-                "안녕하세요. TripTune 팀입니다.<br><br>" +
-                "회원님께서 조회하신 아이디는 다음과 같습니다.<br><br>" +
-                "<div style=\"background-color:#F2F2F2; padding:30px;  height:20px; width:60%; text-align:center;\">" +
-                "아이디 :&emsp;&emsp;<b>" + userId + "</b>" +
-                "</div>" +
-                "<br><br>" +
-                "이용해 주셔서 감사합니다." +
-                "<br><br>";
+    private MimeMessage findPasswordEmailTemplate(FindDTO.FindPassword findPasswordDTO) throws MessagingException {
+        String userId = findPasswordDTO.getUserId();
+        String passwordToken = jwtUtil.createPasswordToken(userId);
 
+        findPasswordURL += passwordToken;
         MimeMessage message = javaMailSender.createMimeMessage();
-        message.addRecipients(MimeMessage.RecipientType.TO, email);
-        message.setSubject("[TripTune] 요청하신 아이디 정보 안내드립니다.");
-        message.setFrom(senderEmail);
-        message.setText(content, "utf-8", "html");
+        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+        helper.setSubject("[TripTune] 비밀번호 재설정을 위한 안내 메일입니다.");
+        helper.setTo(findPasswordDTO.getEmail());
+        helper.setCc(senderEmail);
+
+        HashMap<String, String> emailValues = new HashMap<>();
+        emailValues.put("findPasswordURL", findPasswordURL);
+
+        Context context = new Context();
+        emailValues.forEach((key, value) -> {
+            context.setVariable(key, value);
+        });
+
+        String passwordMailHTML = templateEngine.process("passwordMail", context);
+        helper.setText(passwordMailHTML, true);
+
+        helper.addInline("image", new ClassPathResource("static/images/logo-removebg.png"));
+
+        // 유효기간 1시간
+        redisUtil.setDataExpire(passwordToken, findPasswordDTO.getEmail(), 3600);
 
         return message;
     }

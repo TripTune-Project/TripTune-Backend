@@ -1,5 +1,6 @@
 package com.triptune.global.util;
 
+import com.triptune.domain.member.dto.FindDTO;
 import com.triptune.global.exception.CustomJwtException;
 import com.triptune.global.exception.ErrorCode;
 import com.triptune.global.service.CustomUserDetailsService;
@@ -26,6 +27,9 @@ public class JwtUtil {
 
     @Value("${spring.jwt.token.refresh-expiration-time}")
     private long refreshExpirationTime;
+
+    @Value("${spring.jwt.token.password-expiration-time}")
+    private long passwordExpirationTime;
 
     private final Key key;
     private final CustomUserDetailsService userDetailsService;
@@ -148,6 +152,26 @@ public class JwtUtil {
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
     }
+
+    /**
+     * 비밀번호 찾기애 사용할 토큰 생성
+     * @param userId
+     * @return Password Token
+     */
+    public String createPasswordToken(String userId){
+        Claims claims = Jwts.claims().setSubject(userId);
+        Date now = new Date();
+        Date expireDate = new Date(now.getTime() + passwordExpirationTime);
+
+        return Jwts.builder()
+                .setClaims(claims)
+                .setIssuedAt(now)
+                .setExpiration(expireDate)
+                .signWith(key, SignatureAlgorithm.HS256)
+                .compact();
+    }
+
+
 
     /**
      * Token 의 유효기간 추출
