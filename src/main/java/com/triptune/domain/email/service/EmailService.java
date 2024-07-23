@@ -20,7 +20,6 @@ import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
-import java.io.File;
 import java.util.HashMap;
 import java.util.Random;
 
@@ -36,11 +35,14 @@ public class EmailService {
     private final JwtUtil jwtUtil;
     private final TemplateEngine templateEngine;
 
+    private final String IMAGE_FOLDER_PATH = "static/images/";
+
     @Value("${spring.mail.username}")
     private String senderEmail;
 
     @Value("${app.frontend.find-password.url}")
     private String findPasswordURL;
+
 
     /**
      * 회원가입 인증번호 증명
@@ -74,7 +76,7 @@ public class EmailService {
         }
 
         // 이메일 폼 생성
-        MimeMessage emailForm = createCertificationEmailForm(email);
+        MimeMessage emailForm = certificationEmailTemplate(email);
 
         // 이메일 발송
         log.info("certification number email sent completed");
@@ -101,26 +103,28 @@ public class EmailService {
      * @return 이메일 객체 {@link MimeMessage}
      * @throws MessagingException
      */
-    private MimeMessage createCertificationEmailForm(String email) throws MessagingException {
+    private MimeMessage certificationEmailTemplate(String email) throws MessagingException {
         String authCode = createCode();
 
-        String content = "<br>" +
-                "안녕하세요. TripTune 팀입니다.<br><br>" +
-                "이메일 인증 절차에 따라 인증 번호를 발급해드립니다.<br>" +
-                "아래의 인증 번호를 확인란에 입력해 인증을 완료해 주시기 바랍니다.<br><br>" +
-                "<div style=\"background-color:#F2F2F2; padding:30px; width:80%; text-align:center;\">" +
-                "<div>인증번호 :&emsp;<b>" + authCode + "</b></div>" +
-                "<div style=\"font-size:3%; margin-top:3%; color:#FE2E2E;\">인증번호는 발송된 시점부터 5분간만 유효합니다.</div>" +
-                "</div>" +
-                "<br><br>" +
-                "이용해 주셔서 감사합니다.<br><br>";
-
         MimeMessage message = javaMailSender.createMimeMessage();
-        // 수신자 메일 주소 설정
-        message.addRecipients(MimeMessage.RecipientType.TO, email);
-        message.setSubject("[TripTune] 이메일 인증 코드가 발급되었습니다.");
-        message.setFrom(senderEmail);
-        message.setText(content, "utf-8", "html");
+        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+        helper.setSubject("[TripTune] 이메일 인증 코드가 발급되었습니다.");
+        helper.setTo(email);
+        helper.setCc(senderEmail);
+
+        HashMap<String, String> emailValues = new HashMap<>();
+        emailValues.put("authCode", authCode);
+
+        Context context = new Context();
+        emailValues.forEach((key, value) -> {
+            context.setVariable(key, value);
+        });
+
+        String certificationMailHTML = templateEngine.process("certificationMail", context);
+
+        helper.setText(certificationMailHTML, true);
+        helper.addInline("image", new ClassPathResource(IMAGE_FOLDER_PATH + "logo-removebg.png"));
 
         // 유효기간 3분
         redisUtil.setDataExpire(email, authCode, 300);
