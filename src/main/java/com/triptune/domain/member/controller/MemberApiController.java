@@ -1,10 +1,9 @@
 package com.triptune.domain.member.controller;
 
-import com.triptune.domain.email.dto.EmailDTO;
 import com.triptune.domain.member.dto.*;
 import com.triptune.global.exception.ErrorCode;
 import com.triptune.global.response.ApiResponse;
-import com.triptune.domain.member.exception.IncorrectPasswordException;
+import com.triptune.domain.member.exception.FailLoginException;
 import com.triptune.domain.member.service.MemberService;
 import com.triptune.global.service.CustomUserDetails;
 import com.triptune.global.util.JwtUtil;
@@ -17,9 +16,6 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.support.JstlUtils;
-
-import javax.security.auth.RefreshFailedException;
 
 
 @RestController
@@ -36,7 +32,7 @@ public class MemberApiController {
     @Operation(summary = "회원가입", description = "회원가입을 요청합니다.")
     public ApiResponse<?> join(@Valid @RequestBody MemberDTO.Request memberDTO){
         if(!memberDTO.getPassword().equals(memberDTO.getRepassword())){
-            throw new IncorrectPasswordException(ErrorCode.INCORRECT_PASSWORD_REPASSWORD);
+            throw new FailLoginException(ErrorCode.INCORRECT_PASSWORD_REPASSWORD);
         }
 
         memberService.join(memberDTO);
@@ -88,7 +84,7 @@ public class MemberApiController {
     @Operation(summary = "비밀번호 변경", description = "비밀번호를 변경합니다.")
     public ApiResponse<?> changePassword(@RequestBody PasswordDTO passwordDTO){
         if(!passwordDTO.getPassword().equals(passwordDTO.getRepassword())){
-            throw new IncorrectPasswordException(ErrorCode.INCORRECT_PASSWORD_REPASSWORD);
+            throw new FailLoginException(ErrorCode.INCORRECT_PASSWORD_REPASSWORD);
         }
 
         memberService.changePassword(passwordDTO);

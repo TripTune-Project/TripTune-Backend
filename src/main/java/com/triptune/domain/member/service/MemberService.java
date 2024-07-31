@@ -6,6 +6,7 @@ import com.triptune.domain.member.entity.Member;
 import com.triptune.domain.member.exception.CustomUsernameNotFoundException;
 import com.triptune.domain.member.exception.DataExistException;
 import com.triptune.domain.member.exception.ChangePasswordException;
+import com.triptune.domain.member.exception.FailLoginException;
 import com.triptune.domain.member.repository.MemberRepository;
 import com.triptune.global.exception.CustomJwtException;
 import com.triptune.global.exception.ErrorCode;
@@ -60,10 +61,10 @@ public class MemberService {
 
     public LoginDTO.Response login(LoginDTO.Request loginDTO) {
         Member member = memberRepository.findByUserId(loginDTO.getUserId())
-                .orElseThrow(() -> new CustomUsernameNotFoundException(ErrorCode.FAILED_LOGIN));
+                .orElseThrow(() -> new FailLoginException(ErrorCode.FAILED_LOGIN));
 
         if (!passwordEncoder.matches(loginDTO.getPassword(), member.getPassword())) {
-            throw new CustomUsernameNotFoundException(ErrorCode.FAILED_LOGIN);
+            throw new FailLoginException(ErrorCode.FAILED_LOGIN);
         }
 
         String accessToken = jwtUtil.createAccessToken(loginDTO.getUserId());
