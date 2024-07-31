@@ -2,7 +2,7 @@ package com.triptune.domain.member.exception.handler;
 
 import com.triptune.domain.member.exception.CustomUsernameNotFoundException;
 import com.triptune.domain.member.exception.DataExistException;
-import com.triptune.domain.member.exception.IncorrectPasswordException;
+import com.triptune.domain.member.exception.FailLoginException;
 import com.triptune.domain.member.exception.ChangePasswordException;
 import com.triptune.global.response.ErrorResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -28,8 +28,8 @@ public class MemberExceptionHandler {
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponse handleIncorrectPasswordException(IncorrectPasswordException ex){
-        log.error("IncorrectPasswordException : {}", ex.getMessage());
+    public ErrorResponse handleFailLoginException(FailLoginException ex){
+        log.error("FailLoginException : {}", ex.getMessage());
 
         return ErrorResponse.builder()
                 .errorCode(ex.getHttpStatus().value())
