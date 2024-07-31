@@ -38,6 +38,7 @@ public class MemberExceptionHandler {
     }
 
     @ExceptionHandler
+    @ResponseStatus(HttpStatus.NOT_FOUND)
     public ErrorResponse handleCustomUsernameNotFoundException(CustomUsernameNotFoundException ex){
         log.error("CustomUsernameNotFoundException : {}", ex.getMessage());
 

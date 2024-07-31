@@ -40,8 +40,8 @@ public class EmailService {
     @Value("${spring.mail.username}")
     private String senderEmail;
 
-    @Value("${app.frontend.find-password.url}")
-    private String findPasswordURL;
+    @Value("${app.frontend.change-password.url}")
+    private String passwordURL;
 
 
     /**
@@ -140,10 +140,9 @@ public class EmailService {
      * @throws MessagingException
      */
     private MimeMessage findPasswordEmailTemplate(FindDTO.FindPassword findPasswordDTO) throws MessagingException {
-        String userId = findPasswordDTO.getUserId();
-        String passwordToken = jwtUtil.createPasswordToken(userId);
+        String passwordToken = jwtUtil.createPasswordToken(findPasswordDTO.getUserId());
+        String changePasswordURL = passwordURL + passwordToken;
 
-        findPasswordURL += passwordToken;
         MimeMessage message = javaMailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
@@ -152,7 +151,7 @@ public class EmailService {
         helper.setCc(senderEmail);
 
         HashMap<String, String> emailValues = new HashMap<>();
-        emailValues.put("findPasswordURL", findPasswordURL);
+        emailValues.put("changePasswordURL", changePasswordURL);
 
         Context context = new Context();
         emailValues.forEach((key, value) -> {
@@ -162,7 +161,7 @@ public class EmailService {
         String passwordMailHTML = templateEngine.process("passwordMail", context);
         helper.setText(passwordMailHTML, true);
 
-        helper.addInline("image", new ClassPathResource("static/images/logo-removebg.png"));
+        helper.addInline("image", new ClassPathResource(IMAGE_FOLDER_PATH + "logo-removebg.png"));
 
         // 유효기간 1시간
         redisUtil.setDataExpire(passwordToken, findPasswordDTO.getEmail(), 3600);
