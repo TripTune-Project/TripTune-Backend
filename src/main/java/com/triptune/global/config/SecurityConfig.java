@@ -3,13 +3,11 @@ package com.triptune.global.config;
 import com.triptune.global.exception.CustomAccessDeniedHandler;
 import com.triptune.global.exception.CustomAuthenticationEntryPoint;
 import com.triptune.global.filter.JwtAuthFilter;
-import com.triptune.global.service.CustomUserDetailsService;
 import com.triptune.global.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
-import org.springframework.boot.autoconfigure.web.servlet.error.BasicErrorController;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.Customizer;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -28,17 +26,20 @@ public class SecurityConfig {
     private static final String[] AUTH_WHITELIST = {
             "/swagger-ui/**", "/v3/api-docs/**", "/api/members/join", "/api/members/login", "/api/members/logout",
             "/api/members/refresh", "/api/members/find-id", "/api/members/find-password", "/api/members/change-password",
-            "/api/emails/**", "/error"
+            "/api/emails/**"
     };
+
+
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .formLogin(AbstractHttpConfigurer::disable)
-                .httpBasic(Customizer.withDefaults())
+                .httpBasic(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authz -> authz
                         .requestMatchers(AUTH_WHITELIST).permitAll()
+                        .requestMatchers(HttpMethod.GET).permitAll()
                         .anyRequest().authenticated()
                 )
                 // jwt 이용하기 위해서 세션 관리 상태 없음으로 구성
