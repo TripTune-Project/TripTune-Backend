@@ -1,10 +1,13 @@
 package com.triptune.domain.common.entity;
 
+import com.triptune.domain.travel.entity.TravelPlace;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
+import java.util.List;
 
 @Entity
 @Getter
@@ -27,11 +30,17 @@ public class District {
     @Column(name = "api_sigungu_code")
     private Integer apiSigunguCode;
 
+    @OneToMany(mappedBy = "district", orphanRemoval = true)
+    private List<TravelPlace> travelPlaceList;
+
+
     @Builder
-    public District(Long districtId, City city, String districtName, Integer apiSigunguCode) {
+
+    public District(Long districtId, City city, String districtName, Integer apiSigunguCode, List<TravelPlace> travelPlaceList) {
         this.districtId = districtId;
         this.city = city;
         this.districtName = districtName;
         this.apiSigunguCode = apiSigunguCode;
+        this.travelPlaceList = travelPlaceList;
     }
 }

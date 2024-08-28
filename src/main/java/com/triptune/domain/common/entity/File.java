@@ -1,5 +1,6 @@
 package com.triptune.domain.common.entity;
 
+import com.triptune.domain.travel.entity.TravelImageFile;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
@@ -7,12 +8,13 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Getter
 @Setter
 @NoArgsConstructor
-public class Files {
+public class File {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -32,19 +34,22 @@ public class Files {
     private String fileType;
 
     @Column(name = "file_size")
-    private Double fileSize;
+    private double fileSize;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
     @Column(name = "is_thumbnail")
-    private Integer isThumbnail;
+    private boolean isThumbnail;
 
     @Column(name = "api_file_url")
     private String apiFileUrl;
 
+    @OneToMany(mappedBy = "file", orphanRemoval = true)
+    private List<TravelImageFile> travelImageFileList;
+
     @Builder
-    public Files(Long fileId, String s3ObjectUrl, String originalName, String fileName, String fileType, Double fileSize, LocalDateTime createdAt, Integer isThumbnail, String apiFileUrl) {
+    public File(Long fileId, String s3ObjectUrl, String originalName, String fileName, String fileType, double fileSize, LocalDateTime createdAt, boolean isThumbnail, String apiFileUrl, List<TravelImageFile> travelImageFileList) {
         this.fileId = fileId;
         this.s3ObjectUrl = s3ObjectUrl;
         this.originalName = originalName;
@@ -54,5 +59,16 @@ public class Files {
         this.createdAt = createdAt;
         this.isThumbnail = isThumbnail;
         this.apiFileUrl = apiFileUrl;
+        this.travelImageFileList = travelImageFileList;
+    }
+
+    public static String getThumbnailUrl(List<TravelImageFile> imageFile){
+        return imageFile.stream()
+                .map(TravelImageFile::getFile)
+                .filter(File::isThumbnail)
+                .map(File::getS3ObjectUrl)
+                .findFirst()
+                .orElse(null);
+
     }
 }

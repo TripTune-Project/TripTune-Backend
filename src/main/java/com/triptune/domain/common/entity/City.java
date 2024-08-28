@@ -1,5 +1,6 @@
 package com.triptune.domain.common.entity;
 
+import com.triptune.domain.travel.entity.TravelPlace;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
@@ -23,14 +24,26 @@ public class City {
     @JoinColumn(name = "country_id")
     private Country country;
 
+    @Column(name = "city_name")
+    private String cityName;
+
+    @Column(name = "api_area_code")
+    private Integer apiAreaCode;
+
     @OneToMany(mappedBy = "city", orphanRemoval = true)
     private List<District> districtList;
 
+    @OneToMany(mappedBy = "city", orphanRemoval = true)
+    private List<TravelPlace> travelPlaceList;
+
 
     @Builder
-    public City(Long cityId, Country country, List<District> districtList) {
+    public City(Long cityId, Country country, String cityName, Integer apiAreaCode, List<District> districtList, List<TravelPlace> travelPlaceList) {
         this.cityId = cityId;
         this.country = country;
+        this.cityName = cityName;
+        this.apiAreaCode = apiAreaCode;
         this.districtList = districtList;
+        this.travelPlaceList = travelPlaceList;
     }
 }
