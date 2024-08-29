@@ -1,8 +1,9 @@
 package com.triptune.domain.email.controller;
 
+import com.triptune.domain.email.dto.VerifyAuthRequest;
+import com.triptune.domain.email.dto.VerifyEmailRequest;
 import com.triptune.global.exception.ErrorCode;
 import com.triptune.global.response.ApiResponse;
-import com.triptune.domain.email.dto.EmailDTO;
 import com.triptune.domain.email.exception.EmailVerifyException;
 import com.triptune.domain.email.service.EmailService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -27,16 +28,16 @@ public class EmailApiController {
 
     @PostMapping("/verify-request")
     @Operation(summary = "이메일 인증 요청", description = "이메일 인증을 요청합니다.")
-    public ApiResponse<?> verifyRequest(@Valid @RequestBody EmailDTO.VerifyRequest emailDTO) throws MessagingException {
-        emailService.verifyRequest(emailDTO.getEmail());
+    public ApiResponse<?> verifyRequest(@Valid @RequestBody VerifyEmailRequest verifyEmailRequest) throws MessagingException {
+        emailService.verifyRequest(verifyEmailRequest.getEmail());
 
         return ApiResponse.okResponse();
     }
 
     @PostMapping("/verify")
     @Operation(summary = "이메일 인증 번호 검증", description = "발급된 이메일 인증 번호를 검증합니다.")
-    public ApiResponse<?> verify(@Valid @RequestBody EmailDTO.Verify emailDTO) {
-        boolean isVerify = emailService.verify(emailDTO);
+    public ApiResponse<?> verify(@Valid @RequestBody VerifyAuthRequest verifyAuthRequest) {
+        boolean isVerify = emailService.verify(verifyAuthRequest);
 
         if (!isVerify){
             throw new EmailVerifyException(ErrorCode.EMAIL_VERIFY_FAIL);

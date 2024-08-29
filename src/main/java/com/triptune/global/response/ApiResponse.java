@@ -36,7 +36,6 @@ public class ApiResponse<T> extends ResponseEntity<SuccessResponse<T>> {
     }
 
 
-
     public ApiResponse(HttpStatus status) {
         super(status);
     }

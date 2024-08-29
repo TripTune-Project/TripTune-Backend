@@ -1,12 +1,12 @@
 package com.triptune.domain.email.service;
 
-import com.triptune.domain.member.dto.FindDTO;
+import com.triptune.domain.email.dto.VerifyAuthRequest;
+import com.triptune.domain.member.dto.FindPasswordDTO;
 import com.triptune.domain.member.exception.DataExistException;
 import com.triptune.domain.member.repository.MemberRepository;
 import com.triptune.global.exception.ErrorCode;
 import com.triptune.global.util.JwtUtil;
 import com.triptune.global.util.RedisUtil;
-import com.triptune.domain.email.dto.EmailDTO;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.transaction.Transactional;
@@ -46,11 +46,11 @@ public class EmailService {
 
     /**
      * 회원가입 인증번호 증명
-     * @param emailDTO
+     * @param verifyAuthRequest
      * @return 발급된 인증번호랑 사용자 입력이랑 같을 시 true, 다를 경우 false
      */
-    public Boolean verify(EmailDTO.Verify emailDTO){
-        String savedCode = redisUtil.getData(emailDTO.getEmail());
+    public Boolean verify(VerifyAuthRequest verifyAuthRequest){
+        String savedCode = redisUtil.getData(verifyAuthRequest.getEmail());
 
         log.info("code found by email: {}", savedCode);
 
@@ -58,7 +58,7 @@ public class EmailService {
             return false;
         }
 
-        return savedCode.equals(emailDTO.getAuthCode());
+        return savedCode.equals(verifyAuthRequest.getAuthCode());
     }
 
     /**
@@ -89,7 +89,7 @@ public class EmailService {
      * @param findPasswordDTO
      * @throws MessagingException
      */
-    public void findPassword(FindDTO.FindPassword findPasswordDTO) throws MessagingException {
+    public void findPassword(FindPasswordDTO findPasswordDTO) throws MessagingException {
         MimeMessage emailForm = findPasswordEmailTemplate(findPasswordDTO);
 
         log.info("password recovery email sent completed");
@@ -139,7 +139,7 @@ public class EmailService {
      * @return 이메일 객체 {@link MimeMessage}
      * @throws MessagingException
      */
-    private MimeMessage findPasswordEmailTemplate(FindDTO.FindPassword findPasswordDTO) throws MessagingException {
+    private MimeMessage findPasswordEmailTemplate(FindPasswordDTO findPasswordDTO) throws MessagingException {
         String passwordToken = jwtUtil.createPasswordToken(findPasswordDTO.getUserId());
         String changePasswordURL = passwordURL + passwordToken;
 

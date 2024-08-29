@@ -1,6 +1,5 @@
 package com.triptune.global.util;
 
-import com.triptune.domain.member.dto.FindDTO;
 import com.triptune.global.exception.CustomJwtException;
 import com.triptune.global.exception.ErrorCode;
 import com.triptune.global.service.CustomUserDetailsService;

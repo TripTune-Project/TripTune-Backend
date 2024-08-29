@@ -33,25 +33,25 @@ public class MemberService {
     private final JwtUtil jwtUtil;
     private final RedisUtil redisUtil;
 
-    public void join(MemberDTO.Request memberDTO) {
+    public void join(MemberRequest memberRequest) {
 
-        if(memberRepository.existsByUserId(memberDTO.getUserId())){
+        if(memberRepository.existsByUserId(memberRequest.getUserId())){
             throw new DataExistException(ErrorCode.ALREADY_EXISTED_USERID);
         }
 
-        if(memberRepository.existsByNickname(memberDTO.getNickname())){
+        if(memberRepository.existsByNickname(memberRequest.getNickname())){
             throw new DataExistException(ErrorCode.ALREADY_EXISTED_NICKNAME);
         }
 
-        if(memberRepository.existsByEmail(memberDTO.getEmail())){
+        if(memberRepository.existsByEmail(memberRequest.getEmail())){
             throw new DataExistException(ErrorCode.ALREADY_EXISTED_EMAIL);
         }
 
         Member member = Member.builder()
-                .userId(memberDTO.getUserId())
-                .password(passwordEncoder.encode(memberDTO.getPassword()))
-                .nickname(memberDTO.getNickname())
-                .email(memberDTO.getEmail())
+                .userId(memberRequest.getUserId())
+                .password(passwordEncoder.encode(memberRequest.getPassword()))
+                .nickname(memberRequest.getNickname())
+                .email(memberRequest.getEmail())
                 .isSocialLogin(false)
                 .createdAt(LocalDateTime.now())
                 .build();
@@ -59,20 +59,20 @@ public class MemberService {
         memberRepository.save(member);
     }
 
-    public LoginDTO.Response login(LoginDTO.Request loginDTO) {
-        Member member = memberRepository.findByUserId(loginDTO.getUserId())
+    public LoginResponse login(LoginRequest loginRequest) {
+        Member member = memberRepository.findByUserId(loginRequest.getUserId())
                 .orElseThrow(() -> new FailLoginException(ErrorCode.FAILED_LOGIN));
 
-        if (!passwordEncoder.matches(loginDTO.getPassword(), member.getPassword())) {
+        if (!passwordEncoder.matches(loginRequest.getPassword(), member.getPassword())) {
             throw new FailLoginException(ErrorCode.FAILED_LOGIN);
         }
 
-        String accessToken = jwtUtil.createAccessToken(loginDTO.getUserId());
-        String refreshToken = jwtUtil.createRefreshToken(loginDTO.getUserId());
+        String accessToken = jwtUtil.createAccessToken(loginRequest.getUserId());
+        String refreshToken = jwtUtil.createRefreshToken(loginRequest.getUserId());
 
         member.setRefreshToken(refreshToken);
 
-        return LoginDTO.Response.builder()
+        return LoginResponse.builder()
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
                 .userId(member.getUserId())
@@ -87,7 +87,6 @@ public class MemberService {
 
     public TokenDTO refreshToken(TokenDTO tokenDTO) throws ExpiredJwtException {
         String refreshToken = tokenDTO.getRefreshToken();
-
         jwtUtil.validateToken(refreshToken);
 
         Claims claims = jwtUtil.parseClaims(refreshToken);
@@ -106,15 +105,17 @@ public class MemberService {
 
     /**
      * 이메일 주소로 회원 정보 찾아서 아이디 반환
-     * @param  findIdDTO
-     * @return 사용자 정보 객체 {@link MemberDTO.Response}
+     * @param  findIdRequest
+     * @return 사용자 정보 객체 {@link MemberResponse}
      * @throws CustomUsernameNotFoundException 이메일로 회원 정보를 찾기 못한 경우
      */
-    public MemberDTO.Response findId(FindDTO.FindId findIdDTO) {
-        Member member = memberRepository.findByEmail(findIdDTO.getEmail())
+    public FindIdResponse findId(FindIdRequest findIdRequest) {
+        Member member = memberRepository.findByEmail(findIdRequest.getEmail())
                 .orElseThrow(() -> new CustomUsernameNotFoundException(ErrorCode.NOT_FOUND_USER));
 
-        return MemberDTO.Response.of(member.getUserId());
+        return FindIdResponse.builder()
+                .userId(member.getUserId())
+                .build();
     }
 
 
@@ -123,7 +124,7 @@ public class MemberService {
      * @param findPasswordDTO
      * @throws MessagingException
      */
-    public void findPassword(FindDTO.FindPassword findPasswordDTO) throws MessagingException {
+    public void findPassword(FindPasswordDTO findPasswordDTO) throws MessagingException {
         Member member = memberRepository.findByEmail(findPasswordDTO.getEmail())
                 .orElseThrow(() -> new CustomUsernameNotFoundException(ErrorCode.NOT_FOUND_USER));
 
@@ -135,8 +136,8 @@ public class MemberService {
     }
 
 
-    public void changePassword(PasswordDTO passwordDTO) {
-        String email = redisUtil.getData(passwordDTO.getPasswordToken());
+    public void changePassword(ChangePasswordDTO changePasswordDTO) {
+        String email = redisUtil.getData(changePasswordDTO.getPasswordToken());
 
         if (email == null) {
             throw new ChangePasswordException(ErrorCode.INVALID_CHANGE_PASSWORD);
@@ -145,6 +146,6 @@ public class MemberService {
         Member member = memberRepository.findByEmail(email)
                 .orElseThrow(() -> new CustomUsernameNotFoundException(ErrorCode.NOT_FOUND_USER));
 
-        member.setPassword(passwordEncoder.encode(passwordDTO.getPassword()));
+        member.setPassword(passwordEncoder.encode(changePasswordDTO.getPassword()));
     }
 }

@@ -30,20 +30,20 @@ public class MemberApiController {
 
     @PostMapping("/join")
     @Operation(summary = "회원가입", description = "회원가입을 요청합니다.")
-    public ApiResponse<?> join(@Valid @RequestBody MemberDTO.Request memberDTO){
-        if(!memberDTO.getPassword().equals(memberDTO.getRepassword())){
+    public ApiResponse<?> join(@Valid @RequestBody MemberRequest memberRequest){
+        if(!memberRequest.getPassword().equals(memberRequest.getRepassword())){
             throw new FailLoginException(ErrorCode.INCORRECT_PASSWORD_REPASSWORD);
         }
 
-        memberService.join(memberDTO);
+        memberService.join(memberRequest);
 
         return ApiResponse.okResponse();
     }
 
     @PostMapping("/login")
     @Operation(summary = "로그인", description = "로그인을 실행합니다.")
-    public ApiResponse<LoginDTO.Response> login(@Valid @RequestBody LoginDTO.Request loginDTO){
-        LoginDTO.Response response = memberService.login(loginDTO);
+    public ApiResponse<LoginResponse> login(@Valid @RequestBody LoginRequest loginRequest){
+        LoginResponse response = memberService.login(loginRequest);
         return ApiResponse.dataResponse(response);
     }
 
@@ -68,26 +68,26 @@ public class MemberApiController {
 
     @PostMapping("/find-id")
     @Operation(summary = "아이디 찾기", description = "아이디 찾기를 실행합니다.")
-    public ApiResponse<MemberDTO.Response> findId(@RequestBody FindDTO.FindId findIdDTO) {
-        MemberDTO.Response response = memberService.findId(findIdDTO);
+    public ApiResponse<FindIdResponse> findId(@RequestBody FindIdRequest findIdRequest) {
+        FindIdResponse response = memberService.findId(findIdRequest);
         return ApiResponse.dataResponse(response);
     }
 
     @PostMapping("/find-password")
     @Operation(summary = "비밀번호 찾기", description = "비밀번호 찾기를 요청합니다. 비밀번호 변경 화면으로 연결되는 링크가 이메일을 통해서 제공됩니다.")
-    public ApiResponse<?> findPassword(@RequestBody FindDTO.FindPassword findPasswordDTO) throws MessagingException {
+    public ApiResponse<?> findPassword(@RequestBody FindPasswordDTO findPasswordDTO) throws MessagingException {
         memberService.findPassword(findPasswordDTO);
         return ApiResponse.okResponse();
     }
 
     @PatchMapping("/change-password")
     @Operation(summary = "비밀번호 변경", description = "비밀번호를 변경합니다.")
-    public ApiResponse<?> changePassword(@RequestBody PasswordDTO passwordDTO){
-        if(!passwordDTO.getPassword().equals(passwordDTO.getRepassword())){
+    public ApiResponse<?> changePassword(@RequestBody ChangePasswordDTO changePasswordDTO){
+        if(!changePasswordDTO.getPassword().equals(changePasswordDTO.getRepassword())){
             throw new FailLoginException(ErrorCode.INCORRECT_PASSWORD_REPASSWORD);
         }
 
-        memberService.changePassword(passwordDTO);
+        memberService.changePassword(changePasswordDTO);
         return ApiResponse.okResponse();
     }
 
