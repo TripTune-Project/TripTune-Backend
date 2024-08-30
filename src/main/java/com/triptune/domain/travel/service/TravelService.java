@@ -17,8 +17,10 @@ public class TravelService {
 
     private final TravelRepository travelRepository;
 
-    public Page<TravelResponse> travelPlaceList(TravelLocationRequest travelLocationRequest, Pageable pageable) {
-        Page<TravelResponse> travelPlaceList = travelRepository.findAllByCountryCountryNameAndCityCityNameAndDistrictDistrictName(pageable, "대한민국", "서울", "중구")
+    public Page<TravelResponse> findNearByTravelPlaceList(TravelLocationRequest travelLocationRequest, int page) {
+        Pageable pageable = PageRequest.of(page - 1, 5);
+
+        Page<TravelResponse> travelPlaceList = travelRepository.findAllByAreaData(pageable, "대한민국", "서울", "중구")
                 .map(TravelResponse::fromEntity);
 
         return travelPlaceList;
