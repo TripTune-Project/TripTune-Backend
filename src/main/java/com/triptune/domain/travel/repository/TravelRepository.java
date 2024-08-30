@@ -10,6 +10,5 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface TravelRepository extends JpaRepository<TravelPlace, Long> {
-    Page<TravelPlace> findAllByCountryCountryNameAndCityCityNameAndDistrictDistrictName(Pageable pageable, String countryName, String cityName, String districtName);
+public interface TravelRepository extends JpaRepository<TravelPlace, Long>, TravelCustomRepository {
 }
