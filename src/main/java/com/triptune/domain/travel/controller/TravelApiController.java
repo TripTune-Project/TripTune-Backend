@@ -19,10 +19,11 @@ public class TravelApiController {
     private final TravelService travelService;
 
     @PostMapping("/list")
-    @Operation(summary = "현재 위치와 가까운 여행지 목록 조회", description = "여행지 탐색 메뉴에서 사용자 현재 위치와 가까운 여행지 목록을 제공한다.")
+    @Operation(summary = "현재 위치와 가까운 여행지 목록 제공", description = "여행지 탐색 메뉴에서 사용자 현재 위치와 가까운 여행지 목록을 제공한다.")
     public ApiPageResponse<TravelResponse> findNearByTravelPlaceList(@RequestBody TravelLocationRequest travelLocationRequest, @RequestParam int page){
         Page<TravelResponse> response = travelService.findNearByTravelPlaceList(travelLocationRequest, page);
         return ApiPageResponse.okResponse(response);
     }
+
 
 }
