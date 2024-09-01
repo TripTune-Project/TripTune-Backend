@@ -20,7 +20,7 @@ public class PageResponse<T> {
     @Builder
     public PageResponse(int totalPages, int currentPage, long totalElements, int pageSize, List<T> content) {
         this.totalPages = totalPages;
-        this.currentPage = currentPage;
+        this.currentPage = currentPage + 1;
         this.totalElements = totalElements;
         this.pageSize = pageSize;
         this.content = content;

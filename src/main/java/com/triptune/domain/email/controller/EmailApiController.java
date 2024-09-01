@@ -2,7 +2,7 @@ package com.triptune.domain.email.controller;
 
 import com.triptune.domain.email.dto.VerifyAuthRequest;
 import com.triptune.domain.email.dto.VerifyEmailRequest;
-import com.triptune.global.exception.ErrorCode;
+import com.triptune.global.enumclass.ErrorCode;
 import com.triptune.global.response.ApiResponse;
 import com.triptune.domain.email.exception.EmailVerifyException;
 import com.triptune.domain.email.service.EmailService;

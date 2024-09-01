@@ -9,7 +9,7 @@ import com.triptune.domain.member.exception.ChangePasswordException;
 import com.triptune.domain.member.exception.FailLoginException;
 import com.triptune.domain.member.repository.MemberRepository;
 import com.triptune.global.exception.CustomJwtException;
-import com.triptune.global.exception.ErrorCode;
+import com.triptune.global.enumclass.ErrorCode;
 import com.triptune.global.util.JwtUtil;
 import com.triptune.global.util.RedisUtil;
 import io.jsonwebtoken.Claims;

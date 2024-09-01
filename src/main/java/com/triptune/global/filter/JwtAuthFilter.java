@@ -2,10 +2,8 @@ package com.triptune.global.filter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.triptune.global.exception.CustomJwtException;
-import com.triptune.global.exception.ErrorCode;
 import com.triptune.global.response.ErrorResponse;
 import com.triptune.global.util.JwtUtil;
-import io.jsonwebtoken.*;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -14,10 +12,14 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.util.Arrays;
+
+import static com.triptune.global.config.SecurityConstants.AUTH_WHITELIST;
 
 /**
  * JWT 가 유효성을 검증하는 Filter
@@ -25,19 +27,20 @@ import java.nio.charset.Charset;
 @RequiredArgsConstructor
 public class JwtAuthFilter extends OncePerRequestFilter {
 
-    private static final String LOGOUT_PATH = "/api/members/logout";
     private final JwtUtil jwtUtil;
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
         String requestURI = request.getRequestURI();
 
-        // logout 요청일 경우 filter 통과
-        if(requestURI.equals(LOGOUT_PATH)){
-            filterChain.doFilter(request, response);
-            return;
-        }
+        return Arrays.stream(AUTH_WHITELIST).anyMatch(pattern -> {
+            AntPathMatcher matcher = new AntPathMatcher();
+            return matcher.match(pattern, requestURI);
+        });
+    }
 
+    @Override
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         String token = jwtUtil.resolveToken(request);
 
         try{

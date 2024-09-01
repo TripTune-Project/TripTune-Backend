@@ -1,8 +1,5 @@
-package com.triptune.global.exception;
+package com.triptune.global.enumclass;
 
-import io.jsonwebtoken.ExpiredJwtException;
-import io.jsonwebtoken.MalformedJwtException;
-import io.jsonwebtoken.UnsupportedJwtException;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.springframework.http.HttpStatus;
@@ -33,7 +30,11 @@ public enum ErrorCode {
     EXPIRED_JWT_TOKEN(HttpStatus.UNAUTHORIZED, "JWT 토큰이 만료되었습니다."),
     INVALID_JWT_SIGNATURE(HttpStatus.UNAUTHORIZED, "JWT 서명 검증을 실패했습니다."),
     MISMATCH_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "DB에 저장된 refresh token과 일치하지 않습니다. 다시 로그인해주세요."),
-    BLACKLIST_TOKEN(HttpStatus.UNAUTHORIZED, "로그아웃 된 사용자입니다. 로그인 후 이용해주세요.");
+    BLACKLIST_TOKEN(HttpStatus.UNAUTHORIZED, "로그아웃 된 사용자입니다. 로그인 후 이용해주세요."),
+
+    // 여행지 탐색
+    NO_SEARCH_RESULTS_FOUND(HttpStatus.NOT_FOUND, "검색 결과가 존재하지 않습니다.");
+
 
     private final HttpStatus status;
     private final String message;

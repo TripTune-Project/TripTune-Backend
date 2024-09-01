@@ -37,7 +37,7 @@ public class TravelResponse {
     }
 
 
-    public static TravelResponse fromEntity(TravelPlace travelPlace){
+    public static TravelResponse entityToDto(TravelPlace travelPlace){
         String thumbnailUrl = File.getThumbnailUrl(travelPlace.getTravelImageFileList());
 
         return TravelResponse.builder()
@@ -56,7 +56,7 @@ public class TravelResponse {
 
     public static List<TravelResponse> entityListToDtoList(List<TravelPlace> travelPlaceList){
         return travelPlaceList.stream()
-                .map(TravelResponse::fromEntity)
+                .map(TravelResponse::entityToDto)
                 .collect(Collectors.toList());
     }
 

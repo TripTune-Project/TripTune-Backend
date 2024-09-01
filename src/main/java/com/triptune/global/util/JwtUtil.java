@@ -1,7 +1,7 @@
 package com.triptune.global.util;
 
 import com.triptune.global.exception.CustomJwtException;
-import com.triptune.global.exception.ErrorCode;
+import com.triptune.global.enumclass.ErrorCode;
 import com.triptune.global.service.CustomUserDetailsService;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
