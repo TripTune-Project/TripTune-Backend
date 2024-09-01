@@ -3,7 +3,7 @@ package com.triptune.global.service;
 import com.triptune.domain.member.entity.Member;
 import com.triptune.domain.member.exception.CustomUsernameNotFoundException;
 import com.triptune.domain.member.repository.MemberRepository;
-import com.triptune.global.exception.ErrorCode;
+import com.triptune.global.enumclass.ErrorCode;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;

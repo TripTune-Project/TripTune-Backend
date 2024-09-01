@@ -1,7 +1,7 @@
 package com.triptune.domain.member.controller;
 
 import com.triptune.domain.member.dto.*;
-import com.triptune.global.exception.ErrorCode;
+import com.triptune.global.enumclass.ErrorCode;
 import com.triptune.global.response.ApiResponse;
 import com.triptune.domain.member.exception.FailLoginException;
 import com.triptune.domain.member.service.MemberService;

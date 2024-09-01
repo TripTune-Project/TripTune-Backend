@@ -15,6 +15,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+import static com.triptune.global.config.SecurityConstants.AUTH_WHITELIST;
+
 @RequiredArgsConstructor
 @Configuration
 public class SecurityConfig {
@@ -22,13 +24,6 @@ public class SecurityConfig {
     private final JwtUtil jwtUtil;
     private final CustomAccessDeniedHandler customAccessDeniedHandler;
     private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
-
-    private static final String[] AUTH_WHITELIST = {
-            "/swagger-ui/**", "/v3/api-docs/**", "/api/members/join", "/api/members/login", "/api/members/logout",
-            "/api/members/refresh", "/api/members/find-id", "/api/members/find-password", "/api/members/change-password",
-            "/api/emails/**"
-    };
-
 
 
     @Bean
@@ -39,7 +34,7 @@ public class SecurityConfig {
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authz -> authz
                         .requestMatchers(AUTH_WHITELIST).permitAll()
-                        .requestMatchers(HttpMethod.GET).permitAll()
+//                        .requestMatchers(HttpMethod.GET).permitAll()
                         .anyRequest().authenticated()
                 )
                 // jwt 이용하기 위해서 세션 관리 상태 없음으로 구성
@@ -59,4 +54,5 @@ public class SecurityConfig {
     public BCryptPasswordEncoder encoder(){
         return new BCryptPasswordEncoder();
     }
+
 }
