@@ -1,7 +1,6 @@
 package com.triptune.domain.travel.repository;
 
 import com.querydsl.core.types.dsl.BooleanExpression;
-import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.core.types.dsl.NumberExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.triptune.domain.travel.dto.TravelLocationRequest;
@@ -82,6 +81,34 @@ public class TravelCustomRepositoryImpl implements TravelCustomRepository{
         return new PageImpl<>(content, pageable, totalElements);
     }
 
+    @Override
+    public Page<TravelPlace> searchTravelPlace(Pageable pageable, String type, String keyword) {
+        BooleanExpression booleanExpression = null;
+
+        switch(type){
+            case "국가명":
+                booleanExpression = travelPlace.country.countryName.contains(keyword);
+                break;
+            case "도시명":
+                booleanExpression = travelPlace.city.cityName.contains(keyword);
+                break;
+            case "장소명":
+                booleanExpression = travelPlace.placeName.contains(keyword);
+                break;
+        }
+
+        List<TravelPlace> content = jpaQueryFactory
+                .selectFrom(travelPlace)
+                .where(booleanExpression)
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
+                .fetch();
+
+        int totalElements = getTotalElements(booleanExpression);
+
+        return new PageImpl<>(content, pageable, totalElements);
+    }
+
 
     @Override
     public Integer getTotalElements(BooleanExpression expression) {
@@ -95,4 +122,6 @@ public class TravelCustomRepositoryImpl implements TravelCustomRepository{
 
         return totalElements.intValue();
     }
+
+
 }
