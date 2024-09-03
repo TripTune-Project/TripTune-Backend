@@ -24,6 +24,8 @@ public class QTravelImageFile extends EntityPathBase<TravelImageFile> {
 
     public final com.triptune.domain.common.entity.QFile file;
 
+    public final NumberPath<Long> travelImageFileId = createNumber("travelImageFileId", Long.class);
+
     public final QTravelPlace travelPlace;
 
     public QTravelImageFile(String variable) {

@@ -1,10 +1,13 @@
 package com.triptune.domain.travel.repository;
 
+import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.NumberExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.triptune.domain.travel.dto.TravelLocationRequest;
+import com.triptune.domain.travel.dto.TravelLocationResponse;
 import com.triptune.domain.travel.entity.QTravelPlace;
+import com.triptune.domain.travel.entity.TravelImageFile;
 import com.triptune.domain.travel.entity.TravelPlace;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -48,7 +51,7 @@ public class TravelCustomRepositoryImpl implements TravelCustomRepository{
     }
 
     @Override
-    public Page<TravelPlace> findNearByTravelPlaceList(Pageable pageable, TravelLocationRequest travelLocationRequest, int distance) {
+    public Page<TravelLocationResponse> findNearByTravelPlaceList(Pageable pageable, TravelLocationRequest travelLocationRequest, int radius) {
         double earthRadius = 6371.0;
 
         double latRad = travelLocationRequest.getLatitude();
@@ -65,10 +68,20 @@ public class TravelCustomRepositoryImpl implements TravelCustomRepository{
                         )
         ).multiply(earthRadius);
 
-        BooleanExpression loeExpression = harversineExpression.loe(distance);
+        BooleanExpression loeExpression = harversineExpression.loe(radius);
 
-        List<TravelPlace> content = jpaQueryFactory
-                .select(travelPlace)
+        List<TravelLocationResponse> content = jpaQueryFactory
+                .select(Projections.constructor(TravelLocationResponse.class,
+                        travelPlace.placeId,
+                        travelPlace.country.countryName,
+                        travelPlace.city.cityName,
+                        travelPlace.district.districtName,
+                        travelPlace.address,
+                        travelPlace.detailAddress,
+                        travelPlace.longitude,
+                        travelPlace.latitude,
+                        travelPlace.placeName,
+                        harversineExpression.as("distance")))
                 .from(travelPlace)
                 .where(loeExpression)
                 .orderBy(harversineExpression.asc())
@@ -80,6 +93,7 @@ public class TravelCustomRepositoryImpl implements TravelCustomRepository{
 
         return new PageImpl<>(content, pageable, totalElements);
     }
+
 
     @Override
     public Page<TravelPlace> searchTravelPlace(Pageable pageable, String type, String keyword) {
@@ -122,6 +136,8 @@ public class TravelCustomRepositoryImpl implements TravelCustomRepository{
 
         return totalElements.intValue();
     }
+
+
 
 
 }
