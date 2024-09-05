@@ -26,6 +26,7 @@ public class TravelLocationResponse {
 
     @Builder
     public TravelLocationResponse(Long placeId, String country, String city, String district, String address, String detailAddress, double longitude, double latitude, String placeName, Double distance) {
+        // travelImageFileList 미포함 생성자
         this.placeId = placeId;
         this.country = country;
         this.city = city;
@@ -38,4 +39,20 @@ public class TravelLocationResponse {
         this.distance = distance;
     }
 
+
+    @Builder
+    public TravelLocationResponse(Long placeId, String country, String city, String district, String address, String detailAddress, double longitude, double latitude, String placeName, List<TravelImageFile> travelImageFileList, Double distance) {
+        // travelImageFileList 포함 생성자
+        this.placeId = placeId;
+        this.country = country;
+        this.city = city;
+        this.district = district;
+        this.address = address;
+        this.detailAddress = detailAddress;
+        this.longitude = longitude;
+        this.latitude = latitude;
+        this.placeName = placeName;
+        this.travelImageFileList = travelImageFileList;
+        this.distance = distance;
+    }
 }

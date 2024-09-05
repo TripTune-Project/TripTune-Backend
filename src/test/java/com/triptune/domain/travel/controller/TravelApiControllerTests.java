@@ -8,8 +8,10 @@ import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
@@ -22,11 +24,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @Transactional
-@RequiredArgsConstructor
 public class TravelApiControllerTests {
 
-    private final WebApplicationContext wac;
-    private final ObjectMapper objectMapper;
+    @Autowired
+    private WebApplicationContext wac;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     private MockMvc mockMvc;
 
@@ -40,9 +44,11 @@ public class TravelApiControllerTests {
     }
 
     @Test
-    @DisplayName("성공: 현재 위치에 따른 여행지 목록 제공")
+    @DisplayName("findNearByTravelPlaceList() 성공: 현재 위치에 따른 여행지 목록 제공")
+    @WithMockUser(username = "test")
     void findNearByTravelPlaceListSuccess() throws Exception {
-        mockMvc.perform(post("/api/travel/list")
+        mockMvc.perform(post("/api/travels/list")
+                        .param("page", "1")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(toJsonString(createTravelLocationRequest())))
                 .andExpect(status().isOk());
@@ -50,8 +56,8 @@ public class TravelApiControllerTests {
 
     private TravelLocationRequest createTravelLocationRequest(){
         return TravelLocationRequest.builder()
-                .longitude(37.82312)
-                .latitude(127.44233)
+                .longitude(127.0281573537)
+                .latitude(37.4970465429)
                 .build();
     }
 

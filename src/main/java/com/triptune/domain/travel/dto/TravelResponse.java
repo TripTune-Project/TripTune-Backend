@@ -21,10 +21,10 @@ public class TravelResponse {
     private double latitude;
     private String placeName;
     private String thumbnailUrl;
-    private double distance;
+    private Double distance;
 
     @Builder
-    public TravelResponse(Long placeId, String country, String city, String district, String address, String detailAddress, double longitude, double latitude, String placeName, String thumbnailUrl, double distance) {
+    public TravelResponse(Long placeId, String country, String city, String district, String address, String detailAddress, double longitude, double latitude, String placeName, String thumbnailUrl, Double distance) {
         this.placeId = placeId;
         this.country = country;
         this.city = city;
@@ -80,6 +80,7 @@ public class TravelResponse {
                 .latitude(travelLocationResponse.getLatitude())
                 .placeName(travelLocationResponse.getPlaceName())
                 .thumbnailUrl(thumbnailUrl)
+                .distance(travelLocationResponse.getDistance())
                 .build();
     }
 
