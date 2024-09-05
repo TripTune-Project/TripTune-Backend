@@ -1,4 +1,4 @@
-package com.triptune.domail.travel.respository;
+package com.triptune.domain.travel.respository;
 
 import com.triptune.domain.travel.dto.TravelLocationRequest;
 import com.triptune.domain.travel.dto.TravelLocationResponse;
