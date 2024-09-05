@@ -1,6 +1,7 @@
 package com.triptune.global.exception.handler;
 
-import com.triptune.global.exception.CustomJwtException;
+import com.triptune.global.exception.CustomJwtBadRequestException;
+import com.triptune.global.exception.CustomJwtUnAuthorizedException;
 import com.triptune.global.response.ErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -40,9 +41,20 @@ public class GlobalExceptionHandler {
     }
 
 
-    @ExceptionHandler(CustomJwtException.class)
-    public ErrorResponse handleCustomJwtException(CustomJwtException ex, HttpServletRequest request){
-        log.info("CustomJwtException : {}", ex.getMessage());
+    @ExceptionHandler(CustomJwtBadRequestException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleCustomJwtBadRequestException(CustomJwtBadRequestException ex, HttpServletRequest request){
+        log.info("CustomJwtBadRequestException : {}", ex.getMessage());
+
+        return ErrorResponse.builder()
+                .errorCode(ex.getHttpStatus().value())
+                .message(ex.getMessage()).build();
+    }
+
+    @ExceptionHandler(CustomJwtUnAuthorizedException.class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    public ErrorResponse handleCustomJwtUnAuthorizedException(CustomJwtUnAuthorizedException ex, HttpServletRequest request){
+        log.info("CustomJwtUnAuthorizedException : {}", ex.getMessage());
 
         return ErrorResponse.builder()
                 .errorCode(ex.getHttpStatus().value())
