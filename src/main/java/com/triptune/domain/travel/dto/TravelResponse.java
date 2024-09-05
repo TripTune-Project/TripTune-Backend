@@ -35,7 +35,7 @@ public class TravelResponse {
         this.latitude = latitude;
         this.placeName = placeName;
         this.thumbnailUrl = thumbnailUrl;
-        this.distance = distance;
+        this.distance = Math.floor(distance * 10) / 10.0;
     }
 
     public void setThumbnailUrl(TravelPlace travelPlace) {
