@@ -1,7 +1,8 @@
 package com.triptune.global.util;
 
-import com.triptune.global.exception.CustomJwtException;
+import com.triptune.global.exception.CustomJwtBadRequestException;
 import com.triptune.global.enumclass.ErrorCode;
+import com.triptune.global.exception.CustomJwtUnAuthorizedException;
 import com.triptune.global.service.CustomUserDetailsService;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
@@ -20,15 +21,6 @@ import java.util.Date;
 @Slf4j
 @Component
 public class JwtUtil {
-
-    @Value("${spring.jwt.token.access-expiration-time}")
-    private long accessExpirationTime;
-
-    @Value("${spring.jwt.token.refresh-expiration-time}")
-    private long refreshExpirationTime;
-
-    @Value("${spring.jwt.token.password-expiration-time}")
-    private long passwordExpirationTime;
 
     private final Key key;
     private final CustomUserDetailsService userDetailsService;
@@ -67,25 +59,25 @@ public class JwtUtil {
 
             if(redisUtil.existData(token)){
                 log.info("Already logged out user");
-                throw new CustomJwtException(ErrorCode.BLACKLIST_TOKEN);
+                throw new CustomJwtBadRequestException(ErrorCode.BLACKLIST_TOKEN);
             }
 
             return true;
         } catch (ExpiredJwtException e){
             log.info("Expired JWT Token ", e);
-            throw new CustomJwtException(ErrorCode.EXPIRED_JWT_TOKEN);
+            throw new CustomJwtUnAuthorizedException(ErrorCode.EXPIRED_JWT_TOKEN);
         } catch (SecurityException | MalformedJwtException e) {
             log.info("Invalid JWT Token ", e);
-            throw new CustomJwtException(ErrorCode.INVALID_JWT_TOKEN);
+            throw new CustomJwtBadRequestException(ErrorCode.INVALID_JWT_TOKEN);
         } catch (UnsupportedJwtException e){
             log.info("Unsupported JWT Token ", e);
-            throw new CustomJwtException(ErrorCode.UNSUPPORTED_JWT_TOKEN);
+            throw new CustomJwtBadRequestException(ErrorCode.UNSUPPORTED_JWT_TOKEN);
         } catch (IllegalArgumentException e){
             log.info("JWT claims string is empty ", e);
-            throw new CustomJwtException(ErrorCode.EMPTY_JWT_CLAIMS);
+            throw new CustomJwtBadRequestException(ErrorCode.EMPTY_JWT_CLAIMS);
         } catch (SignatureException e) {
             log.info("JWT signature fail ", e);
-            throw new CustomJwtException(ErrorCode.INVALID_JWT_SIGNATURE);
+            throw new CustomJwtUnAuthorizedException(ErrorCode.INVALID_JWT_SIGNATURE);
         }
     }
 
@@ -116,15 +108,17 @@ public class JwtUtil {
                .getBody();
    }
 
+
     /**
-     * Access Token 생성
+     * JWT 토큰 생성
      * @param userId
-     * @return Access Token
+     * @param expirationTime
+     * @return 생성된 토큰 문자열
      */
-    public String createAccessToken(String userId){
+    public String createToken(String userId, long expirationTime){
         Claims claims = Jwts.claims().setSubject(userId);
         Date now = new Date();
-        Date expireDate = new Date(now.getTime() + accessExpirationTime);
+        Date expireDate = new Date(now.getTime() + expirationTime);
 
         return Jwts.builder()
                 .setClaims(claims)
@@ -133,44 +127,6 @@ public class JwtUtil {
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
     }
-
-    /**
-     * Refresh Token 생성
-     * @param userId
-     * @return Refresh Token
-     */
-    public String createRefreshToken(String userId){
-        Claims claims = Jwts.claims().setSubject(userId);
-        Date now = new Date();
-        Date expireDate = new Date(now.getTime() + refreshExpirationTime);
-
-        return Jwts.builder()
-                .setClaims(claims)
-                .setIssuedAt(now)
-                .setExpiration(expireDate)
-                .signWith(key, SignatureAlgorithm.HS256)
-                .compact();
-    }
-
-    /**
-     * 비밀번호 찾기애 사용할 토큰 생성
-     * @param userId
-     * @return Password Token
-     */
-    public String createPasswordToken(String userId){
-        Claims claims = Jwts.claims().setSubject(userId);
-        Date now = new Date();
-        Date expireDate = new Date(now.getTime() + passwordExpirationTime);
-
-        return Jwts.builder()
-                .setClaims(claims)
-                .setIssuedAt(now)
-                .setExpiration(expireDate)
-                .signWith(key, SignatureAlgorithm.HS256)
-                .compact();
-    }
-
-
 
     /**
      * Token 의 유효기간 추출
