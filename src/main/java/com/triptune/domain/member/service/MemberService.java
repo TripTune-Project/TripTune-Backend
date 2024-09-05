@@ -8,7 +8,7 @@ import com.triptune.domain.member.exception.DataExistException;
 import com.triptune.domain.member.exception.ChangePasswordException;
 import com.triptune.domain.member.exception.FailLoginException;
 import com.triptune.domain.member.repository.MemberRepository;
-import com.triptune.global.exception.CustomJwtException;
+import com.triptune.global.exception.CustomJwtBadRequestException;
 import com.triptune.global.enumclass.ErrorCode;
 import com.triptune.global.util.JwtUtil;
 import com.triptune.global.util.RedisUtil;
@@ -17,6 +17,7 @@ import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.mail.MessagingException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -32,6 +33,13 @@ public class MemberService {
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final RedisUtil redisUtil;
+
+    @Value("${spring.jwt.token.access-expiration-time}")
+    private long accessExpirationTime;
+
+    @Value("${spring.jwt.token.refresh-expiration-time}")
+    private long refreshExpirationTime;
+
 
     public void join(MemberRequest memberRequest) {
 
@@ -67,8 +75,8 @@ public class MemberService {
             throw new FailLoginException(ErrorCode.FAILED_LOGIN);
         }
 
-        String accessToken = jwtUtil.createAccessToken(loginRequest.getUserId());
-        String refreshToken = jwtUtil.createRefreshToken(loginRequest.getUserId());
+        String accessToken = jwtUtil.createToken(loginRequest.getUserId(), accessExpirationTime);
+        String refreshToken = jwtUtil.createToken(loginRequest.getUserId(), refreshExpirationTime);
 
         member.setRefreshToken(refreshToken);
 
@@ -82,11 +90,11 @@ public class MemberService {
 
     public void logout(LogoutDTO logoutDTO, String accessToken) {
         memberRepository.deleteRefreshToken(logoutDTO.getUserId());
-        redisUtil.setDataExpire(accessToken, "logout", 3600);
+        redisUtil.saveExpiredData(accessToken, "logout", 3600);
     }
 
-    public TokenDTO refreshToken(TokenDTO tokenDTO) throws ExpiredJwtException {
-        String refreshToken = tokenDTO.getRefreshToken();
+    public RefreshTokenResponse refreshToken(RefreshTokenRequest refreshTokenRequest) throws ExpiredJwtException {
+        String refreshToken = refreshTokenRequest.getRefreshToken();
         jwtUtil.validateToken(refreshToken);
 
         Claims claims = jwtUtil.parseClaims(refreshToken);
@@ -95,12 +103,12 @@ public class MemberService {
                 .orElseThrow(() -> new CustomUsernameNotFoundException(ErrorCode.NOT_FOUND_USER));
 
         if(!refreshToken.equals(member.getRefreshToken())){
-            throw new CustomJwtException(ErrorCode.MISMATCH_REFRESH_TOKEN);
+            throw new CustomJwtBadRequestException(ErrorCode.MISMATCH_REFRESH_TOKEN);
         }
 
-        String newAccessToken = jwtUtil.createAccessToken(member.getUserId());
+        String newAccessToken = jwtUtil.createToken(member.getUserId(), accessExpirationTime);
 
-        return TokenDTO.of(newAccessToken);
+        return RefreshTokenResponse.builder().accessToken(newAccessToken).build();
     }
 
     /**

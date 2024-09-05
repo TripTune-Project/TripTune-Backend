@@ -43,6 +43,9 @@ public class EmailService {
     @Value("${app.frontend.change-password.url}")
     private String passwordURL;
 
+    @Value("${spring.jwt.token.password-expiration-time}")
+    private long passwordExpirationTime;
+
 
     /**
      * 회원가입 인증번호 증명
@@ -127,7 +130,7 @@ public class EmailService {
         helper.addInline("image", new ClassPathResource(IMAGE_FOLDER_PATH + "logo-removebg.png"));
 
         // 유효기간 3분
-        redisUtil.setDataExpire(email, authCode, 300);
+        redisUtil.saveExpiredData(email, authCode, 300);
 
         return message;
     }
@@ -140,7 +143,7 @@ public class EmailService {
      * @throws MessagingException
      */
     private MimeMessage findPasswordEmailTemplate(FindPasswordDTO findPasswordDTO) throws MessagingException {
-        String passwordToken = jwtUtil.createPasswordToken(findPasswordDTO.getUserId());
+        String passwordToken = jwtUtil.createToken(findPasswordDTO.getUserId(), passwordExpirationTime);
         String changePasswordURL = passwordURL + passwordToken;
 
         MimeMessage message = javaMailSender.createMimeMessage();
@@ -164,7 +167,7 @@ public class EmailService {
         helper.addInline("image", new ClassPathResource(IMAGE_FOLDER_PATH + "logo-removebg.png"));
 
         // 유효기간 1시간
-        redisUtil.setDataExpire(passwordToken, findPasswordDTO.getEmail(), 3600);
+        redisUtil.saveExpiredData(passwordToken, findPasswordDTO.getEmail(), 3600);
 
         return message;
     }

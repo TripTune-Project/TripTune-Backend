@@ -1,4 +1,4 @@
-package com.triptune.domail.travel.respository;
+package com.triptune.domain.travel.respository;
 
 import com.triptune.domain.travel.entity.TravelImageFile;
 import com.triptune.domain.travel.repository.TravelImageFileRepository;

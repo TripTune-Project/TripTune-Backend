@@ -1,13 +1,14 @@
-package com.triptune.domail.travel.controller;
+package com.triptune.domain.member.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.triptune.domain.travel.dto.TravelLocationRequest;
+import com.triptune.domain.member.dto.RefreshTokenRequest;
+import com.triptune.global.util.JwtUtil;
 import jakarta.transaction.Transactional;
-import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
@@ -18,15 +19,21 @@ import org.springframework.web.filter.CharacterEncodingFilter;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
 @Transactional
-@RequiredArgsConstructor
-public class TravelApiControllerTests {
+public class MemberApiControllerTests {
 
-    private final WebApplicationContext wac;
-    private final ObjectMapper objectMapper;
+    @Autowired
+    private WebApplicationContext wac;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    @Autowired
+    private JwtUtil jwtUtil;
 
     private MockMvc mockMvc;
 
@@ -40,18 +47,23 @@ public class TravelApiControllerTests {
     }
 
     @Test
-    @DisplayName("성공: 현재 위치에 따른 여행지 목록 제공")
-    void findNearByTravelPlaceListSuccess() throws Exception {
-        mockMvc.perform(post("/api/travel/list")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(toJsonString(createTravelLocationRequest())))
-                .andExpect(status().isOk());
+    @DisplayName("refreshToken() 실패: refresh token 만료")
+    void failExpiredRefreshToken() throws Exception {
+        String refreshToken = jwtUtil.createToken("test", -604800000);
+
+        mockMvc.perform(post("/api/members/refresh")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJsonString(createTokenRefreshRequest(refreshToken))))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.errorCode").value(401));
+
     }
 
-    private TravelLocationRequest createTravelLocationRequest(){
-        return TravelLocationRequest.builder()
-                .longitude(37.82312)
-                .latitude(127.44233)
+
+    private RefreshTokenRequest createTokenRefreshRequest(String refreshToken){
+        return RefreshTokenRequest.builder()
+                .refreshToken(refreshToken)
                 .build();
     }
 

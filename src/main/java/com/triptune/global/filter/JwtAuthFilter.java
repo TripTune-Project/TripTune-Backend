@@ -1,7 +1,7 @@
 package com.triptune.global.filter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.triptune.global.exception.CustomJwtException;
+import com.triptune.global.exception.CustomJwtBadRequestException;
 import com.triptune.global.response.ErrorResponse;
 import com.triptune.global.util.JwtUtil;
 import jakarta.servlet.FilterChain;
@@ -50,13 +50,13 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             }
 
             filterChain.doFilter(request, response);
-        } catch (CustomJwtException ex){
+        } catch (CustomJwtBadRequestException ex){
             handleJwtException(response, ex);
         }
 
     }
 
-    private void handleJwtException(HttpServletResponse response, CustomJwtException ex) throws IOException {
+    private void handleJwtException(HttpServletResponse response, CustomJwtBadRequestException ex) throws IOException {
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.setStatus(ex.getHttpStatus().value());
         response.setCharacterEncoding(Charset.defaultCharset().name());
