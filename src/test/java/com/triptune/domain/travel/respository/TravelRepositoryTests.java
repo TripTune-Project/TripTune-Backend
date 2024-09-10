@@ -11,6 +11,7 @@ import com.triptune.domain.travel.repository.TravelImageFileRepository;
 import com.triptune.domain.travel.repository.TravelRepository;
 import com.triptune.global.config.QueryDSLConfig;
 import jakarta.transaction.Transactional;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,19 +56,8 @@ public class TravelRepositoryTests {
         this.travelImageFileRepository = travelImageFileRepository;
     }
 
-
-
-    @Test
-    @DisplayName("findNearByTravelPlaceList() 성공: 위치 정보에 따른 여행지 목록 조회 시 데이터 존재하는 경우")
-    void findNearByTravelPlaceList_withData_success(){
-        // given
-        Pageable pageable = PageRequest.of(0, 5);
-        TravelLocationRequest travelLocationRequest = TravelLocationRequest.builder()
-                .latitude(37.4970465429)
-                .longitude(127.0281573537)
-                .build();
-        int radius = 5;   // 5km 이내
-
+    @BeforeEach
+    void setUp(){
         Country country = Country.builder().countryName("대한민국").build();
         Country savedCountry = countryRepository.save(country);
 
@@ -115,6 +105,19 @@ public class TravelRepositoryTests {
                 .build();
 
         travelImageFileRepository.save(travelImageFile);
+    }
+    
+
+    @Test
+    @DisplayName("findNearByTravelPlaceList() 성공: 위치 정보에 따른 여행지 목록 조회 시 데이터 존재하는 경우")
+    void findNearByTravelPlaceList_withData_success(){
+        // given
+        Pageable pageable = PageRequest.of(0, 5);
+        TravelLocationRequest travelLocationRequest = TravelLocationRequest.builder()
+                .latitude(37.4970465429)
+                .longitude(127.0281573537)
+                .build();
+        int radius = 5;   // 5km 이내
 
         // when
         Page<TravelLocationResponse> response = travelRepository.findNearByTravelPlaces(pageable, travelLocationRequest, radius);
@@ -159,7 +162,7 @@ public class TravelRepositoryTests {
         TravelSearchRequest request = TravelSearchRequest.builder()
                 .latitude(37.4970465429)
                 .longitude(127.0281573537)
-                .keyword("덕수궁")
+                .keyword("테스트")
                 .build();
 
         // when
@@ -167,7 +170,7 @@ public class TravelRepositoryTests {
 
         // then
         List<TravelLocationResponse> content = result.getContent();
-        assertTrue(content.get(0).getPlaceName().contains("덕수궁"));
+        assertTrue(content.get(0).getPlaceName().contains("테스트"));
         assertNotNull(content.get(0).getDistance());
 
         for(TravelLocationResponse t: content){
