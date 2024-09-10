@@ -1,10 +1,12 @@
 package com.triptune.domain.travel.entity;
 
-import com.triptune.domain.common.entity.Category;
+import com.triptune.domain.common.entity.ApiCategory;
 import com.triptune.domain.common.entity.City;
 import com.triptune.domain.common.entity.Country;
 import com.triptune.domain.common.entity.District;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Null;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -38,7 +40,7 @@ public class TravelPlace {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_code")
-    private Category category;
+    private ApiCategory apiCategory;
 
     @Column(name = "content_type_id")
     private Long contentTypeId;
@@ -49,6 +51,7 @@ public class TravelPlace {
     @Column(name = "address")
     private String address;
 
+    @Nullable
     @Column(name = "detail_address")
     private String detailAddress;
 
@@ -61,6 +64,7 @@ public class TravelPlace {
     @Column(name = "api_content_id")
     private int apiContentId;
 
+    @Nullable
     @Column(name = "description")
     private String description;
 
@@ -70,12 +74,15 @@ public class TravelPlace {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
+    @Nullable
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @Nullable
     @Column(name = "api_created_at")
     private LocalDateTime apiCreatedAt;
 
+    @Nullable
     @Column(name = "api_updated_at")
     private LocalDateTime apiUpdatedAt;
 
@@ -84,12 +91,12 @@ public class TravelPlace {
 
 
     @Builder
-    public TravelPlace(Long placeId, Country country, City city, District district, Category category, Long contentTypeId, String placeName, String address, String detailAddress, double longitude, double latitude, int apiContentId, String description, int bookmarkCnt, LocalDateTime createdAt, LocalDateTime updatedAt, LocalDateTime apiCreatedAt, LocalDateTime apiUpdatedAt, List<TravelImageFile> travelImageFileList) {
+    public TravelPlace(Long placeId, Country country, City city, District district, ApiCategory apiCategory, Long contentTypeId, String placeName, String address, String detailAddress, double longitude, double latitude, int apiContentId, String description, int bookmarkCnt, LocalDateTime createdAt, LocalDateTime updatedAt, LocalDateTime apiCreatedAt, LocalDateTime apiUpdatedAt, List<TravelImageFile> travelImageFileList) {
         this.placeId = placeId;
         this.country = country;
         this.city = city;
         this.district = district;
-        this.category = category;
+        this.apiCategory = apiCategory;
         this.contentTypeId = contentTypeId;
         this.placeName = placeName;
         this.address = address;
@@ -106,4 +113,28 @@ public class TravelPlace {
         this.travelImageFileList = travelImageFileList;
     }
 
+    @Override
+    public String toString() {
+        return "TravelPlace{" +
+                "placeId=" + placeId +
+                ", country=" + country +
+                ", city=" + city +
+                ", district=" + district +
+                ", category=" + apiCategory +
+                ", contentTypeId=" + contentTypeId +
+                ", placeName='" + placeName + '\'' +
+                ", address='" + address + '\'' +
+                ", detailAddress='" + detailAddress + '\'' +
+                ", longitude=" + longitude +
+                ", latitude=" + latitude +
+                ", apiContentId=" + apiContentId +
+                ", description='" + description + '\'' +
+                ", bookmarkCnt=" + bookmarkCnt +
+                ", createdAt=" + createdAt +
+                ", updatedAt=" + updatedAt +
+                ", apiCreatedAt=" + apiCreatedAt +
+                ", apiUpdatedAt=" + apiUpdatedAt +
+                ", travelImageFileList=" + travelImageFileList +
+                '}';
+    }
 }

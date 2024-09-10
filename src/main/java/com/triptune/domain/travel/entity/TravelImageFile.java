@@ -2,6 +2,7 @@ package com.triptune.domain.travel.entity;
 
 import com.triptune.domain.common.entity.File;
 import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -25,5 +26,10 @@ public class TravelImageFile {
     @JoinColumn(name = "file_id")
     private File file;
 
-
+    @Builder
+    public TravelImageFile(Long travelImageFileId, TravelPlace travelPlace, File file) {
+        this.travelImageFileId = travelImageFileId;
+        this.travelPlace = travelPlace;
+        this.file = file;
+    }
 }
