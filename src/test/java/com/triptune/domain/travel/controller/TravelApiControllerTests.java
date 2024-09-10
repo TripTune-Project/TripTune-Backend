@@ -18,6 +18,7 @@ import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.filter.CharacterEncodingFilter;
 
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -44,15 +45,26 @@ public class TravelApiControllerTests {
     }
 
     @Test
-    @DisplayName("findNearByTravelPlaceList() 성공: 현재 위치에 따른 여행지 목록 제공")
-    @WithMockUser(username = "test")
-    void findNearByTravelPlaceListSuccess() throws Exception {
+    @DisplayName("findNearByTravelPlaceList() 성공: 현재 위치에 따른 여행지 목록을 제공한다.")
+    void findNearByTravelPlaces_success() throws Exception {
         mockMvc.perform(post("/api/travels/list")
                         .param("page", "1")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(toJsonString(createTravelLocationRequest())))
                 .andExpect(status().isOk());
     }
+
+
+//    @Test
+//    @DisplayName("searchTravelPlaces() 성공: 키워드를 통해서 여행지를 겁색한다.")
+//    void searchTravelPlaces_withData_success() throws Exception {
+//        mockMvc.perform(get("/api/travels/search")
+//                .param("page", "1")
+//                .param("keyword", "강남"))
+//                .andExpect(status().isOk());
+//    }
+
+
 
     private TravelLocationRequest createTravelLocationRequest(){
         return TravelLocationRequest.builder()
