@@ -28,7 +28,7 @@ public class TravelApiController {
     }
 
 
-    @GetMapping("/search")
+    @PostMapping("/search")
     @Operation(summary = "여행지 검색", description = "여행지 탐색 메뉴에서 여행지를 검색한다.")
     public ApiPageResponse<TravelResponse> searchTravelPlaces(@RequestBody @Valid TravelSearchRequest travelSearchRequest, @RequestParam int page){
         Page<TravelResponse> response = travelService.searchTravelPlaces(travelSearchRequest, page);
