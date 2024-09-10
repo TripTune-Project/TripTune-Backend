@@ -22,26 +22,70 @@ repositories {
 }
 
 dependencies {
+
+	// jwt
 	implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
 	implementation 'io.jsonwebtoken:jjwt-impl:0.11.5'
 	implementation 'io.jsonwebtoken:jjwt-jackson:0.11.5'
+
+	// thymeleaf
+	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+
+	// jpa
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+
+	// spring security
 	implementation 'org.springframework.boot:spring-boot-starter-security'
+
+	// spring
 	implementation 'org.springframework.boot:spring-boot-starter-web'
-	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.0.4'
-	implementation 'org.springframework.boot:spring-boot-starter-validation'
-	implementation group: 'org.springframework.boot', name: 'spring-boot-starter-mail', version: '2.6.3'
 	implementation 'org.springframework:spring-context:6.0.7'
 	implementation 'org.springframework:spring-context-support:6.0.7'
+
+	// swagger-ui
+	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.0.4'
+
+	// spring boot validation
+	implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+	// spring boot mail
+	implementation group: 'org.springframework.boot', name: 'spring-boot-starter-mail', version: '2.6.3'
+
+	// JavaMail
 	implementation 'com.sun.mail:jakarta.mail:2.0.1'
+
+	// redis
 	implementation group: 'org.springframework.boot', name: 'spring-boot-starter-data-redis', version: '3.2.4'
+
+	// querydsl
+	implementation 'com.querydsl:querydsl-jpa:5.0.0:jakarta'
+	annotationProcessor "com.querydsl:querydsl-apt:5.0.0:jakarta"
+	annotationProcessor "jakarta.annotation:jakarta.annotation-api"
+	annotationProcessor "jakarta.persistence:jakarta.persistence-api"
+
+	// lombok
 	compileOnly 'org.projectlombok:lombok'
-	developmentOnly 'org.springframework.boot:spring-boot-devtools'
-	runtimeOnly 'com.mysql:mysql-connector-j'
 	annotationProcessor 'org.projectlombok:lombok'
+	testCompileOnly 'org.projectlombok:lombok'
+	testAnnotationProcessor 'org.projectlombok:lombok'
+
+	// devtools
+	developmentOnly 'org.springframework.boot:spring-boot-devtools'
+
+	// mysql connector
+	runtimeOnly 'com.mysql:mysql-connector-j'
+
+	// spring boot/security test
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.security:spring-security-test'
+
+	// junit
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+	// 테스트용 h2
+	testImplementation group: 'com.h2database', name: 'h2', version: '1.4.200'
+	testImplementation 'com.h2database:h2'
+	testRuntimeOnly 'com.h2database:h2'
 }
 
 tasks.named('bootBuildImage') {

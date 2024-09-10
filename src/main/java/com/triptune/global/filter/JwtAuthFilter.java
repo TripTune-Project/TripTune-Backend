@@ -1,11 +1,9 @@
 package com.triptune.global.filter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.triptune.global.exception.CustomJwtException;
-import com.triptune.global.exception.ErrorCode;
+import com.triptune.global.exception.CustomJwtBadRequestException;
 import com.triptune.global.response.ErrorResponse;
 import com.triptune.global.util.JwtUtil;
-import io.jsonwebtoken.*;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -14,10 +12,14 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.util.Arrays;
+
+import static com.triptune.global.config.SecurityConstants.AUTH_WHITELIST;
 
 /**
  * JWT 가 유효성을 검증하는 Filter
@@ -26,6 +28,16 @@ import java.nio.charset.Charset;
 public class JwtAuthFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
+        String requestURI = request.getRequestURI();
+
+        return Arrays.stream(AUTH_WHITELIST).anyMatch(pattern -> {
+            AntPathMatcher matcher = new AntPathMatcher();
+            return matcher.match(pattern, requestURI);
+        });
+    }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
@@ -38,29 +50,20 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             }
 
             filterChain.doFilter(request, response);
-
-        } catch (CustomJwtException ex) {
-            handleJwtException(response, ErrorCode.BLACKLIST_TOKEN);
-        } catch (ExpiredJwtException ex){
-            handleJwtException(response, ErrorCode.EXPIRED_JWT_TOKEN);
-        } catch (SecurityException | MalformedJwtException e) {
-            handleJwtException(response, ErrorCode.INVALID_JWT_TOKEN);
-        } catch (UnsupportedJwtException e){
-            handleJwtException(response, ErrorCode.UNSUPPORTED_JWT_TOKEN);
-        } catch (IllegalArgumentException e){
-            handleJwtException(response, ErrorCode.EMPTY_JWT_CLAIMS);
+        } catch (CustomJwtBadRequestException ex){
+            handleJwtException(response, ex);
         }
 
     }
 
-    private void handleJwtException(HttpServletResponse response, ErrorCode errorCode) throws IOException {
+    private void handleJwtException(HttpServletResponse response, CustomJwtBadRequestException ex) throws IOException {
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-        response.setStatus(errorCode.getStatus().value());
+        response.setStatus(ex.getHttpStatus().value());
         response.setCharacterEncoding(Charset.defaultCharset().name());
 
         ErrorResponse errorResponse = ErrorResponse.builder()
-                .errorCode(errorCode.getStatus().value())
-                .message(errorCode.getMessage())
+                .errorCode(ex.getHttpStatus().value())
+                .message(ex.getMessage())
                 .build();
 
         String result = new ObjectMapper().writeValueAsString(errorResponse);
