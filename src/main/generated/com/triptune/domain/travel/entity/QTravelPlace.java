@@ -24,6 +24,8 @@ public class QTravelPlace extends EntityPathBase<TravelPlace> {
 
     public final StringPath address = createString("address");
 
+    public final com.triptune.domain.common.entity.QApiCategory apiCategory;
+
     public final NumberPath<Integer> apiContentId = createNumber("apiContentId", Integer.class);
 
     public final DateTimePath<java.time.LocalDateTime> apiCreatedAt = createDateTime("apiCreatedAt", java.time.LocalDateTime.class);
@@ -31,8 +33,6 @@ public class QTravelPlace extends EntityPathBase<TravelPlace> {
     public final DateTimePath<java.time.LocalDateTime> apiUpdatedAt = createDateTime("apiUpdatedAt", java.time.LocalDateTime.class);
 
     public final NumberPath<Integer> bookmarkCnt = createNumber("bookmarkCnt", Integer.class);
-
-    public final com.triptune.domain.common.entity.QCategory category;
 
     public final com.triptune.domain.common.entity.QCity city;
 
@@ -78,7 +78,7 @@ public class QTravelPlace extends EntityPathBase<TravelPlace> {
 
     public QTravelPlace(Class<? extends TravelPlace> type, PathMetadata metadata, PathInits inits) {
         super(type, metadata, inits);
-        this.category = inits.isInitialized("category") ? new com.triptune.domain.common.entity.QCategory(forProperty("category")) : null;
+        this.apiCategory = inits.isInitialized("apiCategory") ? new com.triptune.domain.common.entity.QApiCategory(forProperty("apiCategory")) : null;
         this.city = inits.isInitialized("city") ? new com.triptune.domain.common.entity.QCity(forProperty("city"), inits.get("city")) : null;
         this.country = inits.isInitialized("country") ? new com.triptune.domain.common.entity.QCountry(forProperty("country")) : null;
         this.district = inits.isInitialized("district") ? new com.triptune.domain.common.entity.QDistrict(forProperty("district"), inits.get("district")) : null;

@@ -13,8 +13,7 @@ import java.util.List;
 @Getter
 @Setter
 @NoArgsConstructor
-@Table(name = "api_category")
-public class Category {
+public class ApiCategory {
 
     @Id
     @Column(name = "category_code")
@@ -29,12 +28,12 @@ public class Category {
     @Column(name = "level")
     private int level;
 
-    @OneToMany(mappedBy = "category", orphanRemoval = true)
+    @OneToMany(mappedBy = "apiCategory", orphanRemoval = true)
     private List<TravelPlace> travelPlaceList;
 
 
     @Builder
-    public Category(String categoryCode, String categoryName, String parentCode, int level, List<TravelPlace> travelPlaceList) {
+    public ApiCategory(String categoryCode, String categoryName, String parentCode, int level, List<TravelPlace> travelPlaceList) {
         this.categoryCode = categoryCode;
         this.categoryName = categoryName;
         this.parentCode = parentCode;
