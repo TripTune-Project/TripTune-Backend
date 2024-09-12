@@ -48,7 +48,7 @@ public class MemberApiControllerTests {
 
     @Test
     @DisplayName("refreshToken() 실패: refresh token 만료")
-    void failExpiredRefreshToken() throws Exception {
+    void expiredRefreshToken_fail() throws Exception {
         String refreshToken = jwtUtil.createToken("test", -604800000);
 
         mockMvc.perform(post("/api/members/refresh")
