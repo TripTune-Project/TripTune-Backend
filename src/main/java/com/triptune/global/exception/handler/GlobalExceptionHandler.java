@@ -63,7 +63,9 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(NoHandlerFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public void handle404(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    public void handle404(NoHandlerFoundException ex, HttpServletRequest request, HttpServletResponse response) throws IOException {
+        log.info("NoHandlerFoundException: {}", ex.getMessage());
+
         response.sendRedirect(notFoundErrorURL);
     }
 
