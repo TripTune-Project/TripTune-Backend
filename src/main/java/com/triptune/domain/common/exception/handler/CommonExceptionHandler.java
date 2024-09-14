@@ -4,6 +4,7 @@ import com.triptune.domain.common.exception.DataExistException;
 import com.triptune.domain.common.exception.DataNotFoundException;
 
 import com.triptune.global.response.ErrorResponse;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -16,8 +17,8 @@ public class CommonExceptionHandler {
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponse handleDataExistedException(DataExistException ex){
-        log.error("DataExistException : {}", ex.getMessage());
+    public ErrorResponse handleDataExistedException(DataExistException ex, HttpServletRequest request){
+        log.error("DataExistException at {}: {}", request.getRequestURI(),  ex.getMessage());
 
         return ErrorResponse.builder()
                 .errorCode(ex.getHttpStatus().value())
@@ -27,8 +28,8 @@ public class CommonExceptionHandler {
 
     @ExceptionHandler(DataNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ErrorResponse handleDataNotFoundException(DataNotFoundException ex){
-        log.error("DataNotFoundException : {}", ex.getMessage());
+    public ErrorResponse handleDataNotFoundException(DataNotFoundException ex, HttpServletRequest request){
+        log.error("DataNotFoundException at {}: {}", request.getRequestURI(),  ex.getMessage());
 
         return ErrorResponse.builder()
                 .message(ex.getMessage())
