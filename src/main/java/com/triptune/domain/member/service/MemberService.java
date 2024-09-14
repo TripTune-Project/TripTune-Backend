@@ -4,7 +4,7 @@ import com.triptune.domain.email.service.EmailService;
 import com.triptune.domain.member.dto.*;
 import com.triptune.domain.member.entity.Member;
 import com.triptune.domain.member.exception.CustomUsernameNotFoundException;
-import com.triptune.domain.member.exception.DataExistException;
+import com.triptune.domain.common.exception.DataExistException;
 import com.triptune.domain.member.exception.ChangePasswordException;
 import com.triptune.domain.member.exception.FailLoginException;
 import com.triptune.domain.member.repository.MemberRepository;
