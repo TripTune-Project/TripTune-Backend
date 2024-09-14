@@ -28,7 +28,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleMethodArgumentNotValidException(MethodArgumentNotValidException ex, HttpServletRequest request){
-        log.info("MethodArgumentNotValidException : {}", ex.getMessage());
+        log.error("MethodArgumentNotValidException at {}: {}", request.getRequestURI(), ex.getMessage());
 
         String message = ex.getBindingResult().getFieldErrors()
                 .stream()
@@ -44,7 +44,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(CustomJwtBadRequestException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleCustomJwtBadRequestException(CustomJwtBadRequestException ex, HttpServletRequest request){
-        log.info("CustomJwtBadRequestException : {}", ex.getMessage());
+        log.error("CustomJwtBadRequestException at {}: {}", request.getRequestURI(), ex.getMessage());
 
         return ErrorResponse.builder()
                 .errorCode(ex.getHttpStatus().value())
@@ -54,7 +54,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(CustomJwtUnAuthorizedException.class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     public ErrorResponse handleCustomJwtUnAuthorizedException(CustomJwtUnAuthorizedException ex, HttpServletRequest request){
-        log.info("CustomJwtUnAuthorizedException : {}", ex.getMessage());
+        log.error("CustomJwtUnAuthorizedException at {}: {}", request.getRequestURI(),  ex.getMessage());
 
         return ErrorResponse.builder()
                 .errorCode(ex.getHttpStatus().value())
@@ -64,7 +64,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(NoHandlerFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public void handle404(NoHandlerFoundException ex, HttpServletRequest request, HttpServletResponse response) throws IOException {
-        log.info("NoHandlerFoundException: {}", ex.getMessage());
+        log.error("NoHandlerFoundException at {}: {}", request.getRequestURI(),  ex.getMessage());
 
         response.sendRedirect(notFoundErrorURL);
     }
