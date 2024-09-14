@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.triptune.domain.travel.dto.TravelLocationRequest;
 import com.triptune.domain.travel.dto.TravelSearchRequest;
+import com.triptune.global.enumclass.ErrorCode;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.BeforeEach;
@@ -48,7 +49,7 @@ public class TravelApiControllerTests {
 
     @Test
     @DisplayName("findNearByTravelPlaceList() 성공: 현재 위치에 따른 여행지 목록을 제공하며 조회 결과가 존재하는 경우")
-    void findNearByTravelPlaces_withData_success() throws Exception {
+    void getNearByTravelPlaces_withData_success() throws Exception {
         mockMvc.perform(post("/api/travels/list")
                         .param("page", "1")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -58,7 +59,7 @@ public class TravelApiControllerTests {
 
     @Test
     @DisplayName("findNearByTravelPlaceList() 성공: 현재 위치에 따른 여행지 목록을 제공하며 조회 결과가 존재하지 않는 경우")
-    void findNearByTravelPlaces_noData_success() throws Exception {
+    void getNearByTravelPlaces_noData_success() throws Exception {
         mockMvc.perform(post("/api/travels/list")
                         .param("page", "1")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -99,7 +100,33 @@ public class TravelApiControllerTests {
                 .andExpect(jsonPath("$.message").value("검색어에 특수문자는 사용 불가합니다."));
     }
 
+    @Test
+    @DisplayName("getTravelDetails() 성공: 여행지 상세정보 조회")
+    void getTravelDetails_success() throws Exception {
+        mockMvc.perform(get("/api/travels/{placeId}", 1L))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.placeId").value(1L))
+                .andExpect(jsonPath("$.data.placeName").exists())
+                .andExpect(jsonPath("$.data.imageList").isNotEmpty());
+    }
 
+    @Test
+    @DisplayName("getTravelDetails() 실패: 여행지 상세정보 조회 시 데이터 존재하지 않아 404 에러 발생")
+    void getTravelDetails_fail() throws Exception {
+        mockMvc.perform(get("/api/travels/{placeId}", 0L))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.errorCode").value(ErrorCode.DATA_NOT_FOUND.getStatus().value()))
+                .andExpect(jsonPath("$.message").value(ErrorCode.DATA_NOT_FOUND.getMessage()));
+    }
+
+
+    /**
+     * TravelLocationRequest 제공 메서드
+     * @param longitude
+     * @param latitude
+     * @return TravelLocationRequest
+     */
     private TravelLocationRequest createTravelLocationRequest(double longitude, double latitude){
         return TravelLocationRequest.builder()
                 .longitude(longitude)
@@ -107,6 +134,13 @@ public class TravelApiControllerTests {
                 .build();
     }
 
+    /**
+     * TravelSearchRequest 제공 메서드
+     * @param longitude
+     * @param latitude
+     * @param keyword
+     * @return TravelSearchRequest
+     */
     private TravelSearchRequest createTravelSearchRequest(double longitude, double latitude, String keyword){
         return TravelSearchRequest.builder()
                 .longitude(longitude)

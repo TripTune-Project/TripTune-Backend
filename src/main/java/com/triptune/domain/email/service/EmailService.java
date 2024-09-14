@@ -2,7 +2,7 @@ package com.triptune.domain.email.service;
 
 import com.triptune.domain.email.dto.VerifyAuthRequest;
 import com.triptune.domain.member.dto.FindPasswordDTO;
-import com.triptune.domain.member.exception.DataExistException;
+import com.triptune.domain.common.exception.DataExistException;
 import com.triptune.domain.member.repository.MemberRepository;
 import com.triptune.global.enumclass.ErrorCode;
 import com.triptune.global.util.JwtUtil;

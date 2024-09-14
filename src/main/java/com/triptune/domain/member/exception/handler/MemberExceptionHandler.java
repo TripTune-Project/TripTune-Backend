@@ -1,7 +1,7 @@
 package com.triptune.domain.member.exception.handler;
 
 import com.triptune.domain.member.exception.CustomUsernameNotFoundException;
-import com.triptune.domain.member.exception.DataExistException;
+import com.triptune.domain.common.exception.DataExistException;
 import com.triptune.domain.member.exception.FailLoginException;
 import com.triptune.domain.member.exception.ChangePasswordException;
 import com.triptune.global.response.ErrorResponse;
@@ -14,17 +14,6 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @Slf4j
 @RestControllerAdvice
 public class MemberExceptionHandler {
-
-    @ExceptionHandler
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponse handleDataExistedException(DataExistException ex){
-        log.error("DataExistException : {}", ex.getMessage());
-
-        return ErrorResponse.builder()
-                .errorCode(ex.getHttpStatus().value())
-                .message(ex.getMessage())
-                .build();
-    }
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)

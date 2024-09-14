@@ -8,6 +8,9 @@ import org.springframework.http.HttpStatus;
 @AllArgsConstructor
 public enum ErrorCode {
 
+    // 공통
+    DATA_NOT_FOUND(HttpStatus.NOT_FOUND, "데이터가 존재하지 않습니다."),
+
     // 입력 검증
     INCORRECT_PASSWORD_REPASSWORD(HttpStatus.BAD_REQUEST, "비밀번호와 재입력 비밀번호가 일치하지 않습니다."),
     ALREADY_EXISTED_USERID(HttpStatus.BAD_REQUEST, "이미 존재하는 아이디입니다."),
@@ -30,10 +33,9 @@ public enum ErrorCode {
     EXPIRED_JWT_TOKEN(HttpStatus.UNAUTHORIZED, "JWT 토큰이 만료되었습니다."),
     INVALID_JWT_SIGNATURE(HttpStatus.UNAUTHORIZED, "JWT 서명 검증을 실패했습니다."),
     MISMATCH_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "DB에 저장된 refresh token과 일치하지 않습니다. 다시 로그인해주세요."),
-    BLACKLIST_TOKEN(HttpStatus.UNAUTHORIZED, "로그아웃 된 사용자입니다. 로그인 후 이용해주세요."),
+    BLACKLIST_TOKEN(HttpStatus.UNAUTHORIZED, "로그아웃 된 사용자입니다. 로그인 후 이용해주세요.");
 
-    // 여행지 탐색
-    NO_SEARCH_RESULTS_FOUND(HttpStatus.NOT_FOUND, "검색 결과가 존재하지 않습니다.");
+
 
 
     private final HttpStatus status;
