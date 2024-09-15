@@ -2,6 +2,7 @@ package com.triptune.domain.member.controller;
 
 import com.triptune.domain.member.dto.*;
 import com.triptune.global.enumclass.ErrorCode;
+import com.triptune.global.exception.CustomJwtBadRequestException;
 import com.triptune.global.response.ApiResponse;
 import com.triptune.domain.member.exception.FailLoginException;
 import com.triptune.domain.member.service.MemberService;
@@ -15,6 +16,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.parameters.P;
 import org.springframework.web.bind.annotation.*;
 
 
@@ -53,8 +55,11 @@ public class MemberApiController {
     public ApiResponse<?> logout(HttpServletRequest request, @RequestBody LogoutDTO logoutDTO){
         String accessToken = jwtUtil.resolveToken(request);
 
-        memberService.logout(logoutDTO, accessToken);
+        if (accessToken == null){
+            throw new CustomJwtBadRequestException(ErrorCode.INVALID_JWT_TOKEN);
+        }
 
+        memberService.logout(logoutDTO, accessToken);
         return ApiResponse.okResponse();
     }
 

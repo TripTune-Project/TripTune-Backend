@@ -32,7 +32,7 @@ public enum ErrorCode {
     EMPTY_JWT_CLAIMS(HttpStatus.BAD_REQUEST, "JWT 클레임이 비었습니다."),
     EXPIRED_JWT_TOKEN(HttpStatus.UNAUTHORIZED, "JWT 토큰이 만료되었습니다."),
     INVALID_JWT_SIGNATURE(HttpStatus.UNAUTHORIZED, "JWT 서명 검증을 실패했습니다."),
-    MISMATCH_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "DB에 저장된 refresh token과 일치하지 않습니다. 다시 로그인해주세요."),
+    MISMATCH_REFRESH_TOKEN(HttpStatus.BAD_REQUEST, "유효하지 않은 JWT 토큰입니다. 로그인 후 이용해주세요."),
     BLACKLIST_TOKEN(HttpStatus.UNAUTHORIZED, "로그아웃 된 사용자입니다. 로그인 후 이용해주세요.");
 
 
