@@ -1,6 +1,7 @@
 package com.triptune.domain.member.service;
 
 import com.triptune.domain.member.dto.ChangePasswordDTO;
+import com.triptune.domain.member.dto.LogoutDTO;
 import com.triptune.domain.member.dto.RefreshTokenRequest;
 import com.triptune.domain.member.dto.RefreshTokenResponse;
 import com.triptune.domain.member.entity.Member;
@@ -50,9 +51,31 @@ public class MemberServiceTests {
     @Mock
     private PasswordEncoder passwordEncoder;
 
+    private final String accessToken = "testAccessToken";
     private final String refreshToken = "testRefreshToken";
     private final String passwordToken = "testPasswordToken";
     private final String newPassword = "newPassword123@";
+
+
+    @Test
+    @DisplayName("logout() 성공: 로그아웃")
+    void logout_success(){
+        // given
+        Member savedMember = createMember(refreshToken);
+        memberRepository.save(savedMember);
+
+        LogoutDTO request = LogoutDTO.builder()
+                .userId("test")
+                .build();
+
+        // when
+        memberService.logout(request, accessToken);
+
+        // then
+        verify(memberRepository, times(1)).deleteRefreshToken(request.getUserId());
+        verify(redisUtil, times(1)).saveExpiredData(accessToken, "logout", 3600);
+    }
+
 
     @Test
     @DisplayName("refreshToken() 성공: access token 갱신")
@@ -63,7 +86,6 @@ public class MemberServiceTests {
         when(jwtUtil.validateToken(refreshToken)).thenReturn(true);
         when(jwtUtil.parseClaims(refreshToken)).thenReturn(mockClaims);
         when(memberRepository.findByUserId(any())).thenReturn(Optional.of(createMember(refreshToken)));
-        String accessToken = "testAccessToken";
         when(jwtUtil.createToken(anyString(), anyLong())).thenReturn(accessToken);
 
         RefreshTokenRequest request = createRefreshTokenRequest(refreshToken);
