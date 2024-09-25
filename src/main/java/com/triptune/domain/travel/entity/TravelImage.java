@@ -11,12 +11,12 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-public class TravelImageFile {
+public class TravelImage {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "travel_image_file_id")
-    private Long travelImageFileId;
+    @Column(name = "travel_image_id")
+    private Long travelImageId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "place_id")
@@ -27,8 +27,8 @@ public class TravelImageFile {
     private File file;
 
     @Builder
-    public TravelImageFile(Long travelImageFileId, TravelPlace travelPlace, File file) {
-        this.travelImageFileId = travelImageFileId;
+    public TravelImage(Long travelImageId, TravelPlace travelPlace, File file) {
+        this.travelImageId = travelImageId;
         this.travelPlace = travelPlace;
         this.file = file;
     }

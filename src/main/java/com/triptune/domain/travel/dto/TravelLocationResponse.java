@@ -1,6 +1,6 @@
 package com.triptune.domain.travel.dto;
 
-import com.triptune.domain.travel.entity.TravelImageFile;
+import com.triptune.domain.travel.entity.TravelImage;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -21,7 +21,7 @@ public class TravelLocationResponse {
     private double longitude;
     private double latitude;
     private String placeName;
-    private List<TravelImageFile> travelImageFileList;
+    private List<TravelImage> travelImageFileList;
     private Double distance;
 
     @Builder
@@ -41,7 +41,7 @@ public class TravelLocationResponse {
 
 
     @Builder
-    public TravelLocationResponse(Long placeId, String country, String city, String district, String address, String detailAddress, double longitude, double latitude, String placeName, List<TravelImageFile> travelImageFileList, Double distance) {
+    public TravelLocationResponse(Long placeId, String country, String city, String district, String address, String detailAddress, double longitude, double latitude, String placeName, List<TravelImage> travelImageFileList, Double distance) {
         // travelImageFileList 포함 생성자
         this.placeId = placeId;
         this.country = country;

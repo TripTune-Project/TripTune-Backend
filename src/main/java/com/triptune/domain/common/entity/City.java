@@ -27,9 +27,6 @@ public class City {
     @Column(name = "city_name")
     private String cityName;
 
-    @Column(name = "api_area_code")
-    private Integer apiAreaCode;
-
     @OneToMany(mappedBy = "city", orphanRemoval = true)
     private List<District> districtList;
 
@@ -38,11 +35,10 @@ public class City {
 
 
     @Builder
-    public City(Long cityId, Country country, String cityName, Integer apiAreaCode, List<District> districtList, List<TravelPlace> travelPlaceList) {
+    public City(Long cityId, Country country, String cityName, List<District> districtList, List<TravelPlace> travelPlaceList) {
         this.cityId = cityId;
         this.country = country;
         this.cityName = cityName;
-        this.apiAreaCode = apiAreaCode;
         this.districtList = districtList;
         this.travelPlaceList = travelPlaceList;
     }

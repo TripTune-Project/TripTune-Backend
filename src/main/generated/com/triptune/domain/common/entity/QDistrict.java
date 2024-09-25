@@ -22,8 +22,6 @@ public class QDistrict extends EntityPathBase<District> {
 
     public static final QDistrict district = new QDistrict("district");
 
-    public final NumberPath<Integer> apiSigunguCode = createNumber("apiSigunguCode", Integer.class);
-
     public final QCity city;
 
     public final NumberPath<Long> districtId = createNumber("districtId", Long.class);

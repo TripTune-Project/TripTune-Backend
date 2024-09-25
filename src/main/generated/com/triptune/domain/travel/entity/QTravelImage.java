@@ -11,40 +11,40 @@ import com.querydsl.core.types.dsl.PathInits;
 
 
 /**
- * QTravelImageFile is a Querydsl query type for TravelImageFile
+ * QTravelImage is a Querydsl query type for TravelImage
  */
 @Generated("com.querydsl.codegen.DefaultEntitySerializer")
-public class QTravelImageFile extends EntityPathBase<TravelImageFile> {
+public class QTravelImage extends EntityPathBase<TravelImage> {
 
-    private static final long serialVersionUID = -978208512L;
+    private static final long serialVersionUID = -1631084188L;
 
     private static final PathInits INITS = PathInits.DIRECT2;
 
-    public static final QTravelImageFile travelImageFile = new QTravelImageFile("travelImageFile");
+    public static final QTravelImage travelImage = new QTravelImage("travelImage");
 
     public final com.triptune.domain.common.entity.QFile file;
 
-    public final NumberPath<Long> travelImageFileId = createNumber("travelImageFileId", Long.class);
+    public final NumberPath<Long> travelImageId = createNumber("travelImageId", Long.class);
 
     public final QTravelPlace travelPlace;
 
-    public QTravelImageFile(String variable) {
-        this(TravelImageFile.class, forVariable(variable), INITS);
+    public QTravelImage(String variable) {
+        this(TravelImage.class, forVariable(variable), INITS);
     }
 
-    public QTravelImageFile(Path<? extends TravelImageFile> path) {
+    public QTravelImage(Path<? extends TravelImage> path) {
         this(path.getType(), path.getMetadata(), PathInits.getFor(path.getMetadata(), INITS));
     }
 
-    public QTravelImageFile(PathMetadata metadata) {
+    public QTravelImage(PathMetadata metadata) {
         this(metadata, PathInits.getFor(metadata, INITS));
     }
 
-    public QTravelImageFile(PathMetadata metadata, PathInits inits) {
-        this(TravelImageFile.class, metadata, inits);
+    public QTravelImage(PathMetadata metadata, PathInits inits) {
+        this(TravelImage.class, metadata, inits);
     }
 
-    public QTravelImageFile(Class<? extends TravelImageFile> type, PathMetadata metadata, PathInits inits) {
+    public QTravelImage(Class<? extends TravelImage> type, PathMetadata metadata, PathInits inits) {
         super(type, metadata, inits);
         this.file = inits.isInitialized("file") ? new com.triptune.domain.common.entity.QFile(forProperty("file")) : null;
         this.travelPlace = inits.isInitialized("travelPlace") ? new QTravelPlace(forProperty("travelPlace"), inits.get("travelPlace")) : null;

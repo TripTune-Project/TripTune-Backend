@@ -38,7 +38,7 @@ public class QFile extends EntityPathBase<File> {
 
     public final StringPath s3ObjectUrl = createString("s3ObjectUrl");
 
-    public final ListPath<com.triptune.domain.travel.entity.TravelImageFile, com.triptune.domain.travel.entity.QTravelImageFile> travelImageFileList = this.<com.triptune.domain.travel.entity.TravelImageFile, com.triptune.domain.travel.entity.QTravelImageFile>createList("travelImageFileList", com.triptune.domain.travel.entity.TravelImageFile.class, com.triptune.domain.travel.entity.QTravelImageFile.class, PathInits.DIRECT2);
+    public final ListPath<com.triptune.domain.travel.entity.TravelImage, com.triptune.domain.travel.entity.QTravelImage> travelImageFileList = this.<com.triptune.domain.travel.entity.TravelImage, com.triptune.domain.travel.entity.QTravelImage>createList("travelImageFileList", com.triptune.domain.travel.entity.TravelImage.class, com.triptune.domain.travel.entity.QTravelImage.class, PathInits.DIRECT2);
 
     public QFile(String variable) {
         super(File.class, forVariable(variable));

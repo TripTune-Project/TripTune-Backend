@@ -1,6 +1,6 @@
 package com.triptune.domain.travel.dto;
 
-import com.triptune.domain.travel.entity.TravelImageFile;
+import com.triptune.domain.travel.entity.TravelImage;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -19,7 +19,7 @@ public class TravelImageResponse {
         this.imageUrl = imageUrl;
     }
 
-    public static TravelImageResponse entityToDto(TravelImageFile travelImageFile){
+    public static TravelImageResponse entityToDto(TravelImage travelImageFile){
         return TravelImageResponse.builder()
                 .fileId(travelImageFile.getFile().getFileId())
                 .imageName(travelImageFile.getFile().getFileName())

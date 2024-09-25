@@ -5,9 +5,9 @@ import com.triptune.domain.common.repository.*;
 import com.triptune.domain.travel.dto.TravelLocationRequest;
 import com.triptune.domain.travel.dto.TravelLocationResponse;
 import com.triptune.domain.travel.dto.TravelSearchRequest;
-import com.triptune.domain.travel.entity.TravelImageFile;
+import com.triptune.domain.travel.entity.TravelImage;
 import com.triptune.domain.travel.entity.TravelPlace;
-import com.triptune.domain.travel.repository.TravelImageFileRepository;
+import com.triptune.domain.travel.repository.TravelImageRepository;
 import com.triptune.domain.travel.repository.TravelRepository;
 import com.triptune.global.config.QueryDSLConfig;
 import jakarta.transaction.Transactional;
@@ -34,23 +34,25 @@ import static org.junit.jupiter.api.Assertions.*;
 @ActiveProfiles("test")
 @TestPropertySource(locations = "classpath:application-test.yml")
 public class TravelRepositoryTests {
-    private TravelRepository travelRepository;
-    private FileRepository fileRepository;
-    private CityRepository cityRepository;
-    private CountryRepository countryRepository;
-    private DistrictRepository districtRepository;
-    private ApiCategoryRepository apiCategoryRepository;
-    private TravelImageFileRepository travelImageFileRepository;
+    private final TravelRepository travelRepository;
+    private final FileRepository fileRepository;
+    private final CityRepository cityRepository;
+    private final CountryRepository countryRepository;
+    private final DistrictRepository districtRepository;
+    private final ApiCategoryRepository apiCategoryRepository;
+    private final TravelImageRepository travelImageRepository;
+    private final ApiContentTypeRepository apiContentTypeRepository;
 
     @Autowired
-    public TravelRepositoryTests(TravelRepository travelRepository, FileRepository fileRepository, CityRepository cityRepository, CountryRepository countryRepository, DistrictRepository districtRepository, ApiCategoryRepository apiCategoryRepository, TravelImageFileRepository travelImageFileRepository) {
+    public TravelRepositoryTests(TravelRepository travelRepository, FileRepository fileRepository, CityRepository cityRepository, CountryRepository countryRepository, DistrictRepository districtRepository, ApiCategoryRepository apiCategoryRepository, TravelImageRepository travelImageRepository, ApiContentTypeRepository apiContentTypeRepository) {
         this.travelRepository = travelRepository;
         this.fileRepository = fileRepository;
         this.cityRepository = cityRepository;
         this.countryRepository = countryRepository;
         this.districtRepository = districtRepository;
         this.apiCategoryRepository = apiCategoryRepository;
-        this.travelImageFileRepository = travelImageFileRepository;
+        this.travelImageRepository = travelImageRepository;
+        this.apiContentTypeRepository = apiContentTypeRepository;
     }
 
     @BeforeEach
@@ -67,17 +69,22 @@ public class TravelRepositoryTests {
         ApiCategory apiCategory = ApiCategory.builder().categoryCode("A0101").categoryName("자연").level(1).build();
         ApiCategory savedApiCategory = apiCategoryRepository.save(apiCategory);
 
+        ApiContentType apiContentType = ApiContentType.builder().contentTypeId(1L).contentTypeName("관광지").build();
+        ApiContentType savedApiContentType = apiContentTypeRepository.save(apiContentType);
+
         TravelPlace travelPlace = TravelPlace.builder()
                 .country(savedCountry)
                 .city(savedCity)
                 .district(savedDistrict)
                 .apiCategory(savedApiCategory)
-                .contentTypeId(1L)
+                .apiContentType(savedApiContentType)
                 .placeName("테스트 장소명")
                 .address("테스트 주소")
+                .useTime("상시")
+                .homepage("www.test.com")
+                .phoneNumber("010-0000-0000")
                 .latitude(37.5)
                 .longitude(127.0281573537)
-                .apiContentId(1)
                 .bookmarkCnt(0)
                 .createdAt(LocalDateTime.now())
                 .build();
@@ -96,12 +103,12 @@ public class TravelRepositoryTests {
 
         File savedFile = fileRepository.save(file);
 
-        TravelImageFile travelImageFile = TravelImageFile.builder()
+        TravelImage travelImageFile = TravelImage.builder()
                 .travelPlace(savedTravelPlace)
                 .file(savedFile)
                 .build();
 
-        travelImageFileRepository.save(travelImageFile);
+        travelImageRepository.save(travelImageFile);
     }
     
 
