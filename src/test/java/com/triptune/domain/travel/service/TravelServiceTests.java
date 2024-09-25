@@ -4,12 +4,11 @@ import com.triptune.domain.common.entity.*;
 import com.triptune.domain.common.exception.DataNotFoundException;
 import com.triptune.domain.common.repository.FileRepository;
 import com.triptune.domain.travel.dto.*;
-import com.triptune.domain.travel.entity.TravelImageFile;
+import com.triptune.domain.travel.entity.TravelImage;
 import com.triptune.domain.travel.entity.TravelPlace;
-import com.triptune.domain.travel.repository.TravelImageFileRepository;
+import com.triptune.domain.travel.repository.TravelImageRepository;
 import com.triptune.domain.travel.repository.TravelRepository;
 import com.triptune.global.enumclass.ErrorCode;
-import com.triptune.global.exception.CustomJwtBadRequestException;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
@@ -46,11 +45,12 @@ public class TravelServiceTests {
     private FileRepository fileRepository;
 
     @Mock
-    private TravelImageFileRepository travelImageFileRepository;
+    private TravelImageRepository travelImageRepository;
 
     private Country country;
     private City city;
     private District district;
+    private ApiCategory apiCategory;
 
 
     @BeforeEach
@@ -58,12 +58,13 @@ public class TravelServiceTests {
         this.country = Country.builder().countryId(1L).countryName("대한민국").build();
         this.city = City.builder().cityId(1L).cityName("서울").country(country).build();
         this.district = District.builder().districtId(1L).districtName("강남구").city(city).build();
+        this.apiCategory = ApiCategory.builder().categoryCode("A0101").categoryName("자연").level(1).build();
     }
 
 
     @Test
     @DisplayName("findNearByTravelPlaces() 성공: 현재 위치에 따른 여행지 목록 조회 시 데이터 존재하는 경우")
-    void getNearByTravelPlaces_withData_success(){
+    void getNearByTravelPlaces_withData(){
         // given
         TravelLocationRequest request = TravelLocationRequest.builder()
                 .latitude(37.4970465429)
@@ -78,8 +79,8 @@ public class TravelServiceTests {
         when(travelRepository.findNearByTravelPlaces(pageable, request, 5))
                 .thenReturn(mockTravelLocationResponse);
 
-        when(travelImageFileRepository.findByTravelPlacePlaceId(any()))
-                .thenReturn(createTravelImageFiles());
+        when(travelImageRepository.findByTravelPlacePlaceId(any()))
+                .thenReturn(createTravelImages());
 
         // when
         Page<TravelResponse> response = travelService.getNearByTravelPlaces(request, page);
@@ -101,7 +102,7 @@ public class TravelServiceTests {
 
     @Test
     @DisplayName("findNearByTravelPlaces() 성공: 현재 위치에 따른 여행지 목록 조회 시 데이터 없는 경우")
-    void getNearByTravelPlaces_noData_success(){
+    void getNearByTravelPlaces_noData(){
         // given
         TravelLocationRequest request = TravelLocationRequest.builder()
                 .latitude(0.0)
@@ -131,7 +132,7 @@ public class TravelServiceTests {
 
     @Test
     @DisplayName("searchTravelPlaces() 성공: 현재 위치에 따른 여행지 목록 조회 시 데이터 존재하는 경우")
-    void searchTravelPlaces_withData_success(){
+    void searchTravelPlaces_withData(){
         // given
         TravelSearchRequest request = TravelSearchRequest.builder()
                 .latitude(37.4970465429)
@@ -147,8 +148,8 @@ public class TravelServiceTests {
         when(travelRepository.searchTravelPlaces(pageable, request))
                 .thenReturn(mockTravelLocationResponse);
 
-        when(travelImageFileRepository.findByTravelPlacePlaceId(any()))
-                .thenReturn(createTravelImageFiles());
+        when(travelImageRepository.findByTravelPlacePlaceId(any()))
+                .thenReturn(createTravelImages());
 
         // when
         Page<TravelResponse> response = travelService.searchTravelPlaces(request, page);
@@ -168,7 +169,7 @@ public class TravelServiceTests {
 
     @Test
     @DisplayName("searchTravelPlaces() 성공: 현재 위치에 따른 여행지 목록 조회 시 데이터 없는 경우")
-    void searchTravelPlaces_noData_success(){
+    void searchTravelPlaces_noData(){
         // given
         TravelSearchRequest request = TravelSearchRequest.builder()
                 .latitude(37.4970465429)
@@ -193,11 +194,16 @@ public class TravelServiceTests {
     }
     
     @Test
-    @DisplayName("getTravelDetails() 성공: 여행지 상세조회")
-    void getTravelDetails_success(){
+    @DisplayName("getTravelDetails() 성공: 숙박을 제외한 여행지 상세조회")
+    void getTravelDetails_exceptLodging(){
         // given
+        ApiContentType apiContentType = ApiContentType.builder().contentTypeId(1L).contentTypeName("관광지").build();
+        TravelPlace travelPlace = createTravelPlace();
+        travelPlace.setUseTime("상시");
+        travelPlace.setApiContentType(apiContentType);
+
         when(travelRepository.findByPlaceId(1L))
-                .thenReturn(Optional.of(createTravelPlace()));
+                .thenReturn(Optional.of(travelPlace));
 
         // when
         TravelDetailResponse response = travelService.getTravelPlaceDetails(1L);
@@ -207,14 +213,49 @@ public class TravelServiceTests {
         assertEquals(response.getAddress(), "테스트 주소");
         assertEquals(response.getPlaceName(), "테스트 장소명");
         assertEquals(response.getDescription(), "테스트 장소 설명");
+        assertEquals(response.getPlaceType(), "관광지");
+        assertNull(response.getCheckInTime());
+        assertNull(response.getCheckOutTime());
+        assertEquals(response.getHomepage(), "www.test.com");
+        assertEquals(response.getPhoneNumber(), "010-0000-0000");
         assertEquals(response.getImageList().get(0).getImageName(), "test1.jpg");
         assertEquals(response.getImageList().get(1).getImageUrl(), "/test/test2.jpg");
-        
+    }
+
+    @Test
+    @DisplayName("getTravelDetails() 성공: 숙박 여행지 상세조회")
+    void getTravelDetails_Lodging(){
+        // given
+        ApiContentType apiContentType = ApiContentType.builder().contentTypeId(1L).contentTypeName("숙박").build();
+        TravelPlace travelPlace = createTravelPlace();
+        travelPlace.setCheckInTime("13:00");
+        travelPlace.setCheckOutTime("11:00");
+        travelPlace.setApiContentType(apiContentType);
+
+        when(travelRepository.findByPlaceId(1L))
+                .thenReturn(Optional.of(travelPlace));
+
+        // when
+        TravelDetailResponse response = travelService.getTravelPlaceDetails(1L);
+
+        // then
+        assertEquals(response.getPlaceId(), 1L);
+        assertEquals(response.getAddress(), "테스트 주소");
+        assertEquals(response.getPlaceName(), "테스트 장소명");
+        assertEquals(response.getDescription(), "테스트 장소 설명");
+        assertEquals(response.getPlaceType(), "숙박");
+        assertNull(response.getUseTime());
+        assertEquals(response.getCheckInTime(), "13:00");
+        assertEquals(response.getCheckOutTime(), "11:00");
+        assertEquals(response.getHomepage(), "www.test.com");
+        assertEquals(response.getPhoneNumber(), "010-0000-0000");
+        assertEquals(response.getImageList().get(0).getImageName(), "test1.jpg");
+        assertEquals(response.getImageList().get(1).getImageUrl(), "/test/test2.jpg");
     }
 
     @Test
     @DisplayName("getTravelDetails() 실패: 조회 시 데이터가 존재하지 않아 DataNotFoundException 발생")
-    void getTravelDetails_noData_fail(){
+    void getTravelDetails_DataNotFoundException(){
         // given
         when(travelRepository.findByPlaceId(1L))
                 .thenReturn(Optional.empty());
@@ -228,6 +269,8 @@ public class TravelServiceTests {
     }
 
 
+
+
     /**
      * TravelPlace 객체 제공하는 메서드
      * @return TravelPlace
@@ -238,15 +281,18 @@ public class TravelServiceTests {
                 .country(country)
                 .city(city)
                 .district(district)
+                .apiCategory(apiCategory)
                 .address("테스트 주소")
                 .detailAddress("테스트 상세주소")
+                .homepage("www.test.com")
+                .phoneNumber("010-0000-0000")
                 .latitude(37.5)
                 .longitude(127.0281573537)
                 .placeName("테스트 장소명")
                 .bookmarkCnt(0)
                 .createdAt(LocalDateTime.now())
                 .description("테스트 장소 설명")
-                .travelImageFileList(createTravelImageFiles())
+                .travelImageList(createTravelImages())
                 .build();
     }
 
@@ -279,8 +325,8 @@ public class TravelServiceTests {
      * 여행지 이미지 정보 List<TravelImageFile> 제공하는 메소드
      * @return List<TravelImageFile>
      */
-    private List<TravelImageFile> createTravelImageFiles(){
-        ApiCategory apiCategory = ApiCategory.builder().categoryCode("A0101").categoryName("자연").level(1).build();
+    private List<TravelImage> createTravelImages(){
+        ApiContentType apiContentType = ApiContentType.builder().contentTypeId(1L).contentTypeName("관광지").build();
 
         TravelPlace testTravel = TravelPlace.builder()
                 .placeId(1L)
@@ -288,12 +334,14 @@ public class TravelServiceTests {
                 .city(city)
                 .district(district)
                 .apiCategory(apiCategory)
-                .contentTypeId(1L)
+                .apiContentType(apiContentType)
                 .placeName("테스트 장소명")
                 .address("테스트 주소")
+                .useTime("상시")
+                .homepage("www.test.com")
+                .phoneNumber("010-0000-0000")
                 .latitude(37.5)
                 .longitude(127.0281573537)
-                .apiContentId(1)
                 .createdAt(LocalDateTime.now())
                 .build();
 
@@ -321,8 +369,8 @@ public class TravelServiceTests {
 
 
         return Arrays.asList(
-                new TravelImageFile(1L, testTravel, testFile1),
-                new TravelImageFile(2L, testTravel, testFile2)
+                new TravelImage(1L, testTravel, testFile1),
+                new TravelImage(2L, testTravel, testFile2)
         );
     }
 
