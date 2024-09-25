@@ -1,7 +1,7 @@
 package com.triptune.domain.travel.respository;
 
-import com.triptune.domain.travel.entity.TravelImageFile;
-import com.triptune.domain.travel.repository.TravelImageFileRepository;
+import com.triptune.domain.travel.entity.TravelImage;
+import com.triptune.domain.travel.repository.TravelImageRepository;
 import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -14,10 +14,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @SpringBootTest
 @Transactional
-public class TravelImageFileRepositoryTests {
+public class TravelImageRepositoryTests {
 
     @Autowired
-    private TravelImageFileRepository travelImageFileRepository;
+    private TravelImageRepository travelImageRepository;
 
     @Test
     @DisplayName("성공: placeId를 이용해서 List<TravelImageFile> 조회")
@@ -26,7 +26,7 @@ public class TravelImageFileRepositoryTests {
         Long placeId = 1L;
 
         // when
-        List<TravelImageFile> result = travelImageFileRepository.findByTravelPlacePlaceId(placeId);
+        List<TravelImage> result = travelImageRepository.findByTravelPlacePlaceId(placeId);
 
         // then
         assertEquals(result.get(0).getTravelPlace().getPlaceId(), placeId);
