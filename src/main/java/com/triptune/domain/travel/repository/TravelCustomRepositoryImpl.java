@@ -9,7 +9,6 @@ import com.triptune.domain.travel.dto.TravelLocationRequest;
 import com.triptune.domain.travel.dto.TravelLocationResponse;
 import com.triptune.domain.travel.dto.TravelSearchRequest;
 import com.triptune.domain.travel.entity.QTravelPlace;
-import com.triptune.domain.travel.entity.TravelImageFile;
 import com.triptune.domain.travel.entity.TravelPlace;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;

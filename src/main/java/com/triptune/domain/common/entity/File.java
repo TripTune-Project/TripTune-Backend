@@ -1,6 +1,6 @@
 package com.triptune.domain.common.entity;
 
-import com.triptune.domain.travel.entity.TravelImageFile;
+import com.triptune.domain.travel.entity.TravelImage;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
@@ -46,10 +46,10 @@ public class File {
     private String apiFileUrl;
 
     @OneToMany(mappedBy = "file", orphanRemoval = true)
-    private List<TravelImageFile> travelImageFileList;
+    private List<TravelImage> travelImageFileList;
 
     @Builder
-    public File(Long fileId, String s3ObjectUrl, String originalName, String fileName, String fileType, double fileSize, LocalDateTime createdAt, boolean isThumbnail, String apiFileUrl, List<TravelImageFile> travelImageFileList) {
+    public File(Long fileId, String s3ObjectUrl, String originalName, String fileName, String fileType, double fileSize, LocalDateTime createdAt, boolean isThumbnail, String apiFileUrl, List<TravelImage> travelImageFileList) {
         this.fileId = fileId;
         this.s3ObjectUrl = s3ObjectUrl;
         this.originalName = originalName;
@@ -62,9 +62,9 @@ public class File {
         this.travelImageFileList = travelImageFileList;
     }
 
-    public static String getThumbnailUrl(List<TravelImageFile> imageFile){
+    public static String getThumbnailUrl(List<TravelImage> imageFile){
         return imageFile.stream()
-                .map(TravelImageFile::getFile)
+                .map(TravelImage::getFile)
                 .filter(File::isThumbnail)
                 .map(File::getS3ObjectUrl)
                 .findFirst()

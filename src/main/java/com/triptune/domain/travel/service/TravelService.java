@@ -1,12 +1,9 @@
 package com.triptune.domain.travel.service;
 
-import com.triptune.domain.common.entity.File;
 import com.triptune.domain.common.exception.DataNotFoundException;
-import com.triptune.domain.common.repository.FileRepository;
 import com.triptune.domain.travel.dto.*;
-import com.triptune.domain.travel.entity.TravelImageFile;
 import com.triptune.domain.travel.entity.TravelPlace;
-import com.triptune.domain.travel.repository.TravelImageFileRepository;
+import com.triptune.domain.travel.repository.TravelImageRepository;
 import com.triptune.domain.travel.repository.TravelRepository;
 import com.triptune.global.enumclass.ErrorCode;
 import jakarta.transaction.Transactional;
@@ -16,16 +13,13 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Optional;
-
 @Service
 @RequiredArgsConstructor
 @Transactional
 public class TravelService {
 
     private final TravelRepository travelRepository;
-    private final TravelImageFileRepository travelImageFileRepository;
+    private final TravelImageRepository travelImageRepository;
 
     /**
      * 현재 위치에 따른 여행지 목록 제공
@@ -40,7 +34,7 @@ public class TravelService {
 
         if (travelPlacePage.getTotalElements() != 0){
             for(TravelLocationResponse response: travelPlacePage){
-                response.setTravelImageFileList(travelImageFileRepository.findByTravelPlacePlaceId(response.getPlaceId()));
+                response.setTravelImageFileList(travelImageRepository.findByTravelPlacePlaceId(response.getPlaceId()));
             }
         }
 
@@ -59,12 +53,17 @@ public class TravelService {
         Page<TravelLocationResponse> travelPlacePage = travelRepository.searchTravelPlaces(pageable, travelSearchRequest);
 
         for(TravelLocationResponse response: travelPlacePage){
-            response.setTravelImageFileList(travelImageFileRepository.findByTravelPlacePlaceId(response.getPlaceId()));
+            response.setTravelImageFileList(travelImageRepository.findByTravelPlacePlaceId(response.getPlaceId()));
         }
 
         return travelPlacePage.map(TravelResponse::entityToLocationDto);
     }
 
+    /**
+     * 여행지 상세보기
+     * @param placeId
+     * @return TravelDetailResponse
+     */
     public TravelDetailResponse getTravelPlaceDetails(Long placeId) {
         TravelPlace travelPlace = travelRepository.findByPlaceId(placeId)
                 .orElseThrow(()-> new DataNotFoundException(ErrorCode.DATA_NOT_FOUND));

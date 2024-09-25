@@ -39,11 +39,11 @@ public class TravelResponse {
     }
 
     public void setThumbnailUrl(TravelPlace travelPlace) {
-        this.thumbnailUrl = File.getThumbnailUrl(travelPlace.getTravelImageFileList());
+        this.thumbnailUrl = File.getThumbnailUrl(travelPlace.getTravelImageList());
     }
 
     public static TravelResponse entityToDto(TravelPlace travelPlace){
-        String thumbnailUrl = File.getThumbnailUrl(travelPlace.getTravelImageFileList());
+        String thumbnailUrl = File.getThumbnailUrl(travelPlace.getTravelImageList());
 
         return TravelResponse.builder()
                 .placeId(travelPlace.getPlaceId())
