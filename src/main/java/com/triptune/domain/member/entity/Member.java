@@ -1,5 +1,6 @@
 package com.triptune.domain.member.entity;
 
+import com.triptune.domain.schedule.entity.TravelAttendee;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
@@ -7,6 +8,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Getter
@@ -46,8 +48,11 @@ public class Member {
     @Column(name = "file_id")
     private Long fileId;
 
+    @OneToMany(mappedBy = "member", orphanRemoval = true)
+    private List<TravelAttendee> travelAttendeeList;
+
     @Builder
-    public Member(Long memberId, String userId, String password, String refreshToken, boolean isSocialLogin, String nickname, String email, LocalDateTime createdAt, LocalDateTime updatedAt, Long fileId) {
+    public Member(Long memberId, String userId, String password, String refreshToken, boolean isSocialLogin, String nickname, String email, LocalDateTime createdAt, LocalDateTime updatedAt, Long fileId, List<TravelAttendee> travelAttendeeList) {
         this.memberId = memberId;
         this.userId = userId;
         this.password = password;
@@ -58,5 +63,6 @@ public class Member {
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
         this.fileId = fileId;
+        this.travelAttendeeList = travelAttendeeList;
     }
 }
