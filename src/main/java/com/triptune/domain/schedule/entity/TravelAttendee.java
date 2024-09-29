@@ -24,9 +24,11 @@ public class TravelAttendee {
     @JoinColumn(name = "member_id")
     private Member member;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "role")
     private AttendeeRole role;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "permission")
     private AttendeePermission permission;
 
