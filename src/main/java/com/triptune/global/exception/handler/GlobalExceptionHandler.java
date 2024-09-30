@@ -1,7 +1,6 @@
 package com.triptune.global.exception.handler;
 
-import com.triptune.global.exception.CustomJwtBadRequestException;
-import com.triptune.global.exception.CustomJwtUnAuthorizedException;
+import com.triptune.global.exception.*;
 import com.triptune.global.response.ErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -67,6 +66,41 @@ public class GlobalExceptionHandler {
         log.error("NoHandlerFoundException at {}: {}", request.getRequestURI(),  ex.getMessage());
 
         response.sendRedirect(notFoundErrorURL);
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleDataExistedException(DataExistException ex, HttpServletRequest request){
+        log.error("DataExistException at {}: {}", request.getRequestURI(),  ex.getMessage());
+
+        return ErrorResponse.builder()
+                .errorCode(ex.getHttpStatus().value())
+                .message(ex.getMessage())
+                .build();
+    }
+
+    @ExceptionHandler(DataNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ErrorResponse handleDataNotFoundException(DataNotFoundException ex, HttpServletRequest request){
+        log.error("DataNotFoundException at {}: {}", request.getRequestURI(),  ex.getMessage());
+
+        return ErrorResponse.builder()
+                .message(ex.getMessage())
+                .errorCode(ex.getHttpStatus().value())
+                .build();
+
+    }
+
+    @ExceptionHandler(CustomNotValidException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleCustomNotValidException(CustomNotValidException ex, HttpServletRequest request){
+        log.error("CustomNotValidException at {}: {}", request.getRequestURI(),  ex.getMessage());
+
+        return ErrorResponse.builder()
+                .message(ex.getMessage())
+                .errorCode(ex.getHttpStatus().value())
+                .build();
+
     }
 
 }
