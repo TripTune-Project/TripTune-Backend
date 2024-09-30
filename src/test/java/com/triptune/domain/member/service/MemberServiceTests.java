@@ -6,10 +6,10 @@ import com.triptune.domain.member.dto.RefreshTokenRequest;
 import com.triptune.domain.member.dto.RefreshTokenResponse;
 import com.triptune.domain.member.entity.Member;
 import com.triptune.domain.member.exception.ChangePasswordException;
-import com.triptune.domain.member.exception.CustomUsernameNotFoundException;
 import com.triptune.domain.member.repository.MemberRepository;
 import com.triptune.global.enumclass.ErrorCode;
 import com.triptune.global.exception.CustomJwtBadRequestException;
+import com.triptune.global.exception.DataNotFoundException;
 import com.triptune.global.util.JwtUtil;
 import com.triptune.global.util.RedisUtil;
 import io.jsonwebtoken.Claims;
@@ -163,8 +163,8 @@ public class MemberServiceTests {
     }
 
     @Test
-    @DisplayName("changePassword() 실패: 사용자 정보를 찾을 수 없어 CustomUsernameNotFoundException 발생")
-    void changePassword_customUsernameNotFoundException_fail(){
+    @DisplayName("changePassword() 실패: 사용자 정보를 찾을 수 없어 DataNotFoundException 발생")
+    void changePassword_DataNotFoundException_fail(){
         // given
         String email = "test@email.com";
 
@@ -172,11 +172,11 @@ public class MemberServiceTests {
         when(memberRepository.findByEmail(anyString())).thenReturn(Optional.empty());
 
         // when
-        CustomUsernameNotFoundException fail = assertThrows(CustomUsernameNotFoundException.class, () -> memberService.changePassword(createChangePasswordDTO()));
+        DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> memberService.changePassword(createChangePasswordDTO()));
 
         // then
-        assertEquals(fail.getHttpStatus(), ErrorCode.NOT_FOUND_USER.getStatus());
-        assertEquals(fail.getMessage(), ErrorCode.NOT_FOUND_USER.getMessage());
+        assertEquals(fail.getHttpStatus(), ErrorCode.USER_NOT_FOUND.getStatus());
+        assertEquals(fail.getMessage(), ErrorCode.USER_NOT_FOUND.getMessage());
 
         log.info("status : {}, message : {}", fail.getHttpStatus(), fail.getMessage());
     }
