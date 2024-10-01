@@ -3,13 +3,13 @@ package com.triptune.domain.member.service;
 import com.triptune.domain.email.service.EmailService;
 import com.triptune.domain.member.dto.*;
 import com.triptune.domain.member.entity.Member;
-import com.triptune.domain.member.exception.CustomUsernameNotFoundException;
-import com.triptune.domain.common.exception.DataExistException;
 import com.triptune.domain.member.exception.ChangePasswordException;
 import com.triptune.domain.member.exception.FailLoginException;
 import com.triptune.domain.member.repository.MemberRepository;
-import com.triptune.global.exception.CustomJwtBadRequestException;
 import com.triptune.global.enumclass.ErrorCode;
+import com.triptune.global.exception.CustomJwtBadRequestException;
+import com.triptune.global.exception.DataExistException;
+import com.triptune.global.exception.DataNotFoundException;
 import com.triptune.global.util.JwtUtil;
 import com.triptune.global.util.RedisUtil;
 import io.jsonwebtoken.Claims;
@@ -100,7 +100,7 @@ public class MemberService {
         Claims claims = jwtUtil.parseClaims(refreshToken);
 
         Member member = memberRepository.findByUserId(claims.getSubject())
-                .orElseThrow(() -> new CustomUsernameNotFoundException(ErrorCode.NOT_FOUND_USER));
+                .orElseThrow(() -> new DataNotFoundException(ErrorCode.USER_NOT_FOUND));
 
         if(!refreshToken.equals(member.getRefreshToken())){
             throw new CustomJwtBadRequestException(ErrorCode.MISMATCH_REFRESH_TOKEN);
@@ -115,11 +115,11 @@ public class MemberService {
      * 이메일 주소로 회원 정보 찾아서 아이디 반환
      * @param  findIdRequest
      * @return 사용자 정보 객체 {@link MemberResponse}
-     * @throws CustomUsernameNotFoundException 이메일로 회원 정보를 찾기 못한 경우
+     * @throws DataNotFoundException 이메일로 회원 정보를 찾기 못한 경우
      */
     public FindIdResponse findId(FindIdRequest findIdRequest) {
         Member member = memberRepository.findByEmail(findIdRequest.getEmail())
-                .orElseThrow(() -> new CustomUsernameNotFoundException(ErrorCode.NOT_FOUND_USER));
+                .orElseThrow(() -> new DataNotFoundException(ErrorCode.USER_NOT_FOUND));
 
         return FindIdResponse.builder()
                 .userId(member.getUserId())
@@ -134,10 +134,10 @@ public class MemberService {
      */
     public void findPassword(FindPasswordDTO findPasswordDTO) throws MessagingException {
         Member member = memberRepository.findByEmail(findPasswordDTO.getEmail())
-                .orElseThrow(() -> new CustomUsernameNotFoundException(ErrorCode.NOT_FOUND_USER));
+                .orElseThrow(() -> new DataNotFoundException(ErrorCode.USER_NOT_FOUND));
 
         if (!member.getUserId().equals(findPasswordDTO.getUserId())){
-            throw new CustomUsernameNotFoundException(ErrorCode.NOT_FOUND_USER);
+            throw new DataNotFoundException(ErrorCode.USER_NOT_FOUND);
         }
 
         emailService.findPassword(findPasswordDTO);
@@ -152,7 +152,7 @@ public class MemberService {
         }
 
         Member member = memberRepository.findByEmail(email)
-                .orElseThrow(() -> new CustomUsernameNotFoundException(ErrorCode.NOT_FOUND_USER));
+                .orElseThrow(() -> new DataNotFoundException(ErrorCode.USER_NOT_FOUND));
 
         member.setPassword(passwordEncoder.encode(changePasswordDTO.getPassword()));
     }

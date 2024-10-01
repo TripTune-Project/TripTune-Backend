@@ -1,7 +1,7 @@
 package com.triptune.domain.travel.service;
 
 import com.triptune.domain.common.entity.*;
-import com.triptune.domain.common.exception.DataNotFoundException;
+import com.triptune.global.exception.DataNotFoundException;
 import com.triptune.domain.common.repository.FileRepository;
 import com.triptune.domain.travel.dto.*;
 import com.triptune.domain.travel.entity.TravelImage;
