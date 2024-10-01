@@ -1,7 +1,6 @@
 package com.triptune.domain.schedule.service;
 
 import com.triptune.domain.member.entity.Member;
-import com.triptune.domain.member.exception.CustomUsernameNotFoundException;
 import com.triptune.domain.member.repository.MemberRepository;
 import com.triptune.domain.schedule.dto.ScheduleRequest;
 import com.triptune.domain.schedule.entity.TravelAttendee;
@@ -9,6 +8,7 @@ import com.triptune.domain.schedule.entity.TravelSchedule;
 import com.triptune.domain.schedule.repository.AttendeeRepository;
 import com.triptune.domain.schedule.repository.ScheduleRepository;
 import com.triptune.global.enumclass.ErrorCode;
+import com.triptune.global.exception.DataNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.DisplayName;
@@ -76,11 +76,11 @@ public class ScheduleServiceTests {
         when(memberRepository.findByUserId(any())).thenReturn(Optional.empty());
 
         // when
-        CustomUsernameNotFoundException fail = assertThrows(CustomUsernameNotFoundException.class, () -> scheduleService.createSchedule(request, "test"));
+        DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> scheduleService.createSchedule(request, "test"));
 
         // then
-        assertEquals(fail.getHttpStatus(), ErrorCode.NOT_FOUND_USER.getStatus());
-        assertEquals(fail.getMessage(), ErrorCode.NOT_FOUND_USER.getMessage());
+        assertEquals(fail.getHttpStatus(), ErrorCode.USER_NOT_FOUND.getStatus());
+        assertEquals(fail.getMessage(), ErrorCode.USER_NOT_FOUND.getMessage());
 
     }
 

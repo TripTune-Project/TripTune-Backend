@@ -1,7 +1,6 @@
 package com.triptune.domain.schedule.service;
 
 import com.triptune.domain.member.entity.Member;
-import com.triptune.domain.member.exception.CustomUsernameNotFoundException;
 import com.triptune.domain.member.repository.MemberRepository;
 import com.triptune.domain.schedule.dto.ScheduleRequest;
 import com.triptune.domain.schedule.entity.TravelAttendee;
@@ -11,6 +10,7 @@ import com.triptune.domain.schedule.enumclass.AttendeeRole;
 import com.triptune.domain.schedule.repository.AttendeeRepository;
 import com.triptune.domain.schedule.repository.ScheduleRepository;
 import com.triptune.global.enumclass.ErrorCode;
+import com.triptune.global.exception.DataNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -36,7 +36,7 @@ public class ScheduleService {
         TravelSchedule savedTravelSchedule = scheduleRepository.save(travelSchedule);
 
         Member savedMember = memberRepository.findByUserId(userId)
-                .orElseThrow(() -> new CustomUsernameNotFoundException(ErrorCode.NOT_FOUND_USER));
+                .orElseThrow(() -> new DataNotFoundException(ErrorCode.USER_NOT_FOUND));
 
         TravelAttendee travelAttendee = TravelAttendee.builder()
                 .travelSchedule(savedTravelSchedule)
