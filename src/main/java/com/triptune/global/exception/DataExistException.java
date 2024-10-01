@@ -1,4 +1,4 @@
-package com.triptune.domain.common.exception;
+package com.triptune.global.exception;
 
 import com.triptune.global.enumclass.ErrorCode;
 import lombok.Getter;

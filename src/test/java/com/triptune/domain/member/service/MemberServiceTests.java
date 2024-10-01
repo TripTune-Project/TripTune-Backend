@@ -1,15 +1,13 @@
 package com.triptune.domain.member.service;
 
-import com.triptune.domain.member.dto.ChangePasswordDTO;
-import com.triptune.domain.member.dto.LogoutDTO;
-import com.triptune.domain.member.dto.RefreshTokenRequest;
-import com.triptune.domain.member.dto.RefreshTokenResponse;
+import com.triptune.domain.member.dto.*;
 import com.triptune.domain.member.entity.Member;
 import com.triptune.domain.member.exception.ChangePasswordException;
-import com.triptune.domain.member.exception.CustomUsernameNotFoundException;
 import com.triptune.domain.member.repository.MemberRepository;
 import com.triptune.global.enumclass.ErrorCode;
 import com.triptune.global.exception.CustomJwtBadRequestException;
+import com.triptune.global.exception.DataExistException;
+import com.triptune.global.exception.DataNotFoundException;
 import com.triptune.global.util.JwtUtil;
 import com.triptune.global.util.RedisUtil;
 import io.jsonwebtoken.Claims;
@@ -58,7 +56,80 @@ public class MemberServiceTests {
 
 
     @Test
-    @DisplayName("logout() 성공: 로그아웃")
+    @DisplayName("회원가입 성공")
+    void join_success(){
+        // given
+        MemberRequest request = createMemberRequest();
+
+        when(memberRepository.existsByUserId(anyString())).thenReturn(false);
+        when(memberRepository.existsByNickname(anyString())).thenReturn(false);
+        when(memberRepository.existsByEmail(anyString())).thenReturn(false);
+
+        // when
+        memberService.join(request);
+
+        // then
+        verify(memberRepository, times(1)).save(any(Member.class));
+    }
+
+    @Test
+    @DisplayName("회원가입 실패: 이미 가입한 아이디가 존재할 경우")
+    void join_userIdExistException(){
+        // given
+        MemberRequest request = createMemberRequest();
+
+        when(memberRepository.existsByUserId(anyString())).thenReturn(true);
+
+        // when
+        DataExistException fail = assertThrows(DataExistException.class, () -> memberService.join(request));
+
+        // then
+        verify(memberRepository, times(0)).save(any(Member.class));
+        assertEquals(fail.getHttpStatus(), ErrorCode.ALREADY_EXISTED_USERID.getStatus());
+        assertEquals(fail.getMessage(), ErrorCode.ALREADY_EXISTED_USERID.getMessage());
+
+    }
+
+    @Test
+    @DisplayName("회원가입 실패: 이미 가입한 닉네임이 존재할 경우")
+    void join_nicknameExistException(){
+        // given
+        MemberRequest request = createMemberRequest();
+
+        when(memberRepository.existsByUserId(anyString())).thenReturn(false);
+        when(memberRepository.existsByNickname(anyString())).thenReturn(true);
+
+        // when
+        DataExistException fail = assertThrows(DataExistException.class, () -> memberService.join(request));
+
+        // then
+        verify(memberRepository, times(0)).save(any(Member.class));
+        assertEquals(fail.getHttpStatus(), ErrorCode.ALREADY_EXISTED_NICKNAME.getStatus());
+        assertEquals(fail.getMessage(), ErrorCode.ALREADY_EXISTED_NICKNAME.getMessage());
+    }
+
+    @Test
+    @DisplayName("회원가입 실패: 이미 가입한 닉네임이 존재할 경우")
+    void join_emailExistException(){
+        // given
+        MemberRequest request = createMemberRequest();
+
+        when(memberRepository.existsByUserId(anyString())).thenReturn(false);
+        when(memberRepository.existsByNickname(anyString())).thenReturn(false);
+        when(memberRepository.existsByEmail(anyString())).thenReturn(true);
+
+        // when
+        DataExistException fail = assertThrows(DataExistException.class, () -> memberService.join(request));
+
+        // then
+        verify(memberRepository, times(0)).save(any(Member.class));
+        assertEquals(fail.getHttpStatus(), ErrorCode.ALREADY_EXISTED_EMAIL.getStatus());
+        assertEquals(fail.getMessage(), ErrorCode.ALREADY_EXISTED_EMAIL.getMessage());
+    }
+
+
+    @Test
+    @DisplayName("로그아웃 성공")
     void logout_success(){
         // given
         Member savedMember = createMember(refreshToken);
@@ -78,7 +149,7 @@ public class MemberServiceTests {
 
 
     @Test
-    @DisplayName("refreshToken() 성공: access token 갱신")
+    @DisplayName("refreshToken 갱신 성공")
     void refreshToken_success(){
         // given
         Claims mockClaims = Jwts.claims().setSubject("test");
@@ -100,8 +171,8 @@ public class MemberServiceTests {
 
 
     @Test
-    @DisplayName("refreshToken() 실패: 저장된 refresh token 와 요청 refresh token이 불일치하는 경우")
-    void misMatchRefreshToken_fail() {
+    @DisplayName("refreshToken 갱신 실패: 저장된 refresh token 와 요청 refresh token이 불일치하는 경우")
+    void misMatchRefreshToken_customJwtBadRequestException() {
         // given
         String savedRefreshToken = "refreshTokenInDatabase";
         Claims mockClaims = Jwts.claims().setSubject("test");
@@ -121,7 +192,7 @@ public class MemberServiceTests {
     }
 
     @Test
-    @DisplayName("changePassword() 성공: 비밀번호 변경")
+    @DisplayName("비밀번호 변경 성공")
     void changePassword_success(){
         // given
         String email = "test@email.com";
@@ -147,8 +218,8 @@ public class MemberServiceTests {
     }
 
     @Test
-    @DisplayName("changePassword() 실패: 비밀번호 변경 토큰 유효 시간이 만료되어 ChangePasswordException 발생")
-    void changePassword_changePasswordException_fail(){
+    @DisplayName("비밀번호 변경 실패: 비밀번호 변경 토큰 유효 시간이 만료되어 ChangePasswordException 발생")
+    void changePassword_changePasswordException(){
         // given
         when(redisUtil.getData(anyString())).thenReturn(null);
 
@@ -158,13 +229,11 @@ public class MemberServiceTests {
         // then
         assertEquals(fail.getHttpStatus(), ErrorCode.INVALID_CHANGE_PASSWORD.getStatus());
         assertEquals(fail.getMessage(), ErrorCode.INVALID_CHANGE_PASSWORD.getMessage());
-
-        log.info("status : {}, message : {}", fail.getHttpStatus(), fail.getMessage());
     }
 
     @Test
-    @DisplayName("changePassword() 실패: 사용자 정보를 찾을 수 없어 CustomUsernameNotFoundException 발생")
-    void changePassword_customUsernameNotFoundException_fail(){
+    @DisplayName("비밀번호 변경 실패: 사용자 정보를 찾을 수 없어 DataNotFoundException 발생")
+    void changePassword_dataNotFoundException(){
         // given
         String email = "test@email.com";
 
@@ -172,16 +241,23 @@ public class MemberServiceTests {
         when(memberRepository.findByEmail(anyString())).thenReturn(Optional.empty());
 
         // when
-        CustomUsernameNotFoundException fail = assertThrows(CustomUsernameNotFoundException.class, () -> memberService.changePassword(createChangePasswordDTO()));
+        DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> memberService.changePassword(createChangePasswordDTO()));
 
         // then
-        assertEquals(fail.getHttpStatus(), ErrorCode.NOT_FOUND_USER.getStatus());
-        assertEquals(fail.getMessage(), ErrorCode.NOT_FOUND_USER.getMessage());
-
-        log.info("status : {}, message : {}", fail.getHttpStatus(), fail.getMessage());
+        assertEquals(fail.getHttpStatus(), ErrorCode.USER_NOT_FOUND.getStatus());
+        assertEquals(fail.getMessage(), ErrorCode.USER_NOT_FOUND.getMessage());
     }
 
 
+    private MemberRequest createMemberRequest(){
+        return MemberRequest.builder()
+                .userId("testUser")
+                .password("password123@")
+                .repassword("password123@")
+                .nickname("test")
+                .email("test@test.com")
+                .build();
+    }
 
     /**
      * Member 객체 제공 메서드

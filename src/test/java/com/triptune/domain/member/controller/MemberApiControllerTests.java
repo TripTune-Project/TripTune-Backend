@@ -3,8 +3,10 @@ package com.triptune.domain.member.controller;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.triptune.domain.member.dto.LogoutDTO;
+import com.triptune.domain.member.dto.MemberRequest;
 import com.triptune.domain.member.dto.RefreshTokenRequest;
 import com.triptune.domain.member.repository.MemberRepository;
+import com.triptune.domain.member.service.MemberService;
 import com.triptune.global.enumclass.ErrorCode;
 import com.triptune.global.util.JwtUtil;
 import com.triptune.global.util.RedisUtil;
@@ -21,6 +23,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.filter.CharacterEncodingFilter;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -46,6 +49,9 @@ public class MemberApiControllerTests {
     private MemberRepository memberRepository;
 
     @MockBean
+    private MemberService memberService;
+
+    @MockBean
     private RedisUtil redisUtil;
 
     private MockMvc mockMvc;
@@ -60,7 +66,49 @@ public class MemberApiControllerTests {
     }
 
     @Test
-    @DisplayName("logout() 성공: 로그아웃")
+    @DisplayName("login() 성공")
+    void join_success() throws Exception {
+        doNothing().when(memberService).join(any());
+
+        mockMvc.perform(post("/api/members/join")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(toJsonString(createMemberRequest())))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("login() 실패: 유효성 검사로 인해 methodArgumentNotValidException 발생")
+    void join_methodArgumentNotValidException() throws Exception {
+        MemberRequest request = createMemberRequest();
+        request.setPassword("password");
+
+        doNothing().when(memberService).join(any());
+
+        mockMvc.perform(post("/api/members/join")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJsonString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false));
+    }
+
+    @Test
+    @DisplayName("login() 실패: 비밀번호, 비밀번호 재입력 불일치로 인한 CustomNotValidException 발생")
+    void join_CustomNotValidException() throws Exception {
+        MemberRequest request = createMemberRequest();
+        request.setPassword("password123@");
+        request.setRepassword("repassword123@");
+
+        doNothing().when(memberService).join(any());
+
+        mockMvc.perform(post("/api/members/join")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJsonString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false));
+    }
+
+    @Test
+    @DisplayName("logout() 성공")
     void logout_success() throws Exception{
         String accessToken = jwtUtil.createToken("test", 3600);
 
@@ -106,6 +154,15 @@ public class MemberApiControllerTests {
 
     }
 
+    private MemberRequest createMemberRequest(){
+        return MemberRequest.builder()
+                .userId("testUser")
+                .password("password123@")
+                .repassword("password123@")
+                .nickname("test")
+                .email("test@test.com")
+                .build();
+    }
 
     private LogoutDTO createLogoutDTO(){
         return LogoutDTO.builder()
