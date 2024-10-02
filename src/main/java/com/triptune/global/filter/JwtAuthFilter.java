@@ -2,6 +2,7 @@ package com.triptune.global.filter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.triptune.global.exception.CustomJwtBadRequestException;
+import com.triptune.global.exception.CustomJwtUnAuthorizedException;
 import com.triptune.global.response.ErrorResponse;
 import com.triptune.global.util.JwtUtil;
 import jakarta.servlet.FilterChain;
@@ -9,6 +10,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -24,6 +26,7 @@ import static com.triptune.global.config.SecurityConstants.AUTH_WHITELIST;
 /**
  * JWT 가 유효성을 검증하는 Filter
  */
+@Slf4j
 @RequiredArgsConstructor
 public class JwtAuthFilter extends OncePerRequestFilter {
 
@@ -41,13 +44,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        String authorization = request.getHeader("Authorization");
         String token = jwtUtil.resolveToken(request);
-
-        if(authorization == null){
-            filterChain.doFilter(request, response);
-            return;
-        }
 
         try{
             if (token != null && jwtUtil.validateToken(token)){
@@ -57,19 +54,23 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
             filterChain.doFilter(request, response);
         } catch (CustomJwtBadRequestException ex){
-            handleJwtException(response, ex);
+            log.error("NoHandlerFoundException at {}: {}", request.getRequestURI(),  ex.getMessage());
+            handleJwtException(response, ex.getHttpStatus().value(), ex.getMessage());
+        } catch (CustomJwtUnAuthorizedException ex){
+            log.error("CustomJwtUnAuthorizedException at {}: {}", request.getRequestURI(),  ex.getMessage());
+            handleJwtException(response, ex.getHttpStatus().value(), ex.getMessage());
         }
 
     }
 
-    private void handleJwtException(HttpServletResponse response, CustomJwtBadRequestException ex) throws IOException {
+    private void handleJwtException(HttpServletResponse response, int status, String message) throws IOException {
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-        response.setStatus(ex.getHttpStatus().value());
+        response.setStatus(status);
         response.setCharacterEncoding(Charset.defaultCharset().name());
 
         ErrorResponse errorResponse = ErrorResponse.builder()
-                .errorCode(ex.getHttpStatus().value())
-                .message(ex.getMessage())
+                .errorCode(status)
+                .message(message)
                 .build();
 
         String result = new ObjectMapper().writeValueAsString(errorResponse);
