@@ -2,7 +2,8 @@ package com.triptune.domain.schedule.service;
 
 import com.triptune.domain.member.entity.Member;
 import com.triptune.domain.member.repository.MemberRepository;
-import com.triptune.domain.schedule.dto.ScheduleRequest;
+import com.triptune.domain.schedule.dto.CreateScheduleRequest;
+import com.triptune.domain.schedule.dto.CreateScheduleResponse;
 import com.triptune.domain.schedule.entity.TravelAttendee;
 import com.triptune.domain.schedule.entity.TravelSchedule;
 import com.triptune.domain.schedule.enumclass.AttendeePermission;
@@ -15,7 +16,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -25,11 +25,11 @@ public class ScheduleService {
     private final MemberRepository memberRepository;
     private final AttendeeRepository attendeeRepository;
 
-    public void createSchedule(ScheduleRequest scheduleRequest, String userId){
+    public CreateScheduleResponse createSchedule(CreateScheduleRequest createScheduleRequest, String userId){
         TravelSchedule travelSchedule = TravelSchedule.builder()
-                .scheduleName(scheduleRequest.getScheduleName())
-                .startDate(scheduleRequest.getStartDate())
-                .endDate(scheduleRequest.getEndDate())
+                .scheduleName(createScheduleRequest.getScheduleName())
+                .startDate(createScheduleRequest.getStartDate())
+                .endDate(createScheduleRequest.getEndDate())
                 .createdAt(LocalDateTime.now())
                 .build();
 
@@ -46,5 +46,7 @@ public class ScheduleService {
                 .build();
 
         attendeeRepository.save(travelAttendee);
+
+        return CreateScheduleResponse.entityToDto(savedTravelSchedule);
     }
 }

@@ -2,7 +2,8 @@ package com.triptune.domain.schedule.service;
 
 import com.triptune.domain.member.entity.Member;
 import com.triptune.domain.member.repository.MemberRepository;
-import com.triptune.domain.schedule.dto.ScheduleRequest;
+import com.triptune.domain.schedule.dto.CreateScheduleRequest;
+import com.triptune.domain.schedule.dto.CreateScheduleResponse;
 import com.triptune.domain.schedule.entity.TravelAttendee;
 import com.triptune.domain.schedule.entity.TravelSchedule;
 import com.triptune.domain.schedule.repository.AttendeeRepository;
@@ -17,7 +18,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -50,18 +50,19 @@ public class ScheduleServiceTests {
     @DisplayName("일정 만들기 성공")
     void createSchedule_success(){
         // given
-        ScheduleRequest request = createScheduleRequest();
-        TravelSchedule travelSchedule = createTravelSchedule();
+        CreateScheduleRequest request = createScheduleRequest();
+        TravelSchedule savedtravelSchedule = createTravelSchedule();
         Member savedMember = createMember();
 
-        when(scheduleRepository.save(any())).thenReturn(travelSchedule);
+        when(scheduleRepository.save(any())).thenReturn(savedtravelSchedule);
         when(memberRepository.findByUserId(any())).thenReturn(Optional.of(savedMember));
 
         // when
-        scheduleService.createSchedule(request, "test");
+        CreateScheduleResponse response = scheduleService.createSchedule(request, "test");
 
         // then
         verify(attendeeRepository, times(1)).save(any(TravelAttendee.class));
+        assertEquals(response.getScheduleId(), savedtravelSchedule.getScheduleId());
 
     }
 
@@ -69,7 +70,7 @@ public class ScheduleServiceTests {
     @DisplayName("일정 만들기 실패: 저장된 사용자 정보 없을 경우")
     void createSchedule_CustomUsernameNotFoundException(){
         // given
-        ScheduleRequest request = createScheduleRequest();
+        CreateScheduleRequest request = createScheduleRequest();
         TravelSchedule travelSchedule = createTravelSchedule();
 
         when(scheduleRepository.save(any())).thenReturn(travelSchedule);
@@ -85,8 +86,8 @@ public class ScheduleServiceTests {
     }
 
 
-    private ScheduleRequest createScheduleRequest(){
-        return ScheduleRequest.builder()
+    private CreateScheduleRequest createScheduleRequest(){
+        return CreateScheduleRequest.builder()
                 .scheduleName("테스트")
                 .startDate(LocalDate.now())
                 .endDate(LocalDate.now().plusDays(10))
