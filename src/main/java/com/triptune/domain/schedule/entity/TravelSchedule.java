@@ -9,7 +9,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
-@Entity
+@Entity(name = "travel_schedule")
 @NoArgsConstructor
 @Getter
 public class TravelSchedule {
@@ -35,16 +35,16 @@ public class TravelSchedule {
     private LocalDateTime updatedAt;
 
     @OneToMany(mappedBy = "travelSchedule", orphanRemoval = true)
-    private List<TravelAttendee> attendees;
+    private List<TravelAttendee> travelAttendeeList;
 
     @Builder
-    public TravelSchedule(Long scheduleId, String scheduleName, LocalDate startDate, LocalDate endDate, LocalDateTime createdAt, LocalDateTime updatedAt, List<TravelAttendee> attendees) {
+    public TravelSchedule(Long scheduleId, String scheduleName, LocalDate startDate, LocalDate endDate, LocalDateTime createdAt, LocalDateTime updatedAt, List<TravelAttendee> travelAttendeeList) {
         this.scheduleId = scheduleId;
         this.scheduleName = scheduleName;
         this.startDate = startDate;
         this.endDate = endDate;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
-        this.attendees = attendees;
+        this.travelAttendeeList = travelAttendeeList;
     }
 }

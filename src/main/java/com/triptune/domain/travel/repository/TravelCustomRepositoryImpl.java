@@ -5,9 +5,11 @@ import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.core.types.dsl.NumberExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import com.triptune.domain.common.entity.QFile;
 import com.triptune.domain.travel.dto.TravelLocationRequest;
 import com.triptune.domain.travel.dto.TravelLocationResponse;
 import com.triptune.domain.travel.dto.TravelSearchRequest;
+import com.triptune.domain.travel.entity.QTravelImage;
 import com.triptune.domain.travel.entity.QTravelPlace;
 import com.triptune.domain.travel.entity.TravelPlace;
 import org.springframework.data.domain.Page;
@@ -37,7 +39,6 @@ public class TravelCustomRepositoryImpl implements TravelCustomRepository{
                 .and(travelPlace.city.cityName.eq(city))
                 .and(travelPlace.district.districtName.eq(district));
 
-
         List<TravelPlace> content = jpaQueryFactory
                 .selectFrom(travelPlace)
                 .where(expression)
@@ -50,6 +51,7 @@ public class TravelCustomRepositoryImpl implements TravelCustomRepository{
 
         return new PageImpl<>(content, pageable, totalElements);
     }
+
 
     @Override
     public Page<TravelLocationResponse> findNearByTravelPlaces(Pageable pageable, TravelLocationRequest travelLocationRequest, int radius) {

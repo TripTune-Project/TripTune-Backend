@@ -2,6 +2,7 @@ package com.triptune.domain.schedule.controller;
 
 import com.triptune.domain.schedule.dto.CreateScheduleRequest;
 import com.triptune.domain.schedule.dto.CreateScheduleResponse;
+import com.triptune.domain.schedule.dto.ScheduleResponse;
 import com.triptune.domain.schedule.service.ScheduleService;
 import com.triptune.global.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -29,4 +30,11 @@ public class ScheduleApiController {
     }
 
 
+    @GetMapping("/{scheduleId}")
+    @Operation(summary = "일정 조회", description = "생성한 일정을 조회합니다.")
+    public ApiResponse<ScheduleResponse> getSchedule(@PathVariable(name = "scheduleId") Long scheduleId, @RequestParam int page){
+         ScheduleResponse response = scheduleService.getSchedule(scheduleId, page);
+
+         return ApiResponse.dataResponse(response);
+    }
 }
