@@ -4,6 +4,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.data.domain.Page;
 
 import java.util.List;
 
@@ -24,5 +25,15 @@ public class PageResponse<T> {
         this.totalElements = totalElements;
         this.pageSize = pageSize;
         this.content = content;
+    }
+
+    public static <T> PageResponse<T> of(Page<T> object){
+        return PageResponse.<T>builder()
+                .totalPages(object.getTotalPages())
+                .currentPage(object.getNumber())
+                .totalElements(object.getTotalElements())
+                .pageSize(object.getSize())
+                .content(object.getContent())
+                .build();
     }
 }
