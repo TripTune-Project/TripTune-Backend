@@ -13,6 +13,7 @@ import com.triptune.domain.schedule.enumclass.AttendeePermission;
 import com.triptune.domain.schedule.enumclass.AttendeeRole;
 import com.triptune.domain.schedule.repository.AttendeeRepository;
 import com.triptune.domain.schedule.repository.ScheduleRepository;
+import com.triptune.domain.travel.dto.TravelSimpleResponse;
 import com.triptune.domain.travel.entity.TravelImage;
 import com.triptune.domain.travel.entity.TravelPlace;
 import com.triptune.domain.travel.repository.TravelRepository;
@@ -28,6 +29,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -116,9 +118,14 @@ public class ScheduleServiceTests extends BaseTest {
         File file1 = createFile(1L, "test1", true);
         File file2 = createFile(2L, "test2", false);
 
-        List<TravelImage> travelImageList1 = createTravelImages(travelPlace1, file1, file2);
+        TravelImage travelImage1 = createTravelImage(travelPlace1, file1);
+        TravelImage travelImage2 = createTravelImage(travelPlace1, file2);
+        List<TravelImage> travelImageList1 = Arrays.asList(travelImage1, travelImage2);
         travelPlace1.setTravelImageList(travelImageList1);
-        List<TravelImage> travelImageList2 = createTravelImages(travelPlace2, file1, file2);
+
+        TravelImage travelImage3 = createTravelImage(travelPlace2, file1);
+        TravelImage travelImage4 = createTravelImage(travelPlace2, file2);
+        List<TravelImage> travelImageList2 = Arrays.asList(travelImage3, travelImage4);
         travelPlace2.setTravelImageList(travelImageList2);
 
         List<TravelPlace> placeList = createTravelPlaceList(travelPlace1, travelPlace2);
@@ -126,7 +133,6 @@ public class ScheduleServiceTests extends BaseTest {
         TravelSchedule schedule = createTravelSchedule();
         Member member1 = createMember(1L, "member1");
         Member member2 = createMember(2L, "member2");
-
 
         List<TravelAttendee> attendeeList = createTravelAttendeeList(member1, member2, schedule);
 
@@ -154,11 +160,6 @@ public class ScheduleServiceTests extends BaseTest {
     @DisplayName("일정 조회 성공: 여행지 데이터 없는 경우")
     void getScheduleWithoutPlaceList_success(){
         // given
-        Country country = createCountry();
-        City city = createCity(country);
-        District district = createDistrict(city, "중구");
-        ApiCategory apiCategory = createApiCategory();
-
         TravelSchedule schedule = createTravelSchedule();
         Member member1 = createMember(1L, "member1");
         Member member2 = createMember(2L, "member2");
@@ -192,6 +193,82 @@ public class ScheduleServiceTests extends BaseTest {
 
         // when
         DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> scheduleService.getSchedule(0L, 1));
+
+        // then
+        assertEquals(fail.getHttpStatus(), ErrorCode.DATA_NOT_FOUND.getStatus());
+        assertEquals(fail.getMessage(), ErrorCode.DATA_NOT_FOUND.getMessage());
+    }
+
+    @Test
+    @DisplayName("여행지 조회 성공")
+    void getTravelPlace_success(){
+        // given
+        Country country = createCountry();
+        City city = createCity(country);
+        District district = createDistrict(city, "중구");
+        ApiCategory apiCategory = createApiCategory();
+        TravelPlace travelPlace1 = createTravelPlace(country, city, district, apiCategory);
+        TravelPlace travelPlace2 = createTravelPlace(country, city, district, apiCategory);
+
+        File file1 = createFile(1L, "test1", true);
+        File file2 = createFile(2L, "test2", false);
+
+        TravelImage travelImage1 = createTravelImage(travelPlace1, file1);
+        TravelImage travelImage2 = createTravelImage(travelPlace1, file2);
+        List<TravelImage> travelImageList1 = Arrays.asList(travelImage1, travelImage2);
+        travelPlace1.setTravelImageList(travelImageList1);
+
+        TravelImage travelImage3 = createTravelImage(travelPlace2, file1);
+        TravelImage travelImage4 = createTravelImage(travelPlace2, file2);
+        List<TravelImage> travelImageList2 = Arrays.asList(travelImage3, travelImage4);
+        travelPlace2.setTravelImageList(travelImageList2);
+
+        List<TravelPlace> placeList = createTravelPlaceList(travelPlace1, travelPlace2);
+
+        TravelSchedule schedule = createTravelSchedule();
+
+        Pageable pageable = PageableUtil.createPageRequest(1, 5);
+
+        when(scheduleRepository.findByScheduleId(any())).thenReturn(Optional.of(schedule));
+        when(travelRepository.findAllByAreaData(any(), anyString(), anyString(), anyString()))
+                .thenReturn(new PageImpl<>(placeList, pageable, 1));
+
+        // when
+        Page<TravelSimpleResponse> response = scheduleService.getTravelPlaces(schedule.getScheduleId(), 1);
+
+        // then
+        assertEquals(response.getTotalElements(), placeList.size());
+        assertEquals(response.getContent().get(0).getPlaceName(), placeList.get(0).getPlaceName());
+        assertNotNull(response.getContent().get(0).getThumbnailUrl());
+    }
+
+    @Test
+    @DisplayName("여행지 조회 성공: 여행지 데이터 없는 경우")
+    void getTravelPlacesWithoutData_success(){
+        // given
+        TravelSchedule schedule = createTravelSchedule();
+        Pageable pageable = PageableUtil.createPageRequest(1, 5);
+
+        when(scheduleRepository.findByScheduleId(any())).thenReturn(Optional.of(schedule));
+        when(travelRepository.findAllByAreaData(any(), anyString(), anyString(), anyString()))
+                .thenReturn(new PageImpl<>(new ArrayList<>(), pageable, 0));
+
+        // when
+        Page<TravelSimpleResponse> response = scheduleService.getTravelPlaces(schedule.getScheduleId(), 1);
+
+        // then
+        assertEquals(response.getTotalElements(), 0);
+        assertTrue(response.getContent().isEmpty());
+    }
+
+    @Test
+    @DisplayName("여행지 조회 실패: 일정을 찾을 수 없는 경우")
+    void getTravelPlaces_notFoundException(){
+        // given
+        when(scheduleRepository.findByScheduleId(any())).thenReturn(Optional.empty());
+
+        // when
+        DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> scheduleService.getTravelPlaces(0L, 1));
 
         // then
         assertEquals(fail.getHttpStatus(), ErrorCode.DATA_NOT_FOUND.getStatus());

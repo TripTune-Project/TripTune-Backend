@@ -139,12 +139,13 @@ public abstract class BaseTest {
                 .build();
     }
 
-    protected List<TravelImage> createTravelImages(TravelPlace travelPlace, File file1, File file2){
-        return Arrays.asList(
-                new TravelImage(1L, travelPlace, file1),
-                new TravelImage(2L, travelPlace, file2)
-        );
+    protected TravelImage createTravelImage(TravelPlace travelPlace, File file){
+        return TravelImage.builder()
+                .travelPlace(travelPlace)
+                .file(file)
+                .build();
     }
+
 
     protected List<TravelLocationResponse> createTravelLocationResponses(Country country, City city, District district){
         TravelLocationResponse travelLocationResponse = TravelLocationResponse.builder()

@@ -33,6 +33,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.filter.CharacterEncodingFilter;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -127,7 +128,6 @@ public class ScheduleApiControllerTests extends BaseTest {
     @Test
     @DisplayName("일정 조회 성공 : 여행지 데이터 존재하는 경우")
     @WithMockUser(username = "member1")
-    @DirtiesContext
     void getScheduleWithPlaceList_success() throws Exception {
         // given
         TravelSchedule schedule = scheduleRepository.save(createTravelSchedule());
@@ -143,20 +143,18 @@ public class ScheduleApiControllerTests extends BaseTest {
         District district = districtRepository.save(createDistrict(city, "중구"));
         ApiCategory apiCategory = apiCategoryRepository.save(createApiCategory());
 
-        TravelPlace travelPlace = createTravelPlace(country, city, district, apiCategory);
-        travelRepository.save(travelPlace);
-
+        TravelPlace travelPlace = travelRepository.save(createTravelPlace(country, city, district, apiCategory));
         File file1 = fileRepository.save(createFile(null, "test1", true));
         File file2 = fileRepository.save(createFile(null, "test2", false));;
 
-        List<TravelImage> travelImageList = createTravelImages(travelPlace, file1, file2);
-        travelImageRepository.saveAll(travelImageList);
+        TravelImage travelImage1 = travelImageRepository.save(createTravelImage(travelPlace, file1));
+        TravelImage travelImage2 = travelImageRepository.save(createTravelImage(travelPlace, file2));
+        List<TravelImage> travelImageList = Arrays.asList(travelImage1, travelImage2);
 
         travelPlace.setTravelImageList(travelImageList);
-        travelRepository.save(travelPlace);
 
         // when, then
-        mockMvc.perform(get("/api/schedules/{scheduleId}", 1L)
+        mockMvc.perform(get("/api/schedules/{scheduleId}", schedule.getScheduleId())
                 .param("page", "1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.scheduleName").value(schedule.getScheduleName()))
@@ -197,7 +195,71 @@ public class ScheduleApiControllerTests extends BaseTest {
     void getSchedule_notFoundException() throws Exception {
         // given
         // when, then
-        mockMvc.perform(get("/api/schedules/{scheduleId}", 1000L)
+        mockMvc.perform(get("/api/schedules/{scheduleId}", 0L)
+                        .param("page", "1"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value(ErrorCode.DATA_NOT_FOUND.getMessage()));
+    }
+
+    @Test
+    @DisplayName("여행지 조회 성공 : 여행지 데이터 존재하는 경우")
+    @WithMockUser(username = "member1")
+    void getTravelPlaces_success() throws Exception {
+        // given
+        TravelSchedule schedule = scheduleRepository.save(createTravelSchedule());
+
+        Country country = countryRepository.save(createCountry());
+        City city = cityRepository.save(createCity(country));
+        District district = districtRepository.save(createDistrict(city, "중구"));
+        ApiCategory apiCategory = apiCategoryRepository.save(createApiCategory());
+
+        TravelPlace travelPlace = createTravelPlace(country, city, district, apiCategory);
+        travelRepository.save(travelPlace);
+
+        File file1 = fileRepository.save(createFile(null, "test1", true));
+        File file2 = fileRepository.save(createFile(null, "test2", false));;
+
+        TravelImage travelImage1 = travelImageRepository.save(createTravelImage(travelPlace, file1));
+        TravelImage travelImage2 = travelImageRepository.save(createTravelImage(travelPlace, file2));
+        List<TravelImage> travelImageList = Arrays.asList(travelImage1, travelImage2);
+
+        travelPlace.setTravelImageList(travelImageList);
+        travelRepository.save(travelPlace);
+
+        // when, then
+        mockMvc.perform(get("/api/schedules/{scheduleId}/travels", schedule.getScheduleId())
+                        .param("page", "1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.totalElements").value(1))
+                .andExpect(jsonPath("$.data.content[0].district").value(district.getDistrictName()))
+                .andExpect(jsonPath("$.data.content[0].placeName").value(travelPlace.getPlaceName()))
+                .andExpect(jsonPath("$.data.content[0].thumbnailUrl").value(travelImageList.get(0).getFile().getS3ObjectUrl()));
+    }
+
+
+    @Test
+    @DisplayName("여행지 조회 성공 : 여행지 데이터 존재하지 않는 경우")
+    @WithMockUser(username = "member1")
+    void getTravelPlacesWithoutData_success() throws Exception {
+        // given
+        TravelSchedule schedule = scheduleRepository.save(createTravelSchedule());
+
+        // when, then
+        mockMvc.perform(get("/api/schedules/{scheduleId}/travels", schedule.getScheduleId())
+                        .param("page", "1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.totalElements").value(0))
+                .andExpect(jsonPath("$.data.content").isEmpty());
+    }
+
+    @Test
+    @DisplayName("일정 조회 실패 : 일정 데이터 존재하지 않는 경우")
+    @WithMockUser(username = "member1")
+    void getTravelPlaces_notFoundException() throws Exception {
+        // given
+        // when, then
+        mockMvc.perform(get("/api/schedules/{scheduleId}/travels", 0L)
                         .param("page", "1"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.success").value(false))
