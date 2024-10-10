@@ -17,19 +17,15 @@ import com.triptune.domain.travel.entity.TravelPlace;
 import com.triptune.domain.travel.repository.TravelRepository;
 import com.triptune.global.enumclass.ErrorCode;
 import com.triptune.global.exception.DataNotFoundException;
-import com.triptune.global.response.ApiResponse;
 import com.triptune.global.response.PageResponse;
 import com.triptune.global.util.PageableUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -65,25 +61,30 @@ public class ScheduleService {
     }
 
     public ScheduleResponse getSchedule(Long scheduleId, int page) {
-        TravelSchedule schedule = scheduleRepository.findByScheduleId(scheduleId)
-                .orElseThrow(() -> new DataNotFoundException(ErrorCode.DATA_NOT_FOUND));
+        TravelSchedule schedule = getSavedSchedule(scheduleId);
 
         // 여행지 정보: Page<TravelPlace> -> PageResponse<TravelSimpleResponse> 로 변경
-        Pageable pageable = PageableUtil.createPageRequest(page, 5);
-
-        Page<TravelPlace> travelPlaces = travelRepository.findAllByAreaData(pageable, "대한민국", "서울", "중구");
-
-        Page<TravelSimpleResponse> travelPlacesDTO = TravelSimpleResponse.entityPageToDtoPage(travelPlaces, pageable);
+        Page<TravelSimpleResponse> travelPlacesDTO = getSimpleTravelPlacesByJunggu(page);
         PageResponse<TravelSimpleResponse> placeDTOList = PageResponse.of(travelPlacesDTO);
 
         List<AttendeeDTO> attendeeDTOList = attendeeRepository.findAllByTravelSchedule_ScheduleId(schedule.getScheduleId())
                 .stream()
                 .map(AttendeeDTO::entityToDTO)
                 .toList();
-
-
         return ScheduleResponse.entityToDTO(schedule, placeDTOList, attendeeDTOList);
+    }
 
+    public Page<TravelSimpleResponse> getTravelPlaces(Long scheduleId, int page) {
+        getSavedSchedule(scheduleId);
+        return getSimpleTravelPlacesByJunggu(page);
+    }
+
+
+    public Page<TravelSimpleResponse> getSimpleTravelPlacesByJunggu(int page) {
+        Pageable pageable = PageableUtil.createPageRequest(page, 5);
+        Page<TravelPlace> travelPlaces = travelRepository.findAllByAreaData(pageable, "대한민국", "서울", "중구");
+
+        return TravelSimpleResponse.entityPageToDtoPage(travelPlaces, pageable);
     }
 
 
@@ -91,4 +92,11 @@ public class ScheduleService {
         return memberRepository.findByUserId(userId)
                 .orElseThrow(() ->  new DataNotFoundException(ErrorCode.USER_NOT_FOUND));
     }
+
+    public TravelSchedule getSavedSchedule(Long scheduleId){
+        return scheduleRepository.findByScheduleId(scheduleId)
+                .orElseThrow(() -> new DataNotFoundException(ErrorCode.DATA_NOT_FOUND));
+    }
+
+
 }
