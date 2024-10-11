@@ -30,10 +30,10 @@ public class TravelService {
     public Page<TravelResponse> getNearByTravelPlaces(TravelLocationRequest travelLocationRequest, int page) {
         Pageable pageable = PageRequest.of(page - 1, 5);
 
-        Page<TravelLocationResponse> travelPlacePage = travelRepository.findNearByTravelPlaces(pageable, travelLocationRequest, 5);
+        Page<TravelLocation> travelPlacePage = travelRepository.findNearByTravelPlaces(pageable, travelLocationRequest, 5);
 
         if (travelPlacePage.getTotalElements() != 0){
-            for(TravelLocationResponse response: travelPlacePage){
+            for(TravelLocation response: travelPlacePage){
                 response.setTravelImageFileList(travelImageRepository.findByTravelPlacePlaceId(response.getPlaceId()));
             }
         }
@@ -50,9 +50,9 @@ public class TravelService {
     public Page<TravelResponse> searchTravelPlaces(TravelSearchRequest travelSearchRequest, int page) {
         Pageable pageable = PageRequest.of(page - 1, 5);
 
-        Page<TravelLocationResponse> travelPlacePage = travelRepository.searchTravelPlaces(pageable, travelSearchRequest);
+        Page<TravelLocation> travelPlacePage = travelRepository.searchTravelPlaces(pageable, travelSearchRequest);
 
-        for(TravelLocationResponse response: travelPlacePage){
+        for(TravelLocation response: travelPlacePage){
             response.setTravelImageFileList(travelImageRepository.findByTravelPlacePlaceId(response.getPlaceId()));
         }
 

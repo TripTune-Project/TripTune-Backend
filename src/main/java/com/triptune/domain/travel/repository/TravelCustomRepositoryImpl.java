@@ -5,11 +5,9 @@ import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.core.types.dsl.NumberExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import com.triptune.domain.common.entity.QFile;
 import com.triptune.domain.travel.dto.TravelLocationRequest;
-import com.triptune.domain.travel.dto.TravelLocationResponse;
+import com.triptune.domain.travel.dto.TravelLocation;
 import com.triptune.domain.travel.dto.TravelSearchRequest;
-import com.triptune.domain.travel.entity.QTravelImage;
 import com.triptune.domain.travel.entity.QTravelPlace;
 import com.triptune.domain.travel.entity.TravelPlace;
 import org.springframework.data.domain.Page;
@@ -54,13 +52,13 @@ public class TravelCustomRepositoryImpl implements TravelCustomRepository{
 
 
     @Override
-    public Page<TravelLocationResponse> findNearByTravelPlaces(Pageable pageable, TravelLocationRequest travelLocationRequest, int radius) {
+    public Page<TravelLocation> findNearByTravelPlaces(Pageable pageable, TravelLocationRequest travelLocationRequest, int radius) {
         NumberExpression<Double> harversineExpression = getHarversineFormula(travelLocationRequest.getLatitude(), travelLocationRequest.getLongitude());
 
         BooleanExpression loeExpression = harversineExpression.loe(radius);
 
-        List<TravelLocationResponse> content = jpaQueryFactory
-                .select(Projections.constructor(TravelLocationResponse.class,
+        List<TravelLocation> content = jpaQueryFactory
+                .select(Projections.constructor(TravelLocation.class,
                         travelPlace.placeId,
                         travelPlace.country.countryName,
                         travelPlace.city.cityName,
@@ -85,7 +83,7 @@ public class TravelCustomRepositoryImpl implements TravelCustomRepository{
 
 
     @Override
-    public Page<TravelLocationResponse> searchTravelPlaces(Pageable pageable, TravelSearchRequest travelSearchRequest) {
+    public Page<TravelLocation> searchTravelPlaces(Pageable pageable, TravelSearchRequest travelSearchRequest) {
         String keyword = travelSearchRequest.getKeyword();
 
         BooleanExpression booleanExpression = travelPlace.country.countryName.contains(keyword)
@@ -103,8 +101,8 @@ public class TravelCustomRepositoryImpl implements TravelCustomRepository{
                 "ELSE 4 " +
                 "END";
 
-        List<TravelLocationResponse> content = jpaQueryFactory
-                .select(Projections.constructor(TravelLocationResponse.class,
+        List<TravelLocation> content = jpaQueryFactory
+                .select(Projections.constructor(TravelLocation.class,
                         travelPlace.placeId,
                         travelPlace.country.countryName,
                         travelPlace.city.cityName,
