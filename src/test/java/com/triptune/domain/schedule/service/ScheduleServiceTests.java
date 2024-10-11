@@ -1,16 +1,14 @@
 package com.triptune.domain.schedule.service;
 
-import com.triptune.domain.BaseTest;
 import com.triptune.domain.common.entity.*;
 import com.triptune.domain.member.entity.Member;
 import com.triptune.domain.member.repository.MemberRepository;
+import com.triptune.domain.schedule.ScheduleTest;
 import com.triptune.domain.schedule.dto.CreateScheduleRequest;
 import com.triptune.domain.schedule.dto.CreateScheduleResponse;
 import com.triptune.domain.schedule.dto.ScheduleResponse;
 import com.triptune.domain.schedule.entity.TravelAttendee;
 import com.triptune.domain.schedule.entity.TravelSchedule;
-import com.triptune.domain.schedule.enumclass.AttendeePermission;
-import com.triptune.domain.schedule.enumclass.AttendeeRole;
 import com.triptune.domain.schedule.repository.AttendeeRepository;
 import com.triptune.domain.schedule.repository.ScheduleRepository;
 import com.triptune.domain.travel.dto.TravelSimpleResponse;
@@ -20,9 +18,6 @@ import com.triptune.domain.travel.repository.TravelRepository;
 import com.triptune.global.enumclass.ErrorCode;
 import com.triptune.global.exception.DataNotFoundException;
 import com.triptune.global.util.PageableUtil;
-import jakarta.transaction.Transactional;
-import lombok.extern.slf4j.Slf4j;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -31,11 +26,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -46,7 +38,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class ScheduleServiceTests extends BaseTest {
+public class ScheduleServiceTests extends ScheduleTest {
 
     @InjectMocks
     private ScheduleService scheduleService;
@@ -128,13 +120,17 @@ public class ScheduleServiceTests extends BaseTest {
         List<TravelImage> travelImageList2 = Arrays.asList(travelImage3, travelImage4);
         travelPlace2.setTravelImageList(travelImageList2);
 
-        List<TravelPlace> placeList = createTravelPlaceList(travelPlace1, travelPlace2);
+        List<TravelPlace> placeList = new ArrayList<>();
+        placeList.add(travelPlace1);
+        placeList.add(travelPlace2);
 
         TravelSchedule schedule = createTravelSchedule();
         Member member1 = createMember(1L, "member1");
         Member member2 = createMember(2L, "member2");
 
-        List<TravelAttendee> attendeeList = createTravelAttendeeList(member1, member2, schedule);
+        List<TravelAttendee> attendeeList = new ArrayList<>();
+        attendeeList.add(createTravelAttendee(member1, schedule));
+        attendeeList.add(createTravelAttendee(member2, schedule));
 
         Pageable pageable = PageableUtil.createPageRequest(1, 5);
 
@@ -164,7 +160,9 @@ public class ScheduleServiceTests extends BaseTest {
         Member member1 = createMember(1L, "member1");
         Member member2 = createMember(2L, "member2");
 
-        List<TravelAttendee> attendeeList = createTravelAttendeeList(member1, member2, schedule);
+        List<TravelAttendee> attendeeList = new ArrayList<>();
+        attendeeList.add(createTravelAttendee(member1, schedule));
+        attendeeList.add(createTravelAttendee(member2, schedule));
 
         Pageable pageable = PageableUtil.createPageRequest(1, 5);
 
@@ -223,7 +221,9 @@ public class ScheduleServiceTests extends BaseTest {
         List<TravelImage> travelImageList2 = Arrays.asList(travelImage3, travelImage4);
         travelPlace2.setTravelImageList(travelImageList2);
 
-        List<TravelPlace> placeList = createTravelPlaceList(travelPlace1, travelPlace2);
+        List<TravelPlace> placeList = new ArrayList<>();
+        placeList.add(travelPlace1);
+        placeList.add(travelPlace2);
 
         TravelSchedule schedule = createTravelSchedule();
 

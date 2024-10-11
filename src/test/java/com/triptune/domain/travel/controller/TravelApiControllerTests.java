@@ -1,23 +1,28 @@
 package com.triptune.domain.travel.controller;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.triptune.domain.travel.dto.TravelLocationRequest;
-import com.triptune.domain.travel.dto.TravelSearchRequest;
+import com.triptune.domain.common.entity.*;
+import com.triptune.domain.common.repository.*;
+import com.triptune.domain.travel.TravelTest;
+import com.triptune.domain.travel.entity.TravelImage;
+import com.triptune.domain.travel.entity.TravelPlace;
+import com.triptune.domain.travel.repository.TravelImageRepository;
+import com.triptune.domain.travel.repository.TravelRepository;
 import com.triptune.global.enumclass.ErrorCode;
-import jakarta.transaction.Transactional;
-import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.filter.CharacterEncodingFilter;
+
+import java.util.Arrays;
+import java.util.List;
 
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -27,16 +32,37 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
-@Transactional
-public class TravelApiControllerTests {
+@ActiveProfiles("test")
+@TestPropertySource(locations = "classpath:application-test.yml")
+public class TravelApiControllerTests extends TravelTest {
+
+    private final WebApplicationContext wac;
+    private final TravelRepository travelRepository;
+    private final CountryRepository countryRepository;
+    private final CityRepository cityRepository;
+    private final DistrictRepository districtRepository;
+    private final ApiCategoryRepository apiCategoryRepository;
+    private final FileRepository fileRepository;
+    private final TravelImageRepository travelImageRepository;
+    private final ApiContentTypeRepository apiContentTypeRepository;
 
     @Autowired
-    private WebApplicationContext wac;
+    public TravelApiControllerTests(WebApplicationContext wac, TravelRepository travelRepository, CountryRepository countryRepository, CityRepository cityRepository, DistrictRepository districtRepository, ApiCategoryRepository apiCategoryRepository, FileRepository fileRepository, TravelImageRepository travelImageRepository, ApiContentTypeRepository apiContentTypeRepository) {
+        this.wac = wac;
+        this.travelRepository = travelRepository;
+        this.countryRepository = countryRepository;
+        this.cityRepository = cityRepository;
+        this.districtRepository = districtRepository;
+        this.apiCategoryRepository = apiCategoryRepository;
+        this.fileRepository = fileRepository;
+        this.travelImageRepository = travelImageRepository;
+        this.apiContentTypeRepository = apiContentTypeRepository;
+    }
 
-    @Autowired
-    private ObjectMapper objectMapper;
+
 
     private MockMvc mockMvc;
+    private TravelPlace travelPlace;
 
     @BeforeEach
     void setUp(){
@@ -45,12 +71,31 @@ public class TravelApiControllerTests {
                 .apply(springSecurity())
                 .alwaysDo(print())
                 .build();
+
+        Country country = countryRepository.save(createCountry());
+        City city = cityRepository.save(createCity(country));
+        District district = districtRepository.save(createDistrict(city, "강남"));
+        ApiCategory apiCategory = apiCategoryRepository.save(createApiCategory());
+
+        travelPlace = travelRepository.save(createTravelPlace(country, city, district, apiCategory));
+        File file1 = fileRepository.save(createFile(null, "test1", true));
+        File file2 = fileRepository.save(createFile(null, "test2", false));;
+
+        TravelImage travelImage1 = travelImageRepository.save(createTravelImage(travelPlace, file1));
+        TravelImage travelImage2 = travelImageRepository.save(createTravelImage(travelPlace, file2));
+        List<TravelImage> travelImageList = Arrays.asList(travelImage1, travelImage2);
+
+        travelPlace.setTravelImageList(travelImageList);
+
     }
 
     @Test
     @DisplayName("findNearByTravelPlaceList() 성공: 현재 위치에 따른 여행지 목록을 제공하며 조회 결과가 존재하는 경우")
     void getNearByTravelPlaces_withData() throws Exception {
-        mockMvc.perform(post("/api/travels/list")
+        // given
+
+        // when, then
+        mockMvc.perform(post("/api/travels")
                         .param("page", "1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(toJsonString(createTravelLocationRequest(127.0281573537, 37.4970465429))))
@@ -60,7 +105,7 @@ public class TravelApiControllerTests {
     @Test
     @DisplayName("findNearByTravelPlaceList() 성공: 현재 위치에 따른 여행지 목록을 제공하며 조회 결과가 존재하지 않는 경우")
     void getNearByTravelPlaces_noData() throws Exception {
-        mockMvc.perform(post("/api/travels/list")
+        mockMvc.perform(post("/api/travels")
                         .param("page", "1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(toJsonString(createTravelLocationRequest(9999.9999, 9999.9999))))
@@ -103,9 +148,15 @@ public class TravelApiControllerTests {
     @Test
     @DisplayName("getTravelDetails() 성공: 여행지 상세정보 조회")
     void getTravelDetails() throws Exception {
-        mockMvc.perform(get("/api/travels/{placeId}", 1L))
+        // given
+        ApiContentType apiContentType = createApiContentType("관광지");
+        apiContentTypeRepository.save(apiContentType);
+        travelPlace.setApiContentType(apiContentType);
+
+        // when, then
+        mockMvc.perform(get("/api/travels/{placeId}", travelPlace.getPlaceId()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.placeId").value(1L))
+                .andExpect(jsonPath("$.data.placeId").value(travelPlace.getPlaceId()))
                 .andExpect(jsonPath("$.data.placeName").exists())
                 .andExpect(jsonPath("$.data.imageList").isNotEmpty());
     }
@@ -121,35 +172,4 @@ public class TravelApiControllerTests {
     }
 
 
-    /**
-     * TravelLocationRequest 제공 메서드
-     * @param longitude
-     * @param latitude
-     * @return TravelLocationRequest
-     */
-    private TravelLocationRequest createTravelLocationRequest(double longitude, double latitude){
-        return TravelLocationRequest.builder()
-                .longitude(longitude)
-                .latitude(latitude)
-                .build();
-    }
-
-    /**
-     * TravelSearchRequest 제공 메서드
-     * @param longitude
-     * @param latitude
-     * @param keyword
-     * @return TravelSearchRequest
-     */
-    private TravelSearchRequest createTravelSearchRequest(double longitude, double latitude, String keyword){
-        return TravelSearchRequest.builder()
-                .longitude(longitude)
-                .latitude(latitude)
-                .keyword(keyword)
-                .build();
-    }
-
-    private String toJsonString(Object obj) throws JsonProcessingException {
-        return objectMapper.writeValueAsString(obj);
-    }
 }

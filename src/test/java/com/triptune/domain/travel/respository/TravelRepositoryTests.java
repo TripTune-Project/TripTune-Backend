@@ -2,14 +2,16 @@ package com.triptune.domain.travel.respository;
 
 import com.triptune.domain.common.entity.*;
 import com.triptune.domain.common.repository.*;
+import com.triptune.domain.travel.TravelTest;
 import com.triptune.domain.travel.dto.TravelLocationRequest;
-import com.triptune.domain.travel.dto.TravelLocationResponse;
+import com.triptune.domain.travel.dto.TravelLocation;
 import com.triptune.domain.travel.dto.TravelSearchRequest;
 import com.triptune.domain.travel.entity.TravelImage;
 import com.triptune.domain.travel.entity.TravelPlace;
 import com.triptune.domain.travel.repository.TravelImageRepository;
 import com.triptune.domain.travel.repository.TravelRepository;
 import com.triptune.global.config.QueryDSLConfig;
+import com.triptune.global.util.PageableUtil;
 import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -24,16 +26,16 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
-@Transactional
 @Import({QueryDSLConfig.class})
 @ActiveProfiles("test")
 @TestPropertySource(locations = "classpath:application-test.yml")
-public class TravelRepositoryTests {
+public class TravelRepositoryTests extends TravelTest {
     private final TravelRepository travelRepository;
     private final FileRepository fileRepository;
     private final CityRepository cityRepository;
@@ -42,6 +44,8 @@ public class TravelRepositoryTests {
     private final ApiCategoryRepository apiCategoryRepository;
     private final TravelImageRepository travelImageRepository;
     private final ApiContentTypeRepository apiContentTypeRepository;
+
+    private TravelPlace travelPlace;
 
     @Autowired
     public TravelRepositoryTests(TravelRepository travelRepository, FileRepository fileRepository, CityRepository cityRepository, CountryRepository countryRepository, DistrictRepository districtRepository, ApiCategoryRepository apiCategoryRepository, TravelImageRepository travelImageRepository, ApiContentTypeRepository apiContentTypeRepository) {
@@ -57,58 +61,23 @@ public class TravelRepositoryTests {
 
     @BeforeEach
     void setUp(){
-        Country country = Country.builder().countryName("대한민국").build();
-        Country savedCountry = countryRepository.save(country);
+        Country country = countryRepository.save(createCountry());
+        City city = cityRepository.save(createCity(country));
+        District district = districtRepository.save(createDistrict(city, "강남구"));
+        ApiCategory apiCategory = apiCategoryRepository.save(createApiCategory());
+        ApiContentType apiContentType = apiContentTypeRepository.save(createApiContentType("관광지"));
+        travelPlace = travelRepository.save(createTravelPlace(country, city, district, apiCategory));
+        File file1 = fileRepository.save(createFile(null, "test1", true));
+        File file2 = fileRepository.save(createFile(null, "test1", false));
+        TravelImage travelImage1 = travelImageRepository.save(createTravelImage(travelPlace, file1));
+        TravelImage travelImage2 = travelImageRepository.save(createTravelImage(travelPlace, file2));
 
-        City city = City.builder().cityName("서울").country(country).build();
-        City savedCity = cityRepository.save(city);
+        List<TravelImage> imageList = new ArrayList<>();
+        imageList.add(travelImage1);
+        imageList.add(travelImage2);
 
-        District district = District.builder().districtName("강남구").city(city).build();
-        District savedDistrict = districtRepository.save(district);
-
-        ApiCategory apiCategory = ApiCategory.builder().categoryCode("A0101").categoryName("자연").level(1).build();
-        ApiCategory savedApiCategory = apiCategoryRepository.save(apiCategory);
-
-        ApiContentType apiContentType = ApiContentType.builder().contentTypeId(1L).contentTypeName("관광지").build();
-        ApiContentType savedApiContentType = apiContentTypeRepository.save(apiContentType);
-
-        TravelPlace travelPlace = TravelPlace.builder()
-                .country(savedCountry)
-                .city(savedCity)
-                .district(savedDistrict)
-                .apiCategory(savedApiCategory)
-                .apiContentType(savedApiContentType)
-                .placeName("테스트 장소명")
-                .address("테스트 주소")
-                .useTime("상시")
-                .homepage("www.test.com")
-                .phoneNumber("010-0000-0000")
-                .latitude(37.5)
-                .longitude(127.0281573537)
-                .bookmarkCnt(0)
-                .createdAt(LocalDateTime.now())
-                .build();
-
-        TravelPlace savedTravelPlace = travelRepository.save(travelPlace);
-
-        File file = File.builder()
-                .s3ObjectUrl("/test/test1.jpg")
-                .originalName("test.jpg")
-                .fileName("test1.jpg")
-                .fileType("jpg")
-                .fileSize(20)
-                .createdAt(LocalDateTime.now())
-                .isThumbnail(true)
-                .build();
-
-        File savedFile = fileRepository.save(file);
-
-        TravelImage travelImageFile = TravelImage.builder()
-                .travelPlace(savedTravelPlace)
-                .file(savedFile)
-                .build();
-
-        travelImageRepository.save(travelImageFile);
+        travelPlace.setApiContentType(apiContentType);
+        travelPlace.setTravelImageList(imageList);
     }
     
 
@@ -116,25 +85,21 @@ public class TravelRepositoryTests {
     @DisplayName("findNearByTravelPlaceList() 성공: 위치 정보에 따른 여행지 목록 조회 시 데이터 존재하는 경우")
     void findNearByTravelPlaceList_withData_success(){
         // given
-        Pageable pageable = PageRequest.of(0, 5);
-        TravelLocationRequest travelLocationRequest = TravelLocationRequest.builder()
-                .latitude(37.4970465429)
-                .longitude(127.0281573537)
-                .build();
+        Pageable pageable = PageableUtil.createPageRequest(1, 5);
+        TravelLocationRequest travelLocationRequest = createTravelLocationRequest(37.497, 127.0);
         int radius = 5;   // 5km 이내
 
         // when
-        Page<TravelLocationResponse> response = travelRepository.findNearByTravelPlaces(pageable, travelLocationRequest, radius);
+        Page<TravelLocation> response = travelRepository.findNearByTravelPlaces(pageable, travelLocationRequest, radius);
 
         // then
-        List<TravelLocationResponse> content = response.getContent();
+        List<TravelLocation> content = response.getContent();
 
 
         assertNotEquals(response.getTotalElements(), 0);
-        assertEquals(content.get(0).getCity(), "서울");
-        assertEquals(content.get(0).getPlaceName(), "테스트 장소명");
-        assertEquals(content.get(0).getAddress(), "테스트 주소");
-        assertEquals(content.get(0).getLatitude(), 37.5);
+        assertEquals(content.get(0).getCity(), travelPlace.getCity().getCityName());
+        assertEquals(content.get(0).getPlaceName(), travelPlace.getPlaceName());
+        assertEquals(content.get(0).getAddress(), travelPlace.getAddress());
         assertNotEquals(content.get(0).getDistance(), 0.0);
 
     }
@@ -143,15 +108,12 @@ public class TravelRepositoryTests {
     @DisplayName("findNearByTravelPlaceList() 성공: 위치 정보에 따른 여행지 목록을 조회하며 조회 결과가 없는 경우")
     void findNearByTravelPlaceList_noData_success(){
         // given
-        Pageable pageable = PageRequest.of(0, 5);
-        TravelLocationRequest travelLocationRequest = TravelLocationRequest.builder()
-                .latitude(99.999999)
-                .longitude(99.999999)
-                .build();
+        Pageable pageable = PageableUtil.createPageRequest(1, 5);
+        TravelLocationRequest travelLocationRequest = createTravelLocationRequest(99.999999, 99.999999);
         int radius = 5;   // 5km 이내
 
         // when
-        Page<TravelLocationResponse> result = travelRepository.findNearByTravelPlaces(pageable, travelLocationRequest, radius);
+        Page<TravelLocation> result = travelRepository.findNearByTravelPlaces(pageable, travelLocationRequest, radius);
 
         // then
         assertEquals(result.getTotalElements(), 0);
@@ -161,23 +123,18 @@ public class TravelRepositoryTests {
     @DisplayName("searchTravelPlace() 성공: 키워드 이용해 검색하며 검색 결과에 데이터가 존재하는 경우")
     void searchTravelPlaces_withData_success(){
         // given
-        Pageable pageable = PageRequest.of(0, 5);
-
-        TravelSearchRequest request = TravelSearchRequest.builder()
-                .latitude(37.4970465429)
-                .longitude(127.0281573537)
-                .keyword("테스트")
-                .build();
+        Pageable pageable = PageableUtil.createPageRequest(1, 5);
+        TravelSearchRequest request = createTravelSearchRequest(37.4970465429, 127.0281573537, "테스트");
 
         // when
-        Page<TravelLocationResponse> result = travelRepository.searchTravelPlaces(pageable, request);
+        Page<TravelLocation> result = travelRepository.searchTravelPlaces(pageable, request);
 
         // then
-        List<TravelLocationResponse> content = result.getContent();
+        List<TravelLocation> content = result.getContent();
         assertTrue(content.get(0).getPlaceName().contains("테스트"));
         assertNotNull(content.get(0).getDistance());
 
-        for(TravelLocationResponse t: content){
+        for(TravelLocation t: content){
             System.out.println("-------------------------------");
             System.out.println(t.getPlaceId());
             System.out.println(t.getDistance());
@@ -190,16 +147,11 @@ public class TravelRepositoryTests {
     @DisplayName("searchTravelPlace() 성공: 키워드 이용해 검색하며 검색결과가 존재하지 않는 경우")
     void searchTravelPlaces_noData_success(){
         // given
-        Pageable pageable = PageRequest.of(0, 5);
-
-        TravelSearchRequest request = TravelSearchRequest.builder()
-                .latitude(37.4970465429)
-                .longitude(127.0281573537)
-                .keyword("ㅁㄴㅇㄹ")
-                .build();
+        Pageable pageable = PageableUtil.createPageRequest(1, 5);
+        TravelSearchRequest request = createTravelSearchRequest(37.4970465429, 127.0281573537, "ㅁㄴㅇㄹ");
 
         // when
-        Page<TravelLocationResponse> result = travelRepository.searchTravelPlaces(pageable, request);
+        Page<TravelLocation> result = travelRepository.searchTravelPlaces(pageable, request);
 
         // then
         assertEquals(result.getTotalElements(), 0);

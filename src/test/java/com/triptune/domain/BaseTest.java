@@ -9,10 +9,6 @@ import com.triptune.domain.schedule.entity.TravelAttendee;
 import com.triptune.domain.schedule.entity.TravelSchedule;
 import com.triptune.domain.schedule.enumclass.AttendeePermission;
 import com.triptune.domain.schedule.enumclass.AttendeeRole;
-import com.triptune.domain.schedule.repository.ScheduleRepository;
-import com.triptune.domain.travel.dto.TravelLocationRequest;
-import com.triptune.domain.travel.dto.TravelLocationResponse;
-import com.triptune.domain.travel.dto.TravelSearchRequest;
 import com.triptune.domain.travel.entity.TravelImage;
 import com.triptune.domain.travel.entity.TravelPlace;
 import jakarta.transaction.Transactional;
@@ -20,26 +16,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
 
 @Transactional
 public abstract class BaseTest {
 
     @Autowired
     private ObjectMapper objectMapper;
-
-
-    protected CreateScheduleRequest createScheduleRequest() {
-        return CreateScheduleRequest.builder()
-                .scheduleName("테스트")
-                .startDate(LocalDate.now())
-                .endDate(LocalDate.now().plusDays(10))
-                .build();
-    }
-
 
     protected TravelSchedule createTravelSchedule(){
         return TravelSchedule.builder()
@@ -50,25 +32,6 @@ public abstract class BaseTest {
                 .build();
     }
 
-    protected List<TravelAttendee> createTravelAttendeeList(Member member1, Member member2, TravelSchedule schedule){
-        TravelAttendee attendee1 = TravelAttendee.builder()
-                .attendeeId(1L)
-                .member(member1)
-                .travelSchedule(schedule)
-                .role(AttendeeRole.AUTHOR)
-                .permission(AttendeePermission.ALL)
-                .build();
-
-        TravelAttendee attendee2 = TravelAttendee.builder()
-                .attendeeId(2L)
-                .member(member2)
-                .travelSchedule(schedule)
-                .role(AttendeeRole.GUEST)
-                .permission(AttendeePermission.ALL)
-                .build();
-
-        return new ArrayList<>(Arrays.asList(attendee1, attendee2));
-    }
 
     protected Member createMember(Long memberId, String userId){
         return Member.builder()
@@ -118,14 +81,6 @@ public abstract class BaseTest {
                 .build();
     }
 
-    protected List<TravelPlace> createTravelPlaceList(TravelPlace travelPlace1, TravelPlace travelPlace2){
-        return Arrays.asList(
-                travelPlace1,
-                travelPlace2
-        );
-
-    }
-
     protected File createFile(Long fileId, String fileName, boolean isThumbnail){
         return File.builder()
                 .fileId(fileId)
@@ -147,37 +102,23 @@ public abstract class BaseTest {
     }
 
 
-    protected List<TravelLocationResponse> createTravelLocationResponses(Country country, City city, District district){
-        TravelLocationResponse travelLocationResponse = TravelLocationResponse.builder()
-                .placeId(1L)
-                .country(country.getCountryName())
-                .city(city.getCityName())
-                .district(district.getDistrictName())
-                .address("테스트 주소")
-                .detailAddress("테스트 상세주소")
-                .latitude(37.5)
-                .longitude(127.0281573537)
-                .placeName("테스트 장소명")
-                .distance(0.2345234234)
-                .build();
-
-        return Collections.singletonList(travelLocationResponse);
-    }
-
-    protected TravelSearchRequest createTravelSearchRequest(String keyword){
-        return TravelSearchRequest.builder()
-                .latitude(37.4970465429)
-                .longitude(127.0281573537)
-                .keyword(keyword)
+    protected ApiContentType createApiContentType(String contentTypeName){
+        return ApiContentType.builder()
+                .contentTypeId(1L)
+                .contentTypeName(contentTypeName)
                 .build();
     }
 
-    protected TravelLocationRequest createTravelLocationRequest(double latitude, double longitude){
-        return TravelLocationRequest.builder()
-                .latitude(latitude)
-                .longitude(longitude)
+    protected TravelAttendee createTravelAttendee(Member member, TravelSchedule schedule){
+        return TravelAttendee.builder()
+                .attendeeId(1L)
+                .member(member)
+                .travelSchedule(schedule)
+                .role(AttendeeRole.AUTHOR)
+                .permission(AttendeePermission.ALL)
                 .build();
     }
+
 
     protected String toJsonString(Object obj) throws JsonProcessingException {
         return objectMapper.writeValueAsString(obj);
