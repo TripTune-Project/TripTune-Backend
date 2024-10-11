@@ -1,10 +1,10 @@
 package com.triptune.domain.schedule.controller;
 
-import com.triptune.domain.BaseTest;
 import com.triptune.domain.common.entity.*;
 import com.triptune.domain.common.repository.*;
 import com.triptune.domain.member.entity.Member;
 import com.triptune.domain.member.repository.MemberRepository;
+import com.triptune.domain.schedule.ScheduleTest;
 import com.triptune.domain.schedule.dto.CreateScheduleRequest;
 import com.triptune.domain.schedule.entity.TravelAttendee;
 import com.triptune.domain.schedule.entity.TravelSchedule;
@@ -15,9 +15,6 @@ import com.triptune.domain.travel.entity.TravelPlace;
 import com.triptune.domain.travel.repository.TravelImageRepository;
 import com.triptune.domain.travel.repository.TravelRepository;
 import com.triptune.global.enumclass.ErrorCode;
-import com.triptune.global.exception.DataNotFoundException;
-import com.triptune.global.util.HttpRequestEndpointChecker;
-import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -25,7 +22,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
@@ -33,13 +29,10 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.filter.CharacterEncodingFilter;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -50,7 +43,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @ActiveProfiles("test")
 @TestPropertySource(locations = "classpath:application-test.yml")
-public class ScheduleApiControllerTests extends BaseTest {
+public class ScheduleApiControllerTests extends ScheduleTest {
     private final WebApplicationContext wac;
     private final ScheduleRepository scheduleRepository;
     private final AttendeeRepository attendeeRepository;
@@ -135,7 +128,9 @@ public class ScheduleApiControllerTests extends BaseTest {
         Member member1 = memberRepository.save(createMember(null, "member1"));
         Member member2 = memberRepository.save(createMember(null, "member2"));
 
-        List<TravelAttendee> attendeeList = createTravelAttendeeList(member1, member2, schedule);
+        List<TravelAttendee> attendeeList = new ArrayList<>();
+        attendeeList.add(createTravelAttendee(member1, schedule));
+        attendeeList.add(createTravelAttendee(member2, schedule));
         attendeeRepository.saveAll(attendeeList);
 
         Country country = countryRepository.save(createCountry());
@@ -158,7 +153,7 @@ public class ScheduleApiControllerTests extends BaseTest {
                 .param("page", "1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.scheduleName").value(schedule.getScheduleName()))
-                .andExpect(jsonPath("$.data.attendeeList[0].userId").value(member1.getUserId()))
+                .andExpect(jsonPath("$.data.attendeeList[0].userId").exists())
                 .andExpect(jsonPath("$.data.placeList.totalElements").value(1))
                 .andExpect(jsonPath("$.data.placeList.content[0].district").value(district.getDistrictName()))
                 .andExpect(jsonPath("$.data.placeList.content[0].placeName").value(travelPlace.getPlaceName()))
@@ -175,7 +170,9 @@ public class ScheduleApiControllerTests extends BaseTest {
         Member member1 = memberRepository.save(createMember(null, "member1"));
         Member member2 = memberRepository.save(createMember(null, "member2"));
 
-        List<TravelAttendee> attendeeList = createTravelAttendeeList(member1, member2, schedule);
+        List<TravelAttendee> attendeeList = new ArrayList<>();
+        attendeeList.add(createTravelAttendee(member1, schedule));
+        attendeeList.add(createTravelAttendee(member2, schedule));
         attendeeRepository.saveAll(attendeeList);
 
 

@@ -66,21 +66,21 @@ public class TravelResponse {
     }
 
 
-    public static TravelResponse entityToLocationDto(TravelLocationResponse travelLocationResponse){
-        String thumbnailUrl = File.getThumbnailUrl(travelLocationResponse.getTravelImageFileList());
+    public static TravelResponse entityToLocationDto(TravelLocation travelLocation){
+        String thumbnailUrl = File.getThumbnailUrl(travelLocation.getTravelImageFileList());
 
         return TravelResponse.builder()
-                .placeId(travelLocationResponse.getPlaceId())
-                .country(travelLocationResponse.getCountry())
-                .city(travelLocationResponse.getCity())
-                .district(travelLocationResponse.getDistrict())
-                .address(travelLocationResponse.getAddress())
-                .detailAddress(travelLocationResponse.getDetailAddress())
-                .longitude(travelLocationResponse.getLongitude())
-                .latitude(travelLocationResponse.getLatitude())
-                .placeName(travelLocationResponse.getPlaceName())
+                .placeId(travelLocation.getPlaceId())
+                .country(travelLocation.getCountry())
+                .city(travelLocation.getCity())
+                .district(travelLocation.getDistrict())
+                .address(travelLocation.getAddress())
+                .detailAddress(travelLocation.getDetailAddress())
+                .longitude(travelLocation.getLongitude())
+                .latitude(travelLocation.getLatitude())
+                .placeName(travelLocation.getPlaceName())
                 .thumbnailUrl(thumbnailUrl)
-                .distance(travelLocationResponse.getDistance())
+                .distance(travelLocation.getDistance())
                 .build();
     }
 
