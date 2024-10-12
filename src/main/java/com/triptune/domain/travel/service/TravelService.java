@@ -50,7 +50,7 @@ public class TravelService {
     public Page<TravelResponse> searchTravelPlaces(TravelSearchRequest travelSearchRequest, int page) {
         Pageable pageable = PageRequest.of(page - 1, 5);
 
-        Page<TravelLocation> travelPlacePage = travelRepository.searchTravelPlaces(pageable, travelSearchRequest);
+        Page<TravelLocation> travelPlacePage = travelRepository.searchTravelPlacesWithLocation(pageable, travelSearchRequest);
 
         for(TravelLocation response: travelPlacePage){
             response.setTravelImageFileList(travelImageRepository.findByTravelPlacePlaceId(response.getPlaceId()));

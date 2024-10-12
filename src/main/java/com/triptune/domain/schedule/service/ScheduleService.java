@@ -71,6 +71,7 @@ public class ScheduleService {
                 .stream()
                 .map(AttendeeDTO::entityToDTO)
                 .toList();
+
         return ScheduleResponse.entityToDTO(schedule, placeDTOList, attendeeDTOList);
     }
 
@@ -87,6 +88,15 @@ public class ScheduleService {
         return TravelSimpleResponse.entityPageToDtoPage(travelPlaces, pageable);
     }
 
+    public Page<TravelSimpleResponse> searchTravelPlaces(Long scheduleId, int page, String keyword) {
+        getSavedSchedule(scheduleId);
+        Pageable pageable = PageableUtil.createPageRequest(page, 5);
+
+        Page<TravelPlace> travelPlaces = travelRepository.searchTravelPlaces(pageable, keyword);
+
+        return TravelSimpleResponse.entityPageToDtoPage(travelPlaces, pageable);
+    }
+
 
     public Member getSavedMember(String userId){
         return memberRepository.findByUserId(userId)
@@ -99,4 +109,7 @@ public class ScheduleService {
     }
 
 
+
 }
+
+

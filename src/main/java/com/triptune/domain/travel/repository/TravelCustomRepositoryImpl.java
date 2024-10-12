@@ -50,6 +50,45 @@ public class TravelCustomRepositoryImpl implements TravelCustomRepository{
         return new PageImpl<>(content, pageable, totalElements);
     }
 
+    @Override
+    public Page<TravelPlace> searchTravelPlaces(Pageable pageable, String keyword) {
+        BooleanExpression booleanExpression = travelPlace.country.countryName.contains(keyword)
+                .or(travelPlace.city.cityName.contains(keyword))
+                .or(travelPlace.district.districtName.contains(keyword))
+                .or(travelPlace.placeName.contains(keyword));
+
+        String orderCaseString = accuracyQuery();
+
+        List<TravelPlace> content = jpaQueryFactory
+                .selectFrom(travelPlace)
+                .where(booleanExpression)
+                .orderBy(
+                        Expressions.stringTemplate(
+                                orderCaseString,
+                                travelPlace.placeName, keyword, keyword + "%", "%" + keyword + "%", "%" + keyword
+                        ).asc(),
+                        Expressions.stringTemplate(
+                                orderCaseString,
+                                travelPlace.country.countryName, keyword, keyword + "%", "%" + keyword + "%", "%" + keyword
+                        ).asc(),
+                        Expressions.stringTemplate(
+                                orderCaseString,
+                                travelPlace.city.cityName, keyword, keyword + "%", "%" + keyword + "%", "%" + keyword
+                        ).asc(),
+                        Expressions.stringTemplate(
+                                orderCaseString,
+                                travelPlace.district.districtName, keyword, keyword + "%", "%" + keyword + "%", "%" + keyword
+                        ).asc()
+                )
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
+                .fetch();
+
+        int totalElements = getTotalElements(booleanExpression);
+
+        return new PageImpl<>(content, pageable, totalElements);
+    }
+
 
     @Override
     public Page<TravelLocation> findNearByTravelPlaces(Pageable pageable, TravelLocationRequest travelLocationRequest, int radius) {
@@ -82,8 +121,9 @@ public class TravelCustomRepositoryImpl implements TravelCustomRepository{
     }
 
 
+
     @Override
-    public Page<TravelLocation> searchTravelPlaces(Pageable pageable, TravelSearchRequest travelSearchRequest) {
+    public Page<TravelLocation> searchTravelPlacesWithLocation(Pageable pageable, TravelSearchRequest travelSearchRequest) {
         String keyword = travelSearchRequest.getKeyword();
 
         BooleanExpression booleanExpression = travelPlace.country.countryName.contains(keyword)
@@ -93,13 +133,7 @@ public class TravelCustomRepositoryImpl implements TravelCustomRepository{
 
 
         NumberExpression<Double> harversineExpression = getHarversineFormula(travelSearchRequest.getLatitude(), travelSearchRequest.getLongitude());
-
-        String orderCaseString = "CASE WHEN {0} = {1} THEN 0 " +
-                "WHEN {0} = {2} THEN 1 " +
-                "WHEN {0} = {3} THEN 2 " +
-                "WHEN {0} = {3} THEN 3 " +
-                "ELSE 4 " +
-                "END";
+        String orderCaseString = accuracyQuery();
 
         List<TravelLocation> content = jpaQueryFactory
                 .select(Projections.constructor(TravelLocation.class,
@@ -173,6 +207,14 @@ public class TravelCustomRepositoryImpl implements TravelCustomRepository{
         ).multiply(earthRadius);
     }
 
+    private String accuracyQuery(){
+        return "CASE WHEN {0} = {1} THEN 0 " +
+                "WHEN {0} = {2} THEN 1 " +
+                "WHEN {0} = {3} THEN 2 " +
+                "WHEN {0} = {3} THEN 3 " +
+                "ELSE 4 " +
+                "END";
+    }
 
 
 }
