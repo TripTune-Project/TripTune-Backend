@@ -275,4 +275,78 @@ public class ScheduleServiceTests extends ScheduleTest {
         assertEquals(fail.getMessage(), ErrorCode.DATA_NOT_FOUND.getMessage());
     }
 
+    @Test
+    @DisplayName("여행지 검색 성공: 검색 결과 존재하는 경우")
+    void searchTravelPlaces_withData(){
+        // given
+        String keyword = "강남";
+        Pageable pageable = PageableUtil.createPageRequest(1, 5);
+
+        Country country = createCountry();
+        City city = createCity(country);
+        District district = createDistrict(city, "강남구");
+        ApiCategory apiCategory = createApiCategory();
+        TravelPlace travelPlace = createTravelPlace(country, city, district, apiCategory);
+
+        List<TravelPlace> travelPlaceList = new ArrayList<>();
+        travelPlaceList.add(travelPlace);
+
+        File file1 = createFile(1L, "test1", true);
+        File file2 = createFile(2L, "test2", false);
+
+        TravelImage travelImage1 = createTravelImage(travelPlace, file1);
+        TravelImage travelImage2 = createTravelImage(travelPlace, file2);
+        List<TravelImage> travelImageList = Arrays.asList(travelImage1, travelImage2);
+        travelPlace.setTravelImageList(travelImageList);
+
+        Page<TravelPlace> travelPlacePage = new PageImpl<>(travelPlaceList, pageable, travelPlaceList.size());
+
+        when(scheduleRepository.findByScheduleId(any())).thenReturn(Optional.of(createTravelSchedule()));
+        when(travelRepository.searchTravelPlaces(pageable, keyword)).thenReturn(travelPlacePage);
+
+        // when
+        Page<TravelSimpleResponse> response = scheduleService.searchTravelPlaces(1L, 1, keyword);
+
+
+        // then
+        List<TravelSimpleResponse> content = response.getContent();
+        assertEquals(content.get(0).getPlaceName(), travelPlace.getPlaceName());
+        assertEquals(content.get(0).getAddress(), travelPlace.getAddress());
+        assertEquals(content.get(0).getThumbnailUrl(), travelImage1.getFile().getS3ObjectUrl());
+    }
+
+    @Test
+    @DisplayName("여행지 검색 성공: 검색 결과 존재하지 않는 경우")
+    void searchTravelPlaces_noData(){
+        // given
+        String keyword = "ㅁㄴㅇㄹ";
+        Pageable pageable = PageableUtil.createPageRequest(1, 5);
+
+        Page<TravelPlace> travelPlacePage = new PageImpl<>(new ArrayList<>(), pageable, 0);
+
+        when(scheduleRepository.findByScheduleId(any())).thenReturn(Optional.of(createTravelSchedule()));
+        when(travelRepository.searchTravelPlaces(pageable, keyword)).thenReturn(travelPlacePage);
+
+        // when
+        Page<TravelSimpleResponse> response = scheduleService.searchTravelPlaces(1L, 1, keyword);
+
+
+        // then
+        assertEquals(response.getTotalElements(), 0);
+    }
+
+    @Test
+    @DisplayName("여행지 검색 실패: 일정을 찾을 수 없는 경우")
+    void searchTravelPlaces_notFoundException(){
+        // given
+        when(scheduleRepository.findByScheduleId(any())).thenReturn(Optional.empty());
+
+        // when
+        DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> scheduleService.searchTravelPlaces(0L, 1, "강남"));
+
+        // then
+        assertEquals(fail.getHttpStatus(), ErrorCode.DATA_NOT_FOUND.getStatus());
+        assertEquals(fail.getMessage(), ErrorCode.DATA_NOT_FOUND.getMessage());
+    }
+
 }

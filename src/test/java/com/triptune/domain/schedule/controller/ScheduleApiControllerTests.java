@@ -202,7 +202,7 @@ public class ScheduleApiControllerTests extends ScheduleTest {
     @Test
     @DisplayName("여행지 조회 성공 : 여행지 데이터 존재하는 경우")
     @WithMockUser(username = "member1")
-    void getTravelPlaces_success() throws Exception {
+    void getTravelPlaces_withData() throws Exception {
         // given
         TravelSchedule schedule = scheduleRepository.save(createTravelSchedule());
 
@@ -211,8 +211,7 @@ public class ScheduleApiControllerTests extends ScheduleTest {
         District district = districtRepository.save(createDistrict(city, "중구"));
         ApiCategory apiCategory = apiCategoryRepository.save(createApiCategory());
 
-        TravelPlace travelPlace = createTravelPlace(country, city, district, apiCategory);
-        travelRepository.save(travelPlace);
+        TravelPlace travelPlace = travelRepository.save(createTravelPlace(country, city, district, apiCategory));
 
         File file1 = fileRepository.save(createFile(null, "test1", true));
         File file2 = fileRepository.save(createFile(null, "test2", false));;
@@ -222,7 +221,6 @@ public class ScheduleApiControllerTests extends ScheduleTest {
         List<TravelImage> travelImageList = Arrays.asList(travelImage1, travelImage2);
 
         travelPlace.setTravelImageList(travelImageList);
-        travelRepository.save(travelPlace);
 
         // when, then
         mockMvc.perform(get("/api/schedules/{scheduleId}/travels", schedule.getScheduleId())
@@ -238,7 +236,7 @@ public class ScheduleApiControllerTests extends ScheduleTest {
     @Test
     @DisplayName("여행지 조회 성공 : 여행지 데이터 존재하지 않는 경우")
     @WithMockUser(username = "member1")
-    void getTravelPlacesWithoutData_success() throws Exception {
+    void getTravelPlaces_noData() throws Exception {
         // given
         TravelSchedule schedule = scheduleRepository.save(createTravelSchedule());
 
@@ -250,14 +248,88 @@ public class ScheduleApiControllerTests extends ScheduleTest {
                 .andExpect(jsonPath("$.data.content").isEmpty());
     }
 
+
     @Test
-    @DisplayName("일정 조회 실패 : 일정 데이터 존재하지 않는 경우")
+    @DisplayName("여행지 조회 실패 : 여행지 데이터 존재하지 않아 NotFoundException 발생")
     @WithMockUser(username = "member1")
     void getTravelPlaces_notFoundException() throws Exception {
         // given
         // when, then
         mockMvc.perform(get("/api/schedules/{scheduleId}/travels", 0L)
                         .param("page", "1"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value(ErrorCode.DATA_NOT_FOUND.getMessage()));
+    }
+
+
+    @Test
+    @DisplayName("여행지 검색 성공 : 검색 결과가 존재하는 경우")
+    @WithMockUser(username = "member1")
+    void searchTravelPlaces_withData() throws Exception {
+        // given
+        TravelSchedule schedule = scheduleRepository.save(createTravelSchedule());
+
+        Country country = countryRepository.save(createCountry());
+        City city = cityRepository.save(createCity(country));
+        District district1 = districtRepository.save(createDistrict(city, "강남구"));
+        District district2 = districtRepository.save(createDistrict(city, "중구"));
+        ApiCategory apiCategory = apiCategoryRepository.save(createApiCategory());
+
+        TravelPlace travelPlace1 = travelRepository.save(createTravelPlace(country, city, district1, apiCategory));
+        TravelPlace travelPlace2 = travelRepository.save(createTravelPlace(country, city, district2, apiCategory));
+
+        File file1 = fileRepository.save(createFile(null, "test1", true));
+        File file2 = fileRepository.save(createFile(null, "test2", false));;
+
+        TravelImage travelImage1 = travelImageRepository.save(createTravelImage(travelPlace1, file1));
+        TravelImage travelImage2 = travelImageRepository.save(createTravelImage(travelPlace1, file2));
+        List<TravelImage> travelImageList1 = Arrays.asList(travelImage1, travelImage2);
+
+        TravelImage travelImage3 = travelImageRepository.save(createTravelImage(travelPlace2, file1));
+        TravelImage travelImage4 = travelImageRepository.save(createTravelImage(travelPlace2, file2));
+        List<TravelImage> travelImageList2 = Arrays.asList(travelImage3, travelImage4);
+
+        travelPlace1.setTravelImageList(travelImageList1);
+        travelPlace2.setTravelImageList(travelImageList2);
+
+        // when, then
+        mockMvc.perform(get("/api/schedules/{scheduleId}/travels/search", schedule.getScheduleId())
+                        .param("page", "1")
+                        .param("keyword", "강남"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.totalElements").value(1))
+                .andExpect(jsonPath("$.data.content[0].district").value(district1.getDistrictName()))
+                .andExpect(jsonPath("$.data.content[0].placeName").value(travelPlace1.getPlaceName()))
+                .andExpect(jsonPath("$.data.content[0].thumbnailUrl").value(travelImageList1.get(0).getFile().getS3ObjectUrl()));
+    }
+
+    @Test
+    @DisplayName("여행지 검색 성공 : 검색 결과가 존재하지 않는 경우")
+    @WithMockUser(username = "member1")
+    void searchTravelPlaces_noData() throws Exception {
+        // given
+        TravelSchedule schedule = scheduleRepository.save(createTravelSchedule());
+
+        // when, then
+        mockMvc.perform(get("/api/schedules/{scheduleId}/travels/search", schedule.getScheduleId())
+                        .param("page", "1")
+                        .param("keyword", "ㅁㄴㅇㄹ"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.totalElements").value(0))
+                .andExpect(jsonPath("$.data.content").isEmpty());
+    }
+
+
+    @Test
+    @DisplayName("여행지 검색 실패 : 일정 데이터 존재하지 않는 경우")
+    @WithMockUser(username = "member1")
+    void searchTravelPlaces_notFoundException() throws Exception {
+        // given
+        // when, then
+        mockMvc.perform(get("/api/schedules/{scheduleId}/travels", 0L)
+                        .param("page", "1")
+                        .param("keyword", "ㅁㄴㅇㄹ"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value(ErrorCode.DATA_NOT_FOUND.getMessage()));

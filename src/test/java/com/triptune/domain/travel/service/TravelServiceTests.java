@@ -3,7 +3,6 @@ package com.triptune.domain.travel.service;
 import com.triptune.domain.common.entity.*;
 import com.triptune.domain.travel.TravelTest;
 import com.triptune.global.exception.DataNotFoundException;
-import com.triptune.domain.common.repository.FileRepository;
 import com.triptune.domain.travel.dto.*;
 import com.triptune.domain.travel.entity.TravelImage;
 import com.triptune.domain.travel.entity.TravelPlace;
@@ -11,8 +10,6 @@ import com.triptune.domain.travel.repository.TravelImageRepository;
 import com.triptune.domain.travel.repository.TravelRepository;
 import com.triptune.global.enumclass.ErrorCode;
 import com.triptune.global.util.PageableUtil;
-import jakarta.transaction.Transactional;
-import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -22,7 +19,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
 import java.util.*;
@@ -140,7 +136,7 @@ public class TravelServiceTests extends TravelTest {
         List<TravelImage> imageList = new ArrayList<>();
         imageList.add(createTravelImage(travelPlace, file));
 
-        when(travelRepository.searchTravelPlaces(pageable, request)).thenReturn(mockLocation);
+        when(travelRepository.searchTravelPlacesWithLocation(pageable, request)).thenReturn(mockLocation);
         when(travelImageRepository.findByTravelPlacePlaceId(any())).thenReturn(imageList);
 
         // when
@@ -167,7 +163,7 @@ public class TravelServiceTests extends TravelTest {
         Pageable pageable = PageableUtil.createPageRequest(1, 5);
         Page<TravelLocation> mockLocation = new PageImpl<>(Collections.emptyList(), pageable, 0);
 
-        when(travelRepository.searchTravelPlaces(pageable, request)).thenReturn(mockLocation);
+        when(travelRepository.searchTravelPlacesWithLocation(pageable, request)).thenReturn(mockLocation);
 
         // when
         Page<TravelResponse> response = travelService.searchTravelPlaces(request, 1);
