@@ -5,9 +5,9 @@ import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.core.types.dsl.NumberExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import com.triptune.domain.travel.dto.TravelLocationRequest;
-import com.triptune.domain.travel.dto.TravelLocation;
-import com.triptune.domain.travel.dto.TravelSearchRequest;
+import com.triptune.domain.travel.dto.PlaceLocationRequest;
+import com.triptune.domain.travel.dto.PlaceLocation;
+import com.triptune.domain.travel.dto.PlaceSearchRequest;
 import com.triptune.domain.travel.entity.QTravelPlace;
 import com.triptune.domain.travel.entity.TravelPlace;
 import org.springframework.data.domain.Page;
@@ -21,12 +21,12 @@ import static com.querydsl.core.types.dsl.Expressions.constant;
 import static com.querydsl.core.types.dsl.MathExpressions.*;
 
 @Repository
-public class TravelCustomRepositoryImpl implements TravelCustomRepository{
+public class TravelPlaceCustomRepositoryImpl implements TravelPlaceCustomRepository {
 
     private final JPAQueryFactory jpaQueryFactory;
     private final QTravelPlace travelPlace;
 
-    public TravelCustomRepositoryImpl(JPAQueryFactory jpaQueryFactory){
+    public TravelPlaceCustomRepositoryImpl(JPAQueryFactory jpaQueryFactory){
         this.jpaQueryFactory = jpaQueryFactory;
         this.travelPlace = QTravelPlace.travelPlace;
     }
@@ -91,13 +91,13 @@ public class TravelCustomRepositoryImpl implements TravelCustomRepository{
 
 
     @Override
-    public Page<TravelLocation> findNearByTravelPlaces(Pageable pageable, TravelLocationRequest travelLocationRequest, int radius) {
-        NumberExpression<Double> harversineExpression = getHarversineFormula(travelLocationRequest.getLatitude(), travelLocationRequest.getLongitude());
+    public Page<PlaceLocation> findNearByTravelPlaces(Pageable pageable, PlaceLocationRequest placeLocationRequest, int radius) {
+        NumberExpression<Double> harversineExpression = getHarversineFormula(placeLocationRequest.getLatitude(), placeLocationRequest.getLongitude());
 
         BooleanExpression loeExpression = harversineExpression.loe(radius);
 
-        List<TravelLocation> content = jpaQueryFactory
-                .select(Projections.constructor(TravelLocation.class,
+        List<PlaceLocation> content = jpaQueryFactory
+                .select(Projections.constructor(PlaceLocation.class,
                         travelPlace.placeId,
                         travelPlace.country.countryName,
                         travelPlace.city.cityName,
@@ -123,8 +123,8 @@ public class TravelCustomRepositoryImpl implements TravelCustomRepository{
 
 
     @Override
-    public Page<TravelLocation> searchTravelPlacesWithLocation(Pageable pageable, TravelSearchRequest travelSearchRequest) {
-        String keyword = travelSearchRequest.getKeyword();
+    public Page<PlaceLocation> searchTravelPlacesWithLocation(Pageable pageable, PlaceSearchRequest placeSearchRequest) {
+        String keyword = placeSearchRequest.getKeyword();
 
         BooleanExpression booleanExpression = travelPlace.country.countryName.contains(keyword)
                 .or(travelPlace.city.cityName.contains(keyword))
@@ -132,11 +132,11 @@ public class TravelCustomRepositoryImpl implements TravelCustomRepository{
                 .or(travelPlace.placeName.contains(keyword));
 
 
-        NumberExpression<Double> harversineExpression = getHarversineFormula(travelSearchRequest.getLatitude(), travelSearchRequest.getLongitude());
+        NumberExpression<Double> harversineExpression = getHarversineFormula(placeSearchRequest.getLatitude(), placeSearchRequest.getLongitude());
         String orderCaseString = accuracyQuery();
 
-        List<TravelLocation> content = jpaQueryFactory
-                .select(Projections.constructor(TravelLocation.class,
+        List<PlaceLocation> content = jpaQueryFactory
+                .select(Projections.constructor(PlaceLocation.class,
                         travelPlace.placeId,
                         travelPlace.country.countryName,
                         travelPlace.city.cityName,

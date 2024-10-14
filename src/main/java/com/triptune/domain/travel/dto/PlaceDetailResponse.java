@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
 @Setter
 @NoArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class TravelDetailResponse {
+public class PlaceDetailResponse {
     private Long placeId;
     private String placeType;
     private String country;
@@ -34,7 +34,7 @@ public class TravelDetailResponse {
     private List<TravelImageResponse> imageList;
 
     @Builder
-    public TravelDetailResponse(Long placeId, String placeType, String country, String city, String district, String address, String detailAddress, String useTime, String checkInTime, String checkOutTime, String homepage, String phoneNumber, double longitude, double latitude, String placeName, String description, List<TravelImageResponse> imageList) {
+    public PlaceDetailResponse(Long placeId, String placeType, String country, String city, String district, String address, String detailAddress, String useTime, String checkInTime, String checkOutTime, String homepage, String phoneNumber, double longitude, double latitude, String placeName, String description, List<TravelImageResponse> imageList) {
         this.placeId = placeId;
         this.placeType = placeType;
         this.country = country;
@@ -55,8 +55,8 @@ public class TravelDetailResponse {
     }
 
 
-    public static TravelDetailResponse entityToDto(TravelPlace travelPlace){
-        return TravelDetailResponse.builder()
+    public static PlaceDetailResponse entityToDto(TravelPlace travelPlace){
+        return PlaceDetailResponse.builder()
                 .placeId(travelPlace.getPlaceId())
                 .placeType(travelPlace.getApiContentType().getContentTypeName())
                 .country(travelPlace.getCountry().getCountryName())

@@ -48,7 +48,7 @@ public class Member {
     @Column(name = "file_id")
     private Long fileId;
 
-    @OneToMany(mappedBy = "member", orphanRemoval = true)
+    @OneToMany(mappedBy = "member", fetch = FetchType.LAZY, orphanRemoval = true)
     private List<TravelAttendee> travelAttendeeList;
 
     @Builder

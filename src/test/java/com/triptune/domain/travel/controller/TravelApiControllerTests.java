@@ -6,7 +6,7 @@ import com.triptune.domain.travel.TravelTest;
 import com.triptune.domain.travel.entity.TravelImage;
 import com.triptune.domain.travel.entity.TravelPlace;
 import com.triptune.domain.travel.repository.TravelImageRepository;
-import com.triptune.domain.travel.repository.TravelRepository;
+import com.triptune.domain.travel.repository.TravelPlacePlaceRepository;
 import com.triptune.global.enumclass.ErrorCode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -37,7 +37,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class TravelApiControllerTests extends TravelTest {
 
     private final WebApplicationContext wac;
-    private final TravelRepository travelRepository;
+    private final TravelPlacePlaceRepository travelPlaceRepository;
     private final CountryRepository countryRepository;
     private final CityRepository cityRepository;
     private final DistrictRepository districtRepository;
@@ -47,9 +47,9 @@ public class TravelApiControllerTests extends TravelTest {
     private final ApiContentTypeRepository apiContentTypeRepository;
 
     @Autowired
-    public TravelApiControllerTests(WebApplicationContext wac, TravelRepository travelRepository, CountryRepository countryRepository, CityRepository cityRepository, DistrictRepository districtRepository, ApiCategoryRepository apiCategoryRepository, FileRepository fileRepository, TravelImageRepository travelImageRepository, ApiContentTypeRepository apiContentTypeRepository) {
+    public TravelApiControllerTests(WebApplicationContext wac, TravelPlacePlaceRepository travelPlaceRepository, CountryRepository countryRepository, CityRepository cityRepository, DistrictRepository districtRepository, ApiCategoryRepository apiCategoryRepository, FileRepository fileRepository, TravelImageRepository travelImageRepository, ApiContentTypeRepository apiContentTypeRepository) {
         this.wac = wac;
-        this.travelRepository = travelRepository;
+        this.travelPlaceRepository = travelPlaceRepository;
         this.countryRepository = countryRepository;
         this.cityRepository = cityRepository;
         this.districtRepository = districtRepository;
@@ -77,7 +77,7 @@ public class TravelApiControllerTests extends TravelTest {
         District district = districtRepository.save(createDistrict(city, "강남"));
         ApiCategory apiCategory = apiCategoryRepository.save(createApiCategory());
 
-        travelPlace = travelRepository.save(createTravelPlace(country, city, district, apiCategory));
+        travelPlace = travelPlaceRepository.save(createTravelPlace(country, city, district, apiCategory));
         File file1 = fileRepository.save(createFile(null, "test1", true));
         File file2 = fileRepository.save(createFile(null, "test2", false));;
 

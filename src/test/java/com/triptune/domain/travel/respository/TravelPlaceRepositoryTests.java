@@ -3,13 +3,13 @@ package com.triptune.domain.travel.respository;
 import com.triptune.domain.common.entity.*;
 import com.triptune.domain.common.repository.*;
 import com.triptune.domain.travel.TravelTest;
-import com.triptune.domain.travel.dto.TravelLocationRequest;
-import com.triptune.domain.travel.dto.TravelLocation;
-import com.triptune.domain.travel.dto.TravelSearchRequest;
+import com.triptune.domain.travel.dto.PlaceLocationRequest;
+import com.triptune.domain.travel.dto.PlaceLocation;
+import com.triptune.domain.travel.dto.PlaceSearchRequest;
 import com.triptune.domain.travel.entity.TravelImage;
 import com.triptune.domain.travel.entity.TravelPlace;
 import com.triptune.domain.travel.repository.TravelImageRepository;
-import com.triptune.domain.travel.repository.TravelRepository;
+import com.triptune.domain.travel.repository.TravelPlacePlaceRepository;
 import com.triptune.global.config.QueryDSLConfig;
 import com.triptune.global.util.PageableUtil;
 import org.junit.jupiter.api.BeforeEach;
@@ -32,8 +32,8 @@ import static org.junit.jupiter.api.Assertions.*;
 @Import({QueryDSLConfig.class})
 @ActiveProfiles("test")
 @TestPropertySource(locations = "classpath:application-test.yml")
-public class TravelRepositoryTests extends TravelTest {
-    private final TravelRepository travelRepository;
+public class TravelPlaceRepositoryTests extends TravelTest {
+    private final TravelPlacePlaceRepository travelPlaceRepository;
     private final FileRepository fileRepository;
     private final CityRepository cityRepository;
     private final CountryRepository countryRepository;
@@ -46,8 +46,8 @@ public class TravelRepositoryTests extends TravelTest {
     private TravelPlace travelPlace2;
 
     @Autowired
-    public TravelRepositoryTests(TravelRepository travelRepository, FileRepository fileRepository, CityRepository cityRepository, CountryRepository countryRepository, DistrictRepository districtRepository, ApiCategoryRepository apiCategoryRepository, TravelImageRepository travelImageRepository, ApiContentTypeRepository apiContentTypeRepository) {
-        this.travelRepository = travelRepository;
+    public TravelPlaceRepositoryTests(TravelPlacePlaceRepository travelPlaceRepository, FileRepository fileRepository, CityRepository cityRepository, CountryRepository countryRepository, DistrictRepository districtRepository, ApiCategoryRepository apiCategoryRepository, TravelImageRepository travelImageRepository, ApiContentTypeRepository apiContentTypeRepository) {
+        this.travelPlaceRepository = travelPlaceRepository;
         this.fileRepository = fileRepository;
         this.cityRepository = cityRepository;
         this.countryRepository = countryRepository;
@@ -65,8 +65,8 @@ public class TravelRepositoryTests extends TravelTest {
         District district2 = districtRepository.save(createDistrict(city, "성북구"));
         ApiCategory apiCategory = apiCategoryRepository.save(createApiCategory());
         ApiContentType apiContentType = apiContentTypeRepository.save(createApiContentType("관광지"));
-        travelPlace1 = travelRepository.save(createTravelPlace(country, city, district1, apiCategory));
-        travelPlace2 = travelRepository.save(createTravelPlace(country, city, district2, apiCategory));
+        travelPlace1 = travelPlaceRepository.save(createTravelPlace(country, city, district1, apiCategory));
+        travelPlace2 = travelPlaceRepository.save(createTravelPlace(country, city, district2, apiCategory));
         File file1 = fileRepository.save(createFile(null, "test1", true));
         File file2 = fileRepository.save(createFile(null, "test2", false));
         TravelImage travelImage1 = travelImageRepository.save(createTravelImage(travelPlace1, file1));
@@ -94,14 +94,14 @@ public class TravelRepositoryTests extends TravelTest {
     void findNearByTravelPlaceList_withData(){
         // given
         Pageable pageable = PageableUtil.createPageRequest(1, 5);
-        TravelLocationRequest travelLocationRequest = createTravelLocationRequest(37.497, 127.0);
+        PlaceLocationRequest placeLocationRequest = createTravelLocationRequest(37.497, 127.0);
         int radius = 5;   // 5km 이내
 
         // when
-        Page<TravelLocation> response = travelRepository.findNearByTravelPlaces(pageable, travelLocationRequest, radius);
+        Page<PlaceLocation> response = travelPlaceRepository.findNearByTravelPlaces(pageable, placeLocationRequest, radius);
 
         // then
-        List<TravelLocation> content = response.getContent();
+        List<PlaceLocation> content = response.getContent();
 
 
         assertNotEquals(response.getTotalElements(), 0);
@@ -117,11 +117,11 @@ public class TravelRepositoryTests extends TravelTest {
     void findNearByTravelPlaceList_noData(){
         // given
         Pageable pageable = PageableUtil.createPageRequest(1, 5);
-        TravelLocationRequest travelLocationRequest = createTravelLocationRequest(99.999999, 99.999999);
+        PlaceLocationRequest placeLocationRequest = createTravelLocationRequest(99.999999, 99.999999);
         int radius = 5;   // 5km 이내
 
         // when
-        Page<TravelLocation> response = travelRepository.findNearByTravelPlaces(pageable, travelLocationRequest, radius);
+        Page<PlaceLocation> response = travelPlaceRepository.findNearByTravelPlaces(pageable, placeLocationRequest, radius);
 
         // then
         assertEquals(response.getTotalElements(), 0);
@@ -132,13 +132,13 @@ public class TravelRepositoryTests extends TravelTest {
     void searchTravelPlacesWithLocation_withData(){
         // given
         Pageable pageable = PageableUtil.createPageRequest(1, 5);
-        TravelSearchRequest request = createTravelSearchRequest(37.4970465429, 127.0281573537, "강남");
+        PlaceSearchRequest request = createTravelSearchRequest(37.4970465429, 127.0281573537, "강남");
 
         // when
-        Page<TravelLocation> response = travelRepository.searchTravelPlacesWithLocation(pageable, request);
+        Page<PlaceLocation> response = travelPlaceRepository.searchTravelPlacesWithLocation(pageable, request);
 
         // then
-        List<TravelLocation> content = response.getContent();
+        List<PlaceLocation> content = response.getContent();
         assertEquals(response.getTotalElements(), 1);
         assertTrue(content.get(0).getDistrict().contains("강남"));
     }
@@ -149,10 +149,10 @@ public class TravelRepositoryTests extends TravelTest {
     void searchTravelPlacesWithLocation_noData(){
         // given
         Pageable pageable = PageableUtil.createPageRequest(1, 5);
-        TravelSearchRequest request = createTravelSearchRequest(37.4970465429, 127.0281573537, "ㅁㄴㅇㄹ");
+        PlaceSearchRequest request = createTravelSearchRequest(37.4970465429, 127.0281573537, "ㅁㄴㅇㄹ");
 
         // when
-        Page<TravelLocation> response = travelRepository.searchTravelPlacesWithLocation(pageable, request);
+        Page<PlaceLocation> response = travelPlaceRepository.searchTravelPlacesWithLocation(pageable, request);
 
         // then
         assertEquals(response.getTotalElements(), 0);
@@ -166,7 +166,7 @@ public class TravelRepositoryTests extends TravelTest {
         Pageable pageable = PageableUtil.createPageRequest(1, 5);
 
         // when
-        Page<TravelPlace> response = travelRepository.searchTravelPlaces(pageable, "성북");
+        Page<TravelPlace> response = travelPlaceRepository.searchTravelPlaces(pageable, "성북");
 
         // then
         List<TravelPlace> content = response.getContent();
@@ -181,7 +181,7 @@ public class TravelRepositoryTests extends TravelTest {
         Pageable pageable = PageableUtil.createPageRequest(1, 5);
 
         // when
-        Page<TravelPlace> response = travelRepository.searchTravelPlaces(pageable, "ㅁㄴㅇㄹ");
+        Page<TravelPlace> response = travelPlaceRepository.searchTravelPlaces(pageable, "ㅁㄴㅇㄹ");
 
         // then
         assertEquals(response.getTotalElements(), 0);

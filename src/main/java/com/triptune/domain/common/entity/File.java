@@ -45,7 +45,7 @@ public class File {
     @Column(name = "api_file_url")
     private String apiFileUrl;
 
-    @OneToMany(mappedBy = "file", orphanRemoval = true)
+    @OneToMany(mappedBy = "file", fetch = FetchType.LAZY, orphanRemoval = true)
     private List<TravelImage> travelImageFileList;
 
     @Builder

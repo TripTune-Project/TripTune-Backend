@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -12,6 +13,7 @@ import java.util.List;
 @Entity(name = "travel_schedule")
 @NoArgsConstructor
 @Getter
+@Setter
 public class TravelSchedule {
 
     @Id
@@ -34,11 +36,14 @@ public class TravelSchedule {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    @OneToMany(mappedBy = "travelSchedule", orphanRemoval = true)
+    @OneToMany(mappedBy = "travelSchedule", fetch = FetchType.LAZY, orphanRemoval = true)
     private List<TravelAttendee> travelAttendeeList;
 
+    @OneToMany(mappedBy = "travelSchedule", fetch = FetchType.LAZY, orphanRemoval = true)
+    private List<TravelRoute> travelRouteList;
+
     @Builder
-    public TravelSchedule(Long scheduleId, String scheduleName, LocalDate startDate, LocalDate endDate, LocalDateTime createdAt, LocalDateTime updatedAt, List<TravelAttendee> travelAttendeeList) {
+    public TravelSchedule(Long scheduleId, String scheduleName, LocalDate startDate, LocalDate endDate, LocalDateTime createdAt, LocalDateTime updatedAt, List<TravelAttendee> travelAttendeeList, List<TravelRoute> travelRouteList) {
         this.scheduleId = scheduleId;
         this.scheduleName = scheduleName;
         this.startDate = startDate;
@@ -46,5 +51,6 @@ public class TravelSchedule {
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
         this.travelAttendeeList = travelAttendeeList;
+        this.travelRouteList = travelRouteList;
     }
 }

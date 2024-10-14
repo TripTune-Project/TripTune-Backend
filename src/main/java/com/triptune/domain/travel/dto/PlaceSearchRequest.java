@@ -11,7 +11,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-public class TravelSearchRequest {
+public class PlaceSearchRequest {
     
     @NotNull(message = "경도는 필수 입력 값입니다.")
     private double longitude;   // 경도
@@ -24,7 +24,7 @@ public class TravelSearchRequest {
     private String keyword;
 
     @Builder
-    public TravelSearchRequest(double longitude, double latitude, String keyword) {
+    public PlaceSearchRequest(double longitude, double latitude, String keyword) {
         this.longitude = longitude;
         this.latitude = latitude;
         this.keyword = keyword;

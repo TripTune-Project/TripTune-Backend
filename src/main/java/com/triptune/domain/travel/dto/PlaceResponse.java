@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 @Getter
 @NoArgsConstructor
-public class TravelResponse {
+public class PlaceResponse {
     private Long placeId;
     private String country;
     private String city;
@@ -24,7 +24,7 @@ public class TravelResponse {
     private Double distance;
 
     @Builder
-    public TravelResponse(Long placeId, String country, String city, String district, String address, String detailAddress, double longitude, double latitude, String placeName, String thumbnailUrl, Double distance) {
+    public PlaceResponse(Long placeId, String country, String city, String district, String address, String detailAddress, double longitude, double latitude, String placeName, String thumbnailUrl, Double distance) {
         this.placeId = placeId;
         this.country = country;
         this.city = city;
@@ -42,10 +42,10 @@ public class TravelResponse {
         this.thumbnailUrl = File.getThumbnailUrl(travelPlace.getTravelImageList());
     }
 
-    public static TravelResponse entityToDto(TravelPlace travelPlace){
+    public static PlaceResponse entityToDto(TravelPlace travelPlace){
         String thumbnailUrl = File.getThumbnailUrl(travelPlace.getTravelImageList());
 
-        return TravelResponse.builder()
+        return PlaceResponse.builder()
                 .placeId(travelPlace.getPlaceId())
                 .country(travelPlace.getCountry().getCountryName())
                 .city(travelPlace.getCity().getCityName())
@@ -59,28 +59,28 @@ public class TravelResponse {
                 .build();
     }
 
-    public static List<TravelResponse> entityListToDtoList(List<TravelPlace> travelPlaceList){
+    public static List<PlaceResponse> entityListToDtoList(List<TravelPlace> travelPlaceList){
         return travelPlaceList.stream()
-                .map(TravelResponse::entityToDto)
+                .map(PlaceResponse::entityToDto)
                 .collect(Collectors.toList());
     }
 
 
-    public static TravelResponse entityToLocationDto(TravelLocation travelLocation){
-        String thumbnailUrl = File.getThumbnailUrl(travelLocation.getTravelImageFileList());
+    public static PlaceResponse entityToLocationDto(PlaceLocation placeLocation){
+        String thumbnailUrl = File.getThumbnailUrl(placeLocation.getTravelImageFileList());
 
-        return TravelResponse.builder()
-                .placeId(travelLocation.getPlaceId())
-                .country(travelLocation.getCountry())
-                .city(travelLocation.getCity())
-                .district(travelLocation.getDistrict())
-                .address(travelLocation.getAddress())
-                .detailAddress(travelLocation.getDetailAddress())
-                .longitude(travelLocation.getLongitude())
-                .latitude(travelLocation.getLatitude())
-                .placeName(travelLocation.getPlaceName())
+        return PlaceResponse.builder()
+                .placeId(placeLocation.getPlaceId())
+                .country(placeLocation.getCountry())
+                .city(placeLocation.getCity())
+                .district(placeLocation.getDistrict())
+                .address(placeLocation.getAddress())
+                .detailAddress(placeLocation.getDetailAddress())
+                .longitude(placeLocation.getLongitude())
+                .latitude(placeLocation.getLatitude())
+                .placeName(placeLocation.getPlaceName())
                 .thumbnailUrl(thumbnailUrl)
-                .distance(travelLocation.getDistance())
+                .distance(placeLocation.getDistance())
                 .build();
     }
 

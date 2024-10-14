@@ -1,7 +1,7 @@
 package com.triptune.domain.schedule.dto;
 
 import com.triptune.domain.schedule.entity.TravelSchedule;
-import com.triptune.domain.travel.dto.TravelSimpleResponse;
+import com.triptune.domain.travel.dto.PlaceSimpleResponse;
 import com.triptune.global.response.PageResponse;
 import lombok.Builder;
 import lombok.Getter;
@@ -9,9 +9,6 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 
 @Getter
@@ -23,10 +20,10 @@ public class ScheduleResponse {
     private LocalDateTime createdAt;
     private LocalDateTime updateAt;
     private List<AttendeeDTO> attendeeList;
-    private PageResponse<TravelSimpleResponse> placeList;
+    private PageResponse<PlaceSimpleResponse> placeList;
 
     @Builder
-    public ScheduleResponse(String scheduleName, LocalDate startDate, LocalDate endDate, LocalDateTime createdAt, LocalDateTime updateAt, List<AttendeeDTO> attendeeList, PageResponse<TravelSimpleResponse> placeList) {
+    public ScheduleResponse(String scheduleName, LocalDate startDate, LocalDate endDate, LocalDateTime createdAt, LocalDateTime updateAt, List<AttendeeDTO> attendeeList, PageResponse<PlaceSimpleResponse> placeList) {
         this.scheduleName = scheduleName;
         this.startDate = startDate;
         this.endDate = endDate;
@@ -36,7 +33,7 @@ public class ScheduleResponse {
         this.placeList = placeList;
     }
 
-    public static ScheduleResponse entityToDTO(TravelSchedule schedule, PageResponse<TravelSimpleResponse> simplePlaces, List<AttendeeDTO> attendeeList){
+    public static ScheduleResponse entityToDTO(TravelSchedule schedule, PageResponse<PlaceSimpleResponse> simplePlaces, List<AttendeeDTO> attendeeList){
         return ScheduleResponse.builder()
                 .scheduleName(schedule.getScheduleName())
                 .startDate(schedule.getStartDate())

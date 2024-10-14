@@ -1,6 +1,7 @@
 package com.triptune.domain.travel.entity;
 
 import com.triptune.domain.common.entity.*;
+import com.triptune.domain.schedule.entity.TravelRoute;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
@@ -83,13 +84,14 @@ public class TravelPlace {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-
-    @OneToMany(mappedBy = "travelPlace", orphanRemoval = true)
+    @OneToMany(mappedBy = "travelPlace", fetch = FetchType.LAZY, orphanRemoval = true)
     private List<TravelImage> travelImageList;
 
+    @OneToMany(mappedBy = "travelPlace", fetch = FetchType.LAZY, orphanRemoval = true)
+    private List<TravelRoute> travelRouteList;
 
     @Builder
-    public TravelPlace(Long placeId, Country country, City city, District district, ApiCategory apiCategory, ApiContentType apiContentType, String placeName, String address, String detailAddress, String useTime, String checkInTime, String checkOutTime, String homepage, String phoneNumber, double longitude, double latitude, String description, int bookmarkCnt, LocalDateTime createdAt, LocalDateTime updatedAt, List<TravelImage> travelImageList) {
+    public TravelPlace(Long placeId, Country country, City city, District district, ApiCategory apiCategory, ApiContentType apiContentType, String placeName, String address, String detailAddress, String useTime, String checkInTime, String checkOutTime, String homepage, String phoneNumber, double longitude, double latitude, String description, int bookmarkCnt, LocalDateTime createdAt, LocalDateTime updatedAt, List<TravelImage> travelImageList, List<TravelRoute> travelRouteList) {
         this.placeId = placeId;
         this.country = country;
         this.city = city;
@@ -111,5 +113,6 @@ public class TravelPlace {
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
         this.travelImageList = travelImageList;
+        this.travelRouteList = travelRouteList;
     }
 }
