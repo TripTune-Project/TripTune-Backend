@@ -6,6 +6,7 @@ import com.triptune.domain.common.entity.*;
 import com.triptune.domain.member.entity.Member;
 import com.triptune.domain.schedule.dto.CreateScheduleRequest;
 import com.triptune.domain.schedule.entity.TravelAttendee;
+import com.triptune.domain.schedule.entity.TravelRoute;
 import com.triptune.domain.schedule.entity.TravelSchedule;
 import com.triptune.domain.schedule.enumclass.AttendeePermission;
 import com.triptune.domain.schedule.enumclass.AttendeeRole;
@@ -25,6 +26,7 @@ public abstract class BaseTest {
 
     protected TravelSchedule createTravelSchedule(){
         return TravelSchedule.builder()
+                .scheduleId(1L)
                 .scheduleName("테스트")
                 .startDate(LocalDate.now())
                 .endDate(LocalDate.now().plusDays(10))
@@ -116,6 +118,14 @@ public abstract class BaseTest {
                 .travelSchedule(schedule)
                 .role(AttendeeRole.AUTHOR)
                 .permission(AttendeePermission.ALL)
+                .build();
+    }
+
+    protected TravelRoute createTravelRoute(TravelSchedule schedule, TravelPlace travelPlace, int routeOrder){
+        return TravelRoute.builder()
+                .travelSchedule(schedule)
+                .travelPlace(travelPlace)
+                .routeOrder(routeOrder)
                 .build();
     }
 
