@@ -27,7 +27,7 @@ public class TravelService {
      * @param page
      * @return Page<TravelResponse>
      */
-    public Page<PlaceResponse> getNearByTravelPlaces(PlaceLocationRequest placeLocationRequest, int page) {
+    public Page<PlaceDistanceResponse> getNearByTravelPlaces(PlaceLocationRequest placeLocationRequest, int page) {
         Pageable pageable = PageRequest.of(page - 1, 5);
 
         Page<PlaceLocation> travelPlacePage = travelPlaceRepository.findNearByTravelPlaces(pageable, placeLocationRequest, 5);
@@ -38,7 +38,7 @@ public class TravelService {
             }
         }
 
-        return travelPlacePage.map(PlaceResponse::entityToLocationDto);
+        return travelPlacePage.map(PlaceDistanceResponse::entityToLocationDto);
     }
 
     /**
@@ -47,7 +47,7 @@ public class TravelService {
      * @param page
      * @return Page<TravelResponse>
      */
-    public Page<PlaceResponse> searchTravelPlaces(PlaceSearchRequest placeSearchRequest, int page) {
+    public Page<PlaceDistanceResponse> searchTravelPlaces(PlaceSearchRequest placeSearchRequest, int page) {
         Pageable pageable = PageRequest.of(page - 1, 5);
 
         Page<PlaceLocation> travelPlacePage = travelPlaceRepository.searchTravelPlacesWithLocation(pageable, placeSearchRequest);
@@ -56,7 +56,7 @@ public class TravelService {
             response.setTravelImageFileList(travelImageRepository.findByTravelPlacePlaceId(response.getPlaceId()));
         }
 
-        return travelPlacePage.map(PlaceResponse::entityToLocationDto);
+        return travelPlacePage.map(PlaceDistanceResponse::entityToLocationDto);
     }
 
     /**

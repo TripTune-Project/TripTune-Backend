@@ -11,7 +11,7 @@ import com.triptune.domain.schedule.enumclass.AttendeeRole;
 import com.triptune.domain.schedule.repository.TravelAttendeeRepository;
 import com.triptune.domain.schedule.repository.TravelRouteRepository;
 import com.triptune.domain.schedule.repository.TravelScheduleRepository;
-import com.triptune.domain.travel.dto.PlaceSimpleResponse;
+import com.triptune.domain.travel.dto.PlaceResponse;
 import com.triptune.domain.travel.entity.TravelPlace;
 import com.triptune.domain.travel.repository.TravelPlacePlaceRepository;
 import com.triptune.global.enumclass.ErrorCode;
@@ -76,8 +76,8 @@ public class ScheduleService {
         TravelSchedule schedule = getSavedSchedule(scheduleId);
 
         // 여행지 정보: Page<TravelPlace> -> PageResponse<TravelSimpleResponse> 로 변경
-        Page<PlaceSimpleResponse> travelPlacesDTO = getSimpleTravelPlacesByJunggu(page);
-        PageResponse<PlaceSimpleResponse> placeDTOList = PageResponse.of(travelPlacesDTO);
+        Page<PlaceResponse> travelPlacesDTO = getSimpleTravelPlacesByJunggu(page);
+        PageResponse<PlaceResponse> placeDTOList = PageResponse.of(travelPlacesDTO);
 
         List<AttendeeDTO> attendeeDTOList = travelAttendeeRepository.findAllByTravelSchedule_ScheduleId(schedule.getScheduleId())
                 .stream()
@@ -93,7 +93,7 @@ public class ScheduleService {
      * @param page: 페이지 수
      * @return Page<PlaceSimpleResponse>: 중구 기준 여행지 정보로 구성된 페이지 dto
      */
-    public Page<PlaceSimpleResponse> getTravelPlaces(Long scheduleId, int page) {
+    public Page<PlaceResponse> getTravelPlaces(Long scheduleId, int page) {
         getSavedSchedule(scheduleId);
         return getSimpleTravelPlacesByJunggu(page);
     }
@@ -105,13 +105,13 @@ public class ScheduleService {
      * @param keyword: 검색 키워드
      * @return Page<PlaceSimpleResponse>: 여행지 정보로 구성된 페이지 dto
      */
-    public Page<PlaceSimpleResponse> searchTravelPlaces(Long scheduleId, int page, String keyword) {
+    public Page<PlaceResponse> searchTravelPlaces(Long scheduleId, int page, String keyword) {
         getSavedSchedule(scheduleId);
 
         Pageable pageable = PageableUtil.createPageRequest(page, 5);
         Page<TravelPlace> travelPlaces = travelPlaceRepository.searchTravelPlaces(pageable, keyword);
 
-        return travelPlaces.map(PlaceSimpleResponse::entityToDto);
+        return travelPlaces.map(PlaceResponse::entityToDto);
     }
 
     /**
@@ -135,11 +135,11 @@ public class ScheduleService {
      * @param page: 페이지 수
      * @return Page<PlaceSimpleResponse>: 중구 기준 여행지 정보로 구성된 페이지 dto
      */
-    public Page<PlaceSimpleResponse> getSimpleTravelPlacesByJunggu(int page) {
+    public Page<PlaceResponse> getSimpleTravelPlacesByJunggu(int page) {
         Pageable pageable = PageableUtil.createPageRequest(page, 5);
         Page<TravelPlace> travelPlaces = travelPlaceRepository.findAllByAreaData(pageable, "대한민국", "서울", "중구");
 
-        return travelPlaces.map(PlaceSimpleResponse::entityToDto);
+        return travelPlaces.map(PlaceResponse::entityToDto);
     }
 
     /**

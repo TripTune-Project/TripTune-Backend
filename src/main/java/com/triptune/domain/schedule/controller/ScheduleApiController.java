@@ -5,7 +5,7 @@ import com.triptune.domain.schedule.dto.CreateScheduleResponse;
 import com.triptune.domain.schedule.dto.ScheduleResponse;
 import com.triptune.domain.schedule.dto.RouteResponse;
 import com.triptune.domain.schedule.service.ScheduleService;
-import com.triptune.domain.travel.dto.PlaceSimpleResponse;
+import com.triptune.domain.travel.dto.PlaceResponse;
 import com.triptune.global.response.ApiPageResponse;
 import com.triptune.global.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -44,19 +44,19 @@ public class ScheduleApiController {
 
     @GetMapping("/{scheduleId}/travels")
     @Operation(summary = "여행지 조회", description = "여행지 탭에서 여행지를 제공합니다.")
-    public ApiPageResponse<PlaceSimpleResponse> getTravelPlaces(@PathVariable(name = "scheduleId") Long scheduleId, @RequestParam int page){
-        Page<PlaceSimpleResponse> response = scheduleService.getTravelPlaces(scheduleId, page);
+    public ApiPageResponse<PlaceResponse> getTravelPlaces(@PathVariable(name = "scheduleId") Long scheduleId, @RequestParam int page){
+        Page<PlaceResponse> response = scheduleService.getTravelPlaces(scheduleId, page);
 
         return ApiPageResponse.okResponse(response);
     }
 
     @GetMapping("/{scheduleId}/travels/search")
     @Operation(summary = "여행지 검색", description = "여행지 탭에서 여행지를 검색합니다.")
-    public ApiPageResponse<PlaceSimpleResponse> searchTravelPlaces(@PathVariable(name = "scheduleId") Long scheduleId,
-                                                                   @RequestParam(name = "page") int page,
-                                                                   @RequestParam(name = "keyword") String keyword){
+    public ApiPageResponse<PlaceResponse> searchTravelPlaces(@PathVariable(name = "scheduleId") Long scheduleId,
+                                                             @RequestParam(name = "page") int page,
+                                                             @RequestParam(name = "keyword") String keyword){
 
-        Page<PlaceSimpleResponse> response = scheduleService.searchTravelPlaces(scheduleId, page, keyword);
+        Page<PlaceResponse> response = scheduleService.searchTravelPlaces(scheduleId, page, keyword);
 
         return ApiPageResponse.okResponse(response);
     }

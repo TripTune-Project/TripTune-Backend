@@ -82,10 +82,10 @@ public class TravelServiceTests extends TravelTest {
         when(travelImageRepository.findByTravelPlacePlaceId(any())).thenReturn(imageList);
 
         // when
-        Page<PlaceResponse> response = travelService.getNearByTravelPlaces(request, 1);
+        Page<PlaceDistanceResponse> response = travelService.getNearByTravelPlaces(request, 1);
 
         // then
-        List<PlaceResponse> content = response.getContent();
+        List<PlaceDistanceResponse> content = response.getContent();
         assertNotEquals(response.getTotalElements(), 0);
         assertEquals(content.get(0).getCity(), locationList.get(0).getCity());
         assertEquals(content.get(0).getPlaceName(), locationList.get(0).getPlaceName());
@@ -110,7 +110,7 @@ public class TravelServiceTests extends TravelTest {
         when(travelPlaceRepository.findNearByTravelPlaces(pageable, request, 5)).thenReturn(mockLocation);
 
         // when
-        Page<PlaceResponse> response = travelService.getNearByTravelPlaces(request, 1);
+        Page<PlaceDistanceResponse> response = travelService.getNearByTravelPlaces(request, 1);
 
         // then
         assertEquals(response.getTotalElements(), 0);
@@ -140,10 +140,10 @@ public class TravelServiceTests extends TravelTest {
         when(travelImageRepository.findByTravelPlacePlaceId(any())).thenReturn(imageList);
 
         // when
-        Page<PlaceResponse> response = travelService.searchTravelPlaces(request, 1);
+        Page<PlaceDistanceResponse> response = travelService.searchTravelPlaces(request, 1);
 
         // then
-        List<PlaceResponse> content = response.getContent();
+        List<PlaceDistanceResponse> content = response.getContent();
         assertNotEquals(response.getTotalElements(), 0);
         assertEquals(content.get(0).getCity(), locationList.get(0).getCity());
         assertEquals(content.get(0).getPlaceName(), locationList.get(0).getPlaceName());
@@ -166,7 +166,7 @@ public class TravelServiceTests extends TravelTest {
         when(travelPlaceRepository.searchTravelPlacesWithLocation(pageable, request)).thenReturn(mockLocation);
 
         // when
-        Page<PlaceResponse> response = travelService.searchTravelPlaces(request, 1);
+        Page<PlaceDistanceResponse> response = travelService.searchTravelPlaces(request, 1);
 
         // then
         assertEquals(response.getTotalElements(), 0);

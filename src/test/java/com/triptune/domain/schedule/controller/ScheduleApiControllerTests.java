@@ -245,6 +245,8 @@ public class ScheduleApiControllerTests extends ScheduleTest {
                 .andExpect(jsonPath("$.data.totalElements").value(1))
                 .andExpect(jsonPath("$.data.content[0].district").value(district.getDistrictName()))
                 .andExpect(jsonPath("$.data.content[0].placeName").value(travelPlace.getPlaceName()))
+                .andExpect(jsonPath("$.data.content[0].longitude").isNotEmpty())
+                .andExpect(jsonPath("$.data.content[0].latitude").isNotEmpty())
                 .andExpect(jsonPath("$.data.content[0].thumbnailUrl").value(travelImageList.get(0).getFile().getS3ObjectUrl()));
     }
 
@@ -317,6 +319,8 @@ public class ScheduleApiControllerTests extends ScheduleTest {
                 .andExpect(jsonPath("$.data.totalElements").value(1))
                 .andExpect(jsonPath("$.data.content[0].district").value(district1.getDistrictName()))
                 .andExpect(jsonPath("$.data.content[0].placeName").value(travelPlace1.getPlaceName()))
+                .andExpect(jsonPath("$.data.content[0].longitude").isNotEmpty())
+                .andExpect(jsonPath("$.data.content[0].latitude").isNotEmpty())
                 .andExpect(jsonPath("$.data.content[0].thumbnailUrl").value(travelImageList1.get(0).getFile().getS3ObjectUrl()));
     }
 

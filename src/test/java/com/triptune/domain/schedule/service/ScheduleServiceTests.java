@@ -14,7 +14,7 @@ import com.triptune.domain.schedule.entity.TravelSchedule;
 import com.triptune.domain.schedule.repository.TravelAttendeeRepository;
 import com.triptune.domain.schedule.repository.TravelRouteRepository;
 import com.triptune.domain.schedule.repository.TravelScheduleRepository;
-import com.triptune.domain.travel.dto.PlaceSimpleResponse;
+import com.triptune.domain.travel.dto.PlaceResponse;
 import com.triptune.domain.travel.entity.TravelImage;
 import com.triptune.domain.travel.entity.TravelPlace;
 import com.triptune.domain.travel.repository.TravelPlacePlaceRepository;
@@ -240,7 +240,7 @@ public class ScheduleServiceTests extends ScheduleTest {
                 .thenReturn(new PageImpl<>(placeList, pageable, 1));
 
         // when
-        Page<PlaceSimpleResponse> response = scheduleService.getTravelPlaces(schedule.getScheduleId(), 1);
+        Page<PlaceResponse> response = scheduleService.getTravelPlaces(schedule.getScheduleId(), 1);
 
         // then
         assertEquals(response.getTotalElements(), placeList.size());
@@ -260,7 +260,7 @@ public class ScheduleServiceTests extends ScheduleTest {
                 .thenReturn(new PageImpl<>(new ArrayList<>(), pageable, 0));
 
         // when
-        Page<PlaceSimpleResponse> response = scheduleService.getTravelPlaces(schedule.getScheduleId(), 1);
+        Page<PlaceResponse> response = scheduleService.getTravelPlaces(schedule.getScheduleId(), 1);
 
         // then
         assertEquals(response.getTotalElements(), 0);
@@ -311,11 +311,11 @@ public class ScheduleServiceTests extends ScheduleTest {
         when(travelPlaceRepository.searchTravelPlaces(pageable, keyword)).thenReturn(travelPlacePage);
 
         // when
-        Page<PlaceSimpleResponse> response = scheduleService.searchTravelPlaces(1L, 1, keyword);
+        Page<PlaceResponse> response = scheduleService.searchTravelPlaces(1L, 1, keyword);
 
 
         // then
-        List<PlaceSimpleResponse> content = response.getContent();
+        List<PlaceResponse> content = response.getContent();
         assertEquals(content.get(0).getPlaceName(), travelPlace.getPlaceName());
         assertEquals(content.get(0).getAddress(), travelPlace.getAddress());
         assertEquals(content.get(0).getThumbnailUrl(), travelImage1.getFile().getS3ObjectUrl());
@@ -334,7 +334,7 @@ public class ScheduleServiceTests extends ScheduleTest {
         when(travelPlaceRepository.searchTravelPlaces(pageable, keyword)).thenReturn(travelPlacePage);
 
         // when
-        Page<PlaceSimpleResponse> response = scheduleService.searchTravelPlaces(1L, 1, keyword);
+        Page<PlaceResponse> response = scheduleService.searchTravelPlaces(1L, 1, keyword);
 
 
         // then
@@ -474,10 +474,10 @@ public class ScheduleServiceTests extends ScheduleTest {
 
 
         // when
-        Page<PlaceSimpleResponse> response = scheduleService.getSimpleTravelPlacesByJunggu(1);
+        Page<PlaceResponse> response = scheduleService.getSimpleTravelPlacesByJunggu(1);
 
         // then
-        List<PlaceSimpleResponse> content = response.getContent();
+        List<PlaceResponse> content = response.getContent();
         assertEquals(response.getTotalElements(), placeList.size());
         assertEquals(content.get(0).getAddress(), travelPlace1.getAddress());
         assertEquals(content.get(0).getThumbnailUrl(), travelImage1.getFile().getS3ObjectUrl());
@@ -494,7 +494,7 @@ public class ScheduleServiceTests extends ScheduleTest {
 
 
         // when
-        Page<PlaceSimpleResponse> response = scheduleService.getSimpleTravelPlacesByJunggu(1);
+        Page<PlaceResponse> response = scheduleService.getSimpleTravelPlacesByJunggu(1);
 
         // then
         assertEquals(response.getTotalElements(), 0);
