@@ -9,7 +9,7 @@ import com.triptune.domain.travel.entity.TravelPlace;
 import com.triptune.domain.travel.repository.TravelImageRepository;
 import com.triptune.domain.travel.repository.TravelPlacePlaceRepository;
 import com.triptune.global.enumclass.ErrorCode;
-import com.triptune.global.util.PageableUtil;
+import com.triptune.global.util.PageUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -55,8 +55,8 @@ public class TravelServiceTests extends TravelTest {
         this.city = createCity(country);
         this.district = createDistrict(city, "강남구");
         this.apiCategory = createApiCategory();
-        this.travelPlace = createTravelPlace(country, city, district, apiCategory);
-        this.file = createFile(1L, "test", true);
+        this.travelPlace = createTravelPlace(1L, country, city, district, apiCategory);
+        this.file = createFile("test", true);
 
         this.imageList = new ArrayList<>();
         this.imageList.add(createTravelImage(travelPlace, file));
@@ -70,7 +70,7 @@ public class TravelServiceTests extends TravelTest {
         // given
         PlaceLocationRequest request = createTravelLocationRequest(37.4970465429, 127.0281573537);
 
-        Pageable pageable = PageableUtil.createPageRequest(1, 5);
+        Pageable pageable = PageUtil.createPageRequest(1, 5);
 
         List<PlaceLocation> locationList = new ArrayList<>();
         locationList.add(createTravelLocation(travelPlace));
@@ -104,7 +104,7 @@ public class TravelServiceTests extends TravelTest {
         // given
         PlaceLocationRequest request = createTravelLocationRequest(0.0, 0.0);
 
-        Pageable pageable = PageableUtil.createPageRequest(1, 5);
+        Pageable pageable = PageUtil.createPageRequest(1, 5);
         Page<PlaceLocation> mockLocation = new PageImpl<>(Collections.emptyList(), pageable, 0);
 
         when(travelPlaceRepository.findNearByTravelPlaces(pageable, request, 5)).thenReturn(mockLocation);
@@ -128,7 +128,7 @@ public class TravelServiceTests extends TravelTest {
         // given
         PlaceSearchRequest request = createTravelSearchRequest(37.49, 127.0, "테스트");
 
-        Pageable pageable = PageableUtil.createPageRequest(1, 5);
+        Pageable pageable = PageUtil.createPageRequest(1, 5);
         List<PlaceLocation> locationList = new ArrayList<>();
         locationList.add(createTravelLocation(travelPlace));
         Page<PlaceLocation> mockLocation = new PageImpl<>(locationList, pageable, 1);
@@ -160,7 +160,7 @@ public class TravelServiceTests extends TravelTest {
         // given
         PlaceSearchRequest request = createTravelSearchRequest(37.49, 127.0, "ㅁㄴㅇㄹ");
 
-        Pageable pageable = PageableUtil.createPageRequest(1, 5);
+        Pageable pageable = PageUtil.createPageRequest(1, 5);
         Page<PlaceLocation> mockLocation = new PageImpl<>(Collections.emptyList(), pageable, 0);
 
         when(travelPlaceRepository.searchTravelPlacesWithLocation(pageable, request)).thenReturn(mockLocation);

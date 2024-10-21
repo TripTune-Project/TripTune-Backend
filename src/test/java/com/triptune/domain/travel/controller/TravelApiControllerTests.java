@@ -77,9 +77,9 @@ public class TravelApiControllerTests extends TravelTest {
         District district = districtRepository.save(createDistrict(city, "강남"));
         ApiCategory apiCategory = apiCategoryRepository.save(createApiCategory());
 
-        travelPlace = travelPlaceRepository.save(createTravelPlace(country, city, district, apiCategory));
-        File file1 = fileRepository.save(createFile(null, "test1", true));
-        File file2 = fileRepository.save(createFile(null, "test2", false));;
+        travelPlace = travelPlaceRepository.save(createTravelPlace(null, country, city, district, apiCategory));
+        File file1 = fileRepository.save(createFile("test1", true));
+        File file2 = fileRepository.save(createFile("test2", false));;
 
         TravelImage travelImage1 = travelImageRepository.save(createTravelImage(travelPlace, file1));
         TravelImage travelImage2 = travelImageRepository.save(createTravelImage(travelPlace, file2));
