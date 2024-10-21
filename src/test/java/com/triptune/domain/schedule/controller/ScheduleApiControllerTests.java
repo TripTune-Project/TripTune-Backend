@@ -35,6 +35,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.filter.CharacterEncodingFilter;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -235,6 +236,22 @@ public class ScheduleApiControllerTests extends ScheduleTest {
         // given
         CreateScheduleRequest request = createScheduleRequest();
         request.setStartDate(null);
+
+        // when, then
+        mockMvc.perform(post("/api/schedules")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJsonString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false));
+    }
+
+    @Test
+    @DisplayName("createSchedule(): 일정 만들기 시 오늘 이전 날짜 입력으로 MethodArgumentNotValidException 발생")
+    @WithMockUser(username = "test")
+    void createSchedulePastDate_methodArgumentNotValidException() throws Exception{
+        // given
+        CreateScheduleRequest request = createScheduleRequest();
+        request.setStartDate(LocalDate.now().minusDays(3));
 
         // when, then
         mockMvc.perform(post("/api/schedules")
