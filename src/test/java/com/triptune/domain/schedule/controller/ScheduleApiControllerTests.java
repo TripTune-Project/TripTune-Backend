@@ -6,10 +6,10 @@ import com.triptune.domain.member.entity.Member;
 import com.triptune.domain.member.repository.MemberRepository;
 import com.triptune.domain.schedule.ScheduleTest;
 import com.triptune.domain.schedule.dto.CreateScheduleRequest;
-import com.triptune.domain.schedule.dto.RouteResponse;
 import com.triptune.domain.schedule.entity.TravelAttendee;
 import com.triptune.domain.schedule.entity.TravelRoute;
 import com.triptune.domain.schedule.entity.TravelSchedule;
+import com.triptune.domain.schedule.enumclass.AttendeeRole;
 import com.triptune.domain.schedule.repository.TravelAttendeeRepository;
 import com.triptune.domain.schedule.repository.TravelRouteRepository;
 import com.triptune.domain.schedule.repository.TravelScheduleRepository;
@@ -18,15 +18,13 @@ import com.triptune.domain.travel.entity.TravelPlace;
 import com.triptune.domain.travel.repository.TravelImageRepository;
 import com.triptune.domain.travel.repository.TravelPlacePlaceRepository;
 import com.triptune.global.enumclass.ErrorCode;
-import com.triptune.global.exception.DataNotFoundException;
-import com.triptune.global.util.PageableUtil;
+import com.triptune.global.util.PageUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
@@ -37,15 +35,14 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.filter.CharacterEncodingFilter;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -69,11 +66,12 @@ public class ScheduleApiControllerTests extends ScheduleTest {
     private final FileRepository fileRepository;
     private final TravelImageRepository travelImageRepository;
     private final TravelRouteRepository travelRouteRepository;
+    private final ApiContentTypeRepository apiContentTypeRepository;
 
     private MockMvc mockMvc;
 
     @Autowired
-    public ScheduleApiControllerTests(WebApplicationContext wac, TravelScheduleRepository travelScheduleRepository, TravelAttendeeRepository travelAttendeeRepository, MemberRepository memberRepository, TravelPlacePlaceRepository travelPlaceRepository, CountryRepository countryRepository, CityRepository cityRepository, DistrictRepository districtRepository, ApiCategoryRepository apiCategoryRepository, FileRepository fileRepository, TravelImageRepository travelImageRepository, TravelRouteRepository travelRouteRepository) {
+    public ScheduleApiControllerTests(WebApplicationContext wac, TravelScheduleRepository travelScheduleRepository, TravelAttendeeRepository travelAttendeeRepository, MemberRepository memberRepository, TravelPlacePlaceRepository travelPlaceRepository, CountryRepository countryRepository, CityRepository cityRepository, DistrictRepository districtRepository, ApiCategoryRepository apiCategoryRepository, FileRepository fileRepository, TravelImageRepository travelImageRepository, TravelRouteRepository travelRouteRepository, ApiContentTypeRepository apiContentTypeRepository) {
         this.wac = wac;
         this.travelScheduleRepository = travelScheduleRepository;
         this.travelAttendeeRepository = travelAttendeeRepository;
@@ -86,6 +84,7 @@ public class ScheduleApiControllerTests extends ScheduleTest {
         this.fileRepository = fileRepository;
         this.travelImageRepository = travelImageRepository;
         this.travelRouteRepository = travelRouteRepository;
+        this.apiContentTypeRepository = apiContentTypeRepository;
     }
 
     @BeforeEach
@@ -98,6 +97,119 @@ public class ScheduleApiControllerTests extends ScheduleTest {
 
     }
 
+    @Test
+    @DisplayName("getSchedules(): 내가 참석한 여행지 목록 조회")
+    @WithMockUser(username = "member1")
+    void getSchedules() throws Exception {
+        // given
+        Member member1 = memberRepository.save(createMember(null, "member1"));
+        Member member2 = memberRepository.save(createMember(null, "member2"));
+
+        Country country = countryRepository.save(createCountry());
+        City city = cityRepository.save(createCity(country));
+        District district1 = districtRepository.save(createDistrict(city, "강남구"));
+        District district2 = districtRepository.save(createDistrict(city, "성북구"));
+        ApiCategory apiCategory = apiCategoryRepository.save(createApiCategory());
+        ApiContentType apiContentType = apiContentTypeRepository.save(createApiContentType("관광지"));
+        TravelPlace travelPlace1 = travelPlaceRepository.save(createTravelPlace(null, country, city, district1, apiCategory));
+        TravelPlace travelPlace2 = travelPlaceRepository.save(createTravelPlace(null, country, city, district2, apiCategory));
+        File file1 = fileRepository.save(createFile("test1", true));
+        File file2 = fileRepository.save(createFile("test2", false));
+        TravelImage travelImage1 = travelImageRepository.save(createTravelImage(travelPlace1, file1));
+        TravelImage travelImage2 = travelImageRepository.save(createTravelImage(travelPlace1, file2));
+        TravelImage travelImage3 = travelImageRepository.save(createTravelImage(travelPlace2, file1));
+        TravelImage travelImage4 = travelImageRepository.save(createTravelImage(travelPlace2, file2));
+
+        travelPlace1.setApiContentType(apiContentType);
+        travelPlace1.setTravelImageList(Arrays.asList(travelImage1, travelImage2));
+        travelPlace2.setApiContentType(apiContentType);
+        travelPlace2.setTravelImageList(Arrays.asList(travelImage3, travelImage4));
+
+        TravelSchedule schedule1 = travelScheduleRepository.save(createTravelSchedule(null,"테스트1"));
+        TravelSchedule schedule2 = travelScheduleRepository.save(createTravelSchedule(null,"테스트2"));
+        TravelSchedule schedule3 = travelScheduleRepository.save(createTravelSchedule(null,"테스트3"));
+
+        TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule1));
+        TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule2));
+        TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(member2, schedule3));
+        attendee2.setRole(AttendeeRole.GUEST);
+
+        TravelRoute route1 = travelRouteRepository.save(createTravelRoute(schedule1, travelPlace1, 1));
+        TravelRoute route2 = travelRouteRepository.save(createTravelRoute(schedule1, travelPlace2, 2));
+        TravelRoute route3 = travelRouteRepository.save(createTravelRoute(schedule2, travelPlace1, 1));
+        TravelRoute route4 = travelRouteRepository.save(createTravelRoute(schedule2, travelPlace2, 2));
+
+        schedule1.setTravelRouteList(Arrays.asList(route1, route2));
+        schedule2.setTravelRouteList(Arrays.asList(route3, route4));
+
+        member1.setTravelAttendeeList(Arrays.asList(attendee1, attendee2));
+        member2.setTravelAttendeeList(List.of(attendee3));
+
+        schedule1.setTravelAttendeeList(List.of(attendee1));
+        schedule2.setTravelAttendeeList(List.of(attendee2));
+        schedule3.setTravelAttendeeList(List.of(attendee3));
+
+        // when, then
+        mockMvc.perform(get("/api/schedules")
+                .param("page", "1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.totalElements").value(2))
+                .andExpect(jsonPath("$.data.content[0].sinceUpdate").exists())
+                .andExpect(jsonPath("$.data.content[0].scheduleName").exists())
+                .andExpect(jsonPath("$.data.content[0].thumbnailUrl").exists());
+    }
+
+    @Test
+    @DisplayName("getSchedules(): 내가 참석한 여행지 목록 조회 시 여행 루트 데이터가 없는 경우")
+    @WithMockUser(username = "member1")
+    void getSchedulesNoRouteData() throws Exception {
+        // given
+        Member member1 = memberRepository.save(createMember(null, "member1"));
+        Member member2 = memberRepository.save(createMember(null, "member2"));
+
+        TravelSchedule schedule1 = travelScheduleRepository.save(createTravelSchedule(null,"테스트1"));
+        TravelSchedule schedule2 = travelScheduleRepository.save(createTravelSchedule(null,"테스트2"));
+        TravelSchedule schedule3 = travelScheduleRepository.save(createTravelSchedule(null,"테스트3"));
+        schedule1.setUpdatedAt(LocalDateTime.now().minusDays(3));
+
+        TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule1));
+        TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule2));
+        TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(member2, schedule3));
+        attendee2.setRole(AttendeeRole.GUEST);
+
+        member1.setTravelAttendeeList(Arrays.asList(attendee1, attendee2));
+        member2.setTravelAttendeeList(List.of(attendee3));
+
+        schedule1.setTravelAttendeeList(List.of(attendee1));
+        schedule2.setTravelAttendeeList(List.of(attendee2));
+        schedule3.setTravelAttendeeList(List.of(attendee3));
+
+        // when, then
+        mockMvc.perform(get("/api/schedules")
+                        .param("page", "1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.totalElements").value(2))
+                .andExpect(jsonPath("$.data.content[0].sinceUpdate").exists())
+                .andExpect(jsonPath("$.data.content[0].scheduleName").exists())
+                .andExpect(jsonPath("$.data.content[0].thumbnailUrl").isEmpty());
+
+    }
+
+    @Test
+    @DisplayName("getSchedules(): 내가 참석한 여행지 목록 조회 시 데이터 없는 경우")
+    @WithMockUser(username = "member1")
+    void getSchedulesWithoutData() throws Exception {
+        // given
+        memberRepository.save(createMember(null, "member1"));
+
+        // when, then
+        mockMvc.perform(get("/api/schedules")
+                        .param("page", "1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.totalElements").value(0))
+                .andExpect(jsonPath("$.data.content").isEmpty());
+    }
+
 
     @Test
     @DisplayName("createSchedule(): 일정 만들기 성공")
@@ -105,9 +217,7 @@ public class ScheduleApiControllerTests extends ScheduleTest {
     void createSchedule_success() throws Exception{
         // given
         CreateScheduleRequest request = createScheduleRequest();
-
-        Member member1 = createMember(1L, "member1");
-        memberRepository.save(member1);
+        memberRepository.save(createMember(null, "member1"));
 
         // when, then
         mockMvc.perform(post("/api/schedules")
@@ -135,11 +245,11 @@ public class ScheduleApiControllerTests extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("getSchedule(): 일정 조회 성공")
+    @DisplayName("getScheduleDetail(): 일정 조회 성공")
     @WithMockUser(username = "member1")
-    void getSchedule() throws Exception {
+    void getScheduleDetail() throws Exception {
         // given
-        TravelSchedule schedule = travelScheduleRepository.save(createTravelSchedule());
+        TravelSchedule schedule = travelScheduleRepository.save(createTravelSchedule(null, "테스트"));
 
         Member member1 = memberRepository.save(createMember(null, "member1"));
         Member member2 = memberRepository.save(createMember(null, "member2"));
@@ -154,9 +264,9 @@ public class ScheduleApiControllerTests extends ScheduleTest {
         District district = districtRepository.save(createDistrict(city, "중구"));
         ApiCategory apiCategory = apiCategoryRepository.save(createApiCategory());
 
-        TravelPlace travelPlace = travelPlaceRepository.save(createTravelPlace(country, city, district, apiCategory));
-        File file1 = fileRepository.save(createFile(null, "test1", true));
-        File file2 = fileRepository.save(createFile(null, "test2", false));;
+        TravelPlace travelPlace = travelPlaceRepository.save(createTravelPlace(null, country, city, district, apiCategory));
+        File file1 = fileRepository.save(createFile("test1", true));
+        File file2 = fileRepository.save(createFile("test2", false));;
 
         TravelImage travelImage1 = travelImageRepository.save(createTravelImage(travelPlace, file1));
         TravelImage travelImage2 = travelImageRepository.save(createTravelImage(travelPlace, file2));
@@ -177,11 +287,11 @@ public class ScheduleApiControllerTests extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("getSchedule(): 일정 조회 시 여행지 데이터 존재하지 않는 경우")
+    @DisplayName("getScheduleDetail(): 일정 조회 시 여행지 데이터 존재하지 않는 경우")
     @WithMockUser(username = "member1")
-    void getScheduleWithoutData() throws Exception {
+    void getScheduleDetailWithoutData() throws Exception {
         // given
-        TravelSchedule schedule = travelScheduleRepository.save(createTravelSchedule());
+        TravelSchedule schedule = travelScheduleRepository.save(createTravelSchedule(null,"테스트"));
 
         Member member1 = memberRepository.save(createMember(null, "member1"));
         Member member2 = memberRepository.save(createMember(null, "member2"));
@@ -203,9 +313,9 @@ public class ScheduleApiControllerTests extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("getSchedule(): 일정 조회 시 일정 데이터 존재하지 않아 DataNotFoundException 발생")
+    @DisplayName("getScheduleDetail(): 일정 조회 시 일정 데이터 존재하지 않아 DataNotFoundException 발생")
     @WithMockUser(username = "member1")
-    void getSchedule_dataNotFoundException() throws Exception {
+    void getScheduleDetail_dataNotFoundException() throws Exception {
         // given
         // when, then
         mockMvc.perform(get("/api/schedules/{scheduleId}", 0L)
@@ -220,17 +330,17 @@ public class ScheduleApiControllerTests extends ScheduleTest {
     @WithMockUser(username = "member1")
     void getTravelPlaces() throws Exception {
         // given
-        TravelSchedule schedule = travelScheduleRepository.save(createTravelSchedule());
+        TravelSchedule schedule = travelScheduleRepository.save(createTravelSchedule(null,"테스트"));
 
         Country country = countryRepository.save(createCountry());
         City city = cityRepository.save(createCity(country));
         District district = districtRepository.save(createDistrict(city, "중구"));
         ApiCategory apiCategory = apiCategoryRepository.save(createApiCategory());
 
-        TravelPlace travelPlace = travelPlaceRepository.save(createTravelPlace(country, city, district, apiCategory));
+        TravelPlace travelPlace = travelPlaceRepository.save(createTravelPlace(null, country, city, district, apiCategory));
 
-        File file1 = fileRepository.save(createFile(null, "test1", true));
-        File file2 = fileRepository.save(createFile(null, "test2", false));;
+        File file1 = fileRepository.save(createFile("test1", true));
+        File file2 = fileRepository.save(createFile("test2", false));;
 
         TravelImage travelImage1 = travelImageRepository.save(createTravelImage(travelPlace, file1));
         TravelImage travelImage2 = travelImageRepository.save(createTravelImage(travelPlace, file2));
@@ -256,7 +366,7 @@ public class ScheduleApiControllerTests extends ScheduleTest {
     @WithMockUser(username = "member1")
     void getTravelPlacesWithoutData() throws Exception {
         // given
-        TravelSchedule schedule = travelScheduleRepository.save(createTravelSchedule());
+        TravelSchedule schedule = travelScheduleRepository.save(createTravelSchedule(null,"테스트"));
 
         // when, then
         mockMvc.perform(get("/api/schedules/{scheduleId}/travels", schedule.getScheduleId())
@@ -286,7 +396,7 @@ public class ScheduleApiControllerTests extends ScheduleTest {
     @WithMockUser(username = "member1")
     void searchTravelPlaces() throws Exception {
         // given
-        TravelSchedule schedule = travelScheduleRepository.save(createTravelSchedule());
+        TravelSchedule schedule = travelScheduleRepository.save(createTravelSchedule(null,"테스트"));
 
         Country country = countryRepository.save(createCountry());
         City city = cityRepository.save(createCity(country));
@@ -294,11 +404,11 @@ public class ScheduleApiControllerTests extends ScheduleTest {
         District district2 = districtRepository.save(createDistrict(city, "중구"));
         ApiCategory apiCategory = apiCategoryRepository.save(createApiCategory());
 
-        TravelPlace travelPlace1 = travelPlaceRepository.save(createTravelPlace(country, city, district1, apiCategory));
-        TravelPlace travelPlace2 = travelPlaceRepository.save(createTravelPlace(country, city, district2, apiCategory));
+        TravelPlace travelPlace1 = travelPlaceRepository.save(createTravelPlace(null, country, city, district1, apiCategory));
+        TravelPlace travelPlace2 = travelPlaceRepository.save(createTravelPlace(null, country, city, district2, apiCategory));
 
-        File file1 = fileRepository.save(createFile(null, "test1", true));
-        File file2 = fileRepository.save(createFile(null, "test2", false));;
+        File file1 = fileRepository.save(createFile("test1", true));
+        File file2 = fileRepository.save(createFile("test2", false));;
 
         TravelImage travelImage1 = travelImageRepository.save(createTravelImage(travelPlace1, file1));
         TravelImage travelImage2 = travelImageRepository.save(createTravelImage(travelPlace1, file2));
@@ -329,7 +439,7 @@ public class ScheduleApiControllerTests extends ScheduleTest {
     @WithMockUser(username = "member1")
     void searchTravelPlacesWithoutData() throws Exception {
         // given
-        TravelSchedule schedule = travelScheduleRepository.save(createTravelSchedule());
+        TravelSchedule schedule = travelScheduleRepository.save(createTravelSchedule(null,"테스트"));
 
         // when, then
         mockMvc.perform(get("/api/schedules/{scheduleId}/travels/search", schedule.getScheduleId())
@@ -360,7 +470,7 @@ public class ScheduleApiControllerTests extends ScheduleTest {
     @WithMockUser(username = "member1")
     void getTravelRoutes() throws Exception {
         // given
-        TravelSchedule schedule = travelScheduleRepository.save(createTravelSchedule());
+        TravelSchedule schedule = travelScheduleRepository.save(createTravelSchedule(null,"테스트"));
 
         Country country = countryRepository.save(createCountry());
         City city = cityRepository.save(createCity(country));
@@ -368,11 +478,11 @@ public class ScheduleApiControllerTests extends ScheduleTest {
         District district2 = districtRepository.save(createDistrict(city, "중구"));
         ApiCategory apiCategory = apiCategoryRepository.save(createApiCategory());
 
-        TravelPlace travelPlace1 = travelPlaceRepository.save(createTravelPlace(country, city, district1, apiCategory));
-        TravelPlace travelPlace2 = travelPlaceRepository.save(createTravelPlace(country, city, district2, apiCategory));
+        TravelPlace travelPlace1 = travelPlaceRepository.save(createTravelPlace(null, country, city, district1, apiCategory));
+        TravelPlace travelPlace2 = travelPlaceRepository.save(createTravelPlace(null, country, city, district2, apiCategory));
 
-        File file1 = fileRepository.save(createFile(null, "test1", true));
-        File file2 = fileRepository.save(createFile(null, "test2", false));;
+        File file1 = fileRepository.save(createFile("test1", true));
+        File file2 = fileRepository.save(createFile("test2", false));;
 
         TravelImage travelImage1 = travelImageRepository.save(createTravelImage(travelPlace1, file1));
         TravelImage travelImage2 = travelImageRepository.save(createTravelImage(travelPlace1, file2));
@@ -415,7 +525,7 @@ public class ScheduleApiControllerTests extends ScheduleTest {
     @WithMockUser(username = "member1")
     void getTravelRoutesWithoutData() throws Exception {
         // given
-        TravelSchedule schedule = travelScheduleRepository.save(createTravelSchedule());
+        TravelSchedule schedule = travelScheduleRepository.save(createTravelSchedule(null,"테스트"));
 
         // when, then
          mockMvc.perform(get("/api/schedules/{scheduleId}/routes", schedule.getScheduleId())
@@ -437,5 +547,7 @@ public class ScheduleApiControllerTests extends ScheduleTest {
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value(ErrorCode.DATA_NOT_FOUND.getMessage()));
     }
+
+
 
 }

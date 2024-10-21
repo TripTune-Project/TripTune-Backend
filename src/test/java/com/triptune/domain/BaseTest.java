@@ -24,10 +24,10 @@ public abstract class BaseTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    protected TravelSchedule createTravelSchedule(){
+    protected TravelSchedule createTravelSchedule(Long scheduleId, String scheduleName){
         return TravelSchedule.builder()
-                .scheduleId(1L)
-                .scheduleName("테스트")
+                .scheduleId(scheduleId)
+                .scheduleName(scheduleName)
                 .startDate(LocalDate.now())
                 .endDate(LocalDate.now().plusDays(10))
                 .createdAt(LocalDateTime.now())
@@ -48,24 +48,24 @@ public abstract class BaseTest {
     }
 
     protected Country createCountry(){
-        return Country.builder().countryId(1L).countryName("대한민국").build();
+        return Country.builder().countryName("대한민국").build();
     }
 
     protected City createCity(Country country){
-        return City.builder().cityId(1L).cityName("서울").country(country).build();
+        return City.builder().cityName("서울").country(country).build();
     }
 
     protected District createDistrict(City city, String districtName){
-        return District.builder().districtId(1L).districtName(districtName).city(city).build();
+        return District.builder().districtName(districtName).city(city).build();
     }
 
     protected ApiCategory createApiCategory(){
         return ApiCategory.builder().categoryCode("A0101").categoryName("자연").level(1).build();
     }
 
-    protected TravelPlace createTravelPlace(Country country, City city, District district, ApiCategory apiCategory){
+    protected TravelPlace createTravelPlace(Long placeId, Country country, City city, District district, ApiCategory apiCategory){
         return TravelPlace.builder()
-                .placeId(1L)
+                .placeId(placeId)
                 .country(country)
                 .city(city)
                 .district(district)
@@ -83,9 +83,8 @@ public abstract class BaseTest {
                 .build();
     }
 
-    protected File createFile(Long fileId, String fileName, boolean isThumbnail){
+    protected File createFile(String fileName, boolean isThumbnail){
         return File.builder()
-                .fileId(fileId)
                 .s3ObjectUrl("/test/" + fileName + ".jpg")
                 .originalName(fileName + "_original.jpg")
                 .fileName(fileName + ".jpg")
@@ -106,14 +105,12 @@ public abstract class BaseTest {
 
     protected ApiContentType createApiContentType(String contentTypeName){
         return ApiContentType.builder()
-                .contentTypeId(1L)
                 .contentTypeName(contentTypeName)
                 .build();
     }
 
     protected TravelAttendee createTravelAttendee(Member member, TravelSchedule schedule){
         return TravelAttendee.builder()
-                .attendeeId(1L)
                 .member(member)
                 .travelSchedule(schedule)
                 .role(AttendeeRole.AUTHOR)
