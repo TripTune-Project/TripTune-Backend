@@ -1,9 +1,6 @@
 package com.triptune.domain.schedule.controller;
 
-import com.triptune.domain.schedule.dto.CreateScheduleRequest;
-import com.triptune.domain.schedule.dto.CreateScheduleResponse;
-import com.triptune.domain.schedule.dto.ScheduleResponse;
-import com.triptune.domain.schedule.dto.RouteResponse;
+import com.triptune.domain.schedule.dto.*;
 import com.triptune.domain.schedule.service.ScheduleService;
 import com.triptune.domain.travel.dto.PlaceResponse;
 import com.triptune.global.response.ApiPageResponse;
@@ -24,6 +21,15 @@ public class ScheduleApiController {
 
     private final ScheduleService scheduleService;
 
+    @GetMapping("")
+    @Operation(summary = "일정 목록 조회", description = "작성한 일정 목록을 조회합니다.")
+    public ApiPageResponse<ScheduleOverviewResponse> getSchedules(@RequestParam(name = "page") int page){
+        String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        Page<ScheduleOverviewResponse> response = scheduleService.getSchedules(page, userId);
+        return ApiPageResponse.okResponse(response);
+    }
+
     @PostMapping
     @Operation(summary = "일정 생성", description = "여행 이름, 날짜를 선택해 일정을 생성합니다.")
     public ApiResponse<CreateScheduleResponse> createSchedule(@Valid @RequestBody CreateScheduleRequest createScheduleRequest){
@@ -35,9 +41,9 @@ public class ScheduleApiController {
 
 
     @GetMapping("/{scheduleId}")
-    @Operation(summary = "일정 조회", description = "생성한 일정을 조회합니다.")
-    public ApiResponse<ScheduleResponse> getSchedule(@PathVariable(name = "scheduleId") Long scheduleId, @RequestParam int page){
-         ScheduleResponse response = scheduleService.getSchedule(scheduleId, page);
+    @Operation(summary = "일정 상세 조회", description = "생성한 일정을 조회합니다.")
+    public ApiResponse<ScheduleResponse> getScheduleDetail(@PathVariable(name = "scheduleId") Long scheduleId, @RequestParam int page){
+         ScheduleResponse response = scheduleService.getScheduleDetail(scheduleId, page);
 
          return ApiResponse.dataResponse(response);
     }
