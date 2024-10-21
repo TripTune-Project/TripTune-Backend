@@ -7,6 +7,6 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
 @Repository
-public interface TravelScheduleRepository extends JpaRepository<TravelSchedule, Long> {
+public interface TravelScheduleRepository extends JpaRepository<TravelSchedule, Long>, TravelScheduleCustomRepository {
     Optional<TravelSchedule> findByScheduleId(Long scheduleId);
 }

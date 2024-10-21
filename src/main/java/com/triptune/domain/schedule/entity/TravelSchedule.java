@@ -8,6 +8,7 @@ import lombok.Setter;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity(name = "travel_schedule")
@@ -37,10 +38,10 @@ public class TravelSchedule {
     private LocalDateTime updatedAt;
 
     @OneToMany(mappedBy = "travelSchedule", fetch = FetchType.LAZY, orphanRemoval = true)
-    private List<TravelAttendee> travelAttendeeList;
+    private List<TravelAttendee> travelAttendeeList = new ArrayList<>();
 
     @OneToMany(mappedBy = "travelSchedule", fetch = FetchType.LAZY, orphanRemoval = true)
-    private List<TravelRoute> travelRouteList;
+    private List<TravelRoute> travelRouteList = new ArrayList<>();
 
     @Builder
     public TravelSchedule(Long scheduleId, String scheduleName, LocalDate startDate, LocalDate endDate, LocalDateTime createdAt, LocalDateTime updatedAt, List<TravelAttendee> travelAttendeeList, List<TravelRoute> travelRouteList) {

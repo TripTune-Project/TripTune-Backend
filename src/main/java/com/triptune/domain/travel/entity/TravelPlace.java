@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -85,10 +86,10 @@ public class TravelPlace {
     private LocalDateTime updatedAt;
 
     @OneToMany(mappedBy = "travelPlace", fetch = FetchType.LAZY, orphanRemoval = true)
-    private List<TravelImage> travelImageList;
+    private List<TravelImage> travelImageList = new ArrayList<>();
 
     @OneToMany(mappedBy = "travelPlace", fetch = FetchType.LAZY, orphanRemoval = true)
-    private List<TravelRoute> travelRouteList;
+    private List<TravelRoute> travelRouteList = new ArrayList<>();
 
     @Builder
     public TravelPlace(Long placeId, Country country, City city, District district, ApiCategory apiCategory, ApiContentType apiContentType, String placeName, String address, String detailAddress, String useTime, String checkInTime, String checkOutTime, String homepage, String phoneNumber, double longitude, double latitude, String description, int bookmarkCnt, LocalDateTime createdAt, LocalDateTime updatedAt, List<TravelImage> travelImageList, List<TravelRoute> travelRouteList) {

@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -46,7 +47,7 @@ public class File {
     private String apiFileUrl;
 
     @OneToMany(mappedBy = "file", fetch = FetchType.LAZY, orphanRemoval = true)
-    private List<TravelImage> travelImageFileList;
+    private List<TravelImage> travelImageFileList = new ArrayList<>();
 
     @Builder
     public File(Long fileId, String s3ObjectUrl, String originalName, String fileName, String fileType, double fileSize, LocalDateTime createdAt, boolean isThumbnail, String apiFileUrl, List<TravelImage> travelImageFileList) {
