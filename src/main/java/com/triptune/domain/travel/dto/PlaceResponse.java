@@ -6,11 +6,9 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
-import java.util.stream.Collectors;
 @Getter
 @NoArgsConstructor
-public class TravelResponse {
+public class PlaceResponse {
     private Long placeId;
     private String country;
     private String city;
@@ -21,10 +19,9 @@ public class TravelResponse {
     private double latitude;
     private String placeName;
     private String thumbnailUrl;
-    private Double distance;
 
     @Builder
-    public TravelResponse(Long placeId, String country, String city, String district, String address, String detailAddress, double longitude, double latitude, String placeName, String thumbnailUrl, Double distance) {
+    public PlaceResponse(Long placeId, String country, String city, String district, String address, String detailAddress, double longitude, double latitude, String placeName, String thumbnailUrl) {
         this.placeId = placeId;
         this.country = country;
         this.city = city;
@@ -35,17 +32,16 @@ public class TravelResponse {
         this.latitude = latitude;
         this.placeName = placeName;
         this.thumbnailUrl = thumbnailUrl;
-        this.distance = Math.floor(distance * 10) / 10.0;
     }
 
     public void setThumbnailUrl(TravelPlace travelPlace) {
         this.thumbnailUrl = File.getThumbnailUrl(travelPlace.getTravelImageList());
     }
 
-    public static TravelResponse entityToDto(TravelPlace travelPlace){
+    public static PlaceResponse entityToDto(TravelPlace travelPlace){
         String thumbnailUrl = File.getThumbnailUrl(travelPlace.getTravelImageList());
 
-        return TravelResponse.builder()
+        return PlaceResponse.builder()
                 .placeId(travelPlace.getPlaceId())
                 .country(travelPlace.getCountry().getCountryName())
                 .city(travelPlace.getCity().getCityName())
@@ -56,31 +52,6 @@ public class TravelResponse {
                 .latitude(travelPlace.getLatitude())
                 .placeName(travelPlace.getPlaceName())
                 .thumbnailUrl(thumbnailUrl)
-                .build();
-    }
-
-    public static List<TravelResponse> entityListToDtoList(List<TravelPlace> travelPlaceList){
-        return travelPlaceList.stream()
-                .map(TravelResponse::entityToDto)
-                .collect(Collectors.toList());
-    }
-
-
-    public static TravelResponse entityToLocationDto(TravelLocation travelLocation){
-        String thumbnailUrl = File.getThumbnailUrl(travelLocation.getTravelImageFileList());
-
-        return TravelResponse.builder()
-                .placeId(travelLocation.getPlaceId())
-                .country(travelLocation.getCountry())
-                .city(travelLocation.getCity())
-                .district(travelLocation.getDistrict())
-                .address(travelLocation.getAddress())
-                .detailAddress(travelLocation.getDetailAddress())
-                .longitude(travelLocation.getLongitude())
-                .latitude(travelLocation.getLatitude())
-                .placeName(travelLocation.getPlaceName())
-                .thumbnailUrl(thumbnailUrl)
-                .distance(travelLocation.getDistance())
                 .build();
     }
 

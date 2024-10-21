@@ -27,10 +27,10 @@ public class City {
     @Column(name = "city_name")
     private String cityName;
 
-    @OneToMany(mappedBy = "city", orphanRemoval = true)
+    @OneToMany(mappedBy = "city", fetch = FetchType.LAZY, orphanRemoval = true)
     private List<District> districtList;
 
-    @OneToMany(mappedBy = "city", orphanRemoval = true)
+    @OneToMany(mappedBy = "city",fetch = FetchType.LAZY, orphanRemoval = true)
     private List<TravelPlace> travelPlaceList;
 
 

@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -48,8 +49,8 @@ public class Member {
     @Column(name = "file_id")
     private Long fileId;
 
-    @OneToMany(mappedBy = "member", orphanRemoval = true)
-    private List<TravelAttendee> travelAttendeeList;
+    @OneToMany(mappedBy = "member", fetch = FetchType.LAZY, orphanRemoval = true)
+    private List<TravelAttendee> travelAttendeeList = new ArrayList<>();
 
     @Builder
     public Member(Long memberId, String userId, String password, String refreshToken, boolean isSocialLogin, String nickname, String email, LocalDateTime createdAt, LocalDateTime updatedAt, Long fileId, List<TravelAttendee> travelAttendeeList) {

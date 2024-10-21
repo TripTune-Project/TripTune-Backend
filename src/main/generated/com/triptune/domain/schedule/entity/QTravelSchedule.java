@@ -32,6 +32,8 @@ public class QTravelSchedule extends EntityPathBase<TravelSchedule> {
 
     public final ListPath<TravelAttendee, QTravelAttendee> travelAttendeeList = this.<TravelAttendee, QTravelAttendee>createList("travelAttendeeList", TravelAttendee.class, QTravelAttendee.class, PathInits.DIRECT2);
 
+    public final ListPath<TravelRoute, QTravelRoute> travelRouteList = this.<TravelRoute, QTravelRoute>createList("travelRouteList", TravelRoute.class, QTravelRoute.class, PathInits.DIRECT2);
+
     public final DateTimePath<java.time.LocalDateTime> updatedAt = createDateTime("updatedAt", java.time.LocalDateTime.class);
 
     public QTravelSchedule(String variable) {

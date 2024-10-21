@@ -24,10 +24,10 @@ public class Country {
     private String countryName;
 
     // orphanRemoval = true : 부모 엔티티 제거 시 자식 엔티티도 제거됨
-    @OneToMany(mappedBy = "country", orphanRemoval = true)
+    @OneToMany(mappedBy = "country", fetch = FetchType.LAZY, orphanRemoval = true)
     private List<City> cityList;
 
-    @OneToMany(mappedBy = "country", orphanRemoval = true)
+    @OneToMany(mappedBy = "country", fetch = FetchType.LAZY, orphanRemoval = true)
     private List<TravelPlace> travelPlaceList;
 
     @Builder

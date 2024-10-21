@@ -23,7 +23,7 @@ public class ApiContentType {
     @Column(name = "content_type_name")
     private String contentTypeName;
 
-    @OneToMany(mappedBy = "apiContentType", orphanRemoval = true)
+    @OneToMany(mappedBy = "apiContentType", fetch = FetchType.LAZY, orphanRemoval = true)
     private List<TravelPlace> travelPlaceList;
 
     @Builder

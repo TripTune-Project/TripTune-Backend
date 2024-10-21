@@ -1,30 +1,30 @@
 package com.triptune.domain.travel;
 
 import com.triptune.domain.BaseTest;
-import com.triptune.domain.travel.dto.TravelLocation;
-import com.triptune.domain.travel.dto.TravelLocationRequest;
-import com.triptune.domain.travel.dto.TravelSearchRequest;
+import com.triptune.domain.travel.dto.PlaceLocation;
+import com.triptune.domain.travel.dto.PlaceLocationRequest;
+import com.triptune.domain.travel.dto.PlaceSearchRequest;
 import com.triptune.domain.travel.entity.TravelPlace;
 
 public abstract class TravelTest extends BaseTest {
-    protected TravelLocationRequest createTravelLocationRequest(double latitude, double longitude){
-        return TravelLocationRequest.builder()
+    protected PlaceLocationRequest createTravelLocationRequest(double latitude, double longitude){
+        return PlaceLocationRequest.builder()
                 .latitude(latitude)
                 .longitude(longitude)
                 .build();
     }
 
 
-    protected TravelSearchRequest createTravelSearchRequest(double longitude, double latitude, String keyword){
-        return TravelSearchRequest.builder()
+    protected PlaceSearchRequest createTravelSearchRequest(double longitude, double latitude, String keyword){
+        return PlaceSearchRequest.builder()
                 .longitude(longitude)
                 .latitude(latitude)
                 .keyword(keyword)
                 .build();
     }
 
-    protected TravelLocation createTravelLocation(TravelPlace place){
-        return TravelLocation.builder()
+    protected PlaceLocation createTravelLocation(TravelPlace place){
+        return PlaceLocation.builder()
                 .placeId(1L)
                 .country(place.getCountry().getCountryName())
                 .city(place.getCity().getCityName())

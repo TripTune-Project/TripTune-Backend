@@ -60,6 +60,8 @@ public class QTravelPlace extends EntityPathBase<TravelPlace> {
 
     public final ListPath<TravelImage, QTravelImage> travelImageList = this.<TravelImage, QTravelImage>createList("travelImageList", TravelImage.class, QTravelImage.class, PathInits.DIRECT2);
 
+    public final ListPath<com.triptune.domain.schedule.entity.TravelRoute, com.triptune.domain.schedule.entity.QTravelRoute> travelRouteList = this.<com.triptune.domain.schedule.entity.TravelRoute, com.triptune.domain.schedule.entity.QTravelRoute>createList("travelRouteList", com.triptune.domain.schedule.entity.TravelRoute.class, com.triptune.domain.schedule.entity.QTravelRoute.class, PathInits.DIRECT2);
+
     public final DateTimePath<java.time.LocalDateTime> updatedAt = createDateTime("updatedAt", java.time.LocalDateTime.class);
 
     public final StringPath useTime = createString("useTime");

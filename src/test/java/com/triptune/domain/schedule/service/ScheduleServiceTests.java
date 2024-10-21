@@ -4,20 +4,20 @@ import com.triptune.domain.common.entity.*;
 import com.triptune.domain.member.entity.Member;
 import com.triptune.domain.member.repository.MemberRepository;
 import com.triptune.domain.schedule.ScheduleTest;
-import com.triptune.domain.schedule.dto.CreateScheduleRequest;
-import com.triptune.domain.schedule.dto.CreateScheduleResponse;
-import com.triptune.domain.schedule.dto.ScheduleResponse;
+import com.triptune.domain.schedule.dto.*;
 import com.triptune.domain.schedule.entity.TravelAttendee;
+import com.triptune.domain.schedule.entity.TravelRoute;
 import com.triptune.domain.schedule.entity.TravelSchedule;
-import com.triptune.domain.schedule.repository.AttendeeRepository;
-import com.triptune.domain.schedule.repository.ScheduleRepository;
-import com.triptune.domain.travel.dto.TravelSimpleResponse;
+import com.triptune.domain.schedule.repository.TravelAttendeeRepository;
+import com.triptune.domain.schedule.repository.TravelRouteRepository;
+import com.triptune.domain.schedule.repository.TravelScheduleRepository;
+import com.triptune.domain.travel.dto.PlaceResponse;
 import com.triptune.domain.travel.entity.TravelImage;
 import com.triptune.domain.travel.entity.TravelPlace;
-import com.triptune.domain.travel.repository.TravelRepository;
+import com.triptune.domain.travel.repository.TravelPlacePlaceRepository;
 import com.triptune.global.enumclass.ErrorCode;
 import com.triptune.global.exception.DataNotFoundException;
-import com.triptune.global.util.PageableUtil;
+import com.triptune.global.util.PageUtil;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -44,47 +44,339 @@ public class ScheduleServiceTests extends ScheduleTest {
     private ScheduleService scheduleService;
 
     @Mock
-    private ScheduleRepository scheduleRepository;
+    private TravelScheduleRepository travelScheduleRepository;
 
     @Mock
     private MemberRepository memberRepository;
 
     @Mock
-    private AttendeeRepository attendeeRepository;
+    private TravelAttendeeRepository travelAttendeeRepository;
 
     @Mock
-    private TravelRepository travelRepository;
+    private TravelPlacePlaceRepository travelPlaceRepository;
+
+    @Mock
+    private TravelRouteRepository travelRouteRepository;
 
 
     @Test
-    @DisplayName("일정 만들기 성공")
-    void createSchedule_success(){
+    @DisplayName("getSchedules(): 내 일정 목록 조회")
+    void getSchedules(){
+        // given
+        int page = 1;
+        String userId = "member1";
+
+        Pageable pageable = PageUtil.createPageRequest(1, 5);
+
+        Country country = createCountry();
+        City city = createCity(country);
+        District district = createDistrict(city, "중구");
+        ApiCategory apiCategory = createApiCategory();
+        TravelPlace travelPlace = createTravelPlace(1L, country, city, district, apiCategory);
+
+        File file1 = createFile("test1", true);
+        File file2 = createFile("test2", false);
+
+        TravelImage travelImage1 = createTravelImage(travelPlace, file1);
+        TravelImage travelImage2 = createTravelImage(travelPlace, file2);
+        List<TravelImage> travelImageList = Arrays.asList(travelImage1, travelImage2);
+        travelPlace.setTravelImageList(travelImageList);
+
+
+        List<TravelSchedule> schedules = Arrays.asList(createTravelSchedule(1L, "테스트1"), createTravelSchedule(2L, "테스트2"));
+        Page<TravelSchedule> schedulePage = PageUtil.createPage(schedules, pageable, schedules.size());
+
+        List<TravelImage> travelImages = Arrays.asList(createTravelImage(travelPlace, file1), createTravelImage(travelPlace, file2));
+
+        when(memberRepository.findByUserId(any())).thenReturn(Optional.of(createMember(1L, userId)));
+        when(travelScheduleRepository.findTravelSchedulesByAttendee(pageable, 1L)).thenReturn(schedulePage);
+        when(travelRouteRepository.findPlaceImagesOfFirstRoute(1L)).thenReturn(travelImages);
+
+        // when
+        Page<ScheduleOverviewResponse> response = scheduleService.getSchedules(page, userId);
+
+        // then
+        List<ScheduleOverviewResponse> content = response.getContent();
+        assertEquals(response.getTotalElements(), 2);
+        assertEquals(content.get(0).getScheduleName(), "테스트1");
+        assertNotNull(content.get(0).getSinceUpdate());
+        assertNotNull(content.get(0).getThumbnailUrl());
+
+    }
+
+    @Test
+    @DisplayName("getSchedules(): 내 일정 목록 조회 시 사용자 데이터가 없는 경우")
+    void getSchedulesNoUserData(){
+        // given
+        int page = 1;
+        String userId = "member1";
+
+        when(memberRepository.findByUserId(any())).thenReturn(Optional.empty());
+
+        // when
+        DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> scheduleService.getSchedules(page, userId));
+
+        // then
+        assertEquals(fail.getHttpStatus(), ErrorCode.USER_NOT_FOUND.getStatus());
+        assertEquals(fail.getMessage(), ErrorCode.USER_NOT_FOUND.getMessage());
+
+    }
+
+    @Test
+    @DisplayName("getSchedules(): 내 일정 목록 조회 시 일정 데이터 없는 경우")
+    void getSchedulesNoScheduleData(){
+        // given
+        int page = 1;
+        String userId = "member1";
+
+        Pageable pageable = PageUtil.createPageRequest(1, 5);
+
+        Page<TravelSchedule> emptySchedulePage = PageUtil.createPage(new ArrayList<>(), pageable, 0);
+
+        when(memberRepository.findByUserId(any())).thenReturn(Optional.of(createMember(1L, userId)));
+        when(travelScheduleRepository.findTravelSchedulesByAttendee(pageable, 1L)).thenReturn(emptySchedulePage);
+
+        // when
+        Page<ScheduleOverviewResponse> response = scheduleService.getSchedules(page, userId);
+
+        // then
+        assertEquals(response.getTotalElements(), 0);
+        assertTrue(response.getContent().isEmpty());
+        verify(travelRouteRepository, times(0)).findAllByTravelSchedule_ScheduleId(any(), any());
+    }
+
+    @Test
+    @DisplayName("getSchedules(): 내 일정 목록 조회 시 이미지 썸네일 데이터 없는 경우")
+    void getSchedulesNoImageThumbnail(){
+        // given
+        int page = 1;
+        String userId = "member1";
+
+        Pageable pageable = PageUtil.createPageRequest(1, 5);
+
+        Country country = createCountry();
+        City city = createCity(country);
+        District district = createDistrict(city, "중구");
+        ApiCategory apiCategory = createApiCategory();
+        TravelPlace travelPlace = createTravelPlace(1L, country, city, district, apiCategory);
+
+        File file1 = createFile("test1", false);
+        File file2 = createFile("test2", false);
+
+        TravelImage travelImage1 = createTravelImage(travelPlace, file1);
+        TravelImage travelImage2 = createTravelImage(travelPlace, file2);
+        List<TravelImage> travelImageList = Arrays.asList(travelImage1, travelImage2);
+        travelPlace.setTravelImageList(travelImageList);
+
+
+        List<TravelSchedule> schedules = Arrays.asList(createTravelSchedule(1L, "테스트1"), createTravelSchedule(2L, "테스트2"));
+        Page<TravelSchedule> schedulePage = PageUtil.createPage(schedules, pageable, schedules.size());
+
+        List<TravelImage> travelImages = Arrays.asList(createTravelImage(travelPlace, file1), createTravelImage(travelPlace, file2));
+
+        when(memberRepository.findByUserId(any())).thenReturn(Optional.of(createMember(1L, userId)));
+        when(travelScheduleRepository.findTravelSchedulesByAttendee(pageable, 1L)).thenReturn(schedulePage);
+        when(travelRouteRepository.findPlaceImagesOfFirstRoute(1L)).thenReturn(travelImages);
+
+        // when
+        Page<ScheduleOverviewResponse> response = scheduleService.getSchedules(page, userId);
+
+        // then
+        List<ScheduleOverviewResponse> content = response.getContent();
+        assertEquals(response.getTotalElements(), 2);
+        assertEquals(content.get(0).getScheduleName(), "테스트1");
+        assertNotNull(content.get(0).getSinceUpdate());
+        assertNull(content.get(0).getThumbnailUrl());
+
+    }
+
+
+    @Test
+    @DisplayName("getSchedules(): 내 일정 목록 조회 시 이미지 썸네일 데이터 없는 경우")
+    void getSchedulesNoImageData(){
+        // given
+        int page = 1;
+        String userId = "member1";
+
+        Pageable pageable = PageUtil.createPageRequest(1, 5);
+
+        List<TravelSchedule> schedules = Arrays.asList(createTravelSchedule(1L, "테스트1"), createTravelSchedule(2L, "테스트2"));
+        Page<TravelSchedule> schedulePage = PageUtil.createPage(schedules, pageable, schedules.size());
+
+        when(memberRepository.findByUserId(any())).thenReturn(Optional.of(createMember(1L, userId)));
+        when(travelScheduleRepository.findTravelSchedulesByAttendee(pageable, 1L)).thenReturn(schedulePage);
+        when(travelRouteRepository.findPlaceImagesOfFirstRoute(1L)).thenReturn(new ArrayList<>());
+
+        // when
+        Page<ScheduleOverviewResponse> response = scheduleService.getSchedules(page, userId);
+
+        // then
+        List<ScheduleOverviewResponse> content = response.getContent();
+        assertEquals(response.getTotalElements(), 2);
+        assertEquals(content.get(0).getScheduleName(), "테스트1");
+        assertNotNull(content.get(0).getSinceUpdate());
+        assertNull(content.get(0).getThumbnailUrl());
+
+    }
+
+    @Test
+    @DisplayName("convertToScheduleOverviewResponse(): TravelSchedule 를 TravelOverviewResponse 로 변경")
+    void convertToScheduleOverviewResponse(){
+        // given
+        TravelSchedule schedule = createTravelSchedule(1L, "테스트1");
+
+        Country country = createCountry();
+        City city = createCity(country);
+        District district = createDistrict(city, "중구");
+        ApiCategory apiCategory = createApiCategory();
+        TravelPlace travelPlace = createTravelPlace(1L, country, city, district, apiCategory);
+
+        File file1 = createFile("test1", true);
+        File file2 = createFile("test2", false);
+
+        TravelImage travelImage1 = createTravelImage(travelPlace, file1);
+        TravelImage travelImage2 = createTravelImage(travelPlace, file2);
+        List<TravelImage> travelImageList = Arrays.asList(travelImage1, travelImage2);
+        travelPlace.setTravelImageList(travelImageList);
+
+
+        when(travelRouteRepository.findPlaceImagesOfFirstRoute(1L)).thenReturn(travelImageList);
+
+        // when
+        ScheduleOverviewResponse response = scheduleService.convertToScheduleOverviewResponse(schedule);
+
+        // then
+        assertEquals(response.getScheduleName(), "테스트1");
+        assertNotNull(response.getSinceUpdate());
+        assertNotNull(response.getThumbnailUrl());
+    }
+
+    @Test
+    @DisplayName("convertToScheduleOverviewResponse(): TravelSchedule 를 TravelOverviewResponse 로 변경 시 썸네일 없는 경우")
+    void convertToScheduleOverviewResponseWithoutThumbnail(){
+        // given
+        TravelSchedule schedule = createTravelSchedule(1L, "테스트1");
+
+        when(travelRouteRepository.findPlaceImagesOfFirstRoute(1L)).thenReturn(new ArrayList<>());
+
+        // when
+        ScheduleOverviewResponse response = scheduleService.convertToScheduleOverviewResponse(schedule);
+
+        // then
+        assertEquals(response.getScheduleName(), "테스트1");
+        assertNotNull(response.getSinceUpdate());
+        assertNull(response.getThumbnailUrl());
+    }
+
+
+    @Test
+    @DisplayName("getThumbnailUrl(): 썸네일 조회")
+    void getThumbnailUrl(){
+        // given
+        TravelSchedule schedule = createTravelSchedule(1L, "테스트1");
+
+        Country country = createCountry();
+        City city = createCity(country);
+        District district = createDistrict(city, "중구");
+        ApiCategory apiCategory = createApiCategory();
+        TravelPlace travelPlace = createTravelPlace(1L, country, city, district, apiCategory);
+
+        File file1 = createFile("test1", true);
+        File file2 = createFile("test2", false);
+
+        TravelImage travelImage1 = createTravelImage(travelPlace, file1);
+        TravelImage travelImage2 = createTravelImage(travelPlace, file2);
+        List<TravelImage> travelImageList = Arrays.asList(travelImage1, travelImage2);
+        travelPlace.setTravelImageList(travelImageList);
+
+
+        when(travelRouteRepository.findPlaceImagesOfFirstRoute(1L)).thenReturn(travelImageList);
+
+        // when
+        String response = scheduleService.getThumbnailUrl(schedule);
+
+        // then
+        System.out.println(response);
+        assertNotNull(response);
+    }
+
+    @Test
+    @DisplayName("getThumbnailUrl(): 썸네일 조회 시 썸네일 이미지 없는 경우")
+    void getThumbnailUrlNoThumbnailImage(){
+        // given
+        TravelSchedule schedule = createTravelSchedule(1L, "테스트1");
+
+        Country country = createCountry();
+        City city = createCity(country);
+        District district = createDistrict(city, "중구");
+        ApiCategory apiCategory = createApiCategory();
+        TravelPlace travelPlace = createTravelPlace(1L, country, city, district, apiCategory);
+
+        File file1 = createFile("test1", false);
+        File file2 = createFile("test2", false);
+
+        TravelImage travelImage1 = createTravelImage(travelPlace, file1);
+        TravelImage travelImage2 = createTravelImage(travelPlace, file2);
+        List<TravelImage> travelImageList = Arrays.asList(travelImage1, travelImage2);
+        travelPlace.setTravelImageList(travelImageList);
+
+
+        when(travelRouteRepository.findPlaceImagesOfFirstRoute(1L)).thenReturn(travelImageList);
+
+        // when
+        String response = scheduleService.getThumbnailUrl(schedule);
+
+        // then
+        System.out.println(response);
+        assertNull(response);
+    }
+
+
+    @Test
+    @DisplayName("getThumbnailUrl(): 썸네일 조회 시 저장된 이미지 없는 경우")
+    void getThumbnailUrlNoImageData(){
+        // given
+        TravelSchedule schedule = createTravelSchedule(1L, "테스트1");
+
+        when(travelRouteRepository.findPlaceImagesOfFirstRoute(1L)).thenReturn(new ArrayList<>());
+
+        // when
+        String response = scheduleService.getThumbnailUrl(schedule);
+
+        // then
+        assertNull(response);
+    }
+
+
+    @Test
+    @DisplayName("createSchedule(): 일정 만들기 성공")
+    void createSchedule(){
         // given
         String userId = "test";
         CreateScheduleRequest request = createScheduleRequest();
-        TravelSchedule savedtravelSchedule = createTravelSchedule();
+        TravelSchedule savedtravelSchedule = createTravelSchedule(1L, "테스트");
         Member savedMember = createMember(1L, userId);
 
-        when(scheduleRepository.save(any())).thenReturn(savedtravelSchedule);
+        when(travelScheduleRepository.save(any())).thenReturn(savedtravelSchedule);
         when(memberRepository.findByUserId(any())).thenReturn(Optional.of(savedMember));
 
         // when
         CreateScheduleResponse response = scheduleService.createSchedule(request, userId);
 
         // then
-        verify(attendeeRepository, times(1)).save(any(TravelAttendee.class));
+        verify(travelAttendeeRepository, times(1)).save(any(TravelAttendee.class));
         assertEquals(response.getScheduleId(), savedtravelSchedule.getScheduleId());
 
     }
 
     @Test
-    @DisplayName("일정 만들기 실패: 저장된 사용자 정보 없을 경우")
-    void createSchedule_CustomUsernameNotFoundException(){
+    @DisplayName("createSchedule(): 저장된 사용자 정보 없어 DataNotFoundException 발생")
+    void createSchedule_CustomUsernameDataNotFoundException(){
         // given
         CreateScheduleRequest request = createScheduleRequest();
-        TravelSchedule schedule = createTravelSchedule();
+        TravelSchedule schedule = createTravelSchedule(1L, "테스트");
 
-        when(scheduleRepository.save(any())).thenReturn(schedule);
+        when(travelScheduleRepository.save(any())).thenReturn(schedule);
         when(memberRepository.findByUserId(any())).thenReturn(Optional.empty());
 
         // when
@@ -97,18 +389,18 @@ public class ScheduleServiceTests extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("일정 조회 성공")
-    void getSchedule_success(){
+    @DisplayName("getScheduleDetail(): 일정 조회 성공")
+    void getScheduleDetail(){
         // given
         Country country = createCountry();
         City city = createCity(country);
         District district = createDistrict(city, "중구");
         ApiCategory apiCategory = createApiCategory();
-        TravelPlace travelPlace1 = createTravelPlace(country, city, district, apiCategory);
-        TravelPlace travelPlace2 = createTravelPlace(country, city, district, apiCategory);
+        TravelPlace travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory);
+        TravelPlace travelPlace2 = createTravelPlace(2L, country, city, district, apiCategory);
 
-        File file1 = createFile(1L, "test1", true);
-        File file2 = createFile(2L, "test2", false);
+        File file1 = createFile("test1", true);
+        File file2 = createFile("test2", false);
 
         TravelImage travelImage1 = createTravelImage(travelPlace1, file1);
         TravelImage travelImage2 = createTravelImage(travelPlace1, file2);
@@ -124,7 +416,7 @@ public class ScheduleServiceTests extends ScheduleTest {
         placeList.add(travelPlace1);
         placeList.add(travelPlace2);
 
-        TravelSchedule schedule = createTravelSchedule();
+        TravelSchedule schedule = createTravelSchedule(1L, "테스트");
         Member member1 = createMember(1L, "member1");
         Member member2 = createMember(2L, "member2");
 
@@ -132,15 +424,15 @@ public class ScheduleServiceTests extends ScheduleTest {
         attendeeList.add(createTravelAttendee(member1, schedule));
         attendeeList.add(createTravelAttendee(member2, schedule));
 
-        Pageable pageable = PageableUtil.createPageRequest(1, 5);
+        Pageable pageable = PageUtil.createPageRequest(1, 5);
 
-        when(scheduleRepository.findByScheduleId(any())).thenReturn(Optional.of(schedule));
-        when(travelRepository.findAllByAreaData(any(), anyString(), anyString(), anyString()))
-                .thenReturn(new PageImpl<>(placeList, pageable, 1));
-        when(attendeeRepository.findAllByTravelSchedule_ScheduleId(any())).thenReturn(attendeeList);
+        when(travelScheduleRepository.findByScheduleId(any())).thenReturn(Optional.of(schedule));
+        when(travelPlaceRepository.findAllByAreaData(any(), anyString(), anyString(), anyString()))
+                .thenReturn(PageUtil.createPage(placeList, pageable, 1));
+        when(travelAttendeeRepository.findAllByTravelSchedule_ScheduleId(any())).thenReturn(attendeeList);
 
         // when
-        ScheduleResponse response = scheduleService.getSchedule(schedule.getScheduleId(), 1);
+        ScheduleResponse response = scheduleService.getScheduleDetail(schedule.getScheduleId(), 1);
 
         // then
         assertEquals(response.getScheduleName(), schedule.getScheduleName());
@@ -153,10 +445,10 @@ public class ScheduleServiceTests extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("일정 조회 성공: 여행지 데이터 없는 경우")
-    void getScheduleWithoutPlaceList_success(){
+    @DisplayName("getScheduleDetail(): 일정 조회 시 여행지 데이터 없는 경우")
+    void getScheduleDetailWithoutData(){
         // given
-        TravelSchedule schedule = createTravelSchedule();
+        TravelSchedule schedule = createTravelSchedule(1L, "테스트");
         Member member1 = createMember(1L, "member1");
         Member member2 = createMember(2L, "member2");
 
@@ -164,15 +456,15 @@ public class ScheduleServiceTests extends ScheduleTest {
         attendeeList.add(createTravelAttendee(member1, schedule));
         attendeeList.add(createTravelAttendee(member2, schedule));
 
-        Pageable pageable = PageableUtil.createPageRequest(1, 5);
+        Pageable pageable = PageUtil.createPageRequest(1, 5);
 
-        when(scheduleRepository.findByScheduleId(any())).thenReturn(Optional.of(schedule));
-        when(travelRepository.findAllByAreaData(any(), anyString(), anyString(), anyString()))
-                .thenReturn(new PageImpl<>(new ArrayList<>(), pageable, 0));
-        when(attendeeRepository.findAllByTravelSchedule_ScheduleId(any())).thenReturn(attendeeList);
+        when(travelScheduleRepository.findByScheduleId(any())).thenReturn(Optional.of(schedule));
+        when(travelPlaceRepository.findAllByAreaData(any(), anyString(), anyString(), anyString()))
+                .thenReturn(PageUtil.createPage(new ArrayList<>(), pageable, 0));
+        when(travelAttendeeRepository.findAllByTravelSchedule_ScheduleId(any())).thenReturn(attendeeList);
 
         // when
-        ScheduleResponse response = scheduleService.getSchedule(schedule.getScheduleId(), 1);
+        ScheduleResponse response = scheduleService.getScheduleDetail(schedule.getScheduleId(), 1);
 
         // then
         assertEquals(response.getScheduleName(), schedule.getScheduleName());
@@ -184,13 +476,13 @@ public class ScheduleServiceTests extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("일정 조회 실패: 일정을 찾을 수 없는 경우")
-    void getSchedule_notFoundException(){
+    @DisplayName("getScheduleDetail(): 일정 조회 시 일정을 찾을 수 없어 DataNotFoundException 발생")
+    void getScheduleDetail_dataNotFoundException(){
         // given
-        when(scheduleRepository.findByScheduleId(any())).thenReturn(Optional.empty());
+        when(travelScheduleRepository.findByScheduleId(any())).thenReturn(Optional.empty());
 
         // when
-        DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> scheduleService.getSchedule(0L, 1));
+        DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> scheduleService.getScheduleDetail(0L, 1));
 
         // then
         assertEquals(fail.getHttpStatus(), ErrorCode.DATA_NOT_FOUND.getStatus());
@@ -198,18 +490,18 @@ public class ScheduleServiceTests extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("여행지 조회 성공")
-    void getTravelPlace_success(){
+    @DisplayName("getTravelPlaces(): 여행지 조회 성공")
+    void getTravelPlaces(){
         // given
         Country country = createCountry();
         City city = createCity(country);
         District district = createDistrict(city, "중구");
         ApiCategory apiCategory = createApiCategory();
-        TravelPlace travelPlace1 = createTravelPlace(country, city, district, apiCategory);
-        TravelPlace travelPlace2 = createTravelPlace(country, city, district, apiCategory);
+        TravelPlace travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory);
+        TravelPlace travelPlace2 = createTravelPlace(2L, country, city, district, apiCategory);
 
-        File file1 = createFile(1L, "test1", true);
-        File file2 = createFile(2L, "test2", false);
+        File file1 = createFile("test1", true);
+        File file2 = createFile("test2", false);
 
         TravelImage travelImage1 = createTravelImage(travelPlace1, file1);
         TravelImage travelImage2 = createTravelImage(travelPlace1, file2);
@@ -225,16 +517,16 @@ public class ScheduleServiceTests extends ScheduleTest {
         placeList.add(travelPlace1);
         placeList.add(travelPlace2);
 
-        TravelSchedule schedule = createTravelSchedule();
+        TravelSchedule schedule = createTravelSchedule(1L, "테스트");
 
-        Pageable pageable = PageableUtil.createPageRequest(1, 5);
+        Pageable pageable = PageUtil.createPageRequest(1, 5);
 
-        when(scheduleRepository.findByScheduleId(any())).thenReturn(Optional.of(schedule));
-        when(travelRepository.findAllByAreaData(any(), anyString(), anyString(), anyString()))
-                .thenReturn(new PageImpl<>(placeList, pageable, 1));
+        when(travelScheduleRepository.findByScheduleId(any())).thenReturn(Optional.of(schedule));
+        when(travelPlaceRepository.findAllByAreaData(any(), anyString(), anyString(), anyString()))
+                .thenReturn(PageUtil.createPage(placeList, pageable, 1));
 
         // when
-        Page<TravelSimpleResponse> response = scheduleService.getTravelPlaces(schedule.getScheduleId(), 1);
+        Page<PlaceResponse> response = scheduleService.getTravelPlaces(schedule.getScheduleId(), 1);
 
         // then
         assertEquals(response.getTotalElements(), placeList.size());
@@ -243,18 +535,18 @@ public class ScheduleServiceTests extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("여행지 조회 성공: 여행지 데이터 없는 경우")
-    void getTravelPlacesWithoutData_success(){
+    @DisplayName("getTravelPlaces(): 여행지 조회 시 여행지 데이터 없는 경우")
+    void getTravelPlacesWithoutData(){
         // given
-        TravelSchedule schedule = createTravelSchedule();
-        Pageable pageable = PageableUtil.createPageRequest(1, 5);
+        TravelSchedule schedule = createTravelSchedule(1L, "테스트");
+        Pageable pageable = PageUtil.createPageRequest(1, 5);
 
-        when(scheduleRepository.findByScheduleId(any())).thenReturn(Optional.of(schedule));
-        when(travelRepository.findAllByAreaData(any(), anyString(), anyString(), anyString()))
-                .thenReturn(new PageImpl<>(new ArrayList<>(), pageable, 0));
+        when(travelScheduleRepository.findByScheduleId(any())).thenReturn(Optional.of(schedule));
+        when(travelPlaceRepository.findAllByAreaData(any(), anyString(), anyString(), anyString()))
+                .thenReturn(PageUtil.createPage(new ArrayList<>(), pageable, 0));
 
         // when
-        Page<TravelSimpleResponse> response = scheduleService.getTravelPlaces(schedule.getScheduleId(), 1);
+        Page<PlaceResponse> response = scheduleService.getTravelPlaces(schedule.getScheduleId(), 1);
 
         // then
         assertEquals(response.getTotalElements(), 0);
@@ -262,13 +554,297 @@ public class ScheduleServiceTests extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("여행지 조회 실패: 일정을 찾을 수 없는 경우")
-    void getTravelPlaces_notFoundException(){
+    @DisplayName("getTravelPlaces(): 여행지 조회 시 일정을 찾을 수 없어 DataNotFoundException 발생")
+    void getTravelPlaces_dataNotFoundException(){
         // given
-        when(scheduleRepository.findByScheduleId(any())).thenReturn(Optional.empty());
+        when(travelScheduleRepository.findByScheduleId(any())).thenReturn(Optional.empty());
 
         // when
         DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> scheduleService.getTravelPlaces(0L, 1));
+
+        // then
+        assertEquals(fail.getHttpStatus(), ErrorCode.DATA_NOT_FOUND.getStatus());
+        assertEquals(fail.getMessage(), ErrorCode.DATA_NOT_FOUND.getMessage());
+    }
+
+    @Test
+    @DisplayName("searchTravelPlaces(): 여행지 검색 성공")
+    void searchTravelPlaces(){
+        // given
+        String keyword = "강남";
+        Pageable pageable = PageUtil.createPageRequest(1, 5);
+
+        Country country = createCountry();
+        City city = createCity(country);
+        District district = createDistrict(city, "강남구");
+        ApiCategory apiCategory = createApiCategory();
+        TravelPlace travelPlace = createTravelPlace(1L, country, city, district, apiCategory);
+
+        List<TravelPlace> travelPlaceList = new ArrayList<>();
+        travelPlaceList.add(travelPlace);
+
+        File file1 = createFile("test1", true);
+        File file2 = createFile("test2", false);
+
+        TravelImage travelImage1 = createTravelImage(travelPlace, file1);
+        TravelImage travelImage2 = createTravelImage(travelPlace, file2);
+        List<TravelImage> travelImageList = Arrays.asList(travelImage1, travelImage2);
+        travelPlace.setTravelImageList(travelImageList);
+
+        Page<TravelPlace> travelPlacePage = PageUtil.createPage(travelPlaceList, pageable, travelPlaceList.size());
+
+        when(travelScheduleRepository.findByScheduleId(any())).thenReturn(Optional.of(createTravelSchedule(1L, "테스트")));
+        when(travelPlaceRepository.searchTravelPlaces(pageable, keyword)).thenReturn(travelPlacePage);
+
+        // when
+        Page<PlaceResponse> response = scheduleService.searchTravelPlaces(1L, 1, keyword);
+
+
+        // then
+        List<PlaceResponse> content = response.getContent();
+        assertEquals(content.get(0).getPlaceName(), travelPlace.getPlaceName());
+        assertEquals(content.get(0).getAddress(), travelPlace.getAddress());
+        assertEquals(content.get(0).getThumbnailUrl(), travelImage1.getFile().getS3ObjectUrl());
+    }
+
+    @Test
+    @DisplayName("searchTravelPlaces(): 여행지 검색 시 검색 결과 존재하지 않는 경우")
+    void searchTravelPlacesWithoutData(){
+        // given
+        String keyword = "ㅁㄴㅇㄹ";
+        Pageable pageable = PageUtil.createPageRequest(1, 5);
+
+        Page<TravelPlace> travelPlacePage = PageUtil.createPage(new ArrayList<>(), pageable, 0);
+
+        when(travelScheduleRepository.findByScheduleId(any())).thenReturn(Optional.of(createTravelSchedule(1L, "테스트")));
+        when(travelPlaceRepository.searchTravelPlaces(pageable, keyword)).thenReturn(travelPlacePage);
+
+        // when
+        Page<PlaceResponse> response = scheduleService.searchTravelPlaces(1L, 1, keyword);
+
+
+        // then
+        assertEquals(response.getTotalElements(), 0);
+    }
+
+    @Test
+    @DisplayName("searchTravelPlaces(): 여행지 검색 시 일정을 찾을 수 없어 DataNotFoundException 발생")
+    void searchTravelPlaces_dataNotFoundException(){
+        // given
+        when(travelScheduleRepository.findByScheduleId(any())).thenReturn(Optional.empty());
+
+        // when
+        DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> scheduleService.searchTravelPlaces(0L, 1, "강남"));
+
+        // then
+        assertEquals(fail.getHttpStatus(), ErrorCode.DATA_NOT_FOUND.getStatus());
+        assertEquals(fail.getMessage(), ErrorCode.DATA_NOT_FOUND.getMessage());
+    }
+
+    @Test
+    @DisplayName("getTravelRoutes(): 여행 루트 조회 성공")
+    void getTravelRoutes(){
+        // given
+        TravelSchedule schedule = createTravelSchedule(1L, "테스트");
+
+        Country country = createCountry();
+        City city = createCity(country);
+        District district = createDistrict(city, "강남구");
+        ApiCategory apiCategory = createApiCategory();
+        TravelPlace travelPlace = createTravelPlace(1L, country, city, district, apiCategory);
+
+        File file1 = createFile("test1", true);
+        File file2 = createFile("test2", false);
+
+        TravelImage travelImage1 = createTravelImage(travelPlace, file1);
+        TravelImage travelImage2 = createTravelImage(travelPlace, file2);
+        List<TravelImage> travelImageList = Arrays.asList(travelImage1, travelImage2);
+        travelPlace.setTravelImageList(travelImageList);
+
+        TravelRoute route1 = createTravelRoute(schedule, travelPlace, 1);
+        TravelRoute route2 = createTravelRoute(schedule, travelPlace, 2);
+        TravelRoute route3 = createTravelRoute(schedule, travelPlace, 3);
+
+        List<TravelRoute> travelRouteList = new ArrayList<>();
+        travelRouteList.add(route1);
+        travelRouteList.add(route2);
+        travelRouteList.add(route3);
+
+        Pageable pageable = PageUtil.createPageRequest(1, 5);
+
+        when(travelScheduleRepository.findByScheduleId(any())).thenReturn(Optional.of(schedule));
+        when(travelRouteRepository.findAllByTravelSchedule_ScheduleId(pageable, schedule.getScheduleId()))
+                .thenReturn(PageUtil.createPage(travelRouteList, pageable, travelRouteList.size()));
+
+
+        // when
+        Page<RouteResponse> response = scheduleService.getTravelRoutes(schedule.getScheduleId(), 1);
+
+        // then
+        List<RouteResponse> content = response.getContent();
+        assertEquals(response.getTotalElements(), travelRouteList.size());
+        assertEquals(content.get(0).getAddress(), travelPlace.getAddress());
+        assertEquals(content.get(0).getThumbnailUrl(), travelImage1.getFile().getS3ObjectUrl());
+        assertEquals(content.get(0).getRouteOrder(), route1.getRouteOrder());
+        assertEquals(content.get(1).getRouteOrder(), route2.getRouteOrder());
+        assertEquals(content.get(2).getRouteOrder(), route3.getRouteOrder());
+    }
+
+    @Test
+    @DisplayName("getTravelRoutes(): 여행 루트 조회 시 저장된 여행 루트 데이터 없는 경우")
+    void getTravelRoutesWithoutData(){
+        // given
+        TravelSchedule schedule = createTravelSchedule(1L, "테스트");
+
+        Pageable pageable = PageUtil.createPageRequest(1, 5);
+
+        when(travelScheduleRepository.findByScheduleId(any())).thenReturn(Optional.of(schedule));
+        when(travelRouteRepository.findAllByTravelSchedule_ScheduleId(pageable, schedule.getScheduleId()))
+                .thenReturn(PageUtil.createPage(new ArrayList<>(), pageable, 0));
+
+
+        // when
+        Page<RouteResponse> response = scheduleService.getTravelRoutes(schedule.getScheduleId(), 1);
+
+        // then
+        assertEquals(response.getTotalElements(), 0);
+        assertTrue(response.getContent().isEmpty());
+    }
+
+    @Test
+    @DisplayName("getTravelRoutes(): 여행 루트 조회 시 일정을 찾을 수 없어 DataNotFoundException 발생")
+    void getTravelRoutes_dataNotFoundException(){
+        // given
+        when(travelScheduleRepository.findByScheduleId(any())).thenReturn(Optional.empty());
+
+        // when
+        DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> scheduleService.getTravelRoutes(0L, 1));
+
+        // then
+        assertEquals(fail.getHttpStatus(), ErrorCode.DATA_NOT_FOUND.getStatus());
+        assertEquals(fail.getMessage(), ErrorCode.DATA_NOT_FOUND.getMessage());
+    }
+
+    @Test
+    @DisplayName("getSimpleTravelPlacesByJunggu(): 중구 기준 여행지 데이터 조회")
+    void getSimpleTravelPlacesByJunggu(){
+        // given
+        Country country = createCountry();
+        City city = createCity(country);
+        District district = createDistrict(city, "중구");
+        ApiCategory apiCategory = createApiCategory();
+        TravelPlace travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory);
+        TravelPlace travelPlace2 = createTravelPlace(2L, country, city, district, apiCategory);
+
+        File file1 = createFile("test1", true);
+        File file2 = createFile("test2", false);
+
+        TravelImage travelImage1 = createTravelImage(travelPlace1, file1);
+        TravelImage travelImage2 = createTravelImage(travelPlace1, file2);
+        List<TravelImage> travelImageList1 = Arrays.asList(travelImage1, travelImage2);
+        travelPlace1.setTravelImageList(travelImageList1);
+
+        TravelImage travelImage3 = createTravelImage(travelPlace2, file1);
+        TravelImage travelImage4 = createTravelImage(travelPlace2, file2);
+        List<TravelImage> travelImageList2 = Arrays.asList(travelImage3, travelImage4);
+        travelPlace2.setTravelImageList(travelImageList2);
+
+        List<TravelPlace> placeList = new ArrayList<>();
+        placeList.add(travelPlace1);
+        placeList.add(travelPlace2);
+
+        Pageable pageable = PageUtil.createPageRequest(1, 5);
+
+        when(travelPlaceRepository.findAllByAreaData(pageable, "대한민국", "서울", "중구"))
+                .thenReturn(PageUtil.createPage(placeList, pageable, placeList.size()));
+
+
+        // when
+        Page<PlaceResponse> response = scheduleService.getSimpleTravelPlacesByJunggu(1);
+
+        // then
+        List<PlaceResponse> content = response.getContent();
+        assertEquals(response.getTotalElements(), placeList.size());
+        assertEquals(content.get(0).getAddress(), travelPlace1.getAddress());
+        assertEquals(content.get(0).getThumbnailUrl(), travelImage1.getFile().getS3ObjectUrl());
+    }
+
+    @Test
+    @DisplayName("getSimpleTravelPlacesByJunggu(): 중구 기준 여행지 데이터 조회 시 데이터 없는 경우")
+    void getSimpleTravelPlacesByJungguWithoutData(){
+        // given
+        Pageable pageable = PageUtil.createPageRequest(1, 5);
+
+        when(travelPlaceRepository.findAllByAreaData(pageable, "대한민국", "서울", "중구"))
+                .thenReturn(PageUtil.createPage(new ArrayList<>(), pageable, 0));
+
+
+        // when
+        Page<PlaceResponse> response = scheduleService.getSimpleTravelPlacesByJunggu(1);
+
+        // then
+        assertEquals(response.getTotalElements(), 0);
+        assertTrue(response.getContent().isEmpty());
+    }
+
+    @Test
+    @DisplayName("getSavedMember(): 저장된 사용자 정보 조회")
+    void getSavedMember(){
+        // given
+        String userId = "test1";
+        Member member = createMember(1L, userId);
+
+        when(memberRepository.findByUserId(any())).thenReturn(Optional.of(member));
+
+        // when
+        Member response = scheduleService.getSavedMember(userId);
+
+        // then
+        assertEquals(response.getUserId(), userId);
+        assertEquals(response.getEmail(), member.getEmail());
+        assertEquals(response.getNickname(), member.getNickname());
+
+    }
+
+    @Test
+    @DisplayName("getSavedMember(): 저장된 사용자 정보 조회 시 데이터 찾을 수 없어 DataNotFoundException 발생")
+    void getSavedMember_dataNotFoundException(){
+        // given
+        when(memberRepository.findByUserId(any())).thenReturn(Optional.empty());
+
+        // when
+        DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> scheduleService.getSavedMember("notUser"));
+
+        // then
+        assertEquals(fail.getHttpStatus(), ErrorCode.USER_NOT_FOUND.getStatus());
+        assertEquals(fail.getMessage(), ErrorCode.USER_NOT_FOUND.getMessage());
+    }
+
+    @Test
+    @DisplayName("getSavedSchedule(): 저장된 일정 조회")
+    void getSavedSchedule(){
+        // given
+        TravelSchedule schedule = createTravelSchedule(1L, "테스트");
+
+        when(travelScheduleRepository.findByScheduleId(any())).thenReturn(Optional.of(schedule));
+
+        // when
+        TravelSchedule response = scheduleService.getSavedSchedule(schedule.getScheduleId());
+
+        // then
+        assertEquals(response.getScheduleName(), schedule.getScheduleName());
+        assertEquals(response.getStartDate(), schedule.getStartDate());
+        assertEquals(response.getEndDate(), schedule.getEndDate());
+    }
+
+    @Test
+    @DisplayName("getSavedSchedule(): 저장된 일정 조회 시 데이터 찾을 수 없어 DataNotFoundException 발생")
+    void getSavedSchedule_dataNotFoundException(){
+        // given
+        when(travelScheduleRepository.findByScheduleId(any())).thenReturn(Optional.empty());
+
+        // when
+        DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> scheduleService.getSavedSchedule(0L));
 
         // then
         assertEquals(fail.getHttpStatus(), ErrorCode.DATA_NOT_FOUND.getStatus());

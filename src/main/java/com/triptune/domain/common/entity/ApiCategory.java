@@ -28,7 +28,7 @@ public class ApiCategory {
     @Column(name = "level")
     private int level;
 
-    @OneToMany(mappedBy = "apiCategory", orphanRemoval = true)
+    @OneToMany(mappedBy = "apiCategory", fetch = FetchType.LAZY, orphanRemoval = true)
     private List<TravelPlace> travelPlaceList;
 
 

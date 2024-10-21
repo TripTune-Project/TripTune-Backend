@@ -11,7 +11,7 @@ import java.util.List;
 @Getter
 @Setter
 @NoArgsConstructor
-public class TravelLocation {
+public class PlaceLocation {
     private Long placeId;
     private String country;
     private String city;
@@ -25,7 +25,7 @@ public class TravelLocation {
     private Double distance;
 
     @Builder
-    public TravelLocation(Long placeId, String country, String city, String district, String address, String detailAddress, double longitude, double latitude, String placeName, Double distance) {
+    public PlaceLocation(Long placeId, String country, String city, String district, String address, String detailAddress, double longitude, double latitude, String placeName, Double distance) {
         // travelImageFileList 미포함 생성자
         this.placeId = placeId;
         this.country = country;
@@ -41,7 +41,7 @@ public class TravelLocation {
 
 
     @Builder
-    public TravelLocation(Long placeId, String country, String city, String district, String address, String detailAddress, double longitude, double latitude, String placeName, List<TravelImage> travelImageFileList, Double distance) {
+    public PlaceLocation(Long placeId, String country, String city, String district, String address, String detailAddress, double longitude, double latitude, String placeName, List<TravelImage> travelImageFileList, Double distance) {
         // travelImageFileList 포함 생성자
         this.placeId = placeId;
         this.country = country;
