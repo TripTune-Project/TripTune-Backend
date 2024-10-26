@@ -2,7 +2,7 @@ package com.triptune.domain.schedule.dto;
 
 import com.triptune.domain.schedule.entity.TravelSchedule;
 import com.triptune.domain.travel.dto.PlaceResponse;
-import com.triptune.global.response.PageResponse;
+import com.triptune.global.response.pagination.PageResponse;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

@@ -3,7 +3,7 @@ package com.triptune.domain.schedule.controller;
 import com.triptune.domain.schedule.dto.*;
 import com.triptune.domain.schedule.service.ScheduleService;
 import com.triptune.domain.travel.dto.PlaceResponse;
-import com.triptune.global.response.ApiPageResponse;
+import com.triptune.global.response.pagination.ApiPageResponse;
 import com.triptune.global.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -27,7 +27,7 @@ public class ScheduleApiController {
         String userId = SecurityContextHolder.getContext().getAuthentication().getName();
 
         Page<ScheduleOverviewResponse> response = scheduleService.getSchedules(page, userId);
-        return ApiPageResponse.okResponse(response);
+        return ApiPageResponse.dataResponse(response);
     }
 
     @PostMapping
@@ -53,7 +53,7 @@ public class ScheduleApiController {
     public ApiPageResponse<PlaceResponse> getTravelPlaces(@PathVariable(name = "scheduleId") Long scheduleId, @RequestParam int page){
         Page<PlaceResponse> response = scheduleService.getTravelPlaces(scheduleId, page);
 
-        return ApiPageResponse.okResponse(response);
+        return ApiPageResponse.dataResponse(response);
     }
 
     @GetMapping("/{scheduleId}/travels/search")
@@ -64,7 +64,7 @@ public class ScheduleApiController {
 
         Page<PlaceResponse> response = scheduleService.searchTravelPlaces(scheduleId, page, keyword);
 
-        return ApiPageResponse.okResponse(response);
+        return ApiPageResponse.dataResponse(response);
     }
 
     @GetMapping("{scheduleId}/routes")
@@ -72,7 +72,7 @@ public class ScheduleApiController {
     public ApiPageResponse<RouteResponse> getTravelRoutes(@PathVariable(name = "scheduleId") Long scheduleId, @RequestParam(name = "page") int page){
         Page<RouteResponse> response = scheduleService.getTravelRoutes(scheduleId, page);
 
-        return ApiPageResponse.okResponse(response);
+        return ApiPageResponse.dataResponse(response);
     }
 
 

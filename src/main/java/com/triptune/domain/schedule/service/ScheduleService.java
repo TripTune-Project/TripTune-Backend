@@ -18,11 +18,10 @@ import com.triptune.domain.travel.entity.TravelPlace;
 import com.triptune.domain.travel.repository.TravelPlacePlaceRepository;
 import com.triptune.global.enumclass.ErrorCode;
 import com.triptune.global.exception.DataNotFoundException;
-import com.triptune.global.response.PageResponse;
+import com.triptune.global.response.pagination.PageResponse;
 import com.triptune.global.util.PageUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 

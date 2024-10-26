@@ -1,4 +1,4 @@
-package com.triptune.global.response;
+package com.triptune.global.response.pagination;
 
 import lombok.Builder;
 import lombok.Getter;
