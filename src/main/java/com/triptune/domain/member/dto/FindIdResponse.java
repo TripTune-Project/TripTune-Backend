@@ -16,4 +16,8 @@ public class FindIdResponse {
     public FindIdResponse(String userId) {
         this.userId = userId;
     }
+
+    public static FindIdResponse of(String userId){
+        return new FindIdResponse(userId);
+    }
 }

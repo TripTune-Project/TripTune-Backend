@@ -18,4 +18,7 @@ public class RefreshTokenResponse {
     }
 
 
+    public static RefreshTokenResponse of(String accessToken){
+        return new RefreshTokenResponse(accessToken);
+    }
 }

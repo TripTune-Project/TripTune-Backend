@@ -1,5 +1,6 @@
 package com.triptune.domain.member.service;
 
+import com.triptune.domain.member.MemberTest;
 import com.triptune.domain.member.dto.*;
 import com.triptune.domain.member.entity.Member;
 import com.triptune.domain.member.exception.ChangePasswordException;
@@ -32,7 +33,7 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 @Transactional
 @Slf4j
-public class MemberServiceTests {
+public class MemberServiceTests extends MemberTest {
 
     @InjectMocks
     private MemberService memberService;
@@ -56,7 +57,7 @@ public class MemberServiceTests {
 
 
     @Test
-    @DisplayName("회원가입 성공")
+    @DisplayName("join(): 회원가입 성공")
     void join_success(){
         // given
         MemberRequest request = createMemberRequest();
@@ -73,7 +74,7 @@ public class MemberServiceTests {
     }
 
     @Test
-    @DisplayName("회원가입 실패: 이미 가입한 아이디가 존재할 경우")
+    @DisplayName("join(): 이미 가입한 아이디가 존재해 예외 발생")
     void join_userIdExistException(){
         // given
         MemberRequest request = createMemberRequest();
@@ -91,7 +92,7 @@ public class MemberServiceTests {
     }
 
     @Test
-    @DisplayName("회원가입 실패: 이미 가입한 닉네임이 존재할 경우")
+    @DisplayName("join(): 이미 가입한 닉네임이 존재해 예외 발생")
     void join_nicknameExistException(){
         // given
         MemberRequest request = createMemberRequest();
@@ -109,7 +110,7 @@ public class MemberServiceTests {
     }
 
     @Test
-    @DisplayName("회원가입 실패: 이미 가입한 닉네임이 존재할 경우")
+    @DisplayName("join(): 이미 가입한 닉네임이 존재해 예외 발생")
     void join_emailExistException(){
         // given
         MemberRequest request = createMemberRequest();
@@ -129,16 +130,13 @@ public class MemberServiceTests {
 
 
     @Test
-    @DisplayName("로그아웃 성공")
-    void logout_success(){
+    @DisplayName("logout(): 로그아웃 성공")
+    void logout(){
         // given
-        Member savedMember = createMember(refreshToken);
+        Member savedMember = createMember(1L, "member");
         memberRepository.save(savedMember);
 
-        LogoutDTO request = LogoutDTO.builder()
-                .userId("test")
-                .build();
-
+        LogoutDTO request = createLogoutDTO();
         // when
         memberService.logout(request, accessToken);
 
@@ -149,14 +147,14 @@ public class MemberServiceTests {
 
 
     @Test
-    @DisplayName("refreshToken 갱신 성공")
-    void refreshToken_success(){
+    @DisplayName("refreshToken(): refresh token  갱신 성공")
+    void refreshToken(){
         // given
         Claims mockClaims = Jwts.claims().setSubject("test");
 
         when(jwtUtil.validateToken(refreshToken)).thenReturn(true);
         when(jwtUtil.parseClaims(refreshToken)).thenReturn(mockClaims);
-        when(memberRepository.findByUserId(any())).thenReturn(Optional.of(createMember(refreshToken)));
+        when(memberRepository.findByUserId(any())).thenReturn(Optional.of(createMember(1L, "member")));
         when(jwtUtil.createToken(anyString(), anyLong())).thenReturn(accessToken);
 
         RefreshTokenRequest request = createRefreshTokenRequest(refreshToken);
@@ -171,17 +169,16 @@ public class MemberServiceTests {
 
 
     @Test
-    @DisplayName("refreshToken 갱신 실패: 저장된 refresh token 와 요청 refresh token이 불일치하는 경우")
+    @DisplayName("refreshToken(): 저장된 refresh token 과 요청 refresh token 이 불일치해 예외 발생")
     void misMatchRefreshToken_customJwtBadRequestException() {
         // given
-        String savedRefreshToken = "refreshTokenInDatabase";
         Claims mockClaims = Jwts.claims().setSubject("test");
+
+        RefreshTokenRequest request = createRefreshTokenRequest(refreshToken);
 
         when(jwtUtil.validateToken(refreshToken)).thenReturn(true);
         when(jwtUtil.parseClaims(refreshToken)).thenReturn(mockClaims);
-        when(memberRepository.findByUserId(any())).thenReturn(Optional.of(createMember(savedRefreshToken)));
-
-        RefreshTokenRequest request = createRefreshTokenRequest(refreshToken);
+        when(memberRepository.findByUserId(any())).thenReturn(Optional.of(createMember(1L, "member")));
 
         // when
         CustomJwtBadRequestException fail = assertThrows(CustomJwtBadRequestException.class, () -> memberService.refreshToken(request));
@@ -192,13 +189,13 @@ public class MemberServiceTests {
     }
 
     @Test
-    @DisplayName("비밀번호 변경 성공")
-    void changePassword_success(){
+    @DisplayName("changePassword(): 비밀번호 변경 성공")
+    void changePassword(){
         // given
         String email = "test@email.com";
         String encodedPassword = "encodedPassword";
 
-        Member storedMember = createMember(refreshToken);
+        Member storedMember = createMember(1L, "member");
 
         when(redisUtil.getData(anyString())).thenReturn(email);
         when(memberRepository.findByEmail(anyString())).thenReturn(Optional.of(storedMember));
@@ -206,7 +203,7 @@ public class MemberServiceTests {
 
 
         // when
-        memberService.changePassword(createChangePasswordDTO());
+        memberService.changePassword(createChangePasswordDTO(passwordToken, newPassword));
 
         // then
         verify(redisUtil, times(1)).getData(passwordToken);
@@ -214,17 +211,18 @@ public class MemberServiceTests {
         verify(passwordEncoder, times(1)).encode(newPassword);
         assertEquals(encodedPassword, storedMember.getPassword());
 
-        log.info("인코딩 제공 비밀번호 : {}, 저장된 비밀번호 : {}", encodedPassword, storedMember.getPassword());
+        System.out.println("인코딩 제공 비밀번호 : " + encodedPassword + "저장된 비밀번호 : " + storedMember.getPassword());
     }
 
     @Test
-    @DisplayName("비밀번호 변경 실패: 비밀번호 변경 토큰 유효 시간이 만료되어 ChangePasswordException 발생")
+    @DisplayName("changePassword(): 비밀번호 변경 토큰 유효 시간이 만료되어 예외 발생")
     void changePassword_changePasswordException(){
         // given
         when(redisUtil.getData(anyString())).thenReturn(null);
 
         // when
-        ChangePasswordException fail = assertThrows(ChangePasswordException.class, () -> memberService.changePassword(createChangePasswordDTO()));
+        ChangePasswordException fail = assertThrows(ChangePasswordException.class,
+                () -> memberService.changePassword(createChangePasswordDTO(accessToken, newPassword)));
 
         // then
         assertEquals(fail.getHttpStatus(), ErrorCode.INVALID_CHANGE_PASSWORD.getStatus());
@@ -232,7 +230,7 @@ public class MemberServiceTests {
     }
 
     @Test
-    @DisplayName("비밀번호 변경 실패: 사용자 정보를 찾을 수 없어 DataNotFoundException 발생")
+    @DisplayName("changePassword(): 사용자 정보를 찾을 수 없어 얘외 발생")
     void changePassword_dataNotFoundException(){
         // given
         String email = "test@email.com";
@@ -241,7 +239,114 @@ public class MemberServiceTests {
         when(memberRepository.findByEmail(anyString())).thenReturn(Optional.empty());
 
         // when
-        DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> memberService.changePassword(createChangePasswordDTO()));
+        DataNotFoundException fail = assertThrows(DataNotFoundException.class,
+                () -> memberService.changePassword(createChangePasswordDTO(accessToken, newPassword)));
+
+        // then
+        assertEquals(fail.getHttpStatus(), ErrorCode.USER_NOT_FOUND.getStatus());
+        assertEquals(fail.getMessage(), ErrorCode.USER_NOT_FOUND.getMessage());
+    }
+
+    @Test
+    @DisplayName("validateUniqueMemberInfo(): 중복된 사용자 정보 체크")
+    void validateUniqueMemberInfo(){
+        // given
+        MemberRequest request = createMemberRequest();
+
+        when(memberRepository.existsByUserId(anyString())).thenReturn(false);
+        when(memberRepository.existsByNickname(anyString())).thenReturn(false);
+        when(memberRepository.existsByEmail(anyString())).thenReturn(false);
+
+
+        // when, then
+        assertDoesNotThrow(() -> memberService.validateUniqueMemberInfo(request));
+
+    }
+
+    @Test
+    @DisplayName("validateUniqueMemberInfo(): 이미 가입한 아이디가 존재해 예외 발생")
+    void validateUniqueMemberInfo_userIdDataExistException(){
+        // given
+        MemberRequest request = createMemberRequest();
+
+        when(memberRepository.existsByUserId(anyString())).thenReturn(true);
+
+        // when
+        DataExistException fail = assertThrows(DataExistException.class, () -> memberService.validateUniqueMemberInfo(request));
+
+        // then
+        assertEquals(fail.getHttpStatus(), ErrorCode.ALREADY_EXISTED_USERID.getStatus());
+        assertEquals(fail.getMessage(), ErrorCode.ALREADY_EXISTED_USERID.getMessage());
+
+    }
+
+    @Test
+    @DisplayName("validateUniqueMemberInfo(): 이미 가입한 닉네임이 존재해 예외 발생")
+    void validateUniqueMemberInfo_nicknameDataExistException(){
+        // given
+        MemberRequest request = createMemberRequest();
+
+        when(memberRepository.existsByUserId(anyString())).thenReturn(false);
+        when(memberRepository.existsByNickname(anyString())).thenReturn(true);
+
+        // when
+        DataExistException fail = assertThrows(DataExistException.class, () -> memberService.validateUniqueMemberInfo(request));
+
+        // then
+        assertEquals(fail.getHttpStatus(), ErrorCode.ALREADY_EXISTED_NICKNAME.getStatus());
+        assertEquals(fail.getMessage(), ErrorCode.ALREADY_EXISTED_NICKNAME.getMessage());
+
+    }
+
+    @Test
+    @DisplayName("validateUniqueMemberInfo(): 이미 가입한 이메일이 존재해 예외 발생")
+    void validateUniqueMemberInfo_emailDataExistException(){
+        // given
+        MemberRequest request = createMemberRequest();
+
+        when(memberRepository.existsByUserId(anyString())).thenReturn(false);
+        when(memberRepository.existsByNickname(anyString())).thenReturn(false);
+        when(memberRepository.existsByEmail(anyString())).thenReturn(true);
+
+        // when
+        DataExistException fail = assertThrows(DataExistException.class, () -> memberService.validateUniqueMemberInfo(request));
+
+        // then
+        assertEquals(fail.getHttpStatus(), ErrorCode.ALREADY_EXISTED_EMAIL.getStatus());
+        assertEquals(fail.getMessage(), ErrorCode.ALREADY_EXISTED_EMAIL.getMessage());
+
+    }
+
+    @Test
+    @DisplayName("getSavedMemberByEmail(): 이메일을 이용에 저장된 사용자 정보 조회")
+    void getSavedMemberByEmail(){
+        // given
+        String email = "member@email.com";
+        MemberRequest request = createMemberRequest();
+
+        when(memberRepository.findByEmail(anyString())).thenReturn(Optional.of(createMember(1L, "member")));
+
+        // when
+        Member response = memberService.getSavedMemberByEmail(email);
+
+        // then
+        assertEquals(response.getMemberId(), 1L);
+        assertEquals(response.getUserId(), "member");
+        assertEquals(response.getEmail(), email);
+
+    }
+
+    @Test
+    @DisplayName("getSavedMemberByEmail() : 사용자 정보를 찾을 수 없어 예외 발생")
+    void getSavedMemberByEmail_dataNotFoundException(){
+        // given
+        String email = "test@email.com";
+
+        when(memberRepository.findByEmail(anyString())).thenReturn(Optional.empty());
+
+        // when
+        DataNotFoundException fail = assertThrows(DataNotFoundException.class,
+                () -> memberService.getSavedMemberByEmail(email));
 
         // then
         assertEquals(fail.getHttpStatus(), ErrorCode.USER_NOT_FOUND.getStatus());
@@ -249,54 +354,5 @@ public class MemberServiceTests {
     }
 
 
-    private MemberRequest createMemberRequest(){
-        return MemberRequest.builder()
-                .userId("testUser")
-                .password("password123@")
-                .repassword("password123@")
-                .nickname("test")
-                .email("test@test.com")
-                .build();
-    }
 
-    /**
-     * Member 객체 제공 메서드
-     * @param storedRefreshToken : 저장된 refresh token
-     * @return Member
-     */
-    private Member createMember(String storedRefreshToken){
-        return Member.builder()
-                .memberId(1L)
-                .userId("test")
-                .email("test@email.com")
-                .password("test123@")
-                .nickname("test")
-                .isSocialLogin(false)
-                .createdAt(LocalDateTime.now())
-                .refreshToken(storedRefreshToken)
-                .build();
-    }
-
-    /**
-     * RefreshTokenRequest 객체 제공 메서드 (토큰 갱신 요청 dto)
-     * @param refreshToken : 기존에 사용하던 refresh token
-     * @return Refresh Token
-     */
-    private RefreshTokenRequest createRefreshTokenRequest(String refreshToken){
-        return RefreshTokenRequest.builder()
-                .refreshToken(refreshToken)
-                .build();
-    }
-
-    /**
-     * ChangePasswordTO 객체 제공 메서드 (비밀번호 변경 요청 dto)
-     * @return ChangePasswordDTO
-     */
-    private ChangePasswordDTO createChangePasswordDTO(){
-        return ChangePasswordDTO.builder()
-                .passwordToken(passwordToken)
-                .password(newPassword)
-                .repassword(newPassword)
-                .build();
-    }
 }

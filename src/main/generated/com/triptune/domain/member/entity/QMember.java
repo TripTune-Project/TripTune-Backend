@@ -24,8 +24,6 @@ public class QMember extends EntityPathBase<Member> {
 
     public final StringPath email = createString("email");
 
-    public final NumberPath<Long> fileId = createNumber("fileId", Long.class);
-
     public final BooleanPath isSocialLogin = createBoolean("isSocialLogin");
 
     public final NumberPath<Long> memberId = createNumber("memberId", Long.class);
@@ -33,6 +31,8 @@ public class QMember extends EntityPathBase<Member> {
     public final StringPath nickname = createString("nickname");
 
     public final StringPath password = createString("password");
+
+    public final NumberPath<Long> profileImageId = createNumber("profileImageId", Long.class);
 
     public final StringPath refreshToken = createString("refreshToken");
 

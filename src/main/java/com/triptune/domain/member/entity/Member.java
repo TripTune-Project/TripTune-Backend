@@ -46,14 +46,15 @@ public class Member {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    @Column(name = "file_id")
-    private Long fileId;
+    @OneToOne
+    @Column(name = "profile_image_id")
+    private Long profileImageId;
 
     @OneToMany(mappedBy = "member", fetch = FetchType.LAZY, orphanRemoval = true)
     private List<TravelAttendee> travelAttendeeList = new ArrayList<>();
 
     @Builder
-    public Member(Long memberId, String userId, String password, String refreshToken, boolean isSocialLogin, String nickname, String email, LocalDateTime createdAt, LocalDateTime updatedAt, Long fileId, List<TravelAttendee> travelAttendeeList) {
+    public Member(Long memberId, String userId, String password, String refreshToken, boolean isSocialLogin, String nickname, String email, LocalDateTime createdAt, LocalDateTime updatedAt, Long profileImageId, List<TravelAttendee> travelAttendeeList) {
         this.memberId = memberId;
         this.userId = userId;
         this.password = password;
@@ -63,7 +64,7 @@ public class Member {
         this.email = email;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
-        this.fileId = fileId;
+        this.profileImageId = profileImageId;
         this.travelAttendeeList = travelAttendeeList;
     }
 }

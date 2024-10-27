@@ -24,6 +24,8 @@ public abstract class BaseTest {
     @Autowired
     private ObjectMapper objectMapper;
 
+    private final String refreshToken = "refreshTokenInDatabase";
+
     protected TravelSchedule createTravelSchedule(Long scheduleId, String scheduleName){
         return TravelSchedule.builder()
                 .scheduleId(scheduleId)
@@ -42,6 +44,7 @@ public abstract class BaseTest {
                 .email(userId + "@email.com")
                 .password("test123@")
                 .nickname(userId)
+                .refreshToken(refreshToken)
                 .isSocialLogin(false)
                 .createdAt(LocalDateTime.now())
                 .build();
