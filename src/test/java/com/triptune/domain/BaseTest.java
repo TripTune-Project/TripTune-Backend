@@ -109,11 +109,11 @@ public abstract class BaseTest {
                 .build();
     }
 
-    protected TravelAttendee createTravelAttendee(Member member, TravelSchedule schedule){
+    protected TravelAttendee createTravelAttendee(Member member, TravelSchedule schedule, AttendeeRole role){
         return TravelAttendee.builder()
                 .member(member)
                 .travelSchedule(schedule)
-                .role(AttendeeRole.AUTHOR)
+                .role(role)
                 .permission(AttendeePermission.ALL)
                 .build();
     }
