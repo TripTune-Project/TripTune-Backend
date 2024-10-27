@@ -3,7 +3,9 @@ package com.triptune.domain.schedule.controller;
 import com.triptune.domain.common.entity.*;
 import com.triptune.domain.common.repository.*;
 import com.triptune.domain.member.entity.Member;
+import com.triptune.domain.member.entity.ProfileImage;
 import com.triptune.domain.member.repository.MemberRepository;
+import com.triptune.domain.member.repository.ProfileImageRepository;
 import com.triptune.domain.schedule.ScheduleTest;
 import com.triptune.domain.schedule.dto.CreateScheduleRequest;
 import com.triptune.domain.schedule.entity.TravelAttendee;
@@ -68,11 +70,12 @@ public class ScheduleApiControllerTests extends ScheduleTest {
     private final TravelImageRepository travelImageRepository;
     private final TravelRouteRepository travelRouteRepository;
     private final ApiContentTypeRepository apiContentTypeRepository;
+    private final ProfileImageRepository profileImageRepository;
 
     private MockMvc mockMvc;
 
     @Autowired
-    public ScheduleApiControllerTests(WebApplicationContext wac, TravelScheduleRepository travelScheduleRepository, TravelAttendeeRepository travelAttendeeRepository, MemberRepository memberRepository, TravelPlacePlaceRepository travelPlaceRepository, CountryRepository countryRepository, CityRepository cityRepository, DistrictRepository districtRepository, ApiCategoryRepository apiCategoryRepository, FileRepository fileRepository, TravelImageRepository travelImageRepository, TravelRouteRepository travelRouteRepository, ApiContentTypeRepository apiContentTypeRepository) {
+    public ScheduleApiControllerTests(WebApplicationContext wac, TravelScheduleRepository travelScheduleRepository, TravelAttendeeRepository travelAttendeeRepository, MemberRepository memberRepository, TravelPlacePlaceRepository travelPlaceRepository, CountryRepository countryRepository, CityRepository cityRepository, DistrictRepository districtRepository, ApiCategoryRepository apiCategoryRepository, FileRepository fileRepository, TravelImageRepository travelImageRepository, TravelRouteRepository travelRouteRepository, ApiContentTypeRepository apiContentTypeRepository, ProfileImageRepository profileImageRepository) {
         this.wac = wac;
         this.travelScheduleRepository = travelScheduleRepository;
         this.travelAttendeeRepository = travelAttendeeRepository;
@@ -86,6 +89,7 @@ public class ScheduleApiControllerTests extends ScheduleTest {
         this.travelImageRepository = travelImageRepository;
         this.travelRouteRepository = travelRouteRepository;
         this.apiContentTypeRepository = apiContentTypeRepository;
+        this.profileImageRepository = profileImageRepository;
     }
 
     @BeforeEach
@@ -105,6 +109,10 @@ public class ScheduleApiControllerTests extends ScheduleTest {
         // given
         Member member1 = memberRepository.save(createMember(null, "member1"));
         Member member2 = memberRepository.save(createMember(null, "member2"));
+        ProfileImage profileImage1 = profileImageRepository.save(createProfileImage(null, "member1Image"));
+        ProfileImage profileImage2 = profileImageRepository.save(createProfileImage(null, "member2Image"));
+        member1.setProfileImage(profileImage1);
+        member2.setProfileImage(profileImage2);
 
         Country country = countryRepository.save(createCountry());
         City city = cityRepository.save(createCity(country));
@@ -168,6 +176,10 @@ public class ScheduleApiControllerTests extends ScheduleTest {
         // given
         Member member1 = memberRepository.save(createMember(null, "member1"));
         Member member2 = memberRepository.save(createMember(null, "member2"));
+        ProfileImage profileImage1 = profileImageRepository.save(createProfileImage(null, "member1Image"));
+        ProfileImage profileImage2 = profileImageRepository.save(createProfileImage(null, "member2Image"));
+        member1.setProfileImage(profileImage1);
+        member2.setProfileImage(profileImage2);
 
         TravelSchedule schedule1 = travelScheduleRepository.save(createTravelSchedule(null,"테스트1"));
         TravelSchedule schedule2 = travelScheduleRepository.save(createTravelSchedule(null,"테스트2"));

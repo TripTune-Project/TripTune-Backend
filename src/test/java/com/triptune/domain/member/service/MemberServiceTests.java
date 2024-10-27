@@ -51,7 +51,6 @@ public class MemberServiceTests extends MemberTest {
     private PasswordEncoder passwordEncoder;
 
     private final String accessToken = "testAccessToken";
-    private final String refreshToken = "testRefreshToken";
     private final String passwordToken = "testPasswordToken";
     private final String newPassword = "newPassword123@";
 
@@ -147,9 +146,10 @@ public class MemberServiceTests extends MemberTest {
 
 
     @Test
-    @DisplayName("refreshToken(): refresh token  갱신 성공")
+    @DisplayName("refreshToken(): refresh token 갱신 성공")
     void refreshToken(){
         // given
+        String refreshToken = "refreshTokenInDatabase";
         Claims mockClaims = Jwts.claims().setSubject("test");
 
         when(jwtUtil.validateToken(refreshToken)).thenReturn(true);
@@ -172,6 +172,7 @@ public class MemberServiceTests extends MemberTest {
     @DisplayName("refreshToken(): 저장된 refresh token 과 요청 refresh token 이 불일치해 예외 발생")
     void misMatchRefreshToken_customJwtBadRequestException() {
         // given
+        String refreshToken = "refreshTokenNotEqualsInDatabase";
         Claims mockClaims = Jwts.claims().setSubject("test");
 
         RefreshTokenRequest request = createRefreshTokenRequest(refreshToken);

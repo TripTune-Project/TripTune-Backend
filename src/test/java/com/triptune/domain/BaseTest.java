@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.triptune.domain.common.entity.*;
 import com.triptune.domain.member.entity.Member;
+import com.triptune.domain.member.entity.ProfileImage;
 import com.triptune.domain.schedule.dto.CreateScheduleRequest;
 import com.triptune.domain.schedule.entity.TravelAttendee;
 import com.triptune.domain.schedule.entity.TravelRoute;
@@ -26,17 +27,6 @@ public abstract class BaseTest {
 
     private final String refreshToken = "refreshTokenInDatabase";
 
-    protected TravelSchedule createTravelSchedule(Long scheduleId, String scheduleName){
-        return TravelSchedule.builder()
-                .scheduleId(scheduleId)
-                .scheduleName(scheduleName)
-                .startDate(LocalDate.now())
-                .endDate(LocalDate.now().plusDays(10))
-                .createdAt(LocalDateTime.now())
-                .build();
-    }
-
-
     protected Member createMember(Long memberId, String userId){
         return Member.builder()
                 .memberId(memberId)
@@ -46,6 +36,18 @@ public abstract class BaseTest {
                 .nickname(userId)
                 .refreshToken(refreshToken)
                 .isSocialLogin(false)
+                .createdAt(LocalDateTime.now())
+                .build();
+    }
+
+    protected ProfileImage createProfileImage(Long profileImageId, String fileName){
+        return ProfileImage.builder()
+                .profileImageId(profileImageId)
+                .s3ObjectUrl("/test/" + fileName + ".jpg")
+                .originalName(fileName + "_original.jpg")
+                .fileName(fileName + ".jpg")
+                .fileType("jpg")
+                .fileSize(20)
                 .createdAt(LocalDateTime.now())
                 .build();
     }
@@ -83,6 +85,16 @@ public abstract class BaseTest {
                 .bookmarkCnt(0)
                 .createdAt(LocalDateTime.now())
                 .description("테스트 장소 설명")
+                .build();
+    }
+
+    protected TravelSchedule createTravelSchedule(Long scheduleId, String scheduleName){
+        return TravelSchedule.builder()
+                .scheduleId(scheduleId)
+                .scheduleName(scheduleName)
+                .startDate(LocalDate.now())
+                .endDate(LocalDate.now().plusDays(10))
+                .createdAt(LocalDateTime.now())
                 .build();
     }
 
