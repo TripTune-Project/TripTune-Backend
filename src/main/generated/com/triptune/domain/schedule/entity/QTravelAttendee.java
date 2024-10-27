@@ -50,7 +50,7 @@ public class QTravelAttendee extends EntityPathBase<TravelAttendee> {
 
     public QTravelAttendee(Class<? extends TravelAttendee> type, PathMetadata metadata, PathInits inits) {
         super(type, metadata, inits);
-        this.member = inits.isInitialized("member") ? new com.triptune.domain.member.entity.QMember(forProperty("member")) : null;
+        this.member = inits.isInitialized("member") ? new com.triptune.domain.member.entity.QMember(forProperty("member"), inits.get("member")) : null;
         this.travelSchedule = inits.isInitialized("travelSchedule") ? new QTravelSchedule(forProperty("travelSchedule")) : null;
     }
 
