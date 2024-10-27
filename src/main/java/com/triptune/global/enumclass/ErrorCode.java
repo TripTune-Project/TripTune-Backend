@@ -33,9 +33,11 @@ public enum ErrorCode {
     EXPIRED_JWT_TOKEN(HttpStatus.UNAUTHORIZED, "JWT 토큰이 만료되었습니다."),
     INVALID_JWT_SIGNATURE(HttpStatus.UNAUTHORIZED, "JWT 서명 검증을 실패했습니다."),
     MISMATCH_REFRESH_TOKEN(HttpStatus.BAD_REQUEST, "유효하지 않은 JWT 토큰입니다. 로그인 후 이용해주세요."),
-    BLACKLIST_TOKEN(HttpStatus.UNAUTHORIZED, "로그아웃 된 사용자입니다. 로그인 후 이용해주세요.");
+    BLACKLIST_TOKEN(HttpStatus.UNAUTHORIZED, "로그아웃 된 사용자입니다. 로그인 후 이용해주세요."),
 
 
+    // 일정
+    AUTHOR_NOT_FOUND(HttpStatus.NOT_FOUND, "작성자 정보를 찾을 수 없습니다.");
 
 
     private final HttpStatus status;

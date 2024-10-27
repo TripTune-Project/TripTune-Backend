@@ -7,25 +7,29 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 @Getter
 @NoArgsConstructor
-public class ScheduleOverviewResponse {
+public class ScheduleInfoResponse {
     private Long scheduleId;
     private String scheduleName;
     private LocalDate startDate;
     private LocalDate endDate;
     private String sinceUpdate;
     private String thumbnailUrl;
+    private AuthorDTO author;
 
     @Builder
-    public ScheduleOverviewResponse(Long scheduleId, String scheduleName, LocalDate startDate, LocalDate endDate, String sinceUpdate, String thumbnailUrl) {
+    public ScheduleInfoResponse(Long scheduleId, String scheduleName, LocalDate startDate, LocalDate endDate, String sinceUpdate, String thumbnailUrl, AuthorDTO author) {
         this.scheduleId = scheduleId;
         this.scheduleName = scheduleName;
         this.startDate = startDate;
         this.endDate = endDate;
         this.sinceUpdate = sinceUpdate;
         this.thumbnailUrl = thumbnailUrl;
+        this.author = author;
     }
 
     private static String getSinceUpdate(TravelSchedule schedule){
@@ -40,14 +44,15 @@ public class ScheduleOverviewResponse {
         return sinceUp;
     }
 
-    public static ScheduleOverviewResponse entityToDto(TravelSchedule schedule, String thumbnailUrl){
-        return ScheduleOverviewResponse.builder()
+    public static ScheduleInfoResponse entityToDto(TravelSchedule schedule, String thumbnailUrl, AuthorDTO author){
+        return ScheduleInfoResponse.builder()
                 .scheduleId(schedule.getScheduleId())
                 .scheduleName(schedule.getScheduleName())
                 .startDate(schedule.getStartDate())
                 .endDate(schedule.getEndDate())
                 .sinceUpdate(getSinceUpdate(schedule))
                 .thumbnailUrl(thumbnailUrl)
+                .author(author)
                 .build();
     }
 

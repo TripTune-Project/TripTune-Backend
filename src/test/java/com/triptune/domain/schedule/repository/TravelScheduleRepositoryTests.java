@@ -95,10 +95,9 @@ public class TravelScheduleRepositoryTests extends ScheduleTest {
         TravelSchedule schedule2 = travelScheduleRepository.save(createTravelSchedule(null,"테스트2"));
         TravelSchedule schedule3 = travelScheduleRepository.save(createTravelSchedule(null,"테스트3"));
 
-        TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule1));
-        TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule2));
-        TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(member2, schedule3));
-        attendee2.setRole(AttendeeRole.GUEST);
+        TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule1, AttendeeRole.AUTHOR));
+        TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule2, AttendeeRole.GUEST));
+        TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(member2, schedule3, AttendeeRole.AUTHOR));
 
 
         member1.setTravelAttendeeList(Arrays.asList(attendee1, attendee2));
@@ -109,7 +108,7 @@ public class TravelScheduleRepositoryTests extends ScheduleTest {
         schedule3.setTravelAttendeeList(List.of(attendee3));
 
 
-        Pageable pageable = PageUtil.createPageRequest(1, 10);
+        Pageable pageable = PageUtil.schedulePageable(1);
 
         // when
         Page<TravelSchedule> response = travelScheduleRepository.findTravelSchedulesByAttendee(pageable, member1.getMemberId());
@@ -128,7 +127,7 @@ public class TravelScheduleRepositoryTests extends ScheduleTest {
         // given
         Member member1 = memberRepository.save(createMember(null, "member1"));
 
-        Pageable pageable = PageUtil.createPageRequest(1, 10);
+        Pageable pageable = PageUtil.schedulePageable(1);
 
         // when
         Page<TravelSchedule> response = travelScheduleRepository.findTravelSchedulesByAttendee(pageable, member1.getMemberId());
@@ -150,9 +149,9 @@ public class TravelScheduleRepositoryTests extends ScheduleTest {
         TravelSchedule schedule2 = travelScheduleRepository.save(createTravelSchedule(null,"테스트2"));
         TravelSchedule schedule3 = travelScheduleRepository.save(createTravelSchedule(null,"테스트3"));
 
-        TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule1));
-        TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule2));
-        TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(member2, schedule3));
+        TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule1, AttendeeRole.AUTHOR));
+        TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule2, AttendeeRole.AUTHOR));
+        TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(member2, schedule3, AttendeeRole.AUTHOR));
 
         member1.setTravelAttendeeList(Arrays.asList(attendee1, attendee2));
         member2.setTravelAttendeeList(List.of(attendee3));

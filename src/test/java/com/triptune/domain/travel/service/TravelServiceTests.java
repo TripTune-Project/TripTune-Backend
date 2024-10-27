@@ -70,7 +70,7 @@ public class TravelServiceTests extends TravelTest {
         // given
         PlaceLocationRequest request = createTravelLocationRequest(37.4970465429, 127.0281573537);
 
-        Pageable pageable = PageUtil.createPageRequest(1, 5);
+        Pageable pageable = PageUtil.defaultPageable(1);
 
         List<PlaceLocation> locationList = new ArrayList<>();
         locationList.add(createTravelLocation(travelPlace));
@@ -104,7 +104,7 @@ public class TravelServiceTests extends TravelTest {
         // given
         PlaceLocationRequest request = createTravelLocationRequest(0.0, 0.0);
 
-        Pageable pageable = PageUtil.createPageRequest(1, 5);
+        Pageable pageable = PageUtil.defaultPageable(1);
         Page<PlaceLocation> mockLocation = new PageImpl<>(Collections.emptyList(), pageable, 0);
 
         when(travelPlaceRepository.findNearByTravelPlaces(pageable, request, 5)).thenReturn(mockLocation);
@@ -128,7 +128,7 @@ public class TravelServiceTests extends TravelTest {
         // given
         PlaceSearchRequest request = createTravelSearchRequest(37.49, 127.0, "테스트");
 
-        Pageable pageable = PageUtil.createPageRequest(1, 5);
+        Pageable pageable = PageUtil.defaultPageable(1);
         List<PlaceLocation> locationList = new ArrayList<>();
         locationList.add(createTravelLocation(travelPlace));
         Page<PlaceLocation> mockLocation = new PageImpl<>(locationList, pageable, 1);
@@ -160,7 +160,7 @@ public class TravelServiceTests extends TravelTest {
         // given
         PlaceSearchRequest request = createTravelSearchRequest(37.49, 127.0, "ㅁㄴㅇㄹ");
 
-        Pageable pageable = PageUtil.createPageRequest(1, 5);
+        Pageable pageable = PageUtil.defaultPageable(1);
         Page<PlaceLocation> mockLocation = new PageImpl<>(Collections.emptyList(), pageable, 0);
 
         when(travelPlaceRepository.searchTravelPlacesWithLocation(pageable, request)).thenReturn(mockLocation);

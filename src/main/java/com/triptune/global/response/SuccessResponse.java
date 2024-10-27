@@ -1,6 +1,7 @@
 package com.triptune.global.response;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.triptune.global.enumclass.SuccessCode;
 import lombok.*;
 
 @Getter
@@ -17,5 +18,20 @@ public class SuccessResponse<T> {
         this.message = message;
         this.data = data;
     }
+
+    public static <T> SuccessResponse<T> of(){
+        return SuccessResponse.<T>builder()
+                .message(SuccessCode.GENERAL_SUCCESS.getMessage())
+                .build();
+    }
+
+    public static <T> SuccessResponse<T> of(T object){
+        return SuccessResponse.<T>builder()
+                .data(object)
+                .message(SuccessCode.GENERAL_SUCCESS.getMessage())
+                .build();
+    }
+
+
 
 }

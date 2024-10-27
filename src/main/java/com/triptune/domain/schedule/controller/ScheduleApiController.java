@@ -3,8 +3,10 @@ package com.triptune.domain.schedule.controller;
 import com.triptune.domain.schedule.dto.*;
 import com.triptune.domain.schedule.service.ScheduleService;
 import com.triptune.domain.travel.dto.PlaceResponse;
-import com.triptune.global.response.ApiPageResponse;
+import com.triptune.global.response.pagination.ApiPageResponse;
 import com.triptune.global.response.ApiResponse;
+import com.triptune.global.response.pagination.ApiSchedulePageResponse;
+import com.triptune.global.response.pagination.SchedulePageResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -23,11 +25,12 @@ public class ScheduleApiController {
 
     @GetMapping("")
     @Operation(summary = "일정 목록 조회", description = "작성한 일정 목록을 조회합니다.")
-    public ApiPageResponse<ScheduleOverviewResponse> getSchedules(@RequestParam(name = "page") int page){
+    public ApiSchedulePageResponse<ScheduleInfoResponse> getSchedules(@RequestParam(name = "page") int page){
         String userId = SecurityContextHolder.getContext().getAuthentication().getName();
 
-        Page<ScheduleOverviewResponse> response = scheduleService.getSchedules(page, userId);
-        return ApiPageResponse.okResponse(response);
+        SchedulePageResponse<ScheduleInfoResponse> response = scheduleService.getSchedules(page, userId);
+
+        return ApiSchedulePageResponse.dataResponse(response);
     }
 
     @PostMapping
@@ -42,8 +45,8 @@ public class ScheduleApiController {
 
     @GetMapping("/{scheduleId}")
     @Operation(summary = "일정 상세 조회", description = "생성한 일정을 조회합니다.")
-    public ApiResponse<ScheduleResponse> getScheduleDetail(@PathVariable(name = "scheduleId") Long scheduleId, @RequestParam int page){
-         ScheduleResponse response = scheduleService.getScheduleDetail(scheduleId, page);
+    public ApiResponse<ScheduleDetailResponse> getScheduleDetail(@PathVariable(name = "scheduleId") Long scheduleId, @RequestParam int page){
+         ScheduleDetailResponse response = scheduleService.getScheduleDetail(scheduleId, page);
 
          return ApiResponse.dataResponse(response);
     }
@@ -53,7 +56,7 @@ public class ScheduleApiController {
     public ApiPageResponse<PlaceResponse> getTravelPlaces(@PathVariable(name = "scheduleId") Long scheduleId, @RequestParam int page){
         Page<PlaceResponse> response = scheduleService.getTravelPlaces(scheduleId, page);
 
-        return ApiPageResponse.okResponse(response);
+        return ApiPageResponse.dataResponse(response);
     }
 
     @GetMapping("/{scheduleId}/travels/search")
@@ -64,7 +67,7 @@ public class ScheduleApiController {
 
         Page<PlaceResponse> response = scheduleService.searchTravelPlaces(scheduleId, page, keyword);
 
-        return ApiPageResponse.okResponse(response);
+        return ApiPageResponse.dataResponse(response);
     }
 
     @GetMapping("{scheduleId}/routes")
@@ -72,7 +75,7 @@ public class ScheduleApiController {
     public ApiPageResponse<RouteResponse> getTravelRoutes(@PathVariable(name = "scheduleId") Long scheduleId, @RequestParam(name = "page") int page){
         Page<RouteResponse> response = scheduleService.getTravelRoutes(scheduleId, page);
 
-        return ApiPageResponse.okResponse(response);
+        return ApiPageResponse.dataResponse(response);
     }
 
 

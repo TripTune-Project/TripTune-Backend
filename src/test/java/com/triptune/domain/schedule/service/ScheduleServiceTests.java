@@ -8,6 +8,7 @@ import com.triptune.domain.schedule.dto.*;
 import com.triptune.domain.schedule.entity.TravelAttendee;
 import com.triptune.domain.schedule.entity.TravelRoute;
 import com.triptune.domain.schedule.entity.TravelSchedule;
+import com.triptune.domain.schedule.enumclass.AttendeeRole;
 import com.triptune.domain.schedule.repository.TravelAttendeeRepository;
 import com.triptune.domain.schedule.repository.TravelRouteRepository;
 import com.triptune.domain.schedule.repository.TravelScheduleRepository;
@@ -17,6 +18,7 @@ import com.triptune.domain.travel.entity.TravelPlace;
 import com.triptune.domain.travel.repository.TravelPlacePlaceRepository;
 import com.triptune.global.enumclass.ErrorCode;
 import com.triptune.global.exception.DataNotFoundException;
+import com.triptune.global.response.pagination.SchedulePageResponse;
 import com.triptune.global.util.PageUtil;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -25,7 +27,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 
 import java.util.ArrayList;
@@ -66,7 +67,7 @@ public class ScheduleServiceTests extends ScheduleTest {
         int page = 1;
         String userId = "member1";
 
-        Pageable pageable = PageUtil.createPageRequest(1, 5);
+        Pageable pageable = PageUtil.schedulePageable(1);
 
         Country country = createCountry();
         City city = createCity(country);
@@ -82,27 +83,95 @@ public class ScheduleServiceTests extends ScheduleTest {
         List<TravelImage> travelImageList = Arrays.asList(travelImage1, travelImage2);
         travelPlace.setTravelImageList(travelImageList);
 
+        TravelSchedule schedule1 = createTravelSchedule(1L, "테스트1");
+        TravelSchedule schedule2 = createTravelSchedule(2L, "테스트2");
 
-        List<TravelSchedule> schedules = Arrays.asList(createTravelSchedule(1L, "테스트1"), createTravelSchedule(2L, "테스트2"));
+        Member member1 = createMember(1L, "member1");
+        Member member2 = createMember(2L, "member2");
+        Member member3 = createMember(3L, "member3");
+
+        List<TravelAttendee> attendee1List = Arrays.asList(
+                createTravelAttendee(member1, schedule1, AttendeeRole.AUTHOR),
+                createTravelAttendee(member2, schedule1, AttendeeRole.GUEST)
+        );
+
+        schedule1.setTravelAttendeeList(attendee1List);
+        schedule2.setTravelAttendeeList(List.of(createTravelAttendee(member3, schedule2, AttendeeRole.AUTHOR)));
+
+        List<TravelSchedule> schedules = Arrays.asList(schedule1, schedule2);
         Page<TravelSchedule> schedulePage = PageUtil.createPage(schedules, pageable, schedules.size());
 
-        List<TravelImage> travelImages = Arrays.asList(createTravelImage(travelPlace, file1), createTravelImage(travelPlace, file2));
 
         when(memberRepository.findByUserId(any())).thenReturn(Optional.of(createMember(1L, userId)));
         when(travelScheduleRepository.findTravelSchedulesByAttendee(pageable, 1L)).thenReturn(schedulePage);
-        when(travelRouteRepository.findPlaceImagesOfFirstRoute(1L)).thenReturn(travelImages);
+        when(travelRouteRepository.findPlaceImagesOfFirstRoute(1L)).thenReturn(travelImageList);
 
         // when
-        Page<ScheduleOverviewResponse> response = scheduleService.getSchedules(page, userId);
+        SchedulePageResponse<ScheduleInfoResponse> response = scheduleService.getSchedules(page, userId);
 
         // then
-        List<ScheduleOverviewResponse> content = response.getContent();
+        List<ScheduleInfoResponse> content = response.getContent();
         assertEquals(response.getTotalElements(), 2);
-        assertEquals(content.get(0).getScheduleName(), "테스트1");
+        assertEquals(response.getTotalSharedElements(), 1);
+        assertEquals(content.get(0).getScheduleName(), schedule1.getScheduleName());
         assertNotNull(content.get(0).getSinceUpdate());
         assertNotNull(content.get(0).getThumbnailUrl());
-
+        assertEquals(content.get(0).getAuthor().getUserId(), member1.getUserId());
     }
+
+    @Test
+    @DisplayName("getSchedules(): 내 일정 목록 조회 시 공유된 일정이 없는 경우")
+    void getSchedulesNotShared(){
+        // given
+        int page = 1;
+        String userId = "member1";
+
+        Pageable pageable = PageUtil.schedulePageable(1);
+
+        Country country = createCountry();
+        City city = createCity(country);
+        District district = createDistrict(city, "중구");
+        ApiCategory apiCategory = createApiCategory();
+        TravelPlace travelPlace = createTravelPlace(1L, country, city, district, apiCategory);
+
+        File file1 = createFile("test1", true);
+        File file2 = createFile("test2", false);
+
+        TravelImage travelImage1 = createTravelImage(travelPlace, file1);
+        TravelImage travelImage2 = createTravelImage(travelPlace, file2);
+        List<TravelImage> travelImageList = Arrays.asList(travelImage1, travelImage2);
+        travelPlace.setTravelImageList(travelImageList);
+
+        TravelSchedule schedule1 = createTravelSchedule(1L, "테스트1");
+        TravelSchedule schedule2 = createTravelSchedule(2L, "테스트2");
+
+        Member member1 = createMember(1L, "member1");
+        Member member2 = createMember(2L, "member2");
+
+        schedule1.setTravelAttendeeList(List.of(createTravelAttendee(member1, schedule1, AttendeeRole.AUTHOR)));
+        schedule2.setTravelAttendeeList(List.of(createTravelAttendee(member2, schedule2, AttendeeRole.AUTHOR)));
+
+        List<TravelSchedule> schedules = Arrays.asList(schedule1, schedule2);
+        Page<TravelSchedule> schedulePage = PageUtil.createPage(schedules, pageable, schedules.size());
+
+
+        when(memberRepository.findByUserId(any())).thenReturn(Optional.of(createMember(1L, userId)));
+        when(travelScheduleRepository.findTravelSchedulesByAttendee(pageable, 1L)).thenReturn(schedulePage);
+        when(travelRouteRepository.findPlaceImagesOfFirstRoute(1L)).thenReturn(travelImageList);
+
+        // when
+        SchedulePageResponse<ScheduleInfoResponse> response = scheduleService.getSchedules(page, userId);
+
+        // then
+        List<ScheduleInfoResponse> content = response.getContent();
+        assertEquals(response.getTotalElements(), 2);
+        assertEquals(response.getTotalSharedElements(), 0);
+        assertEquals(content.get(0).getScheduleName(), schedule1.getScheduleName());
+        assertNotNull(content.get(0).getSinceUpdate());
+        assertNotNull(content.get(0).getThumbnailUrl());
+        assertEquals(content.get(0).getAuthor().getUserId(), member1.getUserId());
+    }
+
 
     @Test
     @DisplayName("getSchedules(): 내 일정 목록 조회 시 사용자 데이터가 없는 경우")
@@ -129,7 +198,7 @@ public class ScheduleServiceTests extends ScheduleTest {
         int page = 1;
         String userId = "member1";
 
-        Pageable pageable = PageUtil.createPageRequest(1, 5);
+        Pageable pageable = PageUtil.schedulePageable(1);
 
         Page<TravelSchedule> emptySchedulePage = PageUtil.createPage(new ArrayList<>(), pageable, 0);
 
@@ -137,7 +206,7 @@ public class ScheduleServiceTests extends ScheduleTest {
         when(travelScheduleRepository.findTravelSchedulesByAttendee(pageable, 1L)).thenReturn(emptySchedulePage);
 
         // when
-        Page<ScheduleOverviewResponse> response = scheduleService.getSchedules(page, userId);
+        SchedulePageResponse<ScheduleInfoResponse> response = scheduleService.getSchedules(page, userId);
 
         // then
         assertEquals(response.getTotalElements(), 0);
@@ -152,7 +221,7 @@ public class ScheduleServiceTests extends ScheduleTest {
         int page = 1;
         String userId = "member1";
 
-        Pageable pageable = PageUtil.createPageRequest(1, 5);
+        Pageable pageable = PageUtil.schedulePageable(1);
 
         Country country = createCountry();
         City city = createCity(country);
@@ -168,21 +237,32 @@ public class ScheduleServiceTests extends ScheduleTest {
         List<TravelImage> travelImageList = Arrays.asList(travelImage1, travelImage2);
         travelPlace.setTravelImageList(travelImageList);
 
+        List<TravelImage> travelImages = Arrays.asList(
+                createTravelImage(travelPlace, file1),
+                createTravelImage(travelPlace, file2)
+        );
 
-        List<TravelSchedule> schedules = Arrays.asList(createTravelSchedule(1L, "테스트1"), createTravelSchedule(2L, "테스트2"));
+        TravelSchedule schedule1 = createTravelSchedule(1L, "테스트1");
+        TravelSchedule schedule2 = createTravelSchedule(2L, "테스트2");
+
+        Member member1 = createMember(1L, "member1");
+        Member member2 = createMember(2L, "member2");
+
+        schedule1.setTravelAttendeeList(List.of(createTravelAttendee(member1, schedule1, AttendeeRole.AUTHOR)));
+        schedule2.setTravelAttendeeList(List.of(createTravelAttendee(member2, schedule2, AttendeeRole.AUTHOR)));
+
+        List<TravelSchedule> schedules = Arrays.asList(schedule1, schedule2);
         Page<TravelSchedule> schedulePage = PageUtil.createPage(schedules, pageable, schedules.size());
-
-        List<TravelImage> travelImages = Arrays.asList(createTravelImage(travelPlace, file1), createTravelImage(travelPlace, file2));
 
         when(memberRepository.findByUserId(any())).thenReturn(Optional.of(createMember(1L, userId)));
         when(travelScheduleRepository.findTravelSchedulesByAttendee(pageable, 1L)).thenReturn(schedulePage);
         when(travelRouteRepository.findPlaceImagesOfFirstRoute(1L)).thenReturn(travelImages);
 
         // when
-        Page<ScheduleOverviewResponse> response = scheduleService.getSchedules(page, userId);
+        SchedulePageResponse<ScheduleInfoResponse> response = scheduleService.getSchedules(page, userId);
 
         // then
-        List<ScheduleOverviewResponse> content = response.getContent();
+        List<ScheduleInfoResponse> content = response.getContent();
         assertEquals(response.getTotalElements(), 2);
         assertEquals(content.get(0).getScheduleName(), "테스트1");
         assertNotNull(content.get(0).getSinceUpdate());
@@ -198,9 +278,18 @@ public class ScheduleServiceTests extends ScheduleTest {
         int page = 1;
         String userId = "member1";
 
-        Pageable pageable = PageUtil.createPageRequest(1, 5);
+        Pageable pageable = PageUtil.schedulePageable(1);
 
-        List<TravelSchedule> schedules = Arrays.asList(createTravelSchedule(1L, "테스트1"), createTravelSchedule(2L, "테스트2"));
+        TravelSchedule schedule1 = createTravelSchedule(1L, "테스트1");
+        TravelSchedule schedule2 = createTravelSchedule(2L, "테스트2");
+
+        Member member1 = createMember(1L, "member1");
+        Member member2 = createMember(2L, "member2");
+
+        schedule1.setTravelAttendeeList(List.of(createTravelAttendee(member1, schedule1, AttendeeRole.AUTHOR)));
+        schedule2.setTravelAttendeeList(List.of(createTravelAttendee(member2, schedule2, AttendeeRole.AUTHOR)));
+
+        List<TravelSchedule> schedules = Arrays.asList(schedule1, schedule2);
         Page<TravelSchedule> schedulePage = PageUtil.createPage(schedules, pageable, schedules.size());
 
         when(memberRepository.findByUserId(any())).thenReturn(Optional.of(createMember(1L, userId)));
@@ -208,10 +297,10 @@ public class ScheduleServiceTests extends ScheduleTest {
         when(travelRouteRepository.findPlaceImagesOfFirstRoute(1L)).thenReturn(new ArrayList<>());
 
         // when
-        Page<ScheduleOverviewResponse> response = scheduleService.getSchedules(page, userId);
+        SchedulePageResponse<ScheduleInfoResponse> response = scheduleService.getSchedules(page, userId);
 
         // then
-        List<ScheduleOverviewResponse> content = response.getContent();
+        List<ScheduleInfoResponse> content = response.getContent();
         assertEquals(response.getTotalElements(), 2);
         assertEquals(content.get(0).getScheduleName(), "테스트1");
         assertNotNull(content.get(0).getSinceUpdate());
@@ -221,7 +310,7 @@ public class ScheduleServiceTests extends ScheduleTest {
 
     @Test
     @DisplayName("convertToScheduleOverviewResponse(): TravelSchedule 를 TravelOverviewResponse 로 변경")
-    void convertToScheduleOverviewResponse(){
+    void convertToScheduleInfoResponse(){
         // given
         TravelSchedule schedule = createTravelSchedule(1L, "테스트1");
 
@@ -239,33 +328,176 @@ public class ScheduleServiceTests extends ScheduleTest {
         List<TravelImage> travelImageList = Arrays.asList(travelImage1, travelImage2);
         travelPlace.setTravelImageList(travelImageList);
 
+        Member member1 = createMember(1L, "member1");
+        Member member2 = createMember(2L, "member2");
+
+        List<TravelAttendee> attendeeList = Arrays.asList(
+                createTravelAttendee(member1, schedule, AttendeeRole.AUTHOR),
+                createTravelAttendee(member2, schedule, AttendeeRole.GUEST)
+        );
+
+        schedule.setTravelAttendeeList(attendeeList);
+
 
         when(travelRouteRepository.findPlaceImagesOfFirstRoute(1L)).thenReturn(travelImageList);
 
         // when
-        ScheduleOverviewResponse response = scheduleService.convertToScheduleOverviewResponse(schedule);
+        ScheduleInfoResponse response = scheduleService.convertToScheduleInfoResponse(schedule);
 
         // then
-        assertEquals(response.getScheduleName(), "테스트1");
+        assertEquals(response.getScheduleName(), schedule.getScheduleName());
         assertNotNull(response.getSinceUpdate());
         assertNotNull(response.getThumbnailUrl());
+        assertEquals(response.getAuthor().getUserId(), member1.getUserId());
     }
 
     @Test
     @DisplayName("convertToScheduleOverviewResponse(): TravelSchedule 를 TravelOverviewResponse 로 변경 시 썸네일 없는 경우")
-    void convertToScheduleOverviewResponseWithoutThumbnail(){
+    void convertToScheduleInfoResponseWithoutThumbnail(){
         // given
         TravelSchedule schedule = createTravelSchedule(1L, "테스트1");
+
+        Member member1 = createMember(1L, "member1");
+        Member member2 = createMember(2L, "member2");
+
+        List<TravelAttendee> attendeeList = Arrays.asList(
+                createTravelAttendee(member1, schedule, AttendeeRole.AUTHOR),
+                createTravelAttendee(member2, schedule, AttendeeRole.GUEST)
+        );
+
+        schedule.setTravelAttendeeList(attendeeList);
 
         when(travelRouteRepository.findPlaceImagesOfFirstRoute(1L)).thenReturn(new ArrayList<>());
 
         // when
-        ScheduleOverviewResponse response = scheduleService.convertToScheduleOverviewResponse(schedule);
+        ScheduleInfoResponse response = scheduleService.convertToScheduleInfoResponse(schedule);
 
         // then
-        assertEquals(response.getScheduleName(), "테스트1");
+        assertEquals(response.getScheduleName(), schedule.getScheduleName());
         assertNotNull(response.getSinceUpdate());
         assertNull(response.getThumbnailUrl());
+        assertEquals(response.getAuthor().getUserId(), member1.getUserId());
+    }
+
+    @Test
+    @DisplayName("convertToScheduleOverviewResponse(): TravelSchedule 를 TravelOverviewResponse 로 변경 시 작성자가 없어 예외 발생")
+    void convertToScheduleInfoResponse_notFoundException(){
+        // given
+        TravelSchedule schedule = createTravelSchedule(1L, "테스트1");
+
+        Member member1 = createMember(1L, "member1");
+        Member member2 = createMember(2L, "member2");
+
+        List<TravelAttendee> attendeeList = Arrays.asList(
+                createTravelAttendee(member1, schedule, AttendeeRole.GUEST),
+                createTravelAttendee(member2, schedule, AttendeeRole.GUEST)
+        );
+
+        schedule.setTravelAttendeeList(attendeeList);
+
+        when(travelRouteRepository.findPlaceImagesOfFirstRoute(1L)).thenReturn(new ArrayList<>());
+
+        // when
+        DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> scheduleService.convertToScheduleInfoResponse(schedule));
+
+        // then
+        assertEquals(fail.getHttpStatus(), ErrorCode.AUTHOR_NOT_FOUND.getStatus());
+        assertEquals(fail.getMessage(), ErrorCode.AUTHOR_NOT_FOUND.getMessage());
+
+    }
+
+    @Test
+    @DisplayName("getAuthorDTO() : 작성자 조회해서 dto 생성")
+    void getAuthorDTO(){
+        // given
+        TravelSchedule schedule = createTravelSchedule(1L, "테스트1");
+
+        Member member1 = createMember(1L, "member1");
+        Member member2 = createMember(2L, "member2");
+
+        List<TravelAttendee> attendeeList = Arrays.asList(
+                createTravelAttendee(member1, schedule, AttendeeRole.AUTHOR),
+                createTravelAttendee(member2, schedule, AttendeeRole.GUEST)
+        );
+
+        schedule.setTravelAttendeeList(attendeeList);
+
+        // when
+        AuthorDTO response = scheduleService.getAuthorDTO(schedule);
+
+        // then
+        assertEquals(response.getUserId(), member1.getUserId());
+
+    }
+
+    @Test
+    @DisplayName("getAuthorDTO() : 작성자 조회해서 dto 생성 시 작성자가 없어 예외 발생")
+    void getAuthorDTO_notFoundException(){
+        // given
+        TravelSchedule schedule = createTravelSchedule(1L, "테스트1");
+
+        Member member1 = createMember(1L, "member1");
+        Member member2 = createMember(2L, "member2");
+
+        List<TravelAttendee> attendeeList = Arrays.asList(
+                createTravelAttendee(member1, schedule, AttendeeRole.GUEST),
+                createTravelAttendee(member2, schedule, AttendeeRole.GUEST)
+        );
+
+        schedule.setTravelAttendeeList(attendeeList);
+
+        // when
+        DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> scheduleService.getAuthorDTO(schedule));
+
+        // then
+        assertEquals(fail.getHttpStatus(), ErrorCode.AUTHOR_NOT_FOUND.getStatus());
+        assertEquals(fail.getMessage(), ErrorCode.AUTHOR_NOT_FOUND.getMessage());
+
+    }
+
+
+    @Test
+    @DisplayName("getAuthorMember() : 일정 작성자 조회")
+    void getAuthorMember(){
+        // given
+        Member member1 = createMember(1L, "member1");
+        Member member2 = createMember(2L, "member2");
+
+        TravelSchedule schedule = createTravelSchedule(1L, "테스트1");
+
+        List<TravelAttendee> attendeeList = Arrays.asList(
+                createTravelAttendee(member1, schedule, AttendeeRole.AUTHOR),
+                createTravelAttendee(member2, schedule, AttendeeRole.GUEST)
+        );
+
+        // when
+        Member response = scheduleService.getAuthorMember(attendeeList);
+
+        // then
+        assertEquals(response.getMemberId(), member1.getMemberId());
+        assertEquals(response.getUserId(), member1.getUserId());
+    }
+
+    @Test
+    @DisplayName("getAuthorMember() : 일정 작성자 조회 시 작성자가 없어 예외 발생")
+    void getAuthorMember_notFoundException(){
+        // given
+        Member member1 = createMember(1L, "member1");
+        Member member2 = createMember(2L, "member2");
+
+        TravelSchedule schedule1 = createTravelSchedule(1L, "테스트1");
+
+        List<TravelAttendee> attendeeList = Arrays.asList(
+                createTravelAttendee(member1, schedule1, AttendeeRole.GUEST),
+                createTravelAttendee(member2, schedule1, AttendeeRole.GUEST)
+        );
+
+        // when
+        DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> scheduleService.getAuthorMember(attendeeList));
+
+        // then
+        assertEquals(fail.getHttpStatus(), ErrorCode.AUTHOR_NOT_FOUND.getStatus());
+        assertEquals(fail.getMessage(), ErrorCode.AUTHOR_NOT_FOUND.getMessage());
     }
 
 
@@ -421,10 +653,10 @@ public class ScheduleServiceTests extends ScheduleTest {
         Member member2 = createMember(2L, "member2");
 
         List<TravelAttendee> attendeeList = new ArrayList<>();
-        attendeeList.add(createTravelAttendee(member1, schedule));
-        attendeeList.add(createTravelAttendee(member2, schedule));
+        attendeeList.add(createTravelAttendee(member1, schedule, AttendeeRole.AUTHOR));
+        attendeeList.add(createTravelAttendee(member2, schedule, AttendeeRole.AUTHOR));
 
-        Pageable pageable = PageUtil.createPageRequest(1, 5);
+        Pageable pageable = PageUtil.defaultPageable(1);
 
         when(travelScheduleRepository.findByScheduleId(any())).thenReturn(Optional.of(schedule));
         when(travelPlaceRepository.findAllByAreaData(any(), anyString(), anyString(), anyString()))
@@ -432,7 +664,7 @@ public class ScheduleServiceTests extends ScheduleTest {
         when(travelAttendeeRepository.findAllByTravelSchedule_ScheduleId(any())).thenReturn(attendeeList);
 
         // when
-        ScheduleResponse response = scheduleService.getScheduleDetail(schedule.getScheduleId(), 1);
+        ScheduleDetailResponse response = scheduleService.getScheduleDetail(schedule.getScheduleId(), 1);
 
         // then
         assertEquals(response.getScheduleName(), schedule.getScheduleName());
@@ -453,10 +685,10 @@ public class ScheduleServiceTests extends ScheduleTest {
         Member member2 = createMember(2L, "member2");
 
         List<TravelAttendee> attendeeList = new ArrayList<>();
-        attendeeList.add(createTravelAttendee(member1, schedule));
-        attendeeList.add(createTravelAttendee(member2, schedule));
+        attendeeList.add(createTravelAttendee(member1, schedule, AttendeeRole.AUTHOR));
+        attendeeList.add(createTravelAttendee(member2, schedule, AttendeeRole.AUTHOR));
 
-        Pageable pageable = PageUtil.createPageRequest(1, 5);
+        Pageable pageable = PageUtil.defaultPageable(1);
 
         when(travelScheduleRepository.findByScheduleId(any())).thenReturn(Optional.of(schedule));
         when(travelPlaceRepository.findAllByAreaData(any(), anyString(), anyString(), anyString()))
@@ -464,7 +696,7 @@ public class ScheduleServiceTests extends ScheduleTest {
         when(travelAttendeeRepository.findAllByTravelSchedule_ScheduleId(any())).thenReturn(attendeeList);
 
         // when
-        ScheduleResponse response = scheduleService.getScheduleDetail(schedule.getScheduleId(), 1);
+        ScheduleDetailResponse response = scheduleService.getScheduleDetail(schedule.getScheduleId(), 1);
 
         // then
         assertEquals(response.getScheduleName(), schedule.getScheduleName());
@@ -519,7 +751,7 @@ public class ScheduleServiceTests extends ScheduleTest {
 
         TravelSchedule schedule = createTravelSchedule(1L, "테스트");
 
-        Pageable pageable = PageUtil.createPageRequest(1, 5);
+        Pageable pageable = PageUtil.defaultPageable(1);
 
         when(travelScheduleRepository.findByScheduleId(any())).thenReturn(Optional.of(schedule));
         when(travelPlaceRepository.findAllByAreaData(any(), anyString(), anyString(), anyString()))
@@ -539,7 +771,7 @@ public class ScheduleServiceTests extends ScheduleTest {
     void getTravelPlacesWithoutData(){
         // given
         TravelSchedule schedule = createTravelSchedule(1L, "테스트");
-        Pageable pageable = PageUtil.createPageRequest(1, 5);
+        Pageable pageable = PageUtil.defaultPageable(1);
 
         when(travelScheduleRepository.findByScheduleId(any())).thenReturn(Optional.of(schedule));
         when(travelPlaceRepository.findAllByAreaData(any(), anyString(), anyString(), anyString()))
@@ -572,7 +804,7 @@ public class ScheduleServiceTests extends ScheduleTest {
     void searchTravelPlaces(){
         // given
         String keyword = "강남";
-        Pageable pageable = PageUtil.createPageRequest(1, 5);
+        Pageable pageable = PageUtil.defaultPageable(1);
 
         Country country = createCountry();
         City city = createCity(country);
@@ -612,7 +844,7 @@ public class ScheduleServiceTests extends ScheduleTest {
     void searchTravelPlacesWithoutData(){
         // given
         String keyword = "ㅁㄴㅇㄹ";
-        Pageable pageable = PageUtil.createPageRequest(1, 5);
+        Pageable pageable = PageUtil.defaultPageable(1);
 
         Page<TravelPlace> travelPlacePage = PageUtil.createPage(new ArrayList<>(), pageable, 0);
 
@@ -670,7 +902,7 @@ public class ScheduleServiceTests extends ScheduleTest {
         travelRouteList.add(route2);
         travelRouteList.add(route3);
 
-        Pageable pageable = PageUtil.createPageRequest(1, 5);
+        Pageable pageable = PageUtil.defaultPageable(1);
 
         when(travelScheduleRepository.findByScheduleId(any())).thenReturn(Optional.of(schedule));
         when(travelRouteRepository.findAllByTravelSchedule_ScheduleId(pageable, schedule.getScheduleId()))
@@ -696,7 +928,7 @@ public class ScheduleServiceTests extends ScheduleTest {
         // given
         TravelSchedule schedule = createTravelSchedule(1L, "테스트");
 
-        Pageable pageable = PageUtil.createPageRequest(1, 5);
+        Pageable pageable = PageUtil.defaultPageable(1);
 
         when(travelScheduleRepository.findByScheduleId(any())).thenReturn(Optional.of(schedule));
         when(travelRouteRepository.findAllByTravelSchedule_ScheduleId(pageable, schedule.getScheduleId()))
@@ -753,7 +985,7 @@ public class ScheduleServiceTests extends ScheduleTest {
         placeList.add(travelPlace1);
         placeList.add(travelPlace2);
 
-        Pageable pageable = PageUtil.createPageRequest(1, 5);
+        Pageable pageable = PageUtil.defaultPageable(1);
 
         when(travelPlaceRepository.findAllByAreaData(pageable, "대한민국", "서울", "중구"))
                 .thenReturn(PageUtil.createPage(placeList, pageable, placeList.size()));
@@ -773,7 +1005,7 @@ public class ScheduleServiceTests extends ScheduleTest {
     @DisplayName("getSimpleTravelPlacesByJunggu(): 중구 기준 여행지 데이터 조회 시 데이터 없는 경우")
     void getSimpleTravelPlacesByJungguWithoutData(){
         // given
-        Pageable pageable = PageUtil.createPageRequest(1, 5);
+        Pageable pageable = PageUtil.defaultPageable(1);
 
         when(travelPlaceRepository.findAllByAreaData(pageable, "대한민국", "서울", "중구"))
                 .thenReturn(PageUtil.createPage(new ArrayList<>(), pageable, 0));

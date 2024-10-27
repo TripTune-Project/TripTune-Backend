@@ -35,6 +35,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.filter.CharacterEncodingFilter;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -129,10 +130,10 @@ public class ScheduleApiControllerTests extends ScheduleTest {
         TravelSchedule schedule2 = travelScheduleRepository.save(createTravelSchedule(null,"테스트2"));
         TravelSchedule schedule3 = travelScheduleRepository.save(createTravelSchedule(null,"테스트3"));
 
-        TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule1));
-        TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule2));
-        TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(member2, schedule3));
-        attendee2.setRole(AttendeeRole.GUEST);
+        TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule1, AttendeeRole.AUTHOR));
+        TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(member2, schedule1, AttendeeRole.GUEST));
+        TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule2, AttendeeRole.AUTHOR));
+        TravelAttendee attendee4 = travelAttendeeRepository.save(createTravelAttendee(member2, schedule3, AttendeeRole.AUTHOR));
 
         TravelRoute route1 = travelRouteRepository.save(createTravelRoute(schedule1, travelPlace1, 1));
         TravelRoute route2 = travelRouteRepository.save(createTravelRoute(schedule1, travelPlace2, 2));
@@ -142,18 +143,19 @@ public class ScheduleApiControllerTests extends ScheduleTest {
         schedule1.setTravelRouteList(Arrays.asList(route1, route2));
         schedule2.setTravelRouteList(Arrays.asList(route3, route4));
 
-        member1.setTravelAttendeeList(Arrays.asList(attendee1, attendee2));
-        member2.setTravelAttendeeList(List.of(attendee3));
+        member1.setTravelAttendeeList(Arrays.asList(attendee1, attendee3));
+        member2.setTravelAttendeeList(Arrays.asList(attendee2, attendee4));
 
-        schedule1.setTravelAttendeeList(List.of(attendee1));
-        schedule2.setTravelAttendeeList(List.of(attendee2));
-        schedule3.setTravelAttendeeList(List.of(attendee3));
+        schedule1.setTravelAttendeeList(Arrays.asList(attendee1, attendee2));
+        schedule2.setTravelAttendeeList(List.of(attendee3));
+        schedule3.setTravelAttendeeList(List.of(attendee4));
 
         // when, then
         mockMvc.perform(get("/api/schedules")
                 .param("page", "1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.totalElements").value(2))
+                .andExpect(jsonPath("$.data.totalSharedElements").value(1))
                 .andExpect(jsonPath("$.data.content[0].sinceUpdate").exists())
                 .andExpect(jsonPath("$.data.content[0].scheduleName").exists())
                 .andExpect(jsonPath("$.data.content[0].thumbnailUrl").exists());
@@ -172,17 +174,17 @@ public class ScheduleApiControllerTests extends ScheduleTest {
         TravelSchedule schedule3 = travelScheduleRepository.save(createTravelSchedule(null,"테스트3"));
         schedule1.setUpdatedAt(LocalDateTime.now().minusDays(3));
 
-        TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule1));
-        TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule2));
-        TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(member2, schedule3));
-        attendee2.setRole(AttendeeRole.GUEST);
+        TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule1, AttendeeRole.AUTHOR));
+        TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(member2, schedule1, AttendeeRole.GUEST));
+        TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule2, AttendeeRole.AUTHOR));
+        TravelAttendee attendee4 = travelAttendeeRepository.save(createTravelAttendee(member2, schedule3, AttendeeRole.AUTHOR));
 
-        member1.setTravelAttendeeList(Arrays.asList(attendee1, attendee2));
-        member2.setTravelAttendeeList(List.of(attendee3));
+        member1.setTravelAttendeeList(Arrays.asList(attendee1, attendee3));
+        member2.setTravelAttendeeList(Arrays.asList(attendee2, attendee4));
 
-        schedule1.setTravelAttendeeList(List.of(attendee1));
-        schedule2.setTravelAttendeeList(List.of(attendee2));
-        schedule3.setTravelAttendeeList(List.of(attendee3));
+        schedule1.setTravelAttendeeList(Arrays.asList(attendee1, attendee2));
+        schedule2.setTravelAttendeeList(List.of(attendee3));
+        schedule3.setTravelAttendeeList(List.of(attendee4));
 
         // when, then
         mockMvc.perform(get("/api/schedules")
@@ -245,6 +247,22 @@ public class ScheduleApiControllerTests extends ScheduleTest {
     }
 
     @Test
+    @DisplayName("createSchedule(): 일정 만들기 시 오늘 이전 날짜 입력으로 MethodArgumentNotValidException 발생")
+    @WithMockUser(username = "test")
+    void createSchedulePastDate_methodArgumentNotValidException() throws Exception{
+        // given
+        CreateScheduleRequest request = createScheduleRequest();
+        request.setStartDate(LocalDate.now().minusDays(3));
+
+        // when, then
+        mockMvc.perform(post("/api/schedules")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJsonString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false));
+    }
+
+    @Test
     @DisplayName("getScheduleDetail(): 일정 조회 성공")
     @WithMockUser(username = "member1")
     void getScheduleDetail() throws Exception {
@@ -255,8 +273,8 @@ public class ScheduleApiControllerTests extends ScheduleTest {
         Member member2 = memberRepository.save(createMember(null, "member2"));
 
         List<TravelAttendee> attendeeList = new ArrayList<>();
-        attendeeList.add(createTravelAttendee(member1, schedule));
-        attendeeList.add(createTravelAttendee(member2, schedule));
+        attendeeList.add(createTravelAttendee(member1, schedule, AttendeeRole.AUTHOR));
+        attendeeList.add(createTravelAttendee(member2, schedule, AttendeeRole.AUTHOR));
         travelAttendeeRepository.saveAll(attendeeList);
 
         Country country = countryRepository.save(createCountry());
@@ -297,8 +315,8 @@ public class ScheduleApiControllerTests extends ScheduleTest {
         Member member2 = memberRepository.save(createMember(null, "member2"));
 
         List<TravelAttendee> attendeeList = new ArrayList<>();
-        attendeeList.add(createTravelAttendee(member1, schedule));
-        attendeeList.add(createTravelAttendee(member2, schedule));
+        attendeeList.add(createTravelAttendee(member1, schedule, AttendeeRole.AUTHOR));
+        attendeeList.add(createTravelAttendee(member2, schedule, AttendeeRole.AUTHOR));
         travelAttendeeRepository.saveAll(attendeeList);
 
 

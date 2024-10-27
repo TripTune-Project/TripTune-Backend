@@ -5,7 +5,7 @@ import com.triptune.domain.travel.dto.PlaceLocationRequest;
 import com.triptune.domain.travel.dto.PlaceDistanceResponse;
 import com.triptune.domain.travel.dto.PlaceSearchRequest;
 import com.triptune.domain.travel.service.TravelService;
-import com.triptune.global.response.ApiPageResponse;
+import com.triptune.global.response.pagination.ApiPageResponse;
 import com.triptune.global.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -26,7 +26,7 @@ public class TravelApiController {
     @Operation(summary = "현재 위치와 가까운 여행지 목록 조회", description = "여행지 탐색 메뉴에서 사용자 현재 위치와 가까운 여행지 목록을 제공한다.")
     public ApiPageResponse<PlaceDistanceResponse> getNearByTravelPlaces(@RequestBody @Valid PlaceLocationRequest placeLocationRequest, @RequestParam int page){
         Page<PlaceDistanceResponse> response = travelService.getNearByTravelPlaces(placeLocationRequest, page);
-        return ApiPageResponse.okResponse(response);
+        return ApiPageResponse.dataResponse(response);
     }
 
 
@@ -34,7 +34,7 @@ public class TravelApiController {
     @Operation(summary = "여행지 검색", description = "여행지 탐색 메뉴에서 여행지를 검색한다.")
     public ApiPageResponse<PlaceDistanceResponse> searchTravelPlaces(@RequestBody @Valid PlaceSearchRequest placeSearchRequest, @RequestParam int page){
         Page<PlaceDistanceResponse> response = travelService.searchTravelPlaces(placeSearchRequest, page);
-        return ApiPageResponse.okResponse(response);
+        return ApiPageResponse.dataResponse(response);
     }
 
 

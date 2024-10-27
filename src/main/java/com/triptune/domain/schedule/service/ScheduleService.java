@@ -18,11 +18,11 @@ import com.triptune.domain.travel.entity.TravelPlace;
 import com.triptune.domain.travel.repository.TravelPlacePlaceRepository;
 import com.triptune.global.enumclass.ErrorCode;
 import com.triptune.global.exception.DataNotFoundException;
-import com.triptune.global.response.PageResponse;
+import com.triptune.global.response.pagination.PageResponse;
+import com.triptune.global.response.pagination.SchedulePageResponse;
 import com.triptune.global.util.PageUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
@@ -42,26 +42,50 @@ public class ScheduleService {
     private final TravelRouteRepository travelRouteRepository;
 
 
-    public Page<ScheduleOverviewResponse> getSchedules(int page, String userId) {
-        Pageable pageable = PageUtil.createPageRequest(page, 5);
-
+    public SchedulePageResponse<ScheduleInfoResponse> getSchedules(int page, String userId) {
+        Pageable pageable = PageUtil.schedulePageable(page);
         Member member = getSavedMember(userId);
-        Page<TravelSchedule> travelSchedules = travelScheduleRepository.findTravelSchedulesByAttendee(pageable, member.getMemberId());
 
-        List<ScheduleOverviewResponse> scheduleOverviewResponses = new ArrayList<>();
+        Page<TravelSchedule> schedulePage = travelScheduleRepository.findTravelSchedulesByAttendee(pageable, member.getMemberId());
 
-        if (!travelSchedules.getContent().isEmpty()){
-            scheduleOverviewResponses = travelSchedules.stream()
-                    .map(this::convertToScheduleOverviewResponse)
+        List<ScheduleInfoResponse> scheduleInfoResponseList = new ArrayList<>();
+        long sharedScheduleCnt = 0;
+
+        if (!schedulePage.getContent().isEmpty()){
+            scheduleInfoResponseList = schedulePage.stream()
+                    .map(this::convertToScheduleInfoResponse)
                     .collect(Collectors.toList());
+
+            sharedScheduleCnt = schedulePage.getContent().stream()
+                    .filter(schedule -> schedule.getTravelAttendeeList().size() > 1)
+                    .count();
         }
 
-        return PageUtil.createPage(scheduleOverviewResponses, pageable, travelSchedules.getTotalElements());
+        Page<ScheduleInfoResponse> scheduleInfoResponsePage = PageUtil.createPage(scheduleInfoResponseList, pageable, schedulePage.getTotalElements());
+
+        return SchedulePageResponse.of(scheduleInfoResponsePage, sharedScheduleCnt);
     }
 
-    public ScheduleOverviewResponse convertToScheduleOverviewResponse(TravelSchedule schedule){
+
+    public ScheduleInfoResponse convertToScheduleInfoResponse(TravelSchedule schedule){
         String thumbnailUrl = getThumbnailUrl(schedule);
-        return ScheduleOverviewResponse.entityToDto(schedule, thumbnailUrl);
+        AuthorDTO authorDTO = getAuthorDTO(schedule);
+
+        return ScheduleInfoResponse.entityToDto(schedule, thumbnailUrl, authorDTO);
+    }
+
+    public AuthorDTO getAuthorDTO(TravelSchedule schedule){
+        Member author = getAuthorMember(schedule.getTravelAttendeeList());
+        // TODO: 프로필 이미지 넣기
+        return AuthorDTO.of(author.getUserId(), null);
+    }
+
+    public Member getAuthorMember(List<TravelAttendee> attendeeList){
+        return attendeeList.stream()
+                .filter(attendee -> attendee.getRole().equals(AttendeeRole.AUTHOR))
+                .map(TravelAttendee::getMember)
+                .findFirst()
+                .orElseThrow(() -> new DataNotFoundException(ErrorCode.AUTHOR_NOT_FOUND));
     }
 
 
@@ -111,7 +135,7 @@ public class ScheduleService {
      * @param page: 페이지 수
      * @return ScheduleResponse: 일정 정보, 여행지 정보(중구)로 구성된 dto
      */
-    public ScheduleResponse getScheduleDetail(Long scheduleId, int page) {
+    public ScheduleDetailResponse getScheduleDetail(Long scheduleId, int page) {
         TravelSchedule schedule = getSavedSchedule(scheduleId);
 
         // 여행지 정보: Page<TravelPlace> -> PageResponse<TravelSimpleResponse> 로 변경
@@ -123,7 +147,7 @@ public class ScheduleService {
                 .map(AttendeeDTO::entityToDTO)
                 .toList();
 
-        return ScheduleResponse.entityToDTO(schedule, placeDTOList, attendeeDTOList);
+        return ScheduleDetailResponse.entityToDTO(schedule, placeDTOList, attendeeDTOList);
     }
 
     /**
@@ -147,7 +171,7 @@ public class ScheduleService {
     public Page<PlaceResponse> searchTravelPlaces(Long scheduleId, int page, String keyword) {
         getSavedSchedule(scheduleId);
 
-        Pageable pageable = PageUtil.createPageRequest(page, 5);
+        Pageable pageable = PageUtil.defaultPageable(page);
         Page<TravelPlace> travelPlaces = travelPlaceRepository.searchTravelPlaces(pageable, keyword);
 
         return travelPlaces.map(PlaceResponse::entityToDto);
@@ -162,7 +186,7 @@ public class ScheduleService {
     public Page<RouteResponse> getTravelRoutes(Long scheduleId, int page) {
         getSavedSchedule(scheduleId);
 
-        Pageable pageable = PageUtil.createPageRequest(page, 5);
+        Pageable pageable = PageUtil.defaultPageable(page);
         Page<TravelRoute> travelRoutes = travelRouteRepository.findAllByTravelSchedule_ScheduleId(pageable, scheduleId);
 
         return travelRoutes.map(t -> RouteResponse.entityToDto(t, t.getTravelPlace()));
@@ -175,7 +199,7 @@ public class ScheduleService {
      * @return Page<PlaceSimpleResponse>: 중구 기준 여행지 정보로 구성된 페이지 dto
      */
     public Page<PlaceResponse> getSimpleTravelPlacesByJunggu(int page) {
-        Pageable pageable = PageUtil.createPageRequest(page, 5);
+        Pageable pageable = PageUtil.defaultPageable(page);
         Page<TravelPlace> travelPlaces = travelPlaceRepository.findAllByAreaData(pageable, "대한민국", "서울", "중구");
 
         return travelPlaces.map(PlaceResponse::entityToDto);
