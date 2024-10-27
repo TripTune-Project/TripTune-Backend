@@ -21,5 +21,13 @@ public class LoginResponse {
         this.userId = userId;
     }
 
+    public static LoginResponse of(String accessToken, String refreshToken, String userId){
+        return LoginResponse.builder()
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .userId(userId)
+                .build();
+    }
+
 
 }
