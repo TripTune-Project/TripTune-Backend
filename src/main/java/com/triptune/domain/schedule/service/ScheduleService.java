@@ -76,8 +76,7 @@ public class ScheduleService {
 
     public AuthorDTO getAuthorDTO(TravelSchedule schedule){
         Member author = getAuthorMember(schedule.getTravelAttendeeList());
-        // TODO: 프로필 이미지 넣기
-        return AuthorDTO.of(author.getUserId(), null);
+        return AuthorDTO.of(author.getUserId(), author.getProfileImage().getS3ObjectUrl());
     }
 
     public Member getAuthorMember(List<TravelAttendee> attendeeList){

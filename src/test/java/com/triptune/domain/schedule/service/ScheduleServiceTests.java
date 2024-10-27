@@ -2,6 +2,7 @@ package com.triptune.domain.schedule.service;
 
 import com.triptune.domain.common.entity.*;
 import com.triptune.domain.member.entity.Member;
+import com.triptune.domain.member.entity.ProfileImage;
 import com.triptune.domain.member.repository.MemberRepository;
 import com.triptune.domain.schedule.ScheduleTest;
 import com.triptune.domain.schedule.dto.*;
@@ -90,6 +91,14 @@ public class ScheduleServiceTests extends ScheduleTest {
         Member member2 = createMember(2L, "member2");
         Member member3 = createMember(3L, "member3");
 
+        ProfileImage member1Image = createProfileImage(1L, "member1Image");
+        ProfileImage member2Image = createProfileImage(2L, "member2Image");
+        ProfileImage member3Image = createProfileImage(3L, "member3Image");
+
+        member1.setProfileImage(member1Image);
+        member2.setProfileImage(member2Image);
+        member3.setProfileImage(member3Image);
+
         List<TravelAttendee> attendee1List = Arrays.asList(
                 createTravelAttendee(member1, schedule1, AttendeeRole.AUTHOR),
                 createTravelAttendee(member2, schedule1, AttendeeRole.GUEST)
@@ -147,6 +156,12 @@ public class ScheduleServiceTests extends ScheduleTest {
 
         Member member1 = createMember(1L, "member1");
         Member member2 = createMember(2L, "member2");
+
+        ProfileImage member1Image = createProfileImage(1L, "member1Image");
+        ProfileImage member2Image = createProfileImage(2L, "member2Image");
+
+        member1.setProfileImage(member1Image);
+        member2.setProfileImage(member2Image);
 
         schedule1.setTravelAttendeeList(List.of(createTravelAttendee(member1, schedule1, AttendeeRole.AUTHOR)));
         schedule2.setTravelAttendeeList(List.of(createTravelAttendee(member2, schedule2, AttendeeRole.AUTHOR)));
@@ -248,6 +263,12 @@ public class ScheduleServiceTests extends ScheduleTest {
         Member member1 = createMember(1L, "member1");
         Member member2 = createMember(2L, "member2");
 
+        ProfileImage member1Image = createProfileImage(1L, "member1Image");
+        ProfileImage member2Image = createProfileImage(2L, "member2Image");
+
+        member1.setProfileImage(member1Image);
+        member2.setProfileImage(member2Image);
+
         schedule1.setTravelAttendeeList(List.of(createTravelAttendee(member1, schedule1, AttendeeRole.AUTHOR)));
         schedule2.setTravelAttendeeList(List.of(createTravelAttendee(member2, schedule2, AttendeeRole.AUTHOR)));
 
@@ -285,6 +306,12 @@ public class ScheduleServiceTests extends ScheduleTest {
 
         Member member1 = createMember(1L, "member1");
         Member member2 = createMember(2L, "member2");
+
+        ProfileImage member1Image = createProfileImage(1L, "member1Image");
+        ProfileImage member2Image = createProfileImage(2L, "member2Image");
+
+        member1.setProfileImage(member1Image);
+        member2.setProfileImage(member2Image);
 
         schedule1.setTravelAttendeeList(List.of(createTravelAttendee(member1, schedule1, AttendeeRole.AUTHOR)));
         schedule2.setTravelAttendeeList(List.of(createTravelAttendee(member2, schedule2, AttendeeRole.AUTHOR)));
@@ -331,6 +358,12 @@ public class ScheduleServiceTests extends ScheduleTest {
         Member member1 = createMember(1L, "member1");
         Member member2 = createMember(2L, "member2");
 
+        ProfileImage member1Image = createProfileImage(1L, "member1Image");
+        ProfileImage member2Image = createProfileImage(2L, "member2Image");
+
+        member1.setProfileImage(member1Image);
+        member2.setProfileImage(member2Image);
+
         List<TravelAttendee> attendeeList = Arrays.asList(
                 createTravelAttendee(member1, schedule, AttendeeRole.AUTHOR),
                 createTravelAttendee(member2, schedule, AttendeeRole.GUEST)
@@ -359,6 +392,12 @@ public class ScheduleServiceTests extends ScheduleTest {
 
         Member member1 = createMember(1L, "member1");
         Member member2 = createMember(2L, "member2");
+
+        ProfileImage member1Image = createProfileImage(1L, "member1Image");
+        ProfileImage member2Image = createProfileImage(2L, "member2Image");
+
+        member1.setProfileImage(member1Image);
+        member2.setProfileImage(member2Image);
 
         List<TravelAttendee> attendeeList = Arrays.asList(
                 createTravelAttendee(member1, schedule, AttendeeRole.AUTHOR),
@@ -415,6 +454,12 @@ public class ScheduleServiceTests extends ScheduleTest {
         Member member1 = createMember(1L, "member1");
         Member member2 = createMember(2L, "member2");
 
+        ProfileImage member1Image = createProfileImage(1L, "member1Image");
+        ProfileImage member2Image = createProfileImage(2L, "member2Image");
+
+        member1.setProfileImage(member1Image);
+        member2.setProfileImage(member2Image);
+
         List<TravelAttendee> attendeeList = Arrays.asList(
                 createTravelAttendee(member1, schedule, AttendeeRole.AUTHOR),
                 createTravelAttendee(member2, schedule, AttendeeRole.GUEST)
@@ -427,6 +472,7 @@ public class ScheduleServiceTests extends ScheduleTest {
 
         // then
         assertEquals(response.getUserId(), member1.getUserId());
+        assertEquals(response.getProfileUrl(), member1.getProfileImage().getS3ObjectUrl());
 
     }
 

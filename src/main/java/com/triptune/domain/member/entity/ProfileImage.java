@@ -2,16 +2,23 @@ package com.triptune.domain.member.entity;
 
 import jakarta.persistence.*;
 import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
 @Entity
+@Getter
+@NoArgsConstructor
 public class ProfileImage {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "profile_image_id")
     private Long profileImageId;
+
+    @OneToOne(mappedBy = "profileImage")
+    private Member member;
 
     @Column(name = "s3_object_url")
     private String s3ObjectUrl;
@@ -33,8 +40,9 @@ public class ProfileImage {
 
 
     @Builder
-    public ProfileImage(Long profileImageId, String s3ObjectUrl, String originalName, String fileName, String fileType, double fileSize, LocalDateTime createdAt) {
+    public ProfileImage(Long profileImageId, Member member, String s3ObjectUrl, String originalName, String fileName, String fileType, double fileSize, LocalDateTime createdAt) {
         this.profileImageId = profileImageId;
+        this.member = member;
         this.s3ObjectUrl = s3ObjectUrl;
         this.originalName = originalName;
         this.fileName = fileName;
