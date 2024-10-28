@@ -3,8 +3,8 @@ package com.triptune.domain.member;
 import com.triptune.domain.BaseTest;
 import com.triptune.domain.member.dto.ChangePasswordDTO;
 import com.triptune.domain.member.dto.LogoutDTO;
-import com.triptune.domain.member.dto.MemberRequest;
-import com.triptune.domain.member.dto.RefreshTokenRequest;
+import com.triptune.domain.member.dto.request.MemberRequest;
+import com.triptune.domain.member.dto.request.RefreshTokenRequest;
 
 public class MemberTest extends BaseTest {
 

@@ -2,6 +2,9 @@ package com.triptune.domain.member.service;
 
 import com.triptune.domain.member.MemberTest;
 import com.triptune.domain.member.dto.*;
+import com.triptune.domain.member.dto.request.MemberRequest;
+import com.triptune.domain.member.dto.request.RefreshTokenRequest;
+import com.triptune.domain.member.dto.response.RefreshTokenResponse;
 import com.triptune.domain.member.entity.Member;
 import com.triptune.domain.member.exception.ChangePasswordException;
 import com.triptune.domain.member.repository.MemberRepository;
@@ -23,7 +26,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;

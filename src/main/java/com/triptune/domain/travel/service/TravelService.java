@@ -1,5 +1,9 @@
 package com.triptune.domain.travel.service;
 
+import com.triptune.domain.travel.dto.request.PlaceLocationRequest;
+import com.triptune.domain.travel.dto.request.PlaceSearchRequest;
+import com.triptune.domain.travel.dto.response.PlaceDetailResponse;
+import com.triptune.domain.travel.dto.response.PlaceDistanceResponse;
 import com.triptune.global.exception.DataNotFoundException;
 import com.triptune.domain.travel.dto.*;
 import com.triptune.domain.travel.entity.TravelPlace;
