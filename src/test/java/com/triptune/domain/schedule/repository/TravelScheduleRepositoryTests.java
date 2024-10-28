@@ -7,6 +7,7 @@ import com.triptune.domain.member.repository.MemberRepository;
 import com.triptune.domain.schedule.ScheduleTest;
 import com.triptune.domain.schedule.entity.TravelAttendee;
 import com.triptune.domain.schedule.entity.TravelSchedule;
+import com.triptune.domain.schedule.enumclass.AttendeePermission;
 import com.triptune.domain.schedule.enumclass.AttendeeRole;
 import com.triptune.domain.travel.entity.TravelImage;
 import com.triptune.domain.travel.entity.TravelPlace;
@@ -48,6 +49,12 @@ public class TravelScheduleRepositoryTests extends ScheduleTest {
     private final ApiContentTypeRepository apiContentTypeRepository;
     private final MemberRepository memberRepository;
 
+    private TravelSchedule schedule1;
+    private TravelSchedule schedule2;
+    private TravelSchedule schedule3;
+    private Member member1;
+    private Member member2;
+
 
     @Autowired
     public TravelScheduleRepositoryTests(TravelScheduleRepository travelScheduleRepository, TravelAttendeeRepository travelAttendeeRepository, TravelPlacePlaceRepository travelPlaceRepository, FileRepository fileRepository, CityRepository cityRepository, CountryRepository countryRepository, DistrictRepository districtRepository, ApiCategoryRepository apiCategoryRepository, TravelImageRepository travelImageRepository, ApiContentTypeRepository apiContentTypeRepository, MemberRepository memberRepository) {
@@ -78,9 +85,17 @@ public class TravelScheduleRepositoryTests extends ScheduleTest {
         TravelImage travelImage2 = travelImageRepository.save(createTravelImage(travelPlace, file2));
 
         List<TravelImage> imageList = Arrays.asList(travelImage1, travelImage2);
-
         travelPlace.setApiContentType(apiContentType);
         travelPlace.setTravelImageList(imageList);
+
+        member1 = memberRepository.save(createMember(null, "member1"));
+        member2 = memberRepository.save(createMember(null, "member2"));
+
+        schedule1 = travelScheduleRepository.save(createTravelSchedule(null,"테스트1"));
+        schedule2 = travelScheduleRepository.save(createTravelSchedule(null,"테스트2"));
+        schedule3 = travelScheduleRepository.save(createTravelSchedule(null,"테스트3"));
+
+
     }
 
 
@@ -88,17 +103,11 @@ public class TravelScheduleRepositoryTests extends ScheduleTest {
     @DisplayName("findTravelSchedulesByAttendee(): 내가 참석한 여행지 목록 조회")
     void findTravelSchedulesByAttendee(){
         // given
-        Member member1 = memberRepository.save(createMember(null, "member1"));
-        Member member2 = memberRepository.save(createMember(null, "member2"));
+        Pageable pageable = PageUtil.schedulePageable(1);
 
-        TravelSchedule schedule1 = travelScheduleRepository.save(createTravelSchedule(null,"테스트1"));
-        TravelSchedule schedule2 = travelScheduleRepository.save(createTravelSchedule(null,"테스트2"));
-        TravelSchedule schedule3 = travelScheduleRepository.save(createTravelSchedule(null,"테스트3"));
-
-        TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule1, AttendeeRole.AUTHOR));
-        TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule2, AttendeeRole.GUEST));
-        TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(member2, schedule3, AttendeeRole.AUTHOR));
-
+        TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
+        TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule2, AttendeeRole.GUEST, AttendeePermission.READ));
+        TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(member2, schedule3, AttendeeRole.AUTHOR, AttendeePermission.ALL));
 
         member1.setTravelAttendeeList(Arrays.asList(attendee1, attendee2));
         member2.setTravelAttendeeList(List.of(attendee3));
@@ -106,9 +115,6 @@ public class TravelScheduleRepositoryTests extends ScheduleTest {
         schedule1.setTravelAttendeeList(List.of(attendee1));
         schedule2.setTravelAttendeeList(List.of(attendee2));
         schedule3.setTravelAttendeeList(List.of(attendee3));
-
-
-        Pageable pageable = PageUtil.schedulePageable(1);
 
         // when
         Page<TravelSchedule> response = travelScheduleRepository.findTravelSchedulesByAttendee(pageable, member1.getMemberId());
@@ -125,8 +131,6 @@ public class TravelScheduleRepositoryTests extends ScheduleTest {
     @DisplayName("findTravelSchedulesByAttendee(): 내가 참석한 여행지 목록 조회 시 데이터가 없는 경우")
     void findTravelSchedulesByAttendeeWithoutData(){
         // given
-        Member member1 = memberRepository.save(createMember(null, "member1"));
-
         Pageable pageable = PageUtil.schedulePageable(1);
 
         // when
@@ -142,16 +146,9 @@ public class TravelScheduleRepositoryTests extends ScheduleTest {
     @DisplayName("getTotalElementByTravelSchedules(): 내가 참석한 여행지 갯수 조회")
     void getTotalElementByTravelSchedules(){
         // given
-        Member member1 = memberRepository.save(createMember(null, "member1"));
-        Member member2 = memberRepository.save(createMember(null, "member2"));
-
-        TravelSchedule schedule1 = travelScheduleRepository.save(createTravelSchedule(null,"테스트1"));
-        TravelSchedule schedule2 = travelScheduleRepository.save(createTravelSchedule(null,"테스트2"));
-        TravelSchedule schedule3 = travelScheduleRepository.save(createTravelSchedule(null,"테스트3"));
-
-        TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule1, AttendeeRole.AUTHOR));
-        TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule2, AttendeeRole.AUTHOR));
-        TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(member2, schedule3, AttendeeRole.AUTHOR));
+        TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
+        TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule2, AttendeeRole.AUTHOR, AttendeePermission.READ));
+        TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(member2, schedule3, AttendeeRole.AUTHOR, AttendeePermission.ALL));
 
         member1.setTravelAttendeeList(Arrays.asList(attendee1, attendee2));
         member2.setTravelAttendeeList(List.of(attendee3));
@@ -173,8 +170,6 @@ public class TravelScheduleRepositoryTests extends ScheduleTest {
     @DisplayName("getTotalElementByTravelSchedules(): 내가 참석한 여행지 갯수 조회 시 데이터가 없는 경우")
     void getTotalElementByTravelSchedulesWithoutData(){
         // given
-        Member member1 = memberRepository.save(createMember(null, "member1"));
-
         // when
         Integer response = travelScheduleRepository.getTotalElementByTravelSchedules(member1.getMemberId());
 

@@ -7,6 +7,8 @@ import com.triptune.domain.member.repository.MemberRepository;
 import com.triptune.domain.schedule.ScheduleTest;
 import com.triptune.domain.schedule.dto.*;
 import com.triptune.domain.schedule.dto.request.CreateScheduleRequest;
+import com.triptune.domain.schedule.dto.request.RouteRequest;
+import com.triptune.domain.schedule.dto.request.UpdateScheduleRequest;
 import com.triptune.domain.schedule.dto.response.CreateScheduleResponse;
 import com.triptune.domain.schedule.dto.response.RouteResponse;
 import com.triptune.domain.schedule.dto.response.ScheduleDetailResponse;
@@ -14,7 +16,9 @@ import com.triptune.domain.schedule.dto.response.ScheduleInfoResponse;
 import com.triptune.domain.schedule.entity.TravelAttendee;
 import com.triptune.domain.schedule.entity.TravelRoute;
 import com.triptune.domain.schedule.entity.TravelSchedule;
+import com.triptune.domain.schedule.enumclass.AttendeePermission;
 import com.triptune.domain.schedule.enumclass.AttendeeRole;
+import com.triptune.domain.schedule.exception.ForbiddenScheduleException;
 import com.triptune.domain.schedule.repository.TravelAttendeeRepository;
 import com.triptune.domain.schedule.repository.TravelRouteRepository;
 import com.triptune.domain.schedule.repository.TravelScheduleRepository;
@@ -36,6 +40,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import javax.xml.crypto.Data;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -71,6 +76,9 @@ public class ScheduleServiceTests extends ScheduleTest {
     private TravelPlace travelPlace1;
     private TravelPlace travelPlace2;
     private Member member1;
+    private Member member2;
+    private Member member3;
+    private TravelAttendee attentee1;
 
     @BeforeEach
     void setUp(){
@@ -83,18 +91,18 @@ public class ScheduleServiceTests extends ScheduleTest {
         File file2 = createFile("test2", false);
         TravelImage travelImage1 = createTravelImage(travelPlace1, file1);
         TravelImage travelImage2 = createTravelImage(travelPlace1, file2);
-        List<TravelImage> travelImageList1 = Arrays.asList(travelImage1, travelImage2);
+        List<TravelImage> travelImageList1 = new ArrayList<>(List.of(travelImage1, travelImage2));
         travelPlace1.setTravelImageList(travelImageList1);
 
         travelPlace2 = createTravelPlace(2L, country, city, district, apiCategory);
         TravelImage travelImage3 = createTravelImage(travelPlace2, file1);
         TravelImage travelImage4 = createTravelImage(travelPlace2, file2);
-        List<TravelImage> travelImageList2 = Arrays.asList(travelImage3, travelImage4);
+        List<TravelImage> travelImageList2 = new ArrayList<>(List.of(travelImage3, travelImage4));
         travelPlace2.setTravelImageList(travelImageList2);
 
         member1 = createMember(1L, "member1");
-        Member member2 = createMember(2L, "member2");
-        Member member3 = createMember(3L, "member3");
+        member2 = createMember(2L, "member2");
+        member3 = createMember(3L, "member3");
         ProfileImage member1Image = createProfileImage(1L, "member1Image");
         ProfileImage member2Image = createProfileImage(2L, "member2Image");
         ProfileImage member3Image = createProfileImage(3L, "member3Image");
@@ -105,19 +113,16 @@ public class ScheduleServiceTests extends ScheduleTest {
         schedule1 = createTravelSchedule(1L, "테스트1");
         schedule2 = createTravelSchedule(2L, "테스트2");
 
-        List<TravelAttendee> attendee1List = Arrays.asList(
-                createTravelAttendee(member1, schedule1, AttendeeRole.AUTHOR),
-                createTravelAttendee(member2, schedule1, AttendeeRole.GUEST)
-        );
-
-        schedule1.setTravelAttendeeList(attendee1List);
-        schedule2.setTravelAttendeeList(List.of(createTravelAttendee(member3, schedule2, AttendeeRole.AUTHOR)));
+        attentee1 = createTravelAttendee(member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL);
+        TravelAttendee attendee2 = createTravelAttendee(member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ);
+        TravelAttendee attendee3 = createTravelAttendee(member3, schedule2, AttendeeRole.AUTHOR, AttendeePermission.ALL);
+        schedule1.setTravelAttendeeList(new ArrayList<>(List.of(attentee1, attendee2)));
+        schedule2.setTravelAttendeeList(new ArrayList<>(List.of(attendee3)));
 
         TravelRoute route1 = createTravelRoute(schedule1, travelPlace1, 1);
         TravelRoute route2 = createTravelRoute(schedule1, travelPlace1, 2);
         TravelRoute route3 = createTravelRoute(schedule1, travelPlace2, 3);
-        List<TravelRoute> travelRouteList = Arrays.asList(route1, route2, route3);
-        schedule1.setTravelRouteList(travelRouteList);
+        schedule1.setTravelRouteList(new ArrayList<>(List.of(route1, route2, route3)));
         schedule2.setTravelRouteList(new ArrayList<>());
     }
 
@@ -131,7 +136,7 @@ public class ScheduleServiceTests extends ScheduleTest {
 
         Pageable pageable = PageUtil.schedulePageable(1);
 
-        List<TravelSchedule> schedules = Arrays.asList(schedule1, schedule2);
+        List<TravelSchedule> schedules = new ArrayList<>(List.of(schedule1, schedule2));
         Page<TravelSchedule> schedulePage = PageUtil.createPage(schedules, pageable, schedules.size());
 
         when(memberRepository.findByUserId(any())).thenReturn(Optional.of(createMember(1L, userId)));
@@ -159,9 +164,9 @@ public class ScheduleServiceTests extends ScheduleTest {
 
         Pageable pageable = PageUtil.schedulePageable(1);
 
-        schedule1.setTravelAttendeeList(List.of(createTravelAttendee(member1, schedule1, AttendeeRole.AUTHOR)));
+        schedule1.setTravelAttendeeList(new ArrayList<>(List.of(createTravelAttendee(member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL))));
 
-        List<TravelSchedule> schedules = Arrays.asList(schedule1, schedule2);
+        List<TravelSchedule> schedules = new ArrayList<>(List.of(schedule1, schedule2));
         Page<TravelSchedule> schedulePage = PageUtil.createPage(schedules, pageable, schedules.size());
 
         when(memberRepository.findByUserId(any())).thenReturn(Optional.of(createMember(1L, userId)));
@@ -233,7 +238,7 @@ public class ScheduleServiceTests extends ScheduleTest {
 
         travelPlace1.getTravelImageList().get(0).getFile().setThumbnail(false);
 
-        List<TravelSchedule> schedules = Arrays.asList(schedule1, schedule2);
+        List<TravelSchedule> schedules = new ArrayList<>(List.of(schedule1, schedule2));
         Page<TravelSchedule> schedulePage = PageUtil.createPage(schedules, pageable, schedules.size());
 
         when(memberRepository.findByUserId(any())).thenReturn(Optional.of(createMember(1L, userId)));
@@ -263,7 +268,7 @@ public class ScheduleServiceTests extends ScheduleTest {
 
         travelPlace1.setTravelImageList(new ArrayList<>());
 
-        List<TravelSchedule> schedules = Arrays.asList(schedule1, schedule2);
+        List<TravelSchedule> schedules = new ArrayList<>(List.of(schedule1, schedule2));
         Page<TravelSchedule> schedulePage = PageUtil.createPage(schedules, pageable, schedules.size());
 
         when(memberRepository.findByUserId(any())).thenReturn(Optional.of(createMember(1L, userId)));
@@ -470,7 +475,7 @@ public class ScheduleServiceTests extends ScheduleTest {
     @DisplayName("getScheduleDetail(): 일정 조회 성공")
     void getScheduleDetail(){
         // given
-        List<TravelPlace> placeList = Arrays.asList(travelPlace1, travelPlace2);
+        List<TravelPlace> placeList = new ArrayList<>(List.of(travelPlace1, travelPlace2));
 
         Pageable pageable = PageUtil.defaultPageable(1);
 
@@ -525,15 +530,309 @@ public class ScheduleServiceTests extends ScheduleTest {
         DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> scheduleService.getScheduleDetail(0L, 1));
 
         // then
-        assertEquals(fail.getHttpStatus(), ErrorCode.DATA_NOT_FOUND.getStatus());
-        assertEquals(fail.getMessage(), ErrorCode.DATA_NOT_FOUND.getMessage());
+        assertEquals(fail.getHttpStatus(), ErrorCode.SCHEDULE_NOT_FOUND.getStatus());
+        assertEquals(fail.getMessage(), ErrorCode.SCHEDULE_NOT_FOUND.getMessage());
     }
+
+    @Test
+    @DisplayName("updateSchedule(): 일정 수정 성공")
+    void updateSchedule(){
+        String userId = member1.getUserId();
+        Long scheduleId = schedule1.getScheduleId();
+
+        RouteRequest routeRequest1 = createRouteRequest(1, travelPlace1.getPlaceId());
+        RouteRequest routeRequest2 = createRouteRequest(2, travelPlace2.getPlaceId());
+        UpdateScheduleRequest updateScheduleRequest = createUpdateScheduleRequest(new ArrayList<>(List.of(routeRequest1, routeRequest2)));
+
+        when(travelScheduleRepository.findByScheduleId(scheduleId)).thenReturn(Optional.of(schedule1));
+        when(memberRepository.findByUserId(userId)).thenReturn(Optional.of(member1));
+        when(travelPlaceRepository.findByPlaceId(travelPlace1.getPlaceId())).thenReturn(Optional.of(travelPlace1));
+        when(travelPlaceRepository.findByPlaceId(travelPlace2.getPlaceId())).thenReturn(Optional.of(travelPlace2));
+
+        // when
+        assertDoesNotThrow(() -> scheduleService.updateSchedule(userId, scheduleId, updateScheduleRequest));
+
+        // then
+        assertEquals(schedule1.getTravelRouteList().size(), 2);
+        assertEquals(schedule1.getScheduleName(), updateScheduleRequest.getScheduleName());
+        assertEquals(schedule1.getStartDate(), updateScheduleRequest.getStartDate());
+        assertEquals(schedule1.getTravelRouteList().get(0).getTravelPlace().getPlaceName(), travelPlace1.getPlaceName());
+    }
+
+    @Test
+    @DisplayName("updateSchedule(): 일정 수정 중 여행 루트 삭제에서 기존에 저장된 여행 루트가 없을 경우")
+    void updateScheduleNoSavedTravelRouteList(){
+        // given
+        String userId = member3.getUserId();
+        Long scheduleId = schedule2.getScheduleId();
+
+        RouteRequest routeRequest1 = createRouteRequest(1, travelPlace1.getPlaceId());
+        RouteRequest routeRequest2 = createRouteRequest(2, travelPlace2.getPlaceId());
+        UpdateScheduleRequest updateScheduleRequest = createUpdateScheduleRequest(new ArrayList<>(List.of(routeRequest1, routeRequest2)));
+
+        when(travelScheduleRepository.findByScheduleId(scheduleId)).thenReturn(Optional.of(schedule2));
+        when(memberRepository.findByUserId(userId)).thenReturn(Optional.of(member3));
+        when(travelPlaceRepository.findByPlaceId(travelPlace1.getPlaceId())).thenReturn(Optional.of(travelPlace1));
+        when(travelPlaceRepository.findByPlaceId(travelPlace2.getPlaceId())).thenReturn(Optional.of(travelPlace2));
+
+        // when
+        assertDoesNotThrow(() -> scheduleService.updateSchedule(userId, scheduleId, updateScheduleRequest));
+
+        // then
+        assertEquals(schedule2.getTravelRouteList().size(), 2);
+        assertEquals(schedule2.getScheduleName(), updateScheduleRequest.getScheduleName());
+        assertEquals(schedule2.getStartDate(), updateScheduleRequest.getStartDate());
+        assertEquals(schedule2.getTravelRouteList().get(0).getTravelPlace().getPlaceName(), travelPlace1.getPlaceName());
+    }
+
+    @Test
+    @DisplayName("updateTravelRouteInSchedule(): 일정의 여행 루트 수정")
+    void updateTravelRouteInSchedule(){
+        RouteRequest routeRequest1 = createRouteRequest(1, travelPlace1.getPlaceId());
+        RouteRequest routeRequest2 = createRouteRequest(2, travelPlace2.getPlaceId());
+        UpdateScheduleRequest updateScheduleRequest = createUpdateScheduleRequest(new ArrayList<>(List.of(routeRequest1, routeRequest2)));
+
+        when(travelPlaceRepository.findByPlaceId(travelPlace1.getPlaceId())).thenReturn(Optional.of(travelPlace1));
+        when(travelPlaceRepository.findByPlaceId(travelPlace2.getPlaceId())).thenReturn(Optional.of(travelPlace2));
+
+        // when
+        assertDoesNotThrow(() -> scheduleService.updateTravelRouteInSchedule(schedule1, updateScheduleRequest.getTravelRoute()));
+
+        // then
+        assertEquals(schedule1.getTravelRouteList().size(), 2);
+        assertEquals(schedule1.getTravelRouteList().get(0).getTravelPlace().getPlaceName(), travelPlace1.getPlaceName());
+    }
+
+    @Test
+    @DisplayName("updateTravelRouteInSchedule(): 일정의 여행 루트 수정 중 기존에 저장된 여행 루트가 없을 경우")
+    void updateTravelRouteInScheduleNoSavedTravelRouteList(){
+        RouteRequest routeRequest1 = createRouteRequest(1, travelPlace1.getPlaceId());
+        RouteRequest routeRequest2 = createRouteRequest(2, travelPlace2.getPlaceId());
+        UpdateScheduleRequest updateScheduleRequest = createUpdateScheduleRequest(new ArrayList<>(List.of(routeRequest1, routeRequest2)));
+
+        when(travelPlaceRepository.findByPlaceId(travelPlace1.getPlaceId())).thenReturn(Optional.of(travelPlace1));
+        when(travelPlaceRepository.findByPlaceId(travelPlace2.getPlaceId())).thenReturn(Optional.of(travelPlace2));
+
+        // when
+        assertDoesNotThrow(() -> scheduleService.updateTravelRouteInSchedule(schedule2, updateScheduleRequest.getTravelRoute()));
+
+        // then
+        assertEquals(schedule2.getTravelRouteList().size(), 2);
+        assertEquals(schedule2.getTravelRouteList().get(0).getTravelPlace().getPlaceName(), travelPlace1.getPlaceName());
+    }
+
+    @Test
+    @DisplayName("updateSchedule(): 일정 수정 시 일정 데이터 없어 예외 발생")
+    void updateScheduleNoSchedule_dataNotFoundException(){
+        // given
+        String userId = member1.getUserId();
+        Long scheduleId = schedule1.getScheduleId();
+
+        RouteRequest routeRequest1 = createRouteRequest(1, travelPlace1.getPlaceId());
+        RouteRequest routeRequest2 = createRouteRequest(2, travelPlace2.getPlaceId());
+        UpdateScheduleRequest updateScheduleRequest = createUpdateScheduleRequest(new ArrayList<>(List.of(routeRequest1, routeRequest2)));
+
+        when(travelScheduleRepository.findByScheduleId(scheduleId)).thenReturn(Optional.empty());
+
+        // when
+        DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> scheduleService.updateSchedule(userId, scheduleId, updateScheduleRequest));
+
+        // then
+        assertEquals(fail.getHttpStatus(), ErrorCode.SCHEDULE_NOT_FOUND.getStatus());
+        assertEquals(fail.getMessage(), ErrorCode.SCHEDULE_NOT_FOUND.getMessage());
+
+    }
+
+    @Test
+    @DisplayName("updateSchedule(): 일정 수정 시 요청 사용자에게 접근 권한이 없어 예외 발생")
+    void updateScheduleForbiddenAccess_forbiddenScheduleException(){
+        // given
+        String userId = member1.getUserId();
+        Long scheduleId = schedule2.getScheduleId();
+
+        RouteRequest routeRequest1 = createRouteRequest(1, travelPlace1.getPlaceId());
+        RouteRequest routeRequest2 = createRouteRequest(2, travelPlace2.getPlaceId());
+        UpdateScheduleRequest updateScheduleRequest = createUpdateScheduleRequest(new ArrayList<>(List.of(routeRequest1, routeRequest2)));
+
+        when(travelScheduleRepository.findByScheduleId(scheduleId)).thenReturn(Optional.of(schedule2));
+        when(memberRepository.findByUserId(userId)).thenReturn(Optional.of(member1));
+
+        // when
+        ForbiddenScheduleException fail = assertThrows(ForbiddenScheduleException.class, () -> scheduleService.updateSchedule(userId, scheduleId, updateScheduleRequest));
+
+        // then
+        assertEquals(fail.getHttpStatus(), ErrorCode.FORBIDDEN_ACCESS_SCHEDULE.getStatus());
+        assertEquals(fail.getMessage(), ErrorCode.FORBIDDEN_ACCESS_SCHEDULE.getMessage());
+
+    }
+
+    @Test
+    @DisplayName("updateSchedule(): 일정 수정 시 요청 사용자에게 수정 권한이 없어 예외 발생")
+    void updateScheduleForbiddenEdit_forbiddenScheduleException(){
+        // given
+        String userId = member2.getUserId();
+        Long scheduleId = schedule1.getScheduleId();
+
+        RouteRequest routeRequest1 = createRouteRequest(1, travelPlace1.getPlaceId());
+        RouteRequest routeRequest2 = createRouteRequest(2, travelPlace2.getPlaceId());
+        UpdateScheduleRequest updateScheduleRequest = createUpdateScheduleRequest(new ArrayList<>(List.of(routeRequest1, routeRequest2)));
+
+        when(travelScheduleRepository.findByScheduleId(scheduleId)).thenReturn(Optional.of(schedule1));
+        when(memberRepository.findByUserId(userId)).thenReturn(Optional.of(member2));
+
+        // when
+        ForbiddenScheduleException fail = assertThrows(ForbiddenScheduleException.class, () -> scheduleService.updateSchedule(userId, scheduleId, updateScheduleRequest));
+
+        // then
+        assertEquals(fail.getHttpStatus(), ErrorCode.FORBIDDEN_EDIT_SCHEDULE.getStatus());
+        assertEquals(fail.getMessage(), ErrorCode.FORBIDDEN_EDIT_SCHEDULE.getMessage());
+    }
+
+
+    @Test
+    @DisplayName("updateSchedule(): 일정 수정 시 여행 루트에 저장된 여행지가 없어 예외 발생")
+    void updateScheduleNoTravelPlace_dataNotFoundException(){
+        // given
+        String userId = member1.getUserId();
+        Long scheduleId = schedule1.getScheduleId();
+
+        RouteRequest routeRequest1 = createRouteRequest(1, travelPlace1.getPlaceId());
+        RouteRequest routeRequest2 = createRouteRequest(2, travelPlace2.getPlaceId());
+        UpdateScheduleRequest updateScheduleRequest = createUpdateScheduleRequest(new ArrayList<>(List.of(routeRequest1, routeRequest2)));
+
+        when(travelScheduleRepository.findByScheduleId(scheduleId)).thenReturn(Optional.of(schedule1));
+        when(memberRepository.findByUserId(userId)).thenReturn(Optional.of(member1));
+        when(travelPlaceRepository.findByPlaceId(anyLong())).thenReturn(Optional.empty());
+
+        // when
+        DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> scheduleService.updateSchedule(userId, scheduleId, updateScheduleRequest));
+
+        // then
+        assertEquals(fail.getHttpStatus(), ErrorCode.PLACE_NOT_FOUND.getStatus());
+        assertEquals(fail.getMessage(), ErrorCode.PLACE_NOT_FOUND.getMessage());
+    }
+
+
+
+    @Test
+    @DisplayName("getTravelAttendee(): 요청 사용자가 일정에 참가자에 포함되는 경우")
+    void getTravelAttendee_containsAttendees(){
+        // given
+        String userId = member1.getUserId();
+
+        when(memberRepository.findByUserId(userId)).thenReturn(Optional.of(member1));
+
+        // when
+        TravelAttendee response = scheduleService.getTravelAttendee(userId, schedule1);
+
+        // then
+        assertEquals(response.getMember().getUserId(), userId);
+        assertEquals(response.getTravelSchedule().getScheduleName(), schedule1.getScheduleName());
+    }
+
+    @Test
+    @DisplayName("getTravelAttendee(): 요청 사용자가 일정에 참가자에 포함되지 않는 경우 예외 발생")
+    void getTravelAttendee_notContainsAttendees_forbiddenScheduleException(){
+        // given
+        String userId = member1.getUserId();
+
+        when(memberRepository.findByUserId(userId)).thenReturn(Optional.of(member1));
+
+        // when
+        ForbiddenScheduleException fail = assertThrows(ForbiddenScheduleException.class, () -> scheduleService.getTravelAttendee(userId, schedule2));
+
+        // then
+        assertEquals(fail.getHttpStatus(), ErrorCode.FORBIDDEN_ACCESS_SCHEDULE.getStatus());
+        assertEquals(fail.getMessage(), ErrorCode.FORBIDDEN_ACCESS_SCHEDULE.getMessage());
+    }
+
+    @Test
+    @DisplayName("findAttendeeInSchedule(): 요청 사용자가 일정에 참가자에 포함되는 경우")
+    void findAttendeeInSchedule_containsAttendees(){
+        // given
+        String userId = member1.getUserId();
+
+        when(memberRepository.findByUserId(userId)).thenReturn(Optional.of(member1));
+
+        // when
+        TravelAttendee response = scheduleService.findAttendeeInSchedule(userId, schedule1);
+
+        // then
+        assertEquals(response.getMember().getUserId(), userId);
+        assertEquals(response.getTravelSchedule().getScheduleName(), schedule1.getScheduleName());
+    }
+
+    @Test
+    @DisplayName("findAttendeeInSchedule(): 요청 사용자가 일정에 참가자에 포함되지 않는 경우")
+    void findAttendeeInSchedule_notContainsAttendees(){
+        // given
+        String userId = member1.getUserId();
+
+        when(memberRepository.findByUserId(userId)).thenReturn(Optional.of(member1));
+
+        // when
+        TravelAttendee response = scheduleService.findAttendeeInSchedule(userId, schedule2);
+
+        // then
+        assertNull(response);
+    }
+
+    @Test
+    @DisplayName("checkUserPermission(): 사용자 편집 권한 중 ALL")
+    void checkUserPermissionALL(){
+        // given
+        AttendeePermission permission = AttendeePermission.ALL;
+
+        // when
+        // then
+        assertDoesNotThrow(() -> scheduleService.checkUserPermission(permission));
+    }
+
+    @Test
+    @DisplayName("checkUserPermission(): 사용자 편집 권한 중 EDIT")
+    void checkUserPermissionEdit(){
+        // given
+        AttendeePermission permission = AttendeePermission.EDIT;
+
+        // when
+        // then
+        assertDoesNotThrow(() -> scheduleService.checkUserPermission(permission));
+    }
+
+    @Test
+    @DisplayName("checkUserPermission(): 사용자 편집 권한 체크 시 CHAT 권한으로 예외 발생")
+    void checkUserPermissionCHAT_forbiddenScheduleException(){
+        // given
+        AttendeePermission permission = AttendeePermission.CHAT;
+
+        // when
+        ForbiddenScheduleException fail = assertThrows(ForbiddenScheduleException.class, () -> scheduleService.checkUserPermission(permission));
+
+        // then
+        assertEquals(fail.getHttpStatus(), ErrorCode.FORBIDDEN_EDIT_SCHEDULE.getStatus());
+        assertEquals(fail.getMessage(), ErrorCode.FORBIDDEN_EDIT_SCHEDULE.getMessage());
+    }
+
+    @Test
+    @DisplayName("checkUserPermission(): 사용자 편집 권한 체크 시 READ 권한으로 예외 발생")
+    void checkUserPermissionREAD_forbiddenScheduleException(){
+        // given
+        AttendeePermission permission = AttendeePermission.READ;
+
+        // when
+        ForbiddenScheduleException fail = assertThrows(ForbiddenScheduleException.class, () -> scheduleService.checkUserPermission(permission));
+
+        // then
+        assertEquals(fail.getHttpStatus(), ErrorCode.FORBIDDEN_EDIT_SCHEDULE.getStatus());
+        assertEquals(fail.getMessage(), ErrorCode.FORBIDDEN_EDIT_SCHEDULE.getMessage());
+    }
+
 
     @Test
     @DisplayName("getTravelPlaces(): 여행지 조회 성공")
     void getTravelPlaces(){
         // given
-        List<TravelPlace> placeList = Arrays.asList(travelPlace1, travelPlace2);
+        List<TravelPlace> placeList = new ArrayList<>(List.of(travelPlace1, travelPlace2));
 
         TravelSchedule schedule = createTravelSchedule(1L, "테스트");
 
@@ -571,7 +870,7 @@ public class ScheduleServiceTests extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("getTravelPlaces(): 여행지 조회 시 일정을 찾을 수 없어 DataNotFoundException 발생")
+    @DisplayName("getTravelPlaces(): 여행지 조회 시 일정을 찾을 수 없어 예외 발생")
     void getTravelPlaces_dataNotFoundException(){
         // given
         when(travelScheduleRepository.findByScheduleId(any())).thenReturn(Optional.empty());
@@ -580,8 +879,8 @@ public class ScheduleServiceTests extends ScheduleTest {
         DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> scheduleService.getTravelPlaces(0L, 1));
 
         // then
-        assertEquals(fail.getHttpStatus(), ErrorCode.DATA_NOT_FOUND.getStatus());
-        assertEquals(fail.getMessage(), ErrorCode.DATA_NOT_FOUND.getMessage());
+        assertEquals(fail.getHttpStatus(), ErrorCode.SCHEDULE_NOT_FOUND.getStatus());
+        assertEquals(fail.getMessage(), ErrorCode.SCHEDULE_NOT_FOUND.getMessage());
     }
 
     @Test
@@ -591,7 +890,7 @@ public class ScheduleServiceTests extends ScheduleTest {
         String keyword = "중구";
         Pageable pageable = PageUtil.defaultPageable(1);
 
-        List<TravelPlace> travelPlaceList = Arrays.asList(travelPlace1, travelPlace2);
+        List<TravelPlace> travelPlaceList = new ArrayList<>(List.of(travelPlace1, travelPlace2));
         Page<TravelPlace> travelPlacePage = PageUtil.createPage(travelPlaceList, pageable, travelPlaceList.size());
 
         when(travelScheduleRepository.findByScheduleId(any())).thenReturn(Optional.of(createTravelSchedule(1L, "테스트")));
@@ -629,7 +928,7 @@ public class ScheduleServiceTests extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("searchTravelPlaces(): 여행지 검색 시 일정을 찾을 수 없어 DataNotFoundException 발생")
+    @DisplayName("searchTravelPlaces(): 여행지 검색 시 일정을 찾을 수 없어 예외 발생")
     void searchTravelPlaces_dataNotFoundException(){
         // given
         when(travelScheduleRepository.findByScheduleId(any())).thenReturn(Optional.empty());
@@ -638,8 +937,8 @@ public class ScheduleServiceTests extends ScheduleTest {
         DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> scheduleService.searchTravelPlaces(0L, 1, "강남"));
 
         // then
-        assertEquals(fail.getHttpStatus(), ErrorCode.DATA_NOT_FOUND.getStatus());
-        assertEquals(fail.getMessage(), ErrorCode.DATA_NOT_FOUND.getMessage());
+        assertEquals(fail.getHttpStatus(), ErrorCode.SCHEDULE_NOT_FOUND.getStatus());
+        assertEquals(fail.getMessage(), ErrorCode.SCHEDULE_NOT_FOUND.getMessage());
     }
 
     @Test
@@ -685,7 +984,7 @@ public class ScheduleServiceTests extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("getTravelRoutes(): 여행 루트 조회 시 일정을 찾을 수 없어 DataNotFoundException 발생")
+    @DisplayName("getTravelRoutes(): 여행 루트 조회 시 일정을 찾을 수 없어 예외 발생")
     void getTravelRoutes_dataNotFoundException(){
         // given
         when(travelScheduleRepository.findByScheduleId(any())).thenReturn(Optional.empty());
@@ -694,15 +993,15 @@ public class ScheduleServiceTests extends ScheduleTest {
         DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> scheduleService.getTravelRoutes(0L, 1));
 
         // then
-        assertEquals(fail.getHttpStatus(), ErrorCode.DATA_NOT_FOUND.getStatus());
-        assertEquals(fail.getMessage(), ErrorCode.DATA_NOT_FOUND.getMessage());
+        assertEquals(fail.getHttpStatus(), ErrorCode.SCHEDULE_NOT_FOUND.getStatus());
+        assertEquals(fail.getMessage(), ErrorCode.SCHEDULE_NOT_FOUND.getMessage());
     }
 
     @Test
     @DisplayName("getSimpleTravelPlacesByJunggu(): 중구 기준 여행지 데이터 조회")
     void getSimpleTravelPlacesByJunggu(){
         // given
-        List<TravelPlace> placeList = Arrays.asList(travelPlace1, travelPlace2);
+        List<TravelPlace> placeList = new ArrayList<>(List.of(travelPlace1, travelPlace2));
         Pageable pageable = PageUtil.defaultPageable(1);
 
         when(travelPlaceRepository.findAllByAreaData(pageable, "대한민국", "서울", "중구"))
@@ -755,7 +1054,7 @@ public class ScheduleServiceTests extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("getSavedMember(): 저장된 사용자 정보 조회 시 데이터 찾을 수 없어 DataNotFoundException 발생")
+    @DisplayName("getSavedMember(): 저장된 사용자 정보 조회 시 데이터 찾을 수 없어 예외 발생")
     void getSavedMember_dataNotFoundException(){
         // given
         when(memberRepository.findByUserId(any())).thenReturn(Optional.empty());
@@ -784,7 +1083,7 @@ public class ScheduleServiceTests extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("getSavedSchedule(): 저장된 일정 조회 시 데이터 찾을 수 없어 DataNotFoundException 발생")
+    @DisplayName("getSavedSchedule(): 저장된 일정 조회 시 데이터 찾을 수 없어 예외 발생")
     void getSavedSchedule_dataNotFoundException(){
         // given
         when(travelScheduleRepository.findByScheduleId(any())).thenReturn(Optional.empty());
@@ -793,8 +1092,42 @@ public class ScheduleServiceTests extends ScheduleTest {
         DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> scheduleService.getSavedSchedule(0L));
 
         // then
-        assertEquals(fail.getHttpStatus(), ErrorCode.DATA_NOT_FOUND.getStatus());
-        assertEquals(fail.getMessage(), ErrorCode.DATA_NOT_FOUND.getMessage());
+        assertEquals(fail.getHttpStatus(), ErrorCode.SCHEDULE_NOT_FOUND.getStatus());
+        assertEquals(fail.getMessage(), ErrorCode.SCHEDULE_NOT_FOUND.getMessage());
+    }
+
+    @Test
+    @DisplayName("getSavedPlace(): 저장된 여행지 조회 성공")
+    void getSavedPlace(){
+        // given
+        Long placeId = travelPlace1.getPlaceId();
+
+        when(travelPlaceRepository.findByPlaceId(anyLong())).thenReturn(Optional.of(travelPlace1));
+
+        // when
+        TravelPlace response = scheduleService.getSavedPlace(placeId);
+
+        // then
+        assertEquals(response.getPlaceId(), placeId);
+        assertEquals(response.getPlaceName(), travelPlace1.getPlaceName());
+
+    }
+
+    @Test
+    @DisplayName("getSavedPlace(): 여행지가 존재하지 않아 예외 발생")
+    void getSavedPlaceNoTravelPlace_dataNotFoundException(){
+        // given
+        Long placeId = travelPlace1.getPlaceId();
+
+        when(travelPlaceRepository.findByPlaceId(anyLong())).thenReturn(Optional.empty());
+
+        // when
+        DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> scheduleService.getSavedPlace(placeId));
+
+        // then
+        assertEquals(fail.getHttpStatus(), ErrorCode.PLACE_NOT_FOUND.getStatus());
+        assertEquals(fail.getMessage(), ErrorCode.PLACE_NOT_FOUND.getMessage());
+
     }
 
 }
