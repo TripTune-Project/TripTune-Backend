@@ -1,6 +1,5 @@
-package com.triptune.domain.schedule.dto;
+package com.triptune.domain.schedule.dto.request;
 
-import com.triptune.global.enumclass.ErrorCode;
 import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

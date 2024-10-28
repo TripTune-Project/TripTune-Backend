@@ -1,7 +1,8 @@
-package com.triptune.domain.schedule.dto;
+package com.triptune.domain.schedule.dto.response;
 
+import com.triptune.domain.schedule.dto.AttendeeDTO;
 import com.triptune.domain.schedule.entity.TravelSchedule;
-import com.triptune.domain.travel.dto.PlaceResponse;
+import com.triptune.domain.travel.dto.response.PlaceResponse;
 import com.triptune.global.response.pagination.PageResponse;
 import lombok.Builder;
 import lombok.Getter;

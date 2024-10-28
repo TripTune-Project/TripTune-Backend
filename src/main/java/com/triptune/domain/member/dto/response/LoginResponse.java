@@ -1,10 +1,8 @@
-package com.triptune.domain.member.dto;
+package com.triptune.domain.member.dto.response;
 
-import jakarta.validation.constraints.NotBlank;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 @Getter
 @NoArgsConstructor

@@ -1,4 +1,4 @@
-package com.triptune.domain.schedule.dto;
+package com.triptune.domain.schedule.dto.response;
 
 import com.triptune.domain.common.entity.File;
 import com.triptune.domain.schedule.entity.TravelRoute;

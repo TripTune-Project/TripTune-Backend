@@ -1,4 +1,4 @@
-package com.triptune.domain.member.dto;
+package com.triptune.domain.member.dto.response;
 
 import lombok.Builder;
 import lombok.Getter;

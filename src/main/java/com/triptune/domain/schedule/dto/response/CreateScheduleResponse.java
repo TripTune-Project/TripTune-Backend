@@ -1,4 +1,4 @@
-package com.triptune.domain.schedule.dto;
+package com.triptune.domain.schedule.dto.response;
 
 import com.triptune.domain.schedule.entity.TravelSchedule;
 import lombok.Builder;
