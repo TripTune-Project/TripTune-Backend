@@ -1,6 +1,7 @@
 package com.triptune.global.exception;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.triptune.global.enumclass.ErrorCode;
 import com.triptune.global.response.ErrorResponse;
 import com.triptune.global.util.HttpRequestEndpointChecker;
 import jakarta.servlet.ServletException;
@@ -37,11 +38,7 @@ public class CustomAccessDeniedHandler implements AccessDeniedHandler {
             response.setStatus(HttpStatus.FORBIDDEN.value());
             response.setCharacterEncoding(StandardCharsets.UTF_8.name());
 
-            ErrorResponse errorResponse = ErrorResponse.builder()
-                    .errorCode(HttpStatus.FORBIDDEN.value())
-                    .message("접근 권한이 없습니다.")
-                    .build();
-
+            ErrorResponse errorResponse = ErrorResponse.of(ErrorCode.FORBIDDEN_ACCESS);
             String result = new ObjectMapper().writeValueAsString(errorResponse);
 
             response.getWriter().write(result);

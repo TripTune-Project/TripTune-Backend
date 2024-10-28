@@ -11,6 +11,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -55,24 +56,20 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
         } catch (CustomJwtBadRequestException ex){
             log.error("NoHandlerFoundException at {}: {}", request.getRequestURI(),  ex.getMessage());
-            handleJwtException(response, ex.getHttpStatus().value(), ex.getMessage());
+            handleJwtException(response, ex.getHttpStatus(), ex.getMessage());
         } catch (CustomJwtUnAuthorizedException ex){
             log.error("CustomJwtUnAuthorizedException at {}: {}", request.getRequestURI(),  ex.getMessage());
-            handleJwtException(response, ex.getHttpStatus().value(), ex.getMessage());
+            handleJwtException(response, ex.getHttpStatus(), ex.getMessage());
         }
 
     }
 
-    private void handleJwtException(HttpServletResponse response, int status, String message) throws IOException {
+    private void handleJwtException(HttpServletResponse response, HttpStatus httpStatus, String message) throws IOException {
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-        response.setStatus(status);
+        response.setStatus(httpStatus.value());
         response.setCharacterEncoding(Charset.defaultCharset().name());
 
-        ErrorResponse errorResponse = ErrorResponse.builder()
-                .errorCode(status)
-                .message(message)
-                .build();
-
+        ErrorResponse errorResponse = ErrorResponse.of(httpStatus, message);
         String result = new ObjectMapper().writeValueAsString(errorResponse);
 
         response.getWriter().write(result);

@@ -1,6 +1,7 @@
 package com.triptune.global.exception;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.triptune.global.enumclass.ErrorCode;
 import com.triptune.global.response.ErrorResponse;
 import com.triptune.global.util.HttpRequestEndpointChecker;
 import jakarta.servlet.http.HttpServletRequest;
@@ -36,11 +37,7 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
             response.setStatus(HttpStatus.UNAUTHORIZED.value());
             response.setCharacterEncoding(Charset.defaultCharset().name());
 
-            ErrorResponse errorResponse = ErrorResponse.builder()
-                    .errorCode(HttpStatus.UNAUTHORIZED.value())
-                    .message("인증되지 않은 사용자입니다. 로그인 후 다시 시도하세요.")
-                    .build();
-
+            ErrorResponse errorResponse = ErrorResponse.of(ErrorCode.UNAUTHORIZED_ACCESS);
             String result = new ObjectMapper().writeValueAsString(errorResponse);
 
             response.getWriter().write(result);
