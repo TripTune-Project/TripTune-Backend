@@ -4,15 +4,23 @@ import com.triptune.domain.common.entity.File;
 import com.triptune.domain.member.entity.Member;
 import com.triptune.domain.member.repository.MemberRepository;
 import com.triptune.domain.schedule.dto.*;
+import com.triptune.domain.schedule.dto.request.CreateScheduleRequest;
+import com.triptune.domain.schedule.dto.request.RouteRequest;
+import com.triptune.domain.schedule.dto.request.UpdateScheduleRequest;
+import com.triptune.domain.schedule.dto.response.CreateScheduleResponse;
+import com.triptune.domain.schedule.dto.response.RouteResponse;
+import com.triptune.domain.schedule.dto.response.ScheduleDetailResponse;
+import com.triptune.domain.schedule.dto.response.ScheduleInfoResponse;
 import com.triptune.domain.schedule.entity.TravelAttendee;
 import com.triptune.domain.schedule.entity.TravelRoute;
 import com.triptune.domain.schedule.entity.TravelSchedule;
 import com.triptune.domain.schedule.enumclass.AttendeePermission;
 import com.triptune.domain.schedule.enumclass.AttendeeRole;
+import com.triptune.domain.schedule.exception.ForbiddenScheduleException;
 import com.triptune.domain.schedule.repository.TravelAttendeeRepository;
 import com.triptune.domain.schedule.repository.TravelRouteRepository;
 import com.triptune.domain.schedule.repository.TravelScheduleRepository;
-import com.triptune.domain.travel.dto.PlaceResponse;
+import com.triptune.domain.travel.dto.response.PlaceResponse;
 import com.triptune.domain.travel.entity.TravelImage;
 import com.triptune.domain.travel.entity.TravelPlace;
 import com.triptune.domain.travel.repository.TravelPlacePlaceRepository;
@@ -21,6 +29,7 @@ import com.triptune.global.exception.DataNotFoundException;
 import com.triptune.global.response.pagination.PageResponse;
 import com.triptune.global.response.pagination.SchedulePageResponse;
 import com.triptune.global.util.PageUtil;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -32,6 +41,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional
 @RequiredArgsConstructor
 public class ScheduleService {
 
@@ -42,6 +52,12 @@ public class ScheduleService {
     private final TravelRouteRepository travelRouteRepository;
 
 
+    /**
+     * 일정 목록 조회
+     * @param page: 페이지 수
+     * @param userId: 접속 사용자 아이디
+     * @return SchedulePageResponse<ScheduleInfoResponse>: 사용자가 참석자로 포함되어있는 일정 목록들과 전제 일정 갯수, 공유된 일정 갯수가 포함된 dto
+     */
     public SchedulePageResponse<ScheduleInfoResponse> getSchedules(int page, String userId) {
         Pageable pageable = PageUtil.schedulePageable(page);
         Member member = getSavedMember(userId);
@@ -62,11 +78,15 @@ public class ScheduleService {
         }
 
         Page<ScheduleInfoResponse> scheduleInfoResponsePage = PageUtil.createPage(scheduleInfoResponseList, pageable, schedulePage.getTotalElements());
-
         return SchedulePageResponse.of(scheduleInfoResponsePage, sharedScheduleCnt);
     }
 
 
+    /**
+     * TravelSchedule 엔티티를 ScheduleInfoResponse 로 변경
+     * @param schedule: 일정
+     * @return ScheduleInfoResponse: 대략적인 일정 정보가 포함된 dto
+     */
     public ScheduleInfoResponse convertToScheduleInfoResponse(TravelSchedule schedule){
         String thumbnailUrl = getThumbnailUrl(schedule);
         AuthorDTO authorDTO = getAuthorDTO(schedule);
@@ -74,11 +94,21 @@ public class ScheduleService {
         return ScheduleInfoResponse.entityToDto(schedule, thumbnailUrl, authorDTO);
     }
 
+    /**
+     * 일정의 작성자 dto 생성 메소드
+     * @param schedule: 일정
+     * @return AuthorDTO: 작성자 정보 포함된 dto
+     */
     public AuthorDTO getAuthorDTO(TravelSchedule schedule){
         Member author = getAuthorMember(schedule.getTravelAttendeeList());
         return AuthorDTO.of(author.getUserId(), author.getProfileImage().getS3ObjectUrl());
     }
 
+    /**
+     * 일정 참가자 중 작성자 정보 조회
+     * @param attendeeList: 참가자 목록
+     * @return Member: 작성자 entity
+     */
     public Member getAuthorMember(List<TravelAttendee> attendeeList){
         return attendeeList.stream()
                 .filter(attendee -> attendee.getRole().equals(AttendeeRole.AUTHOR))
@@ -88,13 +118,28 @@ public class ScheduleService {
     }
 
 
+    /**
+     * 썸네일 이미지 조회
+     * @param schedule: 일정
+     * @return String: 썸네일 url
+     */
     public String getThumbnailUrl(TravelSchedule schedule){
-        List<TravelImage> travelImages = travelRouteRepository.findPlaceImagesOfFirstRoute(schedule.getScheduleId());
+        String thumbnailUrl = null;
 
-        if (!travelImages.isEmpty()){
-            return File.getThumbnailUrl(travelImages);
+        List<TravelRoute> travelRouteList = schedule.getTravelRouteList();
+
+        if (travelRouteList != null && !travelRouteList.isEmpty()){
+            TravelRoute route = schedule.getTravelRouteList().stream()
+                    .filter(travelRoute -> travelRoute.getRouteOrder() == 1)
+                    .findFirst()
+                    .orElse(null);
+
+            if (route != null){
+                thumbnailUrl = File.getThumbnailUrl(route.getTravelPlace().getTravelImageList());
+            }
         }
-        return null;
+
+        return thumbnailUrl;
     }
 
 
@@ -149,6 +194,65 @@ public class ScheduleService {
         return ScheduleDetailResponse.entityToDTO(schedule, placeDTOList, attendeeDTOList);
     }
 
+
+    public void updateSchedule(String userId, Long scheduleId, UpdateScheduleRequest updateScheduleRequest) {
+        TravelSchedule schedule = getSavedSchedule(scheduleId);
+        TravelAttendee attendee = getTravelAttendee(userId, schedule);
+        checkUserPermission(attendee.getPermission());
+
+        schedule.setScheduleName(updateScheduleRequest.getScheduleName());
+        schedule.setStartDate(updateScheduleRequest.getStartDate());
+        schedule.setEndDate(updateScheduleRequest.getEndDate());
+        schedule.setUpdatedAt(LocalDateTime.now());
+
+        updateTravelRouteInSchedule(schedule, updateScheduleRequest.getTravelRoute());
+    }
+
+    public void updateTravelRouteInSchedule(TravelSchedule schedule, List<RouteRequest> routeRequestList){
+        travelRouteRepository.deleteAllByTravelSchedule_ScheduleId(schedule.getScheduleId());
+
+        if (schedule.getTravelRouteList() == null) {
+            schedule.setTravelRouteList(new ArrayList<>());
+        } else{
+            schedule.getTravelRouteList().clear();
+        }
+
+        if (routeRequestList != null && !routeRequestList.isEmpty()){
+            for(RouteRequest routeRequest : routeRequestList){
+                TravelPlace place = getSavedPlace(routeRequest.getPlaceId());
+                TravelRoute route = TravelRoute.of(schedule, place, routeRequest.getRouteOrder());
+                schedule.getTravelRouteList().add(route);
+                travelRouteRepository.save(route);
+            }
+        }
+    }
+
+    public TravelAttendee getTravelAttendee(String userId, TravelSchedule schedule){
+        TravelAttendee attendee = findAttendeeInSchedule(userId, schedule);
+
+        if(attendee == null){
+            throw new ForbiddenScheduleException(ErrorCode.FORBIDDEN_ACCESS_SCHEDULE);
+        }
+
+        return attendee;
+    }
+
+    public TravelAttendee findAttendeeInSchedule(String userId, TravelSchedule schedule){
+        Member member = getSavedMember(userId);
+
+        return schedule.getTravelAttendeeList().stream()
+                .filter(attendee -> attendee.getMember().getMemberId().equals(member.getMemberId()))
+                .findFirst()
+                .orElse(null);
+
+    }
+
+    public void checkUserPermission(AttendeePermission permission){
+        if (permission.equals(AttendeePermission.CHAT) || permission.equals(AttendeePermission.READ)){
+            throw new ForbiddenScheduleException(ErrorCode.FORBIDDEN_EDIT_SCHEDULE);
+        }
+    }
+
     /**
      * 여행지 정보 조회
      * @param scheduleId: 일정 인덱스
@@ -159,6 +263,7 @@ public class ScheduleService {
         getSavedSchedule(scheduleId);
         return getSimpleTravelPlacesByJunggu(page);
     }
+
 
     /**
      * 여행지 검색
@@ -221,7 +326,17 @@ public class ScheduleService {
      */
     public TravelSchedule getSavedSchedule(Long scheduleId){
         return travelScheduleRepository.findByScheduleId(scheduleId)
-                .orElseThrow(() -> new DataNotFoundException(ErrorCode.DATA_NOT_FOUND));
+                .orElseThrow(() -> new DataNotFoundException(ErrorCode.SCHEDULE_NOT_FOUND));
+    }
+
+    /**
+     * 저장된 여행지 조회
+     * @param placeId: 여행지 인덱스
+     * @return TravelPlace: 여행지 entity
+     */
+    public TravelPlace getSavedPlace(Long placeId){
+        return travelPlaceRepository.findByPlaceId(placeId)
+                .orElseThrow(() ->  new DataNotFoundException(ErrorCode.PLACE_NOT_FOUND));
     }
 
 

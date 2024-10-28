@@ -9,4 +9,5 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface TravelRouteRepository extends JpaRepository<TravelRoute, Long>, TravelRouteCustomRepository{
     Page<TravelRoute> findAllByTravelSchedule_ScheduleId(Pageable pageable, Long scheduleId);
+    void deleteAllByTravelSchedule_ScheduleId(Long scheduleId);
 }
