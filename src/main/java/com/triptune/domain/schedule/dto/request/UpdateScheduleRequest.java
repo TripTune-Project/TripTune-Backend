@@ -21,7 +21,6 @@ public class UpdateScheduleRequest {
     private String scheduleName;
 
     @NotNull(message = "여행지 시작 날짜는 필수 입력 값입니다.")
-    @FutureOrPresent(message = "오늘 이후 날짜만 입력 가능합니다.")
     private LocalDate startDate;
 
     @NotNull(message = "여행지 종료 날짜는 필수 입력 값입니다.")

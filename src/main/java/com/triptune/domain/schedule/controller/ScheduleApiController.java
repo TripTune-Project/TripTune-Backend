@@ -59,7 +59,7 @@ public class ScheduleApiController {
 
     @PatchMapping("/{scheduleId}")
     @Operation(summary = "일정 수정", description = "일정 상세 화면에서 저장 버튼을 누르면 해당 일정이 수정됩니다. 사용자는 저장 작업으로 보지만, 실제로는 일정 수정 작업입니다.")
-    public ApiResponse<?> updateSchedule(@PathVariable(name = "scheduleId") Long scheduleId, @RequestBody UpdateScheduleRequest updateScheduleRequest){
+    public ApiResponse<?> updateSchedule(@PathVariable(name = "scheduleId") Long scheduleId, @Valid @RequestBody UpdateScheduleRequest updateScheduleRequest){
         String userId = SecurityContextHolder.getContext().getAuthentication().getName();
 
         scheduleService.updateSchedule(userId, scheduleId, updateScheduleRequest);

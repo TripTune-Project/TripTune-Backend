@@ -245,7 +245,7 @@ public class ScheduleApiControllerTests extends ScheduleTest {
 
 
     @Test
-    @DisplayName("createSchedule(): 일정 만들기 시 필요 입력값이 다 안들어와 MethodArgumentNotValidException 발생")
+    @DisplayName("createSchedule(): 일정 만들기 시 필요 입력값이 다 안들어와 예외 발생")
     @WithMockUser(username = "test")
     void createSchedule_methodArgumentNotValidException() throws Exception{
         // given
@@ -261,7 +261,7 @@ public class ScheduleApiControllerTests extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("createSchedule(): 일정 만들기 시 오늘 이전 날짜 입력으로 MethodArgumentNotValidException 발생")
+    @DisplayName("createSchedule(): 일정 만들기 시 오늘 이전 날짜 입력으로 예외 발생")
     @WithMockUser(username = "test")
     void createSchedulePastDate_methodArgumentNotValidException() throws Exception{
         // given
@@ -371,6 +371,38 @@ public class ScheduleApiControllerTests extends ScheduleTest {
         // then
         assertEquals(schedule1.getScheduleName(), request.getScheduleName());
         assertEquals(schedule1.getTravelRouteList().size(), 2);
+    }
+
+    @Test
+    @DisplayName("updateSchedule(): 일정 수정 시 일정 종료일을 오늘 날짜 이전으로 설정해 예외 발생")
+    @WithMockUser(username = "member1")
+    void updateSchedule_methodArgumentNotValidException() throws Exception {
+        // given
+        TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
+        TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ));
+
+        TravelRoute route1 = travelRouteRepository.save(createTravelRoute(schedule1, travelPlace1, 1));
+        TravelRoute route2 = travelRouteRepository.save(createTravelRoute(schedule1, travelPlace2, 2));
+
+        member1.setTravelAttendeeList(new ArrayList<>(List.of(attendee1)));
+        member2.setTravelAttendeeList(new ArrayList<>(List.of(attendee3)));
+        schedule1.setTravelRouteList(new ArrayList<>(List.of(route1, route2)));
+        schedule1.setTravelAttendeeList(new ArrayList<>(List.of(attendee1, attendee3)));
+
+        RouteRequest routeRequest1 = createRouteRequest(1, travelPlace1.getPlaceId());
+        RouteRequest routeRequest2 = createRouteRequest(2, travelPlace2.getPlaceId());
+
+        UpdateScheduleRequest request = createUpdateScheduleRequest(new ArrayList<>(List.of(routeRequest1, routeRequest2)));
+        request.setEndDate(LocalDate.now().minusDays(10));
+
+
+        // when
+        mockMvc.perform(patch("/api/schedules/{scheduleId}", schedule1.getScheduleId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJsonString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false));
+
     }
 
     @Test
