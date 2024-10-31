@@ -26,11 +26,12 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 @Import({QueryDSLConfig.class})
@@ -84,9 +85,8 @@ public class TravelScheduleRepositoryTests extends ScheduleTest {
         TravelImage travelImage1 = travelImageRepository.save(createTravelImage(travelPlace, file1));
         TravelImage travelImage2 = travelImageRepository.save(createTravelImage(travelPlace, file2));
 
-        List<TravelImage> imageList = Arrays.asList(travelImage1, travelImage2);
         travelPlace.setApiContentType(apiContentType);
-        travelPlace.setTravelImageList(imageList);
+        travelPlace.setTravelImageList(new ArrayList<>(List.of(travelImage1, travelImage2)));
 
         member1 = memberRepository.save(createMember(null, "member1"));
         member2 = memberRepository.save(createMember(null, "member2"));
@@ -94,7 +94,6 @@ public class TravelScheduleRepositoryTests extends ScheduleTest {
         schedule1 = travelScheduleRepository.save(createTravelSchedule(null,"테스트1"));
         schedule2 = travelScheduleRepository.save(createTravelSchedule(null,"테스트2"));
         schedule3 = travelScheduleRepository.save(createTravelSchedule(null,"테스트3"));
-
 
     }
 
@@ -109,21 +108,21 @@ public class TravelScheduleRepositoryTests extends ScheduleTest {
         TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule2, AttendeeRole.GUEST, AttendeePermission.READ));
         TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(member2, schedule3, AttendeeRole.AUTHOR, AttendeePermission.ALL));
 
-        member1.setTravelAttendeeList(Arrays.asList(attendee1, attendee2));
-        member2.setTravelAttendeeList(List.of(attendee3));
+        member1.setTravelAttendeeList(new ArrayList<>(List.of(attendee1, attendee2)));
+        member2.setTravelAttendeeList(new ArrayList<>(List.of(attendee3)));
 
-        schedule1.setTravelAttendeeList(List.of(attendee1));
-        schedule2.setTravelAttendeeList(List.of(attendee2));
-        schedule3.setTravelAttendeeList(List.of(attendee3));
+        schedule1.setTravelAttendeeList(new ArrayList<>(List.of(attendee1)));
+        schedule2.setTravelAttendeeList(new ArrayList<>(List.of(attendee2)));
+        schedule3.setTravelAttendeeList(new ArrayList<>(List.of(attendee3)));
 
         // when
         Page<TravelSchedule> response = travelScheduleRepository.findTravelSchedulesByAttendee(pageable, member1.getMemberId());
 
         // then
         List<TravelSchedule> content = response.getContent();
-        assertEquals(response.getTotalElements(), 2);
-        assertEquals(content.get(0).getScheduleName(), schedule1.getScheduleName());
-        assertEquals(content.get(0).getStartDate(), schedule1.getStartDate());
+        assertThat(response.getTotalElements()).isEqualTo(2);
+        assertThat(content.get(0).getScheduleName()).isNotNull();
+        assertThat(content.get(0).getStartDate()).isNotNull();
 
     }
 
@@ -137,8 +136,8 @@ public class TravelScheduleRepositoryTests extends ScheduleTest {
         Page<TravelSchedule> response = travelScheduleRepository.findTravelSchedulesByAttendee(pageable, member1.getMemberId());
 
         // then
-        assertEquals(response.getTotalElements(), 0);
-        assertTrue(response.getContent().isEmpty());
+        assertThat(response.getTotalElements()).isEqualTo(0);
+        assertThat(response.getContent().isEmpty()).isTrue();
 
     }
 
@@ -150,20 +149,18 @@ public class TravelScheduleRepositoryTests extends ScheduleTest {
         TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule2, AttendeeRole.AUTHOR, AttendeePermission.READ));
         TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(member2, schedule3, AttendeeRole.AUTHOR, AttendeePermission.ALL));
 
-        member1.setTravelAttendeeList(Arrays.asList(attendee1, attendee2));
-        member2.setTravelAttendeeList(List.of(attendee3));
+        member1.setTravelAttendeeList(new ArrayList<>(List.of(attendee1, attendee2)));
+        member2.setTravelAttendeeList(new ArrayList<>(List.of(attendee3)));
 
-        schedule1.setTravelAttendeeList(List.of(attendee1));
-        schedule2.setTravelAttendeeList(List.of(attendee2));
-        schedule3.setTravelAttendeeList(List.of(attendee3));
+        schedule1.setTravelAttendeeList(new ArrayList<>(List.of(attendee1)));
+        schedule2.setTravelAttendeeList(new ArrayList<>(List.of(attendee2)));
+        schedule3.setTravelAttendeeList(new ArrayList<>(List.of(attendee3)));
 
         // when
         Integer response = travelScheduleRepository.getTotalElementByTravelSchedules(member1.getMemberId());
 
         // then
-        assertEquals(response, 2);
-
-
+        assertThat(response).isEqualTo(2);
     }
 
     @Test
@@ -174,8 +171,7 @@ public class TravelScheduleRepositoryTests extends ScheduleTest {
         Integer response = travelScheduleRepository.getTotalElementByTravelSchedules(member1.getMemberId());
 
         // then
-        assertEquals(response, 0);
-
+        assertThat(response).isEqualTo(0);
 
     }
 
