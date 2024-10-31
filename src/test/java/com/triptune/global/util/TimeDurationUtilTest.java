@@ -10,35 +10,15 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class TimeDurationUtilTest {
 
     @Test
-    @DisplayName("마지막 업데이트가 10일 전 경우")
-    void timeDuration10Days(){
-        // given
-        LocalDateTime updateTime = LocalDateTime.now().minusDays(10);
-
-
-        // when
-        String response = TimeDurationUtil.timeDuration(updateTime);
-
-        // then
-        System.out.println(response);
-
-        assertEquals(response, updateTime.getYear() + "년 " + updateTime.getMonthValue() + "월 " + updateTime.getDayOfMonth() + "일");
-
-    }
-
-    @Test
     @DisplayName("마지막 업데이트가 3달 전인 경우")
     void timeDuration3Months(){
         // given
         LocalDateTime updateTime = LocalDateTime.now().minusMonths(3);
 
-
         // when
         String response = TimeDurationUtil.timeDuration(updateTime);
 
         // then
-        System.out.println(response);
-
         assertEquals(response, updateTime.getYear() + "년 " + updateTime.getMonthValue() + "월 " + updateTime.getDayOfMonth() + "일");
 
     }
@@ -49,30 +29,39 @@ public class TimeDurationUtilTest {
         // given
         LocalDateTime updateTime = LocalDateTime.now().minusYears(200);
 
-
         // when
         String response = TimeDurationUtil.timeDuration(updateTime);
 
         // then
-        System.out.println(response);
-
         assertEquals(response, updateTime.getYear() + "년 " + updateTime.getMonthValue() + "월 " + updateTime.getDayOfMonth() + "일");
 
     }
 
     @Test
-    @DisplayName("마지막 업데이트가 7일 전인 경우")
-    void timeDuration7Days(){
+    @DisplayName("마지막 업데이트가 29일 전 경우")
+    void timeDuration29Days(){
         // given
-        LocalDateTime updateTime = LocalDateTime.now().minusDays(7);
+        LocalDateTime updateTime = LocalDateTime.now().minusDays(29);
 
         // when
         String response = TimeDurationUtil.timeDuration(updateTime);
 
         // then
-        System.out.println(response);
+        assertEquals(response, "29일 전");
+    }
 
-        assertEquals(response, "7일 전");
+
+    @Test
+    @DisplayName("마지막 업데이트가 31일 전인 경우")
+    void timeDuration31Days(){
+        // given
+        LocalDateTime updateTime = LocalDateTime.now().minusDays(31);
+
+        // when
+        String response = TimeDurationUtil.timeDuration(updateTime);
+
+        // then
+        assertEquals(response, updateTime.getYear() + "년 " + updateTime.getMonthValue() + "월 " + updateTime.getDayOfMonth() + "일");
 
     }
 
@@ -87,8 +76,6 @@ public class TimeDurationUtilTest {
         String response = TimeDurationUtil.timeDuration(updateTime);
 
         // then
-        System.out.println(response);
-
         assertEquals(response, "5시간 전");
 
     }
@@ -103,8 +90,6 @@ public class TimeDurationUtilTest {
         String response = TimeDurationUtil.timeDuration(updateTime);
 
         // then
-        System.out.println(response);
-
         assertEquals(response, "4일 전");
 
     }
@@ -119,8 +104,6 @@ public class TimeDurationUtilTest {
         String response = TimeDurationUtil.timeDuration(updateTime);
 
         // then
-        System.out.println(response);
-
         assertEquals(response, "5분 전");
 
     }
@@ -136,8 +119,6 @@ public class TimeDurationUtilTest {
         String response = TimeDurationUtil.timeDuration(updateTime);
 
         // then
-        System.out.println(response);
-
         assertEquals(response, "2시간 전");
 
     }
@@ -152,9 +133,7 @@ public class TimeDurationUtilTest {
         String response = TimeDurationUtil.timeDuration(updateTime);
 
         // then
-        System.out.println(response);
-
-        assertEquals(response, updateTime.getYear() + "년 " + updateTime.getMonthValue() + "월 " + updateTime.getDayOfMonth() + "일");
+        assertEquals(response, "10일 전");
 
     }
 
@@ -168,8 +147,6 @@ public class TimeDurationUtilTest {
         String response = TimeDurationUtil.timeDuration(updateTime);
 
         // then
-        System.out.println(response);
-
         assertEquals(response, "지금");
 
     }
@@ -188,8 +165,6 @@ public class TimeDurationUtilTest {
         String response = TimeDurationUtil.timeDuration(updateTime);
 
         // then
-        System.out.println(response);
-
         assertEquals(response, updateTime.getYear() + "년 " + updateTime.getMonthValue() + "월 " + updateTime.getDayOfMonth() + "일");
 
     }
@@ -207,10 +182,7 @@ public class TimeDurationUtilTest {
         String response = TimeDurationUtil.timeDuration(updateTime);
 
         // then
-        System.out.println(response);
-
-        assertEquals(response, updateTime.getYear() + "년 " + updateTime.getMonthValue() + "월 " + updateTime.getDayOfMonth() + "일");
-
+        assertEquals(response, "20일 전");
     }
 
     @Test
@@ -227,8 +199,6 @@ public class TimeDurationUtilTest {
         String response = TimeDurationUtil.timeDuration(updateTime);
 
         // then
-        System.out.println(response);
-
         assertEquals(response, "5일 전");
 
     }
@@ -246,8 +216,6 @@ public class TimeDurationUtilTest {
         String response = TimeDurationUtil.timeDuration(updateTime);
 
         // then
-        System.out.println(response);
-
         assertEquals(response, "23시간 전");
 
     }
@@ -264,8 +232,6 @@ public class TimeDurationUtilTest {
         String response = TimeDurationUtil.timeDuration(updateTime);
 
         // then
-        System.out.println(response);
-
         assertEquals(response, "1분 전");
 
     }
@@ -281,8 +247,6 @@ public class TimeDurationUtilTest {
         String response = TimeDurationUtil.timeDuration(updateTime);
 
         // then
-        System.out.println(response);
-
         assertEquals(response, "1일 전");
 
     }
@@ -297,8 +261,6 @@ public class TimeDurationUtilTest {
         String response = TimeDurationUtil.timeDuration(updateTime);
 
         // then
-        System.out.println(response);
-
         assertEquals(response, "지금");
 
     }
