@@ -21,7 +21,6 @@ import com.triptune.domain.schedule.repository.TravelAttendeeRepository;
 import com.triptune.domain.schedule.repository.TravelRouteRepository;
 import com.triptune.domain.schedule.repository.TravelScheduleRepository;
 import com.triptune.domain.travel.dto.response.PlaceResponse;
-import com.triptune.domain.travel.entity.TravelImage;
 import com.triptune.domain.travel.entity.TravelPlace;
 import com.triptune.domain.travel.repository.TravelPlacePlaceRepository;
 import com.triptune.global.enumclass.ErrorCode;
@@ -35,7 +34,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -150,13 +148,7 @@ public class ScheduleService {
      * @return CreateScheduleResponse: scheduleId로 구성된 dto
      */
     public CreateScheduleResponse createSchedule(CreateScheduleRequest createScheduleRequest, String userId){
-        TravelSchedule travelSchedule = TravelSchedule.builder()
-                .scheduleName(createScheduleRequest.getScheduleName())
-                .startDate(createScheduleRequest.getStartDate())
-                .endDate(createScheduleRequest.getEndDate())
-                .createdAt(LocalDateTime.now())
-                .build();
-
+        TravelSchedule travelSchedule = TravelSchedule.of(createScheduleRequest);
         TravelSchedule savedTravelSchedule = travelScheduleRepository.save(travelSchedule);
 
         Member member = getSavedMember(userId);
@@ -195,19 +187,26 @@ public class ScheduleService {
     }
 
 
+    /**
+     * 일정 수정
+     * @param userId: 사용자 아이디
+     * @param scheduleId: 일정 인덱스
+     * @param updateScheduleRequest: 수정 일정 dto
+     */
     public void updateSchedule(String userId, Long scheduleId, UpdateScheduleRequest updateScheduleRequest) {
         TravelSchedule schedule = getSavedSchedule(scheduleId);
-        TravelAttendee attendee = getTravelAttendee(userId, schedule);
+        TravelAttendee attendee = getAttendeeInfo(userId, schedule);
         checkUserPermission(attendee.getPermission());
 
-        schedule.setScheduleName(updateScheduleRequest.getScheduleName());
-        schedule.setStartDate(updateScheduleRequest.getStartDate());
-        schedule.setEndDate(updateScheduleRequest.getEndDate());
-        schedule.setUpdatedAt(LocalDateTime.now());
-
+        schedule.set(updateScheduleRequest);
         updateTravelRouteInSchedule(schedule, updateScheduleRequest.getTravelRoute());
     }
 
+    /**
+     * 일정 수정 중 여행 루트 수정
+     * @param schedule: 일정 객체
+     * @param routeRequestList: 수정할 여행 루트
+     */
     public void updateTravelRouteInSchedule(TravelSchedule schedule, List<RouteRequest> routeRequestList){
         travelRouteRepository.deleteAllByTravelSchedule_ScheduleId(schedule.getScheduleId());
 
@@ -227,30 +226,43 @@ public class ScheduleService {
         }
     }
 
-    public TravelAttendee getTravelAttendee(String userId, TravelSchedule schedule){
-        TravelAttendee attendee = findAttendeeInSchedule(userId, schedule);
 
-        if(attendee == null){
-            throw new ForbiddenScheduleException(ErrorCode.FORBIDDEN_ACCESS_SCHEDULE);
-        }
-
-        return attendee;
-    }
-
-    public TravelAttendee findAttendeeInSchedule(String userId, TravelSchedule schedule){
+    /**
+     * 일정 참석자 정보 조회
+     * @param userId: 사용자 아이디
+     * @param schedule: 일정 객체
+     * @return TravelAttendee: 조회한 사용자의 일정 권한 및 허용 범위 포함된 객체
+     */
+    public TravelAttendee getAttendeeInfo(String userId, TravelSchedule schedule){
         Member member = getSavedMember(userId);
 
         return schedule.getTravelAttendeeList().stream()
                 .filter(attendee -> attendee.getMember().getMemberId().equals(member.getMemberId()))
                 .findFirst()
-                .orElse(null);
+                .orElseThrow(() -> new ForbiddenScheduleException(ErrorCode.FORBIDDEN_ACCESS_SCHEDULE));
 
     }
 
+    /**
+     * 사용자의 일정 허용 범위 체크
+     * @param permission: 허용 범위
+     */
     public void checkUserPermission(AttendeePermission permission){
         if (permission.equals(AttendeePermission.CHAT) || permission.equals(AttendeePermission.READ)){
             throw new ForbiddenScheduleException(ErrorCode.FORBIDDEN_EDIT_SCHEDULE);
         }
+    }
+
+
+    public void deleteSchedule(Long scheduleId, String userId) {
+        TravelSchedule schedule = getSavedSchedule(scheduleId);
+        TravelAttendee attendee = getAttendeeInfo(userId, schedule);
+
+        if (!attendee.getRole().equals(AttendeeRole.AUTHOR)){
+            throw new ForbiddenScheduleException(ErrorCode.FORBIDDEN_DELETE_SCHEDULE);
+        }
+
+        travelScheduleRepository.deleteById(scheduleId);
     }
 
     /**
@@ -338,7 +350,6 @@ public class ScheduleService {
         return travelPlaceRepository.findByPlaceId(placeId)
                 .orElseThrow(() ->  new DataNotFoundException(ErrorCode.PLACE_NOT_FOUND));
     }
-
 
 
 }

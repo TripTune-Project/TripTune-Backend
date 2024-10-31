@@ -66,6 +66,15 @@ public class ScheduleApiController {
         return ApiResponse.okResponse();
     }
 
+    @DeleteMapping("/{scheduleId}")
+    @Operation(summary = "일정 삭제", description = "일정을 삭제합니다.")
+    public ApiResponse<?> deleteSchedule(@PathVariable(name = "scheduleId") Long scheduleId){
+        String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        scheduleService.deleteSchedule(scheduleId, userId);
+        return ApiResponse.okResponse();
+    }
+
     @GetMapping("/{scheduleId}/travels")
     @Operation(summary = "여행지 조회", description = "여행지 탭에서 여행지를 제공합니다.")
     public ApiPageResponse<PlaceResponse> getTravelPlaces(@PathVariable(name = "scheduleId") Long scheduleId, @RequestParam int page){

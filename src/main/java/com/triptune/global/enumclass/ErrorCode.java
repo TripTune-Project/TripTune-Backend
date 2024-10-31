@@ -44,7 +44,8 @@ public enum ErrorCode {
     SCHEDULE_NOT_FOUND(HttpStatus.NOT_FOUND, "일정 데이터가 존재하지 않습니다."),
     AUTHOR_NOT_FOUND(HttpStatus.NOT_FOUND, "작성자 정보를 찾을 수 없습니다."),
     FORBIDDEN_ACCESS_SCHEDULE(HttpStatus.FORBIDDEN, "해당 일정에 접근 권한이 없는 사용자 입니다."),
-    FORBIDDEN_EDIT_SCHEDULE(HttpStatus.FORBIDDEN, "해딩 일정에 편집 권한이 없는 사용자 입니다.");
+    FORBIDDEN_EDIT_SCHEDULE(HttpStatus.FORBIDDEN, "해당 일정에 편집 권한이 없는 사용자 입니다."),
+    FORBIDDEN_DELETE_SCHEDULE(HttpStatus.FORBIDDEN, "해당 일정에 삭제 권한이 없는 사용자 입니다.");
 
 
     private final HttpStatus status;
