@@ -40,12 +40,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-import javax.xml.crypto.Data;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -712,50 +711,16 @@ public class ScheduleServiceTests extends ScheduleTest {
         assertEquals(fail.getMessage(), ErrorCode.PLACE_NOT_FOUND.getMessage());
     }
 
-
-
-    @Test
-    @DisplayName("getTravelAttendee(): 요청 사용자가 일정에 참가자에 포함되는 경우")
-    void getTravelAttendee_containsAttendees(){
-        // given
-        String userId = member1.getUserId();
-
-        when(memberRepository.findByUserId(userId)).thenReturn(Optional.of(member1));
-
-        // when
-        TravelAttendee response = scheduleService.getTravelAttendee(userId, schedule1);
-
-        // then
-        assertEquals(response.getMember().getUserId(), userId);
-        assertEquals(response.getTravelSchedule().getScheduleName(), schedule1.getScheduleName());
-    }
-
-    @Test
-    @DisplayName("getTravelAttendee(): 요청 사용자가 일정에 참가자에 포함되지 않는 경우 예외 발생")
-    void getTravelAttendee_notContainsAttendees_forbiddenScheduleException(){
-        // given
-        String userId = member1.getUserId();
-
-        when(memberRepository.findByUserId(userId)).thenReturn(Optional.of(member1));
-
-        // when
-        ForbiddenScheduleException fail = assertThrows(ForbiddenScheduleException.class, () -> scheduleService.getTravelAttendee(userId, schedule2));
-
-        // then
-        assertEquals(fail.getHttpStatus(), ErrorCode.FORBIDDEN_ACCESS_SCHEDULE.getStatus());
-        assertEquals(fail.getMessage(), ErrorCode.FORBIDDEN_ACCESS_SCHEDULE.getMessage());
-    }
-
     @Test
     @DisplayName("findAttendeeInSchedule(): 요청 사용자가 일정에 참가자에 포함되는 경우")
-    void findAttendeeInSchedule_containsAttendees(){
+    void getAttendeeInfo_containsAttendees(){
         // given
         String userId = member1.getUserId();
 
         when(memberRepository.findByUserId(userId)).thenReturn(Optional.of(member1));
 
         // when
-        TravelAttendee response = scheduleService.findAttendeeInSchedule(userId, schedule1);
+        TravelAttendee response = scheduleService.getAttendeeInfo(userId, schedule1);
 
         // then
         assertEquals(response.getMember().getUserId(), userId);
@@ -764,17 +729,18 @@ public class ScheduleServiceTests extends ScheduleTest {
 
     @Test
     @DisplayName("findAttendeeInSchedule(): 요청 사용자가 일정에 참가자에 포함되지 않는 경우")
-    void findAttendeeInSchedule_notContainsAttendees(){
+    void getAttendeeInfo_notContainsAttendees(){
         // given
         String userId = member1.getUserId();
-
         when(memberRepository.findByUserId(userId)).thenReturn(Optional.of(member1));
 
         // when
-        TravelAttendee response = scheduleService.findAttendeeInSchedule(userId, schedule2);
+        ForbiddenScheduleException fail = assertThrows(ForbiddenScheduleException.class, () -> scheduleService.getAttendeeInfo(userId, schedule2));
 
         // then
-        assertNull(response);
+        assertEquals(fail.getHttpStatus(), ErrorCode.FORBIDDEN_ACCESS_SCHEDULE.getStatus());
+        assertEquals(fail.getMessage(), ErrorCode.FORBIDDEN_ACCESS_SCHEDULE.getMessage());
+
     }
 
     @Test
@@ -826,6 +792,32 @@ public class ScheduleServiceTests extends ScheduleTest {
         assertEquals(fail.getHttpStatus(), ErrorCode.FORBIDDEN_EDIT_SCHEDULE.getStatus());
         assertEquals(fail.getMessage(), ErrorCode.FORBIDDEN_EDIT_SCHEDULE.getMessage());
     }
+
+    @Test
+    @DisplayName("deleteSchedule(): 일정 삭제")
+    void deleteSchedule(){
+        // given
+        when(travelScheduleRepository.findByScheduleId(any())).thenReturn(Optional.of(schedule1));
+        when(memberRepository.findByUserId(any())).thenReturn(Optional.of(member1));
+
+        // when
+        assertDoesNotThrow(() -> scheduleService.deleteSchedule(schedule1.getScheduleId(), member1.getUserId()));
+    }
+
+    @Test
+    @DisplayName("deleteSchedule(): 일정 삭제 시 작성자가 아닌 사용자가 삭제 요청으로 인해 예외 발생")
+    void deleteScheduleNotAuthor_forbiddenScheduleException(){
+        // given
+        when(travelScheduleRepository.findByScheduleId(any())).thenReturn(Optional.of(schedule1));
+        when(memberRepository.findByUserId(any())).thenReturn(Optional.of(member2));
+
+        // when
+        ForbiddenScheduleException fail = assertThrows(ForbiddenScheduleException.class, () -> scheduleService.deleteSchedule(schedule1.getScheduleId(), member2.getUserId()));
+
+        assertEquals(fail.getHttpStatus(), ErrorCode.FORBIDDEN_DELETE_SCHEDULE.getStatus());
+        assertEquals(fail.getMessage(), ErrorCode.FORBIDDEN_DELETE_SCHEDULE.getMessage());
+    }
+
 
 
     @Test

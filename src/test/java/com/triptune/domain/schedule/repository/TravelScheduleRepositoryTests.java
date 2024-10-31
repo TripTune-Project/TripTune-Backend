@@ -6,6 +6,7 @@ import com.triptune.domain.member.entity.Member;
 import com.triptune.domain.member.repository.MemberRepository;
 import com.triptune.domain.schedule.ScheduleTest;
 import com.triptune.domain.schedule.entity.TravelAttendee;
+import com.triptune.domain.schedule.entity.TravelRoute;
 import com.triptune.domain.schedule.entity.TravelSchedule;
 import com.triptune.domain.schedule.enumclass.AttendeePermission;
 import com.triptune.domain.schedule.enumclass.AttendeeRole;
@@ -14,6 +15,7 @@ import com.triptune.domain.travel.entity.TravelPlace;
 import com.triptune.domain.travel.repository.TravelImageRepository;
 import com.triptune.domain.travel.repository.TravelPlacePlaceRepository;
 import com.triptune.global.config.QueryDSLConfig;
+import com.triptune.global.exception.DataNotFoundException;
 import com.triptune.global.util.PageUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -23,12 +25,14 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.support.PageableUtils;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
@@ -41,6 +45,7 @@ public class TravelScheduleRepositoryTests extends ScheduleTest {
     private final TravelScheduleRepository travelScheduleRepository;
     private final TravelAttendeeRepository travelAttendeeRepository;
     private final TravelPlacePlaceRepository travelPlaceRepository;
+    private final TravelRouteRepository travelRouteRepository;
     private final FileRepository fileRepository;
     private final CityRepository cityRepository;
     private final CountryRepository countryRepository;
@@ -58,10 +63,11 @@ public class TravelScheduleRepositoryTests extends ScheduleTest {
 
 
     @Autowired
-    public TravelScheduleRepositoryTests(TravelScheduleRepository travelScheduleRepository, TravelAttendeeRepository travelAttendeeRepository, TravelPlacePlaceRepository travelPlaceRepository, FileRepository fileRepository, CityRepository cityRepository, CountryRepository countryRepository, DistrictRepository districtRepository, ApiCategoryRepository apiCategoryRepository, TravelImageRepository travelImageRepository, ApiContentTypeRepository apiContentTypeRepository, MemberRepository memberRepository) {
+    public TravelScheduleRepositoryTests(TravelScheduleRepository travelScheduleRepository, TravelAttendeeRepository travelAttendeeRepository, TravelPlacePlaceRepository travelPlaceRepository, TravelRouteRepository travelRouteRepository, FileRepository fileRepository, CityRepository cityRepository, CountryRepository countryRepository, DistrictRepository districtRepository, ApiCategoryRepository apiCategoryRepository, TravelImageRepository travelImageRepository, ApiContentTypeRepository apiContentTypeRepository, MemberRepository memberRepository) {
         this.travelScheduleRepository = travelScheduleRepository;
         this.travelAttendeeRepository = travelAttendeeRepository;
         this.travelPlaceRepository = travelPlaceRepository;
+        this.travelRouteRepository = travelRouteRepository;
         this.fileRepository = fileRepository;
         this.cityRepository = cityRepository;
         this.countryRepository = countryRepository;
@@ -172,7 +178,32 @@ public class TravelScheduleRepositoryTests extends ScheduleTest {
 
         // then
         assertThat(response).isEqualTo(0);
+    }
 
+    @Test
+    @DisplayName("deleteById(): 일정 삭제")
+    void deleteById(){
+        // given
+        // when
+        travelScheduleRepository.deleteById(schedule1.getScheduleId());
+
+        // then
+        // 일정 삭제됐는지 확인
+        Optional<TravelSchedule> schedule = travelScheduleRepository.findByScheduleId(schedule1.getScheduleId());
+        assertTrue(schedule.isEmpty());
+
+        // 해당 일정의 참석자 정보 삭제됐는지 확인
+        List<TravelAttendee> attendees = travelAttendeeRepository.findAllByTravelSchedule_ScheduleId(schedule1.getScheduleId());
+        assertTrue(attendees.isEmpty());
+
+        // 해당 일정의 여행 루트 정보 삭제됐는지 확인
+        Page<TravelRoute> routes = travelRouteRepository.findAllByTravelSchedule_ScheduleId(PageUtil.defaultPageable(1), schedule1.getScheduleId());
+        assertEquals(routes.getTotalElements(), 0);
+        assertTrue(routes.getContent().isEmpty());
+
+        // 사용자 정보 삭제 안됐는지 확인
+        Optional<Member> member = memberRepository.findByUserId(member1.getUserId());
+        assertFalse(member.isEmpty());
     }
 
 

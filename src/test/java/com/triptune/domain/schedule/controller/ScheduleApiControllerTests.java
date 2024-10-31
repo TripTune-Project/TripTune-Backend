@@ -413,9 +413,9 @@ public class ScheduleApiControllerTests extends ScheduleTest {
         TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
         TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ));
 
-        member1.setTravelAttendeeList(List.of(attendee1));
-        member2.setTravelAttendeeList(List.of(attendee3));
-        schedule1.setTravelAttendeeList(Arrays.asList(attendee1, attendee3));
+        member1.setTravelAttendeeList(new ArrayList<>(List.of(attendee1)));
+        member2.setTravelAttendeeList(new ArrayList<>(List.of(attendee3)));
+        schedule1.setTravelAttendeeList(new ArrayList<>(List.of(attendee1, attendee3)));
 
         RouteRequest routeRequest1 = createRouteRequest(1, travelPlace1.getPlaceId());
         UpdateScheduleRequest request = createUpdateScheduleRequest(List.of(routeRequest1));
@@ -513,6 +513,48 @@ public class ScheduleApiControllerTests extends ScheduleTest {
                 .andExpect(jsonPath("$.data.content[0].thumbnailUrl").exists());
     }
 
+    @Test
+    @DisplayName("deleteSchedule(): 일정 삭제")
+    @WithMockUser(username = "member1")
+    void deleteSchedule() throws Exception {
+        TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
+        TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ));
+
+        TravelRoute route1 = travelRouteRepository.save(createTravelRoute(schedule1, travelPlace1, 1));
+        TravelRoute route2 = travelRouteRepository.save(createTravelRoute(schedule1, travelPlace2, 2));
+
+        member1.setTravelAttendeeList(new ArrayList<>(List.of(attendee1)));
+        member2.setTravelAttendeeList(new ArrayList<>(List.of(attendee3)));
+        schedule1.setTravelRouteList(new ArrayList<>(List.of(route1, route2)));
+        schedule1.setTravelAttendeeList(new ArrayList<>(List.of(attendee1, attendee3)));
+
+        mockMvc.perform(delete("/api/schedules/{scheduleId}", schedule1.getScheduleId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true));
+
+    }
+
+    @Test
+    @DisplayName("deleteSchedule(): 일정 삭제 시 삭제 권한이 없는 사용자 요청으로 예외 발생")
+    @WithMockUser(username = "member2")
+    void deleteSchedule_forbiddenScheduleException() throws Exception {
+        TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
+        TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ));
+
+        TravelRoute route1 = travelRouteRepository.save(createTravelRoute(schedule1, travelPlace1, 1));
+        TravelRoute route2 = travelRouteRepository.save(createTravelRoute(schedule1, travelPlace2, 2));
+
+        member1.setTravelAttendeeList(new ArrayList<>(List.of(attendee1)));
+        member2.setTravelAttendeeList(new ArrayList<>(List.of(attendee3)));
+        schedule1.setTravelRouteList(new ArrayList<>(List.of(route1, route2)));
+        schedule1.setTravelAttendeeList(new ArrayList<>(List.of(attendee1, attendee3)));
+
+        mockMvc.perform(delete("/api/schedules/{scheduleId}", schedule1.getScheduleId()))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value(ErrorCode.FORBIDDEN_DELETE_SCHEDULE.getMessage()));
+
+    }
 
     @Test
     @DisplayName("getTravelPlaces(): 여행지 조회 시 여행지 데이터 존재하지 않는 경우")
