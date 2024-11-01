@@ -1,4 +1,4 @@
-package com.triptune.domain.member.dto;
+package com.triptune.domain.member.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Builder;

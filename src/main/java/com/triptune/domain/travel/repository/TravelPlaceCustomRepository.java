@@ -1,9 +1,9 @@
 package com.triptune.domain.travel.repository;
 
 import com.querydsl.core.types.dsl.BooleanExpression;
-import com.triptune.domain.travel.dto.PlaceLocationRequest;
+import com.triptune.domain.travel.dto.request.PlaceLocationRequest;
 import com.triptune.domain.travel.dto.PlaceLocation;
-import com.triptune.domain.travel.dto.PlaceSearchRequest;
+import com.triptune.domain.travel.dto.request.PlaceSearchRequest;
 import com.triptune.domain.travel.entity.TravelPlace;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

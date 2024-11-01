@@ -1,9 +1,9 @@
 package com.triptune.domain.travel.controller;
 
-import com.triptune.domain.travel.dto.PlaceDetailResponse;
-import com.triptune.domain.travel.dto.PlaceLocationRequest;
-import com.triptune.domain.travel.dto.PlaceDistanceResponse;
-import com.triptune.domain.travel.dto.PlaceSearchRequest;
+import com.triptune.domain.travel.dto.response.PlaceDetailResponse;
+import com.triptune.domain.travel.dto.request.PlaceLocationRequest;
+import com.triptune.domain.travel.dto.response.PlaceDistanceResponse;
+import com.triptune.domain.travel.dto.request.PlaceSearchRequest;
 import com.triptune.domain.travel.service.TravelService;
 import com.triptune.global.response.pagination.ApiPageResponse;
 import com.triptune.global.response.ApiResponse;

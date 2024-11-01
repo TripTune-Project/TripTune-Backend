@@ -1,8 +1,14 @@
 package com.triptune.domain.schedule.controller;
 
-import com.triptune.domain.schedule.dto.*;
+import com.triptune.domain.schedule.dto.request.CreateScheduleRequest;
+import com.triptune.domain.schedule.dto.request.UpdateScheduleRequest;
+import com.triptune.domain.schedule.dto.response.CreateScheduleResponse;
+import com.triptune.domain.schedule.dto.response.RouteResponse;
+import com.triptune.domain.schedule.dto.response.ScheduleDetailResponse;
+import com.triptune.domain.schedule.dto.response.ScheduleInfoResponse;
 import com.triptune.domain.schedule.service.ScheduleService;
-import com.triptune.domain.travel.dto.PlaceResponse;
+import com.triptune.domain.travel.dto.response.PlaceResponse;
+import com.triptune.global.response.SuccessResponse;
 import com.triptune.global.response.pagination.ApiPageResponse;
 import com.triptune.global.response.ApiResponse;
 import com.triptune.global.response.pagination.ApiSchedulePageResponse;
@@ -51,6 +57,24 @@ public class ScheduleApiController {
          return ApiResponse.dataResponse(response);
     }
 
+    @PatchMapping("/{scheduleId}")
+    @Operation(summary = "일정 수정", description = "일정 상세 화면에서 저장 버튼을 누르면 해당 일정이 수정됩니다. 사용자는 저장 작업으로 보지만, 실제로는 일정 수정 작업입니다.")
+    public ApiResponse<?> updateSchedule(@PathVariable(name = "scheduleId") Long scheduleId, @Valid @RequestBody UpdateScheduleRequest updateScheduleRequest){
+        String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        scheduleService.updateSchedule(userId, scheduleId, updateScheduleRequest);
+        return ApiResponse.okResponse();
+    }
+
+    @DeleteMapping("/{scheduleId}")
+    @Operation(summary = "일정 삭제", description = "일정을 삭제합니다.")
+    public ApiResponse<?> deleteSchedule(@PathVariable(name = "scheduleId") Long scheduleId){
+        String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        scheduleService.deleteSchedule(scheduleId, userId);
+        return ApiResponse.okResponse();
+    }
+
     @GetMapping("/{scheduleId}/travels")
     @Operation(summary = "여행지 조회", description = "여행지 탭에서 여행지를 제공합니다.")
     public ApiPageResponse<PlaceResponse> getTravelPlaces(@PathVariable(name = "scheduleId") Long scheduleId, @RequestParam int page){
@@ -66,7 +90,6 @@ public class ScheduleApiController {
                                                              @RequestParam(name = "keyword") String keyword){
 
         Page<PlaceResponse> response = scheduleService.searchTravelPlaces(scheduleId, page, keyword);
-
         return ApiPageResponse.dataResponse(response);
     }
 

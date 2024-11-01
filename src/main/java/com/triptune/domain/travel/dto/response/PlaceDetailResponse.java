@@ -1,4 +1,4 @@
-package com.triptune.domain.travel.dto;
+package com.triptune.domain.travel.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.triptune.domain.travel.entity.TravelPlace;

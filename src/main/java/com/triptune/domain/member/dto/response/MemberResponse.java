@@ -1,4 +1,4 @@
-package com.triptune.domain.member.dto;
+package com.triptune.domain.member.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Builder;

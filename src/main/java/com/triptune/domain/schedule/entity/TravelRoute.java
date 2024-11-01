@@ -34,4 +34,14 @@ public class TravelRoute {
         this.travelPlace = travelPlace;
         this.routeOrder = routeOrder;
     }
+
+    public TravelRoute(TravelSchedule travelSchedule, TravelPlace travelPlace, int routeOrder) {
+        this.travelSchedule = travelSchedule;
+        this.travelPlace = travelPlace;
+        this.routeOrder = routeOrder;
+    }
+
+    public static TravelRoute of(TravelSchedule travelSchedule, TravelPlace travelPlace, int routeOrder){
+        return new TravelRoute(travelSchedule, travelPlace, routeOrder);
+    }
 }

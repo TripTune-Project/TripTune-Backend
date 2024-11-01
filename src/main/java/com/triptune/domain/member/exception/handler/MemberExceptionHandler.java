@@ -18,22 +18,14 @@ public class MemberExceptionHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleFailLoginException(FailLoginException ex, HttpServletRequest request){
         log.error("FailLoginException at {}: {}", request.getRequestURI(), ex.getMessage());
-
-        return ErrorResponse.builder()
-                .errorCode(ex.getHttpStatus().value())
-                .message(ex.getMessage())
-                .build();
+        return ErrorResponse.of(ex.getHttpStatus(), ex.getMessage());
     }
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleChangePasswordException(ChangePasswordException ex, HttpServletRequest request){
         log.error("ChangePasswordException at {}: {}", request.getRequestURI(), ex.getMessage());
-
-        return ErrorResponse.builder()
-                .errorCode(ex.getHttpStatus().value())
-                .message(ex.getMessage())
-                .build();
+        return ErrorResponse.of(ex.getHttpStatus(), ex.getMessage());
     }
 
 }

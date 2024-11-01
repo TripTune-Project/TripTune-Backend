@@ -2,8 +2,8 @@ package com.triptune.domain.travel;
 
 import com.triptune.domain.BaseTest;
 import com.triptune.domain.travel.dto.PlaceLocation;
-import com.triptune.domain.travel.dto.PlaceLocationRequest;
-import com.triptune.domain.travel.dto.PlaceSearchRequest;
+import com.triptune.domain.travel.dto.request.PlaceLocationRequest;
+import com.triptune.domain.travel.dto.request.PlaceSearchRequest;
 import com.triptune.domain.travel.entity.TravelPlace;
 
 public abstract class TravelTest extends BaseTest {

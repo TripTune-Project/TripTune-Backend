@@ -34,9 +34,7 @@ public class GlobalExceptionHandler {
                 .map(FieldError::getDefaultMessage)
                 .collect(Collectors.joining());
 
-        return ErrorResponse.builder()
-                .errorCode(HttpStatus.BAD_REQUEST.value())
-                .message(message).build();
+        return ErrorResponse.of(HttpStatus.BAD_REQUEST, message);
     }
 
 
@@ -44,20 +42,14 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleCustomJwtBadRequestException(CustomJwtBadRequestException ex, HttpServletRequest request){
         log.error("CustomJwtBadRequestException at {}: {}", request.getRequestURI(), ex.getMessage());
-
-        return ErrorResponse.builder()
-                .errorCode(ex.getHttpStatus().value())
-                .message(ex.getMessage()).build();
+        return ErrorResponse.of(ex.getHttpStatus(), ex.getMessage());
     }
 
     @ExceptionHandler(CustomJwtUnAuthorizedException.class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     public ErrorResponse handleCustomJwtUnAuthorizedException(CustomJwtUnAuthorizedException ex, HttpServletRequest request){
         log.error("CustomJwtUnAuthorizedException at {}: {}", request.getRequestURI(),  ex.getMessage());
-
-        return ErrorResponse.builder()
-                .errorCode(ex.getHttpStatus().value())
-                .message(ex.getMessage()).build();
+        return ErrorResponse.of(ex.getHttpStatus(), ex.getMessage());
     }
 
     @ExceptionHandler(NoHandlerFoundException.class)
@@ -72,22 +64,14 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleDataExistedException(DataExistException ex, HttpServletRequest request){
         log.error("DataExistException at {}: {}", request.getRequestURI(),  ex.getMessage());
-
-        return ErrorResponse.builder()
-                .errorCode(ex.getHttpStatus().value())
-                .message(ex.getMessage())
-                .build();
+        return ErrorResponse.of(ex.getHttpStatus(), ex.getMessage());
     }
 
     @ExceptionHandler(DataNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public ErrorResponse handleDataNotFoundException(DataNotFoundException ex, HttpServletRequest request){
         log.error("DataNotFoundException at {}: {}", request.getRequestURI(),  ex.getMessage());
-
-        return ErrorResponse.builder()
-                .message(ex.getMessage())
-                .errorCode(ex.getHttpStatus().value())
-                .build();
+        return ErrorResponse.of(ex.getHttpStatus(), ex.getMessage());
 
     }
 
@@ -95,12 +79,7 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleCustomNotValidException(CustomNotValidException ex, HttpServletRequest request){
         log.error("CustomNotValidException at {}: {}", request.getRequestURI(),  ex.getMessage());
-
-        return ErrorResponse.builder()
-                .message(ex.getMessage())
-                .errorCode(ex.getHttpStatus().value())
-                .build();
-
+        return ErrorResponse.of(ex.getHttpStatus(), ex.getMessage());
     }
 
 }

@@ -2,8 +2,15 @@ package com.triptune.domain.member.service;
 
 import com.triptune.domain.email.service.EmailService;
 import com.triptune.domain.member.dto.*;
+import com.triptune.domain.member.dto.request.FindIdRequest;
+import com.triptune.domain.member.dto.request.LoginRequest;
+import com.triptune.domain.member.dto.request.MemberRequest;
+import com.triptune.domain.member.dto.request.RefreshTokenRequest;
+import com.triptune.domain.member.dto.response.FindIdResponse;
+import com.triptune.domain.member.dto.response.LoginResponse;
+import com.triptune.domain.member.dto.response.MemberResponse;
+import com.triptune.domain.member.dto.response.RefreshTokenResponse;
 import com.triptune.domain.member.entity.Member;
-import com.triptune.domain.member.entity.ProfileImage;
 import com.triptune.domain.member.exception.ChangePasswordException;
 import com.triptune.domain.member.exception.FailLoginException;
 import com.triptune.domain.member.repository.MemberRepository;

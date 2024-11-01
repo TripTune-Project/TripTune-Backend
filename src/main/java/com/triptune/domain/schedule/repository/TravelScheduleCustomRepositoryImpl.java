@@ -32,6 +32,7 @@ public class TravelScheduleCustomRepositoryImpl implements TravelScheduleCustomR
                 .selectFrom(travelSchedule)
                 .join(travelSchedule.travelAttendeeList, travelAttendee)
                 .where(travelAttendee.member.memberId.eq(memberId))
+                .orderBy(travelSchedule.updatedAt.desc(), travelSchedule.createdAt.desc())
                 .fetch();
 
 

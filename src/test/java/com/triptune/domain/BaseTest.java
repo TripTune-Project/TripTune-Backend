@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.triptune.domain.common.entity.*;
 import com.triptune.domain.member.entity.Member;
 import com.triptune.domain.member.entity.ProfileImage;
-import com.triptune.domain.schedule.dto.CreateScheduleRequest;
 import com.triptune.domain.schedule.entity.TravelAttendee;
 import com.triptune.domain.schedule.entity.TravelRoute;
 import com.triptune.domain.schedule.entity.TravelSchedule;
@@ -124,12 +123,12 @@ public abstract class BaseTest {
                 .build();
     }
 
-    protected TravelAttendee createTravelAttendee(Member member, TravelSchedule schedule, AttendeeRole role){
+    protected TravelAttendee createTravelAttendee(Member member, TravelSchedule schedule, AttendeeRole role, AttendeePermission permission){
         return TravelAttendee.builder()
                 .member(member)
                 .travelSchedule(schedule)
                 .role(role)
-                .permission(AttendeePermission.ALL)
+                .permission(permission)
                 .build();
     }
 
