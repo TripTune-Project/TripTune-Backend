@@ -67,7 +67,7 @@ public class ScheduleService {
 
         if (!schedulePage.getContent().isEmpty()){
             scheduleInfoResponseList = schedulePage.stream()
-                    .map(this::convertToScheduleInfoResponse)
+                    .map(schedule -> convertToScheduleInfoResponse(member, schedule))
                     .collect(Collectors.toList());
 
             sharedScheduleCnt = schedulePage.getContent().stream()
@@ -85,11 +85,12 @@ public class ScheduleService {
      * @param schedule: 일정
      * @return ScheduleInfoResponse: 대략적인 일정 정보가 포함된 dto
      */
-    public ScheduleInfoResponse convertToScheduleInfoResponse(TravelSchedule schedule){
+    public ScheduleInfoResponse convertToScheduleInfoResponse(Member member, TravelSchedule schedule){
         String thumbnailUrl = getThumbnailUrl(schedule);
+        TravelAttendee attendee = getAttendeeInfo(member, schedule);
         AuthorDTO authorDTO = getAuthorDTO(schedule);
 
-        return ScheduleInfoResponse.entityToDto(schedule, thumbnailUrl, authorDTO);
+        return ScheduleInfoResponse.entityToDto(schedule, attendee.getRole(), thumbnailUrl, authorDTO);
     }
 
     /**
@@ -115,6 +116,20 @@ public class ScheduleService {
                 .orElseThrow(() -> new DataNotFoundException(ErrorCode.AUTHOR_NOT_FOUND));
     }
 
+
+    /**
+     * 일정 참석자 정보 조회
+     * @param member: 사용자 객체
+     * @param schedule: 일정 객체
+     * @return TravelAttendee: 조회한 사용자의 일정 권한 및 허용 범위 포함된 객체
+     */
+    public TravelAttendee getAttendeeInfo(Member member, TravelSchedule schedule){
+        return schedule.getTravelAttendeeList().stream()
+                .filter(attendee -> attendee.getMember().getMemberId().equals(member.getMemberId()))
+                .findFirst()
+                .orElseThrow(() -> new ForbiddenScheduleException(ErrorCode.FORBIDDEN_ACCESS_SCHEDULE));
+
+    }
 
     /**
      * 썸네일 이미지 조회
@@ -195,7 +210,8 @@ public class ScheduleService {
      */
     public void updateSchedule(String userId, Long scheduleId, UpdateScheduleRequest updateScheduleRequest) {
         TravelSchedule schedule = getSavedSchedule(scheduleId);
-        TravelAttendee attendee = getAttendeeInfo(userId, schedule);
+        Member member = getSavedMember(userId);
+        TravelAttendee attendee = getAttendeeInfo(member, schedule);
         checkUserPermission(attendee.getPermission());
 
         schedule.set(updateScheduleRequest);
@@ -227,21 +243,6 @@ public class ScheduleService {
     }
 
 
-    /**
-     * 일정 참석자 정보 조회
-     * @param userId: 사용자 아이디
-     * @param schedule: 일정 객체
-     * @return TravelAttendee: 조회한 사용자의 일정 권한 및 허용 범위 포함된 객체
-     */
-    public TravelAttendee getAttendeeInfo(String userId, TravelSchedule schedule){
-        Member member = getSavedMember(userId);
-
-        return schedule.getTravelAttendeeList().stream()
-                .filter(attendee -> attendee.getMember().getMemberId().equals(member.getMemberId()))
-                .findFirst()
-                .orElseThrow(() -> new ForbiddenScheduleException(ErrorCode.FORBIDDEN_ACCESS_SCHEDULE));
-
-    }
 
     /**
      * 사용자의 일정 허용 범위 체크
@@ -256,7 +257,8 @@ public class ScheduleService {
 
     public void deleteSchedule(Long scheduleId, String userId) {
         TravelSchedule schedule = getSavedSchedule(scheduleId);
-        TravelAttendee attendee = getAttendeeInfo(userId, schedule);
+        Member member = getSavedMember(userId);
+        TravelAttendee attendee = getAttendeeInfo(member, schedule);
 
         if (!attendee.getRole().equals(AttendeeRole.AUTHOR)){
             throw new ForbiddenScheduleException(ErrorCode.FORBIDDEN_DELETE_SCHEDULE);

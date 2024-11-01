@@ -180,7 +180,8 @@ public class ScheduleApiControllerTests extends ScheduleTest {
                 .andExpect(jsonPath("$.data.totalSharedElements").value(1))
                 .andExpect(jsonPath("$.data.content[0].sinceUpdate").exists())
                 .andExpect(jsonPath("$.data.content[0].scheduleName").exists())
-                .andExpect(jsonPath("$.data.content[0].thumbnailUrl").exists());
+                .andExpect(jsonPath("$.data.content[0].thumbnailUrl").exists())
+                .andExpect(jsonPath("$.data.content[0].role").exists());
     }
 
     @Test
@@ -226,7 +227,6 @@ public class ScheduleApiControllerTests extends ScheduleTest {
                 .andExpect(jsonPath("$.data.totalElements").value(0))
                 .andExpect(jsonPath("$.data.content").isEmpty());
     }
-
 
     @Test
     @DisplayName("createSchedule(): 일정 만들기 성공")
