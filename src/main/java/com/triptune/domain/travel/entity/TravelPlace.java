@@ -116,4 +116,12 @@ public class TravelPlace {
         this.travelImageList = travelImageList;
         this.travelRouteList = travelRouteList;
     }
+
+    public String getThumbnailUrl(){
+        return travelImageList.stream()
+                .filter(TravelImage::isThumbnail)
+                .map(TravelImage::getS3ObjectUrl)
+                .findFirst()
+                .orElse(null);
+    }
 }

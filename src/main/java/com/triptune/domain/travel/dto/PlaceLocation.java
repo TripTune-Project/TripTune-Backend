@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Getter
@@ -18,15 +19,15 @@ public class PlaceLocation {
     private String district;
     private String address;
     private String detailAddress;
-    private double longitude;
-    private double latitude;
+    private Double longitude;
+    private Double latitude;
     private String placeName;
-    private List<TravelImage> travelImageFileList;
+    private List<TravelImage> travelImageList;
     private Double distance;
 
     @Builder
     public PlaceLocation(Long placeId, String country, String city, String district, String address, String detailAddress, double longitude, double latitude, String placeName, Double distance) {
-        // travelImageFileList 미포함 생성자
+        // travelImageFileList 포함되지 않은 생성자 -> TravelPlaceCustomRepositoryImpl 에서 사용
         this.placeId = placeId;
         this.country = country;
         this.city = city;
@@ -39,9 +40,8 @@ public class PlaceLocation {
         this.distance = distance;
     }
 
-
     @Builder
-    public PlaceLocation(Long placeId, String country, String city, String district, String address, String detailAddress, double longitude, double latitude, String placeName, List<TravelImage> travelImageFileList, Double distance) {
+    public PlaceLocation(Long placeId, String country, String city, String district, String address, String detailAddress, double longitude, double latitude, String placeName, List<TravelImage> travelImageList, Double distance) {
         // travelImageFileList 포함 생성자
         this.placeId = placeId;
         this.country = country;
@@ -52,7 +52,16 @@ public class PlaceLocation {
         this.longitude = longitude;
         this.latitude = latitude;
         this.placeName = placeName;
-        this.travelImageFileList = travelImageFileList;
+        this.travelImageList = travelImageList;
         this.distance = distance;
+    }
+
+
+    public String getThumbnailUrl(){
+        return travelImageList.stream()
+                .filter(TravelImage::isThumbnail)
+                .map(TravelImage::getS3ObjectUrl)
+                .findFirst()
+                .orElse(null);
     }
 }

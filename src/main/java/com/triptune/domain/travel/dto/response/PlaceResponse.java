@@ -1,6 +1,5 @@
 package com.triptune.domain.travel.dto.response;
 
-import com.triptune.domain.common.entity.File;
 import com.triptune.domain.travel.entity.TravelPlace;
 import lombok.Builder;
 import lombok.Getter;
@@ -34,13 +33,7 @@ public class PlaceResponse {
         this.thumbnailUrl = thumbnailUrl;
     }
 
-    public void setThumbnailUrl(TravelPlace travelPlace) {
-        this.thumbnailUrl = File.getThumbnailUrl(travelPlace.getTravelImageList());
-    }
-
     public static PlaceResponse entityToDto(TravelPlace travelPlace){
-        String thumbnailUrl = File.getThumbnailUrl(travelPlace.getTravelImageList());
-
         return PlaceResponse.builder()
                 .placeId(travelPlace.getPlaceId())
                 .country(travelPlace.getCountry().getCountryName())
@@ -51,7 +44,7 @@ public class PlaceResponse {
                 .longitude(travelPlace.getLongitude())
                 .latitude(travelPlace.getLatitude())
                 .placeName(travelPlace.getPlaceName())
-                .thumbnailUrl(thumbnailUrl)
+                .thumbnailUrl(travelPlace.getThumbnailUrl())
                 .build();
     }
 

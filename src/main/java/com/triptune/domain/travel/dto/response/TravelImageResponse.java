@@ -19,11 +19,11 @@ public class TravelImageResponse {
         this.imageUrl = imageUrl;
     }
 
-    public static TravelImageResponse entityToDto(TravelImage travelImageFile){
+    public static TravelImageResponse entityToDto(TravelImage travelImage){
         return TravelImageResponse.builder()
-                .fileId(travelImageFile.getFile().getFileId())
-                .imageName(travelImageFile.getFile().getFileName())
-                .imageUrl(travelImageFile.getFile().getS3ObjectUrl())
+                .fileId(travelImage.getTravelImageId())
+                .imageName(travelImage.getFileName())
+                .imageUrl(travelImage.getS3ObjectUrl())
                 .build();
     }
 }

@@ -22,7 +22,19 @@ public class QTravelImage extends EntityPathBase<TravelImage> {
 
     public static final QTravelImage travelImage = new QTravelImage("travelImage");
 
-    public final com.triptune.domain.common.entity.QFile file;
+    public final DateTimePath<java.time.LocalDateTime> createdAt = createDateTime("createdAt", java.time.LocalDateTime.class);
+
+    public final StringPath fileName = createString("fileName");
+
+    public final NumberPath<Double> fileSize = createNumber("fileSize", Double.class);
+
+    public final StringPath fileType = createString("fileType");
+
+    public final BooleanPath isThumbnail = createBoolean("isThumbnail");
+
+    public final StringPath originalName = createString("originalName");
+
+    public final StringPath s3ObjectUrl = createString("s3ObjectUrl");
 
     public final NumberPath<Long> travelImageId = createNumber("travelImageId", Long.class);
 
@@ -46,7 +58,6 @@ public class QTravelImage extends EntityPathBase<TravelImage> {
 
     public QTravelImage(Class<? extends TravelImage> type, PathMetadata metadata, PathInits inits) {
         super(type, metadata, inits);
-        this.file = inits.isInitialized("file") ? new com.triptune.domain.common.entity.QFile(forProperty("file")) : null;
         this.travelPlace = inits.isInitialized("travelPlace") ? new QTravelPlace(forProperty("travelPlace"), inits.get("travelPlace")) : null;
     }
 
