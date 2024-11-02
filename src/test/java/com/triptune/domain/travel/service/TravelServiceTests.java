@@ -2,17 +2,17 @@ package com.triptune.domain.travel.service;
 
 import com.triptune.domain.common.entity.*;
 import com.triptune.domain.travel.TravelTest;
+import com.triptune.domain.travel.dto.PlaceLocation;
 import com.triptune.domain.travel.dto.request.PlaceLocationRequest;
 import com.triptune.domain.travel.dto.request.PlaceSearchRequest;
 import com.triptune.domain.travel.dto.response.PlaceDetailResponse;
 import com.triptune.domain.travel.dto.response.PlaceDistanceResponse;
-import com.triptune.global.exception.DataNotFoundException;
-import com.triptune.domain.travel.dto.*;
 import com.triptune.domain.travel.entity.TravelImage;
 import com.triptune.domain.travel.entity.TravelPlace;
 import com.triptune.domain.travel.repository.TravelImageRepository;
 import com.triptune.domain.travel.repository.TravelPlacePlaceRepository;
 import com.triptune.global.enumclass.ErrorCode;
+import com.triptune.global.exception.DataNotFoundException;
 import com.triptune.global.util.PageUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -25,10 +25,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.when;
 
@@ -44,27 +46,18 @@ public class TravelServiceTests extends TravelTest {
     @Mock
     private TravelImageRepository travelImageRepository;
 
-    private Country country;
-    private City city;
-    private District district;
-    private ApiCategory apiCategory;
     private TravelPlace travelPlace;
-    private File file;
-    private List<TravelImage> imageList;
+    private TravelImage travelImage;
 
 
     @BeforeEach
     void setUp(){
-        this.country = createCountry();
-        this.city = createCity(country);
-        this.district = createDistrict(city, "강남구");
-        this.apiCategory = createApiCategory();
+        Country country = createCountry();
+        City city = createCity(country);
+        District district = createDistrict(city, "강남구");
+        ApiCategory apiCategory = createApiCategory();
         this.travelPlace = createTravelPlace(1L, country, city, district, apiCategory);
-        this.file = createFile("test", true);
-
-        this.imageList = new ArrayList<>();
-        this.imageList.add(createTravelImage(travelPlace, file));
-        this.travelPlace.setTravelImageList(imageList);
+        this.travelImage = createTravelImage(travelPlace, "test", true);
     }
 
 
@@ -76,14 +69,14 @@ public class TravelServiceTests extends TravelTest {
 
         Pageable pageable = PageUtil.defaultPageable(1);
 
-        List<PlaceLocation> locationList = new ArrayList<>();
-        locationList.add(createTravelLocation(travelPlace));
-        Page<PlaceLocation> mockLocation = new PageImpl<>(locationList, pageable, 1);
+        List<TravelImage> imageList = new ArrayList<>(List.of(travelImage));
+        travelPlace.setTravelImageList(imageList);
+        List<PlaceLocation> locationList = new ArrayList<>(List.of(createTravelLocation(travelPlace)));
 
-
+        Page<PlaceLocation> mockLocation = PageUtil.createPage(locationList, pageable, 1);
 
         when(travelPlaceRepository.findNearByTravelPlaces(pageable, request, 5)).thenReturn(mockLocation);
-        when(travelImageRepository.findByTravelPlacePlaceId(any())).thenReturn(imageList);
+        when(travelImageRepository.findByTravelPlacePlaceId(anyLong())).thenReturn(imageList);
 
         // when
         Page<PlaceDistanceResponse> response = travelService.getNearByTravelPlaces(request, 1);
@@ -94,7 +87,7 @@ public class TravelServiceTests extends TravelTest {
         assertEquals(content.get(0).getCity(), locationList.get(0).getCity());
         assertEquals(content.get(0).getPlaceName(), locationList.get(0).getPlaceName());
         assertEquals(content.get(0).getAddress(), locationList.get(0).getAddress());
-        assertEquals(content.get(0).getThumbnailUrl(), imageList.get(0).getFile().getS3ObjectUrl());
+        assertEquals(content.get(0).getThumbnailUrl(), imageList.get(0).getS3ObjectUrl());
         assertNotEquals(content.get(0).getDistance(), 0.0);
 
         System.out.println("전체 갯수: " + response.getTotalElements());
@@ -133,15 +126,14 @@ public class TravelServiceTests extends TravelTest {
         PlaceSearchRequest request = createTravelSearchRequest(37.49, 127.0, "테스트");
 
         Pageable pageable = PageUtil.defaultPageable(1);
-        List<PlaceLocation> locationList = new ArrayList<>();
-        locationList.add(createTravelLocation(travelPlace));
-        Page<PlaceLocation> mockLocation = new PageImpl<>(locationList, pageable, 1);
+        List<TravelImage> imageList = new ArrayList<>(List.of(travelImage));
+        travelPlace.setTravelImageList(imageList);
 
-        List<TravelImage> imageList = new ArrayList<>();
-        imageList.add(createTravelImage(travelPlace, file));
+        List<PlaceLocation> locationList = new ArrayList<>(List.of(createTravelLocation(travelPlace)));
+        Page<PlaceLocation> mockLocation = PageUtil.createPage(locationList, pageable, 1);
 
         when(travelPlaceRepository.searchTravelPlacesWithLocation(pageable, request)).thenReturn(mockLocation);
-        when(travelImageRepository.findByTravelPlacePlaceId(any())).thenReturn(imageList);
+        when(travelImageRepository.findByTravelPlacePlaceId(anyLong())).thenReturn(imageList);
 
         // when
         Page<PlaceDistanceResponse> response = travelService.searchTravelPlaces(request, 1);
@@ -152,7 +144,7 @@ public class TravelServiceTests extends TravelTest {
         assertEquals(content.get(0).getCity(), locationList.get(0).getCity());
         assertEquals(content.get(0).getPlaceName(), locationList.get(0).getPlaceName());
         assertEquals(content.get(0).getAddress(), locationList.get(0).getAddress());
-        assertEquals(content.get(0).getThumbnailUrl(), imageList.get(0).getFile().getS3ObjectUrl());
+        assertEquals(content.get(0).getThumbnailUrl(), imageList.get(0).getS3ObjectUrl());
         assertNotEquals(content.get(0).getDistance(), 0.0);
 
     }
@@ -165,7 +157,7 @@ public class TravelServiceTests extends TravelTest {
         PlaceSearchRequest request = createTravelSearchRequest(37.49, 127.0, "ㅁㄴㅇㄹ");
 
         Pageable pageable = PageUtil.defaultPageable(1);
-        Page<PlaceLocation> mockLocation = new PageImpl<>(Collections.emptyList(), pageable, 0);
+        Page<PlaceLocation> mockLocation = PageUtil.createPage(Collections.emptyList(), pageable, 0);
 
         when(travelPlaceRepository.searchTravelPlacesWithLocation(pageable, request)).thenReturn(mockLocation);
 
@@ -184,6 +176,9 @@ public class TravelServiceTests extends TravelTest {
         ApiContentType apiContentType = createApiContentType("관광지");
         travelPlace.setUseTime("상시");
         travelPlace.setApiContentType(apiContentType);
+
+        List<TravelImage> imageList = new ArrayList<>(List.of(travelImage));
+        travelPlace.setTravelImageList(imageList);
 
         when(travelPlaceRepository.findByPlaceId(anyLong())).thenReturn(Optional.of(travelPlace));
 
@@ -211,7 +206,11 @@ public class TravelServiceTests extends TravelTest {
         travelPlace.setCheckOutTime("11:00");
         travelPlace.setApiContentType(apiContentType);
 
+        List<TravelImage> imageList = new ArrayList<>(List.of(travelImage));
+        travelPlace.setTravelImageList(imageList);
+
         when(travelPlaceRepository.findByPlaceId(anyLong())).thenReturn(Optional.of(travelPlace));
+
 
         // when
         PlaceDetailResponse response = travelService.getTravelPlaceDetails(travelPlace.getPlaceId());

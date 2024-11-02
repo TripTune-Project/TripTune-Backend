@@ -64,7 +64,6 @@ public class ScheduleApiControllerTests extends ScheduleTest {
     private final CityRepository cityRepository;
     private final DistrictRepository districtRepository;
     private final ApiCategoryRepository apiCategoryRepository;
-    private final FileRepository fileRepository;
     private final TravelImageRepository travelImageRepository;
     private final TravelRouteRepository travelRouteRepository;
     private final ApiContentTypeRepository apiContentTypeRepository;
@@ -85,7 +84,7 @@ public class ScheduleApiControllerTests extends ScheduleTest {
 
 
     @Autowired
-    public ScheduleApiControllerTests(WebApplicationContext wac, TravelScheduleRepository travelScheduleRepository, TravelAttendeeRepository travelAttendeeRepository, MemberRepository memberRepository, TravelPlacePlaceRepository travelPlaceRepository, CountryRepository countryRepository, CityRepository cityRepository, DistrictRepository districtRepository, ApiCategoryRepository apiCategoryRepository, FileRepository fileRepository, TravelImageRepository travelImageRepository, TravelRouteRepository travelRouteRepository, ApiContentTypeRepository apiContentTypeRepository, ProfileImageRepository profileImageRepository) {
+    public ScheduleApiControllerTests(WebApplicationContext wac, TravelScheduleRepository travelScheduleRepository, TravelAttendeeRepository travelAttendeeRepository, MemberRepository memberRepository, TravelPlacePlaceRepository travelPlaceRepository, CountryRepository countryRepository, CityRepository cityRepository, DistrictRepository districtRepository, ApiCategoryRepository apiCategoryRepository, TravelImageRepository travelImageRepository, TravelRouteRepository travelRouteRepository, ApiContentTypeRepository apiContentTypeRepository, ProfileImageRepository profileImageRepository) {
         this.wac = wac;
         this.travelScheduleRepository = travelScheduleRepository;
         this.travelAttendeeRepository = travelAttendeeRepository;
@@ -95,7 +94,6 @@ public class ScheduleApiControllerTests extends ScheduleTest {
         this.cityRepository = cityRepository;
         this.districtRepository = districtRepository;
         this.apiCategoryRepository = apiCategoryRepository;
-        this.fileRepository = fileRepository;
         this.travelImageRepository = travelImageRepository;
         this.travelRouteRepository = travelRouteRepository;
         this.apiContentTypeRepository = apiContentTypeRepository;
@@ -128,12 +126,10 @@ public class ScheduleApiControllerTests extends ScheduleTest {
         ApiContentType apiContentType = apiContentTypeRepository.save(createApiContentType("관광지"));
         travelPlace1 = travelPlaceRepository.save(createTravelPlace(null, country, city, district1, apiCategory));
         travelPlace2 = travelPlaceRepository.save(createTravelPlace(null, country, city, district2, apiCategory));
-        File file1 = fileRepository.save(createFile("test1", true));
-        File file2 = fileRepository.save(createFile("test2", false));
-        TravelImage travelImage1 = travelImageRepository.save(createTravelImage(travelPlace1, file1));
-        TravelImage travelImage2 = travelImageRepository.save(createTravelImage(travelPlace1, file2));
-        TravelImage travelImage3 = travelImageRepository.save(createTravelImage(travelPlace2, file1));
-        TravelImage travelImage4 = travelImageRepository.save(createTravelImage(travelPlace2, file2));
+        TravelImage travelImage1 = travelImageRepository.save(createTravelImage(travelPlace1, "test1", true));
+        TravelImage travelImage2 = travelImageRepository.save(createTravelImage(travelPlace1, "test2", false));
+        TravelImage travelImage3 = travelImageRepository.save(createTravelImage(travelPlace2, "test1", true));
+        TravelImage travelImage4 = travelImageRepository.save(createTravelImage(travelPlace2, "test2", false));
         travelPlace1.setApiContentType(apiContentType);
         travelPlace1.setTravelImageList(Arrays.asList(travelImage1, travelImage2));
         travelPlace2.setApiContentType(apiContentType);

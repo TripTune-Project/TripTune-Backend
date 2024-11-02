@@ -86,16 +86,14 @@ public class ScheduleServiceTests extends ScheduleTest {
         District district = createDistrict(city, "중구");
         ApiCategory apiCategory = createApiCategory();
         travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory);
-        File file1 = createFile("test1", true);
-        File file2 = createFile("test2", false);
-        TravelImage travelImage1 = createTravelImage(travelPlace1, file1);
-        TravelImage travelImage2 = createTravelImage(travelPlace1, file2);
+        TravelImage travelImage1 = createTravelImage(travelPlace1, "test1", true);
+        TravelImage travelImage2 = createTravelImage(travelPlace1, "test2", false);
         List<TravelImage> travelImageList1 = new ArrayList<>(List.of(travelImage1, travelImage2));
         travelPlace1.setTravelImageList(travelImageList1);
 
         travelPlace2 = createTravelPlace(2L, country, city, district, apiCategory);
-        TravelImage travelImage3 = createTravelImage(travelPlace2, file1);
-        TravelImage travelImage4 = createTravelImage(travelPlace2, file2);
+        TravelImage travelImage3 = createTravelImage(travelPlace2, "test1", true);
+        TravelImage travelImage4 = createTravelImage(travelPlace2, "test2", false);
         List<TravelImage> travelImageList2 = new ArrayList<>(List.of(travelImage3, travelImage4));
         travelPlace2.setTravelImageList(travelImageList2);
 
@@ -228,7 +226,7 @@ public class ScheduleServiceTests extends ScheduleTest {
         // given
         Pageable pageable = PageUtil.schedulePageable(1);
 
-        travelPlace1.getTravelImageList().get(0).getFile().setThumbnail(false);
+        travelPlace1.getTravelImageList().get(0).setThumbnail(false);
 
         List<TravelSchedule> schedules = new ArrayList<>(List.of(schedule1, schedule2));
         Page<TravelSchedule> schedulePage = PageUtil.createPage(schedules, pageable, schedules.size());
@@ -292,7 +290,7 @@ public class ScheduleServiceTests extends ScheduleTest {
     @DisplayName("convertToScheduleOverviewResponse(): TravelSchedule 를 TravelOverviewResponse 로 변경 시 썸네일 없는 경우")
     void convertToScheduleInfoResponseWithoutThumbnail(){
         // given
-        travelPlace1.getTravelImageList().get(0).getFile().setThumbnail(false);
+        travelPlace1.getTravelImageList().get(0).setThumbnail(false);
 
         // when
         ScheduleInfoResponse response = scheduleService.convertToScheduleInfoResponse(member1, schedule1);
@@ -410,7 +408,7 @@ public class ScheduleServiceTests extends ScheduleTest {
     @DisplayName("getThumbnailUrl(): 썸네일 조회 시 썸네일 이미지 없는 경우")
     void getThumbnailUrlNoThumbnailImage(){
         // given
-        travelPlace1.getTravelImageList().get(0).getFile().setThumbnail(false);
+        travelPlace1.getTravelImageList().get(0).setThumbnail(false);
 
         // when
         String response = scheduleService.getThumbnailUrl(schedule1);

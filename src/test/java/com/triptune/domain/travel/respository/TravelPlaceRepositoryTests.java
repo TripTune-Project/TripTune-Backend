@@ -3,8 +3,8 @@ package com.triptune.domain.travel.respository;
 import com.triptune.domain.common.entity.*;
 import com.triptune.domain.common.repository.*;
 import com.triptune.domain.travel.TravelTest;
-import com.triptune.domain.travel.dto.request.PlaceLocationRequest;
 import com.triptune.domain.travel.dto.PlaceLocation;
+import com.triptune.domain.travel.dto.request.PlaceLocationRequest;
 import com.triptune.domain.travel.dto.request.PlaceSearchRequest;
 import com.triptune.domain.travel.entity.TravelImage;
 import com.triptune.domain.travel.entity.TravelPlace;
@@ -23,7 +23,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -34,7 +34,6 @@ import static org.junit.jupiter.api.Assertions.*;
 @TestPropertySource(locations = "classpath:application-test.yml")
 public class TravelPlaceRepositoryTests extends TravelTest {
     private final TravelPlacePlaceRepository travelPlaceRepository;
-    private final FileRepository fileRepository;
     private final CityRepository cityRepository;
     private final CountryRepository countryRepository;
     private final DistrictRepository districtRepository;
@@ -43,12 +42,10 @@ public class TravelPlaceRepositoryTests extends TravelTest {
     private final ApiContentTypeRepository apiContentTypeRepository;
 
     private TravelPlace travelPlace1;
-    private TravelPlace travelPlace2;
 
     @Autowired
-    public TravelPlaceRepositoryTests(TravelPlacePlaceRepository travelPlaceRepository, FileRepository fileRepository, CityRepository cityRepository, CountryRepository countryRepository, DistrictRepository districtRepository, ApiCategoryRepository apiCategoryRepository, TravelImageRepository travelImageRepository, ApiContentTypeRepository apiContentTypeRepository) {
+    public TravelPlaceRepositoryTests(TravelPlacePlaceRepository travelPlaceRepository, CityRepository cityRepository, CountryRepository countryRepository, DistrictRepository districtRepository, ApiCategoryRepository apiCategoryRepository, TravelImageRepository travelImageRepository, ApiContentTypeRepository apiContentTypeRepository) {
         this.travelPlaceRepository = travelPlaceRepository;
-        this.fileRepository = fileRepository;
         this.cityRepository = cityRepository;
         this.countryRepository = countryRepository;
         this.districtRepository = districtRepository;
@@ -66,18 +63,16 @@ public class TravelPlaceRepositoryTests extends TravelTest {
         ApiCategory apiCategory = apiCategoryRepository.save(createApiCategory());
         ApiContentType apiContentType = apiContentTypeRepository.save(createApiContentType("관광지"));
         travelPlace1 = travelPlaceRepository.save(createTravelPlace(null, country, city, district1, apiCategory));
-        travelPlace2 = travelPlaceRepository.save(createTravelPlace(null, country, city, district2, apiCategory));
-        File file1 = fileRepository.save(createFile("test1", true));
-        File file2 = fileRepository.save(createFile("test2", false));
-        TravelImage travelImage1 = travelImageRepository.save(createTravelImage(travelPlace1, file1));
-        TravelImage travelImage2 = travelImageRepository.save(createTravelImage(travelPlace1, file2));
-        TravelImage travelImage3 = travelImageRepository.save(createTravelImage(travelPlace2, file1));
-        TravelImage travelImage4 = travelImageRepository.save(createTravelImage(travelPlace2, file2));
+        TravelPlace travelPlace2 = travelPlaceRepository.save(createTravelPlace(null, country, city, district2, apiCategory));
+        TravelImage travelImage1 = travelImageRepository.save(createTravelImage(travelPlace1, "test1", true));
+        TravelImage travelImage2 = travelImageRepository.save(createTravelImage(travelPlace1, "test2", false));
+        TravelImage travelImage3 = travelImageRepository.save(createTravelImage(travelPlace2, "test1", true));
+        TravelImage travelImage4 = travelImageRepository.save(createTravelImage(travelPlace2, "test2", false));
 
         travelPlace1.setApiContentType(apiContentType);
-        travelPlace1.setTravelImageList(Arrays.asList(travelImage1, travelImage2));
+        travelPlace1.setTravelImageList(new ArrayList<>(List.of(travelImage1, travelImage2)));
         travelPlace2.setApiContentType(apiContentType);
-        travelPlace2.setTravelImageList(Arrays.asList(travelImage3, travelImage4));
+        travelPlace2.setTravelImageList(new ArrayList<>(List.of(travelImage3, travelImage4)));
     }
     
 

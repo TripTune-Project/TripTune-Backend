@@ -97,8 +97,9 @@ public abstract class BaseTest {
                 .build();
     }
 
-    protected File createFile(String fileName, boolean isThumbnail){
-        return File.builder()
+    protected TravelImage createTravelImage(TravelPlace travelPlace, String fileName, boolean isThumbnail){
+        return TravelImage.builder()
+                .travelPlace(travelPlace)
                 .s3ObjectUrl("/test/" + fileName + ".jpg")
                 .originalName(fileName + "_original.jpg")
                 .fileName(fileName + ".jpg")
@@ -106,13 +107,6 @@ public abstract class BaseTest {
                 .fileSize(20)
                 .createdAt(LocalDateTime.now())
                 .isThumbnail(isThumbnail)
-                .build();
-    }
-
-    protected TravelImage createTravelImage(TravelPlace travelPlace, File file){
-        return TravelImage.builder()
-                .travelPlace(travelPlace)
-                .file(file)
                 .build();
     }
 
