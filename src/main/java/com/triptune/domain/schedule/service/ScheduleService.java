@@ -1,9 +1,9 @@
 package com.triptune.domain.schedule.service;
 
-import com.triptune.domain.common.entity.File;
 import com.triptune.domain.member.entity.Member;
 import com.triptune.domain.member.repository.MemberRepository;
-import com.triptune.domain.schedule.dto.*;
+import com.triptune.domain.schedule.dto.AttendeeDTO;
+import com.triptune.domain.schedule.dto.AuthorDTO;
 import com.triptune.domain.schedule.dto.request.CreateScheduleRequest;
 import com.triptune.domain.schedule.dto.request.RouteRequest;
 import com.triptune.domain.schedule.dto.request.UpdateScheduleRequest;
@@ -148,7 +148,7 @@ public class ScheduleService {
                     .orElse(null);
 
             if (route != null){
-                thumbnailUrl = File.getThumbnailUrl(route.getTravelPlace().getTravelImageList());
+                thumbnailUrl = route.getTravelPlace().getThumbnailUrl();
             }
         }
 

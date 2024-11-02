@@ -1,6 +1,5 @@
 package com.triptune.domain.schedule.dto.response;
 
-import com.triptune.domain.common.entity.File;
 import com.triptune.domain.schedule.entity.TravelRoute;
 import com.triptune.domain.travel.entity.TravelPlace;
 import lombok.Builder;
@@ -39,8 +38,6 @@ public class RouteResponse {
 
 
     public static RouteResponse entityToDto(TravelRoute travelRoute, TravelPlace travelPlace){
-        String thumbnailUrl = File.getThumbnailUrl(travelPlace.getTravelImageList());
-
         return RouteResponse.builder()
                 .routeOrder(travelRoute.getRouteOrder())
                 .placeId(travelPlace.getPlaceId())
@@ -52,7 +49,7 @@ public class RouteResponse {
                 .longitude(travelPlace.getLongitude())
                 .latitude(travelPlace.getLatitude())
                 .placeName(travelPlace.getPlaceName())
-                .thumbnailUrl(thumbnailUrl)
+                .thumbnailUrl(travelPlace.getThumbnailUrl())
                 .build();
     }
 }

@@ -1,6 +1,5 @@
 package com.triptune.domain.travel.dto.response;
 
-import com.triptune.domain.common.entity.File;
 import com.triptune.domain.travel.dto.PlaceLocation;
 import com.triptune.domain.travel.entity.TravelPlace;
 import lombok.Builder;
@@ -39,13 +38,7 @@ public class PlaceDistanceResponse {
         this.distance = Math.floor(distance * 10) / 10.0;
     }
 
-    public void setThumbnailUrl(TravelPlace travelPlace) {
-        this.thumbnailUrl = File.getThumbnailUrl(travelPlace.getTravelImageList());
-    }
-
     public static PlaceDistanceResponse entityToDto(TravelPlace travelPlace){
-        String thumbnailUrl = File.getThumbnailUrl(travelPlace.getTravelImageList());
-
         return PlaceDistanceResponse.builder()
                 .placeId(travelPlace.getPlaceId())
                 .country(travelPlace.getCountry().getCountryName())
@@ -56,7 +49,7 @@ public class PlaceDistanceResponse {
                 .longitude(travelPlace.getLongitude())
                 .latitude(travelPlace.getLatitude())
                 .placeName(travelPlace.getPlaceName())
-                .thumbnailUrl(thumbnailUrl)
+                .thumbnailUrl(travelPlace.getThumbnailUrl())
                 .build();
     }
 
@@ -68,8 +61,6 @@ public class PlaceDistanceResponse {
 
 
     public static PlaceDistanceResponse entityToLocationDto(PlaceLocation placeLocation){
-        String thumbnailUrl = File.getThumbnailUrl(placeLocation.getTravelImageFileList());
-
         return PlaceDistanceResponse.builder()
                 .placeId(placeLocation.getPlaceId())
                 .country(placeLocation.getCountry())
@@ -80,7 +71,7 @@ public class PlaceDistanceResponse {
                 .longitude(placeLocation.getLongitude())
                 .latitude(placeLocation.getLatitude())
                 .placeName(placeLocation.getPlaceName())
-                .thumbnailUrl(thumbnailUrl)
+                .thumbnailUrl(placeLocation.getThumbnailUrl())
                 .distance(placeLocation.getDistance())
                 .build();
     }

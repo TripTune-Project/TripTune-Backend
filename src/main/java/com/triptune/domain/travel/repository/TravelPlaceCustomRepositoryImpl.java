@@ -10,6 +10,7 @@ import com.triptune.domain.travel.dto.PlaceLocation;
 import com.triptune.domain.travel.dto.request.PlaceSearchRequest;
 import com.triptune.domain.travel.entity.QTravelPlace;
 import com.triptune.domain.travel.entity.TravelPlace;
+import com.triptune.global.util.PageUtil;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -86,7 +87,7 @@ public class TravelPlaceCustomRepositoryImpl implements TravelPlaceCustomReposit
 
         int totalElements = getTotalElements(booleanExpression);
 
-        return new PageImpl<>(content, pageable, totalElements);
+        return PageUtil.createPage(content, pageable, totalElements);
     }
 
 
@@ -117,7 +118,7 @@ public class TravelPlaceCustomRepositoryImpl implements TravelPlaceCustomReposit
 
         int totalElements = getTotalElements(loeExpression);
 
-        return new PageImpl<>(content, pageable, totalElements);
+        return PageUtil.createPage(content, pageable, totalElements);
     }
 
 
@@ -173,7 +174,7 @@ public class TravelPlaceCustomRepositoryImpl implements TravelPlaceCustomReposit
 
         int totalElements = getTotalElements(booleanExpression);
 
-        return new PageImpl<>(content, pageable, totalElements);
+        return PageUtil.createPage(content, pageable, totalElements);
     }
 
 

@@ -42,19 +42,17 @@ public class TravelApiControllerTests extends TravelTest {
     private final CityRepository cityRepository;
     private final DistrictRepository districtRepository;
     private final ApiCategoryRepository apiCategoryRepository;
-    private final FileRepository fileRepository;
     private final TravelImageRepository travelImageRepository;
     private final ApiContentTypeRepository apiContentTypeRepository;
 
     @Autowired
-    public TravelApiControllerTests(WebApplicationContext wac, TravelPlacePlaceRepository travelPlaceRepository, CountryRepository countryRepository, CityRepository cityRepository, DistrictRepository districtRepository, ApiCategoryRepository apiCategoryRepository, FileRepository fileRepository, TravelImageRepository travelImageRepository, ApiContentTypeRepository apiContentTypeRepository) {
+    public TravelApiControllerTests(WebApplicationContext wac, TravelPlacePlaceRepository travelPlaceRepository, CountryRepository countryRepository, CityRepository cityRepository, DistrictRepository districtRepository, ApiCategoryRepository apiCategoryRepository, TravelImageRepository travelImageRepository, ApiContentTypeRepository apiContentTypeRepository) {
         this.wac = wac;
         this.travelPlaceRepository = travelPlaceRepository;
         this.countryRepository = countryRepository;
         this.cityRepository = cityRepository;
         this.districtRepository = districtRepository;
         this.apiCategoryRepository = apiCategoryRepository;
-        this.fileRepository = fileRepository;
         this.travelImageRepository = travelImageRepository;
         this.apiContentTypeRepository = apiContentTypeRepository;
     }
@@ -78,11 +76,8 @@ public class TravelApiControllerTests extends TravelTest {
         ApiCategory apiCategory = apiCategoryRepository.save(createApiCategory());
 
         travelPlace = travelPlaceRepository.save(createTravelPlace(null, country, city, district, apiCategory));
-        File file1 = fileRepository.save(createFile("test1", true));
-        File file2 = fileRepository.save(createFile("test2", false));;
-
-        TravelImage travelImage1 = travelImageRepository.save(createTravelImage(travelPlace, file1));
-        TravelImage travelImage2 = travelImageRepository.save(createTravelImage(travelPlace, file2));
+        TravelImage travelImage1 = travelImageRepository.save(createTravelImage(travelPlace, "test1", true));
+        TravelImage travelImage2 = travelImageRepository.save(createTravelImage(travelPlace, "test2", false));
         List<TravelImage> travelImageList = Arrays.asList(travelImage1, travelImage2);
 
         travelPlace.setTravelImageList(travelImageList);
