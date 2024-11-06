@@ -8,13 +8,12 @@ import com.triptune.global.exception.DataNotFoundException;
 import com.triptune.domain.travel.dto.*;
 import com.triptune.domain.travel.entity.TravelPlace;
 import com.triptune.domain.travel.repository.TravelImageRepository;
-import com.triptune.domain.travel.repository.TravelPlacePlaceRepository;
+import com.triptune.domain.travel.repository.TravelPlaceRepository;
 import com.triptune.global.enumclass.ErrorCode;
 import com.triptune.global.util.PageUtil;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
@@ -23,7 +22,7 @@ import org.springframework.stereotype.Service;
 @Transactional
 public class TravelService {
 
-    private final TravelPlacePlaceRepository travelPlaceRepository;
+    private final TravelPlaceRepository travelPlaceRepository;
     private final TravelImageRepository travelImageRepository;
 
     private static final int RADIUS_SIZE = 5;

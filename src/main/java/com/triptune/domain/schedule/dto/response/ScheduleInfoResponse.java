@@ -46,7 +46,7 @@ public class ScheduleInfoResponse {
         return sinceUp;
     }
 
-    public static ScheduleInfoResponse entityToDto(TravelSchedule schedule, AttendeeRole role, String thumbnailUrl, AuthorDTO author){
+    public static ScheduleInfoResponse from(TravelSchedule schedule, AttendeeRole role, String thumbnailUrl, AuthorDTO author){
         return ScheduleInfoResponse.builder()
                 .scheduleId(schedule.getScheduleId())
                 .role(role)

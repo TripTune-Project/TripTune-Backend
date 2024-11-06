@@ -39,4 +39,15 @@ public class SchedulePageResponse<T> {
                 .content(object.getContent())
                 .build();
     }
+
+    public static <T> SchedulePageResponse<T> of(Page<T> object, int totalElements){
+        return SchedulePageResponse.<T>builder()
+                .totalPages(object.getTotalPages())
+                .currentPage(object.getNumber())
+                .totalElements(totalElements)
+                .totalSharedElements(object.getTotalElements())
+                .pageSize(object.getSize())
+                .content(object.getContent())
+                .build();
+    }
 }

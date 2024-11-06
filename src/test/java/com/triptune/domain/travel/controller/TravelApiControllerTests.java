@@ -6,7 +6,7 @@ import com.triptune.domain.travel.TravelTest;
 import com.triptune.domain.travel.entity.TravelImage;
 import com.triptune.domain.travel.entity.TravelPlace;
 import com.triptune.domain.travel.repository.TravelImageRepository;
-import com.triptune.domain.travel.repository.TravelPlacePlaceRepository;
+import com.triptune.domain.travel.repository.TravelPlaceRepository;
 import com.triptune.global.enumclass.ErrorCode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -37,7 +37,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class TravelApiControllerTests extends TravelTest {
 
     private final WebApplicationContext wac;
-    private final TravelPlacePlaceRepository travelPlaceRepository;
+    private final TravelPlaceRepository travelPlaceRepository;
     private final CountryRepository countryRepository;
     private final CityRepository cityRepository;
     private final DistrictRepository districtRepository;
@@ -46,7 +46,7 @@ public class TravelApiControllerTests extends TravelTest {
     private final ApiContentTypeRepository apiContentTypeRepository;
 
     @Autowired
-    public TravelApiControllerTests(WebApplicationContext wac, TravelPlacePlaceRepository travelPlaceRepository, CountryRepository countryRepository, CityRepository cityRepository, DistrictRepository districtRepository, ApiCategoryRepository apiCategoryRepository, TravelImageRepository travelImageRepository, ApiContentTypeRepository apiContentTypeRepository) {
+    public TravelApiControllerTests(WebApplicationContext wac, TravelPlaceRepository travelPlaceRepository, CountryRepository countryRepository, CityRepository cityRepository, DistrictRepository districtRepository, ApiCategoryRepository apiCategoryRepository, TravelImageRepository travelImageRepository, ApiContentTypeRepository apiContentTypeRepository) {
         this.wac = wac;
         this.travelPlaceRepository = travelPlaceRepository;
         this.countryRepository = countryRepository;

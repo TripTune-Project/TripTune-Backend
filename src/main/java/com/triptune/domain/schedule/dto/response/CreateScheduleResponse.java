@@ -16,7 +16,7 @@ public class CreateScheduleResponse {
         this.scheduleId = scheduleId;
     }
 
-    public static CreateScheduleResponse entityToDto(TravelSchedule travelSchedule){
+    public static CreateScheduleResponse from(TravelSchedule travelSchedule){
         return CreateScheduleResponse.builder()
                 .scheduleId(travelSchedule.getScheduleId())
                 .build();

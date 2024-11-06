@@ -9,7 +9,7 @@ import com.triptune.domain.travel.dto.request.PlaceSearchRequest;
 import com.triptune.domain.travel.entity.TravelImage;
 import com.triptune.domain.travel.entity.TravelPlace;
 import com.triptune.domain.travel.repository.TravelImageRepository;
-import com.triptune.domain.travel.repository.TravelPlacePlaceRepository;
+import com.triptune.domain.travel.repository.TravelPlaceRepository;
 import com.triptune.global.config.QueryDSLConfig;
 import com.triptune.global.util.PageUtil;
 import org.junit.jupiter.api.BeforeEach;
@@ -33,7 +33,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @ActiveProfiles("test")
 @TestPropertySource(locations = "classpath:application-test.yml")
 public class TravelPlaceRepositoryTests extends TravelTest {
-    private final TravelPlacePlaceRepository travelPlaceRepository;
+    private final TravelPlaceRepository travelPlaceRepository;
     private final CityRepository cityRepository;
     private final CountryRepository countryRepository;
     private final DistrictRepository districtRepository;
@@ -44,7 +44,7 @@ public class TravelPlaceRepositoryTests extends TravelTest {
     private TravelPlace travelPlace1;
 
     @Autowired
-    public TravelPlaceRepositoryTests(TravelPlacePlaceRepository travelPlaceRepository, CityRepository cityRepository, CountryRepository countryRepository, DistrictRepository districtRepository, ApiCategoryRepository apiCategoryRepository, TravelImageRepository travelImageRepository, ApiContentTypeRepository apiContentTypeRepository) {
+    public TravelPlaceRepositoryTests(TravelPlaceRepository travelPlaceRepository, CityRepository cityRepository, CountryRepository countryRepository, DistrictRepository districtRepository, ApiCategoryRepository apiCategoryRepository, TravelImageRepository travelImageRepository, ApiContentTypeRepository apiContentTypeRepository) {
         this.travelPlaceRepository = travelPlaceRepository;
         this.cityRepository = cityRepository;
         this.countryRepository = countryRepository;
