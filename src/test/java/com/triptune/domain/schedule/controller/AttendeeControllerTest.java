@@ -1,23 +1,14 @@
 package com.triptune.domain.schedule.controller;
 
-import com.triptune.domain.common.entity.*;
-import com.triptune.domain.common.repository.*;
 import com.triptune.domain.member.entity.Member;
-import com.triptune.domain.member.entity.ProfileImage;
 import com.triptune.domain.member.repository.MemberRepository;
-import com.triptune.domain.member.repository.ProfileImageRepository;
 import com.triptune.domain.schedule.ScheduleTest;
 import com.triptune.domain.schedule.entity.TravelAttendee;
 import com.triptune.domain.schedule.entity.TravelSchedule;
 import com.triptune.domain.schedule.enumclass.AttendeePermission;
 import com.triptune.domain.schedule.enumclass.AttendeeRole;
 import com.triptune.domain.schedule.repository.TravelAttendeeRepository;
-import com.triptune.domain.schedule.repository.TravelRouteRepository;
 import com.triptune.domain.schedule.repository.TravelScheduleRepository;
-import com.triptune.domain.travel.entity.TravelImage;
-import com.triptune.domain.travel.entity.TravelPlace;
-import com.triptune.domain.travel.repository.TravelImageRepository;
-import com.triptune.domain.travel.repository.TravelPlacePlaceRepository;
 import com.triptune.global.enumclass.ErrorCode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -33,7 +24,6 @@ import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.filter.CharacterEncodingFilter;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
@@ -53,13 +43,8 @@ public class AttendeeControllerTest extends ScheduleTest {
 
     private MockMvc mockMvc;
 
-    private Member member1;
-    private Member member2;
-    private Member member3;
-
     private TravelSchedule schedule1;
     private TravelSchedule schedule2;
-
 
     @Autowired
     public AttendeeControllerTest(WebApplicationContext wac, TravelScheduleRepository travelScheduleRepository, TravelAttendeeRepository travelAttendeeRepository, MemberRepository memberRepository) {
@@ -69,6 +54,7 @@ public class AttendeeControllerTest extends ScheduleTest {
         this.memberRepository = memberRepository;
     }
 
+
     @BeforeEach
     void setUp(){
         mockMvc = MockMvcBuilders.webAppContextSetup(wac)
@@ -77,9 +63,9 @@ public class AttendeeControllerTest extends ScheduleTest {
                 .alwaysDo(print())
                 .build();
 
-        member1 = memberRepository.save(createMember(null, "member1"));
-        member2 = memberRepository.save(createMember(null, "member2"));
-        member3 = memberRepository.save(createMember(null, "member3"));
+        Member member1 = memberRepository.save(createMember(null, "member1"));
+        Member member2 = memberRepository.save(createMember(null, "member2"));
+        Member member3 = memberRepository.save(createMember(null, "member3"));
 
         schedule1 = travelScheduleRepository.save(createTravelSchedule(null,"테스트1"));
         schedule2 = travelScheduleRepository.save(createTravelSchedule(null,"테스트2"));
@@ -87,7 +73,6 @@ public class AttendeeControllerTest extends ScheduleTest {
         TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
         TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ));
         TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(member3, schedule2, AttendeeRole.AUTHOR, AttendeePermission.ALL));
-
         schedule1.setTravelAttendeeList(new ArrayList<>(List.of(attendee1, attendee2)));
         schedule2.setTravelAttendeeList(new ArrayList<>(List.of(attendee3)));
     }

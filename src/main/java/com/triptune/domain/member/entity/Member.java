@@ -50,10 +50,9 @@ public class Member {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-
-
     @OneToMany(mappedBy = "member", fetch = FetchType.LAZY, orphanRemoval = true)
     private List<TravelAttendee> travelAttendeeList = new ArrayList<>();
+
 
     @Builder
     public Member(Long memberId, ProfileImage profileImage, String userId, String password, String refreshToken, boolean isSocialLogin, String nickname, String email, LocalDateTime createdAt, LocalDateTime updatedAt, List<TravelAttendee> travelAttendeeList) {

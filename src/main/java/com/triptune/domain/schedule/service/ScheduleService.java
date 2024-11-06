@@ -8,7 +8,6 @@ import com.triptune.domain.schedule.dto.request.CreateScheduleRequest;
 import com.triptune.domain.schedule.dto.request.RouteRequest;
 import com.triptune.domain.schedule.dto.request.UpdateScheduleRequest;
 import com.triptune.domain.schedule.dto.response.CreateScheduleResponse;
-import com.triptune.domain.schedule.dto.response.RouteResponse;
 import com.triptune.domain.schedule.dto.response.ScheduleDetailResponse;
 import com.triptune.domain.schedule.dto.response.ScheduleInfoResponse;
 import com.triptune.domain.schedule.entity.TravelAttendee;
@@ -22,7 +21,7 @@ import com.triptune.domain.schedule.repository.TravelRouteRepository;
 import com.triptune.domain.schedule.repository.TravelScheduleRepository;
 import com.triptune.domain.travel.dto.response.PlaceResponse;
 import com.triptune.domain.travel.entity.TravelPlace;
-import com.triptune.domain.travel.repository.TravelPlacePlaceRepository;
+import com.triptune.domain.travel.repository.TravelPlaceRepository;
 import com.triptune.global.enumclass.ErrorCode;
 import com.triptune.global.exception.DataNotFoundException;
 import com.triptune.global.response.pagination.PageResponse;
@@ -35,7 +34,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -46,7 +47,7 @@ public class ScheduleService {
     private final TravelScheduleRepository travelScheduleRepository;
     private final MemberRepository memberRepository;
     private final TravelAttendeeRepository travelAttendeeRepository;
-    private final TravelPlacePlaceRepository travelPlaceRepository;
+    private final TravelPlaceRepository travelPlaceRepository;
     private final TravelRouteRepository travelRouteRepository;
 
 
@@ -58,74 +59,69 @@ public class ScheduleService {
      */
     public SchedulePageResponse<ScheduleInfoResponse> getSchedules(int page, String userId) {
         Pageable pageable = PageUtil.schedulePageable(page);
-        Member member = getSavedMember(userId);
+        Page<TravelSchedule> schedulePage = travelScheduleRepository.findTravelSchedulesByUserId(pageable, userId);
 
-        Page<TravelSchedule> schedulePage = travelScheduleRepository.findTravelSchedulesByAttendee(pageable, member.getMemberId());
-
-        List<ScheduleInfoResponse> scheduleInfoResponseList = new ArrayList<>();
-        long sharedScheduleCnt = 0;
-
-        if (!schedulePage.getContent().isEmpty()){
-            scheduleInfoResponseList = schedulePage.stream()
-                    .map(schedule -> convertToScheduleInfoResponse(member, schedule))
-                    .collect(Collectors.toList());
-
-            sharedScheduleCnt = schedulePage.getContent().stream()
-                    .filter(schedule -> schedule.getTravelAttendeeList().size() > 1)
-                    .count();
-        }
+        List<ScheduleInfoResponse> scheduleInfoResponseList = createScheduleInfoResponse(schedulePage, userId);
+        long sharedScheduleCnt = travelScheduleRepository.countSharedTravelSchedulesByUserId(userId);
 
         Page<ScheduleInfoResponse> scheduleInfoResponsePage = PageUtil.createPage(scheduleInfoResponseList, pageable, schedulePage.getTotalElements());
         return SchedulePageResponse.of(scheduleInfoResponsePage, sharedScheduleCnt);
     }
 
 
-    /**
-     * TravelSchedule 엔티티를 ScheduleInfoResponse 로 변경
-     * @param schedule: 일정
-     * @return ScheduleInfoResponse: 대략적인 일정 정보가 포함된 dto
-     */
-    public ScheduleInfoResponse convertToScheduleInfoResponse(Member member, TravelSchedule schedule){
-        String thumbnailUrl = getThumbnailUrl(schedule);
-        TravelAttendee attendee = getAttendeeInfo(member, schedule);
-        AuthorDTO authorDTO = getAuthorDTO(schedule);
+    public SchedulePageResponse<ScheduleInfoResponse> getSharedSchedules(int page, String userId) {
+        Pageable pageable = PageUtil.schedulePageable(page);
+        Page<TravelSchedule> schedulePage = travelScheduleRepository.findSharedTravelSchedulesByUserId(pageable, userId);
 
-        return ScheduleInfoResponse.entityToDto(schedule, attendee.getRole(), thumbnailUrl, authorDTO);
+        List<ScheduleInfoResponse> scheduleInfoResponseList = createScheduleInfoResponse(schedulePage, userId);
+        int totalElements = travelScheduleRepository.countTravelSchedulesByUserId(userId);
+
+        Page<ScheduleInfoResponse> scheduleInfoResponsePage = PageUtil.createPage(scheduleInfoResponseList, pageable, schedulePage.getTotalElements());
+        return SchedulePageResponse.of(scheduleInfoResponsePage, totalElements);
     }
+
+
+    public List<ScheduleInfoResponse> createScheduleInfoResponse(Page<TravelSchedule> schedulePage, String userId){
+        if (schedulePage.getContent().isEmpty()){
+            return Collections.emptyList();
+        }
+
+        return schedulePage.stream()
+                .map(schedule -> {
+                    String thumbnailUrl = getThumbnailUrl(schedule);
+                    TravelAttendee attendee = getAttendeeInfo(schedule, userId);
+                    AuthorDTO authorDTO = createAuthorDTO(schedule);
+
+                    return ScheduleInfoResponse.from(schedule, attendee.getRole(), thumbnailUrl, authorDTO);
+                })
+                .collect(Collectors.toList());
+    }
+
 
     /**
      * 일정의 작성자 dto 생성 메소드
      * @param schedule: 일정
      * @return AuthorDTO: 작성자 정보 포함된 dto
      */
-    public AuthorDTO getAuthorDTO(TravelSchedule schedule){
-        Member author = getAuthorMember(schedule.getTravelAttendeeList());
-        return AuthorDTO.of(author.getUserId(), author.getProfileImage().getS3ObjectUrl());
-    }
-
-    /**
-     * 일정 참가자 중 작성자 정보 조회
-     * @param attendeeList: 참가자 목록
-     * @return Member: 작성자 entity
-     */
-    public Member getAuthorMember(List<TravelAttendee> attendeeList){
-        return attendeeList.stream()
+    public AuthorDTO createAuthorDTO(TravelSchedule schedule){
+        Member author = schedule.getTravelAttendeeList().stream()
                 .filter(attendee -> attendee.getRole().equals(AttendeeRole.AUTHOR))
                 .map(TravelAttendee::getMember)
                 .findFirst()
                 .orElseThrow(() -> new DataNotFoundException(ErrorCode.AUTHOR_NOT_FOUND));
-    }
 
+        return AuthorDTO.of(author.getUserId(), author.getProfileImage().getS3ObjectUrl());
+    }
 
     /**
      * 일정 참석자 정보 조회
-     * @param member: 사용자 객체
      * @param schedule: 일정 객체
+     * @param userId: 사용자 아이디
      * @return TravelAttendee: 조회한 사용자의 일정 권한 및 허용 범위 포함된 객체
      */
-    public TravelAttendee getAttendeeInfo(Member member, TravelSchedule schedule){
+    public TravelAttendee getAttendeeInfo(TravelSchedule schedule, String userId){
         return schedule.getTravelAttendeeList().stream()
-                .filter(attendee -> attendee.getMember().getMemberId().equals(member.getMemberId()))
+                .filter(attendee -> attendee.getMember().getUserId().equals(userId))
                 .findFirst()
                 .orElseThrow(() -> new ForbiddenScheduleException(ErrorCode.FORBIDDEN_ACCESS_SCHEDULE));
 
@@ -138,7 +134,6 @@ public class ScheduleService {
      */
     public String getThumbnailUrl(TravelSchedule schedule){
         String thumbnailUrl = null;
-
         List<TravelRoute> travelRouteList = schedule.getTravelRouteList();
 
         if (travelRouteList != null && !travelRouteList.isEmpty()){
@@ -163,21 +158,15 @@ public class ScheduleService {
      * @return CreateScheduleResponse: scheduleId로 구성된 dto
      */
     public CreateScheduleResponse createSchedule(CreateScheduleRequest createScheduleRequest, String userId){
-        TravelSchedule travelSchedule = TravelSchedule.of(createScheduleRequest);
+        TravelSchedule travelSchedule = TravelSchedule.from(createScheduleRequest);
         TravelSchedule savedTravelSchedule = travelScheduleRepository.save(travelSchedule);
 
         Member member = getSavedMember(userId);
 
-        TravelAttendee travelAttendee = TravelAttendee.builder()
-                .travelSchedule(savedTravelSchedule)
-                .member(member)
-                .role(AttendeeRole.AUTHOR)
-                .permission(AttendeePermission.ALL)
-                .build();
-
+        TravelAttendee travelAttendee = TravelAttendee.of(savedTravelSchedule, member);
         travelAttendeeRepository.save(travelAttendee);
 
-        return CreateScheduleResponse.entityToDto(savedTravelSchedule);
+        return CreateScheduleResponse.from(savedTravelSchedule);
     }
 
     /**
@@ -190,15 +179,18 @@ public class ScheduleService {
         TravelSchedule schedule = getSavedSchedule(scheduleId);
 
         // 여행지 정보: Page<TravelPlace> -> PageResponse<TravelSimpleResponse> 로 변경
-        Page<PlaceResponse> travelPlacesDTO = getSimpleTravelPlacesByJunggu(page);
-        PageResponse<PlaceResponse> placeDTOList = PageResponse.of(travelPlacesDTO);
+        Pageable pageable = PageUtil.defaultPageable(page);
+        Page<PlaceResponse> travelPlacesDTO = travelPlaceRepository.findAllByAreaData(pageable, "대한민국", "서울", "중구")
+                .map(PlaceResponse::entityToDto);
+
+        PageResponse<PlaceResponse> placeResponses = PageResponse.of(travelPlacesDTO);
 
         List<AttendeeDTO> attendeeDTOList = travelAttendeeRepository.findAllByTravelSchedule_ScheduleId(schedule.getScheduleId())
                 .stream()
                 .map(AttendeeDTO::entityToDTO)
                 .toList();
 
-        return ScheduleDetailResponse.entityToDTO(schedule, placeDTOList, attendeeDTOList);
+        return ScheduleDetailResponse.from(schedule, placeResponses, attendeeDTOList);
     }
 
 
@@ -210,8 +202,7 @@ public class ScheduleService {
      */
     public void updateSchedule(String userId, Long scheduleId, UpdateScheduleRequest updateScheduleRequest) {
         TravelSchedule schedule = getSavedSchedule(scheduleId);
-        Member member = getSavedMember(userId);
-        TravelAttendee attendee = getAttendeeInfo(member, schedule);
+        TravelAttendee attendee = getAttendeeInfo(schedule, userId);
         checkUserPermission(attendee.getPermission());
 
         schedule.set(updateScheduleRequest);
@@ -243,7 +234,6 @@ public class ScheduleService {
     }
 
 
-
     /**
      * 사용자의 일정 허용 범위 체크
      * @param permission: 허용 범위
@@ -254,73 +244,20 @@ public class ScheduleService {
         }
     }
 
-
+    /**
+     * 일정 삭제
+     * @param scheduleId: 일정 인덱스
+     * @param userId: 사용자 아이디
+     */
     public void deleteSchedule(Long scheduleId, String userId) {
-        TravelSchedule schedule = getSavedSchedule(scheduleId);
-        Member member = getSavedMember(userId);
-        TravelAttendee attendee = getAttendeeInfo(member, schedule);
+        TravelAttendee attendee = travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_UserId(scheduleId, userId)
+                .orElseThrow(() -> new ForbiddenScheduleException(ErrorCode.FORBIDDEN_ACCESS_SCHEDULE));
 
-        if (!attendee.getRole().equals(AttendeeRole.AUTHOR)){
+        if (!attendee.isAuthor()){
             throw new ForbiddenScheduleException(ErrorCode.FORBIDDEN_DELETE_SCHEDULE);
         }
 
         travelScheduleRepository.deleteById(scheduleId);
-    }
-
-    /**
-     * 여행지 정보 조회
-     * @param scheduleId: 일정 인덱스
-     * @param page: 페이지 수
-     * @return Page<PlaceSimpleResponse>: 중구 기준 여행지 정보로 구성된 페이지 dto
-     */
-    public Page<PlaceResponse> getTravelPlaces(Long scheduleId, int page) {
-        getSavedSchedule(scheduleId);
-        return getSimpleTravelPlacesByJunggu(page);
-    }
-
-
-    /**
-     * 여행지 검색
-     * @param scheduleId: 일정 인덱스
-     * @param page: 페이지 수
-     * @param keyword: 검색 키워드
-     * @return Page<PlaceSimpleResponse>: 여행지 정보로 구성된 페이지 dto
-     */
-    public Page<PlaceResponse> searchTravelPlaces(Long scheduleId, int page, String keyword) {
-        getSavedSchedule(scheduleId);
-
-        Pageable pageable = PageUtil.defaultPageable(page);
-        Page<TravelPlace> travelPlaces = travelPlaceRepository.searchTravelPlaces(pageable, keyword);
-
-        return travelPlaces.map(PlaceResponse::entityToDto);
-    }
-
-    /**
-     * 여행 루트 조회
-     * @param scheduleId: 일정 인덱스
-     * @param page: 페이지 수
-     * @return Page<RouteResponse>: 여행 루트 정보로 구성된 페이지 dto
-     */
-    public Page<RouteResponse> getTravelRoutes(Long scheduleId, int page) {
-        getSavedSchedule(scheduleId);
-
-        Pageable pageable = PageUtil.defaultPageable(page);
-        Page<TravelRoute> travelRoutes = travelRouteRepository.findAllByTravelSchedule_ScheduleId(pageable, scheduleId);
-
-        return travelRoutes.map(t -> RouteResponse.entityToDto(t, t.getTravelPlace()));
-    }
-
-
-    /**
-     * 중구 여행지 조회
-     * @param page: 페이지 수
-     * @return Page<PlaceSimpleResponse>: 중구 기준 여행지 정보로 구성된 페이지 dto
-     */
-    public Page<PlaceResponse> getSimpleTravelPlacesByJunggu(int page) {
-        Pageable pageable = PageUtil.defaultPageable(page);
-        Page<TravelPlace> travelPlaces = travelPlaceRepository.findAllByAreaData(pageable, "대한민국", "서울", "중구");
-
-        return travelPlaces.map(PlaceResponse::entityToDto);
     }
 
     /**
@@ -352,7 +289,6 @@ public class ScheduleService {
         return travelPlaceRepository.findByPlaceId(placeId)
                 .orElseThrow(() ->  new DataNotFoundException(ErrorCode.PLACE_NOT_FOUND));
     }
-
 
 }
 
