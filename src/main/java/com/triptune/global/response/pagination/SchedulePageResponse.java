@@ -29,7 +29,7 @@ public class SchedulePageResponse<T> {
         this.content = content;
     }
 
-    public static <T> SchedulePageResponse<T> of(Page<T> object, long totalSharedElements){
+    public static <T> SchedulePageResponse<T> ofAll(Page<T> object, long totalSharedElements){
         return SchedulePageResponse.<T>builder()
                 .totalPages(object.getTotalPages())
                 .currentPage(object.getNumber())
@@ -40,7 +40,7 @@ public class SchedulePageResponse<T> {
                 .build();
     }
 
-    public static <T> SchedulePageResponse<T> of(Page<T> object, int totalElements){
+    public static <T> SchedulePageResponse<T> ofShared(Page<T> object, int totalElements){
         return SchedulePageResponse.<T>builder()
                 .totalPages(object.getTotalPages())
                 .currentPage(object.getNumber())

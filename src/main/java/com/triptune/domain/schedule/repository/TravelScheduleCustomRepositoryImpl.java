@@ -1,5 +1,6 @@
 package com.triptune.domain.schedule.repository;
 
+import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.triptune.domain.schedule.entity.QTravelAttendee;
 import com.triptune.domain.schedule.entity.QTravelSchedule;
@@ -32,6 +33,8 @@ public class TravelScheduleCustomRepositoryImpl implements TravelScheduleCustomR
                 .join(travelSchedule.travelAttendeeList, travelAttendee)
                 .where(travelAttendee.member.userId.eq(userId))
                 .orderBy(travelSchedule.updatedAt.desc(), travelSchedule.createdAt.desc())
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
                 .fetch();
 
 
@@ -48,6 +51,8 @@ public class TravelScheduleCustomRepositoryImpl implements TravelScheduleCustomR
                 .where(travelAttendee.member.userId.eq(userId)
                         .and(travelSchedule.travelAttendeeList.size().gt(1)))
                 .orderBy(travelSchedule.updatedAt.desc(), travelSchedule.createdAt.desc())
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
                 .fetch();
 
 
@@ -85,5 +90,92 @@ public class TravelScheduleCustomRepositoryImpl implements TravelScheduleCustomR
         if (totalElements == null) totalElements = 0L;
 
         return totalElements.intValue();
+    }
+
+    @Override
+    public Page<TravelSchedule> searchTravelSchedulesByUserIdAndKeyword(Pageable pageable, String keyword, String userId) {
+        String orderCaseString = accuracyQuery();
+
+        List<TravelSchedule> content = jpaQueryFactory
+                .selectFrom(travelSchedule)
+                .leftJoin(travelSchedule.travelAttendeeList, travelAttendee)
+                .where(travelAttendee.member.userId.eq(userId)
+                        .and(travelSchedule.scheduleName.contains(keyword)))
+                .orderBy(Expressions.stringTemplate(
+                        orderCaseString,
+                        travelSchedule.scheduleName, keyword,  keyword + "%", "%" + keyword + "%", "%" + keyword
+                        ).asc()
+                )
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
+                .fetch();
+
+        int totalElements = countTravelSchedulesByUserIdAndKeyword(keyword, userId);
+
+        return PageUtil.createPage(content, pageable, totalElements);
+    }
+
+    @Override
+    public Integer countTravelSchedulesByUserIdAndKeyword(String keyword, String userId) {
+        Long totalElements = jpaQueryFactory
+                .select(travelSchedule.count())
+                .from(travelSchedule)
+                .leftJoin(travelSchedule.travelAttendeeList, travelAttendee)
+                .where(travelAttendee.member.userId.eq(userId)
+                        .and(travelSchedule.scheduleName.contains(keyword)))
+                .fetchOne();
+
+        if (totalElements == null) totalElements = 0L;
+
+        return totalElements.intValue();
+    }
+
+    @Override
+    public Page<TravelSchedule> searchSharedTravelSchedulesByUserIdAndKeyword(Pageable pageable, String keyword, String userId) {
+        String orderCaseString = accuracyQuery();
+
+        List<TravelSchedule> content = jpaQueryFactory
+                .selectFrom(travelSchedule)
+                .leftJoin(travelSchedule.travelAttendeeList, travelAttendee)
+                .where(travelAttendee.member.userId.eq(userId)
+                        .and(travelSchedule.travelAttendeeList.size().gt(1))
+                        .and(travelSchedule.scheduleName.contains(keyword)))
+                .orderBy(Expressions.stringTemplate(
+                                orderCaseString,
+                                travelSchedule.scheduleName, keyword,  keyword + "%", "%" + keyword + "%", "%" + keyword
+                        ).asc()
+                )
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
+                .fetch();
+
+        int totalElements = countSharedTravelSchedulesByUserIdAndKeyword(keyword, userId);
+
+        return PageUtil.createPage(content, pageable, totalElements);
+    }
+
+    @Override
+    public Integer countSharedTravelSchedulesByUserIdAndKeyword(String keyword, String userId) {
+        Long totalElements = jpaQueryFactory
+                .select(travelSchedule.count())
+                .from(travelSchedule)
+                .leftJoin(travelSchedule.travelAttendeeList, travelAttendee)
+                .where(travelAttendee.member.userId.eq(userId)
+                        .and(travelSchedule.travelAttendeeList.size().gt(1))
+                        .and(travelSchedule.scheduleName.contains(keyword)))
+                .fetchOne();
+
+        if (totalElements == null) totalElements = 0L;
+
+        return totalElements.intValue();
+    }
+
+    private String accuracyQuery(){
+        return "CASE WHEN {0} = {1} THEN 0 " +
+                "WHEN {0} = {2} THEN 1 " +
+                "WHEN {0} = {3} THEN 2 " +
+                "WHEN {0} = {3} THEN 3 " +
+                "ELSE 4 " +
+                "END";
     }
 }

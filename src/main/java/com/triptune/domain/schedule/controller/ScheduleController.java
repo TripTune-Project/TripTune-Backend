@@ -3,13 +3,11 @@ package com.triptune.domain.schedule.controller;
 import com.triptune.domain.schedule.dto.request.CreateScheduleRequest;
 import com.triptune.domain.schedule.dto.request.UpdateScheduleRequest;
 import com.triptune.domain.schedule.dto.response.CreateScheduleResponse;
-import com.triptune.domain.schedule.dto.response.RouteResponse;
 import com.triptune.domain.schedule.dto.response.ScheduleDetailResponse;
 import com.triptune.domain.schedule.dto.response.ScheduleInfoResponse;
+import com.triptune.domain.schedule.enumclass.ScheduleType;
 import com.triptune.domain.schedule.service.ScheduleService;
-import com.triptune.domain.travel.dto.response.PlaceResponse;
 import com.triptune.global.aop.AttendeeCheck;
-import com.triptune.global.response.pagination.ApiPageResponse;
 import com.triptune.global.response.ApiResponse;
 import com.triptune.global.response.pagination.ApiSchedulePageResponse;
 import com.triptune.global.response.pagination.SchedulePageResponse;
@@ -17,7 +15,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
@@ -26,6 +23,8 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 @Tag(name = "Schedule", description = "일정 만들기 관련 API")
 public class ScheduleController {
+
+    private static final String SEARCH_ALL = "all";
 
     private final ScheduleService scheduleService;
 
@@ -46,6 +45,25 @@ public class ScheduleController {
 
         return ApiSchedulePageResponse.dataResponse(response);
     }
+
+    @GetMapping("/search")
+    @Operation(summary = "일정 검색", description = "작성한 전체 일정 중 검색합니다.")
+    public ApiSchedulePageResponse<ScheduleInfoResponse> searchSchedules(
+            @RequestParam(name = "page") int page,
+            @RequestParam(name = "keyword") String keyword,
+            @RequestParam(name = "type") ScheduleType type){
+        String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+        SchedulePageResponse<ScheduleInfoResponse> response;
+
+        if (type == ScheduleType.all){
+            response = scheduleService.searchAllSchedules(page, keyword, userId);
+        } else {
+            response = scheduleService.searchSharedSchedules(page, keyword, userId);
+        }
+
+        return ApiSchedulePageResponse.dataResponse(response);
+    }
+
 
     @PostMapping
     @Operation(summary = "일정 생성", description = "여행 이름, 날짜를 선택해 일정을 생성합니다.")

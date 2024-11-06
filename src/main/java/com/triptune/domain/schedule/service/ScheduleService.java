@@ -36,7 +36,6 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -62,10 +61,10 @@ public class ScheduleService {
         Page<TravelSchedule> schedulePage = travelScheduleRepository.findTravelSchedulesByUserId(pageable, userId);
 
         List<ScheduleInfoResponse> scheduleInfoResponseList = createScheduleInfoResponse(schedulePage, userId);
-        long sharedScheduleCnt = travelScheduleRepository.countSharedTravelSchedulesByUserId(userId);
+        int sharedScheduleCnt = travelScheduleRepository.countSharedTravelSchedulesByUserId(userId);
 
         Page<ScheduleInfoResponse> scheduleInfoResponsePage = PageUtil.createPage(scheduleInfoResponseList, pageable, schedulePage.getTotalElements());
-        return SchedulePageResponse.of(scheduleInfoResponsePage, sharedScheduleCnt);
+        return SchedulePageResponse.ofAll(scheduleInfoResponsePage, sharedScheduleCnt);
     }
 
 
@@ -77,7 +76,30 @@ public class ScheduleService {
         int totalElements = travelScheduleRepository.countTravelSchedulesByUserId(userId);
 
         Page<ScheduleInfoResponse> scheduleInfoResponsePage = PageUtil.createPage(scheduleInfoResponseList, pageable, schedulePage.getTotalElements());
-        return SchedulePageResponse.of(scheduleInfoResponsePage, totalElements);
+        return SchedulePageResponse.ofShared(scheduleInfoResponsePage, totalElements);
+    }
+
+
+    public SchedulePageResponse<ScheduleInfoResponse> searchAllSchedules(int page, String keyword, String userId) {
+        Pageable pageable = PageUtil.schedulePageable(page);
+        Page<TravelSchedule> schedulesPage = travelScheduleRepository.searchTravelSchedulesByUserIdAndKeyword(pageable, keyword, userId);
+
+        List<ScheduleInfoResponse> scheduleInfoResponseList = createScheduleInfoResponse(schedulesPage, userId);
+        int sharedElements = travelScheduleRepository.countSharedTravelSchedulesByUserIdAndKeyword(keyword, userId);
+
+        Page<ScheduleInfoResponse> scheduleInfoResponsePage = PageUtil.createPage(scheduleInfoResponseList, pageable, schedulesPage.getTotalElements());
+        return SchedulePageResponse.ofAll(scheduleInfoResponsePage, sharedElements);
+    }
+
+    public SchedulePageResponse<ScheduleInfoResponse> searchSharedSchedules(int page, String keyword, String userId) {
+        Pageable pageable = PageUtil.schedulePageable(page);
+        Page<TravelSchedule> schedulesPage = travelScheduleRepository.searchSharedTravelSchedulesByUserIdAndKeyword(pageable, keyword, userId);
+
+        List<ScheduleInfoResponse> scheduleInfoResponseList = createScheduleInfoResponse(schedulesPage, userId);
+        int totalElements = travelScheduleRepository.countTravelSchedulesByUserIdAndKeyword(keyword, userId);
+
+        Page<ScheduleInfoResponse> scheduleInfoResponsePage = PageUtil.createPage(scheduleInfoResponseList, pageable, schedulesPage.getTotalElements());
+        return SchedulePageResponse.ofShared(scheduleInfoResponsePage, totalElements);
     }
 
 
@@ -289,6 +311,7 @@ public class ScheduleService {
         return travelPlaceRepository.findByPlaceId(placeId)
                 .orElseThrow(() ->  new DataNotFoundException(ErrorCode.PLACE_NOT_FOUND));
     }
+
 
 }
 

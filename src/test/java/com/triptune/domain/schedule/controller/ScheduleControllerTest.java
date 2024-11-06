@@ -15,6 +15,7 @@ import com.triptune.domain.schedule.entity.TravelRoute;
 import com.triptune.domain.schedule.entity.TravelSchedule;
 import com.triptune.domain.schedule.enumclass.AttendeePermission;
 import com.triptune.domain.schedule.enumclass.AttendeeRole;
+import com.triptune.domain.schedule.enumclass.ScheduleType;
 import com.triptune.domain.schedule.repository.TravelAttendeeRepository;
 import com.triptune.domain.schedule.repository.TravelRouteRepository;
 import com.triptune.domain.schedule.repository.TravelScheduleRepository;
@@ -280,6 +281,175 @@ public class ScheduleControllerTest extends ScheduleTest {
     void getSharedSchedulesWithoutData() throws Exception {
         mockMvc.perform(get("/api/schedules/shared")
                         .param("page", "1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.totalElements").value(0))
+                .andExpect(jsonPath("$.data.totalSharedElements").value(0))
+                .andExpect(jsonPath("$.data.content").isEmpty());
+    }
+
+
+    @Test
+    @DisplayName("searchSchedules(): 전체 일정 검색")
+    @WithMockUser(username = "member1")
+    void searchAllSchedules() throws Exception {
+        TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
+        TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ));
+        TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule2, AttendeeRole.AUTHOR, AttendeePermission.ALL));
+        TravelAttendee attendee4 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule3, AttendeeRole.AUTHOR, AttendeePermission.ALL));
+
+        schedule1.setTravelAttendeeList(new ArrayList<>(List.of(attendee1, attendee2)));
+        schedule2.setTravelAttendeeList(new ArrayList<>(List.of(attendee3)));
+        schedule3.setTravelAttendeeList(new ArrayList<>(List.of(attendee4)));
+
+        TravelRoute route1 = travelRouteRepository.save(createTravelRoute(schedule1, travelPlace1, 1));
+        TravelRoute route2 = travelRouteRepository.save(createTravelRoute(schedule1, travelPlace2, 2));
+        TravelRoute route3 = travelRouteRepository.save(createTravelRoute(schedule2, travelPlace1, 1));
+        TravelRoute route4 = travelRouteRepository.save(createTravelRoute(schedule2, travelPlace2, 2));
+        schedule1.setTravelRouteList(Arrays.asList(route1, route2));
+        schedule2.setTravelRouteList(Arrays.asList(route3, route4));
+
+        mockMvc.perform(get("/api/schedules/search")
+                        .param("page", "1")
+                        .param("type", ScheduleType.all.toString())
+                        .param("keyword", "1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.totalElements").value(1))
+                .andExpect(jsonPath("$.data.totalSharedElements").value(1))
+                .andExpect(jsonPath("$.data.content[0].sinceUpdate").exists())
+                .andExpect(jsonPath("$.data.content[0].scheduleName").value(schedule1.getScheduleName()))
+                .andExpect(jsonPath("$.data.content[0].thumbnailUrl").exists())
+                .andExpect(jsonPath("$.data.content[0].role").exists());
+    }
+
+    @Test
+    @DisplayName("searchSchedules(): 전체 일정 검색 시 여행 루트 데이터가 없는 경우")
+    @WithMockUser(username = "member1")
+    void searchAllSchedulesNoRouteData() throws Exception {
+        TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
+        TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ));
+        TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule2, AttendeeRole.AUTHOR, AttendeePermission.ALL));
+        TravelAttendee attendee4 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule3, AttendeeRole.AUTHOR, AttendeePermission.ALL));
+
+        schedule1.setTravelAttendeeList(new ArrayList<>(List.of(attendee1, attendee2)));
+        schedule2.setTravelAttendeeList(new ArrayList<>(List.of(attendee3)));
+        schedule3.setTravelAttendeeList(new ArrayList<>(List.of(attendee4)));
+
+        mockMvc.perform(get("/api/schedules/search")
+                        .param("page", "1")
+                        .param("type", ScheduleType.all.toString())
+                        .param("keyword", "테스트"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.totalElements").value(3))
+                .andExpect(jsonPath("$.data.totalSharedElements").value(1))
+                .andExpect(jsonPath("$.data.content[0].sinceUpdate").exists())
+                .andExpect(jsonPath("$.data.content[0].scheduleName").exists())
+                .andExpect(jsonPath("$.data.content[0].thumbnailUrl").isEmpty());
+
+    }
+
+    @Test
+    @DisplayName("searchSchedules(): 전체 일정 검색 시 공유된 일정 없는 경우")
+    @WithMockUser(username = "member1")
+    void searchAllSchedulesWithoutSharedData() throws Exception {
+        TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
+        TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule2, AttendeeRole.AUTHOR, AttendeePermission.ALL));
+        TravelAttendee attendee4 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule3, AttendeeRole.AUTHOR, AttendeePermission.ALL));
+
+        schedule1.setTravelAttendeeList(new ArrayList<>(List.of(attendee1)));
+        schedule2.setTravelAttendeeList(new ArrayList<>(List.of(attendee3)));
+        schedule3.setTravelAttendeeList(new ArrayList<>(List.of(attendee4)));
+
+        mockMvc.perform(get("/api/schedules/search")
+                        .param("page", "1")
+                        .param("type", ScheduleType.all.toString())
+                        .param("keyword", "테스트"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.totalElements").value(3))
+                .andExpect(jsonPath("$.data.totalSharedElements").value(0))
+                .andExpect(jsonPath("$.data.content").exists());
+    }
+
+    @Test
+    @DisplayName("searchSchedules(): 전체 일정 검색 시 검색 결과 없는 경우")
+    @WithMockUser(username = "member1")
+    void searchSchedulesWithoutData() throws Exception {
+        mockMvc.perform(get("/api/schedules/search")
+                        .param("page", "1")
+                        .param("type", ScheduleType.all.toString())
+                        .param("keyword", "ㅁㄴㅇㄹ"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.totalElements").value(0))
+                .andExpect(jsonPath("$.data.totalSharedElements").value(0))
+                .andExpect(jsonPath("$.data.content").isEmpty());
+    }
+
+    @Test
+    @DisplayName("searchSchedules(): 공유된 일정 검색")
+    @WithMockUser(username = "member1")
+    void searchSharedSchedules() throws Exception {
+        TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
+        TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ));
+        TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule2, AttendeeRole.AUTHOR, AttendeePermission.ALL));
+        TravelAttendee attendee4 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule3, AttendeeRole.AUTHOR, AttendeePermission.ALL));
+
+        schedule1.setTravelAttendeeList(new ArrayList<>(List.of(attendee1, attendee2)));
+        schedule2.setTravelAttendeeList(new ArrayList<>(List.of(attendee3)));
+        schedule3.setTravelAttendeeList(new ArrayList<>(List.of(attendee4)));
+
+        TravelRoute route1 = travelRouteRepository.save(createTravelRoute(schedule1, travelPlace1, 1));
+        TravelRoute route2 = travelRouteRepository.save(createTravelRoute(schedule1, travelPlace2, 2));
+        TravelRoute route3 = travelRouteRepository.save(createTravelRoute(schedule2, travelPlace1, 1));
+        TravelRoute route4 = travelRouteRepository.save(createTravelRoute(schedule2, travelPlace2, 2));
+        schedule1.setTravelRouteList(Arrays.asList(route1, route2));
+        schedule2.setTravelRouteList(Arrays.asList(route3, route4));
+
+        mockMvc.perform(get("/api/schedules/search")
+                        .param("page", "1")
+                        .param("type", ScheduleType.share.toString())
+                        .param("keyword", "테스트"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.totalElements").value(3))
+                .andExpect(jsonPath("$.data.totalSharedElements").value(1))
+                .andExpect(jsonPath("$.data.content[0].sinceUpdate").exists())
+                .andExpect(jsonPath("$.data.content[0].scheduleName").value(schedule1.getScheduleName()))
+                .andExpect(jsonPath("$.data.content[0].thumbnailUrl").exists())
+                .andExpect(jsonPath("$.data.content[0].role").exists());
+    }
+
+    @Test
+    @DisplayName("searchSchedules(): 공유된 일정 검색 시 여행 루트 데이터가 없는 경우")
+    @WithMockUser(username = "member1")
+    void searchSharedSchedulesNoRouteData() throws Exception {
+        TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
+        TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ));
+        TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule2, AttendeeRole.AUTHOR, AttendeePermission.ALL));
+        TravelAttendee attendee4 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule3, AttendeeRole.AUTHOR, AttendeePermission.ALL));
+
+        schedule1.setTravelAttendeeList(new ArrayList<>(List.of(attendee1, attendee2)));
+        schedule2.setTravelAttendeeList(new ArrayList<>(List.of(attendee3)));
+        schedule3.setTravelAttendeeList(new ArrayList<>(List.of(attendee4)));
+
+        mockMvc.perform(get("/api/schedules/search")
+                        .param("page", "1")
+                        .param("type", ScheduleType.share.toString())
+                        .param("keyword", "테스트"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.totalElements").value(3))
+                .andExpect(jsonPath("$.data.totalSharedElements").value(1))
+                .andExpect(jsonPath("$.data.content[0].sinceUpdate").exists())
+                .andExpect(jsonPath("$.data.content[0].scheduleName").exists())
+                .andExpect(jsonPath("$.data.content[0].thumbnailUrl").isEmpty());
+
+    }
+
+    @Test
+    @DisplayName("getSharedSchedules(): 공유된 일정 검색 시 검색 결과 없는 경우")
+    @WithMockUser(username = "member1")
+    void searchSharedSchedulesWithoutData() throws Exception {
+        mockMvc.perform(get("/api/schedules/search")
+                        .param("page", "1")
+                        .param("type", ScheduleType.share.toString())
+                        .param("keyword", "ㅁㄴㅇㄹ"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.totalElements").value(0))
                 .andExpect(jsonPath("$.data.totalSharedElements").value(0))
