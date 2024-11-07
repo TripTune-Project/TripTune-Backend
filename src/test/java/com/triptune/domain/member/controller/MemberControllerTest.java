@@ -35,7 +35,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @Transactional
-public class MemberApiControllerTests {
+public class MemberControllerTest {
 
     @Autowired
     private WebApplicationContext wac;

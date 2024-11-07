@@ -35,7 +35,7 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 @Transactional
 @Slf4j
-public class MemberServiceTests extends MemberTest {
+public class MemberServiceTest extends MemberTest {
 
     @InjectMocks
     private MemberService memberService;

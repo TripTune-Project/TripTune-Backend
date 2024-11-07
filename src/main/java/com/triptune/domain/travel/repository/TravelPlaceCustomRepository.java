@@ -13,5 +13,5 @@ public interface TravelPlaceCustomRepository {
     Page<TravelPlace> searchTravelPlaces(Pageable pageable, String keyword);
     Page<PlaceLocation> findNearByTravelPlaces(Pageable pageable, PlaceLocationRequest placeLocationRequest, int radius);
     Page<PlaceLocation> searchTravelPlacesWithLocation(Pageable pageable, PlaceSearchRequest placeSearchRequest);
-    Integer getTotalElements(BooleanExpression booleanExpression);
+    Integer countTotalElements(BooleanExpression booleanExpression);
 }

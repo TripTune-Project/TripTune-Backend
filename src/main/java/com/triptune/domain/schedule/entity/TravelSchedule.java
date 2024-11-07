@@ -57,7 +57,7 @@ public class TravelSchedule {
         this.travelRouteList = travelRouteList;
     }
 
-    public static TravelSchedule of(CreateScheduleRequest request){
+    public static TravelSchedule from(CreateScheduleRequest request){
         return TravelSchedule.builder()
                 .scheduleName(request.getScheduleName())
                 .startDate(request.getStartDate())

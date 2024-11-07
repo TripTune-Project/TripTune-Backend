@@ -19,7 +19,7 @@ public class TravelImageResponse {
         this.imageUrl = imageUrl;
     }
 
-    public static TravelImageResponse entityToDto(TravelImage travelImage){
+    public static TravelImageResponse from(TravelImage travelImage){
         return TravelImageResponse.builder()
                 .fileId(travelImage.getTravelImageId())
                 .imageName(travelImage.getFileName())

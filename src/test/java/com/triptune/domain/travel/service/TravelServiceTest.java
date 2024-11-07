@@ -10,7 +10,7 @@ import com.triptune.domain.travel.dto.response.PlaceDistanceResponse;
 import com.triptune.domain.travel.entity.TravelImage;
 import com.triptune.domain.travel.entity.TravelPlace;
 import com.triptune.domain.travel.repository.TravelImageRepository;
-import com.triptune.domain.travel.repository.TravelPlacePlaceRepository;
+import com.triptune.domain.travel.repository.TravelPlaceRepository;
 import com.triptune.global.enumclass.ErrorCode;
 import com.triptune.global.exception.DataNotFoundException;
 import com.triptune.global.util.PageUtil;
@@ -35,13 +35,13 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-public class TravelServiceTests extends TravelTest {
+public class TravelServiceTest extends TravelTest {
 
     @InjectMocks
     private TravelService travelService;
 
     @Mock
-    private TravelPlacePlaceRepository travelPlaceRepository;
+    private TravelPlaceRepository travelPlaceRepository;
 
     @Mock
     private TravelImageRepository travelImageRepository;

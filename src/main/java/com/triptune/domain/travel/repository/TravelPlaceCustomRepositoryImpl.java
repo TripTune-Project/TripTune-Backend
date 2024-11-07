@@ -46,7 +46,7 @@ public class TravelPlaceCustomRepositoryImpl implements TravelPlaceCustomReposit
                 .fetch();
 
         // 전체 갯수 조회
-        int totalElements = getTotalElements(expression);
+        int totalElements = countTotalElements(expression);
 
         return new PageImpl<>(content, pageable, totalElements);
     }
@@ -85,7 +85,7 @@ public class TravelPlaceCustomRepositoryImpl implements TravelPlaceCustomReposit
                 .limit(pageable.getPageSize())
                 .fetch();
 
-        int totalElements = getTotalElements(booleanExpression);
+        int totalElements = countTotalElements(booleanExpression);
 
         return PageUtil.createPage(content, pageable, totalElements);
     }
@@ -116,7 +116,7 @@ public class TravelPlaceCustomRepositoryImpl implements TravelPlaceCustomReposit
                 .limit(pageable.getPageSize())
                 .fetch();
 
-        int totalElements = getTotalElements(loeExpression);
+        int totalElements = countTotalElements(loeExpression);
 
         return PageUtil.createPage(content, pageable, totalElements);
     }
@@ -172,14 +172,14 @@ public class TravelPlaceCustomRepositoryImpl implements TravelPlaceCustomReposit
                 .limit(pageable.getPageSize())
                 .fetch();
 
-        int totalElements = getTotalElements(booleanExpression);
+        int totalElements = countTotalElements(booleanExpression);
 
         return PageUtil.createPage(content, pageable, totalElements);
     }
 
 
     @Override
-    public Integer getTotalElements(BooleanExpression expression) {
+    public Integer countTotalElements(BooleanExpression expression) {
         Long totalElements = jpaQueryFactory
                 .select(travelPlace.count())
                 .from(travelPlace)

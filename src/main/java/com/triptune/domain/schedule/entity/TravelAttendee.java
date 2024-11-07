@@ -44,4 +44,17 @@ public class TravelAttendee {
         this.role = role;
         this.permission = permission;
     }
+
+    public static TravelAttendee of(TravelSchedule schedule, Member member){
+        return TravelAttendee.builder()
+                .travelSchedule(schedule)
+                .member(member)
+                .role(AttendeeRole.AUTHOR)
+                .permission(AttendeePermission.ALL)
+                .build();
+    }
+
+    public boolean isAuthor(){
+        return AttendeeRole.AUTHOR.equals(this.role);
+    }
 }

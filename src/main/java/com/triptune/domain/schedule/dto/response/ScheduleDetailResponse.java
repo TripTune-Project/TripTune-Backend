@@ -34,7 +34,7 @@ public class ScheduleDetailResponse {
         this.placeList = placeList;
     }
 
-    public static ScheduleDetailResponse entityToDTO(TravelSchedule schedule, PageResponse<PlaceResponse> simplePlaces, List<AttendeeDTO> attendeeList){
+    public static ScheduleDetailResponse from(TravelSchedule schedule, PageResponse<PlaceResponse> placeResponse, List<AttendeeDTO> attendeeList){
         return ScheduleDetailResponse.builder()
                 .scheduleName(schedule.getScheduleName())
                 .startDate(schedule.getStartDate())
@@ -42,7 +42,7 @@ public class ScheduleDetailResponse {
                 .createdAt(schedule.getCreatedAt())
                 .updateAt(schedule.getUpdatedAt())
                 .attendeeList(attendeeList)
-                .placeList(simplePlaces)
+                .placeList(placeResponse)
                 .build();
     }
 }
