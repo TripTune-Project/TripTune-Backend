@@ -31,7 +31,7 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 @RequestMapping("/api/members")
 @Tag(name = "Member", description = "회원 관련 API")
-public class MemberApiController {
+public class MemberController {
 
     private final MemberService memberService;
     private final JwtUtil jwtUtil;

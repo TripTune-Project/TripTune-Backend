@@ -34,7 +34,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @ActiveProfiles("test")
 @TestPropertySource(locations = "classpath:application-test.yml")
-public class TravelApiControllerTests extends TravelTest {
+public class TravelControllerTest extends TravelTest {
 
     private final WebApplicationContext wac;
     private final TravelPlaceRepository travelPlaceRepository;
@@ -46,7 +46,7 @@ public class TravelApiControllerTests extends TravelTest {
     private final ApiContentTypeRepository apiContentTypeRepository;
 
     @Autowired
-    public TravelApiControllerTests(WebApplicationContext wac, TravelPlaceRepository travelPlaceRepository, CountryRepository countryRepository, CityRepository cityRepository, DistrictRepository districtRepository, ApiCategoryRepository apiCategoryRepository, TravelImageRepository travelImageRepository, ApiContentTypeRepository apiContentTypeRepository) {
+    public TravelControllerTest(WebApplicationContext wac, TravelPlaceRepository travelPlaceRepository, CountryRepository countryRepository, CityRepository cityRepository, DistrictRepository districtRepository, ApiCategoryRepository apiCategoryRepository, TravelImageRepository travelImageRepository, ApiContentTypeRepository apiContentTypeRepository) {
         this.wac = wac;
         this.travelPlaceRepository = travelPlaceRepository;
         this.countryRepository = countryRepository;

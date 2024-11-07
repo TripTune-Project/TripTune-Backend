@@ -35,7 +35,7 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-public class TravelServiceTests extends TravelTest {
+public class TravelServiceTest extends TravelTest {
 
     @InjectMocks
     private TravelService travelService;

@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/emails")
 @RequiredArgsConstructor
 @Tag(name = "Email", description = "이메일 관련 API")
-public class EmailApiController {
+public class EmailController {
 
     private final EmailService emailService;
 

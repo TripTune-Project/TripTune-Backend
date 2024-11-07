@@ -32,7 +32,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @Import({QueryDSLConfig.class})
 @ActiveProfiles("test")
 @TestPropertySource(locations = "classpath:application-test.yml")
-public class TravelPlaceRepositoryTests extends TravelTest {
+public class TravelPlaceRepositoryTest extends TravelTest {
     private final TravelPlaceRepository travelPlaceRepository;
     private final CityRepository cityRepository;
     private final CountryRepository countryRepository;
@@ -44,7 +44,7 @@ public class TravelPlaceRepositoryTests extends TravelTest {
     private TravelPlace travelPlace1;
 
     @Autowired
-    public TravelPlaceRepositoryTests(TravelPlaceRepository travelPlaceRepository, CityRepository cityRepository, CountryRepository countryRepository, DistrictRepository districtRepository, ApiCategoryRepository apiCategoryRepository, TravelImageRepository travelImageRepository, ApiContentTypeRepository apiContentTypeRepository) {
+    public TravelPlaceRepositoryTest(TravelPlaceRepository travelPlaceRepository, CityRepository cityRepository, CountryRepository countryRepository, DistrictRepository districtRepository, ApiCategoryRepository apiCategoryRepository, TravelImageRepository travelImageRepository, ApiContentTypeRepository apiContentTypeRepository) {
         this.travelPlaceRepository = travelPlaceRepository;
         this.cityRepository = cityRepository;
         this.countryRepository = countryRepository;

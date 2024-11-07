@@ -14,7 +14,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @SpringBootTest
 @Transactional
-public class TravelImageRepositoryTests {
+public class TravelImageRepositoryTest {
 
     @Autowired
     private TravelImageRepository travelImageRepository;
