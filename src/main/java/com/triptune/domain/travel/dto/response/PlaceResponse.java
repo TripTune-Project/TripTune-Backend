@@ -33,7 +33,7 @@ public class PlaceResponse {
         this.thumbnailUrl = thumbnailUrl;
     }
 
-    public static PlaceResponse entityToDto(TravelPlace travelPlace){
+    public static PlaceResponse from(TravelPlace travelPlace){
         return PlaceResponse.builder()
                 .placeId(travelPlace.getPlaceId())
                 .country(travelPlace.getCountry().getCountryName())

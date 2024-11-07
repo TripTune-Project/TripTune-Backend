@@ -1,6 +1,5 @@
 package com.triptune.domain.schedule.service;
 
-import com.triptune.domain.schedule.repository.TravelScheduleRepository;
 import com.triptune.domain.travel.dto.response.PlaceResponse;
 import com.triptune.domain.travel.entity.TravelPlace;
 import com.triptune.domain.travel.repository.TravelPlaceRepository;
@@ -27,7 +26,7 @@ public class ScheduleTravelService {
         Pageable pageable = PageUtil.defaultPageable(page);
 
         return travelPlaceRepository.findAllByAreaData(pageable, "대한민국", "서울", "중구")
-                .map(PlaceResponse::entityToDto);
+                .map(PlaceResponse::from);
 
     }
 
@@ -42,7 +41,7 @@ public class ScheduleTravelService {
         Pageable pageable = PageUtil.defaultPageable(page);
         Page<TravelPlace> travelPlaces = travelPlaceRepository.searchTravelPlaces(pageable, keyword);
 
-        return travelPlaces.map(PlaceResponse::entityToDto);
+        return travelPlaces.map(PlaceResponse::from);
     }
 
 }

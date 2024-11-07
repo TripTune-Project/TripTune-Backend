@@ -37,7 +37,7 @@ public class RouteResponse {
     }
 
 
-    public static RouteResponse entityToDto(TravelRoute travelRoute){
+    public static RouteResponse from(TravelRoute travelRoute){
         TravelPlace travelPlace = travelRoute.getTravelPlace();
 
         return RouteResponse.builder()

@@ -203,13 +203,13 @@ public class ScheduleService {
         // 여행지 정보: Page<TravelPlace> -> PageResponse<TravelSimpleResponse> 로 변경
         Pageable pageable = PageUtil.defaultPageable(page);
         Page<PlaceResponse> travelPlacesDTO = travelPlaceRepository.findAllByAreaData(pageable, "대한민국", "서울", "중구")
-                .map(PlaceResponse::entityToDto);
+                .map(PlaceResponse::from);
 
         PageResponse<PlaceResponse> placeResponses = PageResponse.of(travelPlacesDTO);
 
         List<AttendeeDTO> attendeeDTOList = travelAttendeeRepository.findAllByTravelSchedule_ScheduleId(schedule.getScheduleId())
                 .stream()
-                .map(AttendeeDTO::entityToDTO)
+                .map(AttendeeDTO::from)
                 .toList();
 
         return ScheduleDetailResponse.from(schedule, placeResponses, attendeeDTOList);

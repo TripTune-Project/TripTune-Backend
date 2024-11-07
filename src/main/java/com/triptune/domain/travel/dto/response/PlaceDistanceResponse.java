@@ -38,7 +38,7 @@ public class PlaceDistanceResponse {
         this.distance = Math.floor(distance * 10) / 10.0;
     }
 
-    public static PlaceDistanceResponse entityToDto(TravelPlace travelPlace){
+    public static PlaceDistanceResponse from(TravelPlace travelPlace){
         return PlaceDistanceResponse.builder()
                 .placeId(travelPlace.getPlaceId())
                 .country(travelPlace.getCountry().getCountryName())
@@ -55,12 +55,12 @@ public class PlaceDistanceResponse {
 
     public static List<PlaceDistanceResponse> entityListToDtoList(List<TravelPlace> travelPlaceList){
         return travelPlaceList.stream()
-                .map(PlaceDistanceResponse::entityToDto)
+                .map(PlaceDistanceResponse::from)
                 .collect(Collectors.toList());
     }
 
 
-    public static PlaceDistanceResponse entityToLocationDto(PlaceLocation placeLocation){
+    public static PlaceDistanceResponse from(PlaceLocation placeLocation){
         return PlaceDistanceResponse.builder()
                 .placeId(placeLocation.getPlaceId())
                 .country(placeLocation.getCountry())

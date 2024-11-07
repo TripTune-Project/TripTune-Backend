@@ -21,7 +21,7 @@ public class AttendeeDTO {
         this.permission = permission;
     }
 
-    public static AttendeeDTO entityToDTO(TravelAttendee attendee){
+    public static AttendeeDTO from(TravelAttendee attendee){
         return AttendeeDTO.builder()
                 .attendeeId(attendee.getAttendeeId())
                 .userId(attendee.getMember().getUserId())

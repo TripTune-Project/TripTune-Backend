@@ -43,7 +43,7 @@ public class TravelService {
             }
         }
 
-        return travelPlacePage.map(PlaceDistanceResponse::entityToLocationDto);
+        return travelPlacePage.map(PlaceDistanceResponse::from);
     }
 
     /**
@@ -61,7 +61,7 @@ public class TravelService {
             response.setTravelImageList(travelImageRepository.findByTravelPlacePlaceId(response.getPlaceId()));
         }
 
-        return travelPlacePage.map(PlaceDistanceResponse::entityToLocationDto);
+        return travelPlacePage.map(PlaceDistanceResponse::from);
     }
 
     /**
@@ -73,7 +73,7 @@ public class TravelService {
         TravelPlace travelPlace = travelPlaceRepository.findByPlaceId(placeId)
                 .orElseThrow(()-> new DataNotFoundException(ErrorCode.DATA_NOT_FOUND));
 
-        return PlaceDetailResponse.entityToDto(travelPlace);
+        return PlaceDetailResponse.from(travelPlace);
     }
 
 

@@ -4,8 +4,6 @@ import com.triptune.domain.schedule.dto.response.RouteResponse;
 import com.triptune.domain.schedule.entity.TravelRoute;
 import com.triptune.domain.schedule.repository.TravelRouteRepository;
 import com.triptune.domain.schedule.repository.TravelScheduleRepository;
-import com.triptune.global.enumclass.ErrorCode;
-import com.triptune.global.exception.DataNotFoundException;
 import com.triptune.global.util.PageUtil;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +29,6 @@ public class RouteService {
         Pageable pageable = PageUtil.defaultPageable(page);
         Page<TravelRoute> travelRoutes = travelRouteRepository.findAllByTravelSchedule_ScheduleId(pageable, scheduleId);
 
-        return travelRoutes.map(RouteResponse::entityToDto);
+        return travelRoutes.map(RouteResponse::from);
     }
 }

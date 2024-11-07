@@ -7,7 +7,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -56,7 +55,7 @@ public class PlaceDetailResponse {
     }
 
 
-    public static PlaceDetailResponse entityToDto(TravelPlace travelPlace){
+    public static PlaceDetailResponse from(TravelPlace travelPlace){
         return PlaceDetailResponse.builder()
                 .placeId(travelPlace.getPlaceId())
                 .placeType(travelPlace.getApiContentType().getContentTypeName())
@@ -75,7 +74,7 @@ public class PlaceDetailResponse {
                 .placeName(travelPlace.getPlaceName())
                 .description(travelPlace.getDescription())
                 .imageList(travelPlace.getTravelImageList().stream()   // TravelImageFile -> TravelImageResponse 로 변경
-                        .map(TravelImageResponse::entityToDto)
+                        .map(TravelImageResponse::from)
                         .collect(Collectors.toList()))
                 .build();
     }
