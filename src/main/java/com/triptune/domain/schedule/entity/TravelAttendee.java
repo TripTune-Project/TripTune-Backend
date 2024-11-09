@@ -54,6 +54,15 @@ public class TravelAttendee {
                 .build();
     }
 
+    public static TravelAttendee of(TravelSchedule schedule, Member member, AttendeePermission permission){
+        return TravelAttendee.builder()
+                .travelSchedule(schedule)
+                .member(member)
+                .role(AttendeeRole.GUEST)
+                .permission(permission)
+                .build();
+    }
+
     public boolean isAuthor(){
         return AttendeeRole.AUTHOR.equals(this.role);
     }
