@@ -2,9 +2,11 @@ package com.triptune.domain.member.controller;
 
 import com.triptune.domain.member.MemberTest;
 import com.triptune.domain.member.dto.request.MemberRequest;
+import com.triptune.domain.member.entity.Member;
 import com.triptune.domain.member.repository.MemberRepository;
 import com.triptune.domain.member.service.MemberService;
 import com.triptune.global.enumclass.ErrorCode;
+import com.triptune.global.enumclass.SuccessCode;
 import com.triptune.global.filter.JwtAuthFilter;
 import com.triptune.global.util.JwtUtil;
 import com.triptune.global.util.RedisUtil;
@@ -34,9 +36,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class MemberControllerTest extends MemberTest{
     private final WebApplicationContext wac;
     private final JwtUtil jwtUtil;
-
-    @MockBean
-    private MemberRepository memberRepository;
+    private final MemberRepository memberRepository;
 
     @MockBean
     private RedisUtil redisUtil;
@@ -44,9 +44,10 @@ public class MemberControllerTest extends MemberTest{
     private MockMvc mockMvc;
 
     @Autowired
-    public MemberControllerTest(WebApplicationContext wac, JwtUtil jwtUtil, MemberService memberService) {
+    public MemberControllerTest(WebApplicationContext wac, JwtUtil jwtUtil, MemberRepository memberRepository) {
         this.wac = wac;
         this.jwtUtil = jwtUtil;
+        this.memberRepository = memberRepository;
     }
 
     @BeforeEach
@@ -60,17 +61,18 @@ public class MemberControllerTest extends MemberTest{
     }
 
     @Test
-    @DisplayName("회원가입 성공")
-    void join_success() throws Exception {
+    @DisplayName("join(): 회원가입 성공")
+    void join() throws Exception {
         mockMvc.perform(post("/api/members/join")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(toJsonString(createMemberRequest())))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()));;
     }
 
     @Test
-    @DisplayName("회원가입 실패: 유효성 검사로 인해 methodArgumentNotValidException 발생")
-    void join_methodArgumentNotValidException() throws Exception {
+    @DisplayName("join(): 비밀번호 유효성 검사로 인해 예외 발생")
+    void joinInvalidPassword_methodArgumentNotValidException() throws Exception {
         MemberRequest request = createMemberRequest();
         request.setPassword("password");
 
@@ -82,7 +84,7 @@ public class MemberControllerTest extends MemberTest{
     }
 
     @Test
-    @DisplayName("회원가입 실패: 비밀번호, 비밀번호 재입력 불일치로 인한 CustomNotValidException 발생")
+    @DisplayName("join(): 비밀번호, 비밀번호 재입력 불일치로 인한 예외 발생")
     void join_CustomNotValidException() throws Exception {
         MemberRequest request = createMemberRequest();
         request.setPassword("password123@");
@@ -92,16 +94,29 @@ public class MemberControllerTest extends MemberTest{
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(toJsonString(request)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.success").value(false));
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value(ErrorCode.INCORRECT_PASSWORD_REPASSWORD.getMessage()));
     }
 
     @Test
-    @DisplayName("로그아웃 성공")
-    void logout_success() throws Exception{
-        String accessToken = jwtUtil.createToken("test", 3600);
+    @DisplayName("join(): 이미 존재하는 아이디로 인해 예외 발생")
+    void joinExistedUserId_dataExistException() throws Exception {
+        MemberRequest request = createMemberRequest();
+        memberRepository.save(createMember(null, request.getUserId()));
 
-        doNothing().when(memberRepository).deleteRefreshToken("test");
-        doNothing().when(redisUtil).saveExpiredData(accessToken, "logout", 3600);
+        mockMvc.perform(post("/api/members/join")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJsonString(request)))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value(ErrorCode.ALREADY_EXISTED_USERID.getMessage()));
+    }
+
+    @Test
+    @DisplayName("logout(): 로그아웃 성공")
+    void logout() throws Exception{
+        Member member = memberRepository.save(createMember(null, "member1"));
+        String accessToken = jwtUtil.createToken(member.getUserId(), 3600);
 
         mockMvc.perform(patch("/api/members/logout")
                         .header("Authorization", "Bearer " + accessToken)
@@ -111,12 +126,10 @@ public class MemberControllerTest extends MemberTest{
     }
 
     @Test
-    @DisplayName("로그아웃 실패: 잘못된 access Token 으로 인해 CustomJwtBadRequestException 발생")
-    void logout_customJwtBadRequestException_fail() throws Exception{
-        String accessToken = jwtUtil.createToken("test", 3600);
-
-        doNothing().when(memberRepository).deleteRefreshToken("test");
-        doNothing().when(redisUtil).saveExpiredData(accessToken, "logout", 3600);
+    @DisplayName("logout(): 잘못된 access Token 으로 인해 예외 발생")
+    void logout_customJwtBadRequestException() throws Exception{
+        Member member = memberRepository.save(createMember(null, "member1"));
+        String accessToken = jwtUtil.createToken(member.getUserId(), 3600);
 
         mockMvc.perform(patch("/api/members/logout")
                         .header("Authorization", "Bea" + accessToken)
@@ -129,8 +142,8 @@ public class MemberControllerTest extends MemberTest{
 
 
     @Test
-    @DisplayName("refresh token 갱신 실패: refresh token 만료")
-    void expiredRefreshToken_fail() throws Exception {
+    @DisplayName("refreshToken(): refresh token 만료로 예외 발생")
+    void refreshTokenExpired_unauthorizedException() throws Exception {
         String refreshToken = jwtUtil.createToken("test", -604800000);
 
         mockMvc.perform(post("/api/members/refresh")
