@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.triptune.domain.common.entity.*;
 import com.triptune.domain.member.entity.Member;
 import com.triptune.domain.member.entity.ProfileImage;
+import com.triptune.domain.schedule.entity.ChatMessage;
 import com.triptune.domain.schedule.entity.TravelAttendee;
 import com.triptune.domain.schedule.entity.TravelRoute;
 import com.triptune.domain.schedule.entity.TravelSchedule;
@@ -131,6 +132,17 @@ public abstract class BaseTest {
                 .travelSchedule(schedule)
                 .travelPlace(travelPlace)
                 .routeOrder(routeOrder)
+                .build();
+    }
+
+    protected ChatMessage createChatMessage(String messageId, Long scheduleId, Long memberId, String nickname, String message){
+        return ChatMessage.builder()
+                .messageId(messageId)
+                .scheduleId(scheduleId)
+                .memberId(memberId)
+                .nickname(nickname)
+                .message(message)
+                .timestamp(LocalDateTime.now())
                 .build();
     }
 

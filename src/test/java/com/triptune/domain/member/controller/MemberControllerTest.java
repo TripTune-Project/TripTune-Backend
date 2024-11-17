@@ -1,17 +1,13 @@
 package com.triptune.domain.member.controller;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.triptune.domain.member.dto.LogoutDTO;
+import com.triptune.domain.member.MemberTest;
 import com.triptune.domain.member.dto.request.MemberRequest;
-import com.triptune.domain.member.dto.request.RefreshTokenRequest;
 import com.triptune.domain.member.repository.MemberRepository;
 import com.triptune.domain.member.service.MemberService;
 import com.triptune.global.enumclass.ErrorCode;
 import com.triptune.global.filter.JwtAuthFilter;
 import com.triptune.global.util.JwtUtil;
 import com.triptune.global.util.RedisUtil;
-import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -19,12 +15,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.filter.CharacterEncodingFilter;
 
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -34,20 +30,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
-@Transactional
-public class MemberControllerTest {
-
-    @Autowired
-    private WebApplicationContext wac;
-
-    @Autowired
-    private ObjectMapper objectMapper;
-
-    @Autowired
-    private JwtUtil jwtUtil;
-
-    @Autowired
-    private MemberService memberService;
+@ActiveProfiles("test")
+public class MemberControllerTest extends MemberTest{
+    private final WebApplicationContext wac;
+    private final JwtUtil jwtUtil;
 
     @MockBean
     private MemberRepository memberRepository;
@@ -56,6 +42,12 @@ public class MemberControllerTest {
     private RedisUtil redisUtil;
 
     private MockMvc mockMvc;
+
+    @Autowired
+    public MemberControllerTest(WebApplicationContext wac, JwtUtil jwtUtil, MemberService memberService) {
+        this.wac = wac;
+        this.jwtUtil = jwtUtil;
+    }
 
     @BeforeEach
     void setUp(){
@@ -143,36 +135,11 @@ public class MemberControllerTest {
 
         mockMvc.perform(post("/api/members/refresh")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(createTokenRefreshRequest(refreshToken))))
+                        .content(toJsonString(createRefreshTokenRequest(refreshToken))))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.errorCode").value(401));
 
     }
 
-    private MemberRequest createMemberRequest(){
-        return MemberRequest.builder()
-                .userId("testUser")
-                .password("password123@")
-                .repassword("password123@")
-                .nickname("test")
-                .email("test@test.com")
-                .build();
-    }
-
-    private LogoutDTO createLogoutDTO(){
-        return LogoutDTO.builder()
-                .userId("test")
-                .build();
-    }
-
-    private RefreshTokenRequest createTokenRefreshRequest(String refreshToken){
-        return RefreshTokenRequest.builder()
-                .refreshToken(refreshToken)
-                .build();
-    }
-
-    private String toJsonString(Object obj) throws JsonProcessingException {
-        return objectMapper.writeValueAsString(obj);
-    }
 }
