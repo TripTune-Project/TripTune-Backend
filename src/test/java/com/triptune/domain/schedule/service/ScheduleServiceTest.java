@@ -100,7 +100,6 @@ public class ScheduleServiceTest extends ScheduleTest {
         member2 = createMember(2L, "member2");
         ProfileImage member1Image = createProfileImage(1L, "member1Image");
         ProfileImage member2Image = createProfileImage(2L, "member2Image");
-        ProfileImage member3Image = createProfileImage(3L, "member3Image");
         member1.setProfileImage(member1Image);
         member2.setProfileImage(member2Image);
 

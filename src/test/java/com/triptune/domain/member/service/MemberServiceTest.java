@@ -18,6 +18,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -33,8 +34,6 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-@Transactional
-@Slf4j
 public class MemberServiceTest extends MemberTest {
 
     @InjectMocks
@@ -56,10 +55,17 @@ public class MemberServiceTest extends MemberTest {
     private final String passwordToken = "testPasswordToken";
     private final String newPassword = "newPassword123@";
 
+    private Member member;
+
+    @BeforeEach
+    void setUp(){
+        member = createMember(null, "member");
+    }
+
 
     @Test
     @DisplayName("join(): 회원가입 성공")
-    void join_success(){
+    void join(){
         // given
         MemberRequest request = createMemberRequest();
 
@@ -86,7 +92,7 @@ public class MemberServiceTest extends MemberTest {
         DataExistException fail = assertThrows(DataExistException.class, () -> memberService.join(request));
 
         // then
-        verify(memberRepository, times(0)).save(any(Member.class));
+        verify(memberRepository, times(0)).save(any());
         assertEquals(fail.getHttpStatus(), ErrorCode.ALREADY_EXISTED_USERID.getStatus());
         assertEquals(fail.getMessage(), ErrorCode.ALREADY_EXISTED_USERID.getMessage());
 
@@ -105,7 +111,7 @@ public class MemberServiceTest extends MemberTest {
         DataExistException fail = assertThrows(DataExistException.class, () -> memberService.join(request));
 
         // then
-        verify(memberRepository, times(0)).save(any(Member.class));
+        verify(memberRepository, times(0)).save(any());
         assertEquals(fail.getHttpStatus(), ErrorCode.ALREADY_EXISTED_NICKNAME.getStatus());
         assertEquals(fail.getMessage(), ErrorCode.ALREADY_EXISTED_NICKNAME.getMessage());
     }
@@ -134,10 +140,8 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("logout(): 로그아웃 성공")
     void logout(){
         // given
-        Member savedMember = createMember(1L, "member");
-        memberRepository.save(savedMember);
-
         LogoutDTO request = createLogoutDTO();
+
         // when
         memberService.logout(request, accessToken);
 
@@ -156,7 +160,7 @@ public class MemberServiceTest extends MemberTest {
 
         when(jwtUtil.validateToken(refreshToken)).thenReturn(true);
         when(jwtUtil.parseClaims(refreshToken)).thenReturn(mockClaims);
-        when(memberRepository.findByUserId(any())).thenReturn(Optional.of(createMember(1L, "member")));
+        when(memberRepository.findByUserId(any())).thenReturn(Optional.of(member));
         when(jwtUtil.createToken(anyString(), anyLong())).thenReturn(accessToken);
 
         RefreshTokenRequest request = createRefreshTokenRequest(refreshToken);
@@ -181,7 +185,7 @@ public class MemberServiceTest extends MemberTest {
 
         when(jwtUtil.validateToken(refreshToken)).thenReturn(true);
         when(jwtUtil.parseClaims(refreshToken)).thenReturn(mockClaims);
-        when(memberRepository.findByUserId(any())).thenReturn(Optional.of(createMember(1L, "member")));
+        when(memberRepository.findByUserId(any())).thenReturn(Optional.of(member));
 
         // when
         CustomJwtBadRequestException fail = assertThrows(CustomJwtBadRequestException.class, () -> memberService.refreshToken(request));
@@ -195,13 +199,10 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("changePassword(): 비밀번호 변경 성공")
     void changePassword(){
         // given
-        String email = "test@email.com";
         String encodedPassword = "encodedPassword";
 
-        Member storedMember = createMember(1L, "member");
-
-        when(redisUtil.getData(anyString())).thenReturn(email);
-        when(memberRepository.findByEmail(anyString())).thenReturn(Optional.of(storedMember));
+        when(redisUtil.getData(anyString())).thenReturn(member.getEmail());
+        when(memberRepository.findByEmail(anyString())).thenReturn(Optional.of(member));
         when(passwordEncoder.encode(newPassword)).thenReturn(encodedPassword);
 
 
@@ -210,11 +211,11 @@ public class MemberServiceTest extends MemberTest {
 
         // then
         verify(redisUtil, times(1)).getData(passwordToken);
-        verify(memberRepository, times(1)).findByEmail(email);
+        verify(memberRepository, times(1)).findByEmail(member.getEmail());
         verify(passwordEncoder, times(1)).encode(newPassword);
-        assertEquals(encodedPassword, storedMember.getPassword());
+        assertEquals(encodedPassword, member.getPassword());
 
-        System.out.println("인코딩 제공 비밀번호 : " + encodedPassword + "저장된 비밀번호 : " + storedMember.getPassword());
+        System.out.println("인코딩 제공 비밀번호 : " + encodedPassword + "저장된 비밀번호 : " + member.getPassword());
     }
 
     @Test
@@ -236,9 +237,7 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("changePassword(): 사용자 정보를 찾을 수 없어 얘외 발생")
     void changePassword_dataNotFoundException(){
         // given
-        String email = "test@email.com";
-
-        when(redisUtil.getData(anyString())).thenReturn(email);
+        when(redisUtil.getData(anyString())).thenReturn(member.getEmail());
         when(memberRepository.findByEmail(anyString())).thenReturn(Optional.empty());
 
         // when
@@ -324,18 +323,14 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("getSavedMemberByEmail(): 이메일을 이용에 저장된 사용자 정보 조회")
     void getSavedMemberByEmail(){
         // given
-        String email = "member@email.com";
-        MemberRequest request = createMemberRequest();
-
-        when(memberRepository.findByEmail(anyString())).thenReturn(Optional.of(createMember(1L, "member")));
+        when(memberRepository.findByEmail(anyString())).thenReturn(Optional.of(member));
 
         // when
-        Member response = memberService.getSavedMemberByEmail(email);
+        Member response = memberService.getSavedMemberByEmail(member.getEmail());
 
         // then
-        assertEquals(response.getMemberId(), 1L);
-        assertEquals(response.getUserId(), "member");
-        assertEquals(response.getEmail(), email);
+        assertEquals(response.getUserId(), member.getUserId());
+        assertEquals(response.getEmail(), member.getEmail());
 
     }
 

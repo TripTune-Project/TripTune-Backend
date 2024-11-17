@@ -1,9 +1,11 @@
 package com.triptune.domain.schedule;
 
 import com.triptune.domain.BaseTest;
+import com.triptune.domain.schedule.dto.request.CreateAttendeeRequest;
 import com.triptune.domain.schedule.dto.request.CreateScheduleRequest;
 import com.triptune.domain.schedule.dto.request.RouteRequest;
 import com.triptune.domain.schedule.dto.request.UpdateScheduleRequest;
+import com.triptune.domain.schedule.enumclass.AttendeePermission;
 import com.triptune.domain.travel.entity.TravelPlace;
 
 import java.time.LocalDate;
@@ -29,5 +31,12 @@ public abstract class ScheduleTest extends BaseTest {
 
     protected RouteRequest createRouteRequest(int routeOrder, Long placeId){
         return RouteRequest.of(routeOrder, placeId);
+    }
+
+    protected CreateAttendeeRequest createAttendeeRequest(String userId, AttendeePermission permission){
+        return CreateAttendeeRequest.builder()
+                .userId(userId)
+                .permission(permission)
+                .build();
     }
 }

@@ -20,6 +20,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.data.mongo.AutoConfigureDataMongo;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
@@ -37,7 +38,6 @@ import static org.junit.jupiter.api.Assertions.*;
 @SpringBootTest
 @Import({QueryDSLConfig.class})
 @ActiveProfiles("test")
-@TestPropertySource(locations = "classpath:application-test.yml")
 public class TravelScheduleRepositoryTest extends ScheduleTest {
     private final TravelScheduleRepository travelScheduleRepository;
     private final TravelAttendeeRepository travelAttendeeRepository;

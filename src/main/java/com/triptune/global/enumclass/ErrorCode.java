@@ -48,7 +48,9 @@ public enum ErrorCode {
     FORBIDDEN_DELETE_SCHEDULE(HttpStatus.FORBIDDEN, "해당 일정에 삭제 권한이 없는 사용자 입니다."),
 
     // 일정 참석
-    FORBIDDEN_REMOVE_ATTENDEE(HttpStatus.FORBIDDEN, "작성자는 일정에서 나갈 수 없습니다.");
+    FORBIDDEN_REMOVE_ATTENDEE(HttpStatus.FORBIDDEN, "작성자는 일정에서 나갈 수 없습니다."),
+    ALREADY_ATTENDEE(HttpStatus.CONFLICT, "이미 공유되어 있는 사용자입니다."),
+    FORBIDDEN_SHARE_ATTENDEE(HttpStatus.FORBIDDEN, "해당 일정에 공유 권한이 없는 사용자 입니다.");
 
 
     private final HttpStatus status;

@@ -48,10 +48,9 @@ public class ScheduleController {
 
     @GetMapping("/search")
     @Operation(summary = "일정 검색", description = "작성한 전체 일정 중 검색합니다.")
-    public ApiSchedulePageResponse<ScheduleInfoResponse> searchSchedules(
-            @RequestParam(name = "page") int page,
-            @RequestParam(name = "keyword") String keyword,
-            @RequestParam(name = "type") ScheduleType type){
+    public ApiSchedulePageResponse<ScheduleInfoResponse> searchSchedules(@RequestParam(name = "page") int page,
+                                                                         @RequestParam(name = "keyword") String keyword,
+                                                                         @RequestParam(name = "type") ScheduleType type){
         String userId = SecurityContextHolder.getContext().getAuthentication().getName();
         SchedulePageResponse<ScheduleInfoResponse> response;
 
