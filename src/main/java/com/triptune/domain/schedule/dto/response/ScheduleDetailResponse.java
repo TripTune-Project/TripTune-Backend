@@ -20,28 +20,25 @@ public class ScheduleDetailResponse {
     private LocalDate endDate;
     private LocalDateTime createdAt;
     private LocalDateTime updateAt;
-    private List<AttendeeDTO> attendeeList;
     private PageResponse<PlaceResponse> placeList;
 
     @Builder
-    public ScheduleDetailResponse(String scheduleName, LocalDate startDate, LocalDate endDate, LocalDateTime createdAt, LocalDateTime updateAt, List<AttendeeDTO> attendeeList, PageResponse<PlaceResponse> placeList) {
+    public ScheduleDetailResponse(String scheduleName, LocalDate startDate, LocalDate endDate, LocalDateTime createdAt, LocalDateTime updateAt, PageResponse<PlaceResponse> placeList) {
         this.scheduleName = scheduleName;
         this.startDate = startDate;
         this.endDate = endDate;
         this.createdAt = createdAt;
         this.updateAt = updateAt;
-        this.attendeeList = attendeeList;
         this.placeList = placeList;
     }
 
-    public static ScheduleDetailResponse from(TravelSchedule schedule, PageResponse<PlaceResponse> placeResponse, List<AttendeeDTO> attendeeList){
+    public static ScheduleDetailResponse from(TravelSchedule schedule, PageResponse<PlaceResponse> placeResponse){
         return ScheduleDetailResponse.builder()
                 .scheduleName(schedule.getScheduleName())
                 .startDate(schedule.getStartDate())
                 .endDate(schedule.getEndDate())
                 .createdAt(schedule.getCreatedAt())
                 .updateAt(schedule.getUpdatedAt())
-                .attendeeList(attendeeList)
                 .placeList(placeResponse)
                 .build();
     }

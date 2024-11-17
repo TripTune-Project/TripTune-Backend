@@ -205,14 +205,7 @@ public class ScheduleService {
         Page<PlaceResponse> travelPlacesDTO = travelPlaceRepository.findAllByAreaData(pageable, "대한민국", "서울", "중구")
                 .map(PlaceResponse::from);
 
-        PageResponse<PlaceResponse> placeResponses = PageResponse.of(travelPlacesDTO);
-
-        List<AttendeeDTO> attendeeDTOList = travelAttendeeRepository.findAllByTravelSchedule_ScheduleId(schedule.getScheduleId())
-                .stream()
-                .map(AttendeeDTO::from)
-                .toList();
-
-        return ScheduleDetailResponse.from(schedule, placeResponses, attendeeDTOList);
+        return ScheduleDetailResponse.from(schedule, PageResponse.of(travelPlacesDTO));
     }
 
 

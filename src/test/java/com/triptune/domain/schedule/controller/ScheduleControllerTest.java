@@ -508,10 +508,9 @@ public class ScheduleControllerTest extends ScheduleTest {
     @DisplayName("getScheduleDetail(): 일정 상세 조회 성공")
     @WithMockUser(username = "member1")
     void getScheduleDetail() throws Exception {
-        // given
+//        // given
         TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
         TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ));
-
         member1.setTravelAttendeeList(new ArrayList<>(List.of(attendee1, attendee2)));
         schedule1.setTravelAttendeeList(new ArrayList<>(List.of(attendee1, attendee2)));
 
@@ -521,13 +520,10 @@ public class ScheduleControllerTest extends ScheduleTest {
                 .param("page", "1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.scheduleName").value(schedule1.getScheduleName()))
-                .andExpect(jsonPath("$.data.attendeeList[0].userId").exists())
                 .andExpect(jsonPath("$.data.placeList.totalElements").value(1))
                 .andExpect(jsonPath("$.data.placeList.content[0].district").value(travelPlace2.getDistrict().getDistrictName()))
                 .andExpect(jsonPath("$.data.placeList.content[0].placeName").value(travelPlace2.getPlaceName()))
-                .andExpect(jsonPath("$.data.placeList.content[0].thumbnailUrl").exists())
-                .andExpect(jsonPath("$.data.attendeeList[0].userId").value(member1.getUserId()))
-                .andExpect(jsonPath("$.data.attendeeList[0].role").value("AUTHOR"));
+                .andExpect(jsonPath("$.data.placeList.content[0].thumbnailUrl").exists());
     }
 
     @Test
@@ -550,9 +546,7 @@ public class ScheduleControllerTest extends ScheduleTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.scheduleName").value(schedule1.getScheduleName()))
                 .andExpect(jsonPath("$.data.placeList.totalElements").value(0))
-                .andExpect(jsonPath("$.data.placeList.content").isEmpty())
-                .andExpect(jsonPath("$.data.attendeeList[0].userId").value(member1.getUserId()))
-                .andExpect(jsonPath("$.data.attendeeList[0].role").value("AUTHOR"));
+                .andExpect(jsonPath("$.data.placeList.content").isEmpty());
     }
 
     @Test

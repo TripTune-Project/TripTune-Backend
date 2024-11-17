@@ -764,7 +764,6 @@ public class ScheduleServiceTest extends ScheduleTest {
         when(travelScheduleRepository.findByScheduleId(any())).thenReturn(Optional.of(schedule1));
         when(travelPlaceRepository.findAllByAreaData(any(), anyString(), anyString(), anyString()))
                 .thenReturn(PageUtil.createPage(placeList, pageable, 1));
-        when(travelAttendeeRepository.findAllByTravelSchedule_ScheduleId(any())).thenReturn(schedule1.getTravelAttendeeList());
 
         // when
         ScheduleDetailResponse response = scheduleService.getScheduleDetail(schedule1.getScheduleId(), 1);
@@ -772,8 +771,6 @@ public class ScheduleServiceTest extends ScheduleTest {
         // then
         assertEquals(response.getScheduleName(), schedule1.getScheduleName());
         assertEquals(response.getCreatedAt(), schedule1.getCreatedAt());
-        assertEquals(response.getAttendeeList().get(0).getUserId(), schedule1.getTravelAttendeeList().get(0).getMember().getUserId());
-        assertEquals(response.getAttendeeList().get(0).getRole(), schedule1.getTravelAttendeeList().get(0).getRole().name());
         assertEquals(response.getPlaceList().getTotalElements(), placeList.size());
         assertEquals(response.getPlaceList().getContent().get(0).getPlaceName(), placeList.get(0).getPlaceName());
         assertNotNull(response.getPlaceList().getContent().get(0).getThumbnailUrl());
@@ -788,7 +785,6 @@ public class ScheduleServiceTest extends ScheduleTest {
         when(travelScheduleRepository.findByScheduleId(any())).thenReturn(Optional.of(schedule1));
         when(travelPlaceRepository.findAllByAreaData(any(), anyString(), anyString(), anyString()))
                 .thenReturn(PageUtil.createPage(new ArrayList<>(), pageable, 0));
-        when(travelAttendeeRepository.findAllByTravelSchedule_ScheduleId(any())).thenReturn(schedule1.getTravelAttendeeList());
 
         // when
         ScheduleDetailResponse response = scheduleService.getScheduleDetail(schedule1.getScheduleId(), 1);
@@ -796,8 +792,6 @@ public class ScheduleServiceTest extends ScheduleTest {
         // then
         assertEquals(response.getScheduleName(), schedule1.getScheduleName());
         assertEquals(response.getCreatedAt(), schedule1.getCreatedAt());
-        assertEquals(response.getAttendeeList().get(0).getUserId(), schedule1.getTravelAttendeeList().get(0).getMember().getUserId());
-        assertEquals(response.getAttendeeList().get(0).getRole(), schedule1.getTravelAttendeeList().get(0).getRole().name());
         assertEquals(response.getPlaceList().getTotalElements(), 0);
         assertTrue(response.getPlaceList().getContent().isEmpty());
     }
