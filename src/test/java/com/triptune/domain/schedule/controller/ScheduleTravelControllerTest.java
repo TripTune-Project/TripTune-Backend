@@ -131,8 +131,7 @@ public class ScheduleTravelControllerTest extends BaseTest {
     @DisplayName("getTravelPlaces(): 여행지 조회 성공")
     @WithMockUser(username = "member1")
     void getTravelPlaces() throws Exception {
-        // given
-        // when, then
+        // given, when, then
         mockMvc.perform(get("/api/schedules/{scheduleId}/travels", schedule1.getScheduleId())
                         .param("page", "1"))
                 .andExpect(status().isOk())

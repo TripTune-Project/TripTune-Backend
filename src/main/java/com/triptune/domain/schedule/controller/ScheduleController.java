@@ -23,9 +23,6 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 @Tag(name = "Schedule", description = "일정 만들기 관련 API")
 public class ScheduleController {
-
-    private static final String SEARCH_ALL = "all";
-
     private final ScheduleService scheduleService;
 
     @GetMapping
