@@ -61,7 +61,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ResponseStatus(HttpStatus.CONFLICT)
     public ErrorResponse handleDataExistedException(DataExistException ex, HttpServletRequest request){
         log.error("DataExistException at {}: {}", request.getRequestURI(),  ex.getMessage());
         return ErrorResponse.of(ex.getHttpStatus(), ex.getMessage());
