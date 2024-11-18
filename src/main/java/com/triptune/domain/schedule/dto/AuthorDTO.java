@@ -8,16 +8,16 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class AuthorDTO {
 
-    private String userId;
+    private String nickname;
     private String profileUrl;
 
     @Builder
-    public AuthorDTO(String userId, String profileUrl) {
-        this.userId = userId;
+    public AuthorDTO(String nickname, String profileUrl) {
+        this.nickname = nickname;
         this.profileUrl = profileUrl;
     }
 
-    public static AuthorDTO of(String userId, String profileUrl){
-        return new AuthorDTO(userId, profileUrl);
+    public static AuthorDTO of(String nickname, String profileUrl){
+        return new AuthorDTO(nickname, profileUrl);
     }
 }

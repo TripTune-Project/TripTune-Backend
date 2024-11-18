@@ -146,7 +146,7 @@ public class ScheduleServiceTest extends ScheduleTest {
         assertEquals(content.get(0).getScheduleName(), schedule1.getScheduleName());
         assertNotNull(content.get(0).getSinceUpdate());
         assertNotNull(content.get(0).getThumbnailUrl());
-        assertEquals(content.get(0).getAuthor().getUserId(), member1.getUserId());
+        assertEquals(content.get(0).getAuthor().getNickname(), member1.getNickname());
         assertEquals(content.get(0).getRole(), AttendeeRole.AUTHOR);
     }
 
@@ -171,7 +171,7 @@ public class ScheduleServiceTest extends ScheduleTest {
         assertEquals(response.getTotalSharedElements(), 0);
         assertEquals(content.get(0).getScheduleName(), schedule3.getScheduleName());
         assertNotNull(content.get(0).getSinceUpdate());
-        assertEquals(content.get(0).getAuthor().getUserId(), member1.getUserId());
+        assertEquals(content.get(0).getAuthor().getNickname(), member1.getNickname());
     }
 
     @Test
@@ -269,7 +269,7 @@ public class ScheduleServiceTest extends ScheduleTest {
         assertEquals(content.get(0).getScheduleName(), schedule1.getScheduleName());
         assertNotNull(content.get(0).getSinceUpdate());
         assertNotNull(content.get(0).getThumbnailUrl());
-        assertEquals(content.get(0).getAuthor().getUserId(), member1.getUserId());
+        assertEquals(content.get(0).getAuthor().getNickname(), member1.getNickname());
         assertEquals(content.get(0).getRole(), AttendeeRole.AUTHOR);
     }
 
@@ -368,7 +368,7 @@ public class ScheduleServiceTest extends ScheduleTest {
         assertEquals(response.getTotalSharedElements(), 1);
         assertNotNull(content.get(0).getScheduleName());
         assertNotNull(content.get(0).getSinceUpdate());
-        assertEquals(content.get(0).getAuthor().getUserId(), member1.getUserId());
+        assertEquals(content.get(0).getAuthor().getNickname(), member1.getNickname());
         assertEquals(content.get(0).getRole(), AttendeeRole.AUTHOR);
     }
 
@@ -394,7 +394,7 @@ public class ScheduleServiceTest extends ScheduleTest {
         assertEquals(response.getTotalSharedElements(), 0);
         assertEquals(content.get(0).getScheduleName(), schedule3.getScheduleName());
         assertNotNull(content.get(0).getSinceUpdate());
-        assertEquals(content.get(0).getAuthor().getUserId(), member1.getUserId());
+        assertEquals(content.get(0).getAuthor().getNickname(), member1.getNickname());
     }
 
     @Test
@@ -495,7 +495,7 @@ public class ScheduleServiceTest extends ScheduleTest {
         assertEquals(content.get(0).getScheduleName(), schedule1.getScheduleName());
         assertNotNull(content.get(0).getSinceUpdate());
         assertNotNull(content.get(0).getThumbnailUrl());
-        assertEquals(content.get(0).getAuthor().getUserId(), member1.getUserId());
+        assertEquals(content.get(0).getAuthor().getNickname(), member1.getNickname());
         assertEquals(content.get(0).getRole(), AttendeeRole.AUTHOR);
     }
 
@@ -589,7 +589,7 @@ public class ScheduleServiceTest extends ScheduleTest {
         assertEquals(response.get(0).getScheduleName(), schedule1.getScheduleName());
         assertNotNull(response.get(0).getSinceUpdate());
         assertNotNull(response.get(0).getThumbnailUrl());
-        assertEquals(response.get(0).getAuthor().getUserId(), member1.getUserId());
+        assertEquals(response.get(0).getAuthor().getNickname(), member1.getNickname());
     }
 
     @Test
@@ -607,7 +607,7 @@ public class ScheduleServiceTest extends ScheduleTest {
         assertEquals(response.get(0).getScheduleName(), schedule1.getScheduleName());
         assertNotNull(response.get(0).getSinceUpdate());
         assertNull(response.get(0).getThumbnailUrl());
-        assertEquals(response.get(0).getAuthor().getUserId(), member1.getUserId());
+        assertEquals(response.get(0).getAuthor().getNickname(), member1.getNickname());
     }
 
     @Test
@@ -653,7 +653,7 @@ public class ScheduleServiceTest extends ScheduleTest {
         AuthorDTO response = scheduleService.createAuthorDTO(schedule1);
 
         // then
-        assertEquals(response.getUserId(), member1.getUserId());
+        assertEquals(response.getNickname(), member1.getNickname());
         assertEquals(response.getProfileUrl(), member1.getProfileImage().getS3ObjectUrl());
 
     }
