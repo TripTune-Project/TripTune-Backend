@@ -1,6 +1,5 @@
 package com.triptune.domain.schedule.dto.response;
 
-import com.triptune.domain.schedule.dto.AttendeeDTO;
 import com.triptune.domain.schedule.entity.TravelSchedule;
 import com.triptune.domain.travel.dto.response.PlaceResponse;
 import com.triptune.global.response.pagination.PageResponse;
@@ -10,7 +9,6 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Getter
 @NoArgsConstructor

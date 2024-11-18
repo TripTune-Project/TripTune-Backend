@@ -1,9 +1,11 @@
 package com.triptune.domain.schedule.service;
 
 import com.triptune.domain.member.entity.Member;
+import com.triptune.domain.member.entity.ProfileImage;
 import com.triptune.domain.member.repository.MemberRepository;
 import com.triptune.domain.schedule.ScheduleTest;
 import com.triptune.domain.schedule.dto.request.CreateAttendeeRequest;
+import com.triptune.domain.schedule.dto.response.AttendeeResponse;
 import com.triptune.domain.schedule.entity.TravelAttendee;
 import com.triptune.domain.schedule.entity.TravelSchedule;
 import com.triptune.domain.schedule.enumclass.AttendeePermission;
@@ -14,6 +16,7 @@ import com.triptune.domain.schedule.repository.TravelAttendeeRepository;
 import com.triptune.domain.schedule.repository.TravelScheduleRepository;
 import com.triptune.global.enumclass.ErrorCode;
 import com.triptune.global.exception.DataNotFoundException;
+import com.triptune.global.util.PageUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -21,8 +24,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -58,6 +65,13 @@ public class AttendeeServiceTest extends ScheduleTest {
         member2 = createMember(2L, "member2");
         member3 = createMember(3L, "member3");
 
+        ProfileImage member1Image = createProfileImage(1L, "member1Image");
+        ProfileImage member2Image = createProfileImage(2L, "member2Image");
+        ProfileImage member3Image = createProfileImage(3L, "member3Image");
+        member1.setProfileImage(member1Image);
+        member2.setProfileImage(member2Image);
+        member3.setProfileImage(member3Image);
+
         schedule1 = createTravelSchedule(1L, "테스트1");
         TravelSchedule schedule2 = createTravelSchedule(2L, "테스트2");
 
@@ -67,6 +81,31 @@ public class AttendeeServiceTest extends ScheduleTest {
         schedule1.setTravelAttendeeList(new ArrayList<>(List.of(attendee1, attendee2)));
         schedule2.setTravelAttendeeList(new ArrayList<>(List.of(attendee3)));
     }
+
+    @Test
+    @DisplayName("getAttendees(): 일정 참석자 조회")
+    void getAttendees(){
+        // given
+        Pageable pageable = PageUtil.defaultPageable(1);
+        List<TravelAttendee> travelAttendeeList = schedule1.getTravelAttendeeList();
+
+        when(travelAttendeeRepository.findAllByTravelSchedule_ScheduleId(pageable, schedule1.getScheduleId()))
+                .thenReturn(PageUtil.createPage(travelAttendeeList, pageable, travelAttendeeList.size()));
+
+        // when
+        Page<AttendeeResponse> response = attendeeService.getAttendees(schedule1.getScheduleId(), 1);
+
+        // then
+        List<AttendeeResponse> content = response.getContent();
+        assertEquals(response.getTotalElements(), travelAttendeeList.size());
+        assertEquals(content.get(0).getNickname(), attendee1.getMember().getNickname());
+        assertEquals(content.get(0).getRole(), attendee1.getRole().name());
+        assertEquals(content.get(0).getProfileUrl(), attendee1.getMember().getProfileImage().getS3ObjectUrl());
+        assertEquals(content.get(1).getNickname(), attendee2.getMember().getNickname());
+        assertEquals(content.get(1).getRole(), attendee2.getRole().name());
+        assertEquals(content.get(1).getProfileUrl(), attendee2.getMember().getProfileImage().getS3ObjectUrl());
+    }
+
 
     @Test
     @DisplayName("createAttendee(): 일정 참석자 추가")
