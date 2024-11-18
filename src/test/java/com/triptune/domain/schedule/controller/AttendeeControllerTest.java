@@ -140,7 +140,7 @@ public class AttendeeControllerTest extends ScheduleTest {
     @DisplayName("createAttendee(): 일정 참석자 추가")
     @WithMockUser(username = "member1")
     void createAttendee() throws Exception {
-        CreateAttendeeRequest createAttendeeRequest = createAttendeeRequest(member3.getUserId(), AttendeePermission.CHAT);
+        CreateAttendeeRequest createAttendeeRequest = createAttendeeRequest(member3.getEmail(), AttendeePermission.CHAT);
         mockMvc.perform(post("/api/schedules/{scheduleId}/attendees", schedule1.getScheduleId())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(toJsonString(createAttendeeRequest)))
@@ -153,7 +153,7 @@ public class AttendeeControllerTest extends ScheduleTest {
     @DisplayName("createAttendee(): 일정 참석자 추가 시 일정 데이터 존재하지 않아 예외 발생")
     @WithMockUser(username = "member1")
     void createAttendeeNotFoundSchedule_dataNotFoundException() throws Exception{
-        CreateAttendeeRequest createAttendeeRequest = createAttendeeRequest(member3.getUserId(), AttendeePermission.CHAT);
+        CreateAttendeeRequest createAttendeeRequest = createAttendeeRequest(member3.getEmail(), AttendeePermission.CHAT);
         mockMvc.perform(post("/api/schedules/{scheduleId}/attendees", 0L)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(toJsonString(createAttendeeRequest)))
@@ -166,7 +166,7 @@ public class AttendeeControllerTest extends ScheduleTest {
     @DisplayName("createAttendee(): 일정 참석자 추가 시 요청자가 작성자가 아니여서 예외 발생")
     @WithMockUser(username = "member2")
     void createAttendeeNotAuthor_forbiddenScheduleException() throws Exception{
-        CreateAttendeeRequest createAttendeeRequest = createAttendeeRequest(member3.getUserId(), AttendeePermission.CHAT);
+        CreateAttendeeRequest createAttendeeRequest = createAttendeeRequest(member3.getEmail(), AttendeePermission.CHAT);
         mockMvc.perform(post("/api/schedules/{scheduleId}/attendees", schedule1.getScheduleId())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(toJsonString(createAttendeeRequest)))
@@ -179,7 +179,7 @@ public class AttendeeControllerTest extends ScheduleTest {
     @DisplayName("createAttendee(): 일정 참석자 추가 시 초대자 데이터 존재하지 않아 예외 발생")
     @WithMockUser(username = "member1")
     void createAttendeeNotMember_dataNotFoundException() throws Exception{
-        CreateAttendeeRequest createAttendeeRequest = createAttendeeRequest("notMember", AttendeePermission.CHAT);
+        CreateAttendeeRequest createAttendeeRequest = createAttendeeRequest("notMember@email.com", AttendeePermission.CHAT);
         mockMvc.perform(post("/api/schedules/{scheduleId}/attendees", schedule1.getScheduleId())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(toJsonString(createAttendeeRequest)))
@@ -192,7 +192,7 @@ public class AttendeeControllerTest extends ScheduleTest {
     @DisplayName("createAttendee(): 일정 참석자 추가 시 초대자가 이미 참석자여서 예외 발생")
     @WithMockUser(username = "member1")
     void createAttendee_alreadyAttendeeException() throws Exception{
-        CreateAttendeeRequest createAttendeeRequest = createAttendeeRequest(member2.getUserId(), AttendeePermission.CHAT);
+        CreateAttendeeRequest createAttendeeRequest = createAttendeeRequest(member2.getEmail(), AttendeePermission.CHAT);
         mockMvc.perform(post("/api/schedules/{scheduleId}/attendees", schedule1.getScheduleId())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(toJsonString(createAttendeeRequest)))

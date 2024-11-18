@@ -33,9 +33,9 @@ public abstract class ScheduleTest extends BaseTest {
         return RouteRequest.of(routeOrder, placeId);
     }
 
-    protected CreateAttendeeRequest createAttendeeRequest(String userId, AttendeePermission permission){
+    protected CreateAttendeeRequest createAttendeeRequest(String email, AttendeePermission permission){
         return CreateAttendeeRequest.builder()
-                .userId(userId)
+                .email(email)
                 .permission(permission)
                 .build();
     }

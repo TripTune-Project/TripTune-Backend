@@ -47,7 +47,7 @@ public class AttendeeService {
         TravelSchedule schedule = getSavedTravelSchedule(scheduleId);
         validateAuthorPermission(scheduleId, userId);
 
-        Member guest = getSavedMember(createAttendeeRequest.getUserId());
+        Member guest = getSavedMember(createAttendeeRequest.getEmail());
         validateAttendeeNotExists(scheduleId, guest);
 
         TravelAttendee travelAttendee = TravelAttendee.of(schedule, guest, createAttendeeRequest.getPermission());
@@ -84,8 +84,8 @@ public class AttendeeService {
     }
 
 
-    private Member getSavedMember(String userId){
-        return memberRepository.findByUserId(userId)
+    private Member getSavedMember(String email){
+        return memberRepository.findByEmail(email)
                 .orElseThrow(() -> new DataNotFoundException(ErrorCode.USER_NOT_FOUND));
     }
 

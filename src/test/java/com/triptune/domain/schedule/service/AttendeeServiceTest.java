@@ -111,12 +111,12 @@ public class AttendeeServiceTest extends ScheduleTest {
     @DisplayName("createAttendee(): 일정 참석자 추가")
     void createAttendee(){
         // given
-        CreateAttendeeRequest createAttendeeRequest = createAttendeeRequest(member3.getUserId(), AttendeePermission.CHAT);
+        CreateAttendeeRequest createAttendeeRequest = createAttendeeRequest(member3.getEmail(), AttendeePermission.CHAT);
 
         when(travelScheduleRepository.findByScheduleId(anyLong())).thenReturn(Optional.of(schedule1));
         when(travelAttendeeRepository.existsByTravelSchedule_ScheduleIdAndMember_UserIdAndRole(schedule1.getScheduleId(), member1.getUserId(), AttendeeRole.AUTHOR))
                 .thenReturn(true);
-        when(memberRepository.findByUserId(member3.getUserId())).thenReturn(Optional.of(member3));
+        when(memberRepository.findByEmail(member3.getEmail())).thenReturn(Optional.of(member3));
         when(travelAttendeeRepository.existsByTravelSchedule_ScheduleIdAndMember_UserId(anyLong(), anyString())).thenReturn(false);
 
 
@@ -129,7 +129,7 @@ public class AttendeeServiceTest extends ScheduleTest {
     @DisplayName("createAttendee(): 일정 참석자 추가 시 일정 찾을 수 없어 예외 발생")
     void createAttendeeNotFoundSchedule_dataNotFoundException(){
         // given
-        CreateAttendeeRequest createAttendeeRequest = createAttendeeRequest(member3.getUserId(), AttendeePermission.CHAT);
+        CreateAttendeeRequest createAttendeeRequest = createAttendeeRequest(member3.getEmail(), AttendeePermission.CHAT);
 
         when(travelScheduleRepository.findByScheduleId(anyLong())).thenReturn(Optional.empty());
 
@@ -145,7 +145,7 @@ public class AttendeeServiceTest extends ScheduleTest {
     @DisplayName("createAttendee(): 일정 참석자 추가 시 작성자가 아닌 사람의 요청으로 예외 발생")
     void createAttendeeNotAuthor_forbiddenScheduleException(){
         // given
-        CreateAttendeeRequest createAttendeeRequest = createAttendeeRequest(member3.getUserId(), AttendeePermission.CHAT);
+        CreateAttendeeRequest createAttendeeRequest = createAttendeeRequest(member3.getEmail(), AttendeePermission.CHAT);
 
         when(travelScheduleRepository.findByScheduleId(anyLong())).thenReturn(Optional.of(schedule1));
         when(travelAttendeeRepository.existsByTravelSchedule_ScheduleIdAndMember_UserIdAndRole(schedule1.getScheduleId(), member1.getUserId(), AttendeeRole.AUTHOR))
@@ -163,12 +163,12 @@ public class AttendeeServiceTest extends ScheduleTest {
     @DisplayName("createAttendee(): 일정 참석자 추가 시 참석자 정보를 찾을 수 없어 예외 발생")
     void createAttendeeNotMember_forbiddenScheduleException(){
         // given
-        CreateAttendeeRequest createAttendeeRequest = createAttendeeRequest(member3.getUserId(), AttendeePermission.CHAT);
+        CreateAttendeeRequest createAttendeeRequest = createAttendeeRequest(member3.getEmail(), AttendeePermission.CHAT);
 
         when(travelScheduleRepository.findByScheduleId(anyLong())).thenReturn(Optional.of(schedule1));
         when(travelAttendeeRepository.existsByTravelSchedule_ScheduleIdAndMember_UserIdAndRole(schedule1.getScheduleId(), member1.getUserId(), AttendeeRole.AUTHOR))
                 .thenReturn(true);
-        when(memberRepository.findByUserId(anyString())).thenReturn(Optional.empty());
+        when(memberRepository.findByEmail(anyString())).thenReturn(Optional.empty());
 
         // when, then
         DataNotFoundException fail = assertThrows(DataNotFoundException.class, () ->  attendeeService.createAttendee(schedule1.getScheduleId(), member1.getUserId(), createAttendeeRequest));
@@ -182,12 +182,12 @@ public class AttendeeServiceTest extends ScheduleTest {
     @DisplayName("createAttendee(): 일정 참석자 추가 시 이미 참석자로 존재해 예외 발생")
     void createAttendee_alreadyAttendeeException(){
         // given
-        CreateAttendeeRequest createAttendeeRequest = createAttendeeRequest(member3.getUserId(), AttendeePermission.CHAT);
+        CreateAttendeeRequest createAttendeeRequest = createAttendeeRequest(member3.getEmail(), AttendeePermission.CHAT);
 
         when(travelScheduleRepository.findByScheduleId(anyLong())).thenReturn(Optional.of(schedule1));
         when(travelAttendeeRepository.existsByTravelSchedule_ScheduleIdAndMember_UserIdAndRole(schedule1.getScheduleId(), member1.getUserId(), AttendeeRole.AUTHOR))
                 .thenReturn(true);
-        when(memberRepository.findByUserId(anyString())).thenReturn(Optional.of(member3));
+        when(memberRepository.findByEmail(anyString())).thenReturn(Optional.of(member3));
         when(travelAttendeeRepository.existsByTravelSchedule_ScheduleIdAndMember_UserId(anyLong(), anyString())).thenReturn(true);
 
 
