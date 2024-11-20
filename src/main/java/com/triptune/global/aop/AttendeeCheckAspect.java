@@ -25,6 +25,7 @@ public class AttendeeCheckAspect {
     @Around("@annotation(AttendeeCheck)")
     public Object attendeeCheck(ProceedingJoinPoint joinPoint) throws Throwable {
         String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+        // TODO null 체크 해야함
         Long scheduleId = extractScheduleIdFromPath(httpServletRequest.getRequestURI());
 
         if (!isExistSchedule(scheduleId)){

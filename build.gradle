@@ -88,7 +88,7 @@ dependencies {
 	// junit
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
-	// 테스트용 h2
+	// 테스트용 DB
 	testImplementation group: 'com.h2database', name: 'h2', version: '1.4.200'
 	testImplementation 'com.h2database:h2'
 	testRuntimeOnly 'com.h2database:h2'

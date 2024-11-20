@@ -13,4 +13,8 @@ public enum AttendeePermission {
     private final int id;
     private final String permission;
     private final String description;
+
+    public boolean isEnableChat(){
+        return !this.equals(EDIT) && !this.equals(READ);
+    }
 }

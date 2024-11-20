@@ -1,7 +1,7 @@
 package com.triptune.global.util;
 
-import com.triptune.global.exception.CustomJwtBadRequestException;
 import com.triptune.global.enumclass.ErrorCode;
+import com.triptune.global.exception.CustomJwtBadRequestException;
 import com.triptune.global.exception.CustomJwtUnAuthorizedException;
 import com.triptune.global.service.CustomUserDetailsService;
 import io.jsonwebtoken.*;
@@ -22,6 +22,10 @@ import java.util.Date;
 @Component
 public class JwtUtil {
 
+    private static final int BEARER_PREFIX_LENGTH = 7;
+    private static final String BEARER_PREFIX = "Bearer ";
+    private static final String AUTHORIZATION_PREFIX = "Authorization";
+
     private final Key key;
     private final CustomUserDetailsService userDetailsService;
     private final RedisUtil redisUtil;
@@ -35,14 +39,21 @@ public class JwtUtil {
 
     /**
      * 요청 헤더에서 Bearer Token 추출
-     * @param request
-     * @return Bearer Token 문자열, Token 이 없거나 유효하지 않은 경우 null
+     * @param request: HttpServletRequest
+     * @return Bearer 을 뺀 Token 문자열, Token 이 없거나 유효하지 않은 경우 null
      */
     public String resolveToken(HttpServletRequest request){
-        String bearerToken = request.getHeader("Authorization");
+        return resolveBearerToken(request.getHeader(AUTHORIZATION_PREFIX));
+    }
 
-        if (bearerToken != null && bearerToken.startsWith("Bearer ")){
-            return bearerToken.substring(7);
+    /**
+     * 문자열에서 Bearer Token 추출
+     * @param bearerToken: Bearer 이 포함된 토큰
+     * @return Bearer 을 뺀 Token 문자열, Token 이 없거나 유효하지 않은 경우 null
+     */
+    public String resolveBearerToken(String bearerToken){
+        if (bearerToken != null && bearerToken.startsWith(BEARER_PREFIX)){
+            return bearerToken.substring(BEARER_PREFIX_LENGTH);
         }
 
         return null;
@@ -50,7 +61,7 @@ public class JwtUtil {
 
     /**
      * JWT 토큰 검증
-     * @param token
+     * @param token: 토큰 문자열
      * @return Token 이 유효한 경우 true, 아닌 경우 exception 발생
      */
     public boolean validateToken(String token) {
@@ -75,20 +86,16 @@ public class JwtUtil {
         } catch (IllegalArgumentException e){
             log.info("JWT claims string is empty ", e);
             throw new CustomJwtBadRequestException(ErrorCode.EMPTY_JWT_CLAIMS);
-        } catch (SignatureException e) {
-            log.info("JWT signature fail ", e);
-            throw new CustomJwtUnAuthorizedException(ErrorCode.INVALID_JWT_SIGNATURE);
         }
     }
 
     /**
      * 권한 정보 획득
-     * @param token
+     * @param token: 토큰 문자열
      * @return UserDetails 를 이용해 얻은 권한 정보 Authentication
      */
     public Authentication getAuthentication(String token){
         Claims claims = parseClaims(token);
-
         UserDetails userDetails = userDetailsService.loadUserByUsername(claims.getSubject());
 
         return new UsernamePasswordAuthenticationToken(userDetails, "", userDetails.getAuthorities());
@@ -97,7 +104,7 @@ public class JwtUtil {
 
     /**
      * JWT 토큰 복호화
-     * @param token
+     * @param token: 토큰 문자열
      * @return token 을 이용해 복호화한 Claims
      */ 
    public Claims parseClaims(String token){
@@ -111,8 +118,8 @@ public class JwtUtil {
 
     /**
      * JWT 토큰 생성
-     * @param userId
-     * @param expirationTime
+     * @param userId: 사용자 아이디
+     * @param expirationTime: 토큰 만료 시간
      * @return 생성된 토큰 문자열
      */
     public String createToken(String userId, long expirationTime){
@@ -130,7 +137,7 @@ public class JwtUtil {
 
     /**
      * Token 의 유효기간 추출
-     * @param token
+     * @param token: 토큰 문자열
      * @return Token 유효기간
      */
     public Long getExpiration(String token){
