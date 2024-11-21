@@ -3,6 +3,7 @@ package com.triptune.domain.member;
 import com.triptune.domain.BaseTest;
 import com.triptune.domain.member.dto.ChangePasswordDTO;
 import com.triptune.domain.member.dto.LogoutDTO;
+import com.triptune.domain.member.dto.request.LoginRequest;
 import com.triptune.domain.member.dto.request.MemberRequest;
 import com.triptune.domain.member.dto.request.RefreshTokenRequest;
 
@@ -15,6 +16,13 @@ public class MemberTest extends BaseTest {
                 .repassword("password123@")
                 .nickname("test")
                 .email("test@test.com")
+                .build();
+    }
+
+    protected LoginRequest createLoginRequest(String userId, String password){
+        return LoginRequest.builder()
+                .userId(userId)
+                .password(password)
                 .build();
     }
 
@@ -32,9 +40,9 @@ public class MemberTest extends BaseTest {
                 .build();
     }
 
-    protected LogoutDTO createLogoutDTO(){
+    protected LogoutDTO createLogoutDTO(String nickname){
         return LogoutDTO.builder()
-                .userId("test")
+                .nickname(nickname)
                 .build();
 
     }

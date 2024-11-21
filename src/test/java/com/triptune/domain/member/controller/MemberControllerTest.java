@@ -121,8 +121,10 @@ public class MemberControllerTest extends MemberTest{
         mockMvc.perform(patch("/api/members/logout")
                         .header("Authorization", "Bearer " + accessToken)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(toJsonString(createLogoutDTO())))
-                .andExpect(status().isOk());
+                .content(toJsonString(createLogoutDTO(member.getNickname()))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()));
     }
 
     @Test
@@ -134,10 +136,24 @@ public class MemberControllerTest extends MemberTest{
         mockMvc.perform(patch("/api/members/logout")
                         .header("Authorization", "Bea" + accessToken)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(createLogoutDTO())))
+                        .content(toJsonString(createLogoutDTO(member.getNickname()))))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value(ErrorCode.INVALID_JWT_TOKEN.getMessage()));
+    }
+
+    @Test
+    @DisplayName("logout(): 존재하지 않는 사용자 요청으로 인해 예외 발생")
+    void logout_dataNotFoundException() throws Exception{
+        String accessToken = jwtUtil.createToken("notMember", 3600);
+
+        mockMvc.perform(patch("/api/members/logout")
+                        .header("Authorization", "Bearer " + accessToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJsonString(createLogoutDTO("notMember"))))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value(ErrorCode.USER_NOT_FOUND.getMessage()));
     }
 
 
