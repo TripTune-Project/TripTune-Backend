@@ -2,7 +2,6 @@ package com.triptune.domain.schedule.service;
 
 import com.triptune.domain.member.entity.Member;
 import com.triptune.domain.member.repository.MemberRepository;
-import com.triptune.domain.schedule.dto.AttendeeDTO;
 import com.triptune.domain.schedule.dto.AuthorDTO;
 import com.triptune.domain.schedule.dto.request.CreateScheduleRequest;
 import com.triptune.domain.schedule.dto.request.RouteRequest;
@@ -51,7 +50,7 @@ public class ScheduleService {
 
 
     /**
-     * 일정 목록 조회
+     * 전체 일정 목록 조회
      * @param page: 페이지 수
      * @param userId: 접속 사용자 아이디
      * @return SchedulePageResponse<ScheduleInfoResponse>: 사용자가 참석자로 포함되어있는 일정 목록들과 전제 일정 갯수, 공유된 일정 갯수가 포함된 dto
@@ -67,7 +66,12 @@ public class ScheduleService {
         return SchedulePageResponse.ofAll(scheduleInfoResponsePage, sharedScheduleCnt);
     }
 
-
+    /**
+     * 공유된 일정 목록 조회
+     * @param page: 페이지 수
+     * @param userId: 접속 사용자 아이디
+     * @return SchedulePageResponse<ScheduleInfoResponse>: 사용자가 참석자로 포함되어있는 일정 목록들과 전제 일정 갯수, 공유된 일정 갯수가 포함된 dto
+     */
     public SchedulePageResponse<ScheduleInfoResponse> getSharedSchedules(int page, String userId) {
         Pageable pageable = PageUtil.schedulePageable(page);
         Page<TravelSchedule> schedulePage = travelScheduleRepository.findSharedTravelSchedulesByUserId(pageable, userId);
@@ -80,6 +84,14 @@ public class ScheduleService {
     }
 
 
+    /**
+     * 전체 일정 중 검색
+     * @param page: 페이지 수
+     * @param keyword: 검색 키워드
+     * @param userId: 접속 사용자 아이디
+     * @return SchedulePageResponse<ScheduleInfoResponse>: 사용자가 참석자로 포함되어있는 일정 목록들과 전제 일정 갯수, 공유된 일정 갯수가 포함된 dto
+
+     */
     public SchedulePageResponse<ScheduleInfoResponse> searchAllSchedules(int page, String keyword, String userId) {
         Pageable pageable = PageUtil.schedulePageable(page);
         Page<TravelSchedule> schedulesPage = travelScheduleRepository.searchTravelSchedulesByUserIdAndKeyword(pageable, keyword, userId);
@@ -91,6 +103,14 @@ public class ScheduleService {
         return SchedulePageResponse.ofAll(scheduleInfoResponsePage, sharedElements);
     }
 
+
+    /**
+     * 공유된 일정 중 검색
+     * @param page: 페이지 수
+     * @param keyword: 검색 키워드
+     * @param userId: 접속 사용자 아이디
+     * @return SchedulePageResponse<ScheduleInfoResponse>: 사용자가 참석자로 포함되어있는 일정 목록들과 전제 일정 갯수, 공유된 일정 갯수가 포함된 dto
+     */
     public SchedulePageResponse<ScheduleInfoResponse> searchSharedSchedules(int page, String keyword, String userId) {
         Pageable pageable = PageUtil.schedulePageable(page);
         Page<TravelSchedule> schedulesPage = travelScheduleRepository.searchSharedTravelSchedulesByUserIdAndKeyword(pageable, keyword, userId);
@@ -103,6 +123,12 @@ public class ScheduleService {
     }
 
 
+    /**
+     * 일정 목록 조회에서 사용할 dto 생성
+     * @param schedulePage: Page 객체에 담겨있는 일정들
+     * @param userId: 접속한 사용자 아이디
+     * @return List<ScheduleInfoResponse>: 일정 목록에서 사용할 정보들이 담긴 dto 리스트
+     */
     public List<ScheduleInfoResponse> createScheduleInfoResponse(Page<TravelSchedule> schedulePage, String userId){
         if (schedulePage.getContent().isEmpty()){
             return Collections.emptyList();
@@ -132,7 +158,7 @@ public class ScheduleService {
                 .findFirst()
                 .orElseThrow(() -> new DataNotFoundException(ErrorCode.AUTHOR_NOT_FOUND));
 
-        return AuthorDTO.of(author.getUserId(), author.getProfileImage().getS3ObjectUrl());
+        return AuthorDTO.of(author.getNickname(), author.getProfileImage().getS3ObjectUrl());
     }
 
     /**
@@ -205,14 +231,7 @@ public class ScheduleService {
         Page<PlaceResponse> travelPlacesDTO = travelPlaceRepository.findAllByAreaData(pageable, "대한민국", "서울", "중구")
                 .map(PlaceResponse::from);
 
-        PageResponse<PlaceResponse> placeResponses = PageResponse.of(travelPlacesDTO);
-
-        List<AttendeeDTO> attendeeDTOList = travelAttendeeRepository.findAllByTravelSchedule_ScheduleId(schedule.getScheduleId())
-                .stream()
-                .map(AttendeeDTO::from)
-                .toList();
-
-        return ScheduleDetailResponse.from(schedule, placeResponses, attendeeDTOList);
+        return ScheduleDetailResponse.from(schedule, PageResponse.of(travelPlacesDTO));
     }
 
 

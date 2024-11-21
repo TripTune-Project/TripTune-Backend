@@ -13,17 +13,14 @@ import com.triptune.domain.schedule.enumclass.AttendeeRole;
 import com.triptune.domain.schedule.repository.ChatMessageRepository;
 import com.triptune.domain.schedule.repository.TravelAttendeeRepository;
 import com.triptune.domain.schedule.repository.TravelScheduleRepository;
-import com.triptune.global.enumclass.ErrorCode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.data.mongo.AutoConfigureDataMongo;
-import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
@@ -39,7 +36,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
-@ActiveProfiles("test")
+@AutoConfigureDataMongo
+@ActiveProfiles("mongo")
 public class ChatControllerTest extends ScheduleTest {
     private final WebApplicationContext wac;
     private final TravelScheduleRepository travelScheduleRepository;
@@ -125,7 +123,6 @@ public class ChatControllerTest extends ScheduleTest {
                 .andExpect(jsonPath("$.data.content[5].message").value(message6.getMessage()));
     }
 
-
     @Test
     @DisplayName("getChatMessages(): 대화 내용 조회 시 데이터가 없는 경우")
     @WithMockUser(username = "member1")
@@ -136,6 +133,5 @@ public class ChatControllerTest extends ScheduleTest {
                 .andExpect(jsonPath("$.data.totalElements").value(0))
                 .andExpect(jsonPath("$.data.content").isEmpty());
     }
-
 
 }

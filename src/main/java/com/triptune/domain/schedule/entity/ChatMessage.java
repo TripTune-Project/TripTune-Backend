@@ -1,5 +1,7 @@
 package com.triptune.domain.schedule.entity;
 
+import com.triptune.domain.member.entity.Member;
+import com.triptune.domain.schedule.dto.request.ChatMessageRequest;
 import jakarta.persistence.Id;
 import lombok.Builder;
 import lombok.Getter;
@@ -7,6 +9,8 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 
 @Getter
 @Document(collection = "chat_message")
@@ -28,5 +32,16 @@ public class ChatMessage {
         this.nickname = nickname;
         this.message = message;
         this.timestamp = timestamp;
+    }
+
+    public static ChatMessage of(Member member, ChatMessageRequest chatMessageRequest) {
+
+        return ChatMessage.builder()
+                .scheduleId(chatMessageRequest.getScheduleId())
+                .memberId(member.getMemberId())
+                .nickname(member.getNickname())
+                .message(chatMessageRequest.getMessage())
+                .timestamp(LocalDateTime.now())
+                .build();
     }
 }

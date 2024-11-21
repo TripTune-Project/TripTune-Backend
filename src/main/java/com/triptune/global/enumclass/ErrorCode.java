@@ -33,7 +33,6 @@ public enum ErrorCode {
     UNSUPPORTED_JWT_TOKEN(HttpStatus.BAD_REQUEST, "지원되지 않는 JWT 토큰입니다."),
     EMPTY_JWT_CLAIMS(HttpStatus.BAD_REQUEST, "JWT 클레임이 비었습니다."),
     EXPIRED_JWT_TOKEN(HttpStatus.UNAUTHORIZED, "JWT 토큰이 만료되었습니다."),
-    INVALID_JWT_SIGNATURE(HttpStatus.UNAUTHORIZED, "JWT 서명 검증을 실패했습니다."),
     MISMATCH_REFRESH_TOKEN(HttpStatus.BAD_REQUEST, "유효하지 않은 JWT 토큰입니다. 로그인 후 이용해주세요."),
     BLACKLIST_TOKEN(HttpStatus.UNAUTHORIZED, "로그아웃 된 사용자입니다. 로그인 후 이용해주세요."),
 
@@ -50,7 +49,10 @@ public enum ErrorCode {
     // 일정 참석
     FORBIDDEN_REMOVE_ATTENDEE(HttpStatus.FORBIDDEN, "작성자는 일정에서 나갈 수 없습니다."),
     ALREADY_ATTENDEE(HttpStatus.CONFLICT, "이미 공유되어 있는 사용자입니다."),
-    FORBIDDEN_SHARE_ATTENDEE(HttpStatus.FORBIDDEN, "해당 일정에 공유 권한이 없는 사용자 입니다.");
+    FORBIDDEN_SHARE_ATTENDEE(HttpStatus.FORBIDDEN, "해당 일정에 공유 권한이 없는 사용자 입니다."),
+
+    // 채팅
+    FORBIDDEN_CHAT_ATTENDEE(HttpStatus.FORBIDDEN, "채팅 권한이 없는 사용자 입니다.");
 
 
     private final HttpStatus status;

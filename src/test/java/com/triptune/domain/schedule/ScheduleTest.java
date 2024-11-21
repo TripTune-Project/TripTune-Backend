@@ -1,10 +1,7 @@
 package com.triptune.domain.schedule;
 
 import com.triptune.domain.BaseTest;
-import com.triptune.domain.schedule.dto.request.CreateAttendeeRequest;
-import com.triptune.domain.schedule.dto.request.CreateScheduleRequest;
-import com.triptune.domain.schedule.dto.request.RouteRequest;
-import com.triptune.domain.schedule.dto.request.UpdateScheduleRequest;
+import com.triptune.domain.schedule.dto.request.*;
 import com.triptune.domain.schedule.enumclass.AttendeePermission;
 import com.triptune.domain.travel.entity.TravelPlace;
 
@@ -33,10 +30,21 @@ public abstract class ScheduleTest extends BaseTest {
         return RouteRequest.of(routeOrder, placeId);
     }
 
-    protected CreateAttendeeRequest createAttendeeRequest(String userId, AttendeePermission permission){
+    protected CreateAttendeeRequest createAttendeeRequest(String email, AttendeePermission permission){
         return CreateAttendeeRequest.builder()
-                .userId(userId)
+                .email(email)
                 .permission(permission)
                 .build();
     }
+
+
+    protected ChatMessageRequest createChatMessageRequest(Long scheduleId, String nickname, String message) {
+        return ChatMessageRequest.builder()
+                .scheduleId(scheduleId)
+                .nickname(nickname)
+                .message(message)
+                .build();
+
+    }
+
 }

@@ -23,7 +23,7 @@ public class ScheduleTravelService {
      * @return Page<PlaceResponse>: 여행지 정보로 구성된 페이지 dto
      */
     public Page<PlaceResponse> getTravelPlaces(int page) {
-        Pageable pageable = PageUtil.defaultPageable(page);
+        Pageable pageable = PageUtil.travelPageable(page);
 
         return travelPlaceRepository.findAllByAreaData(pageable, "대한민국", "서울", "중구")
                 .map(PlaceResponse::from);
@@ -38,7 +38,7 @@ public class ScheduleTravelService {
      * @return Page<PlaceSimpleResponse>: 여행지 정보로 구성된 페이지 dto
      */
     public Page<PlaceResponse> searchTravelPlaces(int page, String keyword) {
-        Pageable pageable = PageUtil.defaultPageable(page);
+        Pageable pageable = PageUtil.travelPageable(page);
         Page<TravelPlace> travelPlaces = travelPlaceRepository.searchTravelPlaces(pageable, keyword);
 
         return travelPlaces.map(PlaceResponse::from);

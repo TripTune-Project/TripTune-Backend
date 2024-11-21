@@ -4,10 +4,17 @@ import com.triptune.domain.member.entity.Member;
 import com.triptune.domain.member.entity.ProfileImage;
 import com.triptune.domain.member.repository.MemberRepository;
 import com.triptune.domain.schedule.ScheduleTest;
+import com.triptune.domain.schedule.dto.request.ChatMessageRequest;
 import com.triptune.domain.schedule.dto.response.ChatResponse;
 import com.triptune.domain.schedule.entity.ChatMessage;
+import com.triptune.domain.schedule.entity.TravelAttendee;
 import com.triptune.domain.schedule.entity.TravelSchedule;
+import com.triptune.domain.schedule.enumclass.AttendeePermission;
+import com.triptune.domain.schedule.enumclass.AttendeeRole;
+import com.triptune.domain.schedule.exception.ForbiddenChatException;
+import com.triptune.domain.schedule.exception.ForbiddenScheduleException;
 import com.triptune.domain.schedule.repository.ChatMessageRepository;
+import com.triptune.domain.schedule.repository.TravelAttendeeRepository;
 import com.triptune.global.enumclass.ErrorCode;
 import com.triptune.global.exception.DataNotFoundException;
 import com.triptune.global.util.PageUtil;
@@ -27,6 +34,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -40,6 +48,10 @@ class ChatServiceTest extends ScheduleTest {
 
     @Mock
     private MemberRepository memberRepository;
+
+    @Mock
+    private TravelAttendeeRepository travelAttendeeRepository;
+
 
     private TravelSchedule schedule;
     private Member member1;
@@ -208,4 +220,154 @@ class ChatServiceTest extends ScheduleTest {
 
     }
 
+    @Test
+    @DisplayName("sendChatMessage(): 채팅 내용 저장 및 가공")
+    void sendChatMessage(){
+        // given
+        ChatMessageRequest request = createChatMessageRequest(schedule.getScheduleId(), member1.getNickname(), "hello1");
+        TravelAttendee attendee = createTravelAttendee(member1, schedule, AttendeeRole.AUTHOR, AttendeePermission.ALL);
+
+        when(memberRepository.findByNickname(anyString())).thenReturn(Optional.of(member1));
+        when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_UserId(anyLong(), anyString()))
+                .thenReturn(Optional.of(attendee));
+
+
+        // when
+        ChatResponse response = chatService.sendChatMessage(request);
+
+        // then
+        assertEquals(response.getNickname(), request.getNickname());
+        assertEquals(response.getMessage(), request.getMessage());
+    }
+
+    @Test
+    @DisplayName("sendChatMessage(): 채팅 내용 저장 및 가공 시 채팅 권한이 없어 예외 발생")
+    void sendChatMessage_ForbiddenChatException1(){
+        // given
+        ChatMessageRequest request = createChatMessageRequest(schedule.getScheduleId(), member1.getNickname(), "hello1");
+        TravelAttendee attendee = createTravelAttendee(member1, schedule, AttendeeRole.GUEST, AttendeePermission.EDIT);
+
+        when(memberRepository.findByNickname(anyString())).thenReturn(Optional.of(member1));
+        when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_UserId(anyLong(), anyString()))
+                .thenReturn(Optional.of(attendee));
+
+
+        // when
+        ForbiddenChatException fail = assertThrows(ForbiddenChatException.class, () -> chatService.sendChatMessage(request));
+        // then
+        assertEquals(fail.getHttpStatus(), ErrorCode.FORBIDDEN_CHAT_ATTENDEE.getStatus());
+        assertEquals(fail.getMessage(), ErrorCode.FORBIDDEN_CHAT_ATTENDEE.getMessage());
+    }
+
+    @Test
+    @DisplayName("sendChatMessage(): 채팅 내용 저장 및 가공 시 채팅 권한이 없어 예외 발생")
+    void sendChatMessage_ForbiddenChatException2(){
+        // given
+        ChatMessageRequest request = createChatMessageRequest(schedule.getScheduleId(), member1.getNickname(), "hello1");
+        TravelAttendee attendee = createTravelAttendee(member1, schedule, AttendeeRole.GUEST, AttendeePermission.READ);
+
+        when(memberRepository.findByNickname(anyString())).thenReturn(Optional.of(member1));
+        when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_UserId(anyLong(), anyString()))
+                .thenReturn(Optional.of(attendee));
+
+
+        // when
+        ForbiddenChatException fail = assertThrows(ForbiddenChatException.class, () -> chatService.sendChatMessage(request));
+        // then
+        assertEquals(fail.getHttpStatus(), ErrorCode.FORBIDDEN_CHAT_ATTENDEE.getStatus());
+        assertEquals(fail.getMessage(), ErrorCode.FORBIDDEN_CHAT_ATTENDEE.getMessage());
+    }
+
+    @Test
+    @DisplayName("getMemberByMemberId(): 사용자 인덱스로 사용자 정보 조회")
+    void getMemberByMemberId(){
+        // given
+        when(memberRepository.findByMemberId(anyLong())).thenReturn(Optional.of(member1));
+
+        // when
+        Member response = chatService.getMemberByMemberId(member1.getMemberId());
+
+        // then
+        assertEquals(response.getUserId(), member1.getUserId());
+        assertEquals(response.getNickname(), member1.getNickname());
+    }
+
+    @Test
+    @DisplayName("getMemberByMemberId(): 사용자 인덱스로 사용자 정보 조회 시 데이터 없어 예외 발생")
+    void getMemberByMemberId_dataNotFoundException(){
+        // given
+        when(memberRepository.findByMemberId(anyLong())).thenReturn(Optional.empty());
+
+        // when
+        DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> chatService.getMemberByMemberId(member1.getMemberId()));
+
+        // then
+        assertEquals(fail.getHttpStatus(), ErrorCode.USER_NOT_FOUND.getStatus());
+        assertEquals(fail.getMessage(), ErrorCode.USER_NOT_FOUND.getMessage());
+    }
+
+
+    @Test
+    @DisplayName("getMemberByNickname(): 닉네임으로 사용자 정보 조회")
+    void getMemberByNickname(){
+        // given
+        when(memberRepository.findByNickname(anyString())).thenReturn(Optional.of(member1));
+
+        // when
+        Member response = chatService.getMemberByNickname(member1.getNickname());
+
+        // then
+        assertEquals(response.getUserId(), member1.getUserId());
+        assertEquals(response.getNickname(), member1.getNickname());
+    }
+
+
+    @Test
+    @DisplayName("getMemberByNickname(): 닉네임으로 사용자 정보 조회 시 데이터 없어 예외 발생")
+    void getMemberByNickname_dataNotFoundException(){
+        // given
+        when(memberRepository.findByNickname(anyString())).thenReturn(Optional.empty());
+
+        // when
+        DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> chatService.getMemberByNickname(member1.getNickname()));
+
+        // then
+        assertEquals(fail.getHttpStatus(), ErrorCode.USER_NOT_FOUND.getStatus());
+        assertEquals(fail.getMessage(), ErrorCode.USER_NOT_FOUND.getMessage());
+
+    }
+
+
+    @Test
+    @DisplayName("getTravelAttendee(): 참석자 정보 조회")
+    void getTravelAttendee(){
+        // given
+        TravelAttendee attendee = createTravelAttendee(member1, schedule, AttendeeRole.AUTHOR, AttendeePermission.ALL);
+
+        when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_UserId(anyLong(), anyString()))
+                .thenReturn(Optional.of(attendee));
+
+        // when
+        TravelAttendee response = chatService.getTravelAttendee(schedule.getScheduleId(), member1.getUserId());
+
+        // then
+        assertEquals(response.getRole(), attendee.getRole());
+        assertEquals(response.getPermission(), attendee.getPermission());
+    }
+
+
+    @Test
+    @DisplayName("getTravelAttendee(): 참석자 정보 조회 시 데이터 없어 예외 발생")
+    void getTravelAttendee_forbiddenScheduleException(){
+        // given
+        when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_UserId(anyLong(), anyString())).thenReturn(Optional.empty());
+
+        // when
+        ForbiddenScheduleException fail = assertThrows(ForbiddenScheduleException.class, () -> chatService.getTravelAttendee(schedule.getScheduleId(), member1.getUserId()));
+
+        // then
+        assertEquals(fail.getHttpStatus(), ErrorCode.FORBIDDEN_ACCESS_SCHEDULE.getStatus());
+        assertEquals(fail.getMessage(), ErrorCode.FORBIDDEN_ACCESS_SCHEDULE.getMessage());
+
+    }
 }

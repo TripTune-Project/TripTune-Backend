@@ -146,7 +146,7 @@ public class ScheduleServiceTest extends ScheduleTest {
         assertEquals(content.get(0).getScheduleName(), schedule1.getScheduleName());
         assertNotNull(content.get(0).getSinceUpdate());
         assertNotNull(content.get(0).getThumbnailUrl());
-        assertEquals(content.get(0).getAuthor().getUserId(), member1.getUserId());
+        assertEquals(content.get(0).getAuthor().getNickname(), member1.getNickname());
         assertEquals(content.get(0).getRole(), AttendeeRole.AUTHOR);
     }
 
@@ -171,7 +171,7 @@ public class ScheduleServiceTest extends ScheduleTest {
         assertEquals(response.getTotalSharedElements(), 0);
         assertEquals(content.get(0).getScheduleName(), schedule3.getScheduleName());
         assertNotNull(content.get(0).getSinceUpdate());
-        assertEquals(content.get(0).getAuthor().getUserId(), member1.getUserId());
+        assertEquals(content.get(0).getAuthor().getNickname(), member1.getNickname());
     }
 
     @Test
@@ -269,7 +269,7 @@ public class ScheduleServiceTest extends ScheduleTest {
         assertEquals(content.get(0).getScheduleName(), schedule1.getScheduleName());
         assertNotNull(content.get(0).getSinceUpdate());
         assertNotNull(content.get(0).getThumbnailUrl());
-        assertEquals(content.get(0).getAuthor().getUserId(), member1.getUserId());
+        assertEquals(content.get(0).getAuthor().getNickname(), member1.getNickname());
         assertEquals(content.get(0).getRole(), AttendeeRole.AUTHOR);
     }
 
@@ -368,7 +368,7 @@ public class ScheduleServiceTest extends ScheduleTest {
         assertEquals(response.getTotalSharedElements(), 1);
         assertNotNull(content.get(0).getScheduleName());
         assertNotNull(content.get(0).getSinceUpdate());
-        assertEquals(content.get(0).getAuthor().getUserId(), member1.getUserId());
+        assertEquals(content.get(0).getAuthor().getNickname(), member1.getNickname());
         assertEquals(content.get(0).getRole(), AttendeeRole.AUTHOR);
     }
 
@@ -394,7 +394,7 @@ public class ScheduleServiceTest extends ScheduleTest {
         assertEquals(response.getTotalSharedElements(), 0);
         assertEquals(content.get(0).getScheduleName(), schedule3.getScheduleName());
         assertNotNull(content.get(0).getSinceUpdate());
-        assertEquals(content.get(0).getAuthor().getUserId(), member1.getUserId());
+        assertEquals(content.get(0).getAuthor().getNickname(), member1.getNickname());
     }
 
     @Test
@@ -495,7 +495,7 @@ public class ScheduleServiceTest extends ScheduleTest {
         assertEquals(content.get(0).getScheduleName(), schedule1.getScheduleName());
         assertNotNull(content.get(0).getSinceUpdate());
         assertNotNull(content.get(0).getThumbnailUrl());
-        assertEquals(content.get(0).getAuthor().getUserId(), member1.getUserId());
+        assertEquals(content.get(0).getAuthor().getNickname(), member1.getNickname());
         assertEquals(content.get(0).getRole(), AttendeeRole.AUTHOR);
     }
 
@@ -589,7 +589,7 @@ public class ScheduleServiceTest extends ScheduleTest {
         assertEquals(response.get(0).getScheduleName(), schedule1.getScheduleName());
         assertNotNull(response.get(0).getSinceUpdate());
         assertNotNull(response.get(0).getThumbnailUrl());
-        assertEquals(response.get(0).getAuthor().getUserId(), member1.getUserId());
+        assertEquals(response.get(0).getAuthor().getNickname(), member1.getNickname());
     }
 
     @Test
@@ -607,7 +607,7 @@ public class ScheduleServiceTest extends ScheduleTest {
         assertEquals(response.get(0).getScheduleName(), schedule1.getScheduleName());
         assertNotNull(response.get(0).getSinceUpdate());
         assertNull(response.get(0).getThumbnailUrl());
-        assertEquals(response.get(0).getAuthor().getUserId(), member1.getUserId());
+        assertEquals(response.get(0).getAuthor().getNickname(), member1.getNickname());
     }
 
     @Test
@@ -653,7 +653,7 @@ public class ScheduleServiceTest extends ScheduleTest {
         AuthorDTO response = scheduleService.createAuthorDTO(schedule1);
 
         // then
-        assertEquals(response.getUserId(), member1.getUserId());
+        assertEquals(response.getNickname(), member1.getNickname());
         assertEquals(response.getProfileUrl(), member1.getProfileImage().getS3ObjectUrl());
 
     }
@@ -764,7 +764,6 @@ public class ScheduleServiceTest extends ScheduleTest {
         when(travelScheduleRepository.findByScheduleId(any())).thenReturn(Optional.of(schedule1));
         when(travelPlaceRepository.findAllByAreaData(any(), anyString(), anyString(), anyString()))
                 .thenReturn(PageUtil.createPage(placeList, pageable, 1));
-        when(travelAttendeeRepository.findAllByTravelSchedule_ScheduleId(any())).thenReturn(schedule1.getTravelAttendeeList());
 
         // when
         ScheduleDetailResponse response = scheduleService.getScheduleDetail(schedule1.getScheduleId(), 1);
@@ -772,8 +771,6 @@ public class ScheduleServiceTest extends ScheduleTest {
         // then
         assertEquals(response.getScheduleName(), schedule1.getScheduleName());
         assertEquals(response.getCreatedAt(), schedule1.getCreatedAt());
-        assertEquals(response.getAttendeeList().get(0).getUserId(), schedule1.getTravelAttendeeList().get(0).getMember().getUserId());
-        assertEquals(response.getAttendeeList().get(0).getRole(), schedule1.getTravelAttendeeList().get(0).getRole().name());
         assertEquals(response.getPlaceList().getTotalElements(), placeList.size());
         assertEquals(response.getPlaceList().getContent().get(0).getPlaceName(), placeList.get(0).getPlaceName());
         assertNotNull(response.getPlaceList().getContent().get(0).getThumbnailUrl());
@@ -788,7 +785,6 @@ public class ScheduleServiceTest extends ScheduleTest {
         when(travelScheduleRepository.findByScheduleId(any())).thenReturn(Optional.of(schedule1));
         when(travelPlaceRepository.findAllByAreaData(any(), anyString(), anyString(), anyString()))
                 .thenReturn(PageUtil.createPage(new ArrayList<>(), pageable, 0));
-        when(travelAttendeeRepository.findAllByTravelSchedule_ScheduleId(any())).thenReturn(schedule1.getTravelAttendeeList());
 
         // when
         ScheduleDetailResponse response = scheduleService.getScheduleDetail(schedule1.getScheduleId(), 1);
@@ -796,8 +792,6 @@ public class ScheduleServiceTest extends ScheduleTest {
         // then
         assertEquals(response.getScheduleName(), schedule1.getScheduleName());
         assertEquals(response.getCreatedAt(), schedule1.getCreatedAt());
-        assertEquals(response.getAttendeeList().get(0).getUserId(), schedule1.getTravelAttendeeList().get(0).getMember().getUserId());
-        assertEquals(response.getAttendeeList().get(0).getRole(), schedule1.getTravelAttendeeList().get(0).getRole().name());
         assertEquals(response.getPlaceList().getTotalElements(), 0);
         assertTrue(response.getPlaceList().getContent().isEmpty());
     }

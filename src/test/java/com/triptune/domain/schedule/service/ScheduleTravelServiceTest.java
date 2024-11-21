@@ -4,24 +4,11 @@ import com.triptune.domain.common.entity.ApiCategory;
 import com.triptune.domain.common.entity.City;
 import com.triptune.domain.common.entity.Country;
 import com.triptune.domain.common.entity.District;
-import com.triptune.domain.member.entity.Member;
-import com.triptune.domain.member.entity.ProfileImage;
-import com.triptune.domain.member.repository.MemberRepository;
 import com.triptune.domain.schedule.ScheduleTest;
-import com.triptune.domain.schedule.entity.TravelAttendee;
-import com.triptune.domain.schedule.entity.TravelRoute;
-import com.triptune.domain.schedule.entity.TravelSchedule;
-import com.triptune.domain.schedule.enumclass.AttendeePermission;
-import com.triptune.domain.schedule.enumclass.AttendeeRole;
-import com.triptune.domain.schedule.repository.TravelAttendeeRepository;
-import com.triptune.domain.schedule.repository.TravelRouteRepository;
-import com.triptune.domain.schedule.repository.TravelScheduleRepository;
 import com.triptune.domain.travel.dto.response.PlaceResponse;
 import com.triptune.domain.travel.entity.TravelImage;
 import com.triptune.domain.travel.entity.TravelPlace;
 import com.triptune.domain.travel.repository.TravelPlaceRepository;
-import com.triptune.global.enumclass.ErrorCode;
-import com.triptune.global.exception.DataNotFoundException;
 import com.triptune.global.util.PageUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -35,7 +22,6 @@ import org.springframework.data.domain.Pageable;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -79,7 +65,7 @@ public class ScheduleTravelServiceTest extends ScheduleTest {
     void getTravelPlaces(){
         // given
         List<TravelPlace> placeList = new ArrayList<>(List.of(travelPlace1, travelPlace2));
-        Pageable pageable = PageUtil.defaultPageable(1);
+        Pageable pageable = PageUtil.travelPageable(1);
 
         when(travelPlaceRepository.findAllByAreaData(any(), anyString(), anyString(), anyString()))
                 .thenReturn(PageUtil.createPage(placeList, pageable, 1));
@@ -97,7 +83,7 @@ public class ScheduleTravelServiceTest extends ScheduleTest {
     @DisplayName("getTravelPlaces(): 여행지 조회 시 여행지 데이터 없는 경우")
     void getTravelPlacesWithoutData(){
         // given
-        Pageable pageable = PageUtil.defaultPageable(1);
+        Pageable pageable = PageUtil.travelPageable(1);
 
         when(travelPlaceRepository.findAllByAreaData(any(), anyString(), anyString(), anyString()))
                 .thenReturn(PageUtil.createPage(new ArrayList<>(), pageable, 0));
@@ -116,7 +102,7 @@ public class ScheduleTravelServiceTest extends ScheduleTest {
     void searchTravelPlaces(){
         // given
         String keyword = "중구";
-        Pageable pageable = PageUtil.defaultPageable(1);
+        Pageable pageable = PageUtil.travelPageable(1);
 
         List<TravelPlace> travelPlaceList = new ArrayList<>(List.of(travelPlace1, travelPlace2));
         Page<TravelPlace> travelPlacePage = PageUtil.createPage(travelPlaceList, pageable, travelPlaceList.size());
@@ -139,7 +125,7 @@ public class ScheduleTravelServiceTest extends ScheduleTest {
     void searchTravelPlacesWithoutData(){
         // given
         String keyword = "ㅁㄴㅇㄹ";
-        Pageable pageable = PageUtil.defaultPageable(1);
+        Pageable pageable = PageUtil.travelPageable(1);
         Page<TravelPlace> travelPlacePage = PageUtil.createPage(new ArrayList<>(), pageable, 0);
 
         when(travelPlaceRepository.searchTravelPlaces(pageable, keyword)).thenReturn(travelPlacePage);
