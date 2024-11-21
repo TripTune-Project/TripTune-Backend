@@ -1,5 +1,6 @@
 package com.triptune.domain.member.entity;
 
+import com.triptune.domain.member.dto.request.MemberRequest;
 import com.triptune.domain.schedule.entity.TravelAttendee;
 import jakarta.persistence.*;
 import lombok.Builder;
@@ -67,5 +68,16 @@ public class Member {
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
         this.travelAttendeeList = travelAttendeeList;
+    }
+
+    public static Member from(MemberRequest memberRequest, String encodePassword){
+        return Member.builder()
+                .userId(memberRequest.getUserId())
+                .password(encodePassword)
+                .nickname(memberRequest.getNickname())
+                .email(memberRequest.getEmail())
+                .isSocialLogin(false)
+                .createdAt(LocalDateTime.now())
+                .build();
     }
 }

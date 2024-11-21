@@ -59,7 +59,7 @@ public class MemberController {
 
     @PatchMapping("/logout")
     @Operation(summary = "로그아웃", description = "로그아웃을 실행합니다.")
-    public ApiResponse<?> logout(HttpServletRequest request, @RequestBody LogoutDTO logoutDTO){
+    public ApiResponse<?> logout(HttpServletRequest request, @Valid @RequestBody LogoutDTO logoutDTO){
         String accessToken = jwtUtil.resolveToken(request);
 
         if (accessToken == null){

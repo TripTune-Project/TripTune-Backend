@@ -29,12 +29,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
-
 @Service
-@RequiredArgsConstructor
 @Transactional
+@RequiredArgsConstructor
 public class MemberService {
+    private static final int LOGOUT_DURATION = 3600;
 
     private final MemberRepository memberRepository;
     private final EmailService emailService;
@@ -54,15 +53,7 @@ public class MemberService {
      */
     public void join(MemberRequest memberRequest) {
         validateUniqueMemberInfo(memberRequest);
-
-        Member member = Member.builder()
-                .userId(memberRequest.getUserId())
-                .password(passwordEncoder.encode(memberRequest.getPassword()))
-                .nickname(memberRequest.getNickname())
-                .email(memberRequest.getEmail())
-                .isSocialLogin(false)
-                .createdAt(LocalDateTime.now())
-                .build();
+        Member member = Member.from(memberRequest, passwordEncoder.encode(memberRequest.getPassword()));
 
         memberRepository.save(member);
     }
@@ -76,7 +67,8 @@ public class MemberService {
         Member member = memberRepository.findByUserId(loginRequest.getUserId())
                 .orElseThrow(() -> new FailLoginException(ErrorCode.FAILED_LOGIN));
 
-        if (!passwordEncoder.matches(loginRequest.getPassword(), member.getPassword())) {
+        boolean isPasswordMatch = passwordEncoder.matches(loginRequest.getPassword(), member.getPassword());
+        if (!isPasswordMatch) {
             throw new FailLoginException(ErrorCode.FAILED_LOGIN);
         }
 
@@ -85,7 +77,7 @@ public class MemberService {
 
         member.setRefreshToken(refreshToken);
 
-        return LoginResponse.of(accessToken, refreshToken, member.getUserId());
+        return LoginResponse.of(accessToken, refreshToken, member.getNickname());
     }
 
 
@@ -95,8 +87,14 @@ public class MemberService {
      * @param accessToken : 로그아웃을 요청한 사용자의 access token 데이터
      */
     public void logout(LogoutDTO logoutDTO, String accessToken) {
-        memberRepository.deleteRefreshToken(logoutDTO.getUserId());
-        redisUtil.saveExpiredData(accessToken, "logout", 3600);
+        boolean isMember = memberRepository.existsByNickname(logoutDTO.getNickname());
+
+        if (!isMember){
+            throw new DataNotFoundException(ErrorCode.USER_NOT_FOUND);
+        }
+
+        memberRepository.deleteRefreshTokenByNickname(logoutDTO.getNickname());
+        redisUtil.saveExpiredData(accessToken, "logout", LOGOUT_DURATION);
     }
 
     /**
@@ -110,7 +108,7 @@ public class MemberService {
         jwtUtil.validateToken(refreshToken);
 
         Claims claims = jwtUtil.parseClaims(refreshToken);
-        Member member =  memberRepository.findByUserId(claims.getSubject())
+        Member member = memberRepository.findByUserId(claims.getSubject())
                 .orElseThrow(() -> new DataNotFoundException(ErrorCode.USER_NOT_FOUND));
 
         if(!refreshToken.equals(member.getRefreshToken())){
@@ -129,7 +127,7 @@ public class MemberService {
      * @throws DataNotFoundException : 회원 정보 찾지 못해 예외 발생
      */
     public FindIdResponse findId(FindIdRequest findIdRequest) {
-        Member member = getSavedMemberByEmail(findIdRequest.getEmail());
+        Member member = getMemberByEmail(findIdRequest.getEmail());
         return FindIdResponse.of(member.getUserId());
     }
 
@@ -140,7 +138,7 @@ public class MemberService {
      * @throws MessagingException : 이메일 요청 실패 예외
      */
     public void findPassword(FindPasswordDTO findPasswordDTO) throws MessagingException {
-        Member member = getSavedMemberByEmail(findPasswordDTO.getEmail());
+        Member member = getMemberByEmail(findPasswordDTO.getEmail());
 
         if (!member.getUserId().equals(findPasswordDTO.getUserId())){
             throw new DataNotFoundException(ErrorCode.USER_NOT_FOUND);
@@ -160,7 +158,7 @@ public class MemberService {
             throw new ChangePasswordException(ErrorCode.INVALID_CHANGE_PASSWORD);
         }
 
-        Member member = getSavedMemberByEmail(email);
+        Member member = getMemberByEmail(email);
 
         member.setPassword(passwordEncoder.encode(changePasswordDTO.getPassword()));
     }
@@ -188,10 +186,11 @@ public class MemberService {
      * @param email : 사용자 이메일
      * @return Member :  사용자 객체
      */
-    public Member getSavedMemberByEmail(String email){
+    public Member getMemberByEmail(String email){
         return memberRepository.findByEmail(email)
                 .orElseThrow(() -> new DataNotFoundException(ErrorCode.USER_NOT_FOUND));
     }
+
 
 
 }
