@@ -29,12 +29,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
-
 @Service
-@RequiredArgsConstructor
 @Transactional
+@RequiredArgsConstructor
 public class MemberService {
+    private static final int LOGOUT_DURATION = 3600;
 
     private final MemberRepository memberRepository;
     private final EmailService emailService;
@@ -48,35 +47,20 @@ public class MemberService {
     @Value("${spring.jwt.token.refresh-expiration-time}")
     private long refreshExpirationTime;
 
-    /**
-     * 회원가입
-     * @param memberRequest : 가입자 정보 들어있는 dto
-     */
+
     public void join(MemberRequest memberRequest) {
         validateUniqueMemberInfo(memberRequest);
-
-        Member member = Member.builder()
-                .userId(memberRequest.getUserId())
-                .password(passwordEncoder.encode(memberRequest.getPassword()))
-                .nickname(memberRequest.getNickname())
-                .email(memberRequest.getEmail())
-                .isSocialLogin(false)
-                .createdAt(LocalDateTime.now())
-                .build();
+        Member member = Member.from(memberRequest, passwordEncoder.encode(memberRequest.getPassword()));
 
         memberRepository.save(member);
     }
 
-    /**
-     * 로그인
-     * @param loginRequest : 로그인 정보 들어있는 dto
-     * @return LoginResponse : 토큰 정보가 들어있는 dto
-     */
     public LoginResponse login(LoginRequest loginRequest) {
         Member member = memberRepository.findByUserId(loginRequest.getUserId())
                 .orElseThrow(() -> new FailLoginException(ErrorCode.FAILED_LOGIN));
 
-        if (!passwordEncoder.matches(loginRequest.getPassword(), member.getPassword())) {
+        boolean isPasswordMatch = passwordEncoder.matches(loginRequest.getPassword(), member.getPassword());
+        if (!isPasswordMatch) {
             throw new FailLoginException(ErrorCode.FAILED_LOGIN);
         }
 
@@ -85,32 +69,28 @@ public class MemberService {
 
         member.setRefreshToken(refreshToken);
 
-        return LoginResponse.of(accessToken, refreshToken, member.getUserId());
+        return LoginResponse.of(accessToken, refreshToken, member.getNickname());
     }
 
 
-    /**
-     * 로그아웃
-     * @param logoutDTO : 로그아웃을 요청한 사용자 아이디 들어있는 dto
-     * @param accessToken : 로그아웃을 요청한 사용자의 access token 데이터
-     */
     public void logout(LogoutDTO logoutDTO, String accessToken) {
-        memberRepository.deleteRefreshToken(logoutDTO.getUserId());
-        redisUtil.saveExpiredData(accessToken, "logout", 3600);
+        boolean isMember = memberRepository.existsByNickname(logoutDTO.getNickname());
+
+        if (!isMember){
+            throw new DataNotFoundException(ErrorCode.USER_NOT_FOUND);
+        }
+
+        memberRepository.deleteRefreshTokenByNickname(logoutDTO.getNickname());
+        redisUtil.saveExpiredData(accessToken, "logout", LOGOUT_DURATION);
     }
 
-    /**
-     * 토큰 갱신
-     * @param refreshTokenRequest : 갱신에 필요한 refresh token 담긴 dto
-     * @return RefreshTokenResponse : 갱신된 access token 담긴 dto
-     * @throws ExpiredJwtException : jwt 만료 예외
-     */
+
     public RefreshTokenResponse refreshToken(RefreshTokenRequest refreshTokenRequest) throws ExpiredJwtException {
         String refreshToken = refreshTokenRequest.getRefreshToken();
         jwtUtil.validateToken(refreshToken);
 
         Claims claims = jwtUtil.parseClaims(refreshToken);
-        Member member =  memberRepository.findByUserId(claims.getSubject())
+        Member member = memberRepository.findByUserId(claims.getSubject())
                 .orElseThrow(() -> new DataNotFoundException(ErrorCode.USER_NOT_FOUND));
 
         if(!refreshToken.equals(member.getRefreshToken())){
@@ -122,25 +102,15 @@ public class MemberService {
         return RefreshTokenResponse.of(newAccessToken);
     }
 
-    /**
-     * 이메일 주소로 회원 정보 찾아서 아이디 반환
-     * @param  findIdRequest : 아이디 찾기 위한 사용자 정보 담긴 dto
-     * @return 사용자 정보 객체 {@link MemberResponse}
-     * @throws DataNotFoundException : 회원 정보 찾지 못해 예외 발생
-     */
+
     public FindIdResponse findId(FindIdRequest findIdRequest) {
-        Member member = getSavedMemberByEmail(findIdRequest.getEmail());
+        Member member = getMemberByEmail(findIdRequest.getEmail());
         return FindIdResponse.of(member.getUserId());
     }
 
 
-    /**
-     * 이메일, 아이디 정보를 통해 비밀번호 찾기 이메일 요청
-     * @param findPasswordDTO : 비밀번호 찾기 위한 사용자 정보 담긴 dto
-     * @throws MessagingException : 이메일 요청 실패 예외
-     */
     public void findPassword(FindPasswordDTO findPasswordDTO) throws MessagingException {
-        Member member = getSavedMemberByEmail(findPasswordDTO.getEmail());
+        Member member = getMemberByEmail(findPasswordDTO.getEmail());
 
         if (!member.getUserId().equals(findPasswordDTO.getUserId())){
             throw new DataNotFoundException(ErrorCode.USER_NOT_FOUND);
@@ -149,10 +119,7 @@ public class MemberService {
         emailService.findPassword(findPasswordDTO);
     }
 
-    /**
-     * 비밀번호 변경
-     * @param changePasswordDTO : 변경할 비밀번호 정보 담긴 dto
-     */
+
     public void changePassword(ChangePasswordDTO changePasswordDTO) {
         String email = redisUtil.getData(changePasswordDTO.getPasswordToken());
 
@@ -160,15 +127,12 @@ public class MemberService {
             throw new ChangePasswordException(ErrorCode.INVALID_CHANGE_PASSWORD);
         }
 
-        Member member = getSavedMemberByEmail(email);
+        Member member = getMemberByEmail(email);
 
         member.setPassword(passwordEncoder.encode(changePasswordDTO.getPassword()));
     }
 
-    /**
-     * 중복된 사용자 정보 체크
-     * @param memberRequest : 사용자 정보 담긴 dto
-     */
+
     public void validateUniqueMemberInfo(MemberRequest memberRequest){
         if(memberRepository.existsByUserId(memberRequest.getUserId())){
             throw new DataExistException(ErrorCode.ALREADY_EXISTED_USERID);
@@ -183,15 +147,12 @@ public class MemberService {
         }
     }
 
-    /**
-     * 이메일을 이용해 저장된 사용자 정보 조회
-     * @param email : 사용자 이메일
-     * @return Member :  사용자 객체
-     */
-    public Member getSavedMemberByEmail(String email){
+
+    public Member getMemberByEmail(String email){
         return memberRepository.findByEmail(email)
                 .orElseThrow(() -> new DataNotFoundException(ErrorCode.USER_NOT_FOUND));
     }
+
 
 
 }

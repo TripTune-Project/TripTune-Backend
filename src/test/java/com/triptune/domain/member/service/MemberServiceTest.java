@@ -1,12 +1,16 @@
 package com.triptune.domain.member.service;
 
+import com.triptune.domain.email.service.EmailService;
 import com.triptune.domain.member.MemberTest;
-import com.triptune.domain.member.dto.*;
+import com.triptune.domain.member.dto.LogoutDTO;
+import com.triptune.domain.member.dto.request.LoginRequest;
 import com.triptune.domain.member.dto.request.MemberRequest;
 import com.triptune.domain.member.dto.request.RefreshTokenRequest;
+import com.triptune.domain.member.dto.response.LoginResponse;
 import com.triptune.domain.member.dto.response.RefreshTokenResponse;
 import com.triptune.domain.member.entity.Member;
 import com.triptune.domain.member.exception.ChangePasswordException;
+import com.triptune.domain.member.exception.FailLoginException;
 import com.triptune.domain.member.repository.MemberRepository;
 import com.triptune.global.enumclass.ErrorCode;
 import com.triptune.global.exception.CustomJwtBadRequestException;
@@ -16,8 +20,6 @@ import com.triptune.global.util.JwtUtil;
 import com.triptune.global.util.RedisUtil;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-import jakarta.transaction.Transactional;
-import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -51,9 +53,9 @@ public class MemberServiceTest extends MemberTest {
     @Mock
     private PasswordEncoder passwordEncoder;
 
-    private final String accessToken = "testAccessToken";
-    private final String passwordToken = "testPasswordToken";
-    private final String newPassword = "newPassword123@";
+    private final String accessToken = "MemberAccessToken";
+    private final String refreshToken = "MemberRefreshToken";
+    private final String passwordToken = "MemberPasswordToken";
 
     private Member member;
 
@@ -135,19 +137,91 @@ public class MemberServiceTest extends MemberTest {
         assertEquals(fail.getMessage(), ErrorCode.ALREADY_EXISTED_EMAIL.getMessage());
     }
 
+    @Test
+    @DisplayName("login(): 로그인 성공")
+    void login(){
+        // given
+        LoginRequest loginRequest = createLoginRequest(member.getUserId(), passwordToken);
+
+        when(memberRepository.findByUserId(anyString())).thenReturn(Optional.of(member));
+        when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
+        when(jwtUtil.createToken(anyString(), anyLong())).thenReturn(accessToken);
+        when(jwtUtil.createToken(anyString(), anyLong())).thenReturn(refreshToken);
+
+        // when
+        LoginResponse response = memberService.login(loginRequest);
+
+        // then
+        assertEquals(response.getNickname(), member.getNickname());
+        assertNotNull(response.getAccessToken());
+        assertNotNull(response.getRefreshToken());
+    }
+
+    @Test
+    @DisplayName("login(): 로그인 시 사용자 데이터 없어 예외 발생")
+    void loginNotFoundUser_failLoginException(){
+        // given
+        LoginRequest loginRequest = createLoginRequest(member.getUserId(), passwordToken);
+
+        when(memberRepository.findByUserId(anyString())).thenReturn(Optional.empty());
+
+        // when
+        FailLoginException fail = assertThrows(FailLoginException.class, () -> memberService.login(loginRequest));
+
+        // then
+        assertEquals(fail.getHttpStatus(), ErrorCode.FAILED_LOGIN.getStatus());
+        assertEquals(fail.getMessage(), ErrorCode.FAILED_LOGIN.getMessage());
+    }
+
+    @Test
+    @DisplayName("login(): 로그인 시 비밀번호 맞지 않아 예외 발생")
+    void loginMismatchPassword_failLoginException(){
+        // given
+        LoginRequest loginRequest = createLoginRequest(member.getUserId(), passwordToken);
+
+        when(memberRepository.findByUserId(anyString())).thenReturn(Optional.of(member));
+        when(passwordEncoder.matches(anyString(), anyString())).thenReturn(false);
+
+        // when
+        FailLoginException fail = assertThrows(FailLoginException.class, () -> memberService.login(loginRequest));
+
+        // then
+        assertEquals(fail.getHttpStatus(), ErrorCode.FAILED_LOGIN.getStatus());
+        assertEquals(fail.getMessage(), ErrorCode.FAILED_LOGIN.getMessage());
+    }
+
 
     @Test
     @DisplayName("logout(): 로그아웃 성공")
     void logout(){
         // given
-        LogoutDTO request = createLogoutDTO();
+        LogoutDTO request = createLogoutDTO(member.getNickname());
+
+        when(memberRepository.existsByNickname(anyString())).thenReturn(true);
 
         // when
         memberService.logout(request, accessToken);
 
         // then
-        verify(memberRepository, times(1)).deleteRefreshToken(request.getUserId());
+        verify(memberRepository, times(1)).deleteRefreshTokenByNickname(request.getNickname());
         verify(redisUtil, times(1)).saveExpiredData(accessToken, "logout", 3600);
+    }
+
+    @Test
+    @DisplayName("logout(): 로그아웃 요청 시 사용자 데이터 없어 예외 발생")
+    void logout_dataNotFoundException(){
+        // given
+        LogoutDTO request = createLogoutDTO("notMember");
+
+        when(memberRepository.existsByNickname(anyString())).thenReturn(false);
+
+        // when
+        DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> memberService.logout(request, accessToken));
+
+        // then
+        assertEquals(fail.getHttpStatus(), ErrorCode.USER_NOT_FOUND.getStatus());
+        assertEquals(fail.getMessage(), ErrorCode.USER_NOT_FOUND.getMessage());
+
     }
 
 
@@ -155,11 +229,10 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("refreshToken(): refresh token 갱신 성공")
     void refreshToken(){
         // given
-        String refreshToken = "refreshTokenInDatabase";
         Claims mockClaims = Jwts.claims().setSubject("test");
 
-        when(jwtUtil.validateToken(refreshToken)).thenReturn(true);
-        when(jwtUtil.parseClaims(refreshToken)).thenReturn(mockClaims);
+        when(jwtUtil.validateToken(anyString())).thenReturn(true);
+        when(jwtUtil.parseClaims(anyString())).thenReturn(mockClaims);
         when(memberRepository.findByUserId(any())).thenReturn(Optional.of(member));
         when(jwtUtil.createToken(anyString(), anyLong())).thenReturn(accessToken);
 
@@ -178,13 +251,13 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("refreshToken(): 저장된 refresh token 과 요청 refresh token 이 불일치해 예외 발생")
     void misMatchRefreshToken_customJwtBadRequestException() {
         // given
-        String refreshToken = "refreshTokenNotEqualsInDatabase";
+        String notEqualRefreshToken = "NotEqualRefreshToken";
         Claims mockClaims = Jwts.claims().setSubject("test");
 
-        RefreshTokenRequest request = createRefreshTokenRequest(refreshToken);
+        RefreshTokenRequest request = createRefreshTokenRequest(notEqualRefreshToken);
 
-        when(jwtUtil.validateToken(refreshToken)).thenReturn(true);
-        when(jwtUtil.parseClaims(refreshToken)).thenReturn(mockClaims);
+        when(jwtUtil.validateToken(anyString())).thenReturn(true);
+        when(jwtUtil.parseClaims(anyString())).thenReturn(mockClaims);
         when(memberRepository.findByUserId(any())).thenReturn(Optional.of(member));
 
         // when
@@ -199,6 +272,7 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("changePassword(): 비밀번호 변경 성공")
     void changePassword(){
         // given
+        String newPassword = "newPassword";
         String encodedPassword = "encodedPassword";
 
         when(redisUtil.getData(anyString())).thenReturn(member.getEmail());
@@ -215,13 +289,14 @@ public class MemberServiceTest extends MemberTest {
         verify(passwordEncoder, times(1)).encode(newPassword);
         assertEquals(encodedPassword, member.getPassword());
 
-        System.out.println("인코딩 제공 비밀번호 : " + encodedPassword + "저장된 비밀번호 : " + member.getPassword());
+        System.out.println("인코딩 제공 비밀번호 : " + encodedPassword + " 저장된 비밀번호 : " + member.getPassword());
     }
 
     @Test
     @DisplayName("changePassword(): 비밀번호 변경 토큰 유효 시간이 만료되어 예외 발생")
     void changePassword_changePasswordException(){
         // given
+        String newPassword = "newPassword";
         when(redisUtil.getData(anyString())).thenReturn(null);
 
         // when
@@ -237,6 +312,8 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("changePassword(): 사용자 정보를 찾을 수 없어 얘외 발생")
     void changePassword_dataNotFoundException(){
         // given
+        String newPassword = "newPassword";
+
         when(redisUtil.getData(anyString())).thenReturn(member.getEmail());
         when(memberRepository.findByEmail(anyString())).thenReturn(Optional.empty());
 
@@ -321,12 +398,12 @@ public class MemberServiceTest extends MemberTest {
 
     @Test
     @DisplayName("getSavedMemberByEmail(): 이메일을 이용에 저장된 사용자 정보 조회")
-    void getSavedMemberByEmail(){
+    void getMemberByEmail(){
         // given
         when(memberRepository.findByEmail(anyString())).thenReturn(Optional.of(member));
 
         // when
-        Member response = memberService.getSavedMemberByEmail(member.getEmail());
+        Member response = memberService.getMemberByEmail(member.getEmail());
 
         // then
         assertEquals(response.getUserId(), member.getUserId());
@@ -336,7 +413,7 @@ public class MemberServiceTest extends MemberTest {
 
     @Test
     @DisplayName("getSavedMemberByEmail() : 사용자 정보를 찾을 수 없어 예외 발생")
-    void getSavedMemberByEmail_dataNotFoundException(){
+    void getMemberByEmail_dataNotFoundException(){
         // given
         String email = "test@email.com";
 
@@ -344,7 +421,7 @@ public class MemberServiceTest extends MemberTest {
 
         // when
         DataNotFoundException fail = assertThrows(DataNotFoundException.class,
-                () -> memberService.getSavedMemberByEmail(email));
+                () -> memberService.getMemberByEmail(email));
 
         // then
         assertEquals(fail.getHttpStatus(), ErrorCode.USER_NOT_FOUND.getStatus());

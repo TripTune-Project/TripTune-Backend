@@ -25,7 +25,7 @@ public abstract class BaseTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    private final String refreshToken = "refreshTokenInDatabase";
+    private final String refreshToken = "MemberRefreshToken";
 
     protected Member createMember(Long memberId, String userId){
         return Member.builder()

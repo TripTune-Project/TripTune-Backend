@@ -10,20 +10,20 @@ public class LoginResponse {
 
     private String accessToken;
     private String refreshToken;
-    private String userId;
+    private String nickname;
 
     @Builder
-    public LoginResponse(String accessToken, String refreshToken, String userId) {
+    public LoginResponse(String accessToken, String refreshToken, String nickname) {
         this.accessToken = accessToken;
         this.refreshToken = refreshToken;
-        this.userId = userId;
+        this.nickname = nickname;
     }
 
-    public static LoginResponse of(String accessToken, String refreshToken, String userId){
+    public static LoginResponse of(String accessToken, String refreshToken, String nickname){
         return LoginResponse.builder()
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
-                .userId(userId)
+                .nickname(nickname)
                 .build();
     }
 

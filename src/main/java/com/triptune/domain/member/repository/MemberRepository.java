@@ -21,7 +21,7 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     Member findByRefreshToken(String refreshToken);
 
     @Modifying
-    @Query("UPDATE Member m SET m.refreshToken = NULL WHERE m.userId = :userId")
-    void deleteRefreshToken(@Param("userId") String userId);
+    @Query("UPDATE Member m SET m.refreshToken = NULL WHERE m.nickname = :nickname")
+    void deleteRefreshTokenByNickname(@Param("nickname") String nickname);
 
 }
