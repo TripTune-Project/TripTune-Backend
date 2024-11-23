@@ -1,23 +1,19 @@
 package com.triptune.global.exception;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.triptune.global.enumclass.ErrorCode;
-import com.triptune.global.response.ErrorResponse;
 import com.triptune.global.util.HttpRequestEndpointChecker;
+import com.triptune.global.util.JwtUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.NoHandlerFoundException;
 
 import java.io.IOException;
-import java.nio.charset.Charset;
 
 @Component
 @RequiredArgsConstructor
@@ -31,21 +27,10 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
     public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException, NoHandlerFoundException {
         if (!endpointChecker.isEndpointExist(request)){
             log.error("404 NotFoundException in CustomAuthenticationEntryPoint, Request URL: {}", request.getRequestURI());
-            response.sendError(HttpServletResponse.SC_NOT_FOUND, "페이지를 찾을 수 없습니다.");
+            response.sendError(HttpServletResponse.SC_NOT_FOUND, ErrorCode.PAGE_NOT_FOUND.getMessage());
         } else{
-            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-            response.setStatus(HttpStatus.UNAUTHORIZED.value());
-            response.setCharacterEncoding(Charset.defaultCharset().name());
-
-            ErrorResponse errorResponse = ErrorResponse.of(ErrorCode.UNAUTHORIZED_ACCESS);
-            String result = new ObjectMapper().writeValueAsString(errorResponse);
-
-            response.getWriter().write(result);
-            response.getWriter().flush();
-
             log.info("401 CustomAuthenticationEntryPoint(미인증 접근 시도), URL: {}", request.getRequestURI());
+            JwtUtil.writeJwtException(response, HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHORIZED_ACCESS.getMessage());
         }
-
-
     }
 }
