@@ -1012,31 +1012,31 @@ public class ScheduleServiceTest extends ScheduleTest {
     @DisplayName("checkUserPermission(): 사용자 편집 권한 중 ALL")
     void checkUserPermissionALL(){
         // given
-        AttendeePermission permission = AttendeePermission.ALL;
+        attendee1.setPermission(AttendeePermission.ALL);
 
         // when, then
-        assertDoesNotThrow(() -> scheduleService.checkUserPermission(permission));
+        assertDoesNotThrow(() -> scheduleService.checkUserPermission(attendee1));
     }
 
     @Test
     @DisplayName("checkUserPermission(): 사용자 편집 권한 중 EDIT")
     void checkUserPermissionEdit(){
         // given
-        AttendeePermission permission = AttendeePermission.EDIT;
+        attendee1.setPermission(AttendeePermission.EDIT);
 
         // when
         // then
-        assertDoesNotThrow(() -> scheduleService.checkUserPermission(permission));
+        assertDoesNotThrow(() -> scheduleService.checkUserPermission(attendee1));
     }
 
     @Test
     @DisplayName("checkUserPermission(): 사용자 편집 권한 체크 시 CHAT 권한으로 예외 발생")
     void checkUserPermissionCHAT_forbiddenScheduleException(){
         // given
-        AttendeePermission permission = AttendeePermission.CHAT;
+        attendee1.setPermission(AttendeePermission.CHAT);
 
         // when
-        ForbiddenScheduleException fail = assertThrows(ForbiddenScheduleException.class, () -> scheduleService.checkUserPermission(permission));
+        ForbiddenScheduleException fail = assertThrows(ForbiddenScheduleException.class, () -> scheduleService.checkUserPermission(attendee1));
 
         // then
         assertEquals(fail.getHttpStatus(), ErrorCode.FORBIDDEN_EDIT_SCHEDULE.getStatus());
@@ -1047,10 +1047,10 @@ public class ScheduleServiceTest extends ScheduleTest {
     @DisplayName("checkUserPermission(): 사용자 편집 권한 체크 시 READ 권한으로 예외 발생")
     void checkUserPermissionREAD_forbiddenScheduleException(){
         // given
-        AttendeePermission permission = AttendeePermission.READ;
+        attendee1.setPermission(AttendeePermission.READ);
 
         // when
-        ForbiddenScheduleException fail = assertThrows(ForbiddenScheduleException.class, () -> scheduleService.checkUserPermission(permission));
+        ForbiddenScheduleException fail = assertThrows(ForbiddenScheduleException.class, () -> scheduleService.checkUserPermission(attendee1));
 
         // then
         assertEquals(fail.getHttpStatus(), ErrorCode.FORBIDDEN_EDIT_SCHEDULE.getStatus());

@@ -11,6 +11,7 @@ import com.triptune.domain.schedule.entity.TravelAttendee;
 import com.triptune.domain.schedule.entity.TravelSchedule;
 import com.triptune.domain.schedule.enumclass.AttendeePermission;
 import com.triptune.domain.schedule.enumclass.AttendeeRole;
+import com.triptune.domain.schedule.exception.ChatNotFoundException;
 import com.triptune.domain.schedule.exception.ForbiddenChatException;
 import com.triptune.domain.schedule.exception.ForbiddenScheduleException;
 import com.triptune.domain.schedule.repository.ChatMessageRepository;
@@ -329,7 +330,7 @@ class ChatServiceTest extends ScheduleTest {
         when(memberRepository.findByNickname(anyString())).thenReturn(Optional.empty());
 
         // when
-        DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> chatService.getChatMemberByNickname(member1.getNickname()));
+        ChatNotFoundException fail = assertThrows(ChatNotFoundException.class, () -> chatService.getChatMemberByNickname(member1.getNickname()));
 
         // then
         assertEquals(fail.getHttpStatus(), ErrorCode.USER_NOT_FOUND.getStatus());
@@ -363,7 +364,7 @@ class ChatServiceTest extends ScheduleTest {
         when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_UserId(anyLong(), anyString())).thenReturn(Optional.empty());
 
         // when
-        ForbiddenScheduleException fail = assertThrows(ForbiddenScheduleException.class, () -> chatService.getTravelAttendee(schedule.getScheduleId(), member1.getUserId()));
+        ForbiddenChatException fail = assertThrows(ForbiddenChatException.class, () -> chatService.getTravelAttendee(schedule.getScheduleId(), member1.getUserId()));
 
         // then
         assertEquals(fail.getHttpStatus(), ErrorCode.FORBIDDEN_ACCESS_SCHEDULE.getStatus());
