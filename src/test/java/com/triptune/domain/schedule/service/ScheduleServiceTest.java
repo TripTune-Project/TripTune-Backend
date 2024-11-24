@@ -12,12 +12,14 @@ import com.triptune.domain.schedule.dto.request.UpdateScheduleRequest;
 import com.triptune.domain.schedule.dto.response.CreateScheduleResponse;
 import com.triptune.domain.schedule.dto.response.ScheduleDetailResponse;
 import com.triptune.domain.schedule.dto.response.ScheduleInfoResponse;
+import com.triptune.domain.schedule.entity.ChatMessage;
 import com.triptune.domain.schedule.entity.TravelAttendee;
 import com.triptune.domain.schedule.entity.TravelRoute;
 import com.triptune.domain.schedule.entity.TravelSchedule;
 import com.triptune.domain.schedule.enumclass.AttendeePermission;
 import com.triptune.domain.schedule.enumclass.AttendeeRole;
 import com.triptune.domain.schedule.exception.ForbiddenScheduleException;
+import com.triptune.domain.schedule.repository.ChatMessageRepository;
 import com.triptune.domain.schedule.repository.TravelAttendeeRepository;
 import com.triptune.domain.schedule.repository.TravelRouteRepository;
 import com.triptune.domain.schedule.repository.TravelScheduleRepository;
@@ -67,6 +69,9 @@ public class ScheduleServiceTest extends ScheduleTest {
 
     @Mock
     private TravelRouteRepository travelRouteRepository;
+
+    @Mock
+    private ChatMessageRepository chatMessageRepository;
 
     private TravelSchedule schedule1;
     private TravelSchedule schedule2;
@@ -1061,10 +1066,33 @@ public class ScheduleServiceTest extends ScheduleTest {
     @DisplayName("deleteSchedule(): 일정 삭제")
     void deleteSchedule(){
         // given
+        ChatMessage message1 = createChatMessage("chat1", schedule1.getScheduleId(), member1, "hello1");
+        ChatMessage message2 = createChatMessage("chat2", schedule1.getScheduleId(), member1, "hello2");
+        ChatMessage message3 = createChatMessage("chat3", schedule1.getScheduleId(), member2, "hello3");
+        List<ChatMessage> chatMessages = new ArrayList<>(List.of(message1, message2, message3));
+
         when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_UserId(anyLong(), anyString())).thenReturn(Optional.of(attendee1));
+        when(chatMessageRepository.findAllByScheduleId(anyLong())).thenReturn(chatMessages);
 
         // when
         assertDoesNotThrow(() -> scheduleService.deleteSchedule(schedule1.getScheduleId(), member1.getUserId()));
+
+        // then
+        verify(chatMessageRepository, times(1)).deleteAllByScheduleId(schedule1.getScheduleId());
+    }
+
+    @Test
+    @DisplayName("deleteSchedule(): 일정 삭제 시 채팅 메시지 없는 경우")
+    void deleteScheduleNoChatMessageData(){
+        // given
+        when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_UserId(anyLong(), anyString())).thenReturn(Optional.of(attendee1));
+        when(chatMessageRepository.findAllByScheduleId(anyLong())).thenReturn(new ArrayList<>());
+
+        // when
+        assertDoesNotThrow(() -> scheduleService.deleteSchedule(schedule1.getScheduleId(), member1.getUserId()));
+
+        // then
+        verify(chatMessageRepository, times(0)).deleteAllByScheduleId(schedule1.getScheduleId());
     }
 
     @Test
@@ -1078,6 +1106,40 @@ public class ScheduleServiceTest extends ScheduleTest {
 
         assertEquals(fail.getHttpStatus(), ErrorCode.FORBIDDEN_DELETE_SCHEDULE.getStatus());
         assertEquals(fail.getMessage(), ErrorCode.FORBIDDEN_DELETE_SCHEDULE.getMessage());
+    }
+
+    @Test
+    @DisplayName("deleteChatMessageByScheduleId(): 일정 인덱스를 통해 채팅 메시지 삭제")
+    void deleteChatMessageByScheduleId(){
+        // given
+        ChatMessage message1 = createChatMessage("chat1", schedule1.getScheduleId(), member1, "hello1");
+        ChatMessage message2 = createChatMessage("chat2", schedule1.getScheduleId(), member1, "hello2");
+        ChatMessage message3 = createChatMessage("chat3", schedule1.getScheduleId(), member2, "hello3");
+        List<ChatMessage> chatMessages = new ArrayList<>(List.of(message1, message2, message3));
+
+       when(chatMessageRepository.findAllByScheduleId(anyLong())).thenReturn(chatMessages);
+
+        // when
+        assertDoesNotThrow(() -> scheduleService.deleteChatMessageByScheduleId(schedule1.getScheduleId()));
+
+        // then
+        verify(chatMessageRepository, times(1)).deleteAllByScheduleId(schedule1.getScheduleId());
+
+    }
+
+
+    @Test
+    @DisplayName("deleteChatMessageByScheduleId(): 일정 인덱스를 통해 채팅 메시지 삭제 시 채팅 메시지 데이터 없는 경우")
+    void deleteChatMessageByScheduleId_noData(){
+        // given
+        when(chatMessageRepository.findAllByScheduleId(anyLong())).thenReturn(new ArrayList<>());
+
+        // when
+        assertDoesNotThrow(() -> scheduleService.deleteChatMessageByScheduleId(schedule1.getScheduleId()));
+
+        // then
+        verify(chatMessageRepository, times(0)).deleteAllByScheduleId(schedule1.getScheduleId());
+
     }
 
 

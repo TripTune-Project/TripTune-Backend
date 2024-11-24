@@ -80,12 +80,12 @@ class ChatServiceTest extends ScheduleTest {
         // given
         Pageable pageable = PageUtil.chatPageable(1);
 
-        ChatMessage message1 = createChatMessage("id1", schedule.getScheduleId(), member1.getMemberId(), member1.getNickname(), "hello1");
-        ChatMessage message2 = createChatMessage("id2", schedule.getScheduleId(), member1.getMemberId(), member1.getNickname(), "hello2");
-        ChatMessage message3 = createChatMessage("id3", schedule.getScheduleId(), member1.getMemberId(), member1.getNickname(), "hello3");
-        ChatMessage message4 = createChatMessage("id4", schedule.getScheduleId(), member2.getMemberId(), member2.getNickname(), "hello4");
-        ChatMessage message5 = createChatMessage("id5", schedule.getScheduleId(), member3.getMemberId(), member3.getNickname(), "hello5");
-        ChatMessage message6 = createChatMessage("id6", schedule.getScheduleId(), member1.getMemberId(), member1.getNickname(), "hello6");
+        ChatMessage message1 = createChatMessage("id1", schedule.getScheduleId(), member1, "hello1");
+        ChatMessage message2 = createChatMessage("id2", schedule.getScheduleId(), member1, "hello2");
+        ChatMessage message3 = createChatMessage("id3", schedule.getScheduleId(), member1, "hello3");
+        ChatMessage message4 = createChatMessage("id4", schedule.getScheduleId(), member2, "hello4");
+        ChatMessage message5 = createChatMessage("id5", schedule.getScheduleId(), member3, "hello5");
+        ChatMessage message6 = createChatMessage("id6", schedule.getScheduleId(), member1, "hello6");
         List<ChatMessage> messageList = new ArrayList<>(List.of(message1, message2, message3, message4, message5, message6));
         Page<ChatMessage> chatPage = PageUtil.createPage(messageList, pageable, messageList.size());
 
@@ -124,9 +124,9 @@ class ChatServiceTest extends ScheduleTest {
         // given
         Pageable pageable = PageUtil.chatPageable(1);
 
-        ChatMessage message1 = createChatMessage("id1", schedule.getScheduleId(), member1.getMemberId(), member1.getNickname(), "hello1");
-        ChatMessage message2 = createChatMessage("id2", schedule.getScheduleId(), member1.getMemberId(), member1.getNickname(), "hello2");
-        ChatMessage message3 = createChatMessage("id3", schedule.getScheduleId(), member1.getMemberId(), member1.getNickname(), "hello3");
+        ChatMessage message1 = createChatMessage("id1", schedule.getScheduleId(), member1, "hello1");
+        ChatMessage message2 = createChatMessage("id2", schedule.getScheduleId(), member1, "hello2");
+        ChatMessage message3 = createChatMessage("id3", schedule.getScheduleId(), member1, "hello3");
 
         List<ChatMessage> messageList = new ArrayList<>(List.of(message1, message2, message3));
         Page<ChatMessage> chatPage = PageUtil.createPage(messageList, pageable, messageList.size());
@@ -151,9 +151,9 @@ class ChatServiceTest extends ScheduleTest {
         // given
         Pageable pageable = PageUtil.chatPageable(1);
 
-        ChatMessage message1 = createChatMessage("id1", schedule.getScheduleId(), member1.getMemberId(), member1.getNickname(), "hello1");
-        ChatMessage message2 = createChatMessage("id4", schedule.getScheduleId(), member2.getMemberId(), member2.getNickname(), "hello2");
-        ChatMessage message3 = createChatMessage("id5", schedule.getScheduleId(), member3.getMemberId(), member3.getNickname(), "hello3");
+        ChatMessage message1 = createChatMessage("id1", schedule.getScheduleId(), member1, "hello1");
+        ChatMessage message2 = createChatMessage("id4", schedule.getScheduleId(), member2, "hello2");
+        ChatMessage message3 = createChatMessage("id5", schedule.getScheduleId(), member3, "hello3");
         List<ChatMessage> messageList = new ArrayList<>(List.of(message1, message2, message3));
         Page<ChatMessage> chatPage = PageUtil.createPage(messageList, pageable, messageList.size());
 
@@ -205,7 +205,7 @@ class ChatServiceTest extends ScheduleTest {
         // given
         Pageable pageable = PageUtil.chatPageable(1);
 
-        ChatMessage message1 = createChatMessage("id1", schedule.getScheduleId(), member1.getMemberId(), member1.getNickname(), "hello1");
+        ChatMessage message1 = createChatMessage("id1", schedule.getScheduleId(), member1, "hello1");
         List<ChatMessage> messageList = new ArrayList<>(List.of(message1));
         Page<ChatMessage> chatPage = PageUtil.createPage(messageList, pageable, messageList.size());
 

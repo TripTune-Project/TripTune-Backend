@@ -9,11 +9,13 @@ import com.triptune.domain.schedule.dto.request.UpdateScheduleRequest;
 import com.triptune.domain.schedule.dto.response.CreateScheduleResponse;
 import com.triptune.domain.schedule.dto.response.ScheduleDetailResponse;
 import com.triptune.domain.schedule.dto.response.ScheduleInfoResponse;
+import com.triptune.domain.schedule.entity.ChatMessage;
 import com.triptune.domain.schedule.entity.TravelAttendee;
 import com.triptune.domain.schedule.entity.TravelRoute;
 import com.triptune.domain.schedule.entity.TravelSchedule;
 import com.triptune.domain.schedule.enumclass.AttendeeRole;
 import com.triptune.domain.schedule.exception.ForbiddenScheduleException;
+import com.triptune.domain.schedule.repository.ChatMessageRepository;
 import com.triptune.domain.schedule.repository.TravelAttendeeRepository;
 import com.triptune.domain.schedule.repository.TravelRouteRepository;
 import com.triptune.domain.schedule.repository.TravelScheduleRepository;
@@ -46,6 +48,7 @@ public class ScheduleService {
     private final TravelAttendeeRepository travelAttendeeRepository;
     private final TravelPlaceRepository travelPlaceRepository;
     private final TravelRouteRepository travelRouteRepository;
+    private final ChatMessageRepository chatMessageRepository;
 
 
     public SchedulePageResponse<ScheduleInfoResponse> getSchedules(int page, String userId) {
@@ -166,6 +169,12 @@ public class ScheduleService {
     }
 
 
+    public Member getMemberByUserId(String userId){
+        return memberRepository.findByUserId(userId)
+                .orElseThrow(() ->  new DataNotFoundException(ErrorCode.USER_NOT_FOUND));
+    }
+
+
     public ScheduleDetailResponse getScheduleDetail(Long scheduleId, int page) {
         TravelSchedule schedule = getScheduleByScheduleId(scheduleId);
 
@@ -185,6 +194,12 @@ public class ScheduleService {
 
         schedule.set(updateScheduleRequest);
         updateTravelRouteInSchedule(schedule, updateScheduleRequest.getTravelRoute());
+    }
+
+
+    public TravelSchedule getScheduleByScheduleId(Long scheduleId){
+        return travelScheduleRepository.findByScheduleId(scheduleId)
+                .orElseThrow(() -> new DataNotFoundException(ErrorCode.SCHEDULE_NOT_FOUND));
     }
 
     public void checkUserPermission(TravelAttendee attendee){
@@ -214,6 +229,12 @@ public class ScheduleService {
     }
 
 
+    public TravelPlace getPlaceByPlaceId(Long placeId){
+        return travelPlaceRepository.findByPlaceId(placeId)
+                .orElseThrow(() ->  new DataNotFoundException(ErrorCode.PLACE_NOT_FOUND));
+    }
+
+
     public void deleteSchedule(Long scheduleId, String userId) {
         TravelAttendee attendee = travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_UserId(scheduleId, userId)
                 .orElseThrow(() -> new ForbiddenScheduleException(ErrorCode.FORBIDDEN_ACCESS_SCHEDULE));
@@ -223,23 +244,18 @@ public class ScheduleService {
         }
 
         travelScheduleRepository.deleteById(scheduleId);
-    }
-
-    public Member getMemberByUserId(String userId){
-        return memberRepository.findByUserId(userId)
-                .orElseThrow(() ->  new DataNotFoundException(ErrorCode.USER_NOT_FOUND));
-    }
-
-    public TravelSchedule getScheduleByScheduleId(Long scheduleId){
-        return travelScheduleRepository.findByScheduleId(scheduleId)
-                .orElseThrow(() -> new DataNotFoundException(ErrorCode.SCHEDULE_NOT_FOUND));
+        deleteChatMessageByScheduleId(scheduleId);
     }
 
 
-    public TravelPlace getPlaceByPlaceId(Long placeId){
-        return travelPlaceRepository.findByPlaceId(placeId)
-                .orElseThrow(() ->  new DataNotFoundException(ErrorCode.PLACE_NOT_FOUND));
+    public void deleteChatMessageByScheduleId(Long scheduleId){
+        List<ChatMessage> chatMessages = chatMessageRepository.findAllByScheduleId(scheduleId);
+
+        if (!chatMessages.isEmpty()){
+            chatMessageRepository.deleteAllByScheduleId(scheduleId);
+        }
     }
+
 
 
 }
