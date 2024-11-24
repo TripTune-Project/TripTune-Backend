@@ -15,6 +15,6 @@ public enum AttendeePermission {
     private final String description;
 
     public boolean isEnableChat(){
-        return !this.equals(EDIT) && !this.equals(READ);
+        return this.equals(ALL) || this.equals(CHAT);
     }
 }

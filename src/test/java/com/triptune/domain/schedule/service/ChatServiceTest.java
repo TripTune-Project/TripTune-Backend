@@ -309,12 +309,12 @@ class ChatServiceTest extends ScheduleTest {
 
     @Test
     @DisplayName("getMemberByNickname(): 닉네임으로 사용자 정보 조회")
-    void getMemberByNickname(){
+    void getChatMemberByNickname(){
         // given
         when(memberRepository.findByNickname(anyString())).thenReturn(Optional.of(member1));
 
         // when
-        Member response = chatService.getMemberByNickname(member1.getNickname());
+        Member response = chatService.getChatMemberByNickname(member1.getNickname());
 
         // then
         assertEquals(response.getUserId(), member1.getUserId());
@@ -324,12 +324,12 @@ class ChatServiceTest extends ScheduleTest {
 
     @Test
     @DisplayName("getMemberByNickname(): 닉네임으로 사용자 정보 조회 시 데이터 없어 예외 발생")
-    void getMemberByNickname_dataNotFoundException(){
+    void getChatMemberByNickname_dataNotFoundException(){
         // given
         when(memberRepository.findByNickname(anyString())).thenReturn(Optional.empty());
 
         // when
-        DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> chatService.getMemberByNickname(member1.getNickname()));
+        DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> chatService.getChatMemberByNickname(member1.getNickname()));
 
         // then
         assertEquals(fail.getHttpStatus(), ErrorCode.USER_NOT_FOUND.getStatus());

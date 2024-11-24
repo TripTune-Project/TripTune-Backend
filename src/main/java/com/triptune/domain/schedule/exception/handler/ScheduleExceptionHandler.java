@@ -29,11 +29,5 @@ public class ScheduleExceptionHandler {
         return ErrorResponse.of(ex.getHttpStatus(), ex.getMessage());
     }
 
-    @ExceptionHandler
-    @ResponseStatus(HttpStatus.FORBIDDEN)
-    public ErrorResponse handleForbiddenChatException(ForbiddenChatException ex, HttpServletRequest request){
-        log.error("ForbiddenChatException at {}: {}", request.getRequestURI(), ex.getMessage());
-        return ErrorResponse.of(ex.getHttpStatus(), ex.getMessage());
-    }
 
 }

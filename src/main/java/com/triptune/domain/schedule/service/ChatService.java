@@ -6,8 +6,8 @@ import com.triptune.domain.schedule.dto.request.ChatMessageRequest;
 import com.triptune.domain.schedule.dto.response.ChatResponse;
 import com.triptune.domain.schedule.entity.ChatMessage;
 import com.triptune.domain.schedule.entity.TravelAttendee;
+import com.triptune.domain.schedule.exception.ChatNotFoundException;
 import com.triptune.domain.schedule.exception.ForbiddenChatException;
-import com.triptune.domain.schedule.exception.ForbiddenScheduleException;
 import com.triptune.domain.schedule.repository.ChatMessageRepository;
 import com.triptune.domain.schedule.repository.TravelAttendeeRepository;
 import com.triptune.global.enumclass.ErrorCode;
@@ -49,14 +49,20 @@ public class ChatService {
                 .toList();
     }
 
-    private ChatResponse convertToChatResponse(ChatMessage message) {
+    public ChatResponse convertToChatResponse(ChatMessage message) {
         Member member = getMemberByMemberId(message.getMemberId());
         return ChatResponse.from(member, message);
     }
 
 
+    public Member getMemberByMemberId(Long memberId){
+        return memberRepository.findByMemberId(memberId)
+                .orElseThrow(() -> new DataNotFoundException(ErrorCode.USER_NOT_FOUND));
+    }
+
+
     public ChatResponse sendChatMessage(ChatMessageRequest chatMessageRequest) {
-        Member member = getMemberByNickname(chatMessageRequest.getNickname());
+        Member member = getChatMemberByNickname(chatMessageRequest.getNickname());
         TravelAttendee attendee = getTravelAttendee(chatMessageRequest.getScheduleId(), member.getUserId());
 
         if (!attendee.getPermission().isEnableChat()){
@@ -69,21 +75,16 @@ public class ChatService {
         return ChatResponse.from(member, message);
     }
 
-    public Member getMemberByMemberId(Long memberId){
-        return memberRepository.findByMemberId(memberId)
-                .orElseThrow(() -> new DataNotFoundException(ErrorCode.USER_NOT_FOUND));
 
-    }
-
-    public Member getMemberByNickname(String nickname){
+    public Member getChatMemberByNickname(String nickname){
         return memberRepository.findByNickname(nickname)
-                .orElseThrow(() -> new DataNotFoundException(ErrorCode.USER_NOT_FOUND));
+                .orElseThrow(() -> new ChatNotFoundException(ErrorCode.USER_NOT_FOUND));
 
     }
 
     public TravelAttendee getTravelAttendee(Long scheduleId, String userId){
         return travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_UserId(scheduleId, userId)
-                .orElseThrow(() -> new ForbiddenScheduleException(ErrorCode.FORBIDDEN_ACCESS_SCHEDULE));
+                .orElseThrow(() -> new ForbiddenChatException(ErrorCode.FORBIDDEN_ACCESS_SCHEDULE));
     }
 
 }
