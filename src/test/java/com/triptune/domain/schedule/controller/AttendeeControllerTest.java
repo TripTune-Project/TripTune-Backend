@@ -199,9 +199,9 @@ public class AttendeeControllerTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("removeAttendee(): 일정 참석자 제거")
+    @DisplayName("leaveScheduleAsGuest(): 일정 참석자 제거")
     @WithMockUser(username = "member2")
-    void removeAttendee() throws Exception {
+    void leaveScheduleAsGuest() throws Exception {
         mockMvc.perform(delete("/api/schedules/{scheduleId}/attendees", schedule1.getScheduleId()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
@@ -210,9 +210,9 @@ public class AttendeeControllerTest extends ScheduleTest {
 
 
     @Test
-    @DisplayName("removeAttendee(): 일정 참석자 제거 시 사용자가 작성자여서 예외 발생")
+    @DisplayName("leaveScheduleAsGuest(): 일정 참석자 제거 시 사용자가 작성자여서 예외 발생")
     @WithMockUser(username = "member1")
-    void removeAttendeeIsAuthor_forbiddenScheduleException() throws Exception {
+    void leaveScheduleAsGuestIsAuthor_forbiddenScheduleException() throws Exception {
         mockMvc.perform(delete("/api/schedules/{scheduleId}/attendees", schedule1.getScheduleId()))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.success").value(false))
@@ -220,9 +220,9 @@ public class AttendeeControllerTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("removeAttendee(): 일정 참석자 제거 시 사용자가 일정에 접근 권한이 없어 예외 발생")
+    @DisplayName("leaveScheduleAsGuest(): 일정 참석자 제거 시 사용자가 일정에 접근 권한이 없어 예외 발생")
     @WithMockUser(username = "member1")
-    void removeAttendeeNotAttendee_forbiddenScheduleException() throws Exception {
+    void leaveScheduleAsGuest_forbiddenScheduleException() throws Exception {
         mockMvc.perform(delete("/api/schedules/{scheduleId}/attendees", schedule2.getScheduleId()))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.success").value(false))
