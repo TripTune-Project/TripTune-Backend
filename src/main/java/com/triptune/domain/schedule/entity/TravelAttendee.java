@@ -63,7 +63,4 @@ public class TravelAttendee {
                 .build();
     }
 
-    public boolean isAuthor(){
-        return AttendeeRole.AUTHOR.equals(this.role);
-    }
 }

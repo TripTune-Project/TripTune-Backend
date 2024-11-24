@@ -1082,15 +1082,15 @@ public class ScheduleServiceTest extends ScheduleTest {
 
 
     @Test
-    @DisplayName("getSavedMember(): 저장된 사용자 정보 조회")
-    void getSavedMember(){
+    @DisplayName("getMemberByUserId(): 저장된 사용자 정보 조회")
+    void getMemberByUserId(){
         // given
         String userId = "member1";
 
         when(memberRepository.findByUserId(any())).thenReturn(Optional.of(member1));
 
         // when
-        Member response = scheduleService.getSavedMember(userId);
+        Member response = scheduleService.getMemberByUserId(userId);
 
         // then
         assertEquals(response.getUserId(), userId);
@@ -1100,13 +1100,13 @@ public class ScheduleServiceTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("getSavedMember(): 저장된 사용자 정보 조회 시 데이터 찾을 수 없어 예외 발생")
-    void getSavedMember_dataNotFoundException(){
+    @DisplayName("getMemberByUserId(): 저장된 사용자 정보 조회 시 데이터 찾을 수 없어 예외 발생")
+    void getMember_ByUserId_dataNotFoundException(){
         // given
         when(memberRepository.findByUserId(any())).thenReturn(Optional.empty());
 
         // when
-        DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> scheduleService.getSavedMember("notUser"));
+        DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> scheduleService.getMemberByUserId("notUser"));
 
         // then
         assertEquals(fail.getHttpStatus(), ErrorCode.USER_NOT_FOUND.getStatus());
@@ -1114,13 +1114,13 @@ public class ScheduleServiceTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("getSavedSchedule(): 저장된 일정 조회")
-    void getSavedSchedule(){
+    @DisplayName("getScheduleByScheduleId(): 저장된 일정 조회")
+    void getScheduleByScheduleId(){
         // given
         when(travelScheduleRepository.findByScheduleId(any())).thenReturn(Optional.of(schedule1));
 
         // when
-        TravelSchedule response = scheduleService.getSavedSchedule(schedule1.getScheduleId());
+        TravelSchedule response = scheduleService.getScheduleByScheduleId(schedule1.getScheduleId());
 
         // then
         assertEquals(response.getScheduleName(), schedule1.getScheduleName());
@@ -1129,13 +1129,13 @@ public class ScheduleServiceTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("getSavedSchedule(): 저장된 일정 조회 시 데이터 찾을 수 없어 예외 발생")
-    void getSavedSchedule_dataNotFoundException(){
+    @DisplayName("getScheduleByScheduleId(): 저장된 일정 조회 시 데이터 찾을 수 없어 예외 발생")
+    void getScheduleBySchedule_Id_dataNotFoundException(){
         // given
         when(travelScheduleRepository.findByScheduleId(any())).thenReturn(Optional.empty());
 
         // when
-        DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> scheduleService.getSavedSchedule(0L));
+        DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> scheduleService.getScheduleByScheduleId(0L));
 
         // then
         assertEquals(fail.getHttpStatus(), ErrorCode.SCHEDULE_NOT_FOUND.getStatus());
@@ -1143,15 +1143,15 @@ public class ScheduleServiceTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("getSavedPlace(): 저장된 여행지 조회 성공")
-    void getSavedPlace(){
+    @DisplayName("getPlaceByPlaceId(): 저장된 여행지 조회 성공")
+    void getPlaceByPlaceId(){
         // given
         Long placeId = travelPlace1.getPlaceId();
 
         when(travelPlaceRepository.findByPlaceId(anyLong())).thenReturn(Optional.of(travelPlace1));
 
         // when
-        TravelPlace response = scheduleService.getSavedPlace(placeId);
+        TravelPlace response = scheduleService.getPlaceByPlaceId(placeId);
 
         // then
         assertEquals(response.getPlaceId(), placeId);
@@ -1160,15 +1160,15 @@ public class ScheduleServiceTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("getSavedPlace(): 여행지가 존재하지 않아 예외 발생")
-    void getSavedPlaceNoTravelPlace_dataNotFoundException(){
+    @DisplayName("getPlaceByPlaceId(): 여행지가 존재하지 않아 예외 발생")
+    void getPlaceByPlaceNoTravelPlace_Id_dataNotFoundException(){
         // given
         Long placeId = travelPlace1.getPlaceId();
 
         when(travelPlaceRepository.findByPlaceId(anyLong())).thenReturn(Optional.empty());
 
         // when
-        DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> scheduleService.getSavedPlace(placeId));
+        DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> scheduleService.getPlaceByPlaceId(placeId));
 
         // then
         assertEquals(fail.getHttpStatus(), ErrorCode.PLACE_NOT_FOUND.getStatus());

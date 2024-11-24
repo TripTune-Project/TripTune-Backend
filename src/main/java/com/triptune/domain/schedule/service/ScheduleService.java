@@ -12,7 +12,6 @@ import com.triptune.domain.schedule.dto.response.ScheduleInfoResponse;
 import com.triptune.domain.schedule.entity.TravelAttendee;
 import com.triptune.domain.schedule.entity.TravelRoute;
 import com.triptune.domain.schedule.entity.TravelSchedule;
-import com.triptune.domain.schedule.enumclass.AttendeePermission;
 import com.triptune.domain.schedule.enumclass.AttendeeRole;
 import com.triptune.domain.schedule.exception.ForbiddenScheduleException;
 import com.triptune.domain.schedule.repository.TravelAttendeeRepository;
@@ -158,7 +157,7 @@ public class ScheduleService {
         TravelSchedule travelSchedule = TravelSchedule.from(createScheduleRequest);
         TravelSchedule savedTravelSchedule = travelScheduleRepository.save(travelSchedule);
 
-        Member member = getSavedMember(userId);
+        Member member = getMemberByUserId(userId);
 
         TravelAttendee travelAttendee = TravelAttendee.of(savedTravelSchedule, member);
         travelAttendeeRepository.save(travelAttendee);
@@ -168,7 +167,7 @@ public class ScheduleService {
 
 
     public ScheduleDetailResponse getScheduleDetail(Long scheduleId, int page) {
-        TravelSchedule schedule = getSavedSchedule(scheduleId);
+        TravelSchedule schedule = getScheduleByScheduleId(scheduleId);
 
         // 여행지 정보: Page<TravelPlace> -> PageResponse<TravelSimpleResponse> 로 변경
         Pageable pageable = PageUtil.defaultPageable(page);
@@ -180,7 +179,7 @@ public class ScheduleService {
 
 
     public void updateSchedule(String userId, Long scheduleId, UpdateScheduleRequest updateScheduleRequest) {
-        TravelSchedule schedule = getSavedSchedule(scheduleId);
+        TravelSchedule schedule = getScheduleByScheduleId(scheduleId);
         TravelAttendee attendee = getAttendeeInfo(schedule, userId);
         checkUserPermission(attendee);
 
@@ -206,7 +205,7 @@ public class ScheduleService {
 
         if (routeRequestList != null && !routeRequestList.isEmpty()){
             for(RouteRequest routeRequest : routeRequestList){
-                TravelPlace place = getSavedPlace(routeRequest.getPlaceId());
+                TravelPlace place = getPlaceByPlaceId(routeRequest.getPlaceId());
                 TravelRoute route = TravelRoute.of(schedule, place, routeRequest.getRouteOrder());
                 schedule.getTravelRouteList().add(route);
                 travelRouteRepository.save(route);
@@ -226,18 +225,18 @@ public class ScheduleService {
         travelScheduleRepository.deleteById(scheduleId);
     }
 
-    public Member getSavedMember(String userId){
+    public Member getMemberByUserId(String userId){
         return memberRepository.findByUserId(userId)
                 .orElseThrow(() ->  new DataNotFoundException(ErrorCode.USER_NOT_FOUND));
     }
 
-    public TravelSchedule getSavedSchedule(Long scheduleId){
+    public TravelSchedule getScheduleByScheduleId(Long scheduleId){
         return travelScheduleRepository.findByScheduleId(scheduleId)
                 .orElseThrow(() -> new DataNotFoundException(ErrorCode.SCHEDULE_NOT_FOUND));
     }
 
 
-    public TravelPlace getSavedPlace(Long placeId){
+    public TravelPlace getPlaceByPlaceId(Long placeId){
         return travelPlaceRepository.findByPlaceId(placeId)
                 .orElseThrow(() ->  new DataNotFoundException(ErrorCode.PLACE_NOT_FOUND));
     }
