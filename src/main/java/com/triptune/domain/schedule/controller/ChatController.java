@@ -35,15 +35,13 @@ public class ChatController {
 
     @MessageMapping("/chats")
     @Operation(summary = "채팅 보내기", description = "메시지를 저장하고 채팅 참가자들에게 메시지를 보낸다.")
-    public ApiResponse<?> sendChatMessage(@Valid @Payload ChatMessageRequest chatMessageRequest){
+    public void sendChatMessage(@Payload ChatMessageRequest chatMessageRequest){
         ChatResponse response = chatService.sendChatMessage(chatMessageRequest);
 
         messagingTemplate.convertAndSend(
-                "/sub/schedules" + chatMessageRequest.getScheduleId() + "/chats",
+                "/sub/schedules/" + chatMessageRequest.getScheduleId() + "/chats",
                 response
         );
-
-        return ApiResponse.okResponse();
     }
 
 }

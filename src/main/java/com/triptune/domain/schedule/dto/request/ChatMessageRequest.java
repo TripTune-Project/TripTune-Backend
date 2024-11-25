@@ -1,5 +1,6 @@
 package com.triptune.domain.schedule.dto.request;
 
+import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
@@ -17,6 +18,7 @@ public class ChatMessageRequest {
     private String nickname;
 
     @NotBlank(message = "메시지는 필수 입력 값입니다.")
+    @Max(1000)
     private String message;
 
     @Builder

@@ -11,4 +11,8 @@ public enum AttendeeRole {
 
     private final int id;
     private final  String role;
+
+    public boolean isAuthor(){
+        return this == AUTHOR;
+    }
 }

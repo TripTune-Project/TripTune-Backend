@@ -98,12 +98,12 @@ public class ChatControllerTest extends ScheduleTest {
     @DisplayName("getChatMessages(): 대화 내용 조회")
     @WithMockUser(username = "member1")
     void getChatMessages() throws Exception {
-        ChatMessage message1 = chatMessageRepository.save(createChatMessage("id1", schedule.getScheduleId(), member1.getMemberId(), member1.getNickname(), "hello1"));
-        ChatMessage message2 = chatMessageRepository.save(createChatMessage("id2", schedule.getScheduleId(), member1.getMemberId(), member1.getNickname(), "hello2"));
-        ChatMessage message3 = chatMessageRepository.save(createChatMessage("id3", schedule.getScheduleId(), member1.getMemberId(), member1.getNickname(), "hello3"));
-        ChatMessage message4 = chatMessageRepository.save(createChatMessage("id4", schedule.getScheduleId(), member2.getMemberId(), member2.getNickname(), "hello4"));
-        ChatMessage message5 = chatMessageRepository.save(createChatMessage("id5", schedule.getScheduleId(), member3.getMemberId(), member3.getNickname(), "hello5"));
-        ChatMessage message6 = chatMessageRepository.save(createChatMessage("id6", schedule.getScheduleId(), member1.getMemberId(), member1.getNickname(), "hello6"));
+        ChatMessage message1 = chatMessageRepository.save(createChatMessage("id1", schedule.getScheduleId(), member1, "hello1"));
+        ChatMessage message2 = chatMessageRepository.save(createChatMessage("id2", schedule.getScheduleId(), member1, "hello2"));
+        ChatMessage message3 = chatMessageRepository.save(createChatMessage("id3", schedule.getScheduleId(), member1, "hello3"));
+        ChatMessage message4 = chatMessageRepository.save(createChatMessage("id4", schedule.getScheduleId(), member2, "hello4"));
+        ChatMessage message5 = chatMessageRepository.save(createChatMessage("id5", schedule.getScheduleId(), member3, "hello5"));
+        ChatMessage message6 = chatMessageRepository.save(createChatMessage("id6", schedule.getScheduleId(), member1, "hello6"));
 
         mockMvc.perform(get("/api/schedules/{scheduleId}/chats", schedule.getScheduleId())
                         .param("page", "1"))

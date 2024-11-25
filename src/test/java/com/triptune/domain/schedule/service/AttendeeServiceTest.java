@@ -25,11 +25,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -200,28 +198,27 @@ public class AttendeeServiceTest extends ScheduleTest {
     }
 
 
-
     @Test
-    @DisplayName("removeAttendee(): 일정 참석자 제거")
-    void removeAttendee(){
+    @DisplayName("leaveScheduleAsGuest(): 일정 참석자 제거")
+    void leaveScheduleAsGuest(){
         // given
         when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_UserId(anyLong(), anyString())).thenReturn(Optional.of(attendee2));
 
         // when
-        attendeeService.removeAttendee(schedule1.getScheduleId(), member2.getUserId());
+        attendeeService.leaveScheduleAsGuest(schedule1.getScheduleId(), member2.getUserId());
 
         // then
         verify(travelAttendeeRepository, times(1)).deleteById(any());
     }
 
     @Test
-    @DisplayName("removeAttendee(): 일정 참석자 제거 시 참가자 정보가 없어 예외 발생")
-    void removeAttendeeNoAttendeeData_forbiddenScheduleException(){
+    @DisplayName("leaveScheduleAsGuest(): 일정 참석자 제거 시 참가자 정보가 없어 예외 발생")
+    void leaveScheduleAsGuest_forbiddenScheduleException(){
         // given
         when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_UserId(anyLong(), anyString())).thenReturn(Optional.empty());
 
         // when
-        ForbiddenScheduleException fail = assertThrows(ForbiddenScheduleException.class, () -> attendeeService.removeAttendee(schedule1.getScheduleId(), member1.getUserId()));
+        ForbiddenScheduleException fail = assertThrows(ForbiddenScheduleException.class, () -> attendeeService.leaveScheduleAsGuest(schedule1.getScheduleId(), member1.getUserId()));
 
         // then
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.FORBIDDEN_ACCESS_SCHEDULE.getStatus());
@@ -229,13 +226,13 @@ public class AttendeeServiceTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("removeAttendee(): 일정 참석자 제거 시 사용자가 작성자여서 예외 발생")
-    void removeAttendeeIsAuthor_forbiddenScheduleException(){
+    @DisplayName("leaveScheduleAsGuest(): 일정 참석자 제거 시 사용자가 작성자여서 예외 발생")
+    void leaveScheduleAsGuestIsAuthor_forbiddenScheduleException(){
         // given
         when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_UserId(anyLong(), anyString())).thenReturn(Optional.of(attendee1));
 
         // when
-        ForbiddenScheduleException fail = assertThrows(ForbiddenScheduleException.class, () -> attendeeService.removeAttendee(schedule1.getScheduleId(), member1.getUserId()));
+        ForbiddenScheduleException fail = assertThrows(ForbiddenScheduleException.class, () -> attendeeService.leaveScheduleAsGuest(schedule1.getScheduleId(), member1.getUserId()));
 
         // then
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.FORBIDDEN_REMOVE_ATTENDEE.getStatus());

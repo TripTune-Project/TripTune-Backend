@@ -1,5 +1,7 @@
 package com.triptune.domain.schedule.enumclass;
 
+import com.triptune.domain.schedule.exception.ForbiddenScheduleException;
+import com.triptune.global.enumclass.ErrorCode;
 import lombok.AllArgsConstructor;
 
 @AllArgsConstructor
@@ -15,6 +17,9 @@ public enum AttendeePermission {
     private final String description;
 
     public boolean isEnableChat(){
-        return !this.equals(EDIT) && !this.equals(READ);
+        return this.equals(ALL) || this.equals(CHAT);
+    }
+    public boolean isEnableEdit(){
+        return this.equals(ALL) || this.equals(EDIT);
     }
 }

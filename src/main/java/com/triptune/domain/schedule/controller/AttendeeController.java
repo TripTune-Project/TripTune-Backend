@@ -6,7 +6,6 @@ import com.triptune.domain.schedule.service.AttendeeService;
 import com.triptune.global.aop.AttendeeCheck;
 import com.triptune.global.response.ApiResponse;
 import com.triptune.global.response.pagination.ApiPageResponse;
-import com.triptune.global.response.pagination.PageResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -46,10 +45,10 @@ public class AttendeeController {
 
     @DeleteMapping("/attendees")
     @Operation(summary = "일정 나가기", description = "일정에 참석자 목록에서 삭제됩니다.")
-    public ApiResponse<?> removeAttendee(@PathVariable(name = "scheduleId") Long scheduleId){
+    public ApiResponse<?> leaveScheduleAsGuest(@PathVariable(name = "scheduleId") Long scheduleId){
         String userId = SecurityContextHolder.getContext().getAuthentication().getName();
 
-        attendeeService.removeAttendee(scheduleId, userId);
+        attendeeService.leaveScheduleAsGuest(scheduleId, userId);
         return ApiResponse.okResponse();
     }
 

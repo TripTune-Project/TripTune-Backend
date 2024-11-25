@@ -11,6 +11,7 @@ import com.triptune.domain.schedule.entity.TravelAttendee;
 import com.triptune.domain.schedule.entity.TravelSchedule;
 import com.triptune.domain.schedule.enumclass.AttendeePermission;
 import com.triptune.domain.schedule.enumclass.AttendeeRole;
+import com.triptune.domain.schedule.exception.ChatNotFoundException;
 import com.triptune.domain.schedule.exception.ForbiddenChatException;
 import com.triptune.domain.schedule.exception.ForbiddenScheduleException;
 import com.triptune.domain.schedule.repository.ChatMessageRepository;
@@ -79,12 +80,12 @@ class ChatServiceTest extends ScheduleTest {
         // given
         Pageable pageable = PageUtil.chatPageable(1);
 
-        ChatMessage message1 = createChatMessage("id1", schedule.getScheduleId(), member1.getMemberId(), member1.getNickname(), "hello1");
-        ChatMessage message2 = createChatMessage("id2", schedule.getScheduleId(), member1.getMemberId(), member1.getNickname(), "hello2");
-        ChatMessage message3 = createChatMessage("id3", schedule.getScheduleId(), member1.getMemberId(), member1.getNickname(), "hello3");
-        ChatMessage message4 = createChatMessage("id4", schedule.getScheduleId(), member2.getMemberId(), member2.getNickname(), "hello4");
-        ChatMessage message5 = createChatMessage("id5", schedule.getScheduleId(), member3.getMemberId(), member3.getNickname(), "hello5");
-        ChatMessage message6 = createChatMessage("id6", schedule.getScheduleId(), member1.getMemberId(), member1.getNickname(), "hello6");
+        ChatMessage message1 = createChatMessage("id1", schedule.getScheduleId(), member1, "hello1");
+        ChatMessage message2 = createChatMessage("id2", schedule.getScheduleId(), member1, "hello2");
+        ChatMessage message3 = createChatMessage("id3", schedule.getScheduleId(), member1, "hello3");
+        ChatMessage message4 = createChatMessage("id4", schedule.getScheduleId(), member2, "hello4");
+        ChatMessage message5 = createChatMessage("id5", schedule.getScheduleId(), member3, "hello5");
+        ChatMessage message6 = createChatMessage("id6", schedule.getScheduleId(), member1, "hello6");
         List<ChatMessage> messageList = new ArrayList<>(List.of(message1, message2, message3, message4, message5, message6));
         Page<ChatMessage> chatPage = PageUtil.createPage(messageList, pageable, messageList.size());
 
@@ -123,9 +124,9 @@ class ChatServiceTest extends ScheduleTest {
         // given
         Pageable pageable = PageUtil.chatPageable(1);
 
-        ChatMessage message1 = createChatMessage("id1", schedule.getScheduleId(), member1.getMemberId(), member1.getNickname(), "hello1");
-        ChatMessage message2 = createChatMessage("id2", schedule.getScheduleId(), member1.getMemberId(), member1.getNickname(), "hello2");
-        ChatMessage message3 = createChatMessage("id3", schedule.getScheduleId(), member1.getMemberId(), member1.getNickname(), "hello3");
+        ChatMessage message1 = createChatMessage("id1", schedule.getScheduleId(), member1, "hello1");
+        ChatMessage message2 = createChatMessage("id2", schedule.getScheduleId(), member1, "hello2");
+        ChatMessage message3 = createChatMessage("id3", schedule.getScheduleId(), member1, "hello3");
 
         List<ChatMessage> messageList = new ArrayList<>(List.of(message1, message2, message3));
         Page<ChatMessage> chatPage = PageUtil.createPage(messageList, pageable, messageList.size());
@@ -150,9 +151,9 @@ class ChatServiceTest extends ScheduleTest {
         // given
         Pageable pageable = PageUtil.chatPageable(1);
 
-        ChatMessage message1 = createChatMessage("id1", schedule.getScheduleId(), member1.getMemberId(), member1.getNickname(), "hello1");
-        ChatMessage message2 = createChatMessage("id4", schedule.getScheduleId(), member2.getMemberId(), member2.getNickname(), "hello2");
-        ChatMessage message3 = createChatMessage("id5", schedule.getScheduleId(), member3.getMemberId(), member3.getNickname(), "hello3");
+        ChatMessage message1 = createChatMessage("id1", schedule.getScheduleId(), member1, "hello1");
+        ChatMessage message2 = createChatMessage("id4", schedule.getScheduleId(), member2, "hello2");
+        ChatMessage message3 = createChatMessage("id5", schedule.getScheduleId(), member3, "hello3");
         List<ChatMessage> messageList = new ArrayList<>(List.of(message1, message2, message3));
         Page<ChatMessage> chatPage = PageUtil.createPage(messageList, pageable, messageList.size());
 
@@ -204,7 +205,7 @@ class ChatServiceTest extends ScheduleTest {
         // given
         Pageable pageable = PageUtil.chatPageable(1);
 
-        ChatMessage message1 = createChatMessage("id1", schedule.getScheduleId(), member1.getMemberId(), member1.getNickname(), "hello1");
+        ChatMessage message1 = createChatMessage("id1", schedule.getScheduleId(), member1, "hello1");
         List<ChatMessage> messageList = new ArrayList<>(List.of(message1));
         Page<ChatMessage> chatPage = PageUtil.createPage(messageList, pageable, messageList.size());
 
@@ -309,12 +310,12 @@ class ChatServiceTest extends ScheduleTest {
 
     @Test
     @DisplayName("getMemberByNickname(): 닉네임으로 사용자 정보 조회")
-    void getMemberByNickname(){
+    void getChatMemberByNickname(){
         // given
         when(memberRepository.findByNickname(anyString())).thenReturn(Optional.of(member1));
 
         // when
-        Member response = chatService.getMemberByNickname(member1.getNickname());
+        Member response = chatService.getChatMemberByNickname(member1.getNickname());
 
         // then
         assertEquals(response.getUserId(), member1.getUserId());
@@ -324,12 +325,12 @@ class ChatServiceTest extends ScheduleTest {
 
     @Test
     @DisplayName("getMemberByNickname(): 닉네임으로 사용자 정보 조회 시 데이터 없어 예외 발생")
-    void getMemberByNickname_dataNotFoundException(){
+    void getChatMemberByNickname_dataNotFoundException(){
         // given
         when(memberRepository.findByNickname(anyString())).thenReturn(Optional.empty());
 
         // when
-        DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> chatService.getMemberByNickname(member1.getNickname()));
+        ChatNotFoundException fail = assertThrows(ChatNotFoundException.class, () -> chatService.getChatMemberByNickname(member1.getNickname()));
 
         // then
         assertEquals(fail.getHttpStatus(), ErrorCode.USER_NOT_FOUND.getStatus());
@@ -363,7 +364,7 @@ class ChatServiceTest extends ScheduleTest {
         when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_UserId(anyLong(), anyString())).thenReturn(Optional.empty());
 
         // when
-        ForbiddenScheduleException fail = assertThrows(ForbiddenScheduleException.class, () -> chatService.getTravelAttendee(schedule.getScheduleId(), member1.getUserId()));
+        ForbiddenChatException fail = assertThrows(ForbiddenChatException.class, () -> chatService.getTravelAttendee(schedule.getScheduleId(), member1.getUserId()));
 
         // then
         assertEquals(fail.getHttpStatus(), ErrorCode.FORBIDDEN_ACCESS_SCHEDULE.getStatus());

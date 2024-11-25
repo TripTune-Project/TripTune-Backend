@@ -10,12 +10,14 @@ import com.triptune.domain.schedule.ScheduleTest;
 import com.triptune.domain.schedule.dto.request.CreateScheduleRequest;
 import com.triptune.domain.schedule.dto.request.RouteRequest;
 import com.triptune.domain.schedule.dto.request.UpdateScheduleRequest;
+import com.triptune.domain.schedule.entity.ChatMessage;
 import com.triptune.domain.schedule.entity.TravelAttendee;
 import com.triptune.domain.schedule.entity.TravelRoute;
 import com.triptune.domain.schedule.entity.TravelSchedule;
 import com.triptune.domain.schedule.enumclass.AttendeePermission;
 import com.triptune.domain.schedule.enumclass.AttendeeRole;
 import com.triptune.domain.schedule.enumclass.ScheduleType;
+import com.triptune.domain.schedule.repository.ChatMessageRepository;
 import com.triptune.domain.schedule.repository.TravelAttendeeRepository;
 import com.triptune.domain.schedule.repository.TravelRouteRepository;
 import com.triptune.domain.schedule.repository.TravelScheduleRepository;
@@ -50,7 +52,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
-@ActiveProfiles("test")
+@ActiveProfiles("mongo")
 public class ScheduleControllerTest extends ScheduleTest {
     private final WebApplicationContext wac;
     private final TravelScheduleRepository travelScheduleRepository;
@@ -65,6 +67,7 @@ public class ScheduleControllerTest extends ScheduleTest {
     private final TravelRouteRepository travelRouteRepository;
     private final ApiContentTypeRepository apiContentTypeRepository;
     private final ProfileImageRepository profileImageRepository;
+    private final ChatMessageRepository chatMessageRepository;
 
     private MockMvc mockMvc;
 
@@ -81,7 +84,7 @@ public class ScheduleControllerTest extends ScheduleTest {
 
 
     @Autowired
-    public ScheduleControllerTest(WebApplicationContext wac, TravelScheduleRepository travelScheduleRepository, TravelAttendeeRepository travelAttendeeRepository, MemberRepository memberRepository, TravelPlaceRepository travelPlaceRepository, CountryRepository countryRepository, CityRepository cityRepository, DistrictRepository districtRepository, ApiCategoryRepository apiCategoryRepository, TravelImageRepository travelImageRepository, TravelRouteRepository travelRouteRepository, ApiContentTypeRepository apiContentTypeRepository, ProfileImageRepository profileImageRepository) {
+    public ScheduleControllerTest(WebApplicationContext wac, TravelScheduleRepository travelScheduleRepository, TravelAttendeeRepository travelAttendeeRepository, MemberRepository memberRepository, TravelPlaceRepository travelPlaceRepository, CountryRepository countryRepository, CityRepository cityRepository, DistrictRepository districtRepository, ApiCategoryRepository apiCategoryRepository, TravelImageRepository travelImageRepository, TravelRouteRepository travelRouteRepository, ApiContentTypeRepository apiContentTypeRepository, ProfileImageRepository profileImageRepository, ChatMessageRepository chatMessageRepository) {
         this.wac = wac;
         this.travelScheduleRepository = travelScheduleRepository;
         this.travelAttendeeRepository = travelAttendeeRepository;
@@ -95,6 +98,7 @@ public class ScheduleControllerTest extends ScheduleTest {
         this.travelRouteRepository = travelRouteRepository;
         this.apiContentTypeRepository = apiContentTypeRepository;
         this.profileImageRepository = profileImageRepository;
+        this.chatMessageRepository = chatMessageRepository;
     }
 
     @BeforeEach
@@ -104,6 +108,8 @@ public class ScheduleControllerTest extends ScheduleTest {
                 .apply(springSecurity())
                 .alwaysDo(print())
                 .build();
+
+        chatMessageRepository.deleteAll();
 
         member1 = memberRepository.save(createMember(null, "member1"));
         member2 = memberRepository.save(createMember(null, "member2"));
@@ -710,6 +716,30 @@ public class ScheduleControllerTest extends ScheduleTest {
     @DisplayName("deleteSchedule(): 일정 삭제")
     @WithMockUser(username = "member1")
     void deleteSchedule() throws Exception {
+        // given
+        TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
+        TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ));
+
+        member1.setTravelAttendeeList(new ArrayList<>(List.of(attendee1)));
+        member2.setTravelAttendeeList(new ArrayList<>(List.of(attendee2)));
+        schedule1.setTravelAttendeeList(new ArrayList<>(List.of(attendee1, attendee2)));
+
+        chatMessageRepository.save(createChatMessage("chat1", schedule1.getScheduleId(), member1, "hello1"));
+        chatMessageRepository.save(createChatMessage("chat2", schedule1.getScheduleId(), member1, "hello2"));
+        chatMessageRepository.save(createChatMessage("chat3", schedule1.getScheduleId(), member2, "hello3"));
+
+
+        // when, then
+        mockMvc.perform(delete("/api/schedules/{scheduleId}", schedule1.getScheduleId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true));
+
+    }
+
+    @Test
+    @DisplayName("deleteSchedule(): 일정 삭제 시 채팅 메시지 데이터 없는 경우")
+    @WithMockUser(username = "member1")
+    void deleteScheduleNoDataChatMessage() throws Exception {
         // given
         TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
         TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ));

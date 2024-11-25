@@ -12,12 +12,14 @@ import com.triptune.domain.schedule.dto.request.UpdateScheduleRequest;
 import com.triptune.domain.schedule.dto.response.CreateScheduleResponse;
 import com.triptune.domain.schedule.dto.response.ScheduleDetailResponse;
 import com.triptune.domain.schedule.dto.response.ScheduleInfoResponse;
+import com.triptune.domain.schedule.entity.ChatMessage;
 import com.triptune.domain.schedule.entity.TravelAttendee;
 import com.triptune.domain.schedule.entity.TravelRoute;
 import com.triptune.domain.schedule.entity.TravelSchedule;
 import com.triptune.domain.schedule.enumclass.AttendeePermission;
 import com.triptune.domain.schedule.enumclass.AttendeeRole;
 import com.triptune.domain.schedule.exception.ForbiddenScheduleException;
+import com.triptune.domain.schedule.repository.ChatMessageRepository;
 import com.triptune.domain.schedule.repository.TravelAttendeeRepository;
 import com.triptune.domain.schedule.repository.TravelRouteRepository;
 import com.triptune.domain.schedule.repository.TravelScheduleRepository;
@@ -67,6 +69,9 @@ public class ScheduleServiceTest extends ScheduleTest {
 
     @Mock
     private TravelRouteRepository travelRouteRepository;
+
+    @Mock
+    private ChatMessageRepository chatMessageRepository;
 
     private TravelSchedule schedule1;
     private TravelSchedule schedule2;
@@ -1012,31 +1017,31 @@ public class ScheduleServiceTest extends ScheduleTest {
     @DisplayName("checkUserPermission(): 사용자 편집 권한 중 ALL")
     void checkUserPermissionALL(){
         // given
-        AttendeePermission permission = AttendeePermission.ALL;
+        attendee1.setPermission(AttendeePermission.ALL);
 
         // when, then
-        assertDoesNotThrow(() -> scheduleService.checkUserPermission(permission));
+        assertDoesNotThrow(() -> scheduleService.checkUserPermission(attendee1));
     }
 
     @Test
     @DisplayName("checkUserPermission(): 사용자 편집 권한 중 EDIT")
     void checkUserPermissionEdit(){
         // given
-        AttendeePermission permission = AttendeePermission.EDIT;
+        attendee1.setPermission(AttendeePermission.EDIT);
 
         // when
         // then
-        assertDoesNotThrow(() -> scheduleService.checkUserPermission(permission));
+        assertDoesNotThrow(() -> scheduleService.checkUserPermission(attendee1));
     }
 
     @Test
     @DisplayName("checkUserPermission(): 사용자 편집 권한 체크 시 CHAT 권한으로 예외 발생")
     void checkUserPermissionCHAT_forbiddenScheduleException(){
         // given
-        AttendeePermission permission = AttendeePermission.CHAT;
+        attendee1.setPermission(AttendeePermission.CHAT);
 
         // when
-        ForbiddenScheduleException fail = assertThrows(ForbiddenScheduleException.class, () -> scheduleService.checkUserPermission(permission));
+        ForbiddenScheduleException fail = assertThrows(ForbiddenScheduleException.class, () -> scheduleService.checkUserPermission(attendee1));
 
         // then
         assertEquals(fail.getHttpStatus(), ErrorCode.FORBIDDEN_EDIT_SCHEDULE.getStatus());
@@ -1047,10 +1052,10 @@ public class ScheduleServiceTest extends ScheduleTest {
     @DisplayName("checkUserPermission(): 사용자 편집 권한 체크 시 READ 권한으로 예외 발생")
     void checkUserPermissionREAD_forbiddenScheduleException(){
         // given
-        AttendeePermission permission = AttendeePermission.READ;
+        attendee1.setPermission(AttendeePermission.READ);
 
         // when
-        ForbiddenScheduleException fail = assertThrows(ForbiddenScheduleException.class, () -> scheduleService.checkUserPermission(permission));
+        ForbiddenScheduleException fail = assertThrows(ForbiddenScheduleException.class, () -> scheduleService.checkUserPermission(attendee1));
 
         // then
         assertEquals(fail.getHttpStatus(), ErrorCode.FORBIDDEN_EDIT_SCHEDULE.getStatus());
@@ -1061,10 +1066,33 @@ public class ScheduleServiceTest extends ScheduleTest {
     @DisplayName("deleteSchedule(): 일정 삭제")
     void deleteSchedule(){
         // given
+        ChatMessage message1 = createChatMessage("chat1", schedule1.getScheduleId(), member1, "hello1");
+        ChatMessage message2 = createChatMessage("chat2", schedule1.getScheduleId(), member1, "hello2");
+        ChatMessage message3 = createChatMessage("chat3", schedule1.getScheduleId(), member2, "hello3");
+        List<ChatMessage> chatMessages = new ArrayList<>(List.of(message1, message2, message3));
+
         when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_UserId(anyLong(), anyString())).thenReturn(Optional.of(attendee1));
+        when(chatMessageRepository.findAllByScheduleId(anyLong())).thenReturn(chatMessages);
 
         // when
         assertDoesNotThrow(() -> scheduleService.deleteSchedule(schedule1.getScheduleId(), member1.getUserId()));
+
+        // then
+        verify(chatMessageRepository, times(1)).deleteAllByScheduleId(schedule1.getScheduleId());
+    }
+
+    @Test
+    @DisplayName("deleteSchedule(): 일정 삭제 시 채팅 메시지 없는 경우")
+    void deleteScheduleNoChatMessageData(){
+        // given
+        when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_UserId(anyLong(), anyString())).thenReturn(Optional.of(attendee1));
+        when(chatMessageRepository.findAllByScheduleId(anyLong())).thenReturn(new ArrayList<>());
+
+        // when
+        assertDoesNotThrow(() -> scheduleService.deleteSchedule(schedule1.getScheduleId(), member1.getUserId()));
+
+        // then
+        verify(chatMessageRepository, times(0)).deleteAllByScheduleId(schedule1.getScheduleId());
     }
 
     @Test
@@ -1080,17 +1108,51 @@ public class ScheduleServiceTest extends ScheduleTest {
         assertEquals(fail.getMessage(), ErrorCode.FORBIDDEN_DELETE_SCHEDULE.getMessage());
     }
 
+    @Test
+    @DisplayName("deleteChatMessageByScheduleId(): 일정 인덱스를 통해 채팅 메시지 삭제")
+    void deleteChatMessageByScheduleId(){
+        // given
+        ChatMessage message1 = createChatMessage("chat1", schedule1.getScheduleId(), member1, "hello1");
+        ChatMessage message2 = createChatMessage("chat2", schedule1.getScheduleId(), member1, "hello2");
+        ChatMessage message3 = createChatMessage("chat3", schedule1.getScheduleId(), member2, "hello3");
+        List<ChatMessage> chatMessages = new ArrayList<>(List.of(message1, message2, message3));
+
+       when(chatMessageRepository.findAllByScheduleId(anyLong())).thenReturn(chatMessages);
+
+        // when
+        assertDoesNotThrow(() -> scheduleService.deleteChatMessageByScheduleId(schedule1.getScheduleId()));
+
+        // then
+        verify(chatMessageRepository, times(1)).deleteAllByScheduleId(schedule1.getScheduleId());
+
+    }
+
 
     @Test
-    @DisplayName("getSavedMember(): 저장된 사용자 정보 조회")
-    void getSavedMember(){
+    @DisplayName("deleteChatMessageByScheduleId(): 일정 인덱스를 통해 채팅 메시지 삭제 시 채팅 메시지 데이터 없는 경우")
+    void deleteChatMessageByScheduleId_noData(){
+        // given
+        when(chatMessageRepository.findAllByScheduleId(anyLong())).thenReturn(new ArrayList<>());
+
+        // when
+        assertDoesNotThrow(() -> scheduleService.deleteChatMessageByScheduleId(schedule1.getScheduleId()));
+
+        // then
+        verify(chatMessageRepository, times(0)).deleteAllByScheduleId(schedule1.getScheduleId());
+
+    }
+
+
+    @Test
+    @DisplayName("getMemberByUserId(): 저장된 사용자 정보 조회")
+    void getMemberByUserId(){
         // given
         String userId = "member1";
 
         when(memberRepository.findByUserId(any())).thenReturn(Optional.of(member1));
 
         // when
-        Member response = scheduleService.getSavedMember(userId);
+        Member response = scheduleService.getMemberByUserId(userId);
 
         // then
         assertEquals(response.getUserId(), userId);
@@ -1100,13 +1162,13 @@ public class ScheduleServiceTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("getSavedMember(): 저장된 사용자 정보 조회 시 데이터 찾을 수 없어 예외 발생")
-    void getSavedMember_dataNotFoundException(){
+    @DisplayName("getMemberByUserId(): 저장된 사용자 정보 조회 시 데이터 찾을 수 없어 예외 발생")
+    void getMember_ByUserId_dataNotFoundException(){
         // given
         when(memberRepository.findByUserId(any())).thenReturn(Optional.empty());
 
         // when
-        DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> scheduleService.getSavedMember("notUser"));
+        DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> scheduleService.getMemberByUserId("notUser"));
 
         // then
         assertEquals(fail.getHttpStatus(), ErrorCode.USER_NOT_FOUND.getStatus());
@@ -1114,13 +1176,13 @@ public class ScheduleServiceTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("getSavedSchedule(): 저장된 일정 조회")
-    void getSavedSchedule(){
+    @DisplayName("getScheduleByScheduleId(): 저장된 일정 조회")
+    void getScheduleByScheduleId(){
         // given
         when(travelScheduleRepository.findByScheduleId(any())).thenReturn(Optional.of(schedule1));
 
         // when
-        TravelSchedule response = scheduleService.getSavedSchedule(schedule1.getScheduleId());
+        TravelSchedule response = scheduleService.getScheduleByScheduleId(schedule1.getScheduleId());
 
         // then
         assertEquals(response.getScheduleName(), schedule1.getScheduleName());
@@ -1129,13 +1191,13 @@ public class ScheduleServiceTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("getSavedSchedule(): 저장된 일정 조회 시 데이터 찾을 수 없어 예외 발생")
-    void getSavedSchedule_dataNotFoundException(){
+    @DisplayName("getScheduleByScheduleId(): 저장된 일정 조회 시 데이터 찾을 수 없어 예외 발생")
+    void getScheduleBySchedule_Id_dataNotFoundException(){
         // given
         when(travelScheduleRepository.findByScheduleId(any())).thenReturn(Optional.empty());
 
         // when
-        DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> scheduleService.getSavedSchedule(0L));
+        DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> scheduleService.getScheduleByScheduleId(0L));
 
         // then
         assertEquals(fail.getHttpStatus(), ErrorCode.SCHEDULE_NOT_FOUND.getStatus());
@@ -1143,15 +1205,15 @@ public class ScheduleServiceTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("getSavedPlace(): 저장된 여행지 조회 성공")
-    void getSavedPlace(){
+    @DisplayName("getPlaceByPlaceId(): 저장된 여행지 조회 성공")
+    void getPlaceByPlaceId(){
         // given
         Long placeId = travelPlace1.getPlaceId();
 
         when(travelPlaceRepository.findByPlaceId(anyLong())).thenReturn(Optional.of(travelPlace1));
 
         // when
-        TravelPlace response = scheduleService.getSavedPlace(placeId);
+        TravelPlace response = scheduleService.getPlaceByPlaceId(placeId);
 
         // then
         assertEquals(response.getPlaceId(), placeId);
@@ -1160,15 +1222,15 @@ public class ScheduleServiceTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("getSavedPlace(): 여행지가 존재하지 않아 예외 발생")
-    void getSavedPlaceNoTravelPlace_dataNotFoundException(){
+    @DisplayName("getPlaceByPlaceId(): 여행지가 존재하지 않아 예외 발생")
+    void getPlaceByPlaceNoTravelPlace_Id_dataNotFoundException(){
         // given
         Long placeId = travelPlace1.getPlaceId();
 
         when(travelPlaceRepository.findByPlaceId(anyLong())).thenReturn(Optional.empty());
 
         // when
-        DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> scheduleService.getSavedPlace(placeId));
+        DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> scheduleService.getPlaceByPlaceId(placeId));
 
         // then
         assertEquals(fail.getHttpStatus(), ErrorCode.PLACE_NOT_FOUND.getStatus());

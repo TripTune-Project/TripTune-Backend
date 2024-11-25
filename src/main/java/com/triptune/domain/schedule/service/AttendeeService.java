@@ -11,7 +11,6 @@ import com.triptune.domain.schedule.exception.AlreadyAttendeeException;
 import com.triptune.domain.schedule.exception.ForbiddenScheduleException;
 import com.triptune.domain.schedule.repository.TravelAttendeeRepository;
 import com.triptune.domain.schedule.repository.TravelScheduleRepository;
-import com.triptune.domain.travel.service.TravelService;
 import com.triptune.global.enumclass.ErrorCode;
 import com.triptune.global.exception.DataNotFoundException;
 import com.triptune.global.util.PageUtil;
@@ -20,10 +19,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
-
-import static com.triptune.domain.schedule.entity.QTravelAttendee.travelAttendee;
 
 @Service
 @Transactional
@@ -44,10 +39,10 @@ public class AttendeeService {
 
 
     public void createAttendee(Long scheduleId, String userId, CreateAttendeeRequest createAttendeeRequest) {
-        TravelSchedule schedule = getSavedTravelSchedule(scheduleId);
+        TravelSchedule schedule = getScheduleByScheduleId(scheduleId);
         validateAuthorPermission(scheduleId, userId);
 
-        Member guest = getSavedMember(createAttendeeRequest.getEmail());
+        Member guest = getMemberByEmail(createAttendeeRequest.getEmail());
         validateAttendeeNotExists(scheduleId, guest);
 
         TravelAttendee travelAttendee = TravelAttendee.of(schedule, guest, createAttendeeRequest.getPermission());
@@ -72,11 +67,11 @@ public class AttendeeService {
     }
 
 
-    public void removeAttendee(Long scheduleId, String userId) {
+    public void leaveScheduleAsGuest(Long scheduleId, String userId) {
         TravelAttendee attendee = travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_UserId(scheduleId, userId)
                 .orElseThrow(() -> new ForbiddenScheduleException(ErrorCode.FORBIDDEN_ACCESS_SCHEDULE));
 
-        if (attendee.isAuthor()){
+        if (attendee.getRole().isAuthor()){
             throw new ForbiddenScheduleException(ErrorCode.FORBIDDEN_REMOVE_ATTENDEE);
         }
 
@@ -84,13 +79,13 @@ public class AttendeeService {
     }
 
 
-    private Member getSavedMember(String email){
+    private Member getMemberByEmail(String email){
         return memberRepository.findByEmail(email)
                 .orElseThrow(() -> new DataNotFoundException(ErrorCode.USER_NOT_FOUND));
     }
 
 
-    private TravelSchedule getSavedTravelSchedule(Long scheduleId){
+    private TravelSchedule getScheduleByScheduleId(Long scheduleId){
         return travelScheduleRepository.findByScheduleId(scheduleId)
                 .orElseThrow(() -> new DataNotFoundException(ErrorCode.SCHEDULE_NOT_FOUND));
     }

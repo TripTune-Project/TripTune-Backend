@@ -135,12 +135,12 @@ public abstract class BaseTest {
                 .build();
     }
 
-    protected ChatMessage createChatMessage(String messageId, Long scheduleId, Long memberId, String nickname, String message){
+    protected ChatMessage createChatMessage(String messageId, Long scheduleId, Member member, String message){
         return ChatMessage.builder()
                 .messageId(messageId)
                 .scheduleId(scheduleId)
-                .memberId(memberId)
-                .nickname(nickname)
+                .memberId(member.getMemberId())
+                .nickname(member.getNickname())
                 .message(message)
                 .timestamp(LocalDateTime.now())
                 .build();
