@@ -28,6 +28,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -81,27 +82,39 @@ public class AttendeeServiceTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("getAttendees(): 일정 참석자 조회")
-    void getAttendees(){
+    @DisplayName("getAttendeesByScheduleId(): 일정 참석자 조회")
+    void getAttendeesByScheduleId(){
         // given
-        Pageable pageable = PageUtil.defaultPageable(1);
         List<TravelAttendee> travelAttendeeList = schedule1.getTravelAttendeeList();
 
-        when(travelAttendeeRepository.findAllByTravelSchedule_ScheduleId(pageable, schedule1.getScheduleId()))
-                .thenReturn(PageUtil.createPage(travelAttendeeList, pageable, travelAttendeeList.size()));
+        when(travelAttendeeRepository.findAllByTravelSchedule_ScheduleId(schedule1.getScheduleId()))
+                .thenReturn(travelAttendeeList);
 
         // when
-        Page<AttendeeResponse> response = attendeeService.getAttendees(schedule1.getScheduleId(), 1);
+        List<AttendeeResponse> response = attendeeService.getAttendeesByScheduleId(schedule1.getScheduleId());
 
         // then
-        List<AttendeeResponse> content = response.getContent();
-        assertEquals(response.getTotalElements(), travelAttendeeList.size());
-        assertEquals(content.get(0).getNickname(), attendee1.getMember().getNickname());
-        assertEquals(content.get(0).getRole(), attendee1.getRole().name());
-        assertEquals(content.get(0).getProfileUrl(), attendee1.getMember().getProfileImage().getS3ObjectUrl());
-        assertEquals(content.get(1).getNickname(), attendee2.getMember().getNickname());
-        assertEquals(content.get(1).getRole(), attendee2.getRole().name());
-        assertEquals(content.get(1).getProfileUrl(), attendee2.getMember().getProfileImage().getS3ObjectUrl());
+        assertEquals(response.size(), travelAttendeeList.size());
+        assertEquals(response.get(0).getNickname(), attendee1.getMember().getNickname());
+        assertEquals(response.get(0).getRole(), attendee1.getRole().name());
+        assertEquals(response.get(0).getProfileUrl(), attendee1.getMember().getProfileImage().getS3ObjectUrl());
+        assertEquals(response.get(1).getNickname(), attendee2.getMember().getNickname());
+        assertEquals(response.get(1).getRole(), attendee2.getRole().name());
+        assertEquals(response.get(1).getProfileUrl(), attendee2.getMember().getProfileImage().getS3ObjectUrl());
+    }
+
+    @Test
+    @DisplayName("getAttendeesByScheduleId(): 일정 참석자 조회 시 데이터 없는 경우")
+    void getAttendeesByScheduleIdNoData(){
+        // given
+        when(travelAttendeeRepository.findAllByTravelSchedule_ScheduleId(schedule1.getScheduleId()))
+                .thenReturn(Collections.emptyList());
+
+        // when
+        List<AttendeeResponse> response = attendeeService.getAttendeesByScheduleId(schedule1.getScheduleId());
+
+        // then
+        assertEquals(response.size(), 0);
     }
 
 

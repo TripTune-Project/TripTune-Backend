@@ -5,14 +5,14 @@ import com.triptune.domain.schedule.dto.request.CreateAttendeeRequest;
 import com.triptune.domain.schedule.service.AttendeeService;
 import com.triptune.global.aop.AttendeeCheck;
 import com.triptune.global.response.ApiResponse;
-import com.triptune.global.response.pagination.ApiPageResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/schedules/{scheduleId}")
@@ -25,11 +25,10 @@ public class AttendeeController {
     @AttendeeCheck
     @GetMapping("/attendees")
     @Operation(summary = "일정 참석자 조회", description = "일정 참석자를 조회합니다.")
-    public ApiPageResponse<AttendeeResponse> getAttendees(@PathVariable(name = "scheduleId") Long scheduleId,
-                                        @RequestParam(name = "page") int page){
-        Page<AttendeeResponse> response = attendeeService.getAttendees(scheduleId, page);
+    public ApiResponse<List<AttendeeResponse>> getAttendees(@PathVariable(name = "scheduleId") Long scheduleId){
+        List<AttendeeResponse> response = attendeeService.getAttendeesByScheduleId(scheduleId);
 
-        return ApiPageResponse.dataResponse(response);
+        return ApiResponse.dataResponse(response);
     }
 
     @PostMapping("/attendees")

@@ -12,7 +12,6 @@ import java.util.Optional;
 
 @Repository
 public interface TravelAttendeeRepository extends JpaRepository<TravelAttendee, Long> {
-    Page<TravelAttendee> findAllByTravelSchedule_ScheduleId(Pageable pageable, Long scheduleId);
     List<TravelAttendee> findAllByTravelSchedule_ScheduleId(Long scheduleId);
     boolean existsByTravelSchedule_ScheduleIdAndMember_UserId(Long scheduleId, String userId);
     Optional<TravelAttendee> findByTravelSchedule_ScheduleIdAndMember_UserId(Long scheduleId, String userId);

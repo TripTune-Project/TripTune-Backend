@@ -99,13 +99,11 @@ public class AttendeeControllerTest extends ScheduleTest {
     @DisplayName("getAttendees(): 일정 참석자 조회")
     @WithMockUser(username = "member1")
     void getAttendees() throws Exception {
-        mockMvc.perform(get("/api/schedules/{scheduleId}/attendees", schedule1.getScheduleId())
-                        .param("page", "1"))
+        mockMvc.perform(get("/api/schedules/{scheduleId}/attendees", schedule1.getScheduleId()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.totalElements").value(schedule1.getTravelAttendeeList().size()))
-                .andExpect(jsonPath("$.data.content[0].nickname").value(member1.getNickname()))
-                .andExpect(jsonPath("$.data.content[0].profileUrl").value(member1.getProfileImage().getS3ObjectUrl()))
-                .andExpect(jsonPath("$.data.content[0].permission").value(attendee1.getPermission().name()));
+                .andExpect(jsonPath("$.data[0].nickname").value(member1.getNickname()))
+                .andExpect(jsonPath("$.data[0].profileUrl").value(member1.getProfileImage().getS3ObjectUrl()))
+                .andExpect(jsonPath("$.data[0].permission").value(attendee1.getPermission().name()));
 
     }
 
@@ -113,8 +111,7 @@ public class AttendeeControllerTest extends ScheduleTest {
     @DisplayName("getAttendees(): 일정 참석자 조회 시 일정 데이터 존재하지 않아 예외 발생")
     @WithMockUser(username = "member1")
     void getAttendeesNoScheduleData_notFoundException() throws Exception {
-        mockMvc.perform(get("/api/schedules/{scheduleId}/attendees", 0L)
-                        .param("page", "1"))
+        mockMvc.perform(get("/api/schedules/{scheduleId}/attendees", 0L))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value(ErrorCode.SCHEDULE_NOT_FOUND.getMessage()));
@@ -125,8 +122,7 @@ public class AttendeeControllerTest extends ScheduleTest {
     @DisplayName("getAttendees(): 일정 참석자 조회 시 접근 권한이 없어 예외 발생")
     @WithMockUser(username = "member1")
     void getAttendeesNotAccess_forbiddenScheduleException() throws Exception {
-        mockMvc.perform(get("/api/schedules/{scheduleId}/attendees", schedule2.getScheduleId())
-                        .param("page", "1"))
+        mockMvc.perform(get("/api/schedules/{scheduleId}/attendees", schedule2.getScheduleId()))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value(ErrorCode.FORBIDDEN_ACCESS_SCHEDULE.getMessage()));

@@ -1,4 +1,5 @@
 HELP.md
+*.p12
 *.env
 .gradle
 build/

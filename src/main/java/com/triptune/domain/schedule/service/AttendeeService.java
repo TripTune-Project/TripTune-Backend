@@ -13,12 +13,12 @@ import com.triptune.domain.schedule.repository.TravelAttendeeRepository;
 import com.triptune.domain.schedule.repository.TravelScheduleRepository;
 import com.triptune.global.enumclass.ErrorCode;
 import com.triptune.global.exception.DataNotFoundException;
-import com.triptune.global.util.PageUtil;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -30,11 +30,10 @@ public class AttendeeService {
     private final MemberRepository memberRepository;
 
 
-    public Page<AttendeeResponse> getAttendees(Long scheduleId, int page) {
-        Pageable pageable = PageUtil.defaultPageable(page);
-        Page<TravelAttendee> travelAttendeePage = travelAttendeeRepository.findAllByTravelSchedule_ScheduleId(pageable, scheduleId);
+    public List<AttendeeResponse> getAttendeesByScheduleId(Long scheduleId) {
+        List<TravelAttendee> travelAttendees = travelAttendeeRepository.findAllByTravelSchedule_ScheduleId(scheduleId);
 
-        return travelAttendeePage.map(AttendeeResponse::from);
+        return travelAttendees.stream().map(AttendeeResponse::from).collect(Collectors.toList());
     }
 
 
