@@ -127,7 +127,7 @@ public class RouteControllerTest extends ScheduleTest {
 
 
     @Test
-    @DisplayName("getTravelRoutes(): 여행 루트 조회 성공")
+    @DisplayName("여행 루트 조회 성공")
     @WithMockUser(username = "member1")
     void getTravelRoutes() throws Exception {
         // given
@@ -153,7 +153,7 @@ public class RouteControllerTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("getTravelRoutes(): 여행 루트 조회 시 저장된 여행 루트 데이터 없는 경우")
+    @DisplayName("여행 루트 조회 시 저장된 여행 루트 데이터 없는 경우")
     @WithMockUser(username = "member1")
     void getTravelRoutesWithoutData() throws Exception {
         // given
@@ -166,7 +166,7 @@ public class RouteControllerTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("getTravelRoutes(): 여행 루트 조회 시 일정 데이터 존재하지 않아 예외 발생")
+    @DisplayName("여행 루트 조회 시 일정 데이터 존재하지 않아 예외 발생")
     @WithMockUser(username = "member1")
     void getTravelRoutes_dataNotFoundException() throws Exception {
         // given
@@ -179,7 +179,7 @@ public class RouteControllerTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("getTravelPlaces(): 여행지 조회 시 해당 일정에 접근 권한이 없어 예외 발생")
+    @DisplayName("여행지 조회 시 해당 일정에 접근 권한이 없어 예외 발생")
     @WithMockUser(username = "member1")
     void getTravelRoutes_forbiddenScheduleException() throws Exception {
         // given

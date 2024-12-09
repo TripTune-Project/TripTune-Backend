@@ -95,7 +95,7 @@ public class ChatControllerTest extends ScheduleTest {
 
 
     @Test
-    @DisplayName("getChatMessages(): 대화 내용 조회")
+    @DisplayName("채팅 내용 조회")
     @WithMockUser(username = "member1")
     void getChatMessages() throws Exception {
         ChatMessage message1 = chatMessageRepository.save(createChatMessage("id1", schedule.getScheduleId(), member1, "hello1"));
@@ -124,7 +124,7 @@ public class ChatControllerTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("getChatMessages(): 대화 내용 조회 시 데이터가 없는 경우")
+    @DisplayName("채팅 내용 조회 시 데이터가 없는 경우")
     @WithMockUser(username = "member1")
     void getChatMessagesNoMessage() throws Exception {
         mockMvc.perform(get("/api/schedules/{scheduleId}/chats", schedule.getScheduleId())

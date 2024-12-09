@@ -27,18 +27,18 @@ public class ScheduleController {
 
     @GetMapping
     @Operation(summary = "전체 일정 목록 조회", description = "작성한 전체 일정을 조회합니다.")
-    public ApiSchedulePageResponse<ScheduleInfoResponse> getSchedules(@RequestParam(name = "page") int page){
+    public ApiSchedulePageResponse<ScheduleInfoResponse> getAllSchedulesByUserId(@RequestParam(name = "page") int page){
         String userId = SecurityContextHolder.getContext().getAuthentication().getName();
-        SchedulePageResponse<ScheduleInfoResponse> response = scheduleService.getSchedules(page, userId);
+        SchedulePageResponse<ScheduleInfoResponse> response = scheduleService.getAllSchedulesByUserId(page, userId);
 
         return ApiSchedulePageResponse.dataResponse(response);
     }
 
     @GetMapping("/shared")
     @Operation(summary = "공유된 일정 목록 조회", description = "작성한 일정 중 공유된 일정을 조회합니다.")
-    public ApiSchedulePageResponse<ScheduleInfoResponse> getSharedSchedules(@RequestParam(name = "page") int page){
+    public ApiSchedulePageResponse<ScheduleInfoResponse> getSharedSchedulesByUserId(@RequestParam(name = "page") int page){
         String userId = SecurityContextHolder.getContext().getAuthentication().getName();
-        SchedulePageResponse<ScheduleInfoResponse> response = scheduleService.getSharedSchedules(page, userId);
+        SchedulePageResponse<ScheduleInfoResponse> response = scheduleService.getSharedSchedulesByUserId(page, userId);
 
         return ApiSchedulePageResponse.dataResponse(response);
     }

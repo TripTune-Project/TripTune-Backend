@@ -96,7 +96,7 @@ public class TravelScheduleRepositoryTest extends ScheduleTest {
 
 
     @Test
-    @DisplayName("findTravelSchedulesByUserId(): 전체 일정 목록 조회")
+    @DisplayName("전체 일정 목록 조회")
     void findTravelSchedulesByUserId(){
         // given
         Pageable pageable = PageUtil.schedulePageable(1);
@@ -124,7 +124,7 @@ public class TravelScheduleRepositoryTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("findTravelSchedulesByUserId(): 전체 일정 목록 조회 시 데이터가 없는 경우")
+    @DisplayName("전체 일정 목록 조회 시 데이터가 없는 경우")
     void findTravelSchedulesByUserIdWithoutData(){
         // given
         Pageable pageable = PageUtil.schedulePageable(1);
@@ -139,7 +139,7 @@ public class TravelScheduleRepositoryTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("findSharedTravelSchedulesByUserId(): 공유된 일정 목록 조회")
+    @DisplayName("공유된 일정 목록 조회")
     void findSharedTravelSchedulesByUserId(){
         // given
         Pageable pageable = PageUtil.schedulePageable(1);
@@ -168,7 +168,7 @@ public class TravelScheduleRepositoryTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("findSharedTravelSchedulesByUserId(): 공유된 일정 목록 조회 시 데이터가 없는 경우")
+    @DisplayName("공유된 일정 목록 조회 시 데이터가 없는 경우")
     void findSharedTravelSchedulesByUserIdWithoutData(){
         // given
         Pageable pageable = PageUtil.schedulePageable(1);
@@ -183,7 +183,7 @@ public class TravelScheduleRepositoryTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("countTravelSchedulesByUserId(): 전체 일정 갯수 조회")
+    @DisplayName("전체 일정 갯수 조회")
     void countTravelSchedulesByUserId(){
         // given
         TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
@@ -205,7 +205,7 @@ public class TravelScheduleRepositoryTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("countTravelSchedulesByUserId(): 일정 갯수 조회 시 데이터가 없는 경우")
+    @DisplayName("일정 갯수 조회 시 데이터가 없는 경우")
     void countTravelSchedulesByUserIdWithoutData(){
         // given
         // when
@@ -216,7 +216,7 @@ public class TravelScheduleRepositoryTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("countSharedTravelSchedulesByUserId(): 공유된 일정 갯수 조회")
+    @DisplayName("공유된 일정 갯수 조회")
     void countSharedTravelSchedulesByUserId(){
         // given
         TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
@@ -239,7 +239,7 @@ public class TravelScheduleRepositoryTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("countSharedTravelSchedulesByUserId(): 공유된 일정 갯수 조회 시 데이터가 없는 경우")
+    @DisplayName("공유된 일정 갯수 조회 시 데이터가 없는 경우")
     void countSharedTravelSchedulesByUserIdWithoutData(){
         // given
         // when
@@ -250,7 +250,7 @@ public class TravelScheduleRepositoryTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("searchTravelSchedulesByUserId(): 전체 일정 목록 중 검색")
+    @DisplayName("전체 일정 목록 중 검색")
     void searchTravelSchedulesByUserId(){
         // given
         TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
@@ -280,7 +280,7 @@ public class TravelScheduleRepositoryTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("searchTravelSchedulesByUserId(): 전체 일정 목록 검색 시 데이터가 없는 경우")
+    @DisplayName("전체 일정 목록 검색 시 데이터가 없는 경우")
     void searchTravelSchedulesByUserIdWithoutData(){
         // given
         Pageable pageable = PageUtil.schedulePageable(1);
@@ -296,7 +296,7 @@ public class TravelScheduleRepositoryTest extends ScheduleTest {
 
 
     @Test
-    @DisplayName("searchSharedTravelSchedulesByUserIdAndKeyword(): 공유된 일정 목록 검색")
+    @DisplayName("공유된 일정 목록 검색")
     void searchSharedTravelSchedulesByUserIdAndKeyword(){
         // given
         TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
@@ -325,7 +325,7 @@ public class TravelScheduleRepositoryTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("searchSharedTravelSchedulesByUserIdAndKeyword(): 공유된 일정 목록 검색 시 데이터가 없는 경우")
+    @DisplayName("공유된 일정 목록 검색 시 데이터가 없는 경우")
     void searchSharedTravelSchedulesByUserIdAndKeywordWithoutData(){
         // given
         Pageable pageable = PageUtil.schedulePageable(1);
@@ -340,7 +340,7 @@ public class TravelScheduleRepositoryTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("countTravelSchedulesByUserIdAndKeyword(): 전체 일정 키워드 검색 갯수 조회")
+    @DisplayName("전체 일정 키워드 검색 갯수 조회")
     void countTravelSchedulesByUserIdAndKeyword(){
         // given
         TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
@@ -362,7 +362,7 @@ public class TravelScheduleRepositoryTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("countTravelSchedulesByUserIdAndKeyword(): 일정 갯수 키워드 검색 시 데이터가 없는 경우")
+    @DisplayName("일정 갯수 키워드 검색 시 데이터가 없는 경우")
     void countTravelSchedulesByUserIdAndKeywordWithoutData(){
         // given
         // when
@@ -373,7 +373,7 @@ public class TravelScheduleRepositoryTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("countSharedTravelSchedulesByUserIdAndKeyword(): 공유된 일정 키워드 검색 갯수 조회")
+    @DisplayName("공유된 일정 키워드 검색 갯수 조회")
     void countSharedTravelSchedulesByUserIdAndKeyword(){
         // given
         TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
@@ -396,7 +396,7 @@ public class TravelScheduleRepositoryTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("countSharedTravelSchedulesByUserIdAndKeyword(): 공유된 일정 키워드 검색 갯수 조회 시 데이터가 없는 경우")
+    @DisplayName("공유된 일정 키워드 검색 갯수 조회 시 데이터가 없는 경우")
     void countSharedTravelSchedulesByUserIdAndKeywordWithoutData(){
         // given
         // when
@@ -407,7 +407,7 @@ public class TravelScheduleRepositoryTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("deleteById(): 일정 삭제")
+    @DisplayName("일정 삭제")
     void deleteById(){
         // given
         // when

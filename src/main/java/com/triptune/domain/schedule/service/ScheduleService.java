@@ -51,7 +51,7 @@ public class ScheduleService {
     private final ChatMessageRepository chatMessageRepository;
 
 
-    public SchedulePageResponse<ScheduleInfoResponse> getSchedules(int page, String userId) {
+    public SchedulePageResponse<ScheduleInfoResponse> getAllSchedulesByUserId(int page, String userId) {
         Pageable pageable = PageUtil.schedulePageable(page);
         Page<TravelSchedule> schedulePage = travelScheduleRepository.findTravelSchedulesByUserId(pageable, userId);
 
@@ -63,7 +63,7 @@ public class ScheduleService {
     }
 
 
-    public SchedulePageResponse<ScheduleInfoResponse> getSharedSchedules(int page, String userId) {
+    public SchedulePageResponse<ScheduleInfoResponse> getSharedSchedulesByUserId(int page, String userId) {
         Pageable pageable = PageUtil.schedulePageable(page);
         Page<TravelSchedule> schedulePage = travelScheduleRepository.findSharedTravelSchedulesByUserId(pageable, userId);
 
@@ -190,7 +190,7 @@ public class ScheduleService {
     public void updateSchedule(String userId, Long scheduleId, UpdateScheduleRequest updateScheduleRequest) {
         TravelSchedule schedule = getScheduleByScheduleId(scheduleId);
         TravelAttendee attendee = getAttendeeInfo(schedule, userId);
-        checkUserPermission(attendee);
+        checkScheduleEditPermission(attendee);
 
         schedule.set(updateScheduleRequest);
         updateTravelRouteInSchedule(schedule, updateScheduleRequest.getTravelRoute());
@@ -202,7 +202,7 @@ public class ScheduleService {
                 .orElseThrow(() -> new DataNotFoundException(ErrorCode.SCHEDULE_NOT_FOUND));
     }
 
-    public void checkUserPermission(TravelAttendee attendee){
+    public void checkScheduleEditPermission(TravelAttendee attendee){
         if (!attendee.getPermission().isEnableEdit()){
             throw new ForbiddenScheduleException(ErrorCode.FORBIDDEN_EDIT_SCHEDULE);
         }

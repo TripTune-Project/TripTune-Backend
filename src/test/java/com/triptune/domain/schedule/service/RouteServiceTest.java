@@ -83,7 +83,7 @@ public class RouteServiceTest extends ScheduleTest {
 
 
     @Test
-    @DisplayName("getTravelRoutes(): 여행 루트 조회 성공")
+    @DisplayName("여행 루트 조회")
     void getTravelRoutes(){
         // given
         Pageable pageable = PageUtil.defaultPageable(1);
@@ -105,7 +105,7 @@ public class RouteServiceTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("getTravelRoutes(): 여행 루트 조회 시 저장된 여행 루트 데이터 없는 경우")
+    @DisplayName("여행 루트 조회 시 저장된 여행 루트 데이터 없는 경우")
     void getTravelRoutesWithoutData(){
         // given
         Pageable pageable = PageUtil.defaultPageable(1);

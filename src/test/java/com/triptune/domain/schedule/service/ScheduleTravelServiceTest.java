@@ -61,7 +61,7 @@ public class ScheduleTravelServiceTest extends ScheduleTest {
 
 
     @Test
-    @DisplayName("getTravelPlaces(): 여행지 조회 성공")
+    @DisplayName("여행지 조회")
     void getTravelPlaces(){
         // given
         List<TravelPlace> placeList = new ArrayList<>(List.of(travelPlace1, travelPlace2));
@@ -80,7 +80,7 @@ public class ScheduleTravelServiceTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("getTravelPlaces(): 여행지 조회 시 여행지 데이터 없는 경우")
+    @DisplayName("여행지 조회 시 여행지 데이터 없는 경우")
     void getTravelPlacesWithoutData(){
         // given
         Pageable pageable = PageUtil.travelPageable(1);
@@ -98,7 +98,7 @@ public class ScheduleTravelServiceTest extends ScheduleTest {
 
 
     @Test
-    @DisplayName("searchTravelPlaces(): 여행지 검색 성공")
+    @DisplayName("여행지 검색")
     void searchTravelPlaces(){
         // given
         String keyword = "중구";
@@ -121,7 +121,7 @@ public class ScheduleTravelServiceTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("searchTravelPlaces(): 여행지 검색 시 검색 결과 존재하지 않는 경우")
+    @DisplayName("여행지 검색 시 검색 결과 존재하지 않는 경우")
     void searchTravelPlacesWithoutData(){
         // given
         String keyword = "ㅁㄴㅇㄹ";

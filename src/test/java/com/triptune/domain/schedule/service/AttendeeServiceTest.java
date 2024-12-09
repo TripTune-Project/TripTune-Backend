@@ -79,7 +79,7 @@ public class AttendeeServiceTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("getAttendeesByScheduleId(): 일정 참석자 조회")
+    @DisplayName("일정 참석자 조회")
     void getAttendeesByScheduleId(){
         // given
         List<TravelAttendee> travelAttendeeList = schedule1.getTravelAttendeeList();
@@ -101,7 +101,7 @@ public class AttendeeServiceTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("getAttendeesByScheduleId(): 일정 참석자 조회 시 데이터 없는 경우")
+    @DisplayName("일정 참석자 조회 시 데이터 없는 경우")
     void getAttendeesByScheduleIdNoData(){
         // given
         when(travelAttendeeRepository.findAllByTravelSchedule_ScheduleId(schedule1.getScheduleId()))
@@ -116,7 +116,7 @@ public class AttendeeServiceTest extends ScheduleTest {
 
 
     @Test
-    @DisplayName("createAttendee(): 일정 참석자 추가")
+    @DisplayName("일정 참석자 추가")
     void createAttendee(){
         // given
         CreateAttendeeRequest createAttendeeRequest = createAttendeeRequest(member3.getEmail(), AttendeePermission.CHAT);
@@ -134,7 +134,7 @@ public class AttendeeServiceTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("createAttendee(): 일정 참석자 추가 시 일정 찾을 수 없어 예외 발생")
+    @DisplayName("일정 참석자 추가 시 일정 찾을 수 없어 예외 발생")
     void createAttendeeNotFoundSchedule_dataNotFoundException(){
         // given
         CreateAttendeeRequest createAttendeeRequest = createAttendeeRequest(member3.getEmail(), AttendeePermission.CHAT);
@@ -150,7 +150,7 @@ public class AttendeeServiceTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("createAttendee(): 일정 참석자 추가 시 참석자 5명 넘어 예외 발생")
+    @DisplayName("일정 참석자 추가 시 참석자 5명 넘어 예외 발생")
     void createAttendeeOver5_conflictAttendeeException(){
         // given
         CreateAttendeeRequest createAttendeeRequest = createAttendeeRequest(member3.getEmail(), AttendeePermission.CHAT);
@@ -167,7 +167,7 @@ public class AttendeeServiceTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("createAttendee(): 일정 참석자 추가 시 작성자가 아닌 사람의 요청으로 예외 발생")
+    @DisplayName("일정 참석자 추가 시 작성자가 아닌 사람의 요청으로 예외 발생")
     void createAttendeeNotAuthor_forbiddenScheduleException(){
         // given
         CreateAttendeeRequest createAttendeeRequest = createAttendeeRequest(member3.getEmail(), AttendeePermission.CHAT);
@@ -186,7 +186,7 @@ public class AttendeeServiceTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("createAttendee(): 일정 참석자 추가 시 참석자 정보를 찾을 수 없어 예외 발생")
+    @DisplayName("일정 참석자 추가 시 참석자 정보를 찾을 수 없어 예외 발생")
     void createAttendeeNotMember_forbiddenScheduleException(){
         // given
         CreateAttendeeRequest createAttendeeRequest = createAttendeeRequest(member3.getEmail(), AttendeePermission.CHAT);
@@ -206,7 +206,7 @@ public class AttendeeServiceTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("createAttendee(): 일정 참석자 추가 시 이미 참석자로 존재해 예외 발생")
+    @DisplayName("일정 참석자 추가 시 이미 참석자로 존재해 예외 발생")
     void createAttendee_alreadyAttendeeException(){
         // given
         CreateAttendeeRequest createAttendeeRequest = createAttendeeRequest(member3.getEmail(), AttendeePermission.CHAT);
@@ -229,7 +229,7 @@ public class AttendeeServiceTest extends ScheduleTest {
 
 
     @Test
-    @DisplayName("leaveScheduleAsGuest(): 일정 참석자 제거")
+    @DisplayName("일정 나가기")
     void leaveScheduleAsGuest(){
         // given
         when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_UserId(anyLong(), anyString())).thenReturn(Optional.of(attendee2));
@@ -242,7 +242,7 @@ public class AttendeeServiceTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("leaveScheduleAsGuest(): 일정 참석자 제거 시 참가자 정보가 없어 예외 발생")
+    @DisplayName("일정 나가기 요청 시 참가자 정보가 없어 예외 발생")
     void leaveScheduleAsGuest_forbiddenScheduleException(){
         // given
         when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_UserId(anyLong(), anyString())).thenReturn(Optional.empty());
@@ -256,7 +256,7 @@ public class AttendeeServiceTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("leaveScheduleAsGuest(): 일정 참석자 제거 시 사용자가 작성자여서 예외 발생")
+    @DisplayName("일정 나가기 요청 시 요청자가 작성자여서 예외 발생")
     void leaveScheduleAsGuestIsAuthor_forbiddenScheduleException(){
         // given
         when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_UserId(anyLong(), anyString())).thenReturn(Optional.of(attendee1));

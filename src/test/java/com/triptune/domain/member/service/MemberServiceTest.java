@@ -1,6 +1,5 @@
 package com.triptune.domain.member.service;
 
-import com.triptune.domain.email.service.EmailService;
 import com.triptune.domain.member.MemberTest;
 import com.triptune.domain.member.dto.LogoutDTO;
 import com.triptune.domain.member.dto.request.LoginRequest;
@@ -66,7 +65,7 @@ public class MemberServiceTest extends MemberTest {
 
 
     @Test
-    @DisplayName("join(): 회원가입 성공")
+    @DisplayName("회원가입")
     void join(){
         // given
         MemberRequest request = createMemberRequest();
@@ -83,7 +82,7 @@ public class MemberServiceTest extends MemberTest {
     }
 
     @Test
-    @DisplayName("join(): 이미 가입한 아이디가 존재해 예외 발생")
+    @DisplayName("회원가입 시 이미 가입한 아이디가 존재해 예외 발생")
     void join_userIdExistException(){
         // given
         MemberRequest request = createMemberRequest();
@@ -101,7 +100,7 @@ public class MemberServiceTest extends MemberTest {
     }
 
     @Test
-    @DisplayName("join(): 이미 가입한 닉네임이 존재해 예외 발생")
+    @DisplayName("회원가입 시 이미 가입한 닉네임이 존재해 예외 발생")
     void join_nicknameExistException(){
         // given
         MemberRequest request = createMemberRequest();
@@ -119,7 +118,7 @@ public class MemberServiceTest extends MemberTest {
     }
 
     @Test
-    @DisplayName("join(): 이미 가입한 닉네임이 존재해 예외 발생")
+    @DisplayName("회원가입 시 이미 가입한 닉네임이 존재해 예외 발생")
     void join_emailExistException(){
         // given
         MemberRequest request = createMemberRequest();
@@ -138,7 +137,7 @@ public class MemberServiceTest extends MemberTest {
     }
 
     @Test
-    @DisplayName("login(): 로그인 성공")
+    @DisplayName("로그인")
     void login(){
         // given
         LoginRequest loginRequest = createLoginRequest(member.getUserId(), passwordToken);
@@ -158,7 +157,7 @@ public class MemberServiceTest extends MemberTest {
     }
 
     @Test
-    @DisplayName("login(): 로그인 시 사용자 데이터 없어 예외 발생")
+    @DisplayName("로그인 시 사용자 데이터 없어 예외 발생")
     void loginNotFoundUser_failLoginException(){
         // given
         LoginRequest loginRequest = createLoginRequest(member.getUserId(), passwordToken);
@@ -174,7 +173,7 @@ public class MemberServiceTest extends MemberTest {
     }
 
     @Test
-    @DisplayName("login(): 로그인 시 비밀번호 맞지 않아 예외 발생")
+    @DisplayName("로그인 시 비밀번호 맞지 않아 예외 발생")
     void loginMismatchPassword_failLoginException(){
         // given
         LoginRequest loginRequest = createLoginRequest(member.getUserId(), passwordToken);
@@ -192,7 +191,7 @@ public class MemberServiceTest extends MemberTest {
 
 
     @Test
-    @DisplayName("logout(): 로그아웃 성공")
+    @DisplayName("로그아웃")
     void logout(){
         // given
         LogoutDTO request = createLogoutDTO(member.getNickname());
@@ -208,7 +207,7 @@ public class MemberServiceTest extends MemberTest {
     }
 
     @Test
-    @DisplayName("logout(): 로그아웃 요청 시 사용자 데이터 없어 예외 발생")
+    @DisplayName("로그아웃 요청 시 사용자 데이터 없어 예외 발생")
     void logout_dataNotFoundException(){
         // given
         LogoutDTO request = createLogoutDTO("notMember");
@@ -226,7 +225,7 @@ public class MemberServiceTest extends MemberTest {
 
 
     @Test
-    @DisplayName("refreshToken(): refresh token 갱신 성공")
+    @DisplayName("refresh token 갱신 성공")
     void refreshToken(){
         // given
         Claims mockClaims = Jwts.claims().setSubject("test");
@@ -248,7 +247,7 @@ public class MemberServiceTest extends MemberTest {
 
 
     @Test
-    @DisplayName("refreshToken(): 저장된 refresh token 과 요청 refresh token 이 불일치해 예외 발생")
+    @DisplayName("토큰 갱신 시 저장된 refresh token 과 요청 refresh token 이 불일치해 예외 발생")
     void misMatchRefreshToken_customJwtBadRequestException() {
         // given
         String notEqualRefreshToken = "NotEqualRefreshToken";
@@ -269,7 +268,7 @@ public class MemberServiceTest extends MemberTest {
     }
 
     @Test
-    @DisplayName("changePassword(): 비밀번호 변경 성공")
+    @DisplayName("비밀번호 변경")
     void changePassword(){
         // given
         String newPassword = "newPassword";
@@ -293,7 +292,7 @@ public class MemberServiceTest extends MemberTest {
     }
 
     @Test
-    @DisplayName("changePassword(): 비밀번호 변경 토큰 유효 시간이 만료되어 예외 발생")
+    @DisplayName("비밀번호 변경 시 비밀번호 토큰 유효 시간이 만료되어 예외 발생")
     void changePassword_changePasswordException(){
         // given
         String newPassword = "newPassword";
@@ -309,7 +308,7 @@ public class MemberServiceTest extends MemberTest {
     }
 
     @Test
-    @DisplayName("changePassword(): 사용자 정보를 찾을 수 없어 얘외 발생")
+    @DisplayName("비밀번호 변경 시 사용자 정보를 찾을 수 없어 얘외 발생")
     void changePassword_dataNotFoundException(){
         // given
         String newPassword = "newPassword";
@@ -327,7 +326,7 @@ public class MemberServiceTest extends MemberTest {
     }
 
     @Test
-    @DisplayName("validateUniqueMemberInfo(): 중복된 사용자 정보 체크")
+    @DisplayName("사용자 중복 체크")
     void validateUniqueMemberInfo(){
         // given
         MemberRequest request = createMemberRequest();
@@ -343,7 +342,7 @@ public class MemberServiceTest extends MemberTest {
     }
 
     @Test
-    @DisplayName("validateUniqueMemberInfo(): 이미 가입한 아이디가 존재해 예외 발생")
+    @DisplayName("사용자 중복 체크 시 이미 가입한 아이디가 존재해 예외 발생")
     void validateUniqueMemberInfo_userIdDataExistException(){
         // given
         MemberRequest request = createMemberRequest();
@@ -360,7 +359,7 @@ public class MemberServiceTest extends MemberTest {
     }
 
     @Test
-    @DisplayName("validateUniqueMemberInfo(): 이미 가입한 닉네임이 존재해 예외 발생")
+    @DisplayName("사용자 중복 체크 시 이미 가입한 닉네임이 존재해 예외 발생")
     void validateUniqueMemberInfo_nicknameDataExistException(){
         // given
         MemberRequest request = createMemberRequest();
@@ -378,7 +377,7 @@ public class MemberServiceTest extends MemberTest {
     }
 
     @Test
-    @DisplayName("validateUniqueMemberInfo(): 이미 가입한 이메일이 존재해 예외 발생")
+    @DisplayName("사용자 중복 체크 시 이미 가입한 이메일이 존재해 예외 발생")
     void validateUniqueMemberInfo_emailDataExistException(){
         // given
         MemberRequest request = createMemberRequest();
@@ -397,7 +396,7 @@ public class MemberServiceTest extends MemberTest {
     }
 
     @Test
-    @DisplayName("getSavedMemberByEmail(): 이메일을 이용에 저장된 사용자 정보 조회")
+    @DisplayName("이메일을 이용해 저장된 사용자 정보 조회")
     void getMemberByEmail(){
         // given
         when(memberRepository.findByEmail(anyString())).thenReturn(Optional.of(member));
@@ -412,7 +411,7 @@ public class MemberServiceTest extends MemberTest {
     }
 
     @Test
-    @DisplayName("getSavedMemberByEmail() : 사용자 정보를 찾을 수 없어 예외 발생")
+    @DisplayName("이메일로 사용자 정보 조회 시 데이터 없어 예외 발생")
     void getMemberByEmail_dataNotFoundException(){
         // given
         String email = "test@email.com";
