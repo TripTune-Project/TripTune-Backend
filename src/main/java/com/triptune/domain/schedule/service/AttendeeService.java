@@ -7,7 +7,7 @@ import com.triptune.domain.schedule.dto.response.AttendeeResponse;
 import com.triptune.domain.schedule.entity.TravelAttendee;
 import com.triptune.domain.schedule.entity.TravelSchedule;
 import com.triptune.domain.schedule.enumclass.AttendeeRole;
-import com.triptune.domain.schedule.exception.AlreadyAttendeeException;
+import com.triptune.domain.schedule.exception.ConflictAttendeeException;
 import com.triptune.domain.schedule.exception.ForbiddenScheduleException;
 import com.triptune.domain.schedule.repository.TravelAttendeeRepository;
 import com.triptune.domain.schedule.repository.TravelScheduleRepository;
@@ -24,6 +24,7 @@ import java.util.stream.Collectors;
 @Transactional
 @RequiredArgsConstructor
 public class AttendeeService {
+    private static final int MAX_ATTENDEE_NUMBER = 5;
 
     private final TravelAttendeeRepository travelAttendeeRepository;
     private final TravelScheduleRepository travelScheduleRepository;
@@ -32,23 +33,30 @@ public class AttendeeService {
 
     public List<AttendeeResponse> getAttendeesByScheduleId(Long scheduleId) {
         List<TravelAttendee> travelAttendees = travelAttendeeRepository.findAllByTravelSchedule_ScheduleId(scheduleId);
-
         return travelAttendees.stream().map(AttendeeResponse::from).collect(Collectors.toList());
     }
 
-
     public void createAttendee(Long scheduleId, String userId, CreateAttendeeRequest createAttendeeRequest) {
         TravelSchedule schedule = getScheduleByScheduleId(scheduleId);
-        validateAuthorPermission(scheduleId, userId);
+        checkOverAttendeeNumberFive(scheduleId);
+        checkIsAuthorMember(scheduleId, userId);
 
         Member guest = getMemberByEmail(createAttendeeRequest.getEmail());
-        validateAttendeeNotExists(scheduleId, guest);
+        checkAlreadyAttendeeMember(scheduleId, guest);
 
         TravelAttendee travelAttendee = TravelAttendee.of(schedule, guest, createAttendeeRequest.getPermission());
         travelAttendeeRepository.save(travelAttendee);
     }
 
-    private void validateAuthorPermission(Long scheduleId, String userId){
+    private void checkOverAttendeeNumberFive(Long scheduleId){
+        int attendeeCnt = travelAttendeeRepository.countByTravelSchedule_ScheduleId(scheduleId);
+
+        if(attendeeCnt >= MAX_ATTENDEE_NUMBER){
+            throw new ConflictAttendeeException(ErrorCode.OVER_ATTENDEE_NUMBER);
+        }
+    }
+
+    private void checkIsAuthorMember(Long scheduleId, String userId){
         boolean isAuthor = travelAttendeeRepository
                 .existsByTravelSchedule_ScheduleIdAndMember_UserIdAndRole(scheduleId, userId, AttendeeRole.AUTHOR);
 
@@ -57,11 +65,11 @@ public class AttendeeService {
         }
     }
 
-    private void validateAttendeeNotExists(Long scheduleId, Member guest){
+    private void checkAlreadyAttendeeMember(Long scheduleId, Member guest){
         boolean isExistedAttendee = travelAttendeeRepository.existsByTravelSchedule_ScheduleIdAndMember_UserId(scheduleId, guest.getUserId());
 
         if (isExistedAttendee){
-            throw new AlreadyAttendeeException(ErrorCode.ALREADY_ATTENDEE);
+            throw new ConflictAttendeeException(ErrorCode.ALREADY_ATTENDEE);
         }
     }
 

@@ -5,10 +5,10 @@ import lombok.Getter;
 import org.springframework.http.HttpStatus;
 
 @Getter
-public class AlreadyAttendeeException extends RuntimeException{
+public class ConflictAttendeeException extends RuntimeException{
     private final HttpStatus httpStatus;
 
-    public AlreadyAttendeeException(ErrorCode errorCode) {
+    public ConflictAttendeeException(ErrorCode errorCode) {
         super(errorCode.getMessage());
         this.httpStatus = errorCode.getStatus();
     }

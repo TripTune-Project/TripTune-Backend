@@ -156,6 +156,28 @@ public class AttendeeControllerTest extends ScheduleTest {
     }
 
     @Test
+    @DisplayName("createAttendee(): 일정 참석자 추가 시 일정 참석자 5명 넘어 예외 발생")
+    @WithMockUser(username = "member1")
+    void createAttendeeOver5_conflictAttendeeException() throws Exception {
+        Member member4 = memberRepository.save(createMember(null, "member4"));
+        Member member5 = memberRepository.save(createMember(null, "member5"));
+        TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(member3, schedule1, AttendeeRole.GUEST, AttendeePermission.ALL));
+        TravelAttendee attendee4 = travelAttendeeRepository.save(createTravelAttendee(member4, schedule1, AttendeeRole.GUEST, AttendeePermission.ALL));
+        TravelAttendee attendee5 = travelAttendeeRepository.save(createTravelAttendee(member5, schedule1, AttendeeRole.GUEST, AttendeePermission.ALL));
+        schedule1.getTravelAttendeeList().add(attendee3);
+        schedule1.getTravelAttendeeList().add(attendee4);
+        schedule1.getTravelAttendeeList().add(attendee5);
+
+        CreateAttendeeRequest createAttendeeRequest = createAttendeeRequest(member3.getEmail(), AttendeePermission.CHAT);
+        mockMvc.perform(post("/api/schedules/{scheduleId}/attendees", schedule1.getScheduleId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJsonString(createAttendeeRequest)))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.message").value(ErrorCode.OVER_ATTENDEE_NUMBER.getMessage()));
+
+    }
+
+    @Test
     @DisplayName("createAttendee(): 일정 참석자 추가 시 요청자가 작성자가 아니여서 예외 발생")
     @WithMockUser(username = "member2")
     void createAttendeeNotAuthor_forbiddenScheduleException() throws Exception{
