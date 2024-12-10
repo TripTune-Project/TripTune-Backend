@@ -1,23 +1,28 @@
 package com.triptune.global.util;
 
 import java.time.Duration;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.Date;
 
-public class TimeDurationUtil {
-    private static final int MAX_DAYS = 30;
+public class TimeUtil {
+    private static final int MAX_DURATION_DAYS = 30;
+    private static final int HOURS_IN_A_DAY = 24;
+    private static final int MINUTES_IN_AN_HOUR = 60;
     private static final String DATE_PATTERN = "yyyy년 M월 d일";
+    private static final ZoneId TIMEZONE_UTC = ZoneId.of("UTC");
+    private static final ZoneId TIMEZONE_KST = ZoneId.of("Asia/Seoul");
 
     public static String timeDuration(LocalDateTime updateTime){
         LocalDateTime currentTime = LocalDateTime.now();
         Duration duration = Duration.between(updateTime, currentTime);
 
         long days = duration.toDays();
-        long hours = duration.toHours() % 24;
-        long minutes = duration.toMinutes() % 60;
+        long hours = duration.toHours() % HOURS_IN_A_DAY;
+        long minutes = duration.toMinutes() % MINUTES_IN_AN_HOUR;
 
-        if(days > MAX_DAYS){
+        if(days > MAX_DURATION_DAYS){
             return formatFullDate(updateTime);
         } else if (days > 0){
             return formatDaysAgo(days);
@@ -44,5 +49,16 @@ public class TimeDurationUtil {
 
     private static String formatMinutesAgo(long minutes){
         return minutes + "분 전";
+    }
+
+
+    public static LocalDateTime convertToKST(LocalDateTime source){
+        if(source == null){
+            return null;
+        }
+
+        return source.atZone(TIMEZONE_UTC)
+                .withZoneSameInstant(TIMEZONE_KST)
+                .toLocalDateTime();
     }
 }

@@ -29,7 +29,6 @@ public class ChatController {
     @Operation(summary = "채팅 조회", description = "채팅 기록을 조회한다.")
     public ApiPageResponse<ChatResponse> getChatMessages(@PathVariable(name = "scheduleId") Long scheduleId, @RequestParam(name = "page") int page){
         Page<ChatResponse> response = chatService.getChatMessages(page, scheduleId);
-
         return ApiPageResponse.dataResponse(response);
     }
 
