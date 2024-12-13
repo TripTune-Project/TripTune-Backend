@@ -17,14 +17,7 @@ import org.springframework.stereotype.Service;
 public class RouteService {
 
     private final TravelRouteRepository travelRouteRepository;
-    private final TravelScheduleRepository travelScheduleRepository;
 
-    /**
-     * 여행 루트 조회
-     * @param scheduleId: 일정 인덱스
-     * @param page: 페이지 수
-     * @return Page<RouteResponse>: 여행 루트 정보로 구성된 페이지 dto
-     */
     public Page<RouteResponse> getTravelRoutes(Long scheduleId, int page) {
         Pageable pageable = PageUtil.defaultPageable(page);
         Page<TravelRoute> travelRoutes = travelRouteRepository.findAllByTravelSchedule_ScheduleId(pageable, scheduleId);
