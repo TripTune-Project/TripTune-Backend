@@ -38,17 +38,22 @@ public class AttendeeService {
 
     public void createAttendee(Long scheduleId, String userId, CreateAttendeeRequest createAttendeeRequest) {
         TravelSchedule schedule = getScheduleByScheduleId(scheduleId);
-        checkOverAttendeeNumberFive(scheduleId);
-        checkIsAuthorMember(scheduleId, userId);
+        validateAttendeeCount(scheduleId);
+        validateAuthorPermission(scheduleId, userId);
 
         Member guest = getMemberByEmail(createAttendeeRequest.getEmail());
-        checkAlreadyAttendeeMember(scheduleId, guest);
+        validateNotAlreadyAttendee(scheduleId, guest);
 
         TravelAttendee travelAttendee = TravelAttendee.of(schedule, guest, createAttendeeRequest.getPermission());
         travelAttendeeRepository.save(travelAttendee);
     }
 
-    private void checkOverAttendeeNumberFive(Long scheduleId){
+    private TravelSchedule getScheduleByScheduleId(Long scheduleId){
+        return travelScheduleRepository.findByScheduleId(scheduleId)
+                .orElseThrow(() -> new DataNotFoundException(ErrorCode.SCHEDULE_NOT_FOUND));
+    }
+
+    private void validateAttendeeCount(Long scheduleId){
         int attendeeCnt = travelAttendeeRepository.countByTravelSchedule_ScheduleId(scheduleId);
 
         if(attendeeCnt >= MAX_ATTENDEE_NUMBER){
@@ -56,7 +61,7 @@ public class AttendeeService {
         }
     }
 
-    private void checkIsAuthorMember(Long scheduleId, String userId){
+    private void validateAuthorPermission(Long scheduleId, String userId){
         boolean isAuthor = travelAttendeeRepository
                 .existsByTravelSchedule_ScheduleIdAndMember_UserIdAndRole(scheduleId, userId, AttendeeRole.AUTHOR);
 
@@ -65,7 +70,13 @@ public class AttendeeService {
         }
     }
 
-    private void checkAlreadyAttendeeMember(Long scheduleId, Member guest){
+    private Member getMemberByEmail(String email){
+        return memberRepository.findByEmail(email)
+                .orElseThrow(() -> new DataNotFoundException(ErrorCode.USER_NOT_FOUND));
+    }
+
+
+    private void validateNotAlreadyAttendee(Long scheduleId, Member guest){
         boolean isExistedAttendee = travelAttendeeRepository.existsByTravelSchedule_ScheduleIdAndMember_UserId(scheduleId, guest.getUserId());
 
         if (isExistedAttendee){
@@ -84,18 +95,5 @@ public class AttendeeService {
 
         travelAttendeeRepository.deleteById(attendee.getAttendeeId());
     }
-
-
-    private Member getMemberByEmail(String email){
-        return memberRepository.findByEmail(email)
-                .orElseThrow(() -> new DataNotFoundException(ErrorCode.USER_NOT_FOUND));
-    }
-
-
-    private TravelSchedule getScheduleByScheduleId(Long scheduleId){
-        return travelScheduleRepository.findByScheduleId(scheduleId)
-                .orElseThrow(() -> new DataNotFoundException(ErrorCode.SCHEDULE_NOT_FOUND));
-    }
-
 
 }
