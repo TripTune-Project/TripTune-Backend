@@ -6,10 +6,10 @@ import com.triptune.domain.member.entity.ProfileImage;
 import com.triptune.domain.member.repository.MemberRepository;
 import com.triptune.domain.schedule.ScheduleTest;
 import com.triptune.domain.schedule.dto.*;
-import com.triptune.domain.schedule.dto.request.CreateScheduleRequest;
+import com.triptune.domain.schedule.dto.request.ScheduleCreateRequest;
 import com.triptune.domain.schedule.dto.request.RouteRequest;
-import com.triptune.domain.schedule.dto.request.UpdateScheduleRequest;
-import com.triptune.domain.schedule.dto.response.CreateScheduleResponse;
+import com.triptune.domain.schedule.dto.request.ScheduleUpdateRequest;
+import com.triptune.domain.schedule.dto.response.ScheduleCreateResponse;
 import com.triptune.domain.schedule.dto.response.ScheduleDetailResponse;
 import com.triptune.domain.schedule.dto.response.ScheduleInfoResponse;
 import com.triptune.domain.schedule.entity.ChatMessage;
@@ -112,11 +112,11 @@ public class ScheduleServiceTest extends ScheduleTest {
         schedule2 = createTravelSchedule(2L, "테스트2");
         schedule3 = createTravelSchedule(3L, "테스트3");
 
-        attendee1 = createTravelAttendee(member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL);
-        attendee2 = createTravelAttendee(member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ);
-        TravelAttendee attendee3 = createTravelAttendee(member1, schedule2, AttendeeRole.AUTHOR, AttendeePermission.ALL);
-        TravelAttendee attendee4 = createTravelAttendee(member2, schedule2, AttendeeRole.GUEST, AttendeePermission.CHAT);
-        TravelAttendee attendee5 = createTravelAttendee(member1, schedule3, AttendeeRole.AUTHOR, AttendeePermission.ALL);
+        attendee1 = createTravelAttendee(1L, member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL);
+        attendee2 = createTravelAttendee(2L, member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ);
+        TravelAttendee attendee3 = createTravelAttendee(3L, member1, schedule2, AttendeeRole.AUTHOR, AttendeePermission.ALL);
+        TravelAttendee attendee4 = createTravelAttendee(4L, member2, schedule2, AttendeeRole.GUEST, AttendeePermission.CHAT);
+        TravelAttendee attendee5 = createTravelAttendee(5L, member1, schedule3, AttendeeRole.AUTHOR, AttendeePermission.ALL);
         schedule1.setTravelAttendeeList(new ArrayList<>(List.of(attendee1, attendee2)));
         schedule2.setTravelAttendeeList(new ArrayList<>(List.of(attendee3, attendee4)));
         schedule3.setTravelAttendeeList(new ArrayList<>(List.of(attendee5)));
@@ -726,13 +726,13 @@ public class ScheduleServiceTest extends ScheduleTest {
     void createSchedule(){
         // given
         String userId = "test";
-        CreateScheduleRequest request = createScheduleRequest();
+        ScheduleCreateRequest request = createScheduleRequest();
 
         when(travelScheduleRepository.save(any())).thenReturn(schedule1);
         when(memberRepository.findByUserId(any())).thenReturn(Optional.of(member1));
 
         // when
-        CreateScheduleResponse response = scheduleService.createSchedule(request, userId);
+        ScheduleCreateResponse response = scheduleService.createSchedule(request, userId);
 
         // then
         verify(travelAttendeeRepository, times(1)).save(any(TravelAttendee.class));
@@ -744,7 +744,7 @@ public class ScheduleServiceTest extends ScheduleTest {
     @DisplayName("일정 생성 시 저장된 사용자 정보 없어 DataNotFoundException 발생")
     void createSchedule_CustomUsernameDataNotFoundException(){
         // given
-        CreateScheduleRequest request = createScheduleRequest();
+        ScheduleCreateRequest request = createScheduleRequest();
 
         when(travelScheduleRepository.save(any())).thenReturn(schedule1);
         when(memberRepository.findByUserId(any())).thenReturn(Optional.empty());
@@ -823,19 +823,19 @@ public class ScheduleServiceTest extends ScheduleTest {
 
         RouteRequest routeRequest1 = createRouteRequest(1, travelPlace1.getPlaceId());
         RouteRequest routeRequest2 = createRouteRequest(2, travelPlace2.getPlaceId());
-        UpdateScheduleRequest updateScheduleRequest = createUpdateScheduleRequest(new ArrayList<>(List.of(routeRequest1, routeRequest2)));
+        ScheduleUpdateRequest scheduleUpdateRequest = createUpdateScheduleRequest(new ArrayList<>(List.of(routeRequest1, routeRequest2)));
 
         when(travelScheduleRepository.findByScheduleId(scheduleId)).thenReturn(Optional.of(schedule1));
         when(travelPlaceRepository.findByPlaceId(travelPlace1.getPlaceId())).thenReturn(Optional.of(travelPlace1));
         when(travelPlaceRepository.findByPlaceId(travelPlace2.getPlaceId())).thenReturn(Optional.of(travelPlace2));
 
         // when
-        assertDoesNotThrow(() -> scheduleService.updateSchedule(userId, scheduleId, updateScheduleRequest));
+        assertDoesNotThrow(() -> scheduleService.updateSchedule(userId, scheduleId, scheduleUpdateRequest));
 
         // then
         assertEquals(schedule1.getTravelRouteList().size(), 2);
-        assertEquals(schedule1.getScheduleName(), updateScheduleRequest.getScheduleName());
-        assertEquals(schedule1.getStartDate(), updateScheduleRequest.getStartDate());
+        assertEquals(schedule1.getScheduleName(), scheduleUpdateRequest.getScheduleName());
+        assertEquals(schedule1.getStartDate(), scheduleUpdateRequest.getStartDate());
         assertEquals(schedule1.getTravelRouteList().get(0).getTravelPlace().getPlaceName(), travelPlace1.getPlaceName());
     }
 
@@ -848,19 +848,19 @@ public class ScheduleServiceTest extends ScheduleTest {
 
         RouteRequest routeRequest1 = createRouteRequest(1, travelPlace1.getPlaceId());
         RouteRequest routeRequest2 = createRouteRequest(2, travelPlace2.getPlaceId());
-        UpdateScheduleRequest updateScheduleRequest = createUpdateScheduleRequest(new ArrayList<>(List.of(routeRequest1, routeRequest2)));
+        ScheduleUpdateRequest scheduleUpdateRequest = createUpdateScheduleRequest(new ArrayList<>(List.of(routeRequest1, routeRequest2)));
 
         when(travelScheduleRepository.findByScheduleId(scheduleId)).thenReturn(Optional.of(schedule2));
         when(travelPlaceRepository.findByPlaceId(travelPlace1.getPlaceId())).thenReturn(Optional.of(travelPlace1));
         when(travelPlaceRepository.findByPlaceId(travelPlace2.getPlaceId())).thenReturn(Optional.of(travelPlace2));
 
         // when
-        assertDoesNotThrow(() -> scheduleService.updateSchedule(userId, scheduleId, updateScheduleRequest));
+        assertDoesNotThrow(() -> scheduleService.updateSchedule(userId, scheduleId, scheduleUpdateRequest));
 
         // then
         assertEquals(schedule2.getTravelRouteList().size(), 2);
-        assertEquals(schedule2.getScheduleName(), updateScheduleRequest.getScheduleName());
-        assertEquals(schedule2.getStartDate(), updateScheduleRequest.getStartDate());
+        assertEquals(schedule2.getScheduleName(), scheduleUpdateRequest.getScheduleName());
+        assertEquals(schedule2.getStartDate(), scheduleUpdateRequest.getStartDate());
         assertEquals(schedule2.getTravelRouteList().get(0).getTravelPlace().getPlaceName(), travelPlace1.getPlaceName());
     }
 
@@ -869,13 +869,13 @@ public class ScheduleServiceTest extends ScheduleTest {
     void updateTravelRouteInSchedule(){
         RouteRequest routeRequest1 = createRouteRequest(1, travelPlace1.getPlaceId());
         RouteRequest routeRequest2 = createRouteRequest(2, travelPlace2.getPlaceId());
-        UpdateScheduleRequest updateScheduleRequest = createUpdateScheduleRequest(new ArrayList<>(List.of(routeRequest1, routeRequest2)));
+        ScheduleUpdateRequest scheduleUpdateRequest = createUpdateScheduleRequest(new ArrayList<>(List.of(routeRequest1, routeRequest2)));
 
         when(travelPlaceRepository.findByPlaceId(travelPlace1.getPlaceId())).thenReturn(Optional.of(travelPlace1));
         when(travelPlaceRepository.findByPlaceId(travelPlace2.getPlaceId())).thenReturn(Optional.of(travelPlace2));
 
         // when
-        assertDoesNotThrow(() -> scheduleService.updateTravelRouteInSchedule(schedule1, updateScheduleRequest.getTravelRoute()));
+        assertDoesNotThrow(() -> scheduleService.updateTravelRouteInSchedule(schedule1, scheduleUpdateRequest.getTravelRoute()));
 
         // then
         assertEquals(schedule1.getTravelRouteList().size(), 2);
@@ -892,12 +892,12 @@ public class ScheduleServiceTest extends ScheduleTest {
 
         RouteRequest routeRequest1 = createRouteRequest(1, travelPlace1.getPlaceId());
         RouteRequest routeRequest2 = createRouteRequest(2, travelPlace2.getPlaceId());
-        UpdateScheduleRequest updateScheduleRequest = createUpdateScheduleRequest(new ArrayList<>(List.of(routeRequest1, routeRequest2)));
+        ScheduleUpdateRequest scheduleUpdateRequest = createUpdateScheduleRequest(new ArrayList<>(List.of(routeRequest1, routeRequest2)));
 
         when(travelScheduleRepository.findByScheduleId(scheduleId)).thenReturn(Optional.empty());
 
         // when
-        DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> scheduleService.updateSchedule(userId, scheduleId, updateScheduleRequest));
+        DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> scheduleService.updateSchedule(userId, scheduleId, scheduleUpdateRequest));
 
         // then
         assertEquals(fail.getHttpStatus(), ErrorCode.SCHEDULE_NOT_FOUND.getStatus());
@@ -914,12 +914,12 @@ public class ScheduleServiceTest extends ScheduleTest {
 
         RouteRequest routeRequest1 = createRouteRequest(1, travelPlace1.getPlaceId());
         RouteRequest routeRequest2 = createRouteRequest(2, travelPlace2.getPlaceId());
-        UpdateScheduleRequest updateScheduleRequest = createUpdateScheduleRequest(new ArrayList<>(List.of(routeRequest1, routeRequest2)));
+        ScheduleUpdateRequest scheduleUpdateRequest = createUpdateScheduleRequest(new ArrayList<>(List.of(routeRequest1, routeRequest2)));
 
         when(travelScheduleRepository.findByScheduleId(scheduleId)).thenReturn(Optional.of(schedule3));
 
         // when
-        ForbiddenScheduleException fail = assertThrows(ForbiddenScheduleException.class, () -> scheduleService.updateSchedule(userId, scheduleId, updateScheduleRequest));
+        ForbiddenScheduleException fail = assertThrows(ForbiddenScheduleException.class, () -> scheduleService.updateSchedule(userId, scheduleId, scheduleUpdateRequest));
 
         // then
         assertEquals(fail.getHttpStatus(), ErrorCode.FORBIDDEN_ACCESS_SCHEDULE.getStatus());
@@ -936,12 +936,12 @@ public class ScheduleServiceTest extends ScheduleTest {
 
         RouteRequest routeRequest1 = createRouteRequest(1, travelPlace1.getPlaceId());
         RouteRequest routeRequest2 = createRouteRequest(2, travelPlace2.getPlaceId());
-        UpdateScheduleRequest updateScheduleRequest = createUpdateScheduleRequest(new ArrayList<>(List.of(routeRequest1, routeRequest2)));
+        ScheduleUpdateRequest scheduleUpdateRequest = createUpdateScheduleRequest(new ArrayList<>(List.of(routeRequest1, routeRequest2)));
 
         when(travelScheduleRepository.findByScheduleId(scheduleId)).thenReturn(Optional.of(schedule1));
 
         // when
-        ForbiddenScheduleException fail = assertThrows(ForbiddenScheduleException.class, () -> scheduleService.updateSchedule(userId, scheduleId, updateScheduleRequest));
+        ForbiddenScheduleException fail = assertThrows(ForbiddenScheduleException.class, () -> scheduleService.updateSchedule(userId, scheduleId, scheduleUpdateRequest));
 
         // then
         assertEquals(fail.getHttpStatus(), ErrorCode.FORBIDDEN_EDIT_SCHEDULE.getStatus());
@@ -958,13 +958,13 @@ public class ScheduleServiceTest extends ScheduleTest {
 
         RouteRequest routeRequest1 = createRouteRequest(1, travelPlace1.getPlaceId());
         RouteRequest routeRequest2 = createRouteRequest(2, travelPlace2.getPlaceId());
-        UpdateScheduleRequest updateScheduleRequest = createUpdateScheduleRequest(new ArrayList<>(List.of(routeRequest1, routeRequest2)));
+        ScheduleUpdateRequest scheduleUpdateRequest = createUpdateScheduleRequest(new ArrayList<>(List.of(routeRequest1, routeRequest2)));
 
         when(travelScheduleRepository.findByScheduleId(scheduleId)).thenReturn(Optional.of(schedule1));
         when(travelPlaceRepository.findByPlaceId(anyLong())).thenReturn(Optional.empty());
 
         // when
-        DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> scheduleService.updateSchedule(userId, scheduleId, updateScheduleRequest));
+        DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> scheduleService.updateSchedule(userId, scheduleId, scheduleUpdateRequest));
 
         // then
         assertEquals(fail.getHttpStatus(), ErrorCode.PLACE_NOT_FOUND.getStatus());

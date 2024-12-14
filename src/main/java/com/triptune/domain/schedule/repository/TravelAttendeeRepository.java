@@ -15,4 +15,5 @@ public interface TravelAttendeeRepository extends JpaRepository<TravelAttendee, 
     Optional<TravelAttendee> findByTravelSchedule_ScheduleIdAndMember_UserId(Long scheduleId, String userId);
     boolean existsByTravelSchedule_ScheduleIdAndMember_UserIdAndRole(Long scheduleId, String userId, AttendeeRole role);
     int countByTravelSchedule_ScheduleId(Long scheduleId);
+    Optional<TravelAttendee> findByTravelSchedule_ScheduleIdAndAttendeeId(Long scheduleId, Long attendeeId);
 }

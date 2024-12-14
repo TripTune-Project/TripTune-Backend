@@ -85,9 +85,9 @@ public class ChatControllerTest extends ScheduleTest {
 
         schedule = travelScheduleRepository.save(createTravelSchedule(null,"테스트1"));
 
-        TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule, AttendeeRole.AUTHOR, AttendeePermission.ALL));
-        TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(member2, schedule, AttendeeRole.GUEST, AttendeePermission.READ));
-        TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(member3, schedule, AttendeeRole.GUEST, AttendeePermission.CHAT));
+        TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(0L, member1, schedule, AttendeeRole.AUTHOR, AttendeePermission.ALL));
+        TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(0L, member2, schedule, AttendeeRole.GUEST, AttendeePermission.READ));
+        TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(0L, member3, schedule, AttendeeRole.GUEST, AttendeePermission.CHAT));
 
         schedule.setTravelAttendeeList(new ArrayList<>(List.of(attendee1, attendee2, attendee3)));
 

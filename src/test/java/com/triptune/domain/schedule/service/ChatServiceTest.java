@@ -16,6 +16,7 @@ import com.triptune.domain.schedule.exception.ForbiddenChatException;
 import com.triptune.domain.schedule.exception.ForbiddenScheduleException;
 import com.triptune.domain.schedule.repository.ChatMessageRepository;
 import com.triptune.domain.schedule.repository.TravelAttendeeRepository;
+import com.triptune.domain.schedule.repository.TravelScheduleRepository;
 import com.triptune.global.enumclass.ErrorCode;
 import com.triptune.global.exception.DataNotFoundException;
 import com.triptune.global.util.PageUtil;
@@ -52,6 +53,9 @@ class ChatServiceTest extends ScheduleTest {
 
     @Mock
     private TravelAttendeeRepository travelAttendeeRepository;
+
+    @Mock
+    private TravelScheduleRepository travelScheduleRepository;
 
 
     private TravelSchedule schedule;
@@ -226,8 +230,9 @@ class ChatServiceTest extends ScheduleTest {
     void sendChatMessage(){
         // given
         ChatMessageRequest request = createChatMessageRequest(schedule.getScheduleId(), member1.getNickname(), "hello1");
-        TravelAttendee attendee = createTravelAttendee(member1, schedule, AttendeeRole.AUTHOR, AttendeePermission.ALL);
+        TravelAttendee attendee = createTravelAttendee(1L, member1, schedule, AttendeeRole.AUTHOR, AttendeePermission.ALL);
 
+        when(travelScheduleRepository.existsById(anyLong())).thenReturn(true);
         when(memberRepository.findByNickname(anyString())).thenReturn(Optional.of(member1));
         when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_UserId(anyLong(), anyString()))
                 .thenReturn(Optional.of(attendee));
@@ -246,8 +251,9 @@ class ChatServiceTest extends ScheduleTest {
     void sendChatMessage_ForbiddenChatException1(){
         // given
         ChatMessageRequest request = createChatMessageRequest(schedule.getScheduleId(), member1.getNickname(), "hello1");
-        TravelAttendee attendee = createTravelAttendee(member1, schedule, AttendeeRole.GUEST, AttendeePermission.EDIT);
+        TravelAttendee attendee = createTravelAttendee(1L, member1, schedule, AttendeeRole.GUEST, AttendeePermission.EDIT);
 
+        when(travelScheduleRepository.existsById(anyLong())).thenReturn(true);
         when(memberRepository.findByNickname(anyString())).thenReturn(Optional.of(member1));
         when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_UserId(anyLong(), anyString()))
                 .thenReturn(Optional.of(attendee));
@@ -265,8 +271,9 @@ class ChatServiceTest extends ScheduleTest {
     void sendChatMessage_ForbiddenChatException2(){
         // given
         ChatMessageRequest request = createChatMessageRequest(schedule.getScheduleId(), member1.getNickname(), "hello1");
-        TravelAttendee attendee = createTravelAttendee(member1, schedule, AttendeeRole.GUEST, AttendeePermission.READ);
+        TravelAttendee attendee = createTravelAttendee(1L, member1, schedule, AttendeeRole.GUEST, AttendeePermission.READ);
 
+        when(travelScheduleRepository.existsById(anyLong())).thenReturn(true);
         when(memberRepository.findByNickname(anyString())).thenReturn(Optional.of(member1));
         when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_UserId(anyLong(), anyString()))
                 .thenReturn(Optional.of(attendee));
@@ -343,7 +350,7 @@ class ChatServiceTest extends ScheduleTest {
     @DisplayName("참석자 정보 조회")
     void getTravelAttendee(){
         // given
-        TravelAttendee attendee = createTravelAttendee(member1, schedule, AttendeeRole.AUTHOR, AttendeePermission.ALL);
+        TravelAttendee attendee = createTravelAttendee(1L, member1, schedule, AttendeeRole.AUTHOR, AttendeePermission.ALL);
 
         when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_UserId(anyLong(), anyString()))
                 .thenReturn(Optional.of(attendee));

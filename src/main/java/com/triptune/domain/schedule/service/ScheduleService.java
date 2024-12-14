@@ -3,10 +3,10 @@ package com.triptune.domain.schedule.service;
 import com.triptune.domain.member.entity.Member;
 import com.triptune.domain.member.repository.MemberRepository;
 import com.triptune.domain.schedule.dto.AuthorDTO;
-import com.triptune.domain.schedule.dto.request.CreateScheduleRequest;
+import com.triptune.domain.schedule.dto.request.ScheduleCreateRequest;
 import com.triptune.domain.schedule.dto.request.RouteRequest;
-import com.triptune.domain.schedule.dto.request.UpdateScheduleRequest;
-import com.triptune.domain.schedule.dto.response.CreateScheduleResponse;
+import com.triptune.domain.schedule.dto.request.ScheduleUpdateRequest;
+import com.triptune.domain.schedule.dto.response.ScheduleCreateResponse;
 import com.triptune.domain.schedule.dto.response.ScheduleDetailResponse;
 import com.triptune.domain.schedule.dto.response.ScheduleInfoResponse;
 import com.triptune.domain.schedule.entity.ChatMessage;
@@ -156,8 +156,8 @@ public class ScheduleService {
     }
 
 
-    public CreateScheduleResponse createSchedule(CreateScheduleRequest createScheduleRequest, String userId){
-        TravelSchedule travelSchedule = TravelSchedule.from(createScheduleRequest);
+    public ScheduleCreateResponse createSchedule(ScheduleCreateRequest scheduleCreateRequest, String userId){
+        TravelSchedule travelSchedule = TravelSchedule.from(scheduleCreateRequest);
         TravelSchedule savedTravelSchedule = travelScheduleRepository.save(travelSchedule);
 
         Member member = getMemberByUserId(userId);
@@ -165,7 +165,7 @@ public class ScheduleService {
         TravelAttendee travelAttendee = TravelAttendee.of(savedTravelSchedule, member);
         travelAttendeeRepository.save(travelAttendee);
 
-        return CreateScheduleResponse.from(savedTravelSchedule);
+        return ScheduleCreateResponse.from(savedTravelSchedule);
     }
 
 
@@ -187,13 +187,13 @@ public class ScheduleService {
     }
 
 
-    public void updateSchedule(String userId, Long scheduleId, UpdateScheduleRequest updateScheduleRequest) {
+    public void updateSchedule(String userId, Long scheduleId, ScheduleUpdateRequest scheduleUpdateRequest) {
         TravelSchedule schedule = getScheduleByScheduleId(scheduleId);
         TravelAttendee attendee = getAttendeeInfo(schedule, userId);
         checkScheduleEditPermission(attendee);
 
-        schedule.set(updateScheduleRequest);
-        updateTravelRouteInSchedule(schedule, updateScheduleRequest.getTravelRoute());
+        schedule.set(scheduleUpdateRequest);
+        updateTravelRouteInSchedule(schedule, scheduleUpdateRequest.getTravelRoute());
     }
 
 

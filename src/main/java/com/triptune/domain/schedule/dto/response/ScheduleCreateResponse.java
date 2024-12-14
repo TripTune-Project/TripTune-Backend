@@ -7,17 +7,17 @@ import lombok.NoArgsConstructor;
 
 @Getter
 @NoArgsConstructor
-public class CreateScheduleResponse {
+public class ScheduleCreateResponse {
 
     private Long scheduleId;
 
     @Builder
-    public CreateScheduleResponse(Long scheduleId) {
+    public ScheduleCreateResponse(Long scheduleId) {
         this.scheduleId = scheduleId;
     }
 
-    public static CreateScheduleResponse from(TravelSchedule travelSchedule){
-        return CreateScheduleResponse.builder()
+    public static ScheduleCreateResponse from(TravelSchedule travelSchedule){
+        return ScheduleCreateResponse.builder()
                 .scheduleId(travelSchedule.getScheduleId())
                 .build();
     }

@@ -3,22 +3,21 @@ package com.triptune.domain.schedule;
 import com.triptune.domain.BaseTest;
 import com.triptune.domain.schedule.dto.request.*;
 import com.triptune.domain.schedule.enumclass.AttendeePermission;
-import com.triptune.domain.travel.entity.TravelPlace;
 
 import java.time.LocalDate;
 import java.util.List;
 
 public abstract class ScheduleTest extends BaseTest {
-    protected CreateScheduleRequest createScheduleRequest() {
-        return CreateScheduleRequest.builder()
+    protected ScheduleCreateRequest createScheduleRequest() {
+        return ScheduleCreateRequest.builder()
                 .scheduleName("테스트")
                 .startDate(LocalDate.now())
                 .endDate(LocalDate.now().plusDays(10))
                 .build();
     }
 
-    protected UpdateScheduleRequest createUpdateScheduleRequest(List<RouteRequest> routeRequestList){
-        return UpdateScheduleRequest.builder()
+    protected ScheduleUpdateRequest createUpdateScheduleRequest(List<RouteRequest> routeRequestList){
+        return ScheduleUpdateRequest.builder()
                 .scheduleName("수정 테스트")
                 .startDate(LocalDate.now().plusDays(5))
                 .endDate(LocalDate.now().plusDays(20))
@@ -30,11 +29,16 @@ public abstract class ScheduleTest extends BaseTest {
         return RouteRequest.of(routeOrder, placeId);
     }
 
-    protected CreateAttendeeRequest createAttendeeRequest(String email, AttendeePermission permission){
-        return CreateAttendeeRequest.builder()
+    protected AttendeeRequest createAttendeeRequest(String email, AttendeePermission permission){
+        return AttendeeRequest.builder()
                 .email(email)
                 .permission(permission)
                 .build();
+    }
+
+
+    protected AttendeePermissionRequest createAttendeePermissionRequest(AttendeePermission permission) {
+        return AttendeePermissionRequest.builder().permission(permission).build();
     }
 
 

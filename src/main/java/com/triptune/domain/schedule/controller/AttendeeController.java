@@ -1,7 +1,8 @@
 package com.triptune.domain.schedule.controller;
 
+import com.triptune.domain.schedule.dto.request.AttendeePermissionRequest;
 import com.triptune.domain.schedule.dto.response.AttendeeResponse;
-import com.triptune.domain.schedule.dto.request.CreateAttendeeRequest;
+import com.triptune.domain.schedule.dto.request.AttendeeRequest;
 import com.triptune.domain.schedule.service.AttendeeService;
 import com.triptune.global.aop.AttendeeCheck;
 import com.triptune.global.response.ApiResponse;
@@ -32,16 +33,28 @@ public class AttendeeController {
     }
 
     @PostMapping("/attendees")
-    @Operation(summary = "일정 참석자 추가", description = "일정을 공유함으로 참석자를 추가합니다..")
+    @Operation(summary = "일정 참석자 추가", description = "일정을 공유함으로 참석자를 추가합니다.")
     public ApiResponse<?> createAttendee(@PathVariable(name = "scheduleId") Long scheduleId,
-                                      @Valid @RequestBody CreateAttendeeRequest createAttendeeRequest){
+                                      @Valid @RequestBody AttendeeRequest attendeeRequest){
         String userId = SecurityContextHolder.getContext().getAuthentication().getName();
-        attendeeService.createAttendee(scheduleId, userId, createAttendeeRequest);
+        attendeeService.createAttendee(scheduleId, userId, attendeeRequest);
+
+        return ApiResponse.okResponse();
+    }
+
+    @PatchMapping("/attendees/{attendeeId}")
+    @Operation(summary = "일정 참석자 접근 권한 수정", description = "일정 참석자 접근 권한을 수정합니다.")
+    public ApiResponse<?> updateAttendeePermission(@PathVariable(name = "scheduleId") Long scheduleId,
+                                                        @PathVariable(name = "attendeeId") Long attendeeId,
+                                                        @Valid @RequestBody AttendeePermissionRequest attendeePermissionRequest){
+        String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+        attendeeService.updateAttendeePermission(scheduleId, userId, attendeeId, attendeePermissionRequest);
 
         return ApiResponse.okResponse();
     }
 
 
+    @AttendeeCheck
     @DeleteMapping("/attendees")
     @Operation(summary = "일정 나가기", description = "일정에 참석자 목록에서 삭제됩니다.")
     public ApiResponse<?> leaveScheduleAsGuest(@PathVariable(name = "scheduleId") Long scheduleId){
