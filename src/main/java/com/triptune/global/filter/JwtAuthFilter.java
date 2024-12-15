@@ -47,7 +47,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
             filterChain.doFilter(request, response);
         } catch (CustomJwtBadRequestException ex){
-            log.error("NoHandlerFoundException at {}: {}", request.getRequestURI(),  ex.getMessage());
+            log.error("CustomJwtBadRequestException at {}: {}", request.getRequestURI(),  ex.getMessage());
             JwtUtil.writeJwtException(response, ex.getHttpStatus(), ex.getMessage());
         } catch (CustomJwtUnAuthorizedException ex){
             log.error("CustomJwtUnAuthorizedException at {}: {}", request.getRequestURI(),  ex.getMessage());

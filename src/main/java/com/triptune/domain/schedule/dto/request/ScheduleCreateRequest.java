@@ -13,7 +13,7 @@ import java.time.LocalDate;
 @Getter
 @Setter
 @NoArgsConstructor
-public class CreateScheduleRequest {
+public class ScheduleCreateRequest {
     @NotBlank(message = "여행지 이름은 필수 입력 값입니다.")
     private String scheduleName;
 
@@ -26,7 +26,7 @@ public class CreateScheduleRequest {
     private LocalDate endDate;
 
     @Builder
-    public CreateScheduleRequest(String scheduleName, LocalDate startDate, LocalDate endDate) {
+    public ScheduleCreateRequest(String scheduleName, LocalDate startDate, LocalDate endDate) {
         this.scheduleName = scheduleName;
         this.startDate = startDate;
         this.endDate = endDate;

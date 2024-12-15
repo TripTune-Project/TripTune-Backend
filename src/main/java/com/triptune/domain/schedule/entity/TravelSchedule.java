@@ -1,7 +1,7 @@
 package com.triptune.domain.schedule.entity;
 
-import com.triptune.domain.schedule.dto.request.CreateScheduleRequest;
-import com.triptune.domain.schedule.dto.request.UpdateScheduleRequest;
+import com.triptune.domain.schedule.dto.request.ScheduleCreateRequest;
+import com.triptune.domain.schedule.dto.request.ScheduleUpdateRequest;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
@@ -57,7 +57,7 @@ public class TravelSchedule {
         this.travelRouteList = travelRouteList;
     }
 
-    public static TravelSchedule from(CreateScheduleRequest request){
+    public static TravelSchedule from(ScheduleCreateRequest request){
         return TravelSchedule.builder()
                 .scheduleName(request.getScheduleName())
                 .startDate(request.getStartDate())
@@ -66,7 +66,7 @@ public class TravelSchedule {
                 .build();
     }
 
-    public void set(UpdateScheduleRequest request) {
+    public void set(ScheduleUpdateRequest request) {
         this.scheduleName = request.getScheduleName();
         this.startDate = request.getStartDate();
         this.endDate = request.getEndDate();

@@ -1,8 +1,8 @@
 package com.triptune.domain.schedule.controller;
 
-import com.triptune.domain.schedule.dto.request.CreateScheduleRequest;
-import com.triptune.domain.schedule.dto.request.UpdateScheduleRequest;
-import com.triptune.domain.schedule.dto.response.CreateScheduleResponse;
+import com.triptune.domain.schedule.dto.request.ScheduleCreateRequest;
+import com.triptune.domain.schedule.dto.request.ScheduleUpdateRequest;
+import com.triptune.domain.schedule.dto.response.ScheduleCreateResponse;
 import com.triptune.domain.schedule.dto.response.ScheduleDetailResponse;
 import com.triptune.domain.schedule.dto.response.ScheduleInfoResponse;
 import com.triptune.domain.schedule.enumclass.ScheduleType;
@@ -27,18 +27,18 @@ public class ScheduleController {
 
     @GetMapping
     @Operation(summary = "전체 일정 목록 조회", description = "작성한 전체 일정을 조회합니다.")
-    public ApiSchedulePageResponse<ScheduleInfoResponse> getSchedules(@RequestParam(name = "page") int page){
+    public ApiSchedulePageResponse<ScheduleInfoResponse> getAllSchedulesByUserId(@RequestParam(name = "page") int page){
         String userId = SecurityContextHolder.getContext().getAuthentication().getName();
-        SchedulePageResponse<ScheduleInfoResponse> response = scheduleService.getSchedules(page, userId);
+        SchedulePageResponse<ScheduleInfoResponse> response = scheduleService.getAllSchedulesByUserId(page, userId);
 
         return ApiSchedulePageResponse.dataResponse(response);
     }
 
     @GetMapping("/shared")
     @Operation(summary = "공유된 일정 목록 조회", description = "작성한 일정 중 공유된 일정을 조회합니다.")
-    public ApiSchedulePageResponse<ScheduleInfoResponse> getSharedSchedules(@RequestParam(name = "page") int page){
+    public ApiSchedulePageResponse<ScheduleInfoResponse> getSharedSchedulesByUserId(@RequestParam(name = "page") int page){
         String userId = SecurityContextHolder.getContext().getAuthentication().getName();
-        SchedulePageResponse<ScheduleInfoResponse> response = scheduleService.getSharedSchedules(page, userId);
+        SchedulePageResponse<ScheduleInfoResponse> response = scheduleService.getSharedSchedulesByUserId(page, userId);
 
         return ApiSchedulePageResponse.dataResponse(response);
     }
@@ -63,10 +63,10 @@ public class ScheduleController {
 
     @PostMapping
     @Operation(summary = "일정 생성", description = "여행 이름, 날짜를 선택해 일정을 생성합니다.")
-    public ApiResponse<CreateScheduleResponse> createSchedule(@Valid @RequestBody CreateScheduleRequest createScheduleRequest){
+    public ApiResponse<ScheduleCreateResponse> createSchedule(@Valid @RequestBody ScheduleCreateRequest scheduleCreateRequest){
         String userId = SecurityContextHolder.getContext().getAuthentication().getName();
 
-        CreateScheduleResponse response = scheduleService.createSchedule(createScheduleRequest, userId);
+        ScheduleCreateResponse response = scheduleService.createSchedule(scheduleCreateRequest, userId);
         return ApiResponse.dataResponse(response);
     }
 
@@ -83,10 +83,10 @@ public class ScheduleController {
     @AttendeeCheck
     @PatchMapping("/{scheduleId}")
     @Operation(summary = "일정 수정", description = "일정 상세 화면에서 저장 버튼을 누르면 해당 일정이 수정됩니다. 사용자는 저장 작업으로 보지만, 실제로는 일정 수정 작업입니다.")
-    public ApiResponse<?> updateSchedule(@PathVariable(name = "scheduleId") Long scheduleId, @Valid @RequestBody UpdateScheduleRequest updateScheduleRequest){
+    public ApiResponse<?> updateSchedule(@PathVariable(name = "scheduleId") Long scheduleId, @Valid @RequestBody ScheduleUpdateRequest scheduleUpdateRequest){
         String userId = SecurityContextHolder.getContext().getAuthentication().getName();
 
-        scheduleService.updateSchedule(userId, scheduleId, updateScheduleRequest);
+        scheduleService.updateSchedule(userId, scheduleId, scheduleUpdateRequest);
         return ApiResponse.okResponse();
     }
 

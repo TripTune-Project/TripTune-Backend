@@ -1,7 +1,5 @@
 package com.triptune.domain.schedule.enumclass;
 
-import com.triptune.domain.schedule.exception.ForbiddenScheduleException;
-import com.triptune.global.enumclass.ErrorCode;
 import lombok.AllArgsConstructor;
 
 @AllArgsConstructor

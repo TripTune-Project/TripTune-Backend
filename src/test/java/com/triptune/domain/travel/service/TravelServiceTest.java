@@ -62,7 +62,7 @@ public class TravelServiceTest extends TravelTest {
 
 
     @Test
-    @DisplayName("findNearByTravelPlaces() 성공: 현재 위치에 따른 여행지 목록 조회 시 데이터 존재하는 경우")
+    @DisplayName("현재 위치에 따른 여행지 목록 조회 시 데이터 존재하는 경우")
     void getNearByTravelPlaces_withData(){
         // given
         PlaceLocationRequest request = createTravelLocationRequest(37.4970465429, 127.0281573537);
@@ -96,7 +96,7 @@ public class TravelServiceTest extends TravelTest {
 
 
     @Test
-    @DisplayName("findNearByTravelPlaces() 성공: 현재 위치에 따른 여행지 목록 조회 시 데이터 없는 경우")
+    @DisplayName("현재 위치에 따른 여행지 목록 조회 시 데이터 없는 경우")
     void getNearByTravelPlaces_noData(){
         // given
         PlaceLocationRequest request = createTravelLocationRequest(0.0, 0.0);
@@ -120,7 +120,7 @@ public class TravelServiceTest extends TravelTest {
 
 
     @Test
-    @DisplayName("searchTravelPlaces() 성공: 여행지 검색 결과가 존재하며 현재 위치에서 가까운 순으로 정렬")
+    @DisplayName("여행지 검색 결과가 존재하며 현재 위치에서 가까운 순으로 정렬")
     void searchTravelPlaces_withData(){
         // given
         PlaceSearchRequest request = createTravelSearchRequest(37.49, 127.0, "테스트");
@@ -151,7 +151,7 @@ public class TravelServiceTest extends TravelTest {
 
 
     @Test
-    @DisplayName("searchTravelPlaces() 성공: 현재 위치에 따른 여행지 목록 조회 시 데이터 없는 경우")
+    @DisplayName("현재 위치에 따른 여행지 목록 조회 시 데이터 없는 경우")
     void searchTravelPlaces_noData(){
         // given
         PlaceSearchRequest request = createTravelSearchRequest(37.49, 127.0, "ㅁㄴㅇㄹ");
@@ -170,7 +170,7 @@ public class TravelServiceTest extends TravelTest {
     }
     
     @Test
-    @DisplayName("getTravelDetails() 성공: 숙박을 제외한 여행지 상세조회")
+    @DisplayName("숙박을 제외한 여행지 상세 조회")
     void getTravelDetails_exceptLodging(){
         // given
         ApiContentType apiContentType = createApiContentType("관광지");
@@ -198,7 +198,7 @@ public class TravelServiceTest extends TravelTest {
     }
 
     @Test
-    @DisplayName("getTravelDetails() 성공: 숙박 여행지 상세조회")
+    @DisplayName("숙박 여행지 상세 조회")
     void getTravelDetails_Lodging(){
         // given
         ApiContentType apiContentType = createApiContentType("숙박");
@@ -230,7 +230,7 @@ public class TravelServiceTest extends TravelTest {
     }
 
     @Test
-    @DisplayName("getTravelDetails() 실패: 조회 시 데이터가 존재하지 않아 DataNotFoundException 발생")
+    @DisplayName("여행지 상세 조회 시 데이터가 존재하지 않아 DataNotFoundException 발생")
     void getTravelDetails_DataNotFoundException(){
         // given
         when(travelPlaceRepository.findByPlaceId(anyLong())).thenReturn(Optional.empty());

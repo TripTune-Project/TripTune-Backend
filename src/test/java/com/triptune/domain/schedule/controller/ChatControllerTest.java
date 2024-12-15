@@ -85,9 +85,9 @@ public class ChatControllerTest extends ScheduleTest {
 
         schedule = travelScheduleRepository.save(createTravelSchedule(null,"테스트1"));
 
-        TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule, AttendeeRole.AUTHOR, AttendeePermission.ALL));
-        TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(member2, schedule, AttendeeRole.GUEST, AttendeePermission.READ));
-        TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(member3, schedule, AttendeeRole.GUEST, AttendeePermission.CHAT));
+        TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(0L, member1, schedule, AttendeeRole.AUTHOR, AttendeePermission.ALL));
+        TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(0L, member2, schedule, AttendeeRole.GUEST, AttendeePermission.READ));
+        TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(0L, member3, schedule, AttendeeRole.GUEST, AttendeePermission.CHAT));
 
         schedule.setTravelAttendeeList(new ArrayList<>(List.of(attendee1, attendee2, attendee3)));
 
@@ -95,7 +95,7 @@ public class ChatControllerTest extends ScheduleTest {
 
 
     @Test
-    @DisplayName("getChatMessages(): 대화 내용 조회")
+    @DisplayName("채팅 내용 조회")
     @WithMockUser(username = "member1")
     void getChatMessages() throws Exception {
         ChatMessage message1 = chatMessageRepository.save(createChatMessage("id1", schedule.getScheduleId(), member1, "hello1"));
@@ -124,7 +124,7 @@ public class ChatControllerTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("getChatMessages(): 대화 내용 조회 시 데이터가 없는 경우")
+    @DisplayName("채팅 내용 조회 시 데이터가 없는 경우")
     @WithMockUser(username = "member1")
     void getChatMessagesNoMessage() throws Exception {
         mockMvc.perform(get("/api/schedules/{scheduleId}/chats", schedule.getScheduleId())

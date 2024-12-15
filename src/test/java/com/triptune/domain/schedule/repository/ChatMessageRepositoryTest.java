@@ -42,7 +42,7 @@ public class ChatMessageRepositoryTest extends ScheduleTest {
 
 
     @Test
-    @DisplayName("findAllByScheduleId(): 일정 인덱스를 통해 채팅 목록 조회")
+    @DisplayName("일정 id를 통해 채팅 목록 조회")
     void findAllByScheduleId(){
         // given
         Member member1 = memberRepository.save(createMember(null, "member1"));
@@ -62,7 +62,7 @@ public class ChatMessageRepositoryTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("findAllByScheduleId(): 일정 인덱스를 통해 채팅 목록 조회")
+    @DisplayName("일정 id를 통해 채팅 목록 조회")
     void findAllByScheduleId_isEmpty(){
         // given, when
         List<ChatMessage> response = chatMessageRepository.findAllByScheduleId(schedule.getScheduleId());
@@ -72,7 +72,7 @@ public class ChatMessageRepositoryTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("deleteAllByScheduleId(): 일정 인덱스를 통해 채팅 삭제")
+    @DisplayName("일정 id를 통해 채팅 삭제")
     void deleteAllByScheduleId(){
         // given
         Member member1 = memberRepository.save(createMember(null, "member1"));
@@ -92,7 +92,7 @@ public class ChatMessageRepositoryTest extends ScheduleTest {
 
 
     @Test
-    @DisplayName("deleteAllByScheduleId(): 일정 인덱스를 통해 채팅 삭제 시 채팅 데이터 없는 경우")
+    @DisplayName("일정 id를 통해 채팅 삭제 시 채팅 데이터 없는 경우")
     void deleteAllByScheduleId_NoData(){
         // given, when
         chatMessageRepository.deleteAllByScheduleId(schedule.getScheduleId());

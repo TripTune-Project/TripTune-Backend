@@ -1,7 +1,6 @@
 package com.triptune.domain.schedule.exception.handler;
 
-import com.triptune.domain.schedule.exception.AlreadyAttendeeException;
-import com.triptune.domain.schedule.exception.ForbiddenChatException;
+import com.triptune.domain.schedule.exception.ConflictAttendeeException;
 import com.triptune.domain.schedule.exception.ForbiddenScheduleException;
 import com.triptune.global.response.ErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
@@ -24,8 +23,8 @@ public class ScheduleExceptionHandler {
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.CONFLICT)
-    public ErrorResponse handleAlreadyAttendeeException(AlreadyAttendeeException ex, HttpServletRequest request){
-        log.error("AlreadyAttendeeException at {}: {}", request.getRequestURI(), ex.getMessage());
+    public ErrorResponse handleConflictAttendeeException(ConflictAttendeeException ex, HttpServletRequest request){
+        log.error("ConflictAttendeeException at {}: {}", request.getRequestURI(), ex.getMessage());
         return ErrorResponse.of(ex.getHttpStatus(), ex.getMessage());
     }
 

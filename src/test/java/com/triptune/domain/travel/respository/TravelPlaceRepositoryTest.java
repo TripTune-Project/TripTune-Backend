@@ -75,7 +75,7 @@ public class TravelPlaceRepositoryTest extends TravelTest {
     
 
     @Test
-    @DisplayName("findNearByTravelPlaceList() 성공: 위치 정보에 따른 여행지 목록 조회 시 데이터 존재하는 경우")
+    @DisplayName("위치 정보에 따른 여행지 목록 조회 시 데이터 존재하는 경우")
     void findNearByTravelPlaceList_withData(){
         // given
         Pageable pageable = PageUtil.defaultPageable(1);
@@ -98,7 +98,7 @@ public class TravelPlaceRepositoryTest extends TravelTest {
     }
 
     @Test
-    @DisplayName("findNearByTravelPlaceList() 성공: 위치 정보에 따른 여행지 목록을 조회하며 조회 결과가 없는 경우")
+    @DisplayName("위치 정보에 따른 여행지 목록을 조회하며 조회 결과가 없는 경우")
     void findNearByTravelPlaceList_noData(){
         // given
         Pageable pageable = PageUtil.defaultPageable(1);
@@ -113,7 +113,7 @@ public class TravelPlaceRepositoryTest extends TravelTest {
     }
 
     @Test
-    @DisplayName("searchTravelPlacesWithLocation() 성공: 키워드 이용해 검색하며 검색 결과에 데이터가 존재하는 경우")
+    @DisplayName("키워드 이용해 검색하며 검색 결과에 데이터가 존재하는 경우")
     void searchTravelPlacesWithLocation_withData(){
         // given
         Pageable pageable = PageUtil.defaultPageable(1);
@@ -130,7 +130,7 @@ public class TravelPlaceRepositoryTest extends TravelTest {
 
 
     @Test
-    @DisplayName("searchTravelPlacesWithLocation() 성공: 키워드 이용해 검색하며 검색결과가 존재하지 않는 경우")
+    @DisplayName("키워드 이용해 검색하며 검색결과가 존재하지 않는 경우")
     void searchTravelPlacesWithLocation_noData(){
         // given
         Pageable pageable = PageUtil.defaultPageable(1);
@@ -145,7 +145,7 @@ public class TravelPlaceRepositoryTest extends TravelTest {
 
 
     @Test
-    @DisplayName("searchTravelPlace() 성공: 키워드 이용해 검색하며 검색결과가 존재하는 경우")
+    @DisplayName("키워드 이용해 검색하며 검색결과가 존재하는 경우")
     void searchTravelPlaces_withData(){
         // given
         Pageable pageable = PageUtil.defaultPageable(1);
@@ -160,7 +160,7 @@ public class TravelPlaceRepositoryTest extends TravelTest {
     }
 
     @Test
-    @DisplayName("searchTravelPlace() 성공: 키워드 이용해 검색하며 검색결과가 존재하지 않는ㄴ 경우")
+    @DisplayName("키워드 이용해 검색하며 검색결과가 존재하지 않는 경우")
     void searchTravelPlaces_noData(){
         // given
         Pageable pageable = PageUtil.defaultPageable(1);

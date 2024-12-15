@@ -1,5 +1,7 @@
 package com.triptune.domain.schedule.repository;
 
+import com.querydsl.core.types.OrderSpecifier;
+import com.querydsl.core.types.dsl.CaseBuilder;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.triptune.domain.schedule.entity.QTravelAttendee;
@@ -10,6 +12,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
@@ -32,7 +35,7 @@ public class TravelScheduleCustomRepositoryImpl implements TravelScheduleCustomR
                 .selectFrom(travelSchedule)
                 .join(travelSchedule.travelAttendeeList, travelAttendee)
                 .where(travelAttendee.member.userId.eq(userId))
-                .orderBy(travelSchedule.updatedAt.desc(), travelSchedule.createdAt.desc())
+                .orderBy(orderByTravelScheduleDateDESC())
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetch();
@@ -50,7 +53,7 @@ public class TravelScheduleCustomRepositoryImpl implements TravelScheduleCustomR
                 .join(travelSchedule.travelAttendeeList, travelAttendee)
                 .where(travelAttendee.member.userId.eq(userId)
                         .and(travelSchedule.travelAttendeeList.size().gt(1)))
-                .orderBy(travelSchedule.updatedAt.desc(), travelSchedule.createdAt.desc())
+                .orderBy(orderByTravelScheduleDateDESC())
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetch();
@@ -177,5 +180,13 @@ public class TravelScheduleCustomRepositoryImpl implements TravelScheduleCustomR
                 "WHEN {0} = {3} THEN 3 " +
                 "ELSE 4 " +
                 "END";
+    }
+
+    private OrderSpecifier<LocalDateTime> orderByTravelScheduleDateDESC(){
+        return new CaseBuilder()
+                .when(travelSchedule.updatedAt.isNull())
+                .then(travelSchedule.createdAt)
+                .otherwise(travelSchedule.updatedAt)
+                .desc();
     }
 }

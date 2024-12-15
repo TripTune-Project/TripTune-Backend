@@ -15,7 +15,7 @@ import java.util.List;
 @Getter
 @Setter
 @NoArgsConstructor
-public class UpdateScheduleRequest {
+public class ScheduleUpdateRequest {
 
     @NotBlank(message = "여행지 이름은 필수 입력 값입니다.")
     private String scheduleName;
@@ -30,7 +30,7 @@ public class UpdateScheduleRequest {
     private List<RouteRequest> travelRoute = new ArrayList<>();
 
     @Builder
-    public UpdateScheduleRequest(String scheduleName, LocalDate startDate, LocalDate endDate, List<RouteRequest> travelRoute) {
+    public ScheduleUpdateRequest(String scheduleName, LocalDate startDate, LocalDate endDate, List<RouteRequest> travelRoute) {
         this.scheduleName = scheduleName;
         this.startDate = startDate;
         this.endDate = endDate;

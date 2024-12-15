@@ -10,6 +10,7 @@ import com.triptune.domain.schedule.exception.ChatNotFoundException;
 import com.triptune.domain.schedule.exception.ForbiddenChatException;
 import com.triptune.domain.schedule.repository.ChatMessageRepository;
 import com.triptune.domain.schedule.repository.TravelAttendeeRepository;
+import com.triptune.domain.schedule.repository.TravelScheduleRepository;
 import com.triptune.global.enumclass.ErrorCode;
 import com.triptune.global.exception.DataNotFoundException;
 import com.triptune.global.util.PageUtil;
@@ -30,6 +31,7 @@ public class ChatService {
     private final ChatMessageRepository chatMessageRepository;
     private final MemberRepository memberRepository;
     private final TravelAttendeeRepository travelAttendeeRepository;
+    private final TravelScheduleRepository travelScheduleRepository;
 
 
     public Page<ChatResponse> getChatMessages(int page, Long scheduleId) {
@@ -62,6 +64,8 @@ public class ChatService {
 
 
     public ChatResponse sendChatMessage(ChatMessageRequest chatMessageRequest) {
+        validateSchedule(chatMessageRequest.getScheduleId());
+
         Member member = getChatMemberByNickname(chatMessageRequest.getNickname());
         TravelAttendee attendee = getTravelAttendee(chatMessageRequest.getScheduleId(), member.getUserId());
 
@@ -73,6 +77,14 @@ public class ChatService {
         chatMessageRepository.save(message);
 
         return ChatResponse.from(member, message);
+    }
+
+    private void validateSchedule(Long scheduleId){
+        boolean isExist = travelScheduleRepository.existsById(scheduleId);
+
+        if (!isExist){
+            throw new DataNotFoundException(ErrorCode.SCHEDULE_NOT_FOUND);
+        }
     }
 
 

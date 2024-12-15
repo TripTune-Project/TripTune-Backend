@@ -12,7 +12,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-public class CreateAttendeeRequest {
+public class AttendeeRequest {
 
     @Email
     @NotBlank(message = "공유할 사용자 이메일은 필수 입력 값입니다.")
@@ -22,7 +22,7 @@ public class CreateAttendeeRequest {
     private AttendeePermission permission;
 
     @Builder
-    public CreateAttendeeRequest(String email, AttendeePermission permission) {
+    public AttendeeRequest(String email, AttendeePermission permission) {
         this.email = email;
         this.permission = permission;
     }

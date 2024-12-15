@@ -83,7 +83,7 @@ public class TravelControllerTest extends TravelTest {
     }
 
     @Test
-    @DisplayName("findNearByTravelPlaceList() 성공: 현재 위치에 따른 여행지 목록을 제공하며 조회 결과가 존재하는 경우")
+    @DisplayName("현재 위치에 따른 여행지 목록을 제공하며 조회 결과가 존재하는 경우")
     void getNearByTravelPlaces_withData() throws Exception {
         // given
 
@@ -96,7 +96,7 @@ public class TravelControllerTest extends TravelTest {
     }
 
     @Test
-    @DisplayName("findNearByTravelPlaceList() 성공: 현재 위치에 따른 여행지 목록을 제공하며 조회 결과가 존재하지 않는 경우")
+    @DisplayName("현재 위치에 따른 여행지 목록을 제공하며 조회 결과가 존재하지 않는 경우")
     void getNearByTravelPlaces_noData() throws Exception {
         mockMvc.perform(post("/api/travels")
                         .param("page", "1")
@@ -107,7 +107,7 @@ public class TravelControllerTest extends TravelTest {
 
 
     @Test
-    @DisplayName("searchTravelPlaces() 성공: 키워드를 통해서 여행지를 검색하며 검색 결과가 존재하는 경우")
+    @DisplayName("키워드를 통해서 여행지를 검색하며 검색 결과가 존재하는 경우")
     void searchTravelPlaces_withData() throws Exception {
         mockMvc.perform(post("/api/travels/search")
                         .param("page", "1")
@@ -117,7 +117,7 @@ public class TravelControllerTest extends TravelTest {
     }
 
     @Test
-    @DisplayName("searchTravelPlaces() 성공: 키워드를 통해서 여행지를 검색하며 검색 결과가 존재하지 않는 경우")
+    @DisplayName("키워드를 통해서 여행지를 검색하며 검색 결과가 존재하지 않는 경우")
     void searchTravelPlaces_noData() throws Exception {
         mockMvc.perform(post("/api/travels/search")
                         .param("page", "1")
@@ -128,7 +128,7 @@ public class TravelControllerTest extends TravelTest {
     }
 
     @Test
-    @DisplayName("searchTravelPlaces() 실패: 키워드를 통해서 여행지를 검색하며 키워드에 특수문자가 존재하는 경우")
+    @DisplayName("키워드를 통해서 여행지를 검색하며 키워드에 특수문자가 존재하는 경우")
     void searchTravelPlaces_BadRequestException() throws Exception {
         mockMvc.perform(post("/api/travels/search")
                         .param("page", "1")
@@ -139,7 +139,7 @@ public class TravelControllerTest extends TravelTest {
     }
 
     @Test
-    @DisplayName("getTravelDetails() 성공: 여행지 상세정보 조회")
+    @DisplayName("여행지 상세정보 조회")
     void getTravelDetails() throws Exception {
         // given
         ApiContentType apiContentType = createApiContentType("관광지");
@@ -155,7 +155,7 @@ public class TravelControllerTest extends TravelTest {
     }
 
     @Test
-    @DisplayName("getTravelDetails() 실패: 여행지 상세정보 조회 시 데이터 존재하지 않아 404 에러 발생")
+    @DisplayName("여행지 상세정보 조회 시 데이터 존재하지 않아 404 에러 발생")
     void getTravelDetails_NotFoundException() throws Exception {
         mockMvc.perform(get("/api/travels/{placeId}", 0L))
                 .andExpect(status().isNotFound())

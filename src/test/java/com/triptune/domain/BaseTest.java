@@ -118,8 +118,9 @@ public abstract class BaseTest {
                 .build();
     }
 
-    protected TravelAttendee createTravelAttendee(Member member, TravelSchedule schedule, AttendeeRole role, AttendeePermission permission){
+    protected TravelAttendee createTravelAttendee(Long attendeeId, Member member, TravelSchedule schedule, AttendeeRole role, AttendeePermission permission){
         return TravelAttendee.builder()
+                .attendeeId(attendeeId)
                 .member(member)
                 .travelSchedule(schedule)
                 .role(role)

@@ -7,10 +7,9 @@ import com.triptune.domain.member.entity.ProfileImage;
 import com.triptune.domain.member.repository.MemberRepository;
 import com.triptune.domain.member.repository.ProfileImageRepository;
 import com.triptune.domain.schedule.ScheduleTest;
-import com.triptune.domain.schedule.dto.request.CreateScheduleRequest;
+import com.triptune.domain.schedule.dto.request.ScheduleCreateRequest;
 import com.triptune.domain.schedule.dto.request.RouteRequest;
-import com.triptune.domain.schedule.dto.request.UpdateScheduleRequest;
-import com.triptune.domain.schedule.entity.ChatMessage;
+import com.triptune.domain.schedule.dto.request.ScheduleUpdateRequest;
 import com.triptune.domain.schedule.entity.TravelAttendee;
 import com.triptune.domain.schedule.entity.TravelRoute;
 import com.triptune.domain.schedule.entity.TravelSchedule;
@@ -144,13 +143,13 @@ public class ScheduleControllerTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("getSchedules(): 전체 일정 목록 조회")
+    @DisplayName("전체 일정 목록 조회")
     @WithMockUser(username = "member1")
-    void getSchedules() throws Exception {
-        TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
-        TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ));
-        TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule2, AttendeeRole.AUTHOR, AttendeePermission.ALL));
-        TravelAttendee attendee4 = travelAttendeeRepository.save(createTravelAttendee(member3, schedule3, AttendeeRole.AUTHOR, AttendeePermission.ALL));
+    void getAllSchedulesByUserId() throws Exception {
+        TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(0L, member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
+        TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(0L, member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ));
+        TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(0L, member1, schedule2, AttendeeRole.AUTHOR, AttendeePermission.ALL));
+        TravelAttendee attendee4 = travelAttendeeRepository.save(createTravelAttendee(0L, member3, schedule3, AttendeeRole.AUTHOR, AttendeePermission.ALL));
 
         schedule1.setTravelAttendeeList(new ArrayList<>(List.of(attendee1, attendee2)));
         schedule2.setTravelAttendeeList(new ArrayList<>(List.of(attendee3)));
@@ -176,10 +175,10 @@ public class ScheduleControllerTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("getSchedules(): 전체 일정 목록 조회 시 여행 루트 데이터가 없는 경우")
+    @DisplayName("전체 일정 목록 조회 시 여행 루트 데이터가 없는 경우")
     @WithMockUser(username = "member3")
-    void getSchedulesNoRouteData() throws Exception {
-        TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(member3, schedule3, AttendeeRole.AUTHOR, AttendeePermission.ALL));
+    void getAllSchedulesByUserIdNoRouteData() throws Exception {
+        TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(0L, member3, schedule3, AttendeeRole.AUTHOR, AttendeePermission.ALL));
         schedule3.setTravelAttendeeList(new ArrayList<>(List.of(attendee1)));
 
         mockMvc.perform(get("/api/schedules")
@@ -193,9 +192,9 @@ public class ScheduleControllerTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("getSchedules(): 전체 일정 목록 조회 시 데이터 없는 경우")
+    @DisplayName("전체 일정 목록 조회 시 데이터 없는 경우")
     @WithMockUser(username = "member1")
-    void getSchedulesWithoutData() throws Exception {
+    void getAllSchedulesByUserIdWithoutData() throws Exception {
         mockMvc.perform(get("/api/schedules")
                         .param("page", "1"))
                 .andExpect(status().isOk())
@@ -204,13 +203,13 @@ public class ScheduleControllerTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("getSharedSchedules(): 공유된 일정 목록 조회")
+    @DisplayName("공유된 일정 목록 조회")
     @WithMockUser(username = "member1")
-    void getSharedSchedules() throws Exception {
-        TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
-        TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ));
-        TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule2, AttendeeRole.AUTHOR, AttendeePermission.ALL));
-        TravelAttendee attendee4 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule3, AttendeeRole.AUTHOR, AttendeePermission.ALL));
+    void getSharedSchedulesByUserId() throws Exception {
+        TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(0L, member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
+        TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(0L, member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ));
+        TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(0L, member1, schedule2, AttendeeRole.AUTHOR, AttendeePermission.ALL));
+        TravelAttendee attendee4 = travelAttendeeRepository.save(createTravelAttendee(0L, member1, schedule3, AttendeeRole.AUTHOR, AttendeePermission.ALL));
 
         schedule1.setTravelAttendeeList(new ArrayList<>(List.of(attendee1, attendee2)));
         schedule2.setTravelAttendeeList(new ArrayList<>(List.of(attendee3)));
@@ -236,13 +235,13 @@ public class ScheduleControllerTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("getSharedSchedules(): 공유된 일정 목록 조회 시 여행 루트 데이터가 없는 경우")
+    @DisplayName("공유된 일정 목록 조회 시 여행 루트 데이터가 없는 경우")
     @WithMockUser(username = "member1")
-    void getSharedSchedulesNoRouteData() throws Exception {
-        TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
-        TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ));
-        TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule2, AttendeeRole.AUTHOR, AttendeePermission.ALL));
-        TravelAttendee attendee4 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule3, AttendeeRole.AUTHOR, AttendeePermission.ALL));
+    void getSharedSchedulesByUserIdNoRouteData() throws Exception {
+        TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(0L, member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
+        TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(0L, member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ));
+        TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(0L, member1, schedule2, AttendeeRole.AUTHOR, AttendeePermission.ALL));
+        TravelAttendee attendee4 = travelAttendeeRepository.save(createTravelAttendee(0L, member1, schedule3, AttendeeRole.AUTHOR, AttendeePermission.ALL));
 
         schedule1.setTravelAttendeeList(new ArrayList<>(List.of(attendee1, attendee2)));
         schedule2.setTravelAttendeeList(new ArrayList<>(List.of(attendee3)));
@@ -260,12 +259,12 @@ public class ScheduleControllerTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("getSharedSchedules(): 공유된 일정 목록 조회 시 공유된 일정 없는 경우")
+    @DisplayName("공유된 일정 목록 조회 시 공유된 일정 없는 경우")
     @WithMockUser(username = "member1")
-    void getSharedSchedulesWithoutSharedData() throws Exception {
-        TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
-        TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule2, AttendeeRole.AUTHOR, AttendeePermission.ALL));
-        TravelAttendee attendee4 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule3, AttendeeRole.AUTHOR, AttendeePermission.ALL));
+    void getSharedSchedulesWithoutSharedDataByUserId() throws Exception {
+        TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(0L, member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
+        TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(0L, member1, schedule2, AttendeeRole.AUTHOR, AttendeePermission.ALL));
+        TravelAttendee attendee4 = travelAttendeeRepository.save(createTravelAttendee(0L, member1, schedule3, AttendeeRole.AUTHOR, AttendeePermission.ALL));
 
         schedule1.setTravelAttendeeList(new ArrayList<>(List.of(attendee1)));
         schedule2.setTravelAttendeeList(new ArrayList<>(List.of(attendee3)));
@@ -280,9 +279,9 @@ public class ScheduleControllerTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("getSharedSchedules(): 공유된 일정 목록 조회 시 데이터 없는 경우")
+    @DisplayName("공유된 일정 목록 조회 시 데이터 없는 경우")
     @WithMockUser(username = "member1")
-    void getSharedSchedulesWithoutData() throws Exception {
+    void getSharedSchedulesByUserIdWithoutData() throws Exception {
         mockMvc.perform(get("/api/schedules/shared")
                         .param("page", "1"))
                 .andExpect(status().isOk())
@@ -293,13 +292,13 @@ public class ScheduleControllerTest extends ScheduleTest {
 
 
     @Test
-    @DisplayName("searchSchedules(): 전체 일정 검색")
+    @DisplayName("전체 일정 검색")
     @WithMockUser(username = "member1")
-    void searchAllSchedules() throws Exception {
-        TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
-        TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ));
-        TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule2, AttendeeRole.AUTHOR, AttendeePermission.ALL));
-        TravelAttendee attendee4 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule3, AttendeeRole.AUTHOR, AttendeePermission.ALL));
+    void searchSchedules() throws Exception {
+        TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(0L, member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
+        TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(0L, member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ));
+        TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(0L, member1, schedule2, AttendeeRole.AUTHOR, AttendeePermission.ALL));
+        TravelAttendee attendee4 = travelAttendeeRepository.save(createTravelAttendee(0L, member1, schedule3, AttendeeRole.AUTHOR, AttendeePermission.ALL));
 
         schedule1.setTravelAttendeeList(new ArrayList<>(List.of(attendee1, attendee2)));
         schedule2.setTravelAttendeeList(new ArrayList<>(List.of(attendee3)));
@@ -326,13 +325,13 @@ public class ScheduleControllerTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("searchSchedules(): 전체 일정 검색 시 여행 루트 데이터가 없는 경우")
+    @DisplayName("전체 일정 검색 시 여행 루트 데이터가 없는 경우")
     @WithMockUser(username = "member1")
-    void searchAllSchedulesNoRouteData() throws Exception {
-        TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
-        TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ));
-        TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule2, AttendeeRole.AUTHOR, AttendeePermission.ALL));
-        TravelAttendee attendee4 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule3, AttendeeRole.AUTHOR, AttendeePermission.ALL));
+    void searchSchedulesNoRouteData() throws Exception {
+        TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(0L, member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
+        TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(0L, member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ));
+        TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(0L, member1, schedule2, AttendeeRole.AUTHOR, AttendeePermission.ALL));
+        TravelAttendee attendee4 = travelAttendeeRepository.save(createTravelAttendee(0L, member1, schedule3, AttendeeRole.AUTHOR, AttendeePermission.ALL));
 
         schedule1.setTravelAttendeeList(new ArrayList<>(List.of(attendee1, attendee2)));
         schedule2.setTravelAttendeeList(new ArrayList<>(List.of(attendee3)));
@@ -352,12 +351,12 @@ public class ScheduleControllerTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("searchSchedules(): 전체 일정 검색 시 공유된 일정 없는 경우")
+    @DisplayName("전체 일정 검색 시 공유된 일정 없는 경우")
     @WithMockUser(username = "member1")
-    void searchAllSchedulesWithoutSharedData() throws Exception {
-        TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
-        TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule2, AttendeeRole.AUTHOR, AttendeePermission.ALL));
-        TravelAttendee attendee4 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule3, AttendeeRole.AUTHOR, AttendeePermission.ALL));
+    void searchSchedulesWithoutSharedData() throws Exception {
+        TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(0L, member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
+        TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(0L, member1, schedule2, AttendeeRole.AUTHOR, AttendeePermission.ALL));
+        TravelAttendee attendee4 = travelAttendeeRepository.save(createTravelAttendee(0L, member1, schedule3, AttendeeRole.AUTHOR, AttendeePermission.ALL));
 
         schedule1.setTravelAttendeeList(new ArrayList<>(List.of(attendee1)));
         schedule2.setTravelAttendeeList(new ArrayList<>(List.of(attendee3)));
@@ -374,7 +373,7 @@ public class ScheduleControllerTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("searchSchedules(): 전체 일정 검색 시 검색 결과 없는 경우")
+    @DisplayName("전체 일정 검색 시 검색 결과 없는 경우")
     @WithMockUser(username = "member1")
     void searchSchedulesWithoutData() throws Exception {
         mockMvc.perform(get("/api/schedules/search")
@@ -388,13 +387,13 @@ public class ScheduleControllerTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("searchSchedules(): 공유된 일정 검색")
+    @DisplayName("공유된 일정 검색")
     @WithMockUser(username = "member1")
     void searchSharedSchedules() throws Exception {
-        TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
-        TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ));
-        TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule2, AttendeeRole.AUTHOR, AttendeePermission.ALL));
-        TravelAttendee attendee4 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule3, AttendeeRole.AUTHOR, AttendeePermission.ALL));
+        TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(0L, member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
+        TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(0L, member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ));
+        TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(0L, member1, schedule2, AttendeeRole.AUTHOR, AttendeePermission.ALL));
+        TravelAttendee attendee4 = travelAttendeeRepository.save(createTravelAttendee(0L, member1, schedule3, AttendeeRole.AUTHOR, AttendeePermission.ALL));
 
         schedule1.setTravelAttendeeList(new ArrayList<>(List.of(attendee1, attendee2)));
         schedule2.setTravelAttendeeList(new ArrayList<>(List.of(attendee3)));
@@ -421,13 +420,13 @@ public class ScheduleControllerTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("searchSchedules(): 공유된 일정 검색 시 여행 루트 데이터가 없는 경우")
+    @DisplayName("공유된 일정 검색 시 여행 루트 데이터가 없는 경우")
     @WithMockUser(username = "member1")
     void searchSharedSchedulesNoRouteData() throws Exception {
-        TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
-        TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ));
-        TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule2, AttendeeRole.AUTHOR, AttendeePermission.ALL));
-        TravelAttendee attendee4 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule3, AttendeeRole.AUTHOR, AttendeePermission.ALL));
+        TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(0L, member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
+        TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(0L, member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ));
+        TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(0L, member1, schedule2, AttendeeRole.AUTHOR, AttendeePermission.ALL));
+        TravelAttendee attendee4 = travelAttendeeRepository.save(createTravelAttendee(0L, member1, schedule3, AttendeeRole.AUTHOR, AttendeePermission.ALL));
 
         schedule1.setTravelAttendeeList(new ArrayList<>(List.of(attendee1, attendee2)));
         schedule2.setTravelAttendeeList(new ArrayList<>(List.of(attendee3)));
@@ -447,7 +446,7 @@ public class ScheduleControllerTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("getSharedSchedules(): 공유된 일정 검색 시 검색 결과 없는 경우")
+    @DisplayName("공유된 일정 검색 시 검색 결과 없는 경우")
     @WithMockUser(username = "member1")
     void searchSharedSchedulesWithoutData() throws Exception {
         mockMvc.perform(get("/api/schedules/search")
@@ -461,11 +460,11 @@ public class ScheduleControllerTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("createSchedule(): 일정 만들기 성공")
+    @DisplayName("일정 생성")
     @WithMockUser(username = "member1")
     void createSchedule() throws Exception{
         // given
-        CreateScheduleRequest request = createScheduleRequest();
+        ScheduleCreateRequest request = createScheduleRequest();
 
         // when, then
         mockMvc.perform(post("/api/schedules")
@@ -477,11 +476,11 @@ public class ScheduleControllerTest extends ScheduleTest {
 
 
     @Test
-    @DisplayName("createSchedule(): 일정 만들기 시 필요 입력값이 다 안들어와 예외 발생")
+    @DisplayName("일정 생성 시 필요 입력값이 다 안들어와 예외 발생")
     @WithMockUser(username = "test")
     void createSchedule_methodArgumentNotValidException() throws Exception{
         // given
-        CreateScheduleRequest request = createScheduleRequest();
+        ScheduleCreateRequest request = createScheduleRequest();
         request.setStartDate(null);
 
         // when, then
@@ -493,11 +492,11 @@ public class ScheduleControllerTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("createSchedule(): 일정 만들기 시 오늘 이전 날짜 입력으로 예외 발생")
+    @DisplayName("일정 생성 시 오늘 이전 날짜 입력으로 예외 발생")
     @WithMockUser(username = "test")
     void createSchedulePastDate_methodArgumentNotValidException() throws Exception{
         // given
-        CreateScheduleRequest request = createScheduleRequest();
+        ScheduleCreateRequest request = createScheduleRequest();
         request.setStartDate(LocalDate.now().minusDays(3));
 
         // when, then
@@ -509,12 +508,12 @@ public class ScheduleControllerTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("getScheduleDetail(): 일정 상세 조회 성공")
+    @DisplayName("일정 상세 조회")
     @WithMockUser(username = "member1")
     void getScheduleDetail() throws Exception {
 //        // given
-        TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
-        TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ));
+        TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(0L, member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
+        TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(0L, member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ));
         member1.setTravelAttendeeList(new ArrayList<>(List.of(attendee1, attendee2)));
         schedule1.setTravelAttendeeList(new ArrayList<>(List.of(attendee1, attendee2)));
 
@@ -531,14 +530,14 @@ public class ScheduleControllerTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("getScheduleDetail(): 일정 조회 시 여행지 데이터 존재하지 않는 경우")
+    @DisplayName("일정 조회 시 여행지 데이터 존재하지 않는 경우")
     @WithMockUser(username = "member1")
     void getScheduleDetailWithoutData() throws Exception {
         // given
         travelPlace2.getDistrict().setDistrictName("성북구");
 
-        TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
-        TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ));
+        TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(0L, member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
+        TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(0L, member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ));
         
         member1.setTravelAttendeeList(new ArrayList<>(List.of(attendee1, attendee2)));
         schedule1.setTravelAttendeeList(new ArrayList<>(List.of(attendee1, attendee2)));
@@ -554,7 +553,7 @@ public class ScheduleControllerTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("getScheduleDetail(): 일정 상세 조회 시 일정 데이터 존재하지 않아 예외 발생")
+    @DisplayName("일정 상세 조회 시 일정 데이터 존재하지 않아 예외 발생")
     @WithMockUser(username = "member1")
     void getScheduleDetail_dataNotFoundException() throws Exception {
         mockMvc.perform(get("/api/schedules/{scheduleId}", 0L)
@@ -566,7 +565,7 @@ public class ScheduleControllerTest extends ScheduleTest {
 
 
     @Test
-    @DisplayName("getScheduleDetail(): 일정 상세 조회 시 일정에 접근 권한이 없어 예외 발생")
+    @DisplayName("일정 상세 조회 시 일정에 접근 권한이 없어 예외 발생")
     @WithMockUser(username = "member1")
     void getScheduleDetailNotAttendee_forbiddenScheduleException() throws Exception {
         mockMvc.perform(delete("/api/schedules/{scheduleId}", schedule2.getScheduleId()))
@@ -576,12 +575,12 @@ public class ScheduleControllerTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("updateSchedule(): 일정 수정")
+    @DisplayName("일정 수정")
     @WithMockUser(username = "member1")
     void updateSchedule() throws Exception {
         // given
-        TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
-        TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ));
+        TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(0L, member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
+        TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(0L, member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ));
 
         TravelRoute route1 = travelRouteRepository.save(createTravelRoute(schedule1, travelPlace1, 1));
         TravelRoute route2 = travelRouteRepository.save(createTravelRoute(schedule1, travelPlace2, 2));
@@ -594,7 +593,7 @@ public class ScheduleControllerTest extends ScheduleTest {
         RouteRequest routeRequest1 = createRouteRequest(1, travelPlace1.getPlaceId());
         RouteRequest routeRequest2 = createRouteRequest(2, travelPlace2.getPlaceId());
 
-        UpdateScheduleRequest request = createUpdateScheduleRequest(new ArrayList<>(List.of(routeRequest1, routeRequest2)));
+        ScheduleUpdateRequest request = createUpdateScheduleRequest(new ArrayList<>(List.of(routeRequest1, routeRequest2)));
 
         // when
         mockMvc.perform(patch("/api/schedules/{scheduleId}", schedule1.getScheduleId())
@@ -609,12 +608,12 @@ public class ScheduleControllerTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("updateSchedule(): 일정 수정 시 일정 종료일을 오늘 날짜 이전으로 설정해 예외 발생")
+    @DisplayName("일정 수정 시 일정 종료일을 오늘 날짜 이전으로 설정해 예외 발생")
     @WithMockUser(username = "member1")
     void updateSchedule_methodArgumentNotValidException() throws Exception {
         // given
-        TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
-        TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ));
+        TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(0L, member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
+        TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(0L, member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ));
 
         member1.setTravelAttendeeList(new ArrayList<>(List.of(attendee1)));
         member2.setTravelAttendeeList(new ArrayList<>(List.of(attendee3)));
@@ -623,7 +622,7 @@ public class ScheduleControllerTest extends ScheduleTest {
         RouteRequest routeRequest1 = createRouteRequest(1, travelPlace1.getPlaceId());
         RouteRequest routeRequest2 = createRouteRequest(2, travelPlace2.getPlaceId());
 
-        UpdateScheduleRequest request = createUpdateScheduleRequest(new ArrayList<>(List.of(routeRequest1, routeRequest2)));
+        ScheduleUpdateRequest request = createUpdateScheduleRequest(new ArrayList<>(List.of(routeRequest1, routeRequest2)));
         request.setEndDate(LocalDate.now().minusDays(10));
 
 
@@ -637,19 +636,19 @@ public class ScheduleControllerTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("updateSchedule(): 일정 수정 시 저장된 여행 루트 없는 경우")
+    @DisplayName("일정 수정 시 저장된 여행 루트 없는 경우")
     @WithMockUser(username = "member1")
     void updateScheduleNoSavedTravelRoute() throws Exception {
         // given
-        TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
-        TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ));
+        TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(0L, member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
+        TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(0L, member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ));
 
         member1.setTravelAttendeeList(new ArrayList<>(List.of(attendee1)));
         member2.setTravelAttendeeList(new ArrayList<>(List.of(attendee3)));
         schedule1.setTravelAttendeeList(new ArrayList<>(List.of(attendee1, attendee3)));
 
         RouteRequest routeRequest1 = createRouteRequest(1, travelPlace1.getPlaceId());
-        UpdateScheduleRequest request = createUpdateScheduleRequest(new ArrayList<>(List.of(routeRequest1)));
+        ScheduleUpdateRequest request = createUpdateScheduleRequest(new ArrayList<>(List.of(routeRequest1)));
 
         // when
         mockMvc.perform(patch("/api/schedules/{scheduleId}", schedule1.getScheduleId())
@@ -664,19 +663,19 @@ public class ScheduleControllerTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("updateSchedule(): 일정 수정 시 접근 권한이 없어 예외 발생")
+    @DisplayName("일정 수정 시 접근 권한이 없어 예외 발생")
     @WithMockUser(username = "member3")
     void updateScheduleForbiddenAccess_forbiddenScheduleException() throws Exception {
         // given
-        TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
-        TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ));
+        TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(0L, member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
+        TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(0L, member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ));
 
         member1.setTravelAttendeeList(new ArrayList<>(List.of(attendee1)));
         member2.setTravelAttendeeList(new ArrayList<>(List.of(attendee3)));
         schedule1.setTravelAttendeeList(new ArrayList<>(List.of(attendee1, attendee3)));
 
         RouteRequest routeRequest1 = createRouteRequest(1, travelPlace1.getPlaceId());
-        UpdateScheduleRequest request = createUpdateScheduleRequest(new ArrayList<>(List.of(routeRequest1)));
+        ScheduleUpdateRequest request = createUpdateScheduleRequest(new ArrayList<>(List.of(routeRequest1)));
 
         // when, then
         mockMvc.perform(patch("/api/schedules/{scheduleId}", schedule1.getScheduleId())
@@ -689,19 +688,19 @@ public class ScheduleControllerTest extends ScheduleTest {
 
 
     @Test
-    @DisplayName("updateSchedule(): 일정 수정 시 수정 권한이 없어 예외 발생")
+    @DisplayName("일정 수정 시 수정 권한이 없어 예외 발생")
     @WithMockUser(username = "member2")
     void updateScheduleForbiddenEdit_forbiddenScheduleException() throws Exception {
         // given
-        TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
-        TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ));
+        TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(0L, member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
+        TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(0L, member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ));
 
         member1.setTravelAttendeeList(new ArrayList<>(List.of(attendee1)));
         member2.setTravelAttendeeList(new ArrayList<>(List.of(attendee3)));
         schedule1.setTravelAttendeeList(new ArrayList<>(List.of(attendee1, attendee3)));
 
         RouteRequest routeRequest1 = createRouteRequest(1, travelPlace1.getPlaceId());
-        UpdateScheduleRequest request = createUpdateScheduleRequest(new ArrayList<>(List.of(routeRequest1)));
+        ScheduleUpdateRequest request = createUpdateScheduleRequest(new ArrayList<>(List.of(routeRequest1)));
 
         // when, then
         mockMvc.perform(patch("/api/schedules/{scheduleId}", schedule1.getScheduleId())
@@ -713,12 +712,12 @@ public class ScheduleControllerTest extends ScheduleTest {
 
 
     @Test
-    @DisplayName("deleteSchedule(): 일정 삭제")
+    @DisplayName("일정 삭제")
     @WithMockUser(username = "member1")
     void deleteSchedule() throws Exception {
         // given
-        TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
-        TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ));
+        TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(0L, member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
+        TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(0L, member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ));
 
         member1.setTravelAttendeeList(new ArrayList<>(List.of(attendee1)));
         member2.setTravelAttendeeList(new ArrayList<>(List.of(attendee2)));
@@ -737,12 +736,12 @@ public class ScheduleControllerTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("deleteSchedule(): 일정 삭제 시 채팅 메시지 데이터 없는 경우")
+    @DisplayName("일정 삭제 시 채팅 메시지 데이터 없는 경우")
     @WithMockUser(username = "member1")
     void deleteScheduleNoDataChatMessage() throws Exception {
         // given
-        TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
-        TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ));
+        TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(0L, member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
+        TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(0L, member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ));
 
         member1.setTravelAttendeeList(new ArrayList<>(List.of(attendee1)));
         member2.setTravelAttendeeList(new ArrayList<>(List.of(attendee2)));
@@ -756,12 +755,12 @@ public class ScheduleControllerTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("deleteSchedule(): 일정 삭제 시 삭제 권한이 없는 사용자 요청으로 예외 발생")
+    @DisplayName("일정 삭제 시 삭제 권한이 없는 사용자 요청으로 예외 발생")
     @WithMockUser(username = "member2")
     void deleteSchedule_forbiddenScheduleException() throws Exception {
         // given
-        TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
-        TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ));
+        TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(0L, member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
+        TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(0L, member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ));
 
         member1.setTravelAttendeeList(new ArrayList<>(List.of(attendee1)));
         member2.setTravelAttendeeList(new ArrayList<>(List.of(attendee2)));

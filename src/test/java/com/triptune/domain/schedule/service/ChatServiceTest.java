@@ -16,6 +16,7 @@ import com.triptune.domain.schedule.exception.ForbiddenChatException;
 import com.triptune.domain.schedule.exception.ForbiddenScheduleException;
 import com.triptune.domain.schedule.repository.ChatMessageRepository;
 import com.triptune.domain.schedule.repository.TravelAttendeeRepository;
+import com.triptune.domain.schedule.repository.TravelScheduleRepository;
 import com.triptune.global.enumclass.ErrorCode;
 import com.triptune.global.exception.DataNotFoundException;
 import com.triptune.global.util.PageUtil;
@@ -53,6 +54,9 @@ class ChatServiceTest extends ScheduleTest {
     @Mock
     private TravelAttendeeRepository travelAttendeeRepository;
 
+    @Mock
+    private TravelScheduleRepository travelScheduleRepository;
+
 
     private TravelSchedule schedule;
     private Member member1;
@@ -75,7 +79,7 @@ class ChatServiceTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("getChatMessages() : 채팅 조회")
+    @DisplayName("채팅 메시지 조회")
     void getChatMessages(){
         // given
         Pageable pageable = PageUtil.chatPageable(1);
@@ -119,7 +123,7 @@ class ChatServiceTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("getChatMessages() : 채팅 조회 시 한 사용자가 연속적인 채팅을 보낸 경우")
+    @DisplayName("채팅 메시지 조회 시 한 사용자가 연속적인 채팅을 보낸 경우")
     void getChatMessagesOneMember(){
         // given
         Pageable pageable = PageUtil.chatPageable(1);
@@ -146,7 +150,7 @@ class ChatServiceTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("getChatMessages() : 채팅 조회 시 연속적인 대화가 없는 경우")
+    @DisplayName("채팅 메시지 조회 시 연속적인 대화가 없는 경우")
     void getChatMessagesOneChat(){
         // given
         Pageable pageable = PageUtil.chatPageable(1);
@@ -180,7 +184,7 @@ class ChatServiceTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("getChatMessages() : 채팅 조회 대화가 없는 경우")
+    @DisplayName("채팅 메시지 조회 시 메시지가 없는 경우")
     void getChatMessagesNotMessages(){
         // given
         Pageable pageable = PageUtil.chatPageable(1);
@@ -200,7 +204,7 @@ class ChatServiceTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("getChatMessages() : 채팅 조회 시 사용자 데이터 존재하지 않아 예외 발생")
+    @DisplayName("채팅 메시지 조회 시 사용자 데이터 존재하지 않아 예외 발생")
     void getChatMessagesNotFoundUser_dataNotFoundException(){
         // given
         Pageable pageable = PageUtil.chatPageable(1);
@@ -222,12 +226,13 @@ class ChatServiceTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("sendChatMessage(): 채팅 내용 저장 및 가공")
+    @DisplayName("채팅 메시지 저장")
     void sendChatMessage(){
         // given
         ChatMessageRequest request = createChatMessageRequest(schedule.getScheduleId(), member1.getNickname(), "hello1");
-        TravelAttendee attendee = createTravelAttendee(member1, schedule, AttendeeRole.AUTHOR, AttendeePermission.ALL);
+        TravelAttendee attendee = createTravelAttendee(1L, member1, schedule, AttendeeRole.AUTHOR, AttendeePermission.ALL);
 
+        when(travelScheduleRepository.existsById(anyLong())).thenReturn(true);
         when(memberRepository.findByNickname(anyString())).thenReturn(Optional.of(member1));
         when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_UserId(anyLong(), anyString()))
                 .thenReturn(Optional.of(attendee));
@@ -242,12 +247,13 @@ class ChatServiceTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("sendChatMessage(): 채팅 내용 저장 및 가공 시 채팅 권한이 없어 예외 발생")
+    @DisplayName("채팅 메시지 저장 시 채팅 권한이 없어 예외 발생")
     void sendChatMessage_ForbiddenChatException1(){
         // given
         ChatMessageRequest request = createChatMessageRequest(schedule.getScheduleId(), member1.getNickname(), "hello1");
-        TravelAttendee attendee = createTravelAttendee(member1, schedule, AttendeeRole.GUEST, AttendeePermission.EDIT);
+        TravelAttendee attendee = createTravelAttendee(1L, member1, schedule, AttendeeRole.GUEST, AttendeePermission.EDIT);
 
+        when(travelScheduleRepository.existsById(anyLong())).thenReturn(true);
         when(memberRepository.findByNickname(anyString())).thenReturn(Optional.of(member1));
         when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_UserId(anyLong(), anyString()))
                 .thenReturn(Optional.of(attendee));
@@ -261,12 +267,13 @@ class ChatServiceTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("sendChatMessage(): 채팅 내용 저장 및 가공 시 채팅 권한이 없어 예외 발생")
+    @DisplayName("채팅 메시지 저장 시 채팅 권한이 없어 예외 발생")
     void sendChatMessage_ForbiddenChatException2(){
         // given
         ChatMessageRequest request = createChatMessageRequest(schedule.getScheduleId(), member1.getNickname(), "hello1");
-        TravelAttendee attendee = createTravelAttendee(member1, schedule, AttendeeRole.GUEST, AttendeePermission.READ);
+        TravelAttendee attendee = createTravelAttendee(1L, member1, schedule, AttendeeRole.GUEST, AttendeePermission.READ);
 
+        when(travelScheduleRepository.existsById(anyLong())).thenReturn(true);
         when(memberRepository.findByNickname(anyString())).thenReturn(Optional.of(member1));
         when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_UserId(anyLong(), anyString()))
                 .thenReturn(Optional.of(attendee));
@@ -280,7 +287,7 @@ class ChatServiceTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("getMemberByMemberId(): 사용자 인덱스로 사용자 정보 조회")
+    @DisplayName("사용자 인덱스로 사용자 정보 조회")
     void getMemberByMemberId(){
         // given
         when(memberRepository.findByMemberId(anyLong())).thenReturn(Optional.of(member1));
@@ -294,7 +301,7 @@ class ChatServiceTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("getMemberByMemberId(): 사용자 인덱스로 사용자 정보 조회 시 데이터 없어 예외 발생")
+    @DisplayName("사용자 인덱스로 사용자 정보 조회 시 데이터 없어 예외 발생")
     void getMemberByMemberId_dataNotFoundException(){
         // given
         when(memberRepository.findByMemberId(anyLong())).thenReturn(Optional.empty());
@@ -309,7 +316,7 @@ class ChatServiceTest extends ScheduleTest {
 
 
     @Test
-    @DisplayName("getMemberByNickname(): 닉네임으로 사용자 정보 조회")
+    @DisplayName("닉네임으로 사용자 정보 조회")
     void getChatMemberByNickname(){
         // given
         when(memberRepository.findByNickname(anyString())).thenReturn(Optional.of(member1));
@@ -324,7 +331,7 @@ class ChatServiceTest extends ScheduleTest {
 
 
     @Test
-    @DisplayName("getMemberByNickname(): 닉네임으로 사용자 정보 조회 시 데이터 없어 예외 발생")
+    @DisplayName("닉네임으로 사용자 정보 조회 시 데이터 없어 예외 발생")
     void getChatMemberByNickname_dataNotFoundException(){
         // given
         when(memberRepository.findByNickname(anyString())).thenReturn(Optional.empty());
@@ -340,10 +347,10 @@ class ChatServiceTest extends ScheduleTest {
 
 
     @Test
-    @DisplayName("getTravelAttendee(): 참석자 정보 조회")
+    @DisplayName("참석자 정보 조회")
     void getTravelAttendee(){
         // given
-        TravelAttendee attendee = createTravelAttendee(member1, schedule, AttendeeRole.AUTHOR, AttendeePermission.ALL);
+        TravelAttendee attendee = createTravelAttendee(1L, member1, schedule, AttendeeRole.AUTHOR, AttendeePermission.ALL);
 
         when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_UserId(anyLong(), anyString()))
                 .thenReturn(Optional.of(attendee));
@@ -358,7 +365,7 @@ class ChatServiceTest extends ScheduleTest {
 
 
     @Test
-    @DisplayName("getTravelAttendee(): 참석자 정보 조회 시 데이터 없어 예외 발생")
+    @DisplayName("참석자 정보 조회 시 데이터 없어 예외 발생")
     void getTravelAttendee_forbiddenScheduleException(){
         // given
         when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_UserId(anyLong(), anyString())).thenReturn(Optional.empty());

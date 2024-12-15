@@ -6,10 +6,10 @@ import com.triptune.domain.member.entity.ProfileImage;
 import com.triptune.domain.member.repository.MemberRepository;
 import com.triptune.domain.schedule.ScheduleTest;
 import com.triptune.domain.schedule.dto.*;
-import com.triptune.domain.schedule.dto.request.CreateScheduleRequest;
+import com.triptune.domain.schedule.dto.request.ScheduleCreateRequest;
 import com.triptune.domain.schedule.dto.request.RouteRequest;
-import com.triptune.domain.schedule.dto.request.UpdateScheduleRequest;
-import com.triptune.domain.schedule.dto.response.CreateScheduleResponse;
+import com.triptune.domain.schedule.dto.request.ScheduleUpdateRequest;
+import com.triptune.domain.schedule.dto.response.ScheduleCreateResponse;
 import com.triptune.domain.schedule.dto.response.ScheduleDetailResponse;
 import com.triptune.domain.schedule.dto.response.ScheduleInfoResponse;
 import com.triptune.domain.schedule.entity.ChatMessage;
@@ -112,11 +112,11 @@ public class ScheduleServiceTest extends ScheduleTest {
         schedule2 = createTravelSchedule(2L, "테스트2");
         schedule3 = createTravelSchedule(3L, "테스트3");
 
-        attendee1 = createTravelAttendee(member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL);
-        attendee2 = createTravelAttendee(member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ);
-        TravelAttendee attendee3 = createTravelAttendee(member1, schedule2, AttendeeRole.AUTHOR, AttendeePermission.ALL);
-        TravelAttendee attendee4 = createTravelAttendee(member2, schedule2, AttendeeRole.GUEST, AttendeePermission.CHAT);
-        TravelAttendee attendee5 = createTravelAttendee(member1, schedule3, AttendeeRole.AUTHOR, AttendeePermission.ALL);
+        attendee1 = createTravelAttendee(1L, member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL);
+        attendee2 = createTravelAttendee(2L, member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ);
+        TravelAttendee attendee3 = createTravelAttendee(3L, member1, schedule2, AttendeeRole.AUTHOR, AttendeePermission.ALL);
+        TravelAttendee attendee4 = createTravelAttendee(4L, member2, schedule2, AttendeeRole.GUEST, AttendeePermission.CHAT);
+        TravelAttendee attendee5 = createTravelAttendee(5L, member1, schedule3, AttendeeRole.AUTHOR, AttendeePermission.ALL);
         schedule1.setTravelAttendeeList(new ArrayList<>(List.of(attendee1, attendee2)));
         schedule2.setTravelAttendeeList(new ArrayList<>(List.of(attendee3, attendee4)));
         schedule3.setTravelAttendeeList(new ArrayList<>(List.of(attendee5)));
@@ -130,8 +130,8 @@ public class ScheduleServiceTest extends ScheduleTest {
 
 
     @Test
-    @DisplayName("getSchedules(): 내 일정 목록 조회")
-    void getSchedules(){
+    @DisplayName("내 일정 목록 조회")
+    void getAllSchedulesByUserId(){
         // given
         Pageable pageable = PageUtil.schedulePageable(1);
 
@@ -142,7 +142,7 @@ public class ScheduleServiceTest extends ScheduleTest {
         when(travelScheduleRepository.countSharedTravelSchedulesByUserId(anyString())).thenReturn(2);
 
         // when
-        SchedulePageResponse<ScheduleInfoResponse> response = scheduleService.getSchedules(1, member1.getUserId());
+        SchedulePageResponse<ScheduleInfoResponse> response = scheduleService.getAllSchedulesByUserId(1, member1.getUserId());
 
         // then
         List<ScheduleInfoResponse> content = response.getContent();
@@ -156,8 +156,8 @@ public class ScheduleServiceTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("getSchedules(): 내 일정 목록 조회 시 공유된 일정이 없는 경우")
-    void getSchedulesNotShared(){
+    @DisplayName("내 일정 목록 조회 시 공유된 일정이 없는 경우")
+    void getAllSchedulesByUserIdNotShared(){
         // given
         Pageable pageable = PageUtil.schedulePageable(1);
 
@@ -168,7 +168,7 @@ public class ScheduleServiceTest extends ScheduleTest {
         when(travelScheduleRepository.countSharedTravelSchedulesByUserId(anyString())).thenReturn(0);
 
         // when
-        SchedulePageResponse<ScheduleInfoResponse> response = scheduleService.getSchedules(1, member1.getUserId());
+        SchedulePageResponse<ScheduleInfoResponse> response = scheduleService.getAllSchedulesByUserId(1, member1.getUserId());
 
         // then
         List<ScheduleInfoResponse> content = response.getContent();
@@ -180,8 +180,8 @@ public class ScheduleServiceTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("getSchedules(): 내 일정 목록 조회 시 일정 데이터 없는 경우")
-    void getSchedulesNoScheduleData(){
+    @DisplayName("내 일정 목록 조회 시 일정 데이터 없는 경우")
+    void getAllSchedulesByUserIdNoScheduleData(){
         // given
         Pageable pageable = PageUtil.schedulePageable(1);
         Page<TravelSchedule> emptySchedulePage = PageUtil.createPage(new ArrayList<>(), pageable, 0);
@@ -190,7 +190,7 @@ public class ScheduleServiceTest extends ScheduleTest {
         when(travelScheduleRepository.countSharedTravelSchedulesByUserId(anyString())).thenReturn(2);
 
         // when
-        SchedulePageResponse<ScheduleInfoResponse> response = scheduleService.getSchedules(1, member1.getUserId());
+        SchedulePageResponse<ScheduleInfoResponse> response = scheduleService.getAllSchedulesByUserId(1, member1.getUserId());
 
         // then
         assertEquals(response.getTotalElements(), 0);
@@ -200,8 +200,8 @@ public class ScheduleServiceTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("getSchedules(): 내 일정 목록 조회 시 이미지 썸네일 데이터 없는 경우")
-    void getSchedulesNoImageThumbnail(){
+    @DisplayName("내 일정 목록 조회 시 이미지 썸네일 데이터 없는 경우")
+    void getAllSchedulesByUserIdNoImageThumbnail(){
         // given
         Pageable pageable = PageUtil.schedulePageable(1);
         travelPlace1.getTravelImageList().get(0).setThumbnail(false);
@@ -213,7 +213,7 @@ public class ScheduleServiceTest extends ScheduleTest {
         when(travelScheduleRepository.countSharedTravelSchedulesByUserId(anyString())).thenReturn(1);
 
         // when
-        SchedulePageResponse<ScheduleInfoResponse> response = scheduleService.getSchedules(1, member1.getUserId());
+        SchedulePageResponse<ScheduleInfoResponse> response = scheduleService.getAllSchedulesByUserId(1, member1.getUserId());
 
         // then
         List<ScheduleInfoResponse> content = response.getContent();
@@ -227,8 +227,8 @@ public class ScheduleServiceTest extends ScheduleTest {
 
 
     @Test
-    @DisplayName("getSchedules(): 내 일정 목록 조회 시 이미지 데이터 없는 경우")
-    void getSchedulesNoImageData(){
+    @DisplayName("내 일정 목록 조회 시 이미지 데이터 없는 경우")
+    void getAllSchedulesByUserIdNoImageData(){
         // given
         Pageable pageable = PageUtil.schedulePageable(1);
         travelPlace1.setTravelImageList(new ArrayList<>());
@@ -240,7 +240,7 @@ public class ScheduleServiceTest extends ScheduleTest {
         when(travelScheduleRepository.countSharedTravelSchedulesByUserId(anyString())).thenReturn(1);
 
         // when
-        SchedulePageResponse<ScheduleInfoResponse> response = scheduleService.getSchedules(1, member1.getUserId());
+        SchedulePageResponse<ScheduleInfoResponse> response = scheduleService.getAllSchedulesByUserId(1, member1.getUserId());
 
         // then
         List<ScheduleInfoResponse> content = response.getContent();
@@ -253,8 +253,8 @@ public class ScheduleServiceTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("getSharedSchedules(): 공유된 일정 목록 조회")
-    void getSharedSchedules(){
+    @DisplayName("공유된 일정 목록 조회")
+    void getSharedSchedulesByUserId(){
         // given
         Pageable pageable = PageUtil.schedulePageable(1);
 
@@ -265,7 +265,7 @@ public class ScheduleServiceTest extends ScheduleTest {
         when(travelScheduleRepository.countTravelSchedulesByUserId(anyString())).thenReturn(3);
 
         // when
-        SchedulePageResponse<ScheduleInfoResponse> response = scheduleService.getSharedSchedules(1, member1.getUserId());
+        SchedulePageResponse<ScheduleInfoResponse> response = scheduleService.getSharedSchedulesByUserId(1, member1.getUserId());
 
         // then
         List<ScheduleInfoResponse> content = response.getContent();
@@ -280,8 +280,8 @@ public class ScheduleServiceTest extends ScheduleTest {
 
 
     @Test
-    @DisplayName("getSharedSchedules(): 공유된 일정 목록 조회 시 일정 데이터 없는 경우")
-    void getSharedSchedulesNoScheduleData(){
+    @DisplayName("공유된 일정 목록 조회 시 일정 데이터 없는 경우")
+    void getSharedSchedulesByUserIdNoScheduleData(){
         // given
         Pageable pageable = PageUtil.schedulePageable(1);
         Page<TravelSchedule> emptySchedulePage = PageUtil.createPage(new ArrayList<>(), pageable, 0);
@@ -290,7 +290,7 @@ public class ScheduleServiceTest extends ScheduleTest {
         when(travelScheduleRepository.countTravelSchedulesByUserId(anyString())).thenReturn(2);
 
         // when
-        SchedulePageResponse<ScheduleInfoResponse> response = scheduleService.getSharedSchedules(1, member1.getUserId());
+        SchedulePageResponse<ScheduleInfoResponse> response = scheduleService.getSharedSchedulesByUserId(1, member1.getUserId());
 
         // then
         assertEquals(response.getTotalElements(), 2);
@@ -299,8 +299,8 @@ public class ScheduleServiceTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("getSharedSchedules(): 공유된 일정 목록 조회 시 이미지 썸네일 데이터 없는 경우")
-    void getSharedSchedulesNoImageThumbnail(){
+    @DisplayName("공유된 일정 목록 조회 시 이미지 썸네일 데이터 없는 경우")
+    void getSharedSchedulesByUserIdNoImageThumbnail(){
         // given
         Pageable pageable = PageUtil.schedulePageable(1);
         travelPlace1.getTravelImageList().get(0).setThumbnail(false);
@@ -312,7 +312,7 @@ public class ScheduleServiceTest extends ScheduleTest {
         when(travelScheduleRepository.countTravelSchedulesByUserId(anyString())).thenReturn(3);
 
         // when
-        SchedulePageResponse<ScheduleInfoResponse> response = scheduleService.getSharedSchedules(1, member1.getUserId());
+        SchedulePageResponse<ScheduleInfoResponse> response = scheduleService.getSharedSchedulesByUserId(1, member1.getUserId());
 
         // then
         List<ScheduleInfoResponse> content = response.getContent();
@@ -326,8 +326,8 @@ public class ScheduleServiceTest extends ScheduleTest {
 
 
     @Test
-    @DisplayName("getSharedSchedules(): 내 일정 목록 조회 시 이미지 데이터 없는 경우")
-    void getSharedSchedulesNoImageData(){
+    @DisplayName("내 일정 목록 조회 시 이미지 데이터 없는 경우")
+    void getSharedSchedulesByUserIdNoImageData(){
         // given
         Pageable pageable = PageUtil.schedulePageable(1);
         travelPlace1.setTravelImageList(new ArrayList<>());
@@ -339,7 +339,7 @@ public class ScheduleServiceTest extends ScheduleTest {
         when(travelScheduleRepository.countTravelSchedulesByUserId(anyString())).thenReturn(1);
 
         // when
-        SchedulePageResponse<ScheduleInfoResponse> response = scheduleService.getSharedSchedules(1, member1.getUserId());
+        SchedulePageResponse<ScheduleInfoResponse> response = scheduleService.getSharedSchedulesByUserId(1, member1.getUserId());
 
         // then
         List<ScheduleInfoResponse> content = response.getContent();
@@ -352,7 +352,7 @@ public class ScheduleServiceTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("searchAllSchedules(): 내 일정 검색")
+    @DisplayName("내 일정 검색")
     void searchAllSchedules(){
         // given
         String keyword = "테스트";
@@ -378,7 +378,7 @@ public class ScheduleServiceTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("searchAllSchedules(): 내 일정 검색 시 공유된 일정이 없는 경우")
+    @DisplayName("내 일정 검색 시 공유된 일정이 없는 경우")
     void searchAllSchedulesNotShared(){
         // given
         String keyword = "3";
@@ -403,7 +403,7 @@ public class ScheduleServiceTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("searchAllSchedules(): 내 일정 검색 시 검색 결과가 없는 경우")
+    @DisplayName("내 일정 검색 시 검색 결과가 없는 경우")
     void searchAllSchedulesNoData(){
         // given
         String keyword = "ㅁㄴㅇㄹ";
@@ -423,7 +423,7 @@ public class ScheduleServiceTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("searchAllSchedules(): 내 일정 검색 시 이미지 썸네일 데이터 없는 경우")
+    @DisplayName("내 일정 검색 시 이미지 썸네일 데이터 없는 경우")
     void searchAllSchedulesNoImageThumbnail(){
         // given
         String keyword = "테스트";
@@ -451,7 +451,7 @@ public class ScheduleServiceTest extends ScheduleTest {
 
 
     @Test
-    @DisplayName("searchAllSchedules(): 내 일정 목록 조회 시 이미지 데이터 없는 경우")
+    @DisplayName("내 일정 목록 조회 시 이미지 데이터 없는 경우")
     void searchAllSchedulesNoImageData(){
         // given
         String keyword = "1";
@@ -478,7 +478,7 @@ public class ScheduleServiceTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("searchSharedSchedules(): 공유된 일정 검색")
+    @DisplayName("공유된 일정 검색")
     void searchSharedSchedules(){
         // given
         String keyword = "테스트";
@@ -506,7 +506,7 @@ public class ScheduleServiceTest extends ScheduleTest {
 
 
     @Test
-    @DisplayName("searchSharedSchedules(): 공유된 일정 목록 조회 시 일정 데이터 없는 경우")
+    @DisplayName("공유된 일정 목록 조회 시 일정 데이터 없는 경우")
     void searchSharedSchedulesNoData(){
         // given
         String keyword = "테스트";
@@ -526,7 +526,7 @@ public class ScheduleServiceTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("searchSharedSchedules(): 공유된 일정 목록 조회 시 이미지 썸네일 데이터 없는 경우")
+    @DisplayName("공유된 일정 목록 조회 시 이미지 썸네일 데이터 없는 경우")
     void searchSharedSchedulesNoImageThumbnail(){
         // given
         String keyword = "테스트";
@@ -554,7 +554,7 @@ public class ScheduleServiceTest extends ScheduleTest {
 
 
     @Test
-    @DisplayName("searchSharedSchedules(): 공유된 일정 검색 시 이미지 데이터 없는 경우")
+    @DisplayName("공유된 일정 검색 시 이미지 데이터 없는 경우")
     void searchSharedSchedulesNoImageData(){
         // given
         String keyword = "테스트";
@@ -581,7 +581,7 @@ public class ScheduleServiceTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("createScheduleInfoResponse(): TravelSchedule 를 ScheduleInfoResponse 로 변경")
+    @DisplayName("TravelSchedule 를 ScheduleInfoResponse 로 변경")
     void createScheduleInfoResponse(){
         // given
         List<TravelSchedule> travelScheduleList = new ArrayList<>(List.of(schedule1));
@@ -598,7 +598,7 @@ public class ScheduleServiceTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("createScheduleInfoResponse(): TravelSchedule 를 ScheduleInfoResponse 로 변경 시 썸네일 없는 경우")
+    @DisplayName("TravelSchedule 를 ScheduleInfoResponse 로 변경 시 썸네일 없는 경우")
     void createScheduleInfoResponseWithoutThumbnail(){
         // given
         List<TravelSchedule> travelScheduleList = new ArrayList<>(List.of(schedule1));
@@ -616,7 +616,7 @@ public class ScheduleServiceTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("createScheduleInfoResponse(): TravelSchedule 를 ScheduleInfoResponse 로 변경 시 작성자가 없어 예외 발생")
+    @DisplayName("TravelSchedule 를 ScheduleInfoResponse 로 변경 시 작성자가 없어 예외 발생")
     void createScheduleInfoResponse_notFoundException(){
         // given
         List<TravelSchedule> travelScheduleList = new ArrayList<>(List.of(schedule1));
@@ -635,7 +635,7 @@ public class ScheduleServiceTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("convertToScheduleOverviewResponse(): TravelSchedule 를 ScheduleInfoResponse 로 변경 시 접근 권한이 없어 예외 발생")
+    @DisplayName("TravelSchedule 를 ScheduleInfoResponse 로 변경 시 접근 권한이 없어 예외 발생")
     void createScheduleInfoResponse_forbiddenScheduleException(){
         // given
         List<TravelSchedule> travelScheduleList = new ArrayList<>(List.of(schedule3));
@@ -651,7 +651,7 @@ public class ScheduleServiceTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("getAuthorDTO() : 작성자 조회해서 dto 생성")
+    @DisplayName("작성자 조회해서 AuthorDTO 생성")
     void createAuthorDTO(){
         // given
         // when
@@ -664,7 +664,7 @@ public class ScheduleServiceTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("getAuthorDTO() : 작성자 조회해서 dto 생성 시 작성자가 없어 예외 발생")
+    @DisplayName("작성자 조회해서 AuthorDTO 생성 시 작성자가 없어 예외 발생")
     void createAuthorDTO_notFoundException(){
         // given
         for(TravelAttendee attendee : schedule1.getTravelAttendeeList()){
@@ -682,7 +682,7 @@ public class ScheduleServiceTest extends ScheduleTest {
 
 
     @Test
-    @DisplayName("getThumbnailUrl(): 썸네일 조회")
+    @DisplayName("썸네일 조회")
     void getThumbnailUrl(){
         // given
         // when
@@ -694,7 +694,7 @@ public class ScheduleServiceTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("getThumbnailUrl(): 썸네일 조회 시 썸네일 이미지 없는 경우")
+    @DisplayName("썸네일 조회 시 썸네일 이미지 없는 경우")
     void getThumbnailUrlNoThumbnailImage(){
         // given
         travelPlace1.getTravelImageList().get(0).setThumbnail(false);
@@ -708,7 +708,7 @@ public class ScheduleServiceTest extends ScheduleTest {
 
 
     @Test
-    @DisplayName("getThumbnailUrl(): 썸네일 조회 시 저장된 이미지 없는 경우")
+    @DisplayName("썸네일 조회 시 저장된 이미지 없는 경우")
     void getThumbnailUrlNoImageData(){
         // given
         travelPlace1.setTravelImageList(new ArrayList<>());
@@ -722,17 +722,17 @@ public class ScheduleServiceTest extends ScheduleTest {
 
 
     @Test
-    @DisplayName("createSchedule(): 일정 만들기 성공")
+    @DisplayName("일정 생성")
     void createSchedule(){
         // given
         String userId = "test";
-        CreateScheduleRequest request = createScheduleRequest();
+        ScheduleCreateRequest request = createScheduleRequest();
 
         when(travelScheduleRepository.save(any())).thenReturn(schedule1);
         when(memberRepository.findByUserId(any())).thenReturn(Optional.of(member1));
 
         // when
-        CreateScheduleResponse response = scheduleService.createSchedule(request, userId);
+        ScheduleCreateResponse response = scheduleService.createSchedule(request, userId);
 
         // then
         verify(travelAttendeeRepository, times(1)).save(any(TravelAttendee.class));
@@ -741,10 +741,10 @@ public class ScheduleServiceTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("createSchedule(): 저장된 사용자 정보 없어 DataNotFoundException 발생")
+    @DisplayName("일정 생성 시 저장된 사용자 정보 없어 DataNotFoundException 발생")
     void createSchedule_CustomUsernameDataNotFoundException(){
         // given
-        CreateScheduleRequest request = createScheduleRequest();
+        ScheduleCreateRequest request = createScheduleRequest();
 
         when(travelScheduleRepository.save(any())).thenReturn(schedule1);
         when(memberRepository.findByUserId(any())).thenReturn(Optional.empty());
@@ -759,7 +759,7 @@ public class ScheduleServiceTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("getScheduleDetail(): 일정 조회 성공")
+    @DisplayName("일정 상세 조회")
     void getScheduleDetail(){
         // given
         List<TravelPlace> placeList = new ArrayList<>(List.of(travelPlace1, travelPlace2));
@@ -782,7 +782,7 @@ public class ScheduleServiceTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("getScheduleDetail(): 일정 조회 시 여행지 데이터 없는 경우")
+    @DisplayName("일정 상세 조회 시 여행지 데이터 없는 경우")
     void getScheduleDetailWithoutData(){
         // given
         Pageable pageable = PageUtil.defaultPageable(1);
@@ -802,7 +802,7 @@ public class ScheduleServiceTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("getScheduleDetail(): 일정 조회 시 일정을 찾을 수 없어 DataNotFoundException 발생")
+    @DisplayName("일정 상세 조회 시 일정을 찾을 수 없어 DataNotFoundException 발생")
     void getScheduleDetail_dataNotFoundException(){
         // given
         when(travelScheduleRepository.findByScheduleId(any())).thenReturn(Optional.empty());
@@ -816,31 +816,31 @@ public class ScheduleServiceTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("updateSchedule(): 일정 수정 성공")
+    @DisplayName("일정 수정")
     void updateSchedule(){
         String userId = member1.getUserId();
         Long scheduleId = schedule1.getScheduleId();
 
         RouteRequest routeRequest1 = createRouteRequest(1, travelPlace1.getPlaceId());
         RouteRequest routeRequest2 = createRouteRequest(2, travelPlace2.getPlaceId());
-        UpdateScheduleRequest updateScheduleRequest = createUpdateScheduleRequest(new ArrayList<>(List.of(routeRequest1, routeRequest2)));
+        ScheduleUpdateRequest scheduleUpdateRequest = createUpdateScheduleRequest(new ArrayList<>(List.of(routeRequest1, routeRequest2)));
 
         when(travelScheduleRepository.findByScheduleId(scheduleId)).thenReturn(Optional.of(schedule1));
         when(travelPlaceRepository.findByPlaceId(travelPlace1.getPlaceId())).thenReturn(Optional.of(travelPlace1));
         when(travelPlaceRepository.findByPlaceId(travelPlace2.getPlaceId())).thenReturn(Optional.of(travelPlace2));
 
         // when
-        assertDoesNotThrow(() -> scheduleService.updateSchedule(userId, scheduleId, updateScheduleRequest));
+        assertDoesNotThrow(() -> scheduleService.updateSchedule(userId, scheduleId, scheduleUpdateRequest));
 
         // then
         assertEquals(schedule1.getTravelRouteList().size(), 2);
-        assertEquals(schedule1.getScheduleName(), updateScheduleRequest.getScheduleName());
-        assertEquals(schedule1.getStartDate(), updateScheduleRequest.getStartDate());
+        assertEquals(schedule1.getScheduleName(), scheduleUpdateRequest.getScheduleName());
+        assertEquals(schedule1.getStartDate(), scheduleUpdateRequest.getStartDate());
         assertEquals(schedule1.getTravelRouteList().get(0).getTravelPlace().getPlaceName(), travelPlace1.getPlaceName());
     }
 
     @Test
-    @DisplayName("updateSchedule(): 일정 수정 중 여행 루트 삭제에서 기존에 저장된 여행 루트가 없을 경우")
+    @DisplayName("일정 수정 중 여행 루트 삭제에서 기존에 저장된 여행 루트가 없을 경우")
     void updateScheduleNoSavedTravelRouteList(){
         // given
         String userId = member1.getUserId();
@@ -848,60 +848,43 @@ public class ScheduleServiceTest extends ScheduleTest {
 
         RouteRequest routeRequest1 = createRouteRequest(1, travelPlace1.getPlaceId());
         RouteRequest routeRequest2 = createRouteRequest(2, travelPlace2.getPlaceId());
-        UpdateScheduleRequest updateScheduleRequest = createUpdateScheduleRequest(new ArrayList<>(List.of(routeRequest1, routeRequest2)));
+        ScheduleUpdateRequest scheduleUpdateRequest = createUpdateScheduleRequest(new ArrayList<>(List.of(routeRequest1, routeRequest2)));
 
         when(travelScheduleRepository.findByScheduleId(scheduleId)).thenReturn(Optional.of(schedule2));
         when(travelPlaceRepository.findByPlaceId(travelPlace1.getPlaceId())).thenReturn(Optional.of(travelPlace1));
         when(travelPlaceRepository.findByPlaceId(travelPlace2.getPlaceId())).thenReturn(Optional.of(travelPlace2));
 
         // when
-        assertDoesNotThrow(() -> scheduleService.updateSchedule(userId, scheduleId, updateScheduleRequest));
+        assertDoesNotThrow(() -> scheduleService.updateSchedule(userId, scheduleId, scheduleUpdateRequest));
 
         // then
         assertEquals(schedule2.getTravelRouteList().size(), 2);
-        assertEquals(schedule2.getScheduleName(), updateScheduleRequest.getScheduleName());
-        assertEquals(schedule2.getStartDate(), updateScheduleRequest.getStartDate());
+        assertEquals(schedule2.getScheduleName(), scheduleUpdateRequest.getScheduleName());
+        assertEquals(schedule2.getStartDate(), scheduleUpdateRequest.getStartDate());
         assertEquals(schedule2.getTravelRouteList().get(0).getTravelPlace().getPlaceName(), travelPlace1.getPlaceName());
     }
 
     @Test
-    @DisplayName("updateTravelRouteInSchedule(): 일정의 여행 루트 수정")
+    @DisplayName("일정의 여행 루트 수정 시 기존에 저장된 여행 루트가 존재하는 경우")
     void updateTravelRouteInSchedule(){
         RouteRequest routeRequest1 = createRouteRequest(1, travelPlace1.getPlaceId());
         RouteRequest routeRequest2 = createRouteRequest(2, travelPlace2.getPlaceId());
-        UpdateScheduleRequest updateScheduleRequest = createUpdateScheduleRequest(new ArrayList<>(List.of(routeRequest1, routeRequest2)));
+        ScheduleUpdateRequest scheduleUpdateRequest = createUpdateScheduleRequest(new ArrayList<>(List.of(routeRequest1, routeRequest2)));
 
         when(travelPlaceRepository.findByPlaceId(travelPlace1.getPlaceId())).thenReturn(Optional.of(travelPlace1));
         when(travelPlaceRepository.findByPlaceId(travelPlace2.getPlaceId())).thenReturn(Optional.of(travelPlace2));
 
         // when
-        assertDoesNotThrow(() -> scheduleService.updateTravelRouteInSchedule(schedule1, updateScheduleRequest.getTravelRoute()));
+        assertDoesNotThrow(() -> scheduleService.updateTravelRouteInSchedule(schedule1, scheduleUpdateRequest.getTravelRoute()));
 
         // then
         assertEquals(schedule1.getTravelRouteList().size(), 2);
         assertEquals(schedule1.getTravelRouteList().get(0).getTravelPlace().getPlaceName(), travelPlace1.getPlaceName());
     }
 
-    @Test
-    @DisplayName("updateTravelRouteInSchedule(): 일정의 여행 루트 수정 중 기존에 저장된 여행 루트가 없을 경우")
-    void updateTravelRouteInScheduleNoSavedTravelRouteList(){
-        RouteRequest routeRequest1 = createRouteRequest(1, travelPlace1.getPlaceId());
-        RouteRequest routeRequest2 = createRouteRequest(2, travelPlace2.getPlaceId());
-        UpdateScheduleRequest updateScheduleRequest = createUpdateScheduleRequest(new ArrayList<>(List.of(routeRequest1, routeRequest2)));
-
-        when(travelPlaceRepository.findByPlaceId(travelPlace1.getPlaceId())).thenReturn(Optional.of(travelPlace1));
-        when(travelPlaceRepository.findByPlaceId(travelPlace2.getPlaceId())).thenReturn(Optional.of(travelPlace2));
-
-        // when
-        assertDoesNotThrow(() -> scheduleService.updateTravelRouteInSchedule(schedule2, updateScheduleRequest.getTravelRoute()));
-
-        // then
-        assertEquals(schedule2.getTravelRouteList().size(), 2);
-        assertEquals(schedule2.getTravelRouteList().get(0).getTravelPlace().getPlaceName(), travelPlace1.getPlaceName());
-    }
 
     @Test
-    @DisplayName("updateSchedule(): 일정 수정 시 일정 데이터 없어 예외 발생")
+    @DisplayName("일정 수정 시 일정 데이터 없어 예외 발생")
     void updateScheduleNoSchedule_dataNotFoundException(){
         // given
         String userId = member1.getUserId();
@@ -909,12 +892,12 @@ public class ScheduleServiceTest extends ScheduleTest {
 
         RouteRequest routeRequest1 = createRouteRequest(1, travelPlace1.getPlaceId());
         RouteRequest routeRequest2 = createRouteRequest(2, travelPlace2.getPlaceId());
-        UpdateScheduleRequest updateScheduleRequest = createUpdateScheduleRequest(new ArrayList<>(List.of(routeRequest1, routeRequest2)));
+        ScheduleUpdateRequest scheduleUpdateRequest = createUpdateScheduleRequest(new ArrayList<>(List.of(routeRequest1, routeRequest2)));
 
         when(travelScheduleRepository.findByScheduleId(scheduleId)).thenReturn(Optional.empty());
 
         // when
-        DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> scheduleService.updateSchedule(userId, scheduleId, updateScheduleRequest));
+        DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> scheduleService.updateSchedule(userId, scheduleId, scheduleUpdateRequest));
 
         // then
         assertEquals(fail.getHttpStatus(), ErrorCode.SCHEDULE_NOT_FOUND.getStatus());
@@ -923,7 +906,7 @@ public class ScheduleServiceTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("updateSchedule(): 일정 수정 시 요청 사용자에게 접근 권한이 없어 예외 발생")
+    @DisplayName("일정 수정 시 요청 사용자에게 접근 권한이 없어 예외 발생")
     void updateScheduleForbiddenAccess_forbiddenScheduleException(){
         // given
         String userId = member2.getUserId();
@@ -931,12 +914,12 @@ public class ScheduleServiceTest extends ScheduleTest {
 
         RouteRequest routeRequest1 = createRouteRequest(1, travelPlace1.getPlaceId());
         RouteRequest routeRequest2 = createRouteRequest(2, travelPlace2.getPlaceId());
-        UpdateScheduleRequest updateScheduleRequest = createUpdateScheduleRequest(new ArrayList<>(List.of(routeRequest1, routeRequest2)));
+        ScheduleUpdateRequest scheduleUpdateRequest = createUpdateScheduleRequest(new ArrayList<>(List.of(routeRequest1, routeRequest2)));
 
         when(travelScheduleRepository.findByScheduleId(scheduleId)).thenReturn(Optional.of(schedule3));
 
         // when
-        ForbiddenScheduleException fail = assertThrows(ForbiddenScheduleException.class, () -> scheduleService.updateSchedule(userId, scheduleId, updateScheduleRequest));
+        ForbiddenScheduleException fail = assertThrows(ForbiddenScheduleException.class, () -> scheduleService.updateSchedule(userId, scheduleId, scheduleUpdateRequest));
 
         // then
         assertEquals(fail.getHttpStatus(), ErrorCode.FORBIDDEN_ACCESS_SCHEDULE.getStatus());
@@ -945,7 +928,7 @@ public class ScheduleServiceTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("updateSchedule(): 일정 수정 시 요청 사용자에게 수정 권한이 없어 예외 발생")
+    @DisplayName("일정 수정 시 요청 사용자에게 수정 권한이 없어 예외 발생")
     void updateScheduleForbiddenEdit_forbiddenScheduleException(){
         // given
         String userId = member2.getUserId();
@@ -953,12 +936,12 @@ public class ScheduleServiceTest extends ScheduleTest {
 
         RouteRequest routeRequest1 = createRouteRequest(1, travelPlace1.getPlaceId());
         RouteRequest routeRequest2 = createRouteRequest(2, travelPlace2.getPlaceId());
-        UpdateScheduleRequest updateScheduleRequest = createUpdateScheduleRequest(new ArrayList<>(List.of(routeRequest1, routeRequest2)));
+        ScheduleUpdateRequest scheduleUpdateRequest = createUpdateScheduleRequest(new ArrayList<>(List.of(routeRequest1, routeRequest2)));
 
         when(travelScheduleRepository.findByScheduleId(scheduleId)).thenReturn(Optional.of(schedule1));
 
         // when
-        ForbiddenScheduleException fail = assertThrows(ForbiddenScheduleException.class, () -> scheduleService.updateSchedule(userId, scheduleId, updateScheduleRequest));
+        ForbiddenScheduleException fail = assertThrows(ForbiddenScheduleException.class, () -> scheduleService.updateSchedule(userId, scheduleId, scheduleUpdateRequest));
 
         // then
         assertEquals(fail.getHttpStatus(), ErrorCode.FORBIDDEN_EDIT_SCHEDULE.getStatus());
@@ -967,7 +950,7 @@ public class ScheduleServiceTest extends ScheduleTest {
 
 
     @Test
-    @DisplayName("updateSchedule(): 일정 수정 시 여행 루트에 저장된 여행지가 없어 예외 발생")
+    @DisplayName("일정 수정 시 여행 루트에 저장된 여행지가 없어 예외 발생")
     void updateScheduleNoTravelPlace_dataNotFoundException(){
         // given
         String userId = member1.getUserId();
@@ -975,13 +958,13 @@ public class ScheduleServiceTest extends ScheduleTest {
 
         RouteRequest routeRequest1 = createRouteRequest(1, travelPlace1.getPlaceId());
         RouteRequest routeRequest2 = createRouteRequest(2, travelPlace2.getPlaceId());
-        UpdateScheduleRequest updateScheduleRequest = createUpdateScheduleRequest(new ArrayList<>(List.of(routeRequest1, routeRequest2)));
+        ScheduleUpdateRequest scheduleUpdateRequest = createUpdateScheduleRequest(new ArrayList<>(List.of(routeRequest1, routeRequest2)));
 
         when(travelScheduleRepository.findByScheduleId(scheduleId)).thenReturn(Optional.of(schedule1));
         when(travelPlaceRepository.findByPlaceId(anyLong())).thenReturn(Optional.empty());
 
         // when
-        DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> scheduleService.updateSchedule(userId, scheduleId, updateScheduleRequest));
+        DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> scheduleService.updateSchedule(userId, scheduleId, scheduleUpdateRequest));
 
         // then
         assertEquals(fail.getHttpStatus(), ErrorCode.PLACE_NOT_FOUND.getStatus());
@@ -989,7 +972,7 @@ public class ScheduleServiceTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("findAttendeeInSchedule(): 요청 사용자가 일정에 참가자에 포함되는 경우")
+    @DisplayName("참가자 정보 조회")
     void getAttendeeInfo_containsAttendees(){
         // given
         // when
@@ -1001,7 +984,7 @@ public class ScheduleServiceTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("findAttendeeInSchedule(): 요청 사용자가 일정에 참가자에 포함되지 않는 경우")
+    @DisplayName("참가자 정보 조회 시 데이터 존재하지 않는 경우")
     void getAttendeeInfo_notContainsAttendees(){
         // given
         // when
@@ -1014,34 +997,34 @@ public class ScheduleServiceTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("checkUserPermission(): 사용자 편집 권한 중 ALL")
-    void checkUserPermissionALL(){
+    @DisplayName("일정 수정 사용자 권한 체크 ALL")
+    void checkScheduleEditPermissionALL(){
         // given
         attendee1.setPermission(AttendeePermission.ALL);
 
         // when, then
-        assertDoesNotThrow(() -> scheduleService.checkUserPermission(attendee1));
+        assertDoesNotThrow(() -> scheduleService.checkScheduleEditPermission(attendee1));
     }
 
     @Test
-    @DisplayName("checkUserPermission(): 사용자 편집 권한 중 EDIT")
-    void checkUserPermissionEdit(){
+    @DisplayName("일정 수정 사용자 권한 체크 EDIT")
+    void checkScheduleEditPermissionEdit(){
         // given
         attendee1.setPermission(AttendeePermission.EDIT);
 
         // when
         // then
-        assertDoesNotThrow(() -> scheduleService.checkUserPermission(attendee1));
+        assertDoesNotThrow(() -> scheduleService.checkScheduleEditPermission(attendee1));
     }
 
     @Test
-    @DisplayName("checkUserPermission(): 사용자 편집 권한 체크 시 CHAT 권한으로 예외 발생")
-    void checkUserPermissionCHAT_forbiddenScheduleException(){
+    @DisplayName("일정 수정 사용자 권한 체크 중 CHAT 권한으로 예외 발생")
+    void checkScheduleEditPermissionCHAT_forbiddenScheduleException(){
         // given
         attendee1.setPermission(AttendeePermission.CHAT);
 
         // when
-        ForbiddenScheduleException fail = assertThrows(ForbiddenScheduleException.class, () -> scheduleService.checkUserPermission(attendee1));
+        ForbiddenScheduleException fail = assertThrows(ForbiddenScheduleException.class, () -> scheduleService.checkScheduleEditPermission(attendee1));
 
         // then
         assertEquals(fail.getHttpStatus(), ErrorCode.FORBIDDEN_EDIT_SCHEDULE.getStatus());
@@ -1049,13 +1032,13 @@ public class ScheduleServiceTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("checkUserPermission(): 사용자 편집 권한 체크 시 READ 권한으로 예외 발생")
-    void checkUserPermissionREAD_forbiddenScheduleException(){
+    @DisplayName("일정 수정 사용자 권한 체크 시 READ 권한으로 예외 발생")
+    void checkScheduleEditPermissionREAD_forbiddenScheduleException(){
         // given
         attendee1.setPermission(AttendeePermission.READ);
 
         // when
-        ForbiddenScheduleException fail = assertThrows(ForbiddenScheduleException.class, () -> scheduleService.checkUserPermission(attendee1));
+        ForbiddenScheduleException fail = assertThrows(ForbiddenScheduleException.class, () -> scheduleService.checkScheduleEditPermission(attendee1));
 
         // then
         assertEquals(fail.getHttpStatus(), ErrorCode.FORBIDDEN_EDIT_SCHEDULE.getStatus());
@@ -1063,7 +1046,7 @@ public class ScheduleServiceTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("deleteSchedule(): 일정 삭제")
+    @DisplayName("일정 삭제")
     void deleteSchedule(){
         // given
         ChatMessage message1 = createChatMessage("chat1", schedule1.getScheduleId(), member1, "hello1");
@@ -1082,7 +1065,7 @@ public class ScheduleServiceTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("deleteSchedule(): 일정 삭제 시 채팅 메시지 없는 경우")
+    @DisplayName("일정 삭제 시 채팅 메시지 없는 경우")
     void deleteScheduleNoChatMessageData(){
         // given
         when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_UserId(anyLong(), anyString())).thenReturn(Optional.of(attendee1));
@@ -1096,7 +1079,7 @@ public class ScheduleServiceTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("deleteSchedule(): 일정 삭제 시 작성자가 아닌 사용자가 삭제 요청으로 인해 예외 발생")
+    @DisplayName("일정 삭제 시 작성자가 아닌 사용자가 삭제 요청으로 인해 예외 발생")
     void deleteScheduleNotAuthor_forbiddenScheduleException(){
         // given
         when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_UserId(anyLong(), anyString())).thenReturn(Optional.of(attendee2));
@@ -1109,7 +1092,7 @@ public class ScheduleServiceTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("deleteChatMessageByScheduleId(): 일정 인덱스를 통해 채팅 메시지 삭제")
+    @DisplayName("일정 id를 통해 채팅 메시지 삭제")
     void deleteChatMessageByScheduleId(){
         // given
         ChatMessage message1 = createChatMessage("chat1", schedule1.getScheduleId(), member1, "hello1");
@@ -1129,7 +1112,7 @@ public class ScheduleServiceTest extends ScheduleTest {
 
 
     @Test
-    @DisplayName("deleteChatMessageByScheduleId(): 일정 인덱스를 통해 채팅 메시지 삭제 시 채팅 메시지 데이터 없는 경우")
+    @DisplayName("일정 id를 통해 채팅 메시지 삭제 시 채팅 메시지 데이터 없는 경우")
     void deleteChatMessageByScheduleId_noData(){
         // given
         when(chatMessageRepository.findAllByScheduleId(anyLong())).thenReturn(new ArrayList<>());
@@ -1144,7 +1127,7 @@ public class ScheduleServiceTest extends ScheduleTest {
 
 
     @Test
-    @DisplayName("getMemberByUserId(): 저장된 사용자 정보 조회")
+    @DisplayName("저장된 사용자 정보 조회")
     void getMemberByUserId(){
         // given
         String userId = "member1";
@@ -1162,7 +1145,7 @@ public class ScheduleServiceTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("getMemberByUserId(): 저장된 사용자 정보 조회 시 데이터 찾을 수 없어 예외 발생")
+    @DisplayName("저장된 사용자 정보 조회 시 데이터 찾을 수 없어 예외 발생")
     void getMember_ByUserId_dataNotFoundException(){
         // given
         when(memberRepository.findByUserId(any())).thenReturn(Optional.empty());
@@ -1176,7 +1159,7 @@ public class ScheduleServiceTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("getScheduleByScheduleId(): 저장된 일정 조회")
+    @DisplayName("저장된 일정 조회")
     void getScheduleByScheduleId(){
         // given
         when(travelScheduleRepository.findByScheduleId(any())).thenReturn(Optional.of(schedule1));
@@ -1191,7 +1174,7 @@ public class ScheduleServiceTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("getScheduleByScheduleId(): 저장된 일정 조회 시 데이터 찾을 수 없어 예외 발생")
+    @DisplayName("저장된 일정 조회 시 데이터 찾을 수 없어 예외 발생")
     void getScheduleBySchedule_Id_dataNotFoundException(){
         // given
         when(travelScheduleRepository.findByScheduleId(any())).thenReturn(Optional.empty());
@@ -1205,7 +1188,7 @@ public class ScheduleServiceTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("getPlaceByPlaceId(): 저장된 여행지 조회 성공")
+    @DisplayName("저장된 여행지 조회")
     void getPlaceByPlaceId(){
         // given
         Long placeId = travelPlace1.getPlaceId();
@@ -1222,8 +1205,8 @@ public class ScheduleServiceTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("getPlaceByPlaceId(): 여행지가 존재하지 않아 예외 발생")
-    void getPlaceByPlaceNoTravelPlace_Id_dataNotFoundException(){
+    @DisplayName("저장된 여행지 데이터 조회 시 데이터 존재하지 않아 예외 발생")
+    void getPlaceByPlaceId_dataNotFoundException(){
         // given
         Long placeId = travelPlace1.getPlaceId();
 

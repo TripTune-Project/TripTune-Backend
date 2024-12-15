@@ -109,9 +109,9 @@ public class ScheduleTravelControllerTest extends BaseTest {
         schedule1 = travelScheduleRepository.save(createTravelSchedule(null,"테스트1"));
         schedule2 = travelScheduleRepository.save(createTravelSchedule(null,"테스트2"));
 
-        TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
-        TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ));
-        TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(member2, schedule2, AttendeeRole.AUTHOR, AttendeePermission.ALL));
+        TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(0L, member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
+        TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(0L, member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ));
+        TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(0L, member2, schedule2, AttendeeRole.AUTHOR, AttendeePermission.ALL));
 
         member1.setTravelAttendeeList(new ArrayList<>(List.of(attendee1)));
         member2.setTravelAttendeeList(new ArrayList<>(List.of(attendee2, attendee3)));
@@ -122,7 +122,7 @@ public class ScheduleTravelControllerTest extends BaseTest {
 
 
     @Test
-    @DisplayName("getTravelPlaces(): 여행지 조회 성공")
+    @DisplayName("여행지 조회")
     @WithMockUser(username = "member1")
     void getTravelPlaces() throws Exception {
         // given, when, then
@@ -139,7 +139,7 @@ public class ScheduleTravelControllerTest extends BaseTest {
 
 
     @Test
-    @DisplayName("getTravelPlaces(): 여행지 조회 시 여행지 데이터 존재하지 않는 경우")
+    @DisplayName("여행지 조회 시 여행지 데이터 존재하지 않는 경우")
     @WithMockUser(username = "member1")
     void getTravelPlacesWithoutData() throws Exception {
         // given
@@ -154,7 +154,7 @@ public class ScheduleTravelControllerTest extends BaseTest {
     }
 
     @Test
-    @DisplayName("getTravelPlaces(): 여행지 조회 시 해당 일정에 접근 권한이 없어 예외 발생")
+    @DisplayName("여행지 조회 시 해당 일정에 접근 권한이 없어 예외 발생")
     @WithMockUser(username = "member1")
     void getTravelPlaces_forbiddenScheduleException() throws Exception {
         // given
@@ -168,7 +168,7 @@ public class ScheduleTravelControllerTest extends BaseTest {
 
 
     @Test
-    @DisplayName("getTravelPlaces(): 여행지 조회 시 일정 데이터 존재하지 않아 예외 발생")
+    @DisplayName("여행지 조회 시 일정 데이터 존재하지 않아 예외 발생")
     @WithMockUser(username = "member1")
     void getTravelPlaces_dataNotFoundException() throws Exception {
         // given
@@ -182,7 +182,7 @@ public class ScheduleTravelControllerTest extends BaseTest {
 
 
     @Test
-    @DisplayName("searchTravelPlaces(): 여행지 검색 성공")
+    @DisplayName("여행지 검색")
     @WithMockUser(username = "member1")
     void searchTravelPlaces() throws Exception {
         // given
@@ -200,7 +200,7 @@ public class ScheduleTravelControllerTest extends BaseTest {
     }
 
     @Test
-    @DisplayName("searchTravelPlaces(): 여행지 검색 시 검색 결과가 존재하지 않는 경우")
+    @DisplayName("여행지 검색 시 검색 결과가 존재하지 않는 경우")
     @WithMockUser(username = "member1")
     void searchTravelPlacesWithoutData() throws Exception {
         // given
@@ -215,7 +215,7 @@ public class ScheduleTravelControllerTest extends BaseTest {
 
 
     @Test
-    @DisplayName("searchTravelPlaces(): 여행지 검색 시 일정 데이터 존재하지 않아 예외 발생")
+    @DisplayName("여행지 검색 시 일정 데이터 존재하지 않아 예외 발생")
     @WithMockUser(username = "member1")
     void searchTravelPlaces_dataNotFoundException() throws Exception {
         // given
@@ -230,7 +230,7 @@ public class ScheduleTravelControllerTest extends BaseTest {
 
 
     @Test
-    @DisplayName("searchTravelPlaces(): 여행지 검색 시 해당 일정에 접근 권한이 없어 예외 발생")
+    @DisplayName("여행지 검색 시 해당 일정에 접근 권한이 없어 예외 발생")
     @WithMockUser(username = "member1")
     void searchTravelPlaces_forbiddenScheduleException() throws Exception {
         // given

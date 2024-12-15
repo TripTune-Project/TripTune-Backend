@@ -61,7 +61,7 @@ public class MemberControllerTest extends MemberTest{
     }
 
     @Test
-    @DisplayName("join(): 회원가입 성공")
+    @DisplayName("회원가입")
     void join() throws Exception {
         mockMvc.perform(post("/api/members/join")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -71,7 +71,7 @@ public class MemberControllerTest extends MemberTest{
     }
 
     @Test
-    @DisplayName("join(): 비밀번호 유효성 검사로 인해 예외 발생")
+    @DisplayName("회원 가입 시 비밀번호 유효성 검사로 예외 발생")
     void joinInvalidPassword_methodArgumentNotValidException() throws Exception {
         MemberRequest request = createMemberRequest();
         request.setPassword("password");
@@ -84,7 +84,7 @@ public class MemberControllerTest extends MemberTest{
     }
 
     @Test
-    @DisplayName("join(): 비밀번호, 비밀번호 재입력 불일치로 인한 예외 발생")
+    @DisplayName("회원 가입 시 비밀번호, 비밀번호 재입력 불일치로 인한 예외 발생")
     void join_CustomNotValidException() throws Exception {
         MemberRequest request = createMemberRequest();
         request.setPassword("password123@");
@@ -99,7 +99,7 @@ public class MemberControllerTest extends MemberTest{
     }
 
     @Test
-    @DisplayName("join(): 이미 존재하는 아이디로 인해 예외 발생")
+    @DisplayName("회원 가입 시 이미 존재하는 아이디로 인해 예외 발생")
     void joinExistedUserId_dataExistException() throws Exception {
         MemberRequest request = createMemberRequest();
         memberRepository.save(createMember(null, request.getUserId()));
@@ -113,7 +113,7 @@ public class MemberControllerTest extends MemberTest{
     }
 
     @Test
-    @DisplayName("logout(): 로그아웃 성공")
+    @DisplayName("로그아웃")
     void logout() throws Exception{
         Member member = memberRepository.save(createMember(null, "member1"));
         String accessToken = jwtUtil.createToken(member.getUserId(), 3600);
@@ -128,7 +128,7 @@ public class MemberControllerTest extends MemberTest{
     }
 
     @Test
-    @DisplayName("logout(): 잘못된 access Token 으로 인해 예외 발생")
+    @DisplayName("로그아웃 시 잘못된 access Token 으로 인해 예외 발생")
     void logout_customJwtBadRequestException() throws Exception{
         Member member = memberRepository.save(createMember(null, "member1"));
         String accessToken = jwtUtil.createToken(member.getUserId(), 3600);
@@ -143,7 +143,7 @@ public class MemberControllerTest extends MemberTest{
     }
 
     @Test
-    @DisplayName("logout(): 존재하지 않는 사용자 요청으로 인해 예외 발생")
+    @DisplayName("로그아웃 시 존재하지 않는 사용자 요청으로 인해 예외 발생")
     void logout_dataNotFoundException() throws Exception{
         String accessToken = jwtUtil.createToken("notMember", 3600);
 
@@ -158,7 +158,7 @@ public class MemberControllerTest extends MemberTest{
 
 
     @Test
-    @DisplayName("refreshToken(): refresh token 만료로 예외 발생")
+    @DisplayName("토큰 갱신 시 refresh token 만료로 예외 발생")
     void refreshTokenExpired_unauthorizedException() throws Exception {
         String refreshToken = jwtUtil.createToken("test", -604800000);
 

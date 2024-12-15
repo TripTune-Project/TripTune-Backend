@@ -3,10 +3,10 @@ package com.triptune.domain.schedule.service;
 import com.triptune.domain.member.entity.Member;
 import com.triptune.domain.member.repository.MemberRepository;
 import com.triptune.domain.schedule.dto.AuthorDTO;
-import com.triptune.domain.schedule.dto.request.CreateScheduleRequest;
+import com.triptune.domain.schedule.dto.request.ScheduleCreateRequest;
 import com.triptune.domain.schedule.dto.request.RouteRequest;
-import com.triptune.domain.schedule.dto.request.UpdateScheduleRequest;
-import com.triptune.domain.schedule.dto.response.CreateScheduleResponse;
+import com.triptune.domain.schedule.dto.request.ScheduleUpdateRequest;
+import com.triptune.domain.schedule.dto.response.ScheduleCreateResponse;
 import com.triptune.domain.schedule.dto.response.ScheduleDetailResponse;
 import com.triptune.domain.schedule.dto.response.ScheduleInfoResponse;
 import com.triptune.domain.schedule.entity.ChatMessage;
@@ -51,7 +51,7 @@ public class ScheduleService {
     private final ChatMessageRepository chatMessageRepository;
 
 
-    public SchedulePageResponse<ScheduleInfoResponse> getSchedules(int page, String userId) {
+    public SchedulePageResponse<ScheduleInfoResponse> getAllSchedulesByUserId(int page, String userId) {
         Pageable pageable = PageUtil.schedulePageable(page);
         Page<TravelSchedule> schedulePage = travelScheduleRepository.findTravelSchedulesByUserId(pageable, userId);
 
@@ -63,7 +63,7 @@ public class ScheduleService {
     }
 
 
-    public SchedulePageResponse<ScheduleInfoResponse> getSharedSchedules(int page, String userId) {
+    public SchedulePageResponse<ScheduleInfoResponse> getSharedSchedulesByUserId(int page, String userId) {
         Pageable pageable = PageUtil.schedulePageable(page);
         Page<TravelSchedule> schedulePage = travelScheduleRepository.findSharedTravelSchedulesByUserId(pageable, userId);
 
@@ -156,8 +156,8 @@ public class ScheduleService {
     }
 
 
-    public CreateScheduleResponse createSchedule(CreateScheduleRequest createScheduleRequest, String userId){
-        TravelSchedule travelSchedule = TravelSchedule.from(createScheduleRequest);
+    public ScheduleCreateResponse createSchedule(ScheduleCreateRequest scheduleCreateRequest, String userId){
+        TravelSchedule travelSchedule = TravelSchedule.from(scheduleCreateRequest);
         TravelSchedule savedTravelSchedule = travelScheduleRepository.save(travelSchedule);
 
         Member member = getMemberByUserId(userId);
@@ -165,7 +165,7 @@ public class ScheduleService {
         TravelAttendee travelAttendee = TravelAttendee.of(savedTravelSchedule, member);
         travelAttendeeRepository.save(travelAttendee);
 
-        return CreateScheduleResponse.from(savedTravelSchedule);
+        return ScheduleCreateResponse.from(savedTravelSchedule);
     }
 
 
@@ -187,13 +187,13 @@ public class ScheduleService {
     }
 
 
-    public void updateSchedule(String userId, Long scheduleId, UpdateScheduleRequest updateScheduleRequest) {
+    public void updateSchedule(String userId, Long scheduleId, ScheduleUpdateRequest scheduleUpdateRequest) {
         TravelSchedule schedule = getScheduleByScheduleId(scheduleId);
         TravelAttendee attendee = getAttendeeInfo(schedule, userId);
-        checkUserPermission(attendee);
+        checkScheduleEditPermission(attendee);
 
-        schedule.set(updateScheduleRequest);
-        updateTravelRouteInSchedule(schedule, updateScheduleRequest.getTravelRoute());
+        schedule.set(scheduleUpdateRequest);
+        updateTravelRouteInSchedule(schedule, scheduleUpdateRequest.getTravelRoute());
     }
 
 
@@ -202,7 +202,7 @@ public class ScheduleService {
                 .orElseThrow(() -> new DataNotFoundException(ErrorCode.SCHEDULE_NOT_FOUND));
     }
 
-    public void checkUserPermission(TravelAttendee attendee){
+    public void checkScheduleEditPermission(TravelAttendee attendee){
         if (!attendee.getPermission().isEnableEdit()){
             throw new ForbiddenScheduleException(ErrorCode.FORBIDDEN_EDIT_SCHEDULE);
         }

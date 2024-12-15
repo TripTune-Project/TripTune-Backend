@@ -11,7 +11,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
-import org.springframework.web.servlet.NoHandlerFoundException;
 
 import java.io.IOException;
 
@@ -24,7 +23,7 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
     private final HttpRequestEndpointChecker endpointChecker;
 
     @Override
-    public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException, NoHandlerFoundException {
+    public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException {
         if (!endpointChecker.isEndpointExist(request)){
             log.error("404 NotFoundException in CustomAuthenticationEntryPoint, Request URL: {}", request.getRequestURI());
             response.sendError(HttpServletResponse.SC_NOT_FOUND, ErrorCode.PAGE_NOT_FOUND.getMessage());

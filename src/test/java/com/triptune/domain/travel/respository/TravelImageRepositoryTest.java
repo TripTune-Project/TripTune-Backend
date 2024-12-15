@@ -66,7 +66,7 @@ public class TravelImageRepositoryTest extends TravelTest {
     }
 
     @Test
-    @DisplayName("findByTravelPlacePlaceId() 성공: placeId를 이용해서 List<TravelImageFile> 조회")
+    @DisplayName("placeId를 이용해서 여행지 이미지 목록 조회")
     void findByTravelPlacePlaceId(){
         // given, when
         List<TravelImage> response = travelImageRepository.findByTravelPlacePlaceId(travelPlace.getPlaceId());

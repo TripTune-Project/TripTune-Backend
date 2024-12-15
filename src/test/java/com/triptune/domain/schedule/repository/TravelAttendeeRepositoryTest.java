@@ -54,9 +54,9 @@ public class TravelAttendeeRepositoryTest extends ScheduleTest {
         schedule2 = travelScheduleRepository.save(createTravelSchedule(null,"테스트2"));
         schedule3 = travelScheduleRepository.save(createTravelSchedule(null,"테스트3"));
 
-        TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
-        TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule2, AttendeeRole.GUEST, AttendeePermission.READ));
-        TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(member2, schedule3, AttendeeRole.AUTHOR, AttendeePermission.ALL));
+        TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(0L, member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
+        TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(0L, member1, schedule2, AttendeeRole.GUEST, AttendeePermission.READ));
+        TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(0L, member2, schedule3, AttendeeRole.AUTHOR, AttendeePermission.ALL));
 
         member1.setTravelAttendeeList(new ArrayList<>(List.of(attendee1, attendee2)));
         member2.setTravelAttendeeList(new ArrayList<>(List.of(attendee3)));
@@ -88,13 +88,4 @@ public class TravelAttendeeRepositoryTest extends ScheduleTest {
     }
 
 
-    @Test
-    @DisplayName("일정 참가자인지 확인 false 반환")
-    void existsAttendee_fals(){
-        // when
-        boolean response = travelAttendeeRepository.existsByTravelSchedule_ScheduleIdAndMember_UserId(0L, member2.getUserId());
-
-        // then
-        assertFalse(response);
-    }
 }

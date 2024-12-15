@@ -114,9 +114,9 @@ public class RouteControllerTest extends ScheduleTest {
         schedule1 = travelScheduleRepository.save(createTravelSchedule(null,"테스트1"));
         schedule2 = travelScheduleRepository.save(createTravelSchedule(null,"테스트2"));
 
-        TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
-        TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ));
-        TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(member2, schedule2, AttendeeRole.AUTHOR, AttendeePermission.ALL));
+        TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(0L, member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
+        TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(0L, member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ));
+        TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(0L, member2, schedule2, AttendeeRole.AUTHOR, AttendeePermission.ALL));
 
         member1.setTravelAttendeeList(new ArrayList<>(List.of(attendee1)));
         member2.setTravelAttendeeList(new ArrayList<>(List.of(attendee2, attendee3)));
@@ -127,7 +127,7 @@ public class RouteControllerTest extends ScheduleTest {
 
 
     @Test
-    @DisplayName("getTravelRoutes(): 여행 루트 조회 성공")
+    @DisplayName("여행 루트 조회 성공")
     @WithMockUser(username = "member1")
     void getTravelRoutes() throws Exception {
         // given
@@ -153,7 +153,7 @@ public class RouteControllerTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("getTravelRoutes(): 여행 루트 조회 시 저장된 여행 루트 데이터 없는 경우")
+    @DisplayName("여행 루트 조회 시 저장된 여행 루트 데이터 없는 경우")
     @WithMockUser(username = "member1")
     void getTravelRoutesWithoutData() throws Exception {
         // given
@@ -166,7 +166,7 @@ public class RouteControllerTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("getTravelRoutes(): 여행 루트 조회 시 일정 데이터 존재하지 않아 예외 발생")
+    @DisplayName("여행 루트 조회 시 일정 데이터 존재하지 않아 예외 발생")
     @WithMockUser(username = "member1")
     void getTravelRoutes_dataNotFoundException() throws Exception {
         // given
@@ -179,7 +179,7 @@ public class RouteControllerTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("getTravelPlaces(): 여행지 조회 시 해당 일정에 접근 권한이 없어 예외 발생")
+    @DisplayName("여행지 조회 시 해당 일정에 접근 권한이 없어 예외 발생")
     @WithMockUser(username = "member1")
     void getTravelRoutes_forbiddenScheduleException() throws Exception {
         // given
