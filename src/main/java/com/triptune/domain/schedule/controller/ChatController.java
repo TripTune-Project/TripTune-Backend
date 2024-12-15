@@ -4,6 +4,7 @@ import com.triptune.domain.schedule.dto.request.ChatMessageRequest;
 import com.triptune.domain.schedule.dto.response.ChatResponse;
 import com.triptune.domain.schedule.service.ChatService;
 import com.triptune.global.aop.AttendeeCheck;
+import com.triptune.global.aop.ScheduleCheck;
 import com.triptune.global.response.ApiResponse;
 import com.triptune.global.response.pagination.ApiPageResponse;
 import io.swagger.v3.oas.annotations.Operation;

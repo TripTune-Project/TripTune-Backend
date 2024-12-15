@@ -5,6 +5,7 @@ import com.triptune.domain.schedule.dto.response.AttendeeResponse;
 import com.triptune.domain.schedule.dto.request.AttendeeRequest;
 import com.triptune.domain.schedule.service.AttendeeService;
 import com.triptune.global.aop.AttendeeCheck;
+import com.triptune.global.aop.ScheduleCheck;
 import com.triptune.global.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -42,6 +43,7 @@ public class AttendeeController {
         return ApiResponse.okResponse();
     }
 
+    @ScheduleCheck
     @PatchMapping("/attendees/{attendeeId}")
     @Operation(summary = "일정 참석자 접근 권한 수정", description = "일정 참석자 접근 권한을 수정합니다.")
     public ApiResponse<?> updateAttendeePermission(@PathVariable(name = "scheduleId") Long scheduleId,
@@ -54,7 +56,7 @@ public class AttendeeController {
     }
 
 
-    @AttendeeCheck
+    @ScheduleCheck
     @DeleteMapping("/attendees")
     @Operation(summary = "일정 나가기", description = "일정에 참석자 목록에서 삭제됩니다.")
     public ApiResponse<?> leaveScheduleAsGuest(@PathVariable(name = "scheduleId") Long scheduleId){

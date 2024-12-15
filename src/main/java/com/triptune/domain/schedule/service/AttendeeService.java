@@ -33,25 +33,29 @@ public class AttendeeService {
 
 
     public List<AttendeeResponse> getAttendeesByScheduleId(Long scheduleId) {
-        List<TravelAttendee> travelAttendees = travelAttendeeRepository.findAllByTravelSchedule_ScheduleId(scheduleId);
-        return travelAttendees.stream().map(AttendeeResponse::from).collect(Collectors.toList());
+        return travelAttendeeRepository.findAllByTravelSchedule_ScheduleId(scheduleId)
+                .stream()
+                .map(AttendeeResponse::from)
+                .collect(Collectors.toList());
     }
 
     public void createAttendee(Long scheduleId, String userId, AttendeeRequest attendeeRequest) {
-        // TODO 1. 일정 정보 가져옴 2. 참석자 5명 이상인지 확인 3. 요청자 작성자인지 확인 4. 이미 참석자인지 확인
-        TravelSchedule schedule = getScheduleByScheduleId(scheduleId);
-        validateAttendeeCount(scheduleId);
-        validateAuthor(scheduleId, userId, ErrorCode.FORBIDDEN_SHARE_ATTENDEE);
+        validateAttendeeAddition(scheduleId, userId);
 
+        Member guest = findMemberByEmail(attendeeRequest.getEmail());
+        validateAttendeeAlreadyExists(scheduleId, guest.getUserId());
 
-        Member guest = getMemberByEmail(attendeeRequest.getEmail());
-        validateAttendeeExists(scheduleId, guest);
-
+        TravelSchedule schedule = findScheduleByScheduleId(scheduleId);
         TravelAttendee travelAttendee = TravelAttendee.of(schedule, guest, attendeeRequest.getPermission());
         travelAttendeeRepository.save(travelAttendee);
     }
 
-    public TravelSchedule getScheduleByScheduleId(Long scheduleId){
+    public void validateAttendeeAddition(Long scheduleId, String userId){
+        validateAttendeeCount(scheduleId);
+        validateAuthor(scheduleId, userId, ErrorCode.FORBIDDEN_SHARE_ATTENDEE);
+    }
+
+    public TravelSchedule findScheduleByScheduleId(Long scheduleId){
         return travelScheduleRepository.findByScheduleId(scheduleId)
                 .orElseThrow(() -> new DataNotFoundException(ErrorCode.SCHEDULE_NOT_FOUND));
     }
@@ -73,14 +77,14 @@ public class AttendeeService {
         }
     }
 
-    public Member getMemberByEmail(String email){
+    public Member findMemberByEmail(String email){
         return memberRepository.findByEmail(email)
                 .orElseThrow(() -> new DataNotFoundException(ErrorCode.USER_NOT_FOUND));
     }
 
 
-    public void validateAttendeeExists(Long scheduleId, Member guest){
-        boolean isExistedAttendee = travelAttendeeRepository.existsByTravelSchedule_ScheduleIdAndMember_UserId(scheduleId, guest.getUserId());
+    public void validateAttendeeAlreadyExists(Long scheduleId, String userId){
+        boolean isExistedAttendee = travelAttendeeRepository.existsByTravelSchedule_ScheduleIdAndMember_UserId(scheduleId, userId);
 
         if (isExistedAttendee){
             throw new ConflictAttendeeException(ErrorCode.ALREADY_ATTENDEE);
@@ -88,8 +92,6 @@ public class AttendeeService {
     }
 
     public void updateAttendeePermission(Long scheduleId, String userId, Long attendeeId, AttendeePermissionRequest attendeePermissionRequest) {
-        // TODO : 1. 일정 존재하는지 2. 요청자가 일정 작성자가 맞는지 3. attendee 확인
-        getScheduleByScheduleId(scheduleId);
         validateAuthor(scheduleId, userId, ErrorCode.FORBIDDEN_UPDATE_ATTENDEE_PERMISSION);
 
         TravelAttendee attendee = travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndAttendeeId(scheduleId, attendeeId)

@@ -290,6 +290,16 @@ public class AttendeeControllerTest extends ScheduleTest {
                 .andExpect(jsonPath("$.message").value("200(성공)"));
     }
 
+    @Test
+    @DisplayName("일정 나가기 요청 시 일정 데이터 존재하지 않아 예외 발생")
+    @WithMockUser(username = "member2")
+    void leaveScheduleAsGuest_scheduleDataNotFoundException() throws Exception {
+        mockMvc.perform(delete("/api/schedules/{scheduleId}/attendees", 0L))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value(ErrorCode.SCHEDULE_NOT_FOUND.getMessage()));
+    }
+
 
     @Test
     @DisplayName("일정 나가기 요청 시 사용자가 작성자여서 예외 발생")

@@ -92,13 +92,13 @@ public class AttendeeServiceTest extends ScheduleTest {
         List<AttendeeResponse> response = attendeeService.getAttendeesByScheduleId(schedule1.getScheduleId());
 
         // then
-        assertEquals(response.size(), travelAttendeeList.size());
-        assertEquals(response.get(0).getNickname(), attendee1.getMember().getNickname());
-        assertEquals(response.get(0).getRole(), attendee1.getRole().name());
-        assertEquals(response.get(0).getProfileUrl(), attendee1.getMember().getProfileImage().getS3ObjectUrl());
-        assertEquals(response.get(1).getNickname(), attendee2.getMember().getNickname());
-        assertEquals(response.get(1).getRole(), attendee2.getRole().name());
-        assertEquals(response.get(1).getProfileUrl(), attendee2.getMember().getProfileImage().getS3ObjectUrl());
+        assertThat(response.size()).isEqualTo(travelAttendeeList.size());
+        assertThat(response.get(0).getNickname()).isEqualTo(attendee1.getMember().getNickname());
+        assertThat(response.get(0).getRole()).isEqualTo(attendee1.getRole().name());
+        assertThat(response.get(0).getProfileUrl()).isEqualTo(attendee1.getMember().getProfileImage().getS3ObjectUrl());
+        assertThat(response.get(1).getNickname()).isEqualTo(attendee2.getMember().getNickname());
+        assertThat(response.get(1).getRole()).isEqualTo(attendee2.getRole().name());
+        assertThat(response.get(1).getProfileUrl()).isEqualTo(attendee2.getMember().getProfileImage().getS3ObjectUrl());
     }
 
     @Test
@@ -112,7 +112,7 @@ public class AttendeeServiceTest extends ScheduleTest {
         List<AttendeeResponse> response = attendeeService.getAttendeesByScheduleId(schedule1.getScheduleId());
 
         // then
-        assertEquals(response.size(), 0);
+        assertThat(response.size()).isEqualTo(0);
     }
 
 
@@ -145,8 +145,8 @@ public class AttendeeServiceTest extends ScheduleTest {
         // when, then
         DataNotFoundException fail = assertThrows(DataNotFoundException.class, () ->  attendeeService.createAttendee(schedule1.getScheduleId(), member1.getUserId(), attendeeRequest));
 
-        assertEquals(fail.getHttpStatus(), ErrorCode.SCHEDULE_NOT_FOUND.getStatus());
-        assertEquals(fail.getMessage(), ErrorCode.SCHEDULE_NOT_FOUND.getMessage());
+        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.SCHEDULE_NOT_FOUND.getStatus());
+        assertThat(fail.getMessage()).isEqualTo(ErrorCode.SCHEDULE_NOT_FOUND.getMessage());
 
     }
 
@@ -162,8 +162,8 @@ public class AttendeeServiceTest extends ScheduleTest {
         // when, then
         ConflictAttendeeException fail = assertThrows(ConflictAttendeeException.class, () ->  attendeeService.createAttendee(schedule1.getScheduleId(), member1.getUserId(), attendeeRequest));
 
-        assertEquals(fail.getHttpStatus(), ErrorCode.OVER_ATTENDEE_NUMBER.getStatus());
-        assertEquals(fail.getMessage(), ErrorCode.OVER_ATTENDEE_NUMBER.getMessage());
+        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.OVER_ATTENDEE_NUMBER.getStatus());
+        assertThat(fail.getMessage()).isEqualTo(ErrorCode.OVER_ATTENDEE_NUMBER.getMessage());
 
     }
 
@@ -181,8 +181,8 @@ public class AttendeeServiceTest extends ScheduleTest {
         // when, then
         ForbiddenScheduleException fail = assertThrows(ForbiddenScheduleException.class, () ->  attendeeService.createAttendee(schedule1.getScheduleId(), member1.getUserId(), attendeeRequest));
 
-        assertEquals(fail.getHttpStatus(), ErrorCode.FORBIDDEN_SHARE_ATTENDEE.getStatus());
-        assertEquals(fail.getMessage(), ErrorCode.FORBIDDEN_SHARE_ATTENDEE.getMessage());
+        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.FORBIDDEN_SHARE_ATTENDEE.getStatus());
+        assertThat(fail.getMessage()).isEqualTo(ErrorCode.FORBIDDEN_SHARE_ATTENDEE.getMessage());
 
     }
 
@@ -201,8 +201,8 @@ public class AttendeeServiceTest extends ScheduleTest {
         // when, then
         DataNotFoundException fail = assertThrows(DataNotFoundException.class, () ->  attendeeService.createAttendee(schedule1.getScheduleId(), member1.getUserId(), attendeeRequest));
 
-        assertEquals(fail.getHttpStatus(), ErrorCode.USER_NOT_FOUND.getStatus());
-        assertEquals(fail.getMessage(), ErrorCode.USER_NOT_FOUND.getMessage());
+        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.USER_NOT_FOUND.getStatus());
+        assertThat(fail.getMessage()).isEqualTo(ErrorCode.USER_NOT_FOUND.getMessage());
 
     }
 
@@ -223,9 +223,81 @@ public class AttendeeServiceTest extends ScheduleTest {
         // when, then
         ConflictAttendeeException fail = assertThrows(ConflictAttendeeException.class, () ->  attendeeService.createAttendee(schedule1.getScheduleId(), member1.getUserId(), attendeeRequest));
 
-        assertEquals(fail.getHttpStatus(), ErrorCode.ALREADY_ATTENDEE.getStatus());
-        assertEquals(fail.getMessage(), ErrorCode.ALREADY_ATTENDEE.getMessage());
+        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.ALREADY_ATTENDEE.getStatus());
+        assertThat(fail.getMessage()).isEqualTo(ErrorCode.ALREADY_ATTENDEE.getMessage());
 
+    }
+
+    @Test
+    @DisplayName("일정 참석자 5명 넘는지 확인")
+    void validateAttendeeCount(){
+        // given
+        when(travelAttendeeRepository.countByTravelSchedule_ScheduleId(anyLong())).thenReturn(4);
+
+        // when, then
+        assertDoesNotThrow(() -> attendeeService.validateAttendeeCount(schedule1.getScheduleId()));
+    }
+
+    @Test
+    @DisplayName("일정 참석자 5명 넘어 예외 발생")
+    void validateAttendeeCount_conflictAttendeeException(){
+        // given
+        when(travelAttendeeRepository.countByTravelSchedule_ScheduleId(anyLong())).thenReturn(5);
+
+        // when
+        ConflictAttendeeException fail = assertThrows(ConflictAttendeeException.class, () -> attendeeService.validateAttendeeCount(schedule1.getScheduleId()));
+
+        // then
+        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.OVER_ATTENDEE_NUMBER.getStatus());
+        assertThat(fail.getMessage()).isEqualTo(ErrorCode.OVER_ATTENDEE_NUMBER.getMessage());
+    }
+
+    @Test
+    @DisplayName("작성자인지 검증")
+    void validateAuthor(){
+        // given
+        when(travelAttendeeRepository.existsByTravelSchedule_ScheduleIdAndMember_UserIdAndRole(anyLong(), anyString(), any())).thenReturn(true);
+
+        // when, then
+        assertDoesNotThrow(() -> attendeeService.validateAuthor(schedule1.getScheduleId(), member1.getUserId(), ErrorCode.FORBIDDEN_ACCESS_SCHEDULE));
+    }
+
+    @Test
+    @DisplayName("작성자인지 검증 시 예외 발생")
+    void validateAuthor_forbiddenScheduleException(){
+        // given
+        when(travelAttendeeRepository.existsByTravelSchedule_ScheduleIdAndMember_UserIdAndRole(anyLong(), anyString(), any())).thenReturn(false);
+
+        // when, then
+        ForbiddenScheduleException fail = assertThrows(ForbiddenScheduleException.class, () -> attendeeService.validateAuthor(schedule1.getScheduleId(), member1.getUserId(), ErrorCode.FORBIDDEN_ACCESS_SCHEDULE));
+
+        // then
+        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.FORBIDDEN_ACCESS_SCHEDULE.getStatus());
+        assertThat(fail.getMessage()).isEqualTo(ErrorCode.FORBIDDEN_ACCESS_SCHEDULE.getMessage());
+    }
+
+    @Test
+    @DisplayName("기존 참석자인지 검증")
+    void validateAttendeeAlreadyExists(){
+        // given
+        when(travelAttendeeRepository.existsByTravelSchedule_ScheduleIdAndMember_UserId(anyLong(), anyString())).thenReturn(false);
+
+        // when, then
+        assertDoesNotThrow(() -> attendeeService.validateAttendeeAlreadyExists(schedule1.getScheduleId(), member1.getUserId()));
+    }
+
+    @Test
+    @DisplayName("기존 참석자인지 검증 시 예외 발생")
+    void validateAttendeeAlreadyExists_conflictAttendeeException(){
+        // given
+        when(travelAttendeeRepository.existsByTravelSchedule_ScheduleIdAndMember_UserId(anyLong(), anyString())).thenReturn(true);
+
+        // when, then
+        ConflictAttendeeException fail = assertThrows(ConflictAttendeeException.class, () -> attendeeService.validateAttendeeAlreadyExists(schedule1.getScheduleId(), member1.getUserId()));
+
+        // then
+        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.ALREADY_ATTENDEE.getStatus());
+        assertThat(fail.getMessage()).isEqualTo(ErrorCode.ALREADY_ATTENDEE.getMessage());
     }
 
     @Test
@@ -234,7 +306,6 @@ public class AttendeeServiceTest extends ScheduleTest {
         // given
         AttendeePermissionRequest request = createAttendeePermissionRequest(AttendeePermission.READ);
 
-        when(travelScheduleRepository.findByScheduleId(anyLong())).thenReturn(Optional.of(schedule1));
         when(travelAttendeeRepository.existsByTravelSchedule_ScheduleIdAndMember_UserIdAndRole(anyLong(), anyString(), any())).thenReturn(true);
         when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndAttendeeId(anyLong(), anyLong())).thenReturn(Optional.of(attendee2));
 
@@ -247,28 +318,11 @@ public class AttendeeServiceTest extends ScheduleTest {
 
 
     @Test
-    @DisplayName("일정 참석자 접근 권한 수정 시 일정 데이터 없어서 예외 발생")
-    void updateAttendeePermission_scheduleDataNotFoundException(){
-        // given
-        AttendeePermissionRequest request = createAttendeePermissionRequest(AttendeePermission.READ);
-
-        when(travelScheduleRepository.findByScheduleId(anyLong())).thenReturn(Optional.empty());
-
-        // when
-        DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> attendeeService.updateAttendeePermission(schedule1.getScheduleId(), member1.getUserId(), attendee2.getAttendeeId(), request));
-
-        // then
-        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.SCHEDULE_NOT_FOUND.getStatus());
-        assertThat(fail.getMessage()).isEqualTo(ErrorCode.SCHEDULE_NOT_FOUND.getMessage());
-    }
-
-    @Test
     @DisplayName("일정 참석자 허용 권한 수정 시 요청자가 작성자가 아니여서 예외 발생")
     void updateAttendeePermission_forbiddenUpdateAttendeePermission(){
         // given
         AttendeePermissionRequest request = createAttendeePermissionRequest(AttendeePermission.READ);
 
-        when(travelScheduleRepository.findByScheduleId(anyLong())).thenReturn(Optional.of(schedule1));
         when(travelAttendeeRepository.existsByTravelSchedule_ScheduleIdAndMember_UserIdAndRole(anyLong(), anyString(), any())).thenReturn(false);
 
         // when
@@ -285,7 +339,6 @@ public class AttendeeServiceTest extends ScheduleTest {
         // given
         AttendeePermissionRequest request = createAttendeePermissionRequest(AttendeePermission.READ);
 
-        when(travelScheduleRepository.findByScheduleId(anyLong())).thenReturn(Optional.of(schedule1));
         when(travelAttendeeRepository.existsByTravelSchedule_ScheduleIdAndMember_UserIdAndRole(anyLong(), anyString(), any())).thenReturn(true);
         when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndAttendeeId(anyLong(), anyLong())).thenReturn(Optional.empty());
 
@@ -305,7 +358,6 @@ public class AttendeeServiceTest extends ScheduleTest {
         // given
         AttendeePermissionRequest request = createAttendeePermissionRequest(AttendeePermission.READ);
 
-        when(travelScheduleRepository.findByScheduleId(anyLong())).thenReturn(Optional.of(schedule1));
         when(travelAttendeeRepository.existsByTravelSchedule_ScheduleIdAndMember_UserIdAndRole(anyLong(), anyString(), any())).thenReturn(true);
         when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndAttendeeId(anyLong(), anyLong())).thenReturn(Optional.of(attendee1));
 
