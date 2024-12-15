@@ -10,8 +10,11 @@ import lombok.RequiredArgsConstructor;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
+import org.springframework.http.HttpHeaders;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.servlet.NoHandlerFoundException;
 
 @Aspect
 @RequiredArgsConstructor
@@ -39,8 +42,8 @@ public class AttendeeCheckAspect {
     }
 
 
-    private Long extractScheduleIdFromPath(String path){
-        return Long.parseLong(path.split("/")[3]);
+    private Long extractScheduleIdFromPath(String path) {
+        return  Long.parseLong(path.split("/")[3]);
     }
 
     private boolean isExistSchedule(Long scheduleId){

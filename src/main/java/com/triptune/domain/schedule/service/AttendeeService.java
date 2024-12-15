@@ -40,12 +40,12 @@ public class AttendeeService {
     }
 
     public void createAttendee(Long scheduleId, String userId, AttendeeRequest attendeeRequest) {
+        TravelSchedule schedule = findScheduleByScheduleId(scheduleId);
         validateAttendeeAddition(scheduleId, userId);
 
         Member guest = findMemberByEmail(attendeeRequest.getEmail());
         validateAttendeeAlreadyExists(scheduleId, guest.getUserId());
 
-        TravelSchedule schedule = findScheduleByScheduleId(scheduleId);
         TravelAttendee travelAttendee = TravelAttendee.of(schedule, guest, attendeeRequest.getPermission());
         travelAttendeeRepository.save(travelAttendee);
     }
