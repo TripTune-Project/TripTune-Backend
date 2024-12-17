@@ -9,6 +9,7 @@ import com.triptune.domain.schedule.dto.*;
 import com.triptune.domain.schedule.dto.request.ScheduleCreateRequest;
 import com.triptune.domain.schedule.dto.request.RouteRequest;
 import com.triptune.domain.schedule.dto.request.ScheduleUpdateRequest;
+import com.triptune.domain.schedule.dto.response.OverviewScheduleResponse;
 import com.triptune.domain.schedule.dto.response.ScheduleCreateResponse;
 import com.triptune.domain.schedule.dto.response.ScheduleDetailResponse;
 import com.triptune.domain.schedule.dto.response.ScheduleInfoResponse;
@@ -44,6 +45,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -349,6 +351,46 @@ public class ScheduleServiceTest extends ScheduleTest {
         assertNotNull(content.get(0).getSinceUpdate());
         assertNull(content.get(0).getThumbnailUrl());
 
+    }
+
+    @Test
+    @DisplayName("간단한 내 일정 목록 조회")
+    void getOverviewScheduleByUserId(){
+        // given
+        Pageable pageable = PageUtil.scheduleModalPageable(1);
+
+        List<TravelSchedule> schedules = new ArrayList<>(List.of(schedule1));
+        Page<TravelSchedule> schedulePage = PageUtil.createPage(schedules, pageable, schedules.size());
+
+        when(travelScheduleRepository.findTravelSchedulesByUserId(any(), anyString())).thenReturn(schedulePage);
+        when(travelAttendeeRepository.findAuthorNicknameByScheduleId(anyLong())).thenReturn(member1.getNickname());
+
+        // when
+        Page<OverviewScheduleResponse> response = scheduleService.getOverviewScheduleByUserId(1, member1.getUserId());
+
+        // then
+        assertThat(response.getTotalElements()).isNotZero();
+        assertThat(response.getContent().get(0).getScheduleName()).isEqualTo(schedule1.getScheduleName());
+        assertThat(response.getContent().get(0).getStartDate()).isEqualTo(schedule1.getStartDate());
+        assertThat(response.getContent().get(0).getAuthor()).isEqualTo(member1.getNickname());
+    }
+
+    @Test
+    @DisplayName("간단한 내 일정 목록 조회 시 일정 데이터 존재하지 않는 경우")
+    void getOverviewScheduleByUserId_emptySchedules(){
+        // given
+        Pageable pageable = PageUtil.scheduleModalPageable(1);
+
+        Page<TravelSchedule> schedulePage = PageUtil.createPage(new ArrayList<>(), pageable, 0);
+
+        when(travelScheduleRepository.findTravelSchedulesByUserId(any(), anyString())).thenReturn(schedulePage);
+
+        // when
+        Page<OverviewScheduleResponse> response = scheduleService.getOverviewScheduleByUserId(1, member1.getUserId());
+
+        // then
+        assertThat(response.getTotalElements()).isZero();
+        assertThat(response.getContent()).isEmpty();
     }
 
     @Test

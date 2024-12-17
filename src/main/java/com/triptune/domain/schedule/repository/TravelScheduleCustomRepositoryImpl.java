@@ -7,6 +7,7 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.triptune.domain.schedule.entity.QTravelAttendee;
 import com.triptune.domain.schedule.entity.QTravelSchedule;
 import com.triptune.domain.schedule.entity.TravelSchedule;
+import com.triptune.domain.schedule.enumclass.AttendeeRole;
 import com.triptune.global.util.PageUtil;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
