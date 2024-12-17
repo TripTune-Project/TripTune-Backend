@@ -24,7 +24,7 @@ public class StompHandler implements ChannelInterceptor {
             log.info("WebSocket 연결 요청: {}", accessor.getSessionId());
 
             String token = jwtUtil.resolveBearerToken(accessor.getFirstNativeHeader("Authorization"));
-            jwtUtil.validateToken(token);
+            jwtUtil.validateChatToken(token);
 
             log.info("WebSocket 연결 완료: {}", accessor.getSessionId());
         }

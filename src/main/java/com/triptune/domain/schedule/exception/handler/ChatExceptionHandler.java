@@ -1,8 +1,6 @@
 package com.triptune.domain.schedule.exception.handler;
 
-import com.triptune.domain.schedule.exception.BadRequestChatException;
-import com.triptune.domain.schedule.exception.DataNotFoundChatException;
-import com.triptune.domain.schedule.exception.ForbiddenChatException;
+import com.triptune.domain.schedule.exception.*;
 import com.triptune.global.response.ErrorResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -36,6 +34,20 @@ public class ChatExceptionHandler {
     @SendToUser(destinations = "/queue/errors", broadcast = false)
     public ErrorResponse handleBadRequestChatException(BadRequestChatException ex){
         log.error("BadRequestChatException: {}", ex.getMessage());
+        return ErrorResponse.of(ex.getHttpStatus(), ex.getMessage());
+    }
+
+    @MessageExceptionHandler
+    @SendToUser(destinations = "/queue/errors", broadcast = false)
+    public ErrorResponse handleCustomJwtBadRequestChatException(CustomJwtBadRequestChatException ex){
+        log.error("CustomJwtBadRequestChatException: {}", ex.getMessage());
+        return ErrorResponse.of(ex.getHttpStatus(), ex.getMessage());
+    }
+
+    @MessageExceptionHandler
+    @SendToUser(destinations = "/queue/errors", broadcast = false)
+    public ErrorResponse handleCustomJwtUnAuthorizedChatException(CustomJwtUnAuthorizedChatException ex){
+        log.error("CustomJwtUnAuthorizedChatException: {}", ex.getMessage());
         return ErrorResponse.of(ex.getHttpStatus(), ex.getMessage());
     }
 
