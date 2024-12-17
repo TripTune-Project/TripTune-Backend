@@ -6,7 +6,7 @@ import com.triptune.domain.schedule.dto.request.ChatMessageRequest;
 import com.triptune.domain.schedule.dto.response.ChatResponse;
 import com.triptune.domain.schedule.entity.ChatMessage;
 import com.triptune.domain.schedule.entity.TravelAttendee;
-import com.triptune.domain.schedule.exception.ChatNotFoundException;
+import com.triptune.domain.schedule.exception.DataNotFoundChatException;
 import com.triptune.domain.schedule.exception.ForbiddenChatException;
 import com.triptune.domain.schedule.repository.ChatMessageRepository;
 import com.triptune.domain.schedule.repository.TravelAttendeeRepository;
@@ -66,8 +66,8 @@ public class ChatService {
     public ChatResponse sendChatMessage(ChatMessageRequest chatMessageRequest) {
         validateSchedule(chatMessageRequest.getScheduleId());
 
-        Member member = getChatMemberByNickname(chatMessageRequest.getNickname());
-        TravelAttendee attendee = getTravelAttendee(chatMessageRequest.getScheduleId(), member.getUserId());
+        Member member = findChatMemberByNickname(chatMessageRequest.getNickname());
+        TravelAttendee attendee = findTravelAttendee(chatMessageRequest.getScheduleId(), member.getUserId());
 
         if (!attendee.getPermission().isEnableChat()){
             throw new ForbiddenChatException(ErrorCode.FORBIDDEN_CHAT_ATTENDEE);
@@ -83,18 +83,18 @@ public class ChatService {
         boolean isExist = travelScheduleRepository.existsById(scheduleId);
 
         if (!isExist){
-            throw new DataNotFoundException(ErrorCode.SCHEDULE_NOT_FOUND);
+            throw new DataNotFoundChatException(ErrorCode.SCHEDULE_NOT_FOUND);
         }
     }
 
 
-    public Member getChatMemberByNickname(String nickname){
+    public Member findChatMemberByNickname(String nickname){
         return memberRepository.findByNickname(nickname)
-                .orElseThrow(() -> new ChatNotFoundException(ErrorCode.USER_NOT_FOUND));
+                .orElseThrow(() -> new DataNotFoundChatException(ErrorCode.USER_NOT_FOUND));
 
     }
 
-    public TravelAttendee getTravelAttendee(Long scheduleId, String userId){
+    public TravelAttendee findTravelAttendee(Long scheduleId, String userId){
         return travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_UserId(scheduleId, userId)
                 .orElseThrow(() -> new ForbiddenChatException(ErrorCode.FORBIDDEN_ACCESS_SCHEDULE));
     }

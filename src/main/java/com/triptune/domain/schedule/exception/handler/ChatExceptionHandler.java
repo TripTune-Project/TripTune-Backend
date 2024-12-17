@@ -1,6 +1,7 @@
 package com.triptune.domain.schedule.exception.handler;
 
-import com.triptune.domain.schedule.exception.ChatNotFoundException;
+import com.triptune.domain.schedule.exception.BadRequestChatException;
+import com.triptune.domain.schedule.exception.DataNotFoundChatException;
 import com.triptune.domain.schedule.exception.ForbiddenChatException;
 import com.triptune.global.response.ErrorResponse;
 import lombok.RequiredArgsConstructor;
@@ -26,8 +27,15 @@ public class ChatExceptionHandler {
 
     @MessageExceptionHandler
     @SendToUser(destinations = "/queue/errors", broadcast = false)
-    public ErrorResponse handleChatNotFoundException(ChatNotFoundException ex){
+    public ErrorResponse handleDataNotFoundChatException(DataNotFoundChatException ex){
         log.error("ChatNotFoundException: {}", ex.getMessage());
+        return ErrorResponse.of(ex.getHttpStatus(), ex.getMessage());
+    }
+
+    @MessageExceptionHandler
+    @SendToUser(destinations = "/queue/errors", broadcast = false)
+    public ErrorResponse handleBadRequestChatException(BadRequestChatException ex){
+        log.error("BadRequestChatException: {}", ex.getMessage());
         return ErrorResponse.of(ex.getHttpStatus(), ex.getMessage());
     }
 
