@@ -20,7 +20,7 @@ public class ScheduleTravelController {
 
     @AttendeeCheck
     @GetMapping("/travels")
-    @Operation(summary = "여행지 조회", description = "여행지 탭에서 여행지를 제공합니다.")
+    @Operation(summary = "여행지 조회", description = "일정 상세보기 여행지 탭에서 여행지를 제공합니다.")
     public ApiPageResponse<PlaceResponse> getTravelPlaces(@PathVariable(name = "scheduleId") Long scheduleId, @RequestParam int page){
         Page<PlaceResponse> response = scheduleTravelService.getTravelPlaces(page);
 
@@ -29,7 +29,7 @@ public class ScheduleTravelController {
 
     @AttendeeCheck
     @GetMapping("/travels/search")
-    @Operation(summary = "여행지 검색", description = "여행지 탭에서 여행지를 검색합니다.")
+    @Operation(summary = "여행지 검색", description = "일정 상세보기 여행지 탭에서 여행지를 검색합니다.")
     public ApiPageResponse<PlaceResponse> searchTravelPlaces(@PathVariable(name = "scheduleId") Long scheduleId,
                                                              @RequestParam(name = "page") int page,
                                                              @RequestParam(name = "keyword") String keyword){

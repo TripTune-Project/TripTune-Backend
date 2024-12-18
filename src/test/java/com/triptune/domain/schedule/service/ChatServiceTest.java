@@ -92,7 +92,7 @@ class ChatServiceTest extends ScheduleTest {
         List<ChatMessage> messageList = new ArrayList<>(List.of(message1, message2, message3, message4, message5, message6));
         Page<ChatMessage> chatPage = PageUtil.createPage(messageList, pageable, messageList.size());
 
-        when(chatMessageRepository.findChatByScheduleId(pageable, schedule.getScheduleId())).thenReturn(chatPage);
+        when(chatMessageRepository.findAllByScheduleId(pageable, schedule.getScheduleId())).thenReturn(chatPage);
         when(memberRepository.findByMemberId(member1.getMemberId())).thenReturn(Optional.of(member1));
         when(memberRepository.findByMemberId(member2.getMemberId())).thenReturn(Optional.of(member2));
         when(memberRepository.findByMemberId(member3.getMemberId())).thenReturn(Optional.of(member3));
@@ -134,8 +134,8 @@ class ChatServiceTest extends ScheduleTest {
         List<ChatMessage> messageList = new ArrayList<>(List.of(message1, message2, message3));
         Page<ChatMessage> chatPage = PageUtil.createPage(messageList, pageable, messageList.size());
 
-        when(chatMessageRepository.findChatByScheduleId(pageable, schedule.getScheduleId())).thenReturn(chatPage);
-        when(memberRepository.findByMemberId(member1.getMemberId())).thenReturn(Optional.of(member1));
+        when(chatMessageRepository.findAllByScheduleId(pageable, schedule.getScheduleId())).thenReturn(chatPage);
+        when(memberRepository.findByMemberId(anyLong())).thenReturn(Optional.of(member1));
 
         // when
         Page<ChatResponse> response = chatService.getChatMessages(1, schedule.getScheduleId());
@@ -160,7 +160,7 @@ class ChatServiceTest extends ScheduleTest {
         List<ChatMessage> messageList = new ArrayList<>(List.of(message1, message2, message3));
         Page<ChatMessage> chatPage = PageUtil.createPage(messageList, pageable, messageList.size());
 
-        when(chatMessageRepository.findChatByScheduleId(pageable, schedule.getScheduleId())).thenReturn(chatPage);
+        when(chatMessageRepository.findAllByScheduleId(pageable, schedule.getScheduleId())).thenReturn(chatPage);
         when(memberRepository.findByMemberId(member1.getMemberId())).thenReturn(Optional.of(member1));
         when(memberRepository.findByMemberId(member2.getMemberId())).thenReturn(Optional.of(member2));
         when(memberRepository.findByMemberId(member3.getMemberId())).thenReturn(Optional.of(member3));
@@ -190,7 +190,7 @@ class ChatServiceTest extends ScheduleTest {
 
         Page<ChatMessage> chatPage = PageUtil.createPage(new ArrayList<>(), pageable, 0);
 
-        when(chatMessageRepository.findChatByScheduleId(pageable, schedule.getScheduleId())).thenReturn(chatPage);
+        when(chatMessageRepository.findAllByScheduleId(pageable, schedule.getScheduleId())).thenReturn(chatPage);
 
         // when
         Page<ChatResponse> response = chatService.getChatMessages(1, schedule.getScheduleId());
@@ -211,8 +211,8 @@ class ChatServiceTest extends ScheduleTest {
         List<ChatMessage> messageList = new ArrayList<>(List.of(message1));
         Page<ChatMessage> chatPage = PageUtil.createPage(messageList, pageable, messageList.size());
 
-        when(chatMessageRepository.findChatByScheduleId(pageable, schedule.getScheduleId())).thenReturn(chatPage);
-        when(memberRepository.findByMemberId(member1.getMemberId())).thenReturn(Optional.empty());
+        when(chatMessageRepository.findAllByScheduleId(pageable, schedule.getScheduleId())).thenReturn(chatPage);
+        when(memberRepository.findByMemberId(anyLong())).thenReturn(Optional.empty());
 
         // when
         DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> chatService.getChatMessages(1, schedule.getScheduleId()));
@@ -283,34 +283,6 @@ class ChatServiceTest extends ScheduleTest {
         // then
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.FORBIDDEN_CHAT_ATTENDEE.getStatus());
         assertThat(fail.getMessage()).isEqualTo(ErrorCode.FORBIDDEN_CHAT_ATTENDEE.getMessage());
-    }
-
-    @Test
-    @DisplayName("사용자 인덱스로 사용자 정보 조회")
-    void getMemberByMemberId(){
-        // given
-        when(memberRepository.findByMemberId(anyLong())).thenReturn(Optional.of(member1));
-
-        // when
-        Member response = chatService.getMemberByMemberId(member1.getMemberId());
-
-        // then
-        assertThat(response.getUserId()).isEqualTo(member1.getUserId());
-        assertThat(response.getNickname()).isEqualTo(member1.getNickname());
-    }
-
-    @Test
-    @DisplayName("사용자 인덱스로 사용자 정보 조회 시 데이터 없어 예외 발생")
-    void getMemberByMemberId_dataNotFoundException(){
-        // given
-        when(memberRepository.findByMemberId(anyLong())).thenReturn(Optional.empty());
-
-        // when
-        DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> chatService.getMemberByMemberId(member1.getMemberId()));
-
-        // then
-        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.USER_NOT_FOUND.getStatus());
-        assertThat(fail.getMessage()).isEqualTo(ErrorCode.USER_NOT_FOUND.getMessage());
     }
 
 

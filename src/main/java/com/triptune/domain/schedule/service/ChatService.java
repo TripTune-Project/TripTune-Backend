@@ -20,7 +20,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 @Service
@@ -36,31 +36,28 @@ public class ChatService {
 
     public Page<ChatResponse> getChatMessages(int page, Long scheduleId) {
         Pageable pageable = PageUtil.chatPageable(page);
-        Page<ChatMessage> chatPage = chatMessageRepository.findChatByScheduleId(pageable, scheduleId);
+        Page<ChatMessage> chatPage = chatMessageRepository.findAllByScheduleId(pageable, scheduleId);
 
-        List<ChatResponse> chatResponseList = chatPage.getContent().isEmpty()
-                ? Collections.emptyList()
-                : convertToChatResponseList(chatPage.getContent());
+        List<ChatResponse> chatResponseList = chatPage.getContent()
+                .stream()
+                .map(this::convertToChatResponse)
+                .sorted(Comparator.comparing(ChatResponse::getTimestamp))
+                .toList();
 
         return PageUtil.createPage(chatResponseList, pageable, chatPage.getTotalElements());
     }
 
-    public List<ChatResponse> convertToChatResponseList(List<ChatMessage> messageList) {
-        return messageList.stream()
-                .map(this::convertToChatResponse)
-                .toList();
-    }
 
     public ChatResponse convertToChatResponse(ChatMessage message) {
-        Member member = getMemberByMemberId(message.getMemberId());
+        Member member = findByMemberId(message.getMemberId());
         return ChatResponse.from(member, message);
     }
 
-
-    public Member getMemberByMemberId(Long memberId){
+    public Member findByMemberId(Long memberId){
         return memberRepository.findByMemberId(memberId)
                 .orElseThrow(() -> new DataNotFoundException(ErrorCode.USER_NOT_FOUND));
     }
+
 
 
     public ChatResponse sendChatMessage(ChatMessageRequest chatMessageRequest) {
@@ -73,8 +70,7 @@ public class ChatService {
             throw new ForbiddenChatException(ErrorCode.FORBIDDEN_CHAT_ATTENDEE);
         }
 
-        ChatMessage message = ChatMessage.of(member, chatMessageRequest);
-        message = chatMessageRepository.save(message);
+        ChatMessage message = chatMessageRepository.save(ChatMessage.of(member, chatMessageRequest));
 
         return ChatResponse.from(member, message);
     }
@@ -86,7 +82,6 @@ public class ChatService {
             throw new DataNotFoundChatException(ErrorCode.SCHEDULE_NOT_FOUND);
         }
     }
-
 
     public Member findChatMemberByNickname(String nickname){
         return memberRepository.findByNickname(nickname)

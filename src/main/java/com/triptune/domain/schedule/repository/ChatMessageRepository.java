@@ -8,7 +8,7 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 import java.util.List;
 
 public interface ChatMessageRepository extends MongoRepository<ChatMessage, String> {
-    Page<ChatMessage> findChatByScheduleId(Pageable pageable, Long scheduleId);
+    Page<ChatMessage> findAllByScheduleId(Pageable pageable, Long scheduleId);
     List<ChatMessage> findAllByScheduleId(Long scheduleId);
     void deleteAllByScheduleId(Long scheduleId);
 }

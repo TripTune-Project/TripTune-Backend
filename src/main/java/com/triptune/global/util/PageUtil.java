@@ -23,7 +23,7 @@ public class PageUtil {
     }
 
     public static Pageable chatPageable(int page){
-        return PageRequest.of(page - DEFAULT_PAGE, CHAT_SIZE, Sort.by(Sort.Direction.ASC, "timestamp"));
+        return PageRequest.of(page - DEFAULT_PAGE, CHAT_SIZE, Sort.by(Sort.Direction.DESC, "timestamp"));
     }
 
     public static Pageable scheduleModalPageable(int page){
