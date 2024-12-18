@@ -303,7 +303,7 @@ public class ScheduleControllerTest extends ScheduleTest {
         schedule1.setTravelAttendeeList(new ArrayList<>(List.of(attendee1, attendee2)));
         schedule2.setTravelAttendeeList(new ArrayList<>(List.of(attendee3, attendee4)));
 
-        mockMvc.perform(get("/api/schedules/overview")
+        mockMvc.perform(get("/api/schedules/preview")
                         .param("page", "1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.totalElements").value(2))
@@ -317,7 +317,7 @@ public class ScheduleControllerTest extends ScheduleTest {
     @DisplayName("간단한 일정 조회 시 일정 데이터가 없는 경우")
     @WithMockUser(username = "member1")
     void getOverviewScheduleByUserId_emptySchedules() throws Exception {
-        mockMvc.perform(get("/api/schedules/overview")
+        mockMvc.perform(get("/api/schedules/preview")
                         .param("page", "1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.totalElements").value(0))

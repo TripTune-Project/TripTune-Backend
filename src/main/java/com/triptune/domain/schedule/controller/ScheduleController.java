@@ -46,7 +46,7 @@ public class ScheduleController {
         return ApiSchedulePageResponse.dataResponse(response);
     }
 
-    @GetMapping("/overview")
+    @GetMapping("/preview")
     @Operation(summary = "간단한 일정 목록 조회", description = "작성한 전체 일정을 필요 데이터로 구성해 조회합니다.")
     public ApiPageResponse<OverviewScheduleResponse> getOverviewScheduleByUserId(@RequestParam(name = "page") int page){
         String userId = SecurityContextHolder.getContext().getAuthentication().getName();
