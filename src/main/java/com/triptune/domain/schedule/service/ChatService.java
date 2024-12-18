@@ -74,7 +74,7 @@ public class ChatService {
         }
 
         ChatMessage message = ChatMessage.of(member, chatMessageRequest);
-        chatMessageRepository.save(message);
+        message = chatMessageRepository.save(message);
 
         return ChatResponse.from(member, message);
     }
