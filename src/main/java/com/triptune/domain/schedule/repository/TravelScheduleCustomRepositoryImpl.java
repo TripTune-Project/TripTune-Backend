@@ -7,7 +7,7 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.triptune.domain.schedule.entity.QTravelAttendee;
 import com.triptune.domain.schedule.entity.QTravelSchedule;
 import com.triptune.domain.schedule.entity.TravelSchedule;
-import com.triptune.domain.schedule.enumclass.AttendeeRole;
+import com.triptune.domain.schedule.enumclass.AttendeePermission;
 import com.triptune.global.util.PageUtil;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -173,6 +173,42 @@ public class TravelScheduleCustomRepositoryImpl implements TravelScheduleCustomR
 
         return totalElements.intValue();
     }
+
+    @Override
+    public Page<TravelSchedule> findEnableEditTravelSchedulesByUserId(Pageable pageable, String userId) {
+        List<TravelSchedule> travelSchedules = jpaQueryFactory
+                .selectFrom(travelSchedule)
+                .leftJoin(travelSchedule.travelAttendeeList, travelAttendee)
+                .where(travelAttendee.member.userId.eq(userId)
+                        .and(travelAttendee.permission.eq(AttendeePermission.ALL)
+                                .or(travelAttendee.permission.eq(AttendeePermission.EDIT))))
+                .orderBy(orderByTravelScheduleDateDESC())
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
+                .fetch();
+
+
+        Integer totalElements = countEnableEditTravelSchedulesByUserId(userId);
+
+        return PageUtil.createPage(travelSchedules, pageable, totalElements);
+    }
+
+    @Override
+    public Integer countEnableEditTravelSchedulesByUserId(String userId) {
+        Long totalElements = jpaQueryFactory
+                .select(travelSchedule.count())
+                .from(travelSchedule)
+                .leftJoin(travelSchedule.travelAttendeeList, travelAttendee)
+                .where(travelAttendee.member.userId.eq(userId)
+                        .and(travelAttendee.permission.eq(AttendeePermission.ALL)
+                                .or(travelAttendee.permission.eq(AttendeePermission.EDIT))))
+                .fetchOne();
+
+        if (totalElements == null) totalElements = 0L;
+
+        return totalElements.intValue();
+    }
+
 
     private String accuracyQuery(){
         return "CASE WHEN {0} = {1} THEN 0 " +

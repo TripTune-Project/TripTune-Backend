@@ -75,10 +75,10 @@ public class ScheduleService {
     }
 
 
-    public Page<OverviewScheduleResponse> getOverviewScheduleByUserId(int page, String userId) {
+    public Page<OverviewScheduleResponse> getEnableEditScheduleByUserId(int page, String userId) {
         Pageable pageable = PageUtil.scheduleModalPageable(page);
 
-        return travelScheduleRepository.findTravelSchedulesByUserId(pageable, userId)
+        return travelScheduleRepository.findEnableEditTravelSchedulesByUserId(pageable, userId)
                 .map(schedule -> {
                     String author = findAuthorNicknameByScheduleId(schedule.getScheduleId());
                     return OverviewScheduleResponse.from(schedule, author);

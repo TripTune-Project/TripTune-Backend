@@ -354,19 +354,19 @@ public class ScheduleServiceTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("간단한 내 일정 목록 조회")
-    void getOverviewScheduleByUserId(){
+    @DisplayName("수정 권한 있는 내 일정 목록 조회")
+    void getEnableEditScheduleByUserId(){
         // given
         Pageable pageable = PageUtil.scheduleModalPageable(1);
 
         List<TravelSchedule> schedules = new ArrayList<>(List.of(schedule1));
         Page<TravelSchedule> schedulePage = PageUtil.createPage(schedules, pageable, schedules.size());
 
-        when(travelScheduleRepository.findTravelSchedulesByUserId(any(), anyString())).thenReturn(schedulePage);
+        when(travelScheduleRepository.findEnableEditTravelSchedulesByUserId(any(), anyString())).thenReturn(schedulePage);
         when(travelAttendeeRepository.findAuthorNicknameByScheduleId(anyLong())).thenReturn(member1.getNickname());
 
         // when
-        Page<OverviewScheduleResponse> response = scheduleService.getOverviewScheduleByUserId(1, member1.getUserId());
+        Page<OverviewScheduleResponse> response = scheduleService.getEnableEditScheduleByUserId(1, member1.getUserId());
 
         // then
         assertThat(response.getTotalElements()).isNotZero();
@@ -376,17 +376,17 @@ public class ScheduleServiceTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("간단한 내 일정 목록 조회 시 일정 데이터 존재하지 않는 경우")
-    void getOverviewScheduleByUserId_emptySchedules(){
+    @DisplayName("수정 권한 있는 내 일정 목록 조회 시 일정 데이터 존재하지 않는 경우")
+    void getEnableEditScheduleByUserId_emptySchedules(){
         // given
         Pageable pageable = PageUtil.scheduleModalPageable(1);
 
         Page<TravelSchedule> schedulePage = PageUtil.createPage(new ArrayList<>(), pageable, 0);
 
-        when(travelScheduleRepository.findTravelSchedulesByUserId(any(), anyString())).thenReturn(schedulePage);
+        when(travelScheduleRepository.findEnableEditTravelSchedulesByUserId(any(), anyString())).thenReturn(schedulePage);
 
         // when
-        Page<OverviewScheduleResponse> response = scheduleService.getOverviewScheduleByUserId(1, member1.getUserId());
+        Page<OverviewScheduleResponse> response = scheduleService.getEnableEditScheduleByUserId(1, member1.getUserId());
 
         // then
         assertThat(response.getTotalElements()).isZero();

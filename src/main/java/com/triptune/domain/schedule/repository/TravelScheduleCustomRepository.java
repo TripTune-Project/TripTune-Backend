@@ -13,4 +13,6 @@ public interface TravelScheduleCustomRepository {
     Integer countTravelSchedulesByUserIdAndKeyword(String keyword, String userId);
     Page<TravelSchedule> searchSharedTravelSchedulesByUserIdAndKeyword(Pageable pageable, String keyword, String userId);
     Integer countSharedTravelSchedulesByUserIdAndKeyword(String keyword, String userId);
+    Page<TravelSchedule> findEnableEditTravelSchedulesByUserId(Pageable pageable, String userId);
+    Integer countEnableEditTravelSchedulesByUserId(String userId);
 }

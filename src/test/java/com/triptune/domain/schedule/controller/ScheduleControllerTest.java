@@ -292,9 +292,9 @@ public class ScheduleControllerTest extends ScheduleTest {
 
 
     @Test
-    @DisplayName("간단한 일정 조회")
+    @DisplayName("수정 권한 있는 내 일정 조회")
     @WithMockUser(username = "member1")
-    void getOverviewScheduleByUserId() throws Exception {
+    void getEnableEditScheduleByUserId() throws Exception {
         TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(null, member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
         TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(null, member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ));
         TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(null, member3, schedule2, AttendeeRole.AUTHOR, AttendeePermission.ALL));
@@ -306,17 +306,15 @@ public class ScheduleControllerTest extends ScheduleTest {
         mockMvc.perform(get("/api/schedules/preview")
                         .param("page", "1"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.totalElements").value(2))
-                .andExpect(jsonPath("$.data.content[0].scheduleName").value(schedule2.getScheduleName()))
-                .andExpect(jsonPath("$.data.content[0].author").value(member3.getNickname()))
-                .andExpect(jsonPath("$.data.content[1].scheduleName").value(schedule1.getScheduleName()))
-                .andExpect(jsonPath("$.data.content[1].author").value(member1.getNickname()));
+                .andExpect(jsonPath("$.data.totalElements").value(1))
+                .andExpect(jsonPath("$.data.content[0].scheduleName").value(schedule1.getScheduleName()))
+                .andExpect(jsonPath("$.data.content[0].author").value(member1.getNickname()));
     }
 
     @Test
-    @DisplayName("간단한 일정 조회 시 일정 데이터가 없는 경우")
+    @DisplayName("수정 가능한 일정 조회 시 일정 데이터가 없는 경우")
     @WithMockUser(username = "member1")
-    void getOverviewScheduleByUserId_emptySchedules() throws Exception {
+    void getEnableEditScheduleByUserId_emptySchedules() throws Exception {
         mockMvc.perform(get("/api/schedules/preview")
                         .param("page", "1"))
                 .andExpect(status().isOk())

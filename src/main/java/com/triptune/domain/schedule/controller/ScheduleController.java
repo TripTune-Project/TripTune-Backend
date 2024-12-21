@@ -47,10 +47,10 @@ public class ScheduleController {
     }
 
     @GetMapping("/preview")
-    @Operation(summary = "간단한 일정 목록 조회", description = "작성한 전체 일정을 필요 데이터로 구성해 조회합니다.")
-    public ApiPageResponse<OverviewScheduleResponse> getOverviewScheduleByUserId(@RequestParam(name = "page") int page){
+    @Operation(summary = "수정 권한 있는 일정 목록 조회", description = "작성한 일정 중 수정 권한이 있는 일정을 필요 데이터로 구성해 조회합니다.")
+    public ApiPageResponse<OverviewScheduleResponse> getEnableEditScheduleByUserId(@RequestParam(name = "page") int page){
         String userId = SecurityContextHolder.getContext().getAuthentication().getName();
-        Page<OverviewScheduleResponse> response = scheduleService.getOverviewScheduleByUserId(page, userId);
+        Page<OverviewScheduleResponse> response = scheduleService.getEnableEditScheduleByUserId(page, userId);
 
         return ApiPageResponse.dataResponse(response);
     }
