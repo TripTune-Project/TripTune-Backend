@@ -12,7 +12,7 @@ public class ApiResponse<T> extends ResponseEntity<SuccessResponse<T>> {
 
     public static <T> ApiResponse<T> okResponse(){
         SuccessResponse<T> successResponse = SuccessResponse.<T>builder()
-                .message("200 OK")
+                .message("200(성공)")
                 .build();
 
         return new ApiResponse<>(successResponse, HttpStatus.OK);
@@ -28,13 +28,12 @@ public class ApiResponse<T> extends ResponseEntity<SuccessResponse<T>> {
 
     public static <T> ApiResponse<T> dataResponse(T body){
         SuccessResponse<T> successResponse = SuccessResponse.<T>builder()
-                .message("200 OK")
+                .message("200(성공)")
                 .data(body)
                 .build();
 
         return new ApiResponse<>(successResponse, HttpStatus.OK);
     }
-
 
 
     public ApiResponse(HttpStatus status) {
