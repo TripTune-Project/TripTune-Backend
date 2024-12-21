@@ -24,6 +24,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 
@@ -70,9 +71,8 @@ public class MemberController {
         return ApiResponse.okResponse();
     }
 
-
     @PostMapping("/refresh")
-    @Operation(summary = "토큰 갱신", description = "Refresh Token 을 이용해 만료된 Access Token을 갱신합니다.")
+    @Operation(summary = "토큰 갱신", description = "Refresh Token 을 이용해 만료된 Access Token 을 갱신합니다.")
     public ApiResponse<RefreshTokenResponse> refreshToken(@RequestBody RefreshTokenRequest refreshTokenRequest) throws ExpiredJwtException {
         RefreshTokenResponse response = memberService.refreshToken(refreshTokenRequest);
         return ApiResponse.dataResponse(response);
@@ -80,22 +80,22 @@ public class MemberController {
 
     @PostMapping("/find-id")
     @Operation(summary = "아이디 찾기", description = "아이디 찾기를 실행합니다.")
-    public ApiResponse<FindIdResponse> findId(@RequestBody FindIdRequest findIdRequest) {
+    public ApiResponse<FindIdResponse> findId(@Valid @RequestBody FindIdRequest findIdRequest) {
         FindIdResponse response = memberService.findId(findIdRequest);
         return ApiResponse.dataResponse(response);
     }
 
     @PostMapping("/find-password")
     @Operation(summary = "비밀번호 찾기", description = "비밀번호 찾기를 요청합니다. 비밀번호 변경 화면으로 연결되는 링크가 이메일을 통해서 제공됩니다.")
-    public ApiResponse<?> findPassword(@RequestBody FindPasswordDTO findPasswordDTO) throws MessagingException {
+    public ApiResponse<?> findPassword(@Valid @RequestBody FindPasswordDTO findPasswordDTO) throws MessagingException {
         memberService.findPassword(findPasswordDTO);
         return ApiResponse.okResponse();
     }
 
     @PatchMapping("/change-password")
     @Operation(summary = "비밀번호 변경", description = "비밀번호를 변경합니다.")
-    public ApiResponse<?> changePassword(@RequestBody ChangePasswordDTO changePasswordDTO){
-        if(!changePasswordDTO.getPassword().equals(changePasswordDTO.getRepassword())){
+    public ApiResponse<?> changePassword(@Valid @RequestBody ChangePasswordDTO changePasswordDTO){
+        if(!changePasswordDTO.isMatchPassword()){
             throw new FailLoginException(ErrorCode.INCORRECT_PASSWORD_REPASSWORD);
         }
 
