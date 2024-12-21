@@ -19,6 +19,7 @@ import org.springframework.test.context.ActiveProfiles;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -85,6 +86,16 @@ public class TravelAttendeeRepositoryTest extends ScheduleTest {
 
         // then
         assertFalse(response);
+    }
+
+    @Test
+    @DisplayName("일정 작성자 닉네임 조회")
+    void findAuthorNicknameByScheduleId(){
+        // given, when
+        String response = travelAttendeeRepository.findAuthorNicknameByScheduleId(schedule1.getScheduleId());
+
+        // then
+        assertThat(response).isEqualTo(member1.getNickname());
     }
 
 

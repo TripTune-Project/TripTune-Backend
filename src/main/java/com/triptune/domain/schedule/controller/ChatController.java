@@ -2,9 +2,11 @@ package com.triptune.domain.schedule.controller;
 
 import com.triptune.domain.schedule.dto.request.ChatMessageRequest;
 import com.triptune.domain.schedule.dto.response.ChatResponse;
+import com.triptune.domain.schedule.exception.BadRequestChatException;
 import com.triptune.domain.schedule.service.ChatService;
 import com.triptune.global.aop.AttendeeCheck;
 import com.triptune.global.aop.ScheduleCheck;
+import com.triptune.global.enumclass.ErrorCode;
 import com.triptune.global.response.ApiResponse;
 import com.triptune.global.response.pagination.ApiPageResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -21,6 +23,7 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 @Tag(name = "Schedule - Chat", description = "일정 만들기 중 채팅 관련 API")
 public class ChatController {
+    private static final int MAX_MESSAGE_LENGTH = 1000;
 
     private final ChatService chatService;
     private final SimpMessagingTemplate messagingTemplate;
@@ -36,6 +39,10 @@ public class ChatController {
     @MessageMapping("/chats")
     @Operation(summary = "채팅 보내기", description = "메시지를 저장하고 채팅 참가자들에게 메시지를 보낸다.")
     public void sendChatMessage(@Payload ChatMessageRequest chatMessageRequest){
+        if (chatMessageRequest.getMessage().length() > MAX_MESSAGE_LENGTH){
+            throw new BadRequestChatException(ErrorCode.CHAT_MESSAGE_TOO_LONG);
+        }
+
         ChatResponse response = chatService.sendChatMessage(chatMessageRequest);
 
         messagingTemplate.convertAndSend(

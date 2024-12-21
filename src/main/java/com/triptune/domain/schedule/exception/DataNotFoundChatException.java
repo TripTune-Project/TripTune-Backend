@@ -5,10 +5,10 @@ import lombok.Getter;
 import org.springframework.http.HttpStatus;
 
 @Getter
-public class ChatNotFoundException extends RuntimeException{
+public class DataNotFoundChatException extends RuntimeException{
     private final HttpStatus httpStatus;
 
-    public ChatNotFoundException(ErrorCode errorCode){
+    public DataNotFoundChatException(ErrorCode errorCode){
         super(errorCode.getMessage());
         this.httpStatus = errorCode.getStatus();
     }

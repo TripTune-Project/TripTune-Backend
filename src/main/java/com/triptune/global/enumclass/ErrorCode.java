@@ -38,17 +38,17 @@ public enum ErrorCode {
     BLACKLIST_TOKEN(HttpStatus.UNAUTHORIZED, "로그아웃 된 사용자입니다. 로그인 후 이용해주세요."),
 
     // 여행지
-    PLACE_NOT_FOUND(HttpStatus.NOT_FOUND, "여행지 데이터가 존재하지 않습니다."),
+    PLACE_NOT_FOUND(HttpStatus.NOT_FOUND, "여행지 정보를 찾을 수 없습니다."),
 
     // 일정
-    SCHEDULE_NOT_FOUND(HttpStatus.NOT_FOUND, "일정 데이터가 존재하지 않습니다."),
+    SCHEDULE_NOT_FOUND(HttpStatus.NOT_FOUND, "일정 정보를 찾을 수 없습니다."),
     AUTHOR_NOT_FOUND(HttpStatus.NOT_FOUND, "작성자 정보를 찾을 수 없습니다."),
     FORBIDDEN_ACCESS_SCHEDULE(HttpStatus.FORBIDDEN, "해당 일정에 접근 권한이 없는 사용자 입니다."),
     FORBIDDEN_EDIT_SCHEDULE(HttpStatus.FORBIDDEN, "해당 일정에 편집 권한이 없는 사용자 입니다."),
     FORBIDDEN_DELETE_SCHEDULE(HttpStatus.FORBIDDEN, "해당 일정에 삭제 권한이 없는 사용자 입니다."),
 
     // 일정 참석
-    ATTENDEE_NOT_FOUND(HttpStatus.NOT_FOUND, "참석자 정보가 존재하지 않습니다."),
+    ATTENDEE_NOT_FOUND(HttpStatus.NOT_FOUND, "참석자 정보를 찾을 수 없습니다."),
     ALREADY_ATTENDEE(HttpStatus.CONFLICT, "이미 공유되어 있는 사용자입니다."),
     OVER_ATTENDEE_NUMBER(HttpStatus.CONFLICT, "일정은 최대 5명까지 공유할 수 있습니다."),
     FORBIDDEN_SHARE_ATTENDEE(HttpStatus.FORBIDDEN, "일정 공유는 작성자만 가능합니다."),
@@ -57,7 +57,8 @@ public enum ErrorCode {
     FORBIDDEN_UPDATE_ATTENDEE_PERMISSION(HttpStatus.FORBIDDEN, "일정 접근 권한은 작성자만 수정 가능합니다."),
 
     // 채팅
-    FORBIDDEN_CHAT_ATTENDEE(HttpStatus.FORBIDDEN, "채팅 권한이 없는 사용자 입니다.");
+    FORBIDDEN_CHAT_ATTENDEE(HttpStatus.FORBIDDEN, "채팅 권한이 없는 사용자 입니다."),
+    CHAT_MESSAGE_TOO_LONG(HttpStatus.BAD_REQUEST, "채팅 메시지는 1000자 이하여야 합니다.");
 
 
     private final HttpStatus status;

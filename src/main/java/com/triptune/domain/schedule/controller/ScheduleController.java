@@ -2,6 +2,7 @@ package com.triptune.domain.schedule.controller;
 
 import com.triptune.domain.schedule.dto.request.ScheduleCreateRequest;
 import com.triptune.domain.schedule.dto.request.ScheduleUpdateRequest;
+import com.triptune.domain.schedule.dto.response.OverviewScheduleResponse;
 import com.triptune.domain.schedule.dto.response.ScheduleCreateResponse;
 import com.triptune.domain.schedule.dto.response.ScheduleDetailResponse;
 import com.triptune.domain.schedule.dto.response.ScheduleInfoResponse;
@@ -9,12 +10,14 @@ import com.triptune.domain.schedule.enumclass.ScheduleType;
 import com.triptune.domain.schedule.service.ScheduleService;
 import com.triptune.global.aop.AttendeeCheck;
 import com.triptune.global.response.ApiResponse;
+import com.triptune.global.response.pagination.ApiPageResponse;
 import com.triptune.global.response.pagination.ApiSchedulePageResponse;
 import com.triptune.global.response.pagination.SchedulePageResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
@@ -41,6 +44,15 @@ public class ScheduleController {
         SchedulePageResponse<ScheduleInfoResponse> response = scheduleService.getSharedSchedulesByUserId(page, userId);
 
         return ApiSchedulePageResponse.dataResponse(response);
+    }
+
+    @GetMapping("/preview")
+    @Operation(summary = "수정 권한 있는 일정 목록 조회", description = "작성한 일정 중 수정 권한이 있는 일정을 필요 데이터로 구성해 조회합니다.")
+    public ApiPageResponse<OverviewScheduleResponse> getEnableEditScheduleByUserId(@RequestParam(name = "page") int page){
+        String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+        Page<OverviewScheduleResponse> response = scheduleService.getEnableEditScheduleByUserId(page, userId);
+
+        return ApiPageResponse.dataResponse(response);
     }
 
     @GetMapping("/search")

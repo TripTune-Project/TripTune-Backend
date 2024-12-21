@@ -6,6 +6,7 @@ import com.triptune.domain.schedule.dto.AuthorDTO;
 import com.triptune.domain.schedule.dto.request.ScheduleCreateRequest;
 import com.triptune.domain.schedule.dto.request.RouteRequest;
 import com.triptune.domain.schedule.dto.request.ScheduleUpdateRequest;
+import com.triptune.domain.schedule.dto.response.OverviewScheduleResponse;
 import com.triptune.domain.schedule.dto.response.ScheduleCreateResponse;
 import com.triptune.domain.schedule.dto.response.ScheduleDetailResponse;
 import com.triptune.domain.schedule.dto.response.ScheduleInfoResponse;
@@ -50,7 +51,6 @@ public class ScheduleService {
     private final TravelRouteRepository travelRouteRepository;
     private final ChatMessageRepository chatMessageRepository;
 
-
     public SchedulePageResponse<ScheduleInfoResponse> getAllSchedulesByUserId(int page, String userId) {
         Pageable pageable = PageUtil.schedulePageable(page);
         Page<TravelSchedule> schedulePage = travelScheduleRepository.findTravelSchedulesByUserId(pageable, userId);
@@ -74,6 +74,20 @@ public class ScheduleService {
         return SchedulePageResponse.ofShared(scheduleInfoResponsePage, totalElements);
     }
 
+
+    public Page<OverviewScheduleResponse> getEnableEditScheduleByUserId(int page, String userId) {
+        Pageable pageable = PageUtil.scheduleModalPageable(page);
+
+        return travelScheduleRepository.findEnableEditTravelSchedulesByUserId(pageable, userId)
+                .map(schedule -> {
+                    String author = findAuthorNicknameByScheduleId(schedule.getScheduleId());
+                    return OverviewScheduleResponse.from(schedule, author);
+                });
+    }
+
+    public String findAuthorNicknameByScheduleId(Long scheduleId){
+        return travelAttendeeRepository.findAuthorNicknameByScheduleId(scheduleId);
+    }
 
     public SchedulePageResponse<ScheduleInfoResponse> searchAllSchedules(int page, String keyword, String userId) {
         Pageable pageable = PageUtil.schedulePageable(page);
@@ -255,7 +269,6 @@ public class ScheduleService {
             chatMessageRepository.deleteAllByScheduleId(scheduleId);
         }
     }
-
 
 
 }

@@ -1,6 +1,8 @@
 package com.triptune.global.util;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.triptune.domain.schedule.exception.CustomJwtBadRequestChatException;
+import com.triptune.domain.schedule.exception.CustomJwtUnAuthorizedChatException;
 import com.triptune.global.enumclass.ErrorCode;
 import com.triptune.global.exception.CustomJwtBadRequestException;
 import com.triptune.global.exception.CustomJwtUnAuthorizedException;
@@ -83,6 +85,31 @@ public class JwtUtil {
             throw new CustomJwtBadRequestException(ErrorCode.EMPTY_JWT_CLAIMS);
         }
     }
+
+    public void validateChatToken(String token) {
+        try {
+            Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
+
+            if(redisUtil.existData(token)){
+                log.info("Already logged out user");
+                throw new CustomJwtBadRequestChatException(ErrorCode.BLACKLIST_TOKEN);
+            }
+
+        } catch (ExpiredJwtException e){
+            log.info("Expired JWT Token ", e);
+            throw new CustomJwtUnAuthorizedChatException(ErrorCode.EXPIRED_JWT_TOKEN);
+        } catch (SecurityException | MalformedJwtException e) {
+            log.info("Invalid JWT Token ", e);
+            throw new CustomJwtBadRequestChatException(ErrorCode.INVALID_JWT_TOKEN);
+        } catch (UnsupportedJwtException e){
+            log.info("Unsupported JWT Token ", e);
+            throw new CustomJwtBadRequestChatException(ErrorCode.UNSUPPORTED_JWT_TOKEN);
+        } catch (IllegalArgumentException e){
+            log.info("JWT claims string is empty ", e);
+            throw new CustomJwtBadRequestChatException(ErrorCode.EMPTY_JWT_CLAIMS);
+        }
+    }
+
 
 
     public Authentication getAuthentication(String token){

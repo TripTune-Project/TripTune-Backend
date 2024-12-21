@@ -35,7 +35,6 @@ public class ChatMessage {
     }
 
     public static ChatMessage of(Member member, ChatMessageRequest chatMessageRequest) {
-
         return ChatMessage.builder()
                 .scheduleId(chatMessageRequest.getScheduleId())
                 .memberId(member.getMemberId())

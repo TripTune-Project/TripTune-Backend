@@ -11,9 +11,8 @@ import com.triptune.domain.schedule.entity.TravelAttendee;
 import com.triptune.domain.schedule.entity.TravelSchedule;
 import com.triptune.domain.schedule.enumclass.AttendeePermission;
 import com.triptune.domain.schedule.enumclass.AttendeeRole;
-import com.triptune.domain.schedule.exception.ChatNotFoundException;
+import com.triptune.domain.schedule.exception.DataNotFoundChatException;
 import com.triptune.domain.schedule.exception.ForbiddenChatException;
-import com.triptune.domain.schedule.exception.ForbiddenScheduleException;
 import com.triptune.domain.schedule.repository.ChatMessageRepository;
 import com.triptune.domain.schedule.repository.TravelAttendeeRepository;
 import com.triptune.domain.schedule.repository.TravelScheduleRepository;
@@ -34,9 +33,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -93,7 +92,7 @@ class ChatServiceTest extends ScheduleTest {
         List<ChatMessage> messageList = new ArrayList<>(List.of(message1, message2, message3, message4, message5, message6));
         Page<ChatMessage> chatPage = PageUtil.createPage(messageList, pageable, messageList.size());
 
-        when(chatMessageRepository.findChatByScheduleId(pageable, schedule.getScheduleId())).thenReturn(chatPage);
+        when(chatMessageRepository.findAllByScheduleId(pageable, schedule.getScheduleId())).thenReturn(chatPage);
         when(memberRepository.findByMemberId(member1.getMemberId())).thenReturn(Optional.of(member1));
         when(memberRepository.findByMemberId(member2.getMemberId())).thenReturn(Optional.of(member2));
         when(memberRepository.findByMemberId(member3.getMemberId())).thenReturn(Optional.of(member3));
@@ -103,22 +102,22 @@ class ChatServiceTest extends ScheduleTest {
 
         // then
         List<ChatResponse> content = response.getContent();
-        assertEquals(response.getTotalElements(), 6);
-        assertEquals(content.get(0).getNickname(), member1.getNickname());
-        assertNotNull(content.get(0).getProfileUrl());
-        assertEquals(content.get(0).getMessage(), message1.getMessage());
-        assertEquals(content.get(1).getNickname(), member1.getNickname());
-        assertNotNull(content.get(1).getProfileUrl());
-        assertEquals(content.get(1).getMessage(), message2.getMessage());
-        assertEquals(content.get(2).getNickname(), member1.getNickname());
-        assertNotNull(content.get(2).getProfileUrl());
-        assertEquals(content.get(2).getMessage(), message3.getMessage());
-        assertEquals(content.get(3).getNickname(), member2.getNickname());
-        assertEquals(content.get(3).getMessage(), message4.getMessage());
-        assertEquals(content.get(4).getNickname(), member3.getNickname());
-        assertEquals(content.get(4).getMessage(), message5.getMessage());assertEquals(content.get(0).getNickname(), member1.getNickname());
-        assertEquals(content.get(5).getNickname(), member1.getNickname());
-        assertEquals(content.get(5).getMessage(), message6.getMessage());
+        assertThat(response.getTotalElements()).isEqualTo(6);
+        assertThat(content.get(0).getNickname()).isEqualTo(member1.getNickname());
+        assertThat(content.get(0).getProfileUrl()).isNotNull();
+        assertThat(content.get(0).getMessage()).isEqualTo(message1.getMessage());
+        assertThat(content.get(1).getNickname()).isEqualTo(member1.getNickname());
+        assertThat(content.get(1).getProfileUrl()).isNotNull();
+        assertThat(content.get(1).getMessage()).isEqualTo(message2.getMessage());
+        assertThat(content.get(2).getNickname()).isEqualTo(member1.getNickname());
+        assertThat(content.get(2).getProfileUrl()).isNotNull();
+        assertThat(content.get(2).getMessage()).isEqualTo(message3.getMessage());
+        assertThat(content.get(3).getNickname()).isEqualTo(member2.getNickname());
+        assertThat(content.get(3).getMessage()).isEqualTo(message4.getMessage());
+        assertThat(content.get(4).getNickname()).isEqualTo(member3.getNickname());
+        assertThat(content.get(4).getMessage()).isEqualTo(message5.getMessage());assertEquals(content.get(0).getNickname(), member1.getNickname());
+        assertThat(content.get(5).getNickname()).isEqualTo(member1.getNickname());
+        assertThat(content.get(5).getMessage()).isEqualTo(message6.getMessage());
 
     }
 
@@ -135,18 +134,18 @@ class ChatServiceTest extends ScheduleTest {
         List<ChatMessage> messageList = new ArrayList<>(List.of(message1, message2, message3));
         Page<ChatMessage> chatPage = PageUtil.createPage(messageList, pageable, messageList.size());
 
-        when(chatMessageRepository.findChatByScheduleId(pageable, schedule.getScheduleId())).thenReturn(chatPage);
-        when(memberRepository.findByMemberId(member1.getMemberId())).thenReturn(Optional.of(member1));
+        when(chatMessageRepository.findAllByScheduleId(pageable, schedule.getScheduleId())).thenReturn(chatPage);
+        when(memberRepository.findByMemberId(anyLong())).thenReturn(Optional.of(member1));
 
         // when
         Page<ChatResponse> response = chatService.getChatMessages(1, schedule.getScheduleId());
 
         // then
         List<ChatResponse> content = response.getContent();
-        assertEquals(response.getTotalElements(), 3);
-        assertEquals(content.get(0).getNickname(), member1.getNickname());
-        assertNotNull(content.get(0).getProfileUrl());
-        assertEquals(content.get(0).getMessage(), message1.getMessage());
+        assertThat(response.getTotalElements()).isEqualTo(3);
+        assertThat(content.get(0).getNickname()).isEqualTo(member1.getNickname());
+        assertThat(content.get(0).getProfileUrl()).isNotNull();
+        assertThat(content.get(0).getMessage()).isEqualTo(message1.getMessage());
     }
 
     @Test
@@ -161,7 +160,7 @@ class ChatServiceTest extends ScheduleTest {
         List<ChatMessage> messageList = new ArrayList<>(List.of(message1, message2, message3));
         Page<ChatMessage> chatPage = PageUtil.createPage(messageList, pageable, messageList.size());
 
-        when(chatMessageRepository.findChatByScheduleId(pageable, schedule.getScheduleId())).thenReturn(chatPage);
+        when(chatMessageRepository.findAllByScheduleId(pageable, schedule.getScheduleId())).thenReturn(chatPage);
         when(memberRepository.findByMemberId(member1.getMemberId())).thenReturn(Optional.of(member1));
         when(memberRepository.findByMemberId(member2.getMemberId())).thenReturn(Optional.of(member2));
         when(memberRepository.findByMemberId(member3.getMemberId())).thenReturn(Optional.of(member3));
@@ -171,14 +170,14 @@ class ChatServiceTest extends ScheduleTest {
 
         // then
         List<ChatResponse> content = response.getContent();
-        assertEquals(response.getTotalElements(), 3);
-        assertEquals(content.get(0).getNickname(), member1.getNickname());
-        assertNotNull(content.get(0).getProfileUrl());
-        assertEquals(content.get(0).getMessage(), message1.getMessage());
-        assertEquals(content.get(1).getNickname(), member2.getNickname());
-        assertEquals(content.get(1).getMessage(), message2.getMessage());
-        assertEquals(content.get(2).getNickname(), member3.getNickname());
-        assertEquals(content.get(2).getMessage(), message3.getMessage());
+        assertThat(response.getTotalElements()).isEqualTo(3);
+        assertThat(content.get(0).getNickname()).isEqualTo(member1.getNickname());
+        assertThat(content.get(0).getProfileUrl()).isNotNull();
+        assertThat(content.get(0).getMessage()).isEqualTo(message1.getMessage());
+        assertThat(content.get(1).getNickname()).isEqualTo(member2.getNickname());
+        assertThat(content.get(1).getMessage()).isEqualTo(message2.getMessage());
+        assertThat(content.get(2).getNickname()).isEqualTo(member3.getNickname());
+        assertThat(content.get(2).getMessage()).isEqualTo(message3.getMessage());
 
 
     }
@@ -191,15 +190,14 @@ class ChatServiceTest extends ScheduleTest {
 
         Page<ChatMessage> chatPage = PageUtil.createPage(new ArrayList<>(), pageable, 0);
 
-        when(chatMessageRepository.findChatByScheduleId(pageable, schedule.getScheduleId())).thenReturn(chatPage);
+        when(chatMessageRepository.findAllByScheduleId(pageable, schedule.getScheduleId())).thenReturn(chatPage);
 
         // when
         Page<ChatResponse> response = chatService.getChatMessages(1, schedule.getScheduleId());
 
         // then
-        List<ChatResponse> content = response.getContent();
-        assertEquals(response.getTotalElements(), 0);
-        assertTrue(content.isEmpty());
+        assertThat(response.getTotalElements()).isEqualTo(0);
+        assertThat(response.getContent()).isEmpty();
 
     }
 
@@ -213,15 +211,15 @@ class ChatServiceTest extends ScheduleTest {
         List<ChatMessage> messageList = new ArrayList<>(List.of(message1));
         Page<ChatMessage> chatPage = PageUtil.createPage(messageList, pageable, messageList.size());
 
-        when(chatMessageRepository.findChatByScheduleId(pageable, schedule.getScheduleId())).thenReturn(chatPage);
-        when(memberRepository.findByMemberId(member1.getMemberId())).thenReturn(Optional.empty());
+        when(chatMessageRepository.findAllByScheduleId(pageable, schedule.getScheduleId())).thenReturn(chatPage);
+        when(memberRepository.findByMemberId(anyLong())).thenReturn(Optional.empty());
 
         // when
         DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> chatService.getChatMessages(1, schedule.getScheduleId()));
 
         // then
-        assertEquals(fail.getHttpStatus(), ErrorCode.USER_NOT_FOUND.getStatus());
-        assertEquals(fail.getMessage(), ErrorCode.USER_NOT_FOUND.getMessage());
+        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.USER_NOT_FOUND.getStatus());
+        assertThat(fail.getMessage()).isEqualTo(ErrorCode.USER_NOT_FOUND.getMessage());
 
     }
 
@@ -234,16 +232,17 @@ class ChatServiceTest extends ScheduleTest {
 
         when(travelScheduleRepository.existsById(anyLong())).thenReturn(true);
         when(memberRepository.findByNickname(anyString())).thenReturn(Optional.of(member1));
-        when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_UserId(anyLong(), anyString()))
-                .thenReturn(Optional.of(attendee));
+        when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_UserId(anyLong(), anyString())).thenReturn(Optional.of(attendee));
+        when(chatMessageRepository.save(any())).thenReturn(createChatMessage("message1", request.getScheduleId(), member1, request.getMessage()));
 
 
         // when
         ChatResponse response = chatService.sendChatMessage(request);
 
         // then
-        assertEquals(response.getNickname(), request.getNickname());
-        assertEquals(response.getMessage(), request.getMessage());
+        assertThat(response.getMessageId()).isNotEmpty();
+        assertThat(response.getNickname()).isEqualTo(request.getNickname());
+        assertThat(response.getMessage()).isEqualTo(request.getMessage());
     }
 
     @Test
@@ -258,12 +257,12 @@ class ChatServiceTest extends ScheduleTest {
         when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_UserId(anyLong(), anyString()))
                 .thenReturn(Optional.of(attendee));
 
-
         // when
         ForbiddenChatException fail = assertThrows(ForbiddenChatException.class, () -> chatService.sendChatMessage(request));
+
         // then
-        assertEquals(fail.getHttpStatus(), ErrorCode.FORBIDDEN_CHAT_ATTENDEE.getStatus());
-        assertEquals(fail.getMessage(), ErrorCode.FORBIDDEN_CHAT_ATTENDEE.getMessage());
+        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.FORBIDDEN_CHAT_ATTENDEE.getStatus());
+        assertThat(fail.getMessage()).isEqualTo(ErrorCode.FORBIDDEN_CHAT_ATTENDEE.getMessage());
     }
 
     @Test
@@ -282,73 +281,45 @@ class ChatServiceTest extends ScheduleTest {
         // when
         ForbiddenChatException fail = assertThrows(ForbiddenChatException.class, () -> chatService.sendChatMessage(request));
         // then
-        assertEquals(fail.getHttpStatus(), ErrorCode.FORBIDDEN_CHAT_ATTENDEE.getStatus());
-        assertEquals(fail.getMessage(), ErrorCode.FORBIDDEN_CHAT_ATTENDEE.getMessage());
-    }
-
-    @Test
-    @DisplayName("사용자 인덱스로 사용자 정보 조회")
-    void getMemberByMemberId(){
-        // given
-        when(memberRepository.findByMemberId(anyLong())).thenReturn(Optional.of(member1));
-
-        // when
-        Member response = chatService.getMemberByMemberId(member1.getMemberId());
-
-        // then
-        assertEquals(response.getUserId(), member1.getUserId());
-        assertEquals(response.getNickname(), member1.getNickname());
-    }
-
-    @Test
-    @DisplayName("사용자 인덱스로 사용자 정보 조회 시 데이터 없어 예외 발생")
-    void getMemberByMemberId_dataNotFoundException(){
-        // given
-        when(memberRepository.findByMemberId(anyLong())).thenReturn(Optional.empty());
-
-        // when
-        DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> chatService.getMemberByMemberId(member1.getMemberId()));
-
-        // then
-        assertEquals(fail.getHttpStatus(), ErrorCode.USER_NOT_FOUND.getStatus());
-        assertEquals(fail.getMessage(), ErrorCode.USER_NOT_FOUND.getMessage());
+        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.FORBIDDEN_CHAT_ATTENDEE.getStatus());
+        assertThat(fail.getMessage()).isEqualTo(ErrorCode.FORBIDDEN_CHAT_ATTENDEE.getMessage());
     }
 
 
     @Test
     @DisplayName("닉네임으로 사용자 정보 조회")
-    void getChatMemberByNickname(){
+    void findChatMemberByNickname(){
         // given
         when(memberRepository.findByNickname(anyString())).thenReturn(Optional.of(member1));
 
         // when
-        Member response = chatService.getChatMemberByNickname(member1.getNickname());
+        Member response = chatService.findChatMemberByNickname(member1.getNickname());
 
         // then
-        assertEquals(response.getUserId(), member1.getUserId());
-        assertEquals(response.getNickname(), member1.getNickname());
+        assertThat(response.getUserId()).isEqualTo(member1.getUserId());
+        assertThat(response.getNickname()).isEqualTo(member1.getNickname());
     }
 
 
     @Test
     @DisplayName("닉네임으로 사용자 정보 조회 시 데이터 없어 예외 발생")
-    void getChatMemberByNickname_dataNotFoundException(){
+    void findChatMemberByNickname_dataNotFoundException(){
         // given
         when(memberRepository.findByNickname(anyString())).thenReturn(Optional.empty());
 
         // when
-        ChatNotFoundException fail = assertThrows(ChatNotFoundException.class, () -> chatService.getChatMemberByNickname(member1.getNickname()));
+        DataNotFoundChatException fail = assertThrows(DataNotFoundChatException.class, () -> chatService.findChatMemberByNickname(member1.getNickname()));
 
         // then
-        assertEquals(fail.getHttpStatus(), ErrorCode.USER_NOT_FOUND.getStatus());
-        assertEquals(fail.getMessage(), ErrorCode.USER_NOT_FOUND.getMessage());
+        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.USER_NOT_FOUND.getStatus());
+        assertThat(fail.getMessage()).isEqualTo(ErrorCode.USER_NOT_FOUND.getMessage());
 
     }
 
 
     @Test
     @DisplayName("참석자 정보 조회")
-    void getTravelAttendee(){
+    void findTravelAttendee(){
         // given
         TravelAttendee attendee = createTravelAttendee(1L, member1, schedule, AttendeeRole.AUTHOR, AttendeePermission.ALL);
 
@@ -356,26 +327,26 @@ class ChatServiceTest extends ScheduleTest {
                 .thenReturn(Optional.of(attendee));
 
         // when
-        TravelAttendee response = chatService.getTravelAttendee(schedule.getScheduleId(), member1.getUserId());
+        TravelAttendee response = chatService.findTravelAttendee(schedule.getScheduleId(), member1.getUserId());
 
         // then
-        assertEquals(response.getRole(), attendee.getRole());
-        assertEquals(response.getPermission(), attendee.getPermission());
+        assertThat(response.getRole()).isEqualTo(attendee.getRole());
+        assertThat(response.getPermission()).isEqualTo(attendee.getPermission());
     }
 
 
     @Test
     @DisplayName("참석자 정보 조회 시 데이터 없어 예외 발생")
-    void getTravelAttendee_forbiddenScheduleException(){
+    void findTravelAttendee_forbiddenScheduleException(){
         // given
         when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_UserId(anyLong(), anyString())).thenReturn(Optional.empty());
 
         // when
-        ForbiddenChatException fail = assertThrows(ForbiddenChatException.class, () -> chatService.getTravelAttendee(schedule.getScheduleId(), member1.getUserId()));
+        ForbiddenChatException fail = assertThrows(ForbiddenChatException.class, () -> chatService.findTravelAttendee(schedule.getScheduleId(), member1.getUserId()));
 
         // then
-        assertEquals(fail.getHttpStatus(), ErrorCode.FORBIDDEN_ACCESS_SCHEDULE.getStatus());
-        assertEquals(fail.getMessage(), ErrorCode.FORBIDDEN_ACCESS_SCHEDULE.getMessage());
+        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.FORBIDDEN_ACCESS_SCHEDULE.getStatus());
+        assertThat(fail.getMessage()).isEqualTo(ErrorCode.FORBIDDEN_ACCESS_SCHEDULE.getMessage());
 
     }
 }
