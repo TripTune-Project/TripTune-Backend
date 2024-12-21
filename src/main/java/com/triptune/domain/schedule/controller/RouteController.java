@@ -1,13 +1,17 @@
 package com.triptune.domain.schedule.controller;
 
+import com.triptune.domain.schedule.dto.request.RouteCreateRequest;
 import com.triptune.domain.schedule.dto.response.RouteResponse;
 import com.triptune.domain.schedule.service.RouteService;
 import com.triptune.global.aop.AttendeeCheck;
+import com.triptune.global.response.ApiResponse;
 import com.triptune.global.response.pagination.ApiPageResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -25,6 +29,15 @@ public class RouteController {
         Page<RouteResponse> response = routeService.getTravelRoutes(scheduleId, page);
 
         return ApiPageResponse.dataResponse(response);
+    }
+
+
+    @PostMapping("/routes")
+    @Operation(summary = "여행 루트 마지막에 여행지 추가", description = "여행 루트의 마지막에 여행지를 추가한다.")
+    public ApiResponse<?> createLastRoute(@PathVariable(name = "scheduleId") Long scheduleId, @Valid @RequestBody RouteCreateRequest routeCreateRequest){
+        String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+        routeService.createLastRoute(scheduleId, userId, routeCreateRequest);
+        return ApiResponse.okResponse();
     }
 
 }

@@ -51,4 +51,8 @@ public abstract class ScheduleTest extends BaseTest {
 
     }
 
+    protected RouteCreateRequest createRouteCreateRequest(Long placeId){
+        return RouteCreateRequest.builder().placeId(placeId).build();
+    }
+
 }
