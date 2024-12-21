@@ -2,8 +2,8 @@ package com.triptune.domain.member.service;
 
 import com.triptune.domain.email.service.EmailService;
 import com.triptune.domain.member.MemberTest;
-import com.triptune.domain.member.dto.FindPasswordDTO;
-import com.triptune.domain.member.dto.LogoutDTO;
+import com.triptune.domain.member.dto.request.FindPasswordRequest;
+import com.triptune.domain.member.dto.request.LogoutRequest;
 import com.triptune.domain.member.dto.request.FindIdRequest;
 import com.triptune.domain.member.dto.request.LoginRequest;
 import com.triptune.domain.member.dto.request.MemberRequest;
@@ -274,7 +274,7 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("로그아웃")
     void logout(){
         // given
-        LogoutDTO request = createLogoutDTO(member.getNickname());
+        LogoutRequest request = createLogoutDTO(member.getNickname());
 
         when(memberRepository.existsByNickname(anyString())).thenReturn(true);
 
@@ -290,7 +290,7 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("로그아웃 요청 시 사용자 데이터 없어 예외 발생")
     void logout_dataNotFoundException(){
         // given
-        LogoutDTO request = createLogoutDTO("notMember");
+        LogoutRequest request = createLogoutDTO("notMember");
 
         when(memberRepository.existsByNickname(anyString())).thenReturn(false);
 
@@ -382,32 +382,32 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("비밀번호 찾기 성공")
     void findPassword() throws MessagingException {
         // given
-        FindPasswordDTO findPasswordDTO = createFindPasswordDTO("test");
+        FindPasswordRequest findPasswordRequest = createFindPasswordDTO("test");
 
         when(memberRepository.existsByUserIdAndEmail(anyString(), anyString())).thenReturn(true);
 
         // when
-        assertDoesNotThrow(() -> memberService.findPassword(findPasswordDTO));
+        assertDoesNotThrow(() -> memberService.findPassword(findPasswordRequest));
 
         // then
-        verify(emailService, times(1)).findPassword(findPasswordDTO);
+        verify(emailService, times(1)).findPassword(findPasswordRequest);
     }
 
     @Test
     @DisplayName("비밀번호 찾기 시 사용자 정보 존재하지 않아 예외 발생")
     void findPasswordNotEqualsUserId_DataNotFoundException() throws MessagingException {
         // given
-        FindPasswordDTO findPasswordDTO = createFindPasswordDTO("fail");
+        FindPasswordRequest findPasswordRequest = createFindPasswordDTO("fail");
 
         when(memberRepository.existsByUserIdAndEmail(anyString(), anyString())).thenReturn(false);
 
         // when
-        DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> memberService.findPassword(findPasswordDTO));
+        DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> memberService.findPassword(findPasswordRequest));
 
         // then
         assertEquals(fail.getHttpStatus(), ErrorCode.MEMBER_NOT_FOUND.getStatus());
         assertEquals(fail.getMessage(), ErrorCode.MEMBER_NOT_FOUND.getMessage());
-        verify(emailService, times(0)).findPassword(findPasswordDTO);
+        verify(emailService, times(0)).findPassword(findPasswordRequest);
     }
 
 

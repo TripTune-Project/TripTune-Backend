@@ -1,10 +1,6 @@
 package com.triptune.domain.member.controller;
 
-import com.triptune.domain.member.dto.*;
-import com.triptune.domain.member.dto.request.FindIdRequest;
-import com.triptune.domain.member.dto.request.LoginRequest;
-import com.triptune.domain.member.dto.request.MemberRequest;
-import com.triptune.domain.member.dto.request.RefreshTokenRequest;
+import com.triptune.domain.member.dto.request.*;
 import com.triptune.domain.member.dto.response.FindIdResponse;
 import com.triptune.domain.member.dto.response.LoginResponse;
 import com.triptune.domain.member.dto.response.RefreshTokenResponse;
@@ -24,7 +20,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 
@@ -60,14 +55,14 @@ public class MemberController {
 
     @PatchMapping("/logout")
     @Operation(summary = "로그아웃", description = "로그아웃을 실행합니다.")
-    public ApiResponse<?> logout(HttpServletRequest request, @Valid @RequestBody LogoutDTO logoutDTO){
+    public ApiResponse<?> logout(HttpServletRequest request, @Valid @RequestBody LogoutRequest logoutRequest){
         String accessToken = jwtUtil.resolveToken(request);
 
         if (accessToken == null){
             throw new CustomJwtBadRequestException(ErrorCode.INVALID_JWT_TOKEN);
         }
 
-        memberService.logout(logoutDTO, accessToken);
+        memberService.logout(logoutRequest, accessToken);
         return ApiResponse.okResponse();
     }
 
@@ -87,19 +82,19 @@ public class MemberController {
 
     @PostMapping("/find-password")
     @Operation(summary = "비밀번호 찾기", description = "비밀번호 찾기를 요청합니다. 비밀번호 변경 화면으로 연결되는 링크가 이메일을 통해서 제공됩니다.")
-    public ApiResponse<?> findPassword(@Valid @RequestBody FindPasswordDTO findPasswordDTO) throws MessagingException {
-        memberService.findPassword(findPasswordDTO);
+    public ApiResponse<?> findPassword(@Valid @RequestBody FindPasswordRequest findPasswordRequest) throws MessagingException {
+        memberService.findPassword(findPasswordRequest);
         return ApiResponse.okResponse();
     }
 
     @PatchMapping("/change-password")
     @Operation(summary = "비밀번호 변경", description = "비밀번호를 변경합니다.")
-    public ApiResponse<?> changePassword(@Valid @RequestBody ChangePasswordDTO changePasswordDTO){
-        if(!changePasswordDTO.isMatchPassword()){
+    public ApiResponse<?> changePassword(@Valid @RequestBody ChangePasswordRequest changePasswordRequest){
+        if(!changePasswordRequest.isMatchPassword()){
             throw new FailLoginException(ErrorCode.INCORRECT_PASSWORD_REPASSWORD);
         }
 
-        memberService.changePassword(changePasswordDTO);
+        memberService.changePassword(changePasswordRequest);
         return ApiResponse.okResponse();
     }
 

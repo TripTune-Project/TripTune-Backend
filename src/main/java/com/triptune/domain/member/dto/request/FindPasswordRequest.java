@@ -1,4 +1,4 @@
-package com.triptune.domain.member.dto;
+package com.triptune.domain.member.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Builder;
@@ -9,7 +9,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-public class FindPasswordDTO {
+public class FindPasswordRequest {
 
     @NotBlank(message = "아이디는 필수 입력 값입니다.")
     private String userId;
@@ -18,7 +18,7 @@ public class FindPasswordDTO {
     private String email;
 
     @Builder
-    public FindPasswordDTO(String userId, String email) {
+    public FindPasswordRequest(String userId, String email) {
         this.userId = userId;
         this.email = email;
     }

@@ -1,11 +1,7 @@
 package com.triptune.domain.member.service;
 
 import com.triptune.domain.email.service.EmailService;
-import com.triptune.domain.member.dto.*;
-import com.triptune.domain.member.dto.request.FindIdRequest;
-import com.triptune.domain.member.dto.request.LoginRequest;
-import com.triptune.domain.member.dto.request.MemberRequest;
-import com.triptune.domain.member.dto.request.RefreshTokenRequest;
+import com.triptune.domain.member.dto.request.*;
 import com.triptune.domain.member.dto.response.FindIdResponse;
 import com.triptune.domain.member.dto.response.LoginResponse;
 import com.triptune.domain.member.dto.response.RefreshTokenResponse;
@@ -23,7 +19,6 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.mail.MessagingException;
 import jakarta.transaction.Transactional;
-import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -88,12 +83,12 @@ public class MemberService {
     }
 
 
-    public void logout(LogoutDTO logoutDTO, String accessToken) {
-        if (!isExistsMember(logoutDTO.getNickname())){
+    public void logout(LogoutRequest logoutRequest, String accessToken) {
+        if (!isExistsMember(logoutRequest.getNickname())){
             throw new DataNotFoundException(ErrorCode.MEMBER_NOT_FOUND);
         }
 
-        memberRepository.deleteRefreshTokenByNickname(logoutDTO.getNickname());
+        memberRepository.deleteRefreshTokenByNickname(logoutRequest.getNickname());
         redisUtil.saveExpiredData(accessToken, "logout", LOGOUT_DURATION);
     }
 
@@ -131,25 +126,25 @@ public class MemberService {
     }
 
 
-    public void findPassword(FindPasswordDTO findPasswordDTO) throws MessagingException {
-        boolean isExistsMember = memberRepository.existsByUserIdAndEmail(findPasswordDTO.getUserId(), findPasswordDTO.getEmail());
+    public void findPassword(FindPasswordRequest findPasswordRequest) throws MessagingException {
+        boolean isExistsMember = memberRepository.existsByUserIdAndEmail(findPasswordRequest.getUserId(), findPasswordRequest.getEmail());
         if (!isExistsMember){
             throw new DataNotFoundException(ErrorCode.MEMBER_NOT_FOUND);
         }
 
-        emailService.findPassword(findPasswordDTO);
+        emailService.findPassword(findPasswordRequest);
     }
 
 
-    public void changePassword(ChangePasswordDTO changePasswordDTO) {
-        String email = redisUtil.getData(changePasswordDTO.getPasswordToken());
+    public void changePassword(ChangePasswordRequest changePasswordRequest) {
+        String email = redisUtil.getData(changePasswordRequest.getPasswordToken());
 
         if (email == null) {
             throw new ChangePasswordException(ErrorCode.INVALID_CHANGE_PASSWORD);
         }
 
         Member member = findMemberByEmail(email);
-        member.setPassword(passwordEncoder.encode(changePasswordDTO.getPassword()));
+        member.setPassword(passwordEncoder.encode(changePasswordRequest.getPassword()));
     }
 
 

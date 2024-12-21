@@ -1,4 +1,4 @@
-package com.triptune.domain.member.dto;
+package com.triptune.domain.member.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
@@ -10,7 +10,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-public class ChangePasswordDTO {
+public class ChangePasswordRequest {
 
     @NotBlank(message = "비밀번호 변경 토큰은 필수 입력 값입니다.")
     private String passwordToken;
@@ -24,7 +24,7 @@ public class ChangePasswordDTO {
     private String repassword;
 
     @Builder
-    public ChangePasswordDTO(String passwordToken, String password, String repassword) {
+    public ChangePasswordRequest(String passwordToken, String password, String repassword) {
         this.passwordToken = passwordToken;
         this.password = password;
         this.repassword = repassword;

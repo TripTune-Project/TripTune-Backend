@@ -1,7 +1,7 @@
 package com.triptune.domain.email.service;
 
 import com.triptune.domain.email.dto.VerifyAuthRequest;
-import com.triptune.domain.member.dto.FindPasswordDTO;
+import com.triptune.domain.member.dto.request.FindPasswordRequest;
 import com.triptune.global.exception.DataExistException;
 import com.triptune.domain.member.repository.MemberRepository;
 import com.triptune.global.enumclass.ErrorCode;
@@ -89,11 +89,11 @@ public class EmailService {
 
     /**
      * 비밀번호 찾기 이메일 요청 : 비밀번호 변경 링크 제공
-     * @param findPasswordDTO
+     * @param findPasswordRequest
      * @throws MessagingException
      */
-    public void findPassword(FindPasswordDTO findPasswordDTO) throws MessagingException {
-        MimeMessage emailForm = findPasswordEmailTemplate(findPasswordDTO);
+    public void findPassword(FindPasswordRequest findPasswordRequest) throws MessagingException {
+        MimeMessage emailForm = findPasswordEmailTemplate(findPasswordRequest);
 
         log.info("password recovery email sent completed");
         javaMailSender.send(emailForm);
@@ -138,19 +138,19 @@ public class EmailService {
 
     /**
      * 비밀번호 변경 링크가 포함된 비밀번호 찾기 템플릿 생성
-     * @param findPasswordDTO
+     * @param findPasswordRequest
      * @return 이메일 객체 {@link MimeMessage}
      * @throws MessagingException
      */
-    private MimeMessage findPasswordEmailTemplate(FindPasswordDTO findPasswordDTO) throws MessagingException {
-        String passwordToken = jwtUtil.createToken(findPasswordDTO.getUserId(), passwordExpirationTime);
+    private MimeMessage findPasswordEmailTemplate(FindPasswordRequest findPasswordRequest) throws MessagingException {
+        String passwordToken = jwtUtil.createToken(findPasswordRequest.getUserId(), passwordExpirationTime);
         String changePasswordURL = passwordURL + passwordToken;
 
         MimeMessage message = javaMailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
         helper.setSubject("[TripTune] 비밀번호 재설정을 위한 안내 메일입니다.");
-        helper.setTo(findPasswordDTO.getEmail());
+        helper.setTo(findPasswordRequest.getEmail());
         helper.setCc(senderEmail);
 
         HashMap<String, String> emailValues = new HashMap<>();
@@ -167,7 +167,7 @@ public class EmailService {
         helper.addInline("image", new ClassPathResource(IMAGE_FOLDER_PATH + "logo-removebg.png"));
 
         // 유효기간 1시간
-        redisUtil.saveExpiredData(passwordToken, findPasswordDTO.getEmail(), 3600);
+        redisUtil.saveExpiredData(passwordToken, findPasswordRequest.getEmail(), 3600);
 
         return message;
     }
