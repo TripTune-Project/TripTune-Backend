@@ -1,18 +1,15 @@
 package com.triptune.domain.travel.entity;
 
-import com.triptune.domain.common.entity.ApiCategory;
-import com.triptune.domain.common.entity.City;
-import com.triptune.domain.common.entity.Country;
-import com.triptune.domain.common.entity.District;
-import jakarta.annotation.Nullable;
+import com.triptune.domain.common.entity.*;
+import com.triptune.domain.schedule.entity.TravelRoute;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Null;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -42,8 +39,9 @@ public class TravelPlace {
     @JoinColumn(name = "category_code")
     private ApiCategory apiCategory;
 
-    @Column(name = "content_type_id")
-    private Long contentTypeId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "content_type_id")
+    private ApiContentType apiContentType;
 
     @Column(name = "place_name")
     private String placeName;
@@ -51,9 +49,23 @@ public class TravelPlace {
     @Column(name = "address")
     private String address;
 
-    @Nullable
     @Column(name = "detail_address")
     private String detailAddress;
+
+    @Column(name = "use_time")
+    private String useTime;
+
+    @Column(name = "check_in_time")
+    private String checkInTime;
+
+    @Column(name = "check_out_time")
+    private String checkOutTime;
+
+    @Column(name = "homepage")
+    private String homepage;
+
+    @Column(name = "phone_number")
+    private String phoneNumber;
 
     @Column(name = "longitude")
     private double longitude;
@@ -61,10 +73,6 @@ public class TravelPlace {
     @Column(name = "latitude")
     private double latitude;
 
-    @Column(name = "api_content_id")
-    private int apiContentId;
-
-    @Nullable
     @Column(name = "description")
     private String description;
 
@@ -74,67 +82,46 @@ public class TravelPlace {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
-    @Nullable
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    @Nullable
-    @Column(name = "api_created_at")
-    private LocalDateTime apiCreatedAt;
+    @OneToMany(mappedBy = "travelPlace", fetch = FetchType.LAZY, orphanRemoval = true)
+    private List<TravelImage> travelImageList = new ArrayList<>();
 
-    @Nullable
-    @Column(name = "api_updated_at")
-    private LocalDateTime apiUpdatedAt;
-
-    @OneToMany(mappedBy = "travelPlace", orphanRemoval = true)
-    private List<TravelImageFile> travelImageFileList;
-
+    @OneToMany(mappedBy = "travelPlace", fetch = FetchType.LAZY, orphanRemoval = true)
+    private List<TravelRoute> travelRouteList = new ArrayList<>();
 
     @Builder
-    public TravelPlace(Long placeId, Country country, City city, District district, ApiCategory apiCategory, Long contentTypeId, String placeName, String address, String detailAddress, double longitude, double latitude, int apiContentId, String description, int bookmarkCnt, LocalDateTime createdAt, LocalDateTime updatedAt, LocalDateTime apiCreatedAt, LocalDateTime apiUpdatedAt, List<TravelImageFile> travelImageFileList) {
+    public TravelPlace(Long placeId, Country country, City city, District district, ApiCategory apiCategory, ApiContentType apiContentType, String placeName, String address, String detailAddress, String useTime, String checkInTime, String checkOutTime, String homepage, String phoneNumber, double longitude, double latitude, String description, int bookmarkCnt, LocalDateTime createdAt, LocalDateTime updatedAt, List<TravelImage> travelImageList, List<TravelRoute> travelRouteList) {
         this.placeId = placeId;
         this.country = country;
         this.city = city;
         this.district = district;
         this.apiCategory = apiCategory;
-        this.contentTypeId = contentTypeId;
+        this.apiContentType = apiContentType;
         this.placeName = placeName;
         this.address = address;
         this.detailAddress = detailAddress;
+        this.useTime = useTime;
+        this.checkInTime = checkInTime;
+        this.checkOutTime = checkOutTime;
+        this.homepage = homepage;
+        this.phoneNumber = phoneNumber;
         this.longitude = longitude;
         this.latitude = latitude;
-        this.apiContentId = apiContentId;
         this.description = description;
         this.bookmarkCnt = bookmarkCnt;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
-        this.apiCreatedAt = apiCreatedAt;
-        this.apiUpdatedAt = apiUpdatedAt;
-        this.travelImageFileList = travelImageFileList;
+        this.travelImageList = travelImageList;
+        this.travelRouteList = travelRouteList;
     }
 
-    @Override
-    public String toString() {
-        return "TravelPlace{" +
-                "placeId=" + placeId +
-                ", country=" + country +
-                ", city=" + city +
-                ", district=" + district +
-                ", category=" + apiCategory +
-                ", contentTypeId=" + contentTypeId +
-                ", placeName='" + placeName + '\'' +
-                ", address='" + address + '\'' +
-                ", detailAddress='" + detailAddress + '\'' +
-                ", longitude=" + longitude +
-                ", latitude=" + latitude +
-                ", apiContentId=" + apiContentId +
-                ", description='" + description + '\'' +
-                ", bookmarkCnt=" + bookmarkCnt +
-                ", createdAt=" + createdAt +
-                ", updatedAt=" + updatedAt +
-                ", apiCreatedAt=" + apiCreatedAt +
-                ", apiUpdatedAt=" + apiUpdatedAt +
-                ", travelImageFileList=" + travelImageFileList +
-                '}';
+    public String getThumbnailUrl(){
+        return travelImageList.stream()
+                .filter(TravelImage::isThumbnail)
+                .map(TravelImage::getS3ObjectUrl)
+                .findFirst()
+                .orElse(null);
     }
 }

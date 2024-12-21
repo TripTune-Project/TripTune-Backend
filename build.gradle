@@ -79,13 +79,21 @@ dependencies {
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.security:spring-security-test'
 
+	// mongodb
+	implementation 'org.springframework.boot:spring-boot-starter-data-mongodb'
+
+	// websocket
+	implementation 'org.springframework.boot:spring-boot-starter-websocket'
+
 	// junit
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
-	// 테스트용 h2
+	// 테스트용 DB
 	testImplementation group: 'com.h2database', name: 'h2', version: '1.4.200'
 	testImplementation 'com.h2database:h2'
 	testRuntimeOnly 'com.h2database:h2'
+	testImplementation 'de.flapdoodle.embed:de.flapdoodle.embed.mongo:3.5.4'
+
 }
 
 tasks.named('bootBuildImage') {

@@ -22,8 +22,6 @@ public class QCity extends EntityPathBase<City> {
 
     public static final QCity city = new QCity("city");
 
-    public final NumberPath<Integer> apiAreaCode = createNumber("apiAreaCode", Integer.class);
-
     public final NumberPath<Long> cityId = createNumber("cityId", Long.class);
 
     public final StringPath cityName = createString("cityName");

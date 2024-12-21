@@ -1,9 +1,9 @@
 package com.triptune.global.service;
 
 import com.triptune.domain.member.entity.Member;
-import com.triptune.domain.member.exception.CustomUsernameNotFoundException;
 import com.triptune.domain.member.repository.MemberRepository;
 import com.triptune.global.enumclass.ErrorCode;
+import com.triptune.global.exception.DataNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -21,7 +21,7 @@ public class CustomUserDetailsService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String userId) throws UsernameNotFoundException {
         Member member = memberRepository.findByUserId(userId)
-                .orElseThrow(() -> new CustomUsernameNotFoundException(ErrorCode.NOT_FOUND_USER));
+                .orElseThrow(() -> new DataNotFoundException(ErrorCode.USER_NOT_FOUND));
 
         return new CustomUserDetails(member);
     }

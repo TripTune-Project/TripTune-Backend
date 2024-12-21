@@ -26,17 +26,15 @@ public class QTravelPlace extends EntityPathBase<TravelPlace> {
 
     public final com.triptune.domain.common.entity.QApiCategory apiCategory;
 
-    public final NumberPath<Integer> apiContentId = createNumber("apiContentId", Integer.class);
-
-    public final DateTimePath<java.time.LocalDateTime> apiCreatedAt = createDateTime("apiCreatedAt", java.time.LocalDateTime.class);
-
-    public final DateTimePath<java.time.LocalDateTime> apiUpdatedAt = createDateTime("apiUpdatedAt", java.time.LocalDateTime.class);
+    public final com.triptune.domain.common.entity.QApiContentType apiContentType;
 
     public final NumberPath<Integer> bookmarkCnt = createNumber("bookmarkCnt", Integer.class);
 
-    public final com.triptune.domain.common.entity.QCity city;
+    public final StringPath checkInTime = createString("checkInTime");
 
-    public final NumberPath<Long> contentTypeId = createNumber("contentTypeId", Long.class);
+    public final StringPath checkOutTime = createString("checkOutTime");
+
+    public final com.triptune.domain.common.entity.QCity city;
 
     public final com.triptune.domain.common.entity.QCountry country;
 
@@ -48,17 +46,25 @@ public class QTravelPlace extends EntityPathBase<TravelPlace> {
 
     public final com.triptune.domain.common.entity.QDistrict district;
 
+    public final StringPath homepage = createString("homepage");
+
     public final NumberPath<Double> latitude = createNumber("latitude", Double.class);
 
     public final NumberPath<Double> longitude = createNumber("longitude", Double.class);
+
+    public final StringPath phoneNumber = createString("phoneNumber");
 
     public final NumberPath<Long> placeId = createNumber("placeId", Long.class);
 
     public final StringPath placeName = createString("placeName");
 
-    public final ListPath<TravelImageFile, QTravelImageFile> travelImageFileList = this.<TravelImageFile, QTravelImageFile>createList("travelImageFileList", TravelImageFile.class, QTravelImageFile.class, PathInits.DIRECT2);
+    public final ListPath<TravelImage, QTravelImage> travelImageList = this.<TravelImage, QTravelImage>createList("travelImageList", TravelImage.class, QTravelImage.class, PathInits.DIRECT2);
+
+    public final ListPath<com.triptune.domain.schedule.entity.TravelRoute, com.triptune.domain.schedule.entity.QTravelRoute> travelRouteList = this.<com.triptune.domain.schedule.entity.TravelRoute, com.triptune.domain.schedule.entity.QTravelRoute>createList("travelRouteList", com.triptune.domain.schedule.entity.TravelRoute.class, com.triptune.domain.schedule.entity.QTravelRoute.class, PathInits.DIRECT2);
 
     public final DateTimePath<java.time.LocalDateTime> updatedAt = createDateTime("updatedAt", java.time.LocalDateTime.class);
+
+    public final StringPath useTime = createString("useTime");
 
     public QTravelPlace(String variable) {
         this(TravelPlace.class, forVariable(variable), INITS);
@@ -79,6 +85,7 @@ public class QTravelPlace extends EntityPathBase<TravelPlace> {
     public QTravelPlace(Class<? extends TravelPlace> type, PathMetadata metadata, PathInits inits) {
         super(type, metadata, inits);
         this.apiCategory = inits.isInitialized("apiCategory") ? new com.triptune.domain.common.entity.QApiCategory(forProperty("apiCategory")) : null;
+        this.apiContentType = inits.isInitialized("apiContentType") ? new com.triptune.domain.common.entity.QApiContentType(forProperty("apiContentType")) : null;
         this.city = inits.isInitialized("city") ? new com.triptune.domain.common.entity.QCity(forProperty("city"), inits.get("city")) : null;
         this.country = inits.isInitialized("country") ? new com.triptune.domain.common.entity.QCountry(forProperty("country")) : null;
         this.district = inits.isInitialized("district") ? new com.triptune.domain.common.entity.QDistrict(forProperty("district"), inits.get("district")) : null;

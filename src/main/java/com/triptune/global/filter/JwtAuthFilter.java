@@ -1,36 +1,33 @@
 package com.triptune.global.filter;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.triptune.global.exception.CustomJwtBadRequestException;
-import com.triptune.global.response.ErrorResponse;
+import com.triptune.global.exception.CustomJwtUnAuthorizedException;
 import com.triptune.global.util.JwtUtil;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.MediaType;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.util.Arrays;
 
 import static com.triptune.global.config.SecurityConstants.AUTH_WHITELIST;
 
-/**
- * JWT 가 유효성을 검증하는 Filter
- */
+
+@Slf4j
 @RequiredArgsConstructor
 public class JwtAuthFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
 
     @Override
-    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
+    protected boolean shouldNotFilter(HttpServletRequest request) {
         String requestURI = request.getRequestURI();
 
         return Arrays.stream(AUTH_WHITELIST).anyMatch(pattern -> {
@@ -41,14 +38,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        String authorization = request.getHeader("Authorization");
         String token = jwtUtil.resolveToken(request);
-
-        if(authorization == null){
-            filterChain.doFilter(request, response);
-            return;
-        }
-
         try{
             if (token != null && jwtUtil.validateToken(token)){
                 Authentication auth = jwtUtil.getAuthentication(token);
@@ -57,24 +47,14 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
             filterChain.doFilter(request, response);
         } catch (CustomJwtBadRequestException ex){
-            handleJwtException(response, ex);
+            log.error("CustomJwtBadRequestException at {}: {}", request.getRequestURI(),  ex.getMessage());
+            JwtUtil.writeJwtException(response, ex.getHttpStatus(), ex.getMessage());
+        } catch (CustomJwtUnAuthorizedException ex){
+            log.error("CustomJwtUnAuthorizedException at {}: {}", request.getRequestURI(),  ex.getMessage());
+            JwtUtil.writeJwtException(response, ex.getHttpStatus(), ex.getMessage());
         }
 
     }
 
-    private void handleJwtException(HttpServletResponse response, CustomJwtBadRequestException ex) throws IOException {
-        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-        response.setStatus(ex.getHttpStatus().value());
-        response.setCharacterEncoding(Charset.defaultCharset().name());
 
-        ErrorResponse errorResponse = ErrorResponse.builder()
-                .errorCode(ex.getHttpStatus().value())
-                .message(ex.getMessage())
-                .build();
-
-        String result = new ObjectMapper().writeValueAsString(errorResponse);
-
-        response.getWriter().write(result);
-        response.getWriter().flush();
-    }
 }

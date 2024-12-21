@@ -1,5 +1,7 @@
 package com.triptune.domain.member.entity;
 
+import com.triptune.domain.member.dto.request.MemberRequest;
+import com.triptune.domain.schedule.entity.TravelAttendee;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
@@ -7,6 +9,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
@@ -18,6 +22,10 @@ public class Member {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "member_id")
     private Long memberId;
+
+    @OneToOne
+    @JoinColumn(name = "profile_image_id")
+    private ProfileImage profileImage;
 
     @Column(name = "user_id")
     private String userId;
@@ -43,12 +51,14 @@ public class Member {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    @Column(name = "file_id")
-    private Long fileId;
+    @OneToMany(mappedBy = "member", fetch = FetchType.LAZY, orphanRemoval = true)
+    private List<TravelAttendee> travelAttendeeList = new ArrayList<>();
+
 
     @Builder
-    public Member(Long memberId, String userId, String password, String refreshToken, boolean isSocialLogin, String nickname, String email, LocalDateTime createdAt, LocalDateTime updatedAt, Long fileId) {
+    public Member(Long memberId, ProfileImage profileImage, String userId, String password, String refreshToken, boolean isSocialLogin, String nickname, String email, LocalDateTime createdAt, LocalDateTime updatedAt, List<TravelAttendee> travelAttendeeList) {
         this.memberId = memberId;
+        this.profileImage = profileImage;
         this.userId = userId;
         this.password = password;
         this.refreshToken = refreshToken;
@@ -57,6 +67,17 @@ public class Member {
         this.email = email;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
-        this.fileId = fileId;
+        this.travelAttendeeList = travelAttendeeList;
+    }
+
+    public static Member from(MemberRequest memberRequest, String encodePassword){
+        return Member.builder()
+                .userId(memberRequest.getUserId())
+                .password(encodePassword)
+                .nickname(memberRequest.getNickname())
+                .email(memberRequest.getEmail())
+                .isSocialLogin(false)
+                .createdAt(LocalDateTime.now())
+                .build();
     }
 }

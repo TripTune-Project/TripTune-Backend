@@ -27,20 +27,16 @@ public class District {
     @Column(name = "district_name")
     private String districtName;
 
-    @Column(name = "api_sigungu_code")
-    private Integer apiSigunguCode;
-
-    @OneToMany(mappedBy = "district", orphanRemoval = true)
+    @OneToMany(mappedBy = "district", fetch = FetchType.LAZY, orphanRemoval = true)
     private List<TravelPlace> travelPlaceList;
 
 
     @Builder
 
-    public District(Long districtId, City city, String districtName, Integer apiSigunguCode, List<TravelPlace> travelPlaceList) {
+    public District(Long districtId, City city, String districtName, List<TravelPlace> travelPlaceList) {
         this.districtId = districtId;
         this.city = city;
         this.districtName = districtName;
-        this.apiSigunguCode = apiSigunguCode;
         this.travelPlaceList = travelPlaceList;
     }
 }

@@ -1,26 +1,39 @@
 package com.triptune.global.util;
 
-import com.triptune.global.exception.CustomJwtBadRequestException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.triptune.domain.schedule.exception.CustomJwtBadRequestChatException;
+import com.triptune.domain.schedule.exception.CustomJwtUnAuthorizedChatException;
 import com.triptune.global.enumclass.ErrorCode;
+import com.triptune.global.exception.CustomJwtBadRequestException;
 import com.triptune.global.exception.CustomJwtUnAuthorizedException;
+import com.triptune.global.response.ErrorResponse;
 import com.triptune.global.service.CustomUserDetailsService;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
+import java.io.IOException;
+import java.nio.charset.Charset;
 import java.security.Key;
 import java.util.Date;
 
 @Slf4j
 @Component
 public class JwtUtil {
+
+    private static final int BEARER_PREFIX_LENGTH = 7;
+    private static final String BEARER_PREFIX = "Bearer ";
+    private static final String AUTHORIZATION_PREFIX = "Authorization";
 
     private final Key key;
     private final CustomUserDetailsService userDetailsService;
@@ -33,26 +46,21 @@ public class JwtUtil {
         this.redisUtil = redisUtil;
     }
 
-    /**
-     * 요청 헤더에서 Bearer Token 추출
-     * @param request
-     * @return Bearer Token 문자열, Token 이 없거나 유효하지 않은 경우 null
-     */
-    public String resolveToken(HttpServletRequest request){
-        String bearerToken = request.getHeader("Authorization");
 
-        if (bearerToken != null && bearerToken.startsWith("Bearer ")){
-            return bearerToken.substring(7);
+    public String resolveToken(HttpServletRequest request){
+        return resolveBearerToken(request.getHeader(AUTHORIZATION_PREFIX));
+    }
+
+
+    public String resolveBearerToken(String bearerToken){
+        if (bearerToken != null && bearerToken.startsWith(BEARER_PREFIX)){
+            return bearerToken.substring(BEARER_PREFIX_LENGTH);
         }
 
         return null;
     }
 
-    /**
-     * JWT 토큰 검증
-     * @param token
-     * @return Token 이 유효한 경우 true, 아닌 경우 exception 발생
-     */
+
     public boolean validateToken(String token) {
         try {
             Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
@@ -75,31 +83,43 @@ public class JwtUtil {
         } catch (IllegalArgumentException e){
             log.info("JWT claims string is empty ", e);
             throw new CustomJwtBadRequestException(ErrorCode.EMPTY_JWT_CLAIMS);
-        } catch (SignatureException e) {
-            log.info("JWT signature fail ", e);
-            throw new CustomJwtUnAuthorizedException(ErrorCode.INVALID_JWT_SIGNATURE);
         }
     }
 
-    /**
-     * 권한 정보 획득
-     * @param token
-     * @return UserDetails 를 이용해 얻은 권한 정보 Authentication
-     */
+    public void validateChatToken(String token) {
+        try {
+            Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
+
+            if(redisUtil.existData(token)){
+                log.info("Already logged out user");
+                throw new CustomJwtBadRequestChatException(ErrorCode.BLACKLIST_TOKEN);
+            }
+
+        } catch (ExpiredJwtException e){
+            log.info("Expired JWT Token ", e);
+            throw new CustomJwtUnAuthorizedChatException(ErrorCode.EXPIRED_JWT_TOKEN);
+        } catch (SecurityException | MalformedJwtException e) {
+            log.info("Invalid JWT Token ", e);
+            throw new CustomJwtBadRequestChatException(ErrorCode.INVALID_JWT_TOKEN);
+        } catch (UnsupportedJwtException e){
+            log.info("Unsupported JWT Token ", e);
+            throw new CustomJwtBadRequestChatException(ErrorCode.UNSUPPORTED_JWT_TOKEN);
+        } catch (IllegalArgumentException e){
+            log.info("JWT claims string is empty ", e);
+            throw new CustomJwtBadRequestChatException(ErrorCode.EMPTY_JWT_CLAIMS);
+        }
+    }
+
+
+
     public Authentication getAuthentication(String token){
         Claims claims = parseClaims(token);
-
         UserDetails userDetails = userDetailsService.loadUserByUsername(claims.getSubject());
 
         return new UsernamePasswordAuthenticationToken(userDetails, "", userDetails.getAuthorities());
     }
 
 
-    /**
-     * JWT 토큰 복호화
-     * @param token
-     * @return token 을 이용해 복호화한 Claims
-     */ 
    public Claims parseClaims(String token){
        return Jwts.parserBuilder()
                .setSigningKey(key)
@@ -109,12 +129,6 @@ public class JwtUtil {
    }
 
 
-    /**
-     * JWT 토큰 생성
-     * @param userId
-     * @param expirationTime
-     * @return 생성된 토큰 문자열
-     */
     public String createToken(String userId, long expirationTime){
         Claims claims = Jwts.claims().setSubject(userId);
         Date now = new Date();
@@ -128,22 +142,17 @@ public class JwtUtil {
                 .compact();
     }
 
-    /**
-     * Token 의 유효기간 추출
-     * @param token
-     * @return Token 유효기간
-     */
-    public Long getExpiration(String token){
-        Date expiration = Jwts.parserBuilder()
-                .setSigningKey(key)
-                .build()
-                .parseClaimsJws(token)
-                .getBody()
-                .getExpiration();
+    public static void writeJwtException(HttpServletResponse response, HttpStatus httpStatus, String message) throws IOException {
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        response.setStatus(httpStatus.value());
+        response.setCharacterEncoding(Charset.defaultCharset().name());
 
-        long now = new Date().getTime();
+        ErrorResponse errorResponse = ErrorResponse.of(httpStatus, message);
+        String result = new ObjectMapper().writeValueAsString(errorResponse);
 
-        return (expiration.getTime() - now);
+        response.getWriter().write(result);
+        response.getWriter().flush();
     }
+
 
 }
