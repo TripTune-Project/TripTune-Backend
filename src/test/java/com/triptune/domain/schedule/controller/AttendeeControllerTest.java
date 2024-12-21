@@ -201,7 +201,7 @@ public class AttendeeControllerTest extends ScheduleTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(toJsonString(attendeeRequest)))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.message").value(ErrorCode.USER_NOT_FOUND.getMessage()));
+                .andExpect(jsonPath("$.message").value(ErrorCode.MEMBER_NOT_FOUND.getMessage()));
 
     }
 

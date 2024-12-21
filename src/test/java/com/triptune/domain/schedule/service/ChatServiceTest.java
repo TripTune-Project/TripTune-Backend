@@ -218,8 +218,8 @@ class ChatServiceTest extends ScheduleTest {
         DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> chatService.getChatMessages(1, schedule.getScheduleId()));
 
         // then
-        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.USER_NOT_FOUND.getStatus());
-        assertThat(fail.getMessage()).isEqualTo(ErrorCode.USER_NOT_FOUND.getMessage());
+        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.MEMBER_NOT_FOUND.getStatus());
+        assertThat(fail.getMessage()).isEqualTo(ErrorCode.MEMBER_NOT_FOUND.getMessage());
 
     }
 
@@ -311,8 +311,8 @@ class ChatServiceTest extends ScheduleTest {
         DataNotFoundChatException fail = assertThrows(DataNotFoundChatException.class, () -> chatService.findChatMemberByNickname(member1.getNickname()));
 
         // then
-        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.USER_NOT_FOUND.getStatus());
-        assertThat(fail.getMessage()).isEqualTo(ErrorCode.USER_NOT_FOUND.getMessage());
+        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.MEMBER_NOT_FOUND.getStatus());
+        assertThat(fail.getMessage()).isEqualTo(ErrorCode.MEMBER_NOT_FOUND.getMessage());
 
     }
 

@@ -185,7 +185,7 @@ public class ScheduleService {
 
     public Member getMemberByUserId(String userId){
         return memberRepository.findByUserId(userId)
-                .orElseThrow(() ->  new DataNotFoundException(ErrorCode.USER_NOT_FOUND));
+                .orElseThrow(() ->  new DataNotFoundException(ErrorCode.MEMBER_NOT_FOUND));
     }
 
 

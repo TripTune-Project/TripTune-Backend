@@ -795,8 +795,8 @@ public class ScheduleServiceTest extends ScheduleTest {
         DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> scheduleService.createSchedule(request, "test"));
 
         // then
-        assertEquals(fail.getHttpStatus(), ErrorCode.USER_NOT_FOUND.getStatus());
-        assertEquals(fail.getMessage(), ErrorCode.USER_NOT_FOUND.getMessage());
+        assertEquals(fail.getHttpStatus(), ErrorCode.MEMBER_NOT_FOUND.getStatus());
+        assertEquals(fail.getMessage(), ErrorCode.MEMBER_NOT_FOUND.getMessage());
 
     }
 
@@ -1196,8 +1196,8 @@ public class ScheduleServiceTest extends ScheduleTest {
         DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> scheduleService.getMemberByUserId("notUser"));
 
         // then
-        assertEquals(fail.getHttpStatus(), ErrorCode.USER_NOT_FOUND.getStatus());
-        assertEquals(fail.getMessage(), ErrorCode.USER_NOT_FOUND.getMessage());
+        assertEquals(fail.getHttpStatus(), ErrorCode.MEMBER_NOT_FOUND.getStatus());
+        assertEquals(fail.getMessage(), ErrorCode.MEMBER_NOT_FOUND.getMessage());
     }
 
     @Test

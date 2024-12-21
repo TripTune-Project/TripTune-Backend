@@ -201,8 +201,8 @@ public class AttendeeServiceTest extends ScheduleTest {
         // when, then
         DataNotFoundException fail = assertThrows(DataNotFoundException.class, () ->  attendeeService.createAttendee(schedule1.getScheduleId(), member1.getUserId(), attendeeRequest));
 
-        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.USER_NOT_FOUND.getStatus());
-        assertThat(fail.getMessage()).isEqualTo(ErrorCode.USER_NOT_FOUND.getMessage());
+        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.MEMBER_NOT_FOUND.getStatus());
+        assertThat(fail.getMessage()).isEqualTo(ErrorCode.MEMBER_NOT_FOUND.getMessage());
 
     }
 

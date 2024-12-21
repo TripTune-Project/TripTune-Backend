@@ -79,7 +79,7 @@ public class AttendeeService {
 
     public Member findMemberByEmail(String email){
         return memberRepository.findByEmail(email)
-                .orElseThrow(() -> new DataNotFoundException(ErrorCode.USER_NOT_FOUND));
+                .orElseThrow(() -> new DataNotFoundException(ErrorCode.MEMBER_NOT_FOUND));
     }
 
 

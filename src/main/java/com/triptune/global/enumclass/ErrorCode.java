@@ -21,8 +21,8 @@ public enum ErrorCode {
     ALREADY_EXISTED_EMAIL(HttpStatus.CONFLICT, "이미 가입되어 있는 이메일입니다."),
 
     // 사용자
+    MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "사용자 정보를 찾을 수 없습니다."),
     FAILED_LOGIN(HttpStatus.BAD_REQUEST, "아이디 또는 비밀번호가 일치하지 않습니다."),
-    USER_NOT_FOUND(HttpStatus.NOT_FOUND, "사용자 정보를 찾을 수 없습니다."),
     INVALID_CHANGE_PASSWORD(HttpStatus.BAD_REQUEST, "잘못된 요청입니다. 비밀번호 찾기를 다시 진행해주세요."),
 
 

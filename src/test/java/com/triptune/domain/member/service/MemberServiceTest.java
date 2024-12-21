@@ -1,10 +1,14 @@
 package com.triptune.domain.member.service;
 
+import com.triptune.domain.email.service.EmailService;
 import com.triptune.domain.member.MemberTest;
+import com.triptune.domain.member.dto.FindPasswordDTO;
 import com.triptune.domain.member.dto.LogoutDTO;
+import com.triptune.domain.member.dto.request.FindIdRequest;
 import com.triptune.domain.member.dto.request.LoginRequest;
 import com.triptune.domain.member.dto.request.MemberRequest;
 import com.triptune.domain.member.dto.request.RefreshTokenRequest;
+import com.triptune.domain.member.dto.response.FindIdResponse;
 import com.triptune.domain.member.dto.response.LoginResponse;
 import com.triptune.domain.member.dto.response.RefreshTokenResponse;
 import com.triptune.domain.member.entity.Member;
@@ -19,6 +23,7 @@ import com.triptune.global.util.JwtUtil;
 import com.triptune.global.util.RedisUtil;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
+import jakarta.mail.MessagingException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -48,6 +53,9 @@ public class MemberServiceTest extends MemberTest {
 
     @Mock
     private RedisUtil redisUtil;
+
+    @Mock
+    private EmailService emailService;
 
     @Mock
     private PasswordEncoder passwordEncoder;
@@ -136,6 +144,78 @@ public class MemberServiceTest extends MemberTest {
         assertEquals(fail.getMessage(), ErrorCode.ALREADY_EXISTED_EMAIL.getMessage());
     }
 
+
+    @Test
+    @DisplayName("사용자 중복 체크")
+    void validateUniqueMemberInfo(){
+        // given
+        MemberRequest request = createMemberRequest();
+
+        when(memberRepository.existsByUserId(anyString())).thenReturn(false);
+        when(memberRepository.existsByNickname(anyString())).thenReturn(false);
+        when(memberRepository.existsByEmail(anyString())).thenReturn(false);
+
+
+        // when, then
+        assertDoesNotThrow(() -> memberService.validateUniqueMemberInfo(request));
+
+    }
+
+    @Test
+    @DisplayName("사용자 중복 체크 시 이미 가입한 아이디가 존재해 예외 발생")
+    void validateUniqueMemberInfo_userIdDataExistException(){
+        // given
+        MemberRequest request = createMemberRequest();
+
+        when(memberRepository.existsByUserId(anyString())).thenReturn(true);
+
+        // when
+        DataExistException fail = assertThrows(DataExistException.class, () -> memberService.validateUniqueMemberInfo(request));
+
+        // then
+        assertEquals(fail.getHttpStatus(), ErrorCode.ALREADY_EXISTED_USERID.getStatus());
+        assertEquals(fail.getMessage(), ErrorCode.ALREADY_EXISTED_USERID.getMessage());
+
+    }
+
+    @Test
+    @DisplayName("사용자 중복 체크 시 이미 가입한 닉네임이 존재해 예외 발생")
+    void validateUniqueMemberInfo_nicknameDataExistException(){
+        // given
+        MemberRequest request = createMemberRequest();
+
+        when(memberRepository.existsByUserId(anyString())).thenReturn(false);
+        when(memberRepository.existsByNickname(anyString())).thenReturn(true);
+
+        // when
+        DataExistException fail = assertThrows(DataExistException.class, () -> memberService.validateUniqueMemberInfo(request));
+
+        // then
+        assertEquals(fail.getHttpStatus(), ErrorCode.ALREADY_EXISTED_NICKNAME.getStatus());
+        assertEquals(fail.getMessage(), ErrorCode.ALREADY_EXISTED_NICKNAME.getMessage());
+
+    }
+
+    @Test
+    @DisplayName("사용자 중복 체크 시 이미 가입한 이메일이 존재해 예외 발생")
+    void validateUniqueMemberInfo_emailDataExistException(){
+        // given
+        MemberRequest request = createMemberRequest();
+
+        when(memberRepository.existsByUserId(anyString())).thenReturn(false);
+        when(memberRepository.existsByNickname(anyString())).thenReturn(false);
+        when(memberRepository.existsByEmail(anyString())).thenReturn(true);
+
+        // when
+        DataExistException fail = assertThrows(DataExistException.class, () -> memberService.validateUniqueMemberInfo(request));
+
+        // then
+        assertEquals(fail.getHttpStatus(), ErrorCode.ALREADY_EXISTED_EMAIL.getStatus());
+        assertEquals(fail.getMessage(), ErrorCode.ALREADY_EXISTED_EMAIL.getMessage());
+
+    }
+
+
     @Test
     @DisplayName("로그인")
     void login(){
@@ -218,14 +298,14 @@ public class MemberServiceTest extends MemberTest {
         DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> memberService.logout(request, accessToken));
 
         // then
-        assertEquals(fail.getHttpStatus(), ErrorCode.USER_NOT_FOUND.getStatus());
-        assertEquals(fail.getMessage(), ErrorCode.USER_NOT_FOUND.getMessage());
+        assertEquals(fail.getHttpStatus(), ErrorCode.MEMBER_NOT_FOUND.getStatus());
+        assertEquals(fail.getMessage(), ErrorCode.MEMBER_NOT_FOUND.getMessage());
 
     }
 
 
     @Test
-    @DisplayName("refresh token 갱신 성공")
+    @DisplayName("refresh token 갱신")
     void refreshToken(){
         // given
         Claims mockClaims = Jwts.claims().setSubject("test");
@@ -268,6 +348,70 @@ public class MemberServiceTest extends MemberTest {
     }
 
     @Test
+    @DisplayName("아이디 찾기 성공")
+    void findId() throws MessagingException {
+        // given
+        FindIdRequest findIdRequest = createFindIdRequest("test@email.com");
+
+        when(memberRepository.findByEmail(anyString())).thenReturn(Optional.of(createMember(1L, "test")));
+
+        // when
+        FindIdResponse response = memberService.findId(findIdRequest);
+
+        // then
+        assertEquals(response.getUserId(), "test");
+    }
+
+    @Test
+    @DisplayName("아이디 찾기 시 이메일 맞지 않아 예외 발생")
+    void findIdNotEqualsEmail_DataNotFoundException() {
+        // given
+        FindIdRequest findIdRequest = createFindIdRequest("fail@email.com");
+
+        when(memberRepository.findByEmail(anyString())).thenReturn(Optional.empty());
+
+        // when
+        DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> memberService.findId(findIdRequest));
+
+        // then
+        assertEquals(fail.getHttpStatus(), ErrorCode.MEMBER_NOT_FOUND.getStatus());
+        assertEquals(fail.getMessage(), ErrorCode.MEMBER_NOT_FOUND.getMessage());
+    }
+
+    @Test
+    @DisplayName("비밀번호 찾기 성공")
+    void findPassword() throws MessagingException {
+        // given
+        FindPasswordDTO findPasswordDTO = createFindPasswordDTO("test");
+
+        when(memberRepository.existsByUserIdAndEmail(anyString(), anyString())).thenReturn(true);
+
+        // when
+        assertDoesNotThrow(() -> memberService.findPassword(findPasswordDTO));
+
+        // then
+        verify(emailService, times(1)).findPassword(findPasswordDTO);
+    }
+
+    @Test
+    @DisplayName("비밀번호 찾기 시 사용자 정보 존재하지 않아 예외 발생")
+    void findPasswordNotEqualsUserId_DataNotFoundException() throws MessagingException {
+        // given
+        FindPasswordDTO findPasswordDTO = createFindPasswordDTO("fail");
+
+        when(memberRepository.existsByUserIdAndEmail(anyString(), anyString())).thenReturn(false);
+
+        // when
+        DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> memberService.findPassword(findPasswordDTO));
+
+        // then
+        assertEquals(fail.getHttpStatus(), ErrorCode.MEMBER_NOT_FOUND.getStatus());
+        assertEquals(fail.getMessage(), ErrorCode.MEMBER_NOT_FOUND.getMessage());
+        verify(emailService, times(0)).findPassword(findPasswordDTO);
+    }
+
+
+    @Test
     @DisplayName("비밀번호 변경")
     void changePassword(){
         // given
@@ -280,7 +424,7 @@ public class MemberServiceTest extends MemberTest {
 
 
         // when
-        memberService.changePassword(createChangePasswordDTO(passwordToken, newPassword));
+        memberService.changePassword(createChangePasswordDTO(passwordToken, newPassword, newPassword));
 
         // then
         verify(redisUtil, times(1)).getData(passwordToken);
@@ -300,7 +444,7 @@ public class MemberServiceTest extends MemberTest {
 
         // when
         ChangePasswordException fail = assertThrows(ChangePasswordException.class,
-                () -> memberService.changePassword(createChangePasswordDTO(accessToken, newPassword)));
+                () -> memberService.changePassword(createChangePasswordDTO(accessToken, newPassword, newPassword)));
 
         // then
         assertEquals(fail.getHttpStatus(), ErrorCode.INVALID_CHANGE_PASSWORD.getStatus());
@@ -318,91 +462,21 @@ public class MemberServiceTest extends MemberTest {
 
         // when
         DataNotFoundException fail = assertThrows(DataNotFoundException.class,
-                () -> memberService.changePassword(createChangePasswordDTO(accessToken, newPassword)));
+                () -> memberService.changePassword(createChangePasswordDTO(accessToken, newPassword, newPassword)));
 
         // then
-        assertEquals(fail.getHttpStatus(), ErrorCode.USER_NOT_FOUND.getStatus());
-        assertEquals(fail.getMessage(), ErrorCode.USER_NOT_FOUND.getMessage());
-    }
-
-    @Test
-    @DisplayName("사용자 중복 체크")
-    void validateUniqueMemberInfo(){
-        // given
-        MemberRequest request = createMemberRequest();
-
-        when(memberRepository.existsByUserId(anyString())).thenReturn(false);
-        when(memberRepository.existsByNickname(anyString())).thenReturn(false);
-        when(memberRepository.existsByEmail(anyString())).thenReturn(false);
-
-
-        // when, then
-        assertDoesNotThrow(() -> memberService.validateUniqueMemberInfo(request));
-
-    }
-
-    @Test
-    @DisplayName("사용자 중복 체크 시 이미 가입한 아이디가 존재해 예외 발생")
-    void validateUniqueMemberInfo_userIdDataExistException(){
-        // given
-        MemberRequest request = createMemberRequest();
-
-        when(memberRepository.existsByUserId(anyString())).thenReturn(true);
-
-        // when
-        DataExistException fail = assertThrows(DataExistException.class, () -> memberService.validateUniqueMemberInfo(request));
-
-        // then
-        assertEquals(fail.getHttpStatus(), ErrorCode.ALREADY_EXISTED_USERID.getStatus());
-        assertEquals(fail.getMessage(), ErrorCode.ALREADY_EXISTED_USERID.getMessage());
-
-    }
-
-    @Test
-    @DisplayName("사용자 중복 체크 시 이미 가입한 닉네임이 존재해 예외 발생")
-    void validateUniqueMemberInfo_nicknameDataExistException(){
-        // given
-        MemberRequest request = createMemberRequest();
-
-        when(memberRepository.existsByUserId(anyString())).thenReturn(false);
-        when(memberRepository.existsByNickname(anyString())).thenReturn(true);
-
-        // when
-        DataExistException fail = assertThrows(DataExistException.class, () -> memberService.validateUniqueMemberInfo(request));
-
-        // then
-        assertEquals(fail.getHttpStatus(), ErrorCode.ALREADY_EXISTED_NICKNAME.getStatus());
-        assertEquals(fail.getMessage(), ErrorCode.ALREADY_EXISTED_NICKNAME.getMessage());
-
-    }
-
-    @Test
-    @DisplayName("사용자 중복 체크 시 이미 가입한 이메일이 존재해 예외 발생")
-    void validateUniqueMemberInfo_emailDataExistException(){
-        // given
-        MemberRequest request = createMemberRequest();
-
-        when(memberRepository.existsByUserId(anyString())).thenReturn(false);
-        when(memberRepository.existsByNickname(anyString())).thenReturn(false);
-        when(memberRepository.existsByEmail(anyString())).thenReturn(true);
-
-        // when
-        DataExistException fail = assertThrows(DataExistException.class, () -> memberService.validateUniqueMemberInfo(request));
-
-        // then
-        assertEquals(fail.getHttpStatus(), ErrorCode.ALREADY_EXISTED_EMAIL.getStatus());
-        assertEquals(fail.getMessage(), ErrorCode.ALREADY_EXISTED_EMAIL.getMessage());
-
+        assertEquals(fail.getHttpStatus(), ErrorCode.MEMBER_NOT_FOUND.getStatus());
+        assertEquals(fail.getMessage(), ErrorCode.MEMBER_NOT_FOUND.getMessage());
     }
 
     @Test
     @DisplayName("이메일을 이용해 저장된 사용자 정보 조회")
-    void getMemberByEmail(){
+    void findMemberByEmail(){
         // given
         when(memberRepository.findByEmail(anyString())).thenReturn(Optional.of(member));
 
         // when
-        Member response = memberService.getMemberByEmail(member.getEmail());
+        Member response = memberService.findMemberByEmail(member.getEmail());
 
         // then
         assertEquals(response.getUserId(), member.getUserId());
@@ -412,7 +486,7 @@ public class MemberServiceTest extends MemberTest {
 
     @Test
     @DisplayName("이메일로 사용자 정보 조회 시 데이터 없어 예외 발생")
-    void getMemberByEmail_dataNotFoundException(){
+    void findMemberByEmail_dataNotFoundException(){
         // given
         String email = "test@email.com";
 
@@ -420,11 +494,11 @@ public class MemberServiceTest extends MemberTest {
 
         // when
         DataNotFoundException fail = assertThrows(DataNotFoundException.class,
-                () -> memberService.getMemberByEmail(email));
+                () -> memberService.findMemberByEmail(email));
 
         // then
-        assertEquals(fail.getHttpStatus(), ErrorCode.USER_NOT_FOUND.getStatus());
-        assertEquals(fail.getMessage(), ErrorCode.USER_NOT_FOUND.getMessage());
+        assertEquals(fail.getHttpStatus(), ErrorCode.MEMBER_NOT_FOUND.getStatus());
+        assertEquals(fail.getMessage(), ErrorCode.MEMBER_NOT_FOUND.getMessage());
     }
 
 

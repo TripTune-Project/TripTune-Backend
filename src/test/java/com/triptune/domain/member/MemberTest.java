@@ -2,7 +2,9 @@ package com.triptune.domain.member;
 
 import com.triptune.domain.BaseTest;
 import com.triptune.domain.member.dto.ChangePasswordDTO;
+import com.triptune.domain.member.dto.FindPasswordDTO;
 import com.triptune.domain.member.dto.LogoutDTO;
+import com.triptune.domain.member.dto.request.FindIdRequest;
 import com.triptune.domain.member.dto.request.LoginRequest;
 import com.triptune.domain.member.dto.request.MemberRequest;
 import com.triptune.domain.member.dto.request.RefreshTokenRequest;
@@ -32,11 +34,11 @@ public class MemberTest extends BaseTest {
                 .build();
     }
 
-    protected ChangePasswordDTO createChangePasswordDTO(String passwordToken, String newPassword){
+    protected ChangePasswordDTO createChangePasswordDTO(String passwordToken, String newPassword1, String newPassword2){
         return ChangePasswordDTO.builder()
                 .passwordToken(passwordToken)
-                .password(newPassword)
-                .repassword(newPassword)
+                .password(newPassword1)
+                .repassword(newPassword2)
                 .build();
     }
 
@@ -45,5 +47,19 @@ public class MemberTest extends BaseTest {
                 .nickname(nickname)
                 .build();
 
+    }
+
+
+    protected FindIdRequest createFindIdRequest(String email){
+        return FindIdRequest.builder()
+                .email(email)
+                .build();
+    }
+
+    protected FindPasswordDTO createFindPasswordDTO(String userId){
+        return FindPasswordDTO.builder()
+                .userId(userId)
+                .email(userId + "@email.com")
+                .build();
     }
 }

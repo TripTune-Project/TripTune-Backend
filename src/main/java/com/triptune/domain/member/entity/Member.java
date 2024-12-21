@@ -80,4 +80,12 @@ public class Member {
                 .createdAt(LocalDateTime.now())
                 .build();
     }
+
+    public boolean isEqualRefreshToken(String refreshToken){
+        return this.refreshToken.equals(refreshToken);
+    }
+
+    public boolean isEqualUserId(String userId){
+        return this.userId.equals(userId);
+    }
 }
