@@ -18,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Transactional
 public abstract class BaseTest {
@@ -37,6 +38,20 @@ public abstract class BaseTest {
                 .refreshToken(refreshToken)
                 .isSocialLogin(false)
                 .createdAt(LocalDateTime.now())
+                .build();
+    }
+
+    protected Member createMember(Long memberId, String userId, ProfileImage profileImage){
+        return Member.builder()
+                .memberId(memberId)
+                .userId(userId)
+                .email(userId + "@email.com")
+                .password("test123@")
+                .nickname(userId)
+                .refreshToken(refreshToken)
+                .isSocialLogin(false)
+                .createdAt(LocalDateTime.now())
+                .profileImage(profileImage)
                 .build();
     }
 
@@ -97,6 +112,8 @@ public abstract class BaseTest {
                 .createdAt(LocalDateTime.now())
                 .build();
     }
+
+
 
     protected TravelImage createTravelImage(TravelPlace travelPlace, String fileName, boolean isThumbnail){
         return TravelImage.builder()

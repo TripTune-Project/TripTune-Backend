@@ -59,12 +59,9 @@ public class TravelAttendeeRepositoryTest extends ScheduleTest {
         TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(0L, member1, schedule2, AttendeeRole.GUEST, AttendeePermission.READ));
         TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(0L, member2, schedule3, AttendeeRole.AUTHOR, AttendeePermission.ALL));
 
-        member1.setTravelAttendeeList(new ArrayList<>(List.of(attendee1, attendee2)));
-        member2.setTravelAttendeeList(new ArrayList<>(List.of(attendee3)));
-
-        schedule1.setTravelAttendeeList(new ArrayList<>(List.of(attendee1)));
-        schedule2.setTravelAttendeeList(new ArrayList<>(List.of(attendee2)));
-        schedule3.setTravelAttendeeList(new ArrayList<>(List.of(attendee3)));
+//        schedule1.setTravelAttendeeList(new ArrayList<>(List.of(attendee1)));
+//        schedule2.setTravelAttendeeList(new ArrayList<>(List.of(attendee2)));
+//        schedule3.setTravelAttendeeList(new ArrayList<>(List.of(attendee3)));
 
     }
 

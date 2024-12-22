@@ -55,7 +55,7 @@ public class ChatService {
 
     public Member findByMemberId(Long memberId){
         return memberRepository.findByMemberId(memberId)
-                .orElseThrow(() -> new DataNotFoundException(ErrorCode.USER_NOT_FOUND));
+                .orElseThrow(() -> new DataNotFoundException(ErrorCode.MEMBER_NOT_FOUND));
     }
 
 
@@ -85,7 +85,7 @@ public class ChatService {
 
     public Member findChatMemberByNickname(String nickname){
         return memberRepository.findByNickname(nickname)
-                .orElseThrow(() -> new DataNotFoundChatException(ErrorCode.USER_NOT_FOUND));
+                .orElseThrow(() -> new DataNotFoundChatException(ErrorCode.MEMBER_NOT_FOUND));
 
     }
 

@@ -18,7 +18,7 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     Optional<Member> findByEmail(String email);
     Optional<Member> findByMemberId(Long memberId);
     Optional<Member> findByNickname(String nickname);
-    Member findByRefreshToken(String refreshToken);
+    boolean existsByUserIdAndEmail(String userId, String email);
 
     @Modifying
     @Query("UPDATE Member m SET m.refreshToken = NULL WHERE m.nickname = :nickname")

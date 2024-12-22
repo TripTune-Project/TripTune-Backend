@@ -1,10 +1,10 @@
 package com.triptune.domain.member.controller;
 
+import com.triptune.domain.email.service.EmailService;
 import com.triptune.domain.member.MemberTest;
 import com.triptune.domain.member.dto.request.MemberRequest;
 import com.triptune.domain.member.entity.Member;
 import com.triptune.domain.member.repository.MemberRepository;
-import com.triptune.domain.member.service.MemberService;
 import com.triptune.global.enumclass.ErrorCode;
 import com.triptune.global.enumclass.SuccessCode;
 import com.triptune.global.filter.JwtAuthFilter;
@@ -23,7 +23,9 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.filter.CharacterEncodingFilter;
 
-import static org.mockito.Mockito.doNothing;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -40,6 +42,9 @@ public class MemberControllerTest extends MemberTest{
 
     @MockBean
     private RedisUtil redisUtil;
+
+    @MockBean
+    private EmailService emailService;
 
     private MockMvc mockMvc;
 
@@ -80,7 +85,8 @@ public class MemberControllerTest extends MemberTest{
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(toJsonString(request)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.success").value(false));
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").isNotEmpty());
     }
 
     @Test
@@ -115,7 +121,7 @@ public class MemberControllerTest extends MemberTest{
     @Test
     @DisplayName("로그아웃")
     void logout() throws Exception{
-        Member member = memberRepository.save(createMember(null, "member1"));
+        Member member = memberRepository.save(createMember(null, "member"));
         String accessToken = jwtUtil.createToken(member.getUserId(), 3600);
 
         mockMvc.perform(patch("/api/members/logout")
@@ -130,7 +136,7 @@ public class MemberControllerTest extends MemberTest{
     @Test
     @DisplayName("로그아웃 시 잘못된 access Token 으로 인해 예외 발생")
     void logout_customJwtBadRequestException() throws Exception{
-        Member member = memberRepository.save(createMember(null, "member1"));
+        Member member = memberRepository.save(createMember(null, "member"));
         String accessToken = jwtUtil.createToken(member.getUserId(), 3600);
 
         mockMvc.perform(patch("/api/members/logout")
@@ -153,22 +159,176 @@ public class MemberControllerTest extends MemberTest{
                         .content(toJsonString(createLogoutDTO("notMember"))))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.success").value(false))
-                .andExpect(jsonPath("$.message").value(ErrorCode.USER_NOT_FOUND.getMessage()));
+                .andExpect(jsonPath("$.message").value(ErrorCode.MEMBER_NOT_FOUND.getMessage()));
     }
 
+    @Test
+    @DisplayName("토큰 갱신")
+    void refreshToken() throws Exception{
+        Member member = memberRepository.save(createMember(null, "member"));
+        String refreshToken = jwtUtil.createToken(member.getUserId(), 10000000);
+        member.updateRefreshToken(refreshToken);
+
+        mockMvc.perform(post("/api/members/refresh")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJsonString(createRefreshTokenRequest(member.getRefreshToken()))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()));
+    }
 
     @Test
     @DisplayName("토큰 갱신 시 refresh token 만료로 예외 발생")
-    void refreshTokenExpired_unauthorizedException() throws Exception {
-        String refreshToken = jwtUtil.createToken("test", -604800000);
+    void refreshToken_unauthorizedExpiredException() throws Exception {
+        String refreshToken = jwtUtil.createToken("member", -604800000);
 
         mockMvc.perform(post("/api/members/refresh")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(toJsonString(createRefreshTokenRequest(refreshToken))))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.success").value(false))
-                .andExpect(jsonPath("$.errorCode").value(401));
+                .andExpect(jsonPath("$.message").value(ErrorCode.EXPIRED_JWT_TOKEN.getMessage()));
+    }
+
+    @Test
+    @DisplayName("토큰 갱신 시 사용자 데이터 존재하지 않아 예외 발생")
+    void refreshToken_memberNotFoundException() throws Exception {
+        String refreshToken = jwtUtil.createToken("member", 100000000);
+
+        mockMvc.perform(post("/api/members/refresh")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJsonString(createRefreshTokenRequest(refreshToken))))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value(ErrorCode.MEMBER_NOT_FOUND.getMessage()));
 
     }
+
+    @Test
+    @DisplayName("토큰 갱신 시 사용자가 요청과 저장된 refresh token 값이 달라 예외 발생")
+    void refreshToken_NotEqualsRefreshToken() throws Exception {
+        Member member = memberRepository.save(createMember(null, "member"));
+        String refreshToken = jwtUtil.createToken(member.getUserId(), 10000000);
+
+        mockMvc.perform(post("/api/members/refresh")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJsonString(createRefreshTokenRequest(refreshToken))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value(ErrorCode.MISMATCH_REFRESH_TOKEN.getMessage()));
+
+    }
+
+    @Test
+    @DisplayName("아이디 찾기")
+    void findId() throws Exception{
+        Member member = memberRepository.save(createMember(null, "member"));
+
+        mockMvc.perform(post("/api/members/find-id")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJsonString(createFindIdRequest(member.getEmail()))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()));
+
+    }
+
+    @Test
+    @DisplayName("아이디 찾기 시 사용자 데이터 존재하지 않아 예외 발생")
+    void findId_memberNotFoundException() throws Exception{
+        mockMvc.perform(post("/api/members/find-id")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJsonString(createFindIdRequest("notMember@email.com"))))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value(ErrorCode.MEMBER_NOT_FOUND.getMessage()));
+
+    }
+
+    @Test
+    @DisplayName("비밀번호 찾기")
+    void findPassword() throws Exception{
+        Member member = memberRepository.save(createMember(null, "member"));
+
+        mockMvc.perform(post("/api/members/find-password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJsonString(createFindPasswordDTO(member.getUserId()))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()));
+
+    }
+
+    @Test
+    @DisplayName("비밀번호 찾기 시 사용자 데이터 존재하지 않아 예외 발생")
+    void findPassword_memberNotFoundException() throws Exception{
+        Member member = memberRepository.save(createMember(null, "member"));
+
+        mockMvc.perform(post("/api/members/find-password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJsonString(createFindPasswordDTO("notMember"))))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value(ErrorCode.MEMBER_NOT_FOUND.getMessage()));
+
+    }
+
+    @Test
+    @DisplayName("비밀번호 변경")
+    void changePassword() throws Exception{
+        Member member = memberRepository.save(createMember(null, "member"));
+        when(redisUtil.getData(anyString())).thenReturn(member.getEmail());
+
+        mockMvc.perform(patch("/api/members/change-password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJsonString(createChangePasswordDTO("changePassword", "password12!@", "password12!@"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()));
+
+    }
+
+    @Test
+    @DisplayName("비밀번호 변경 시 비밀번호와 재입력 비밀번호가 달라 예외 발생")
+    void changePassword_notMathPassword() throws Exception{
+        memberRepository.save(createMember(null, "member"));
+
+        mockMvc.perform(patch("/api/members/change-password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJsonString(createChangePasswordDTO("changePassword", "password12!@", "password34!@"))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value(ErrorCode.INCORRECT_PASSWORD_REPASSWORD.getMessage()));
+
+    }
+
+    @Test
+    @DisplayName("비밀번호 변경 시 저장된 비밀번호 변경 토큰이 존재하지 않아 예외 발생")
+    void changePassword_PasswordTokenNotFoundException() throws Exception{
+        memberRepository.save(createMember(null, "member"));
+
+        mockMvc.perform(patch("/api/members/change-password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJsonString(createChangePasswordDTO("changePassword", "password12!@", "password12!@"))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value(ErrorCode.INVALID_CHANGE_PASSWORD.getMessage()));
+
+    }
+
+    @Test
+    @DisplayName("비밀번호 변경 시 사용자 데이터 존재하지 않아 예외 발생")
+    void changePassword_memberNotFoundException() throws Exception{
+        when(redisUtil.getData(anyString())).thenReturn("noMember@email.com");
+
+        mockMvc.perform(patch("/api/members/change-password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJsonString(createChangePasswordDTO("changePassword", "password12!@", "password12!@"))))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value(ErrorCode.MEMBER_NOT_FOUND.getMessage()));
+
+    }
+
 
 }

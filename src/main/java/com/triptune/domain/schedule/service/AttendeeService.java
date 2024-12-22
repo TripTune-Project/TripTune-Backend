@@ -79,7 +79,7 @@ public class AttendeeService {
 
     public Member findMemberByEmail(String email){
         return memberRepository.findByEmail(email)
-                .orElseThrow(() -> new DataNotFoundException(ErrorCode.USER_NOT_FOUND));
+                .orElseThrow(() -> new DataNotFoundException(ErrorCode.MEMBER_NOT_FOUND));
     }
 
 
@@ -101,7 +101,7 @@ public class AttendeeService {
             throw new ForbiddenScheduleException(ErrorCode.FORBIDDEN_UPDATE_AUTHOR_ATTENDEE_PERMISSION);
         }
 
-        attendee.setPermission(attendeePermissionRequest.getPermission());
+        attendee.updatePermission(attendeePermissionRequest.getPermission());
     }
 
 

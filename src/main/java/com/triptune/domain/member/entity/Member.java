@@ -14,7 +14,6 @@ import java.util.List;
 
 @Entity
 @Getter
-@Setter
 @NoArgsConstructor
 public class Member {
 
@@ -80,4 +79,19 @@ public class Member {
                 .createdAt(LocalDateTime.now())
                 .build();
     }
+
+
+    public void updateRefreshToken(String refreshToken) {
+        this.refreshToken = refreshToken;
+    }
+
+    public void updatePassword(String password) {
+        this.password = password;
+    }
+
+    public boolean isEqualRefreshToken(String refreshToken){
+        return this.refreshToken.equals(refreshToken);
+    }
+
+
 }

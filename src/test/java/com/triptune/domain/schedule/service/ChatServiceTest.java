@@ -65,16 +65,14 @@ class ChatServiceTest extends ScheduleTest {
     @BeforeEach
     void setUp(){
         schedule = createTravelSchedule(1L, "테스트");
-        member1 = createMember(1L, "member1");
-        member2 = createMember(2L, "member2");
-        member3 = createMember(3L, "member3");
 
         ProfileImage member1Image = createProfileImage(1L, "member1Image");
         ProfileImage member2Image = createProfileImage(2L, "member2Image");
         ProfileImage member3Image = createProfileImage(3L, "member3Image");
-        member1.setProfileImage(member1Image);
-        member2.setProfileImage(member2Image);
-        member3.setProfileImage(member3Image);
+
+        member1 = createMember(1L, "member1", member1Image);
+        member2 = createMember(2L, "member2", member2Image);
+        member3 = createMember(3L, "member3", member3Image);
     }
 
     @Test
@@ -218,8 +216,8 @@ class ChatServiceTest extends ScheduleTest {
         DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> chatService.getChatMessages(1, schedule.getScheduleId()));
 
         // then
-        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.USER_NOT_FOUND.getStatus());
-        assertThat(fail.getMessage()).isEqualTo(ErrorCode.USER_NOT_FOUND.getMessage());
+        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.MEMBER_NOT_FOUND.getStatus());
+        assertThat(fail.getMessage()).isEqualTo(ErrorCode.MEMBER_NOT_FOUND.getMessage());
 
     }
 
@@ -311,8 +309,8 @@ class ChatServiceTest extends ScheduleTest {
         DataNotFoundChatException fail = assertThrows(DataNotFoundChatException.class, () -> chatService.findChatMemberByNickname(member1.getNickname()));
 
         // then
-        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.USER_NOT_FOUND.getStatus());
-        assertThat(fail.getMessage()).isEqualTo(ErrorCode.USER_NOT_FOUND.getMessage());
+        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.MEMBER_NOT_FOUND.getStatus());
+        assertThat(fail.getMessage()).isEqualTo(ErrorCode.MEMBER_NOT_FOUND.getMessage());
 
     }
 

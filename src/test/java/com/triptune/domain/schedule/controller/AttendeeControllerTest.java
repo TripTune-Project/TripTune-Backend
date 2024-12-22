@@ -77,15 +77,13 @@ public class AttendeeControllerTest extends ScheduleTest {
                 .alwaysDo(print())
                 .build();
 
-        member1 = memberRepository.save(createMember(null, "member1"));
-        member2 = memberRepository.save(createMember(null, "member2"));
-        member3 = memberRepository.save(createMember(null, "member3"));
         ProfileImage profileImage1 = profileImageRepository.save(createProfileImage(null, "member1Image"));
         ProfileImage profileImage2 = profileImageRepository.save(createProfileImage(null, "member2Image"));
         ProfileImage profileImage3 = profileImageRepository.save(createProfileImage(null, "member3Image"));
-        member1.setProfileImage(profileImage1);
-        member2.setProfileImage(profileImage2);
-        member3.setProfileImage(profileImage3);
+
+        member1 = memberRepository.save(createMember(null, "member1", profileImage1));
+        member2 = memberRepository.save(createMember(null, "member2", profileImage2));
+        member3 = memberRepository.save(createMember(null, "member3", profileImage3));
 
         schedule1 = travelScheduleRepository.save(createTravelSchedule(null,"테스트1"));
         schedule2 = travelScheduleRepository.save(createTravelSchedule(null,"테스트2"));
@@ -93,8 +91,7 @@ public class AttendeeControllerTest extends ScheduleTest {
         attendee1 = travelAttendeeRepository.save(createTravelAttendee(0L, member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
         attendee2 = travelAttendeeRepository.save(createTravelAttendee(0L, member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ));
         attendee3 = travelAttendeeRepository.save(createTravelAttendee(0L, member3, schedule2, AttendeeRole.AUTHOR, AttendeePermission.ALL));
-        schedule1.setTravelAttendeeList(new ArrayList<>(List.of(attendee1, attendee2)));
-        schedule2.setTravelAttendeeList(new ArrayList<>(List.of(attendee3)));
+
     }
 
     @Test
@@ -163,12 +160,10 @@ public class AttendeeControllerTest extends ScheduleTest {
     void createAttendeeOver5_conflictAttendeeException() throws Exception {
         Member member4 = memberRepository.save(createMember(null, "member4"));
         Member member5 = memberRepository.save(createMember(null, "member5"));
-        TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(0L, member3, schedule1, AttendeeRole.GUEST, AttendeePermission.ALL));
-        TravelAttendee attendee4 = travelAttendeeRepository.save(createTravelAttendee(0L, member4, schedule1, AttendeeRole.GUEST, AttendeePermission.ALL));
-        TravelAttendee attendee5 = travelAttendeeRepository.save(createTravelAttendee(0L, member5, schedule1, AttendeeRole.GUEST, AttendeePermission.ALL));
-        schedule1.getTravelAttendeeList().add(attendee3);
-        schedule1.getTravelAttendeeList().add(attendee4);
-        schedule1.getTravelAttendeeList().add(attendee5);
+        travelAttendeeRepository.save(createTravelAttendee(0L, member3, schedule1, AttendeeRole.GUEST, AttendeePermission.ALL));
+        travelAttendeeRepository.save(createTravelAttendee(0L, member4, schedule1, AttendeeRole.GUEST, AttendeePermission.ALL));
+        travelAttendeeRepository.save(createTravelAttendee(0L, member5, schedule1, AttendeeRole.GUEST, AttendeePermission.ALL));
+
 
         AttendeeRequest attendeeRequest = createAttendeeRequest(member3.getEmail(), AttendeePermission.CHAT);
         mockMvc.perform(post("/api/schedules/{scheduleId}/attendees", schedule1.getScheduleId())
@@ -201,7 +196,7 @@ public class AttendeeControllerTest extends ScheduleTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(toJsonString(attendeeRequest)))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.message").value(ErrorCode.USER_NOT_FOUND.getMessage()));
+                .andExpect(jsonPath("$.message").value(ErrorCode.MEMBER_NOT_FOUND.getMessage()));
 
     }
 

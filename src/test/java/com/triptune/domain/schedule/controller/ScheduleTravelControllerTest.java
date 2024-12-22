@@ -113,8 +113,6 @@ public class ScheduleTravelControllerTest extends BaseTest {
         TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(0L, member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ));
         TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(0L, member2, schedule2, AttendeeRole.AUTHOR, AttendeePermission.ALL));
 
-        member1.setTravelAttendeeList(new ArrayList<>(List.of(attendee1)));
-        member2.setTravelAttendeeList(new ArrayList<>(List.of(attendee2, attendee3)));
         schedule1.setTravelAttendeeList(new ArrayList<>(List.of(attendee1, attendee2)));
         schedule2.setTravelAttendeeList(new ArrayList<>(List.of(attendee3)));
 
@@ -157,8 +155,7 @@ public class ScheduleTravelControllerTest extends BaseTest {
     @DisplayName("여행지 조회 시 해당 일정에 접근 권한이 없어 예외 발생")
     @WithMockUser(username = "member1")
     void getTravelPlaces_forbiddenScheduleException() throws Exception {
-        // given
-        // when, then
+        // given, when, then
         mockMvc.perform(get("/api/schedules/{scheduleId}/travels", schedule2.getScheduleId())
                         .param("page", "1"))
                 .andExpect(status().isForbidden())
@@ -171,8 +168,7 @@ public class ScheduleTravelControllerTest extends BaseTest {
     @DisplayName("여행지 조회 시 일정 데이터 존재하지 않아 예외 발생")
     @WithMockUser(username = "member1")
     void getTravelPlaces_dataNotFoundException() throws Exception {
-        // given
-        // when, then
+        // given, when, then
         mockMvc.perform(get("/api/schedules/{scheduleId}/travels", 0L)
                         .param("page", "1"))
                 .andExpect(status().isNotFound())
@@ -185,8 +181,7 @@ public class ScheduleTravelControllerTest extends BaseTest {
     @DisplayName("여행지 검색")
     @WithMockUser(username = "member1")
     void searchTravelPlaces() throws Exception {
-        // given
-        // when, then
+        // given, when, then
         mockMvc.perform(get("/api/schedules/{scheduleId}/travels/search", schedule1.getScheduleId())
                         .param("page", "1")
                         .param("keyword", "강남"))

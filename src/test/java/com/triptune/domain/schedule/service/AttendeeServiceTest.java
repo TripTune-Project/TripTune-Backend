@@ -58,16 +58,15 @@ public class AttendeeServiceTest extends ScheduleTest {
 
     @BeforeEach
     void setUp(){
-        member1 = createMember(1L, "member1");
-        member2 = createMember(2L, "member2");
-        member3 = createMember(3L, "member3");
 
         ProfileImage member1Image = createProfileImage(1L, "member1Image");
         ProfileImage member2Image = createProfileImage(2L, "member2Image");
         ProfileImage member3Image = createProfileImage(3L, "member3Image");
-        member1.setProfileImage(member1Image);
-        member2.setProfileImage(member2Image);
-        member3.setProfileImage(member3Image);
+
+        member1 = createMember(1L, "member1", member1Image);
+        member2 = createMember(2L, "member2", member2Image);
+        member3 = createMember(3L, "member3", member3Image);
+
 
         schedule1 = createTravelSchedule(1L, "테스트1");
         TravelSchedule schedule2 = createTravelSchedule(2L, "테스트2");
@@ -201,8 +200,8 @@ public class AttendeeServiceTest extends ScheduleTest {
         // when, then
         DataNotFoundException fail = assertThrows(DataNotFoundException.class, () ->  attendeeService.createAttendee(schedule1.getScheduleId(), member1.getUserId(), attendeeRequest));
 
-        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.USER_NOT_FOUND.getStatus());
-        assertThat(fail.getMessage()).isEqualTo(ErrorCode.USER_NOT_FOUND.getMessage());
+        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.MEMBER_NOT_FOUND.getStatus());
+        assertThat(fail.getMessage()).isEqualTo(ErrorCode.MEMBER_NOT_FOUND.getMessage());
 
     }
 
