@@ -11,7 +11,6 @@ import java.util.List;
 
 @Entity
 @Getter
-@Setter
 @NoArgsConstructor
 public class District {
 
@@ -38,5 +37,9 @@ public class District {
         this.city = city;
         this.districtName = districtName;
         this.travelPlaceList = travelPlaceList;
+    }
+
+    public void updateDistrictName(String districtName) {
+        this.districtName = districtName;
     }
 }

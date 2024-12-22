@@ -11,7 +11,6 @@ import lombok.Setter;
 
 @Entity
 @Getter
-@Setter
 @NoArgsConstructor
 public class TravelAttendee {
 
@@ -61,6 +60,14 @@ public class TravelAttendee {
                 .role(AttendeeRole.GUEST)
                 .permission(permission)
                 .build();
+    }
+
+    public void updatePermission(AttendeePermission permission){
+        this.permission = permission;
+    }
+
+    public void updateRole(AttendeeRole role){
+        this.role = role;
     }
 
 }

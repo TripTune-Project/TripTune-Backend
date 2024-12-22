@@ -167,7 +167,7 @@ public class MemberControllerTest extends MemberTest{
     void refreshToken() throws Exception{
         Member member = memberRepository.save(createMember(null, "member"));
         String refreshToken = jwtUtil.createToken(member.getUserId(), 10000000);
-        member.setRefreshToken(refreshToken);
+        member.updateRefreshToken(refreshToken);
 
         mockMvc.perform(post("/api/members/refresh")
                         .contentType(MediaType.APPLICATION_JSON)

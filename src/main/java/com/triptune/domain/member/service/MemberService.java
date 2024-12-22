@@ -77,7 +77,7 @@ public class MemberService {
         String accessToken = jwtUtil.createToken(loginRequest.getUserId(), accessExpirationTime);
         String refreshToken = jwtUtil.createToken(loginRequest.getUserId(), refreshExpirationTime);
 
-        member.setRefreshToken(refreshToken);
+        member.updateRefreshToken(refreshToken);
 
         return LoginResponse.of(accessToken, refreshToken, member.getNickname());
     }
@@ -144,9 +144,9 @@ public class MemberService {
         }
 
         Member member = findMemberByEmail(email);
-        member.setPassword(passwordEncoder.encode(changePasswordRequest.getPassword()));
-    }
+        member.updatePassword(passwordEncoder.encode(changePasswordRequest.getPassword()));
 
+    }
 
     public Member findMemberByEmail(String email){
         return memberRepository.findByEmail(email)

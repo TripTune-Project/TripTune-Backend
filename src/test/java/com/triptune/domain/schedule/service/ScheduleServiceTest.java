@@ -103,12 +103,10 @@ public class ScheduleServiceTest extends ScheduleTest {
         List<TravelImage> travelImageList2 = new ArrayList<>(List.of(travelImage3, travelImage4));
         travelPlace2.setTravelImageList(travelImageList2);
 
-        member1 = createMember(1L, "member1");
-        member2 = createMember(2L, "member2");
         ProfileImage member1Image = createProfileImage(1L, "member1Image");
         ProfileImage member2Image = createProfileImage(2L, "member2Image");
-        member1.setProfileImage(member1Image);
-        member2.setProfileImage(member2Image);
+        member1 = createMember(1L, "member1", member1Image);
+        member2 = createMember(2L, "member2", member2Image);
 
         schedule1 = createTravelSchedule(1L, "테스트1");
         schedule2 = createTravelSchedule(2L, "테스트2");
@@ -664,7 +662,7 @@ public class ScheduleServiceTest extends ScheduleTest {
         List<TravelSchedule> travelScheduleList = new ArrayList<>(List.of(schedule1));
         Page<TravelSchedule> schedulePage = PageUtil.createPage(travelScheduleList, PageUtil.schedulePageable(1), travelScheduleList.size());
         for(TravelAttendee attendee : schedule1.getTravelAttendeeList()){
-            attendee.setRole(AttendeeRole.GUEST);
+            attendee.updateRole(AttendeeRole.GUEST);
         }
 
         // when
@@ -710,7 +708,7 @@ public class ScheduleServiceTest extends ScheduleTest {
     void createAuthorDTO_notFoundException(){
         // given
         for(TravelAttendee attendee : schedule1.getTravelAttendeeList()){
-            attendee.setRole(AttendeeRole.GUEST);
+            attendee.updateRole(AttendeeRole.GUEST);
         }
 
         // when
@@ -1042,7 +1040,7 @@ public class ScheduleServiceTest extends ScheduleTest {
     @DisplayName("일정 수정 사용자 권한 체크 ALL")
     void checkScheduleEditPermissionALL(){
         // given
-        attendee1.setPermission(AttendeePermission.ALL);
+        attendee1.updatePermission(AttendeePermission.ALL);
 
         // when, then
         assertDoesNotThrow(() -> scheduleService.checkScheduleEditPermission(attendee1));
@@ -1052,7 +1050,7 @@ public class ScheduleServiceTest extends ScheduleTest {
     @DisplayName("일정 수정 사용자 권한 체크 EDIT")
     void checkScheduleEditPermissionEdit(){
         // given
-        attendee1.setPermission(AttendeePermission.EDIT);
+        attendee1.updatePermission(AttendeePermission.EDIT);
 
         // when
         // then
@@ -1063,7 +1061,7 @@ public class ScheduleServiceTest extends ScheduleTest {
     @DisplayName("일정 수정 사용자 권한 체크 중 CHAT 권한으로 예외 발생")
     void checkScheduleEditPermissionCHAT_forbiddenScheduleException(){
         // given
-        attendee1.setPermission(AttendeePermission.CHAT);
+        attendee1.updatePermission(AttendeePermission.CHAT);
 
         // when
         ForbiddenScheduleException fail = assertThrows(ForbiddenScheduleException.class, () -> scheduleService.checkScheduleEditPermission(attendee1));
@@ -1077,7 +1075,7 @@ public class ScheduleServiceTest extends ScheduleTest {
     @DisplayName("일정 수정 사용자 권한 체크 시 READ 권한으로 예외 발생")
     void checkScheduleEditPermissionREAD_forbiddenScheduleException(){
         // given
-        attendee1.setPermission(AttendeePermission.READ);
+        attendee1.updatePermission(AttendeePermission.READ);
 
         // when
         ForbiddenScheduleException fail = assertThrows(ForbiddenScheduleException.class, () -> scheduleService.checkScheduleEditPermission(attendee1));

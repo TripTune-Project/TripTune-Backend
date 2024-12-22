@@ -227,7 +227,7 @@ public class ScheduleService {
         travelRouteRepository.deleteAllByTravelSchedule_ScheduleId(schedule.getScheduleId());
 
         if (schedule.getTravelRouteList() == null){
-            schedule.setTravelRouteList(new ArrayList<>());
+            schedule.updateTravelRouteList(new ArrayList<>());
         } else{
             schedule.getTravelRouteList().clear();
         }

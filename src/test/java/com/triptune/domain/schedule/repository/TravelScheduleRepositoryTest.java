@@ -105,9 +105,6 @@ public class TravelScheduleRepositoryTest extends ScheduleTest {
         TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(0L, member1, schedule2, AttendeeRole.GUEST, AttendeePermission.READ));
         TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(0L, member2, schedule3, AttendeeRole.AUTHOR, AttendeePermission.ALL));
 
-        member1.setTravelAttendeeList(new ArrayList<>(List.of(attendee1, attendee2)));
-        member2.setTravelAttendeeList(new ArrayList<>(List.of(attendee3)));
-
         schedule1.setTravelAttendeeList(new ArrayList<>(List.of(attendee1)));
         schedule2.setTravelAttendeeList(new ArrayList<>(List.of(attendee2)));
         schedule3.setTravelAttendeeList(new ArrayList<>(List.of(attendee3)));
@@ -149,9 +146,6 @@ public class TravelScheduleRepositoryTest extends ScheduleTest {
         TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(0L, member2, schedule2, AttendeeRole.GUEST, AttendeePermission.READ));
         TravelAttendee attendee4 = travelAttendeeRepository.save(createTravelAttendee(0L, member2, schedule3, AttendeeRole.AUTHOR, AttendeePermission.ALL));
 
-        member1.setTravelAttendeeList(new ArrayList<>(List.of(attendee1, attendee2)));
-        member2.setTravelAttendeeList(new ArrayList<>(List.of(attendee3, attendee4)));
-
         schedule1.setTravelAttendeeList(new ArrayList<>(List.of(attendee1)));
         schedule2.setTravelAttendeeList(new ArrayList<>(List.of(attendee2, attendee3)));
         schedule3.setTravelAttendeeList(new ArrayList<>(List.of(attendee4)));
@@ -190,9 +184,6 @@ public class TravelScheduleRepositoryTest extends ScheduleTest {
         TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(0L, member1, schedule2, AttendeeRole.AUTHOR, AttendeePermission.READ));
         TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(0L, member2, schedule3, AttendeeRole.AUTHOR, AttendeePermission.ALL));
 
-        member1.setTravelAttendeeList(new ArrayList<>(List.of(attendee1, attendee2)));
-        member2.setTravelAttendeeList(new ArrayList<>(List.of(attendee3)));
-
         schedule1.setTravelAttendeeList(new ArrayList<>(List.of(attendee1)));
         schedule2.setTravelAttendeeList(new ArrayList<>(List.of(attendee2)));
         schedule3.setTravelAttendeeList(new ArrayList<>(List.of(attendee3)));
@@ -207,8 +198,7 @@ public class TravelScheduleRepositoryTest extends ScheduleTest {
     @Test
     @DisplayName("일정 갯수 조회 시 데이터가 없는 경우")
     void countTravelSchedulesByUserIdWithoutData(){
-        // given
-        // when
+        // given, when
         Integer response = travelScheduleRepository.countTravelSchedulesByUserId(member1.getUserId());
 
         // then
@@ -224,9 +214,6 @@ public class TravelScheduleRepositoryTest extends ScheduleTest {
         TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(0L, member2, schedule2, AttendeeRole.GUEST, AttendeePermission.READ));
         TravelAttendee attendee4 = travelAttendeeRepository.save(createTravelAttendee(0L, member2, schedule3, AttendeeRole.AUTHOR, AttendeePermission.ALL));
 
-        member1.setTravelAttendeeList(new ArrayList<>(List.of(attendee1, attendee2)));
-        member2.setTravelAttendeeList(new ArrayList<>(List.of(attendee3, attendee4)));
-
         schedule1.setTravelAttendeeList(new ArrayList<>(List.of(attendee1)));
         schedule2.setTravelAttendeeList(new ArrayList<>(List.of(attendee2, attendee3)));
         schedule3.setTravelAttendeeList(new ArrayList<>(List.of(attendee4)));
@@ -241,8 +228,7 @@ public class TravelScheduleRepositoryTest extends ScheduleTest {
     @Test
     @DisplayName("공유된 일정 갯수 조회 시 데이터가 없는 경우")
     void countSharedTravelSchedulesByUserIdWithoutData(){
-        // given
-        // when
+        // given, when
         Integer response = travelScheduleRepository.countSharedTravelSchedulesByUserId(member1.getUserId());
 
         // then
@@ -258,9 +244,6 @@ public class TravelScheduleRepositoryTest extends ScheduleTest {
         TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(0L, member2, schedule2, AttendeeRole.GUEST, AttendeePermission.READ));
         TravelAttendee attendee4 = travelAttendeeRepository.save(createTravelAttendee(0L, member2, schedule3, AttendeeRole.AUTHOR, AttendeePermission.ALL));
         attendee4.getTravelSchedule().setScheduleName("테스트23");
-
-        member1.setTravelAttendeeList(new ArrayList<>(List.of(attendee1, attendee2)));
-        member2.setTravelAttendeeList(new ArrayList<>(List.of(attendee3, attendee4)));
 
         schedule1.setTravelAttendeeList(new ArrayList<>(List.of(attendee1)));
         schedule2.setTravelAttendeeList(new ArrayList<>(List.of(attendee2, attendee3)));
@@ -304,9 +287,6 @@ public class TravelScheduleRepositoryTest extends ScheduleTest {
         TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(0L, member2, schedule2, AttendeeRole.GUEST, AttendeePermission.READ));
         TravelAttendee attendee4 = travelAttendeeRepository.save(createTravelAttendee(0L, member2, schedule3, AttendeeRole.AUTHOR, AttendeePermission.ALL));
 
-        member1.setTravelAttendeeList(new ArrayList<>(List.of(attendee1, attendee2)));
-        member2.setTravelAttendeeList(new ArrayList<>(List.of(attendee3, attendee4)));
-
         schedule1.setTravelAttendeeList(new ArrayList<>(List.of(attendee1)));
         schedule2.setTravelAttendeeList(new ArrayList<>(List.of(attendee2, attendee3)));
         schedule3.setTravelAttendeeList(new ArrayList<>(List.of(attendee4)));
@@ -347,9 +327,6 @@ public class TravelScheduleRepositoryTest extends ScheduleTest {
         TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(0L, member1, schedule2, AttendeeRole.AUTHOR, AttendeePermission.READ));
         TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(0L, member2, schedule3, AttendeeRole.AUTHOR, AttendeePermission.ALL));
 
-        member1.setTravelAttendeeList(new ArrayList<>(List.of(attendee1, attendee2)));
-        member2.setTravelAttendeeList(new ArrayList<>(List.of(attendee3)));
-
         schedule1.setTravelAttendeeList(new ArrayList<>(List.of(attendee1)));
         schedule2.setTravelAttendeeList(new ArrayList<>(List.of(attendee2)));
         schedule3.setTravelAttendeeList(new ArrayList<>(List.of(attendee3)));
@@ -381,9 +358,6 @@ public class TravelScheduleRepositoryTest extends ScheduleTest {
         TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(0L, member2, schedule2, AttendeeRole.GUEST, AttendeePermission.READ));
         TravelAttendee attendee4 = travelAttendeeRepository.save(createTravelAttendee(0L, member2, schedule3, AttendeeRole.AUTHOR, AttendeePermission.ALL));
 
-        member1.setTravelAttendeeList(new ArrayList<>(List.of(attendee1, attendee2)));
-        member2.setTravelAttendeeList(new ArrayList<>(List.of(attendee3, attendee4)));
-
         schedule1.setTravelAttendeeList(new ArrayList<>(List.of(attendee1)));
         schedule2.setTravelAttendeeList(new ArrayList<>(List.of(attendee2, attendee3)));
         schedule3.setTravelAttendeeList(new ArrayList<>(List.of(attendee4)));
@@ -398,8 +372,7 @@ public class TravelScheduleRepositoryTest extends ScheduleTest {
     @Test
     @DisplayName("공유된 일정 키워드 검색 갯수 조회 시 데이터가 없는 경우")
     void countSharedTravelSchedulesByUserIdAndKeywordWithoutData(){
-        // given
-        // when
+        // given, when
         Integer response = travelScheduleRepository.countSharedTravelSchedulesByUserIdAndKeyword("ㅁㄴㅇㄹ", member1.getUserId());
 
         // then
@@ -409,8 +382,7 @@ public class TravelScheduleRepositoryTest extends ScheduleTest {
     @Test
     @DisplayName("일정 삭제")
     void deleteById(){
-        // given
-        // when
+        // given, when
         travelScheduleRepository.deleteById(schedule1.getScheduleId());
 
         // then

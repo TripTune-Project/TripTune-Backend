@@ -101,7 +101,7 @@ public class AttendeeService {
             throw new ForbiddenScheduleException(ErrorCode.FORBIDDEN_UPDATE_AUTHOR_ATTENDEE_PERMISSION);
         }
 
-        attendee.setPermission(attendeePermissionRequest.getPermission());
+        attendee.updatePermission(attendeePermissionRequest.getPermission());
     }
 
 

@@ -14,9 +14,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity(name = "travel_schedule")
-@NoArgsConstructor
 @Getter
 @Setter
+@NoArgsConstructor
 public class TravelSchedule {
 
     @Id
@@ -71,5 +71,9 @@ public class TravelSchedule {
         this.startDate = request.getStartDate();
         this.endDate = request.getEndDate();
         this.updatedAt = LocalDateTime.now();
+    }
+
+    public void updateTravelRouteList(List<TravelRoute> travelRouteList){
+        this.travelRouteList = travelRouteList;
     }
 }

@@ -73,15 +73,13 @@ public class ChatControllerTest extends ScheduleTest {
 
         chatMessageRepository.deleteAll();
 
-        member1 = memberRepository.save(createMember(null, "member1"));
-        member2 = memberRepository.save(createMember(null, "member2"));
-        member3 = memberRepository.save(createMember(null, "member3"));
         ProfileImage profileImage1 = profileImageRepository.save(createProfileImage(null, "member1Image"));
         ProfileImage profileImage2 = profileImageRepository.save(createProfileImage(null, "member2Image"));
         ProfileImage profileImage3 = profileImageRepository.save(createProfileImage(null, "member3Image"));
-        member1.setProfileImage(profileImage1);
-        member2.setProfileImage(profileImage2);
-        member3.setProfileImage(profileImage3);
+
+        member1 = memberRepository.save(createMember(null, "member1", profileImage1));
+        member2 = memberRepository.save(createMember(null, "member2", profileImage2));
+        member3 = memberRepository.save(createMember(null, "member3", profileImage3));
 
         schedule = travelScheduleRepository.save(createTravelSchedule(null,"테스트1"));
 
