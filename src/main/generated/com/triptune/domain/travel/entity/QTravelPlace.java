@@ -30,6 +30,8 @@ public class QTravelPlace extends EntityPathBase<TravelPlace> {
 
     public final NumberPath<Integer> bookmarkCnt = createNumber("bookmarkCnt", Integer.class);
 
+    public final ListPath<com.triptune.domain.bookmark.entity.Bookmark, com.triptune.domain.bookmark.entity.QBookmark> bookmarkList = this.<com.triptune.domain.bookmark.entity.Bookmark, com.triptune.domain.bookmark.entity.QBookmark>createList("bookmarkList", com.triptune.domain.bookmark.entity.Bookmark.class, com.triptune.domain.bookmark.entity.QBookmark.class, PathInits.DIRECT2);
+
     public final StringPath checkInTime = createString("checkInTime");
 
     public final StringPath checkOutTime = createString("checkOutTime");

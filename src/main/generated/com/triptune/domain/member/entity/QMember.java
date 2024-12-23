@@ -22,6 +22,8 @@ public class QMember extends EntityPathBase<Member> {
 
     public static final QMember member = new QMember("member1");
 
+    public final ListPath<com.triptune.domain.bookmark.entity.Bookmark, com.triptune.domain.bookmark.entity.QBookmark> bookmarkList = this.<com.triptune.domain.bookmark.entity.Bookmark, com.triptune.domain.bookmark.entity.QBookmark>createList("bookmarkList", com.triptune.domain.bookmark.entity.Bookmark.class, com.triptune.domain.bookmark.entity.QBookmark.class, PathInits.DIRECT2);
+
     public final DateTimePath<java.time.LocalDateTime> createdAt = createDateTime("createdAt", java.time.LocalDateTime.class);
 
     public final StringPath email = createString("email");

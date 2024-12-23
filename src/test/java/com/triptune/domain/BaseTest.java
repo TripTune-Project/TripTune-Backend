@@ -2,6 +2,7 @@ package com.triptune.domain;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.triptune.domain.bookmark.entity.Bookmark;
 import com.triptune.domain.common.entity.*;
 import com.triptune.domain.member.entity.Member;
 import com.triptune.domain.member.entity.ProfileImage;
@@ -161,6 +162,15 @@ public abstract class BaseTest {
                 .nickname(member.getNickname())
                 .message(message)
                 .timestamp(LocalDateTime.now())
+                .build();
+    }
+
+    protected Bookmark createBookmark(Long bookmarkId, Member member, TravelPlace travelPlace){
+        return Bookmark.builder()
+                .bookmarkId(bookmarkId)
+                .member(member)
+                .travelPlace(travelPlace)
+                .createdAt(LocalDateTime.now())
                 .build();
     }
 

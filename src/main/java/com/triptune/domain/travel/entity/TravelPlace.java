@@ -1,5 +1,6 @@
 package com.triptune.domain.travel.entity;
 
+import com.triptune.domain.bookmark.entity.Bookmark;
 import com.triptune.domain.common.entity.*;
 import com.triptune.domain.schedule.entity.TravelRoute;
 import jakarta.persistence.*;
@@ -91,8 +92,11 @@ public class TravelPlace {
     @OneToMany(mappedBy = "travelPlace", fetch = FetchType.LAZY, orphanRemoval = true)
     private List<TravelRoute> travelRouteList = new ArrayList<>();
 
+    @OneToMany(mappedBy = "travelPlace", fetch = FetchType.LAZY, orphanRemoval = true)
+    private List<Bookmark> bookmarkList = new ArrayList<>();
+
     @Builder
-    public TravelPlace(Long placeId, Country country, City city, District district, ApiCategory apiCategory, ApiContentType apiContentType, String placeName, String address, String detailAddress, String useTime, String checkInTime, String checkOutTime, String homepage, String phoneNumber, double longitude, double latitude, String description, int bookmarkCnt, LocalDateTime createdAt, LocalDateTime updatedAt, List<TravelImage> travelImageList, List<TravelRoute> travelRouteList) {
+    public TravelPlace(Long placeId, Country country, City city, District district, ApiCategory apiCategory, ApiContentType apiContentType, String placeName, String address, String detailAddress, String useTime, String checkInTime, String checkOutTime, String homepage, String phoneNumber, double longitude, double latitude, String description, int bookmarkCnt, LocalDateTime createdAt, LocalDateTime updatedAt, List<TravelImage> travelImageList, List<TravelRoute> travelRouteList, List<Bookmark> bookmarkList) {
         this.placeId = placeId;
         this.country = country;
         this.city = city;
@@ -115,6 +119,7 @@ public class TravelPlace {
         this.updatedAt = updatedAt;
         this.travelImageList = travelImageList;
         this.travelRouteList = travelRouteList;
+        this.bookmarkList = bookmarkList;
     }
 
     public String getThumbnailUrl(){
@@ -123,5 +128,9 @@ public class TravelPlace {
                 .map(TravelImage::getS3ObjectUrl)
                 .findFirst()
                 .orElse(null);
+    }
+
+    public void updateBookmarkCnt() {
+        this.bookmarkCnt++;
     }
 }
