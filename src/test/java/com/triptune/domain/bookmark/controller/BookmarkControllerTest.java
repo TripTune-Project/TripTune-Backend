@@ -34,6 +34,7 @@ import org.springframework.web.filter.CharacterEncodingFilter;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -150,6 +151,42 @@ class BookmarkControllerTest extends BookmarkTest {
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value(ErrorCode.PLACE_NOT_FOUND.getMessage()));
     }
+
+    @Test
+    @DisplayName("북마크 삭제")
+    @WithMockUser("member")
+    void deleteBookmark() throws Exception{
+        Member member = memberRepository.save(createMember(null, "member"));
+        TravelPlace travelPlace = travelPlaceRepository.save(createTravelPlace(null, country, city, district, apiCategory));
+        bookmarkRepository.save(createBookmark(null, member, travelPlace));
+
+        mockMvc.perform(delete("/api/bookmarks")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJsonString(createBookmarkRequest(travelPlace.getPlaceId()))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()));
+
+        assertThat(bookmarkRepository.existsByMember_UserIdAndTravelPlace_PlaceId(member.getUserId(), travelPlace.getPlaceId())).isFalse();
+    }
+
+
+    @Test
+    @DisplayName("북마크 삭제 시 북마크 데이터가 없는 경우")
+    @WithMockUser("member")
+    void deleteBookmark_bookmarkNotFoundException() throws Exception{
+        memberRepository.save(createMember(null, "member"));
+        TravelPlace travelPlace = travelPlaceRepository.save(createTravelPlace(null, country, city, district, apiCategory));
+
+        mockMvc.perform(delete("/api/bookmarks")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJsonString(createBookmarkRequest(travelPlace.getPlaceId()))))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value(ErrorCode.BOOKMARK_NOT_FOUND.getMessage()));
+    }
+
+
 
 
 

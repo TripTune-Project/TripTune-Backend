@@ -61,6 +61,7 @@ public enum ErrorCode {
     CHAT_MESSAGE_TOO_LONG(HttpStatus.BAD_REQUEST, "채팅 메시지는 1000자 이하여야 합니다."),
 
     // 북마크
+    BOOKMARK_NOT_FOUND(HttpStatus.NOT_FOUND, "북마크 정보를 찾을 수 없습니다."),
     ALREADY_EXISTED_BOOKMARK(HttpStatus.CONFLICT, "이미 북마크 되어있는 여행지입니다.");
 
     private final HttpStatus status;

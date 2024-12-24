@@ -51,4 +51,12 @@ public class BookmarkService {
     public boolean isExistBookmark(String userId, Long placeId){
         return bookmarkRepository.existsByMember_UserIdAndTravelPlace_PlaceId(userId, placeId);
     }
+
+    public void deleteBookmark(String userId, BookmarkRequest bookmarkRequest) {
+        if (!isExistBookmark(userId, bookmarkRequest.getPlaceId())){
+            throw new DataNotFoundException(ErrorCode.BOOKMARK_NOT_FOUND);
+        }
+
+        bookmarkRepository.deleteByMember_UserIdAndTravelPlace_PlaceId(userId, bookmarkRequest.getPlaceId());
+    }
 }

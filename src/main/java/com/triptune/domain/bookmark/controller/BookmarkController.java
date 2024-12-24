@@ -8,10 +8,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/bookmarks")
@@ -28,5 +25,15 @@ public class BookmarkController {
         bookmarkService.createBookmark(userId, bookmarkRequest);
 
         return ApiResponse.okResponse();
+    }
+
+    @DeleteMapping
+    @Operation(summary = "북마크 취소", description = "북마크를 취소합니다.")
+    public ApiResponse<?> deleteBookmark(@Valid @RequestBody BookmarkRequest bookmarkRequest){
+        String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+        bookmarkService.deleteBookmark(userId, bookmarkRequest);
+
+        return ApiResponse.okResponse();
+
     }
 }

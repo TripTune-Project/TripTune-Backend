@@ -124,4 +124,35 @@ public class BookmarkServiceTest extends BookmarkTest {
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.PLACE_NOT_FOUND.getStatus());
         assertThat(fail.getMessage()).isEqualTo(ErrorCode.PLACE_NOT_FOUND.getMessage());
     }
+
+    @Test
+    @DisplayName("북마크 삭제")
+    void deleteBookmark(){
+        // given
+        BookmarkRequest request = createBookmarkRequest(1L);
+
+        when(bookmarkRepository.existsByMember_UserIdAndTravelPlace_PlaceId(anyString(), anyLong())).thenReturn(true);
+
+        // when
+        assertDoesNotThrow(() -> bookmarkService.deleteBookmark(member.getUserId(), request));
+
+        // then
+        verify(bookmarkRepository, times(1)).deleteByMember_UserIdAndTravelPlace_PlaceId(anyString(), anyLong());
+    }
+
+    @Test
+    @DisplayName("북마크 삭제 시 북마크 데이터가 존재하지 않아 예외 발생")
+    void deleteBookmark_bookmarkNotFoundException(){
+        // given
+        BookmarkRequest request = createBookmarkRequest(1L);
+
+        when(bookmarkRepository.existsByMember_UserIdAndTravelPlace_PlaceId(anyString(), anyLong())).thenReturn(false);
+
+        // when
+        DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> bookmarkService.deleteBookmark(member.getUserId(), request));
+
+        // then
+        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.BOOKMARK_NOT_FOUND.getStatus());
+        assertThat(fail.getMessage()).isEqualTo(ErrorCode.BOOKMARK_NOT_FOUND.getMessage());
+    }
 }
