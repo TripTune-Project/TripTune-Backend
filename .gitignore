@@ -8,6 +8,7 @@ build/
 !**/src/test/**/build/
 *.yml
 application.properties
+generated/
 
 ### STS ###
 .apt_generated
