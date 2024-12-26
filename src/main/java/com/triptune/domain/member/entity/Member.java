@@ -1,5 +1,6 @@
 package com.triptune.domain.member.entity;
 
+import com.triptune.domain.bookmark.entity.Bookmark;
 import com.triptune.domain.member.dto.request.MemberRequest;
 import com.triptune.domain.schedule.entity.TravelAttendee;
 import jakarta.persistence.*;
@@ -53,9 +54,11 @@ public class Member {
     @OneToMany(mappedBy = "member", fetch = FetchType.LAZY, orphanRemoval = true)
     private List<TravelAttendee> travelAttendeeList = new ArrayList<>();
 
+    @OneToMany(mappedBy = "member", fetch = FetchType.LAZY, orphanRemoval = true)
+    private List<Bookmark> bookmarkList = new ArrayList<>();
 
     @Builder
-    public Member(Long memberId, ProfileImage profileImage, String userId, String password, String refreshToken, boolean isSocialLogin, String nickname, String email, LocalDateTime createdAt, LocalDateTime updatedAt, List<TravelAttendee> travelAttendeeList) {
+    public Member(Long memberId, ProfileImage profileImage, String userId, String password, String refreshToken, boolean isSocialLogin, String nickname, String email, LocalDateTime createdAt, LocalDateTime updatedAt, List<TravelAttendee> travelAttendeeList, List<Bookmark> bookmarkList) {
         this.memberId = memberId;
         this.profileImage = profileImage;
         this.userId = userId;
@@ -67,6 +70,7 @@ public class Member {
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
         this.travelAttendeeList = travelAttendeeList;
+        this.bookmarkList = bookmarkList;
     }
 
     public static Member from(MemberRequest memberRequest, String encodePassword){

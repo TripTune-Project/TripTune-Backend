@@ -23,17 +23,17 @@ public abstract class TravelTest extends BaseTest {
                 .build();
     }
 
-    protected PlaceLocation createTravelLocation(TravelPlace place){
+    protected PlaceLocation createTravelLocation(TravelPlace travelPlace){
         return PlaceLocation.builder()
-                .placeId(1L)
-                .country(place.getCountry().getCountryName())
-                .city(place.getCity().getCityName())
-                .district(place.getDistrict().getDistrictName())
-                .address(place.getAddress())
-                .detailAddress(place.getDetailAddress())
-                .latitude(place.getLatitude())
-                .longitude(place.getLongitude())
-                .placeName(place.getPlaceName())
+                .placeId(travelPlace.getPlaceId())
+                .country(travelPlace.getCountry().getCountryName())
+                .city(travelPlace.getCity().getCityName())
+                .district(travelPlace.getDistrict().getDistrictName())
+                .address(travelPlace.getAddress())
+                .detailAddress(travelPlace.getDetailAddress())
+                .latitude(travelPlace.getLatitude())
+                .longitude(travelPlace.getLongitude())
+                .placeName(travelPlace.getPlaceName())
                 .distance(0.2345234234)
                 .build();
     }

@@ -1,13 +1,9 @@
 package com.triptune.domain.travel.dto;
 
-import com.triptune.domain.travel.entity.TravelImage;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @Getter
 @Setter
@@ -22,8 +18,9 @@ public class PlaceLocation {
     private Double longitude;
     private Double latitude;
     private String placeName;
-    private List<TravelImage> travelImageList;
+    private String thumbnailUrl;
     private Double distance;
+    private boolean isBookmark;
 
     @Builder
     public PlaceLocation(Long placeId, String country, String city, String district, String address, String detailAddress, double longitude, double latitude, String placeName, Double distance) {
@@ -41,7 +38,7 @@ public class PlaceLocation {
     }
 
     @Builder
-    public PlaceLocation(Long placeId, String country, String city, String district, String address, String detailAddress, double longitude, double latitude, String placeName, List<TravelImage> travelImageList, Double distance) {
+    public PlaceLocation(Long placeId, String country, String city, String district, String address, String detailAddress, double longitude, double latitude, String placeName, String thumbnailUrl, Double distance, boolean isBookmark) {
         // travelImageFileList 포함 생성자
         this.placeId = placeId;
         this.country = country;
@@ -52,16 +49,16 @@ public class PlaceLocation {
         this.longitude = longitude;
         this.latitude = latitude;
         this.placeName = placeName;
-        this.travelImageList = travelImageList;
+        this.thumbnailUrl = thumbnailUrl;
         this.distance = distance;
+        this.isBookmark = isBookmark;
     }
 
+    public void updateThumbnailUrl(String thumbnailUrl){
+        this.thumbnailUrl = thumbnailUrl;
+    }
 
-    public String getThumbnailUrl(){
-        return travelImageList.stream()
-                .filter(TravelImage::isThumbnail)
-                .map(TravelImage::getS3ObjectUrl)
-                .findFirst()
-                .orElse(null);
+    public void updateIsBookmarkTrue(){
+        this.isBookmark = true;
     }
 }
