@@ -112,10 +112,10 @@ public class TravelControllerTest extends TravelTest {
                 .andExpect(jsonPath("$.data.content[0].district").value(travelPlace1.getDistrict().getDistrictName()))
                 .andExpect(jsonPath("$.data.content[0].placeName").value(travelPlace1.getPlaceName()))
                 .andExpect(jsonPath("$.data.content[0].thumbnailUrl").value(travelImage1.getS3ObjectUrl()))
-                .andExpect(jsonPath("$.data.content[0].isBookmark").value(true))
+                .andExpect(jsonPath("$.data.content[0].bookmarkStatus").value(true))
                 .andExpect(jsonPath("$.data.content[1].placeName").value(travelPlace2.getPlaceName()))
                 .andExpect(jsonPath("$.data.content[1].thumbnailUrl").doesNotExist())
-                .andExpect(jsonPath("$.data.content[1].isBookmark").value(false));
+                .andExpect(jsonPath("$.data.content[1].bookmarkStatus").value(false));
     }
 
     @Test
@@ -132,10 +132,10 @@ public class TravelControllerTest extends TravelTest {
                 .andExpect(jsonPath("$.data.content[0].district").value(travelPlace1.getDistrict().getDistrictName()))
                 .andExpect(jsonPath("$.data.content[0].placeName").value(travelPlace1.getPlaceName()))
                 .andExpect(jsonPath("$.data.content[0].thumbnailUrl").value(travelImage1.getS3ObjectUrl()))
-                .andExpect(jsonPath("$.data.content[0].isBookmark").value(false))
+                .andExpect(jsonPath("$.data.content[0].bookmarkStatus").value(false))
                 .andExpect(jsonPath("$.data.content[1].placeName").value(travelPlace2.getPlaceName()))
                 .andExpect(jsonPath("$.data.content[1].thumbnailUrl").doesNotExist())
-                .andExpect(jsonPath("$.data.content[1].isBookmark").value(false));
+                .andExpect(jsonPath("$.data.content[1].bookmarkStatus").value(false));
     }
 
     @Test
@@ -179,10 +179,10 @@ public class TravelControllerTest extends TravelTest {
                 .andExpect(jsonPath("$.data.content[0].district").value(travelPlace1.getDistrict().getDistrictName()))
                 .andExpect(jsonPath("$.data.content[0].placeName").value(travelPlace1.getPlaceName()))
                 .andExpect(jsonPath("$.data.content[0].thumbnailUrl").value(travelImage1.getS3ObjectUrl()))
-                .andExpect(jsonPath("$.data.content[0].isBookmark").value(true))
+                .andExpect(jsonPath("$.data.content[0].bookmarkStatus").value(true))
                 .andExpect(jsonPath("$.data.content[1].placeName").value(travelPlace2.getPlaceName()))
                 .andExpect(jsonPath("$.data.content[1].thumbnailUrl").doesNotExist())
-                .andExpect(jsonPath("$.data.content[1].isBookmark").value(false));
+                .andExpect(jsonPath("$.data.content[1].bookmarkStatus").value(false));
     }
 
     @Test
@@ -199,10 +199,10 @@ public class TravelControllerTest extends TravelTest {
                 .andExpect(jsonPath("$.data.content[0].district").value(travelPlace1.getDistrict().getDistrictName()))
                 .andExpect(jsonPath("$.data.content[0].placeName").value(travelPlace1.getPlaceName()))
                 .andExpect(jsonPath("$.data.content[0].thumbnailUrl").value(travelImage1.getS3ObjectUrl()))
-                .andExpect(jsonPath("$.data.content[0].isBookmark").value(false))
+                .andExpect(jsonPath("$.data.content[0].bookmarkStatus").value(false))
                 .andExpect(jsonPath("$.data.content[1].placeName").value(travelPlace2.getPlaceName()))
                 .andExpect(jsonPath("$.data.content[1].thumbnailUrl").doesNotExist())
-                .andExpect(jsonPath("$.data.content[1].isBookmark").value(false));
+                .andExpect(jsonPath("$.data.content[1].bookmarkStatus").value(false));
     }
 
     @Test
@@ -255,7 +255,7 @@ public class TravelControllerTest extends TravelTest {
                 .andExpect(jsonPath("$.data.placeId").value(travelPlace1.getPlaceId()))
                 .andExpect(jsonPath("$.data.placeName").exists())
                 .andExpect(jsonPath("$.data.imageList").isNotEmpty())
-                .andExpect(jsonPath("$.data.isBookmark").value(true));
+                .andExpect(jsonPath("$.data.bookmarkStatus").value(true));
     }
 
     @Test
@@ -271,7 +271,7 @@ public class TravelControllerTest extends TravelTest {
                 .andExpect(jsonPath("$.data.placeId").value(travelPlace1.getPlaceId()))
                 .andExpect(jsonPath("$.data.placeName").exists())
                 .andExpect(jsonPath("$.data.imageList").isNotEmpty())
-                .andExpect(jsonPath("$.data.isBookmark").value(false));
+                .andExpect(jsonPath("$.data.bookmarkStatus").value(false));
     }
 
     @Test

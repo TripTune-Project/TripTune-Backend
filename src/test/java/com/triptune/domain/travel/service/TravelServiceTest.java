@@ -95,10 +95,10 @@ public class TravelServiceTest extends TravelTest {
         assertThat(content.get(0).getCity()).isEqualTo(travelPlace1.getCity().getCityName());
         assertThat(content.get(0).getPlaceName()).isEqualTo(travelPlace1.getPlaceName());
         assertThat(content.get(0).getThumbnailUrl()).isEqualTo(travelImage.getS3ObjectUrl());
-        assertThat(content.get(0).isBookmark()).isTrue();
+        assertThat(content.get(0).isBookmarkStatus()).isTrue();
         assertThat(content.get(0).getDistance()).isNotEqualTo(0.0);
         assertThat(content.get(1).getThumbnailUrl()).isNull();
-        assertThat(content.get(1).isBookmark()).isFalse();
+        assertThat(content.get(1).isBookmarkStatus()).isFalse();
     }
 
 
@@ -128,10 +128,10 @@ public class TravelServiceTest extends TravelTest {
         assertThat(content.get(0).getCity()).isEqualTo(travelPlace1.getCity().getCityName());
         assertThat(content.get(0).getPlaceName()).isEqualTo(travelPlace1.getPlaceName());
         assertThat(content.get(0).getThumbnailUrl()).isEqualTo(travelImage.getS3ObjectUrl());
-        assertThat(content.get(0).isBookmark()).isFalse();
+        assertThat(content.get(0).isBookmarkStatus()).isFalse();
         assertThat(content.get(0).getDistance()).isNotEqualTo(0.0);
         assertThat(content.get(1).getThumbnailUrl()).isNull();
-        assertThat(content.get(1).isBookmark()).isFalse();
+        assertThat(content.get(1).isBookmarkStatus()).isFalse();
     }
 
     @Test
@@ -197,10 +197,10 @@ public class TravelServiceTest extends TravelTest {
         assertThat(content.get(0).getCity()).isEqualTo(travelPlace1.getCity().getCityName());
         assertThat(content.get(0).getPlaceName()).isEqualTo(travelPlace1.getPlaceName());
         assertThat(content.get(0).getThumbnailUrl()).isEqualTo(travelImage.getS3ObjectUrl());
-        assertThat(content.get(0).isBookmark()).isTrue();
+        assertThat(content.get(0).isBookmarkStatus()).isTrue();
         assertThat(content.get(0).getDistance()).isNotEqualTo(0.0);
         assertThat(content.get(1).getThumbnailUrl()).isNull();
-        assertThat(content.get(1).isBookmark()).isFalse();
+        assertThat(content.get(1).isBookmarkStatus()).isFalse();
     }
 
     @Test
@@ -228,9 +228,9 @@ public class TravelServiceTest extends TravelTest {
         assertThat(content.get(0).getPlaceName()).isEqualTo(travelPlace1.getPlaceName());
         assertThat(content.get(0).getThumbnailUrl()).isEqualTo(travelImage.getS3ObjectUrl());
         assertThat(content.get(0).getDistance()).isNotEqualTo(0.0);
-        assertThat(content.get(0).isBookmark()).isFalse();
+        assertThat(content.get(0).isBookmarkStatus()).isFalse();
         assertThat(content.get(1).getThumbnailUrl()).isNull();
-        assertThat(content.get(0).isBookmark()).isFalse();
+        assertThat(content.get(0).isBookmarkStatus()).isFalse();
     }
 
 
@@ -298,7 +298,7 @@ public class TravelServiceTest extends TravelTest {
         assertThat(response.getCheckOutTime()).isNull();
         assertThat(response.getHomepage()).isEqualTo(travelPlace1.getHomepage());
         assertThat(response.getPhoneNumber()).isEqualTo(travelPlace1.getPhoneNumber());
-        assertThat(response.isBookmark()).isTrue();
+        assertThat(response.isBookmarkStatus()).isTrue();
     }
 
     @Test
@@ -326,7 +326,7 @@ public class TravelServiceTest extends TravelTest {
         assertThat(response.getCheckOutTime()).isNull();
         assertThat(response.getHomepage()).isEqualTo(travelPlace1.getHomepage());
         assertThat(response.getPhoneNumber()).isEqualTo(travelPlace1.getPhoneNumber());
-        assertThat(response.isBookmark()).isFalse();
+        assertThat(response.isBookmarkStatus()).isFalse();
     }
 
     @Test
@@ -358,7 +358,7 @@ public class TravelServiceTest extends TravelTest {
         assertThat(response.getCheckOutTime()).isEqualTo(travelPlace1.getCheckOutTime());
         assertThat(response.getHomepage()).isEqualTo(travelPlace1.getHomepage());
         assertThat(response.getPhoneNumber()).isEqualTo(travelPlace1.getPhoneNumber());
-        assertThat(response.isBookmark()).isTrue();
+        assertThat(response.isBookmarkStatus()).isTrue();
 
     }
 
@@ -390,7 +390,7 @@ public class TravelServiceTest extends TravelTest {
         assertThat(response.getCheckOutTime()).isEqualTo(travelPlace1.getCheckOutTime());
         assertThat(response.getHomepage()).isEqualTo(travelPlace1.getHomepage());
         assertThat(response.getPhoneNumber()).isEqualTo(travelPlace1.getPhoneNumber());
-        assertThat(response.isBookmark()).isFalse();
+        assertThat(response.isBookmarkStatus()).isFalse();
 
     }
 

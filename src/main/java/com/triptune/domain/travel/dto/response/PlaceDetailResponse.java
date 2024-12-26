@@ -31,13 +31,12 @@ public class PlaceDetailResponse {
     private double longitude;
     private double latitude;
     private String placeName;
-    @JsonProperty("isBookmark")
-    private boolean isBookmark;
+    private boolean bookmarkStatus;
     private String description;
     private List<TravelImageResponse> imageList;
 
     @Builder
-    public PlaceDetailResponse(Long placeId, String placeType, String country, String city, String district, String address, String detailAddress, String useTime, String checkInTime, String checkOutTime, String homepage, String phoneNumber, double longitude, double latitude, String placeName, boolean isBookmark, String description, List<TravelImageResponse> imageList) {
+    public PlaceDetailResponse(Long placeId, String placeType, String country, String city, String district, String address, String detailAddress, String useTime, String checkInTime, String checkOutTime, String homepage, String phoneNumber, double longitude, double latitude, String placeName, boolean bookmarkStatus, String description, List<TravelImageResponse> imageList) {
         this.placeId = placeId;
         this.placeType = placeType;
         this.country = country;
@@ -53,13 +52,13 @@ public class PlaceDetailResponse {
         this.longitude = longitude;
         this.latitude = latitude;
         this.placeName = placeName;
-        this.isBookmark = isBookmark;
+        this.bookmarkStatus = bookmarkStatus;
         this.description = description;
         this.imageList = imageList;
     }
 
 
-    public static PlaceDetailResponse from(TravelPlace travelPlace, boolean isBookmark){
+    public static PlaceDetailResponse from(TravelPlace travelPlace, boolean bookmarkStatus){
         return PlaceDetailResponse.builder()
                 .placeId(travelPlace.getPlaceId())
                 .placeType(travelPlace.getApiContentType().getContentTypeName())
@@ -76,7 +75,7 @@ public class PlaceDetailResponse {
                 .longitude(travelPlace.getLongitude())
                 .latitude(travelPlace.getLatitude())
                 .placeName(travelPlace.getPlaceName())
-                .isBookmark(isBookmark)
+                .bookmarkStatus(bookmarkStatus)
                 .description(travelPlace.getDescription())
                 .imageList(travelPlace.getTravelImageList().stream()   // TravelImageFile -> TravelImageResponse 로 변경
                         .map(TravelImageResponse::from)
