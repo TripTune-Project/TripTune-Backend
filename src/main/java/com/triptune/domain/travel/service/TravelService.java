@@ -1,5 +1,6 @@
 package com.triptune.domain.travel.service;
 
+import com.triptune.domain.bookmark.repository.BookmarkRepository;
 import com.triptune.domain.travel.dto.request.PlaceLocationRequest;
 import com.triptune.domain.travel.dto.request.PlaceSearchRequest;
 import com.triptune.domain.travel.dto.response.PlaceDetailResponse;
@@ -17,48 +18,69 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.Optional;
+
 @Service
 @RequiredArgsConstructor
 @Transactional
 public class TravelService {
+    private static final int RADIUS_SIZE = 5;
 
     private final TravelPlaceRepository travelPlaceRepository;
     private final TravelImageRepository travelImageRepository;
+    private final BookmarkRepository bookmarkRepository;
 
-    private static final int RADIUS_SIZE = 5;
 
-    public Page<PlaceDistanceResponse> getNearByTravelPlaces(PlaceLocationRequest placeLocationRequest, int page) {
+    public Page<PlaceDistanceResponse> getNearByTravelPlaces(int page, String userId, PlaceLocationRequest placeLocationRequest) {
         Pageable pageable = PageUtil.defaultPageable(page);
         Page<PlaceLocation> travelPlacePage = travelPlaceRepository.findNearByTravelPlaces(pageable, placeLocationRequest, RADIUS_SIZE);
 
-        if (travelPlacePage.getTotalElements() != 0){
-            for(PlaceLocation location: travelPlacePage){
-                location.setTravelImageList(travelImageRepository.findByTravelPlacePlaceId(location.getPlaceId()));
-            }
-        }
-
+        setPlaceLocations(travelPlacePage.getContent(), userId);
         return travelPlacePage.map(PlaceDistanceResponse::from);
     }
 
-
-    public Page<PlaceDistanceResponse> searchTravelPlaces(PlaceSearchRequest placeSearchRequest, int page) {
+    public Page<PlaceDistanceResponse> searchTravelPlaces(int page, String userId, PlaceSearchRequest placeSearchRequest) {
         Pageable pageable = PageUtil.defaultPageable(page);
-
         Page<PlaceLocation> travelPlacePage = travelPlaceRepository.searchTravelPlacesWithLocation(pageable, placeSearchRequest);
 
-        for(PlaceLocation response: travelPlacePage){
-            response.setTravelImageList(travelImageRepository.findByTravelPlacePlaceId(response.getPlaceId()));
-        }
-
+        setPlaceLocations(travelPlacePage.getContent(), userId);
         return travelPlacePage.map(PlaceDistanceResponse::from);
     }
 
+    public void setPlaceLocations(List<PlaceLocation> placeLocations, String userId){
+        placeLocations.forEach(this::updateThumbnailUrl);
 
-    public PlaceDetailResponse getTravelPlaceDetails(Long placeId) {
+        if (userId != null){
+            placeLocations.forEach(location -> updateIsBookmark(userId, location));
+        }
+
+    }
+
+    public void updateThumbnailUrl(PlaceLocation location){
+        location.updateThumbnailUrl(travelImageRepository.findThumbnailUrlByPlaceId(location.getPlaceId()));
+    }
+
+
+    public void updateIsBookmark(String userId, PlaceLocation location){
+        boolean isBookmark = bookmarkRepository.existsByMember_UserIdAndTravelPlace_PlaceId(userId, location.getPlaceId());
+
+        if (isBookmark){
+            location.updateIsBookmarkTrue();
+        }
+    }
+
+    public PlaceDetailResponse getTravelPlaceDetails(Long placeId, String userId) {
         TravelPlace travelPlace = travelPlaceRepository.findByPlaceId(placeId)
                 .orElseThrow(()-> new DataNotFoundException(ErrorCode.DATA_NOT_FOUND));
 
-        return PlaceDetailResponse.from(travelPlace);
+        boolean isBookmark = false;
+
+        if (userId != null){
+            isBookmark = bookmarkRepository.existsByMember_UserIdAndTravelPlace_PlaceId(userId, placeId);
+        }
+
+        return PlaceDetailResponse.from(travelPlace, isBookmark);
     }
 
 

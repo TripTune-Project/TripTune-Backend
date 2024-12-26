@@ -1,6 +1,7 @@
 package com.triptune.domain.travel.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.triptune.domain.travel.entity.TravelPlace;
 import lombok.Builder;
 import lombok.Getter;
@@ -30,11 +31,13 @@ public class PlaceDetailResponse {
     private double longitude;
     private double latitude;
     private String placeName;
+    @JsonProperty("isBookmark")
+    private boolean isBookmark;
     private String description;
     private List<TravelImageResponse> imageList;
 
     @Builder
-    public PlaceDetailResponse(Long placeId, String placeType, String country, String city, String district, String address, String detailAddress, String useTime, String checkInTime, String checkOutTime, String homepage, String phoneNumber, double longitude, double latitude, String placeName, String description, List<TravelImageResponse> imageList) {
+    public PlaceDetailResponse(Long placeId, String placeType, String country, String city, String district, String address, String detailAddress, String useTime, String checkInTime, String checkOutTime, String homepage, String phoneNumber, double longitude, double latitude, String placeName, boolean isBookmark, String description, List<TravelImageResponse> imageList) {
         this.placeId = placeId;
         this.placeType = placeType;
         this.country = country;
@@ -50,12 +53,13 @@ public class PlaceDetailResponse {
         this.longitude = longitude;
         this.latitude = latitude;
         this.placeName = placeName;
+        this.isBookmark = isBookmark;
         this.description = description;
         this.imageList = imageList;
     }
 
 
-    public static PlaceDetailResponse from(TravelPlace travelPlace){
+    public static PlaceDetailResponse from(TravelPlace travelPlace, boolean isBookmark){
         return PlaceDetailResponse.builder()
                 .placeId(travelPlace.getPlaceId())
                 .placeType(travelPlace.getApiContentType().getContentTypeName())
@@ -72,6 +76,7 @@ public class PlaceDetailResponse {
                 .longitude(travelPlace.getLongitude())
                 .latitude(travelPlace.getLatitude())
                 .placeName(travelPlace.getPlaceName())
+                .isBookmark(isBookmark)
                 .description(travelPlace.getDescription())
                 .imageList(travelPlace.getTravelImageList().stream()   // TravelImageFile -> TravelImageResponse 로 변경
                         .map(TravelImageResponse::from)

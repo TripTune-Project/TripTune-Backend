@@ -104,6 +104,26 @@ public abstract class BaseTest {
                 .build();
     }
 
+    protected TravelPlace createTravelPlace(Long placeId, Country country, City city, District district, ApiCategory apiCategory, double latitude, double longitude){
+        return TravelPlace.builder()
+                .placeId(placeId)
+                .country(country)
+                .city(city)
+                .district(district)
+                .apiCategory(apiCategory)
+                .address("테스트 주소")
+                .detailAddress("테스트 상세주소")
+                .homepage("www.test.com")
+                .phoneNumber("010-0000-0000")
+                .latitude(latitude)
+                .longitude(longitude)
+                .placeName("테스트 장소명")
+                .bookmarkCnt(0)
+                .createdAt(LocalDateTime.now())
+                .description("테스트 장소 설명")
+                .build();
+    }
+
     protected TravelSchedule createTravelSchedule(Long scheduleId, String scheduleName){
         return TravelSchedule.builder()
                 .scheduleId(scheduleId)
