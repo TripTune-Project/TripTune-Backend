@@ -162,7 +162,7 @@ public class ScheduleControllerTest extends ScheduleTest {
 
 
         mockMvc.perform(get("/api/schedules")
-                .param("page", "1"))
+                        .param("page", "1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.totalElements").value(2))
                 .andExpect(jsonPath("$.data.totalSharedElements").value(1))
@@ -301,7 +301,7 @@ public class ScheduleControllerTest extends ScheduleTest {
         schedule1.setTravelAttendeeList(new ArrayList<>(List.of(attendee1, attendee2)));
         schedule2.setTravelAttendeeList(new ArrayList<>(List.of(attendee3, attendee4)));
 
-        mockMvc.perform(get("/api/schedules/preview")
+        mockMvc.perform(get("/api/schedules/edit")
                         .param("page", "1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.totalElements").value(1))
@@ -313,7 +313,7 @@ public class ScheduleControllerTest extends ScheduleTest {
     @DisplayName("수정 가능한 일정 조회 시 일정 데이터가 없는 경우")
     @WithMockUser(username = "member1")
     void getEnableEditScheduleByUserId_emptySchedules() throws Exception {
-        mockMvc.perform(get("/api/schedules/preview")
+        mockMvc.perform(get("/api/schedules/edit")
                         .param("page", "1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.totalElements").value(0))
@@ -498,8 +498,8 @@ public class ScheduleControllerTest extends ScheduleTest {
 
         // when, then
         mockMvc.perform(post("/api/schedules")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(toJsonString(request)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJsonString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true));
     }
@@ -550,7 +550,7 @@ public class ScheduleControllerTest extends ScheduleTest {
 
         // when, then
         mockMvc.perform(get("/api/schedules/{scheduleId}", schedule1.getScheduleId())
-                .param("page", "1"))
+                        .param("page", "1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.scheduleName").value(schedule1.getScheduleName()))
                 .andExpect(jsonPath("$.data.placeList.totalElements").value(1))
