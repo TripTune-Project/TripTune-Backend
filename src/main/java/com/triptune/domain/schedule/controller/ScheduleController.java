@@ -46,7 +46,7 @@ public class ScheduleController {
         return ApiSchedulePageResponse.dataResponse(response);
     }
 
-    @GetMapping("/preview")
+    @GetMapping("/edit")
     @Operation(summary = "수정 권한 있는 일정 목록 조회", description = "작성한 일정 중 수정 권한이 있는 일정을 필요 데이터로 구성해 조회합니다.")
     public ApiPageResponse<OverviewScheduleResponse> getEnableEditScheduleByUserId(@RequestParam(name = "page") int page){
         String userId = SecurityContextHolder.getContext().getAuthentication().getName();
