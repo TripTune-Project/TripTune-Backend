@@ -24,7 +24,7 @@ public class TravelController {
 
     private final TravelService travelService;
 
-    @PostMapping("")
+    @PostMapping
     @Operation(summary = "현재 위치와 가까운 여행지 목록 조회", description = "여행지 탐색 메뉴에서 사용자 현재 위치와 가까운 여행지 목록을 제공한다.")
     public ApiPageResponse<PlaceDistanceResponse> getNearByTravelPlaces(@RequestBody @Valid PlaceLocationRequest placeLocationRequest, @RequestParam int page){
         String userId = authenticateUserId();

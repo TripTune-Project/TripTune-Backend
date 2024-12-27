@@ -24,11 +24,10 @@ public class PlaceDistanceResponse {
     private String placeName;
     private String thumbnailUrl;
     private Double distance;
-    @JsonProperty("isBookmark")
-    private boolean isBookmark;
+    private boolean bookmarkStatus;
 
     @Builder
-    public PlaceDistanceResponse(Long placeId, String country, String city, String district, String address, String detailAddress, double longitude, double latitude, String placeName, String thumbnailUrl, Double distance, boolean isBookmark) {
+    public PlaceDistanceResponse(Long placeId, String country, String city, String district, String address, String detailAddress, double longitude, double latitude, String placeName, String thumbnailUrl, Double distance, boolean bookmarkStatus) {
         this.placeId = placeId;
         this.country = country;
         this.city = city;
@@ -40,7 +39,7 @@ public class PlaceDistanceResponse {
         this.placeName = placeName;
         this.thumbnailUrl = thumbnailUrl;
         this.distance = Math.floor(distance * 10) / 10.0;
-        this.isBookmark = isBookmark;
+        this.bookmarkStatus = bookmarkStatus;
     }
 
     public static PlaceDistanceResponse from(TravelPlace travelPlace){
@@ -71,7 +70,7 @@ public class PlaceDistanceResponse {
                 .placeName(placeLocation.getPlaceName())
                 .thumbnailUrl(placeLocation.getThumbnailUrl())
                 .distance(placeLocation.getDistance())
-                .isBookmark(placeLocation.isBookmark())
+                .bookmarkStatus(placeLocation.isBookmarkStatus())
                 .build();
     }
 

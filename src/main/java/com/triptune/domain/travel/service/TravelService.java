@@ -52,7 +52,7 @@ public class TravelService {
         placeLocations.forEach(this::updateThumbnailUrl);
 
         if (userId != null){
-            placeLocations.forEach(location -> updateIsBookmark(userId, location));
+            placeLocations.forEach(location -> updateBookmarkStatus(userId, location));
         }
 
     }
@@ -62,11 +62,11 @@ public class TravelService {
     }
 
 
-    public void updateIsBookmark(String userId, PlaceLocation location){
+    public void updateBookmarkStatus(String userId, PlaceLocation location){
         boolean isBookmark = bookmarkRepository.existsByMember_UserIdAndTravelPlace_PlaceId(userId, location.getPlaceId());
 
         if (isBookmark){
-            location.updateIsBookmarkTrue();
+            location.updateBookmarkStatusTrue();
         }
     }
 
