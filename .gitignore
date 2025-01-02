@@ -9,6 +9,7 @@ build/
 *.yml
 application.properties
 generated/
+**/src/test/**/global/config/WebConfigTest.java
 
 ### STS ###
 .apt_generated
