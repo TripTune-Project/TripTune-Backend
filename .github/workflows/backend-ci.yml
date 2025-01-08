@@ -23,7 +23,9 @@ jobs:
 
     - name: Set yml Files
       run: |
+        mkdir -p ./src/main/resources
         echo "${{ secrets.APPLICATION }}" > ./src/main/resources/application.yml
+        mkdir -p ./src/test/resources
         echo "${{ secrets.APPLICATION_TEST }}" > ./src/test/resources/application-test.yml
         echo "${{ secrets.APPLICATION_MONGO }}" > ./src/test/resources/application-mongo.yml
 
