@@ -24,8 +24,8 @@ jobs:
     - name: Set yml Files
       run: |
         echo "${{ secrets.APPLICATION }}" > ./src/main/resources/application.yml
-        echo "${{ secrets.APPLICATION_TEST }}" > ./src/main/resources/application-test.yml
-        echo "${{ secrets.APPLICATION_MONGO }}" > ./src/main/resources/application-mongo.yml
+        echo "${{ secrets.APPLICATION_TEST }}" > ./src/test/resources/application-test.yml
+        echo "${{ secrets.APPLICATION_MONGO }}" > ./src/test/resources/application-mongo.yml
 
 
     - name: Cache Gradle dependencies
