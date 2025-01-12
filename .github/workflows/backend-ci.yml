@@ -27,12 +27,9 @@ jobs:
         echo "${{ secrets.APPLICATION }}" > ./src/main/resources/application.yml
         mkdir -p ./src/test/resources
         echo "${{ secrets.APPLICATION_TEST }}" > ./src/test/resources/application-test.yml
-        echo "${{ secrets.APPLICATION_MONGO }}" > ./src/test/resources/application-mongo.yml
 
     - name: Check application-test.yml content
       run: cat ./src/test/resources/application-test.yml
-    - name: Check application-mongo.yml content
-      run: cat ./src/test/resources/application-mongo.yml
 
 
     - name: Cache Gradle dependencies
