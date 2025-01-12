@@ -21,12 +21,19 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
 
-    - name: Set yml Files
+    - name: Set application.yml
       run: |
         mkdir -p ./src/main/resources
-        echo "${{ secrets.APPLICATION }}" > ./src/main/resources/application.yml
+        cd ./src/main/resources
+        touch ./application.yml
+        echo "${{ secrets.APPLICATION }}" > ./application.yml
+
+    - name: Set application-test.yml
+      run: |
         mkdir -p ./src/test/resources
-        echo "${{ secrets.APPLICATION_TEST }}" > ./src/test/resources/application-test.yml
+        cd ./src/test/resources
+        touch ./application-test.yml
+        echo "${{ secrets.APPLICATION_TEST }}" > ./application-test.yml
 
     - name: Check application-test.yml content
       run: cat ./src/test/resources/application-test.yml
