@@ -92,6 +92,7 @@ dependencies {
 	testImplementation group: 'com.h2database', name: 'h2', version: '1.4.200'
 	testImplementation 'com.h2database:h2'
 	testRuntimeOnly 'com.h2database:h2'
+	testImplementation 'de.flapdoodle.embed:de.flapdoodle.embed.mongo:3.5.4'
 
 }
 
