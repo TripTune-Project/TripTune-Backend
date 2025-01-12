@@ -22,16 +22,14 @@ jobs:
     - name: Set application.yml
       run: |
         mkdir -p ./src/main/resources
-        cd ./src/main/resources
-        touch ./application.yml
-        echo "${{ secrets.APPLICATION }}" > ./application.yml
+        touch ./src/main/resources/application.yml
+        echo ${{ secrets.APPLICATION }} > ./src/main/resources/application.yml
 
     - name: Set application-test.yml
       run: |
         mkdir -p ./src/test/resources
-        cd ./src/test/resources
-        touch ./application-test.yml
-        echo "${{ secrets.APPLICATION_TEST }}" > ./application-test.yml
+        touch ./src/test/resources/application-test.yml
+        echo ${{ secrets.APPLICATION_TEST }} > ./src/test/resources/application-test.yml
 
     - name: Check application-test.yml content
       run: cat ./src/test/resources/application-test.yml
