@@ -23,13 +23,13 @@ jobs:
       run: |
         mkdir -p ./src/main/resources
         touch ./src/main/resources/application.yml
-        echo "${{ secrets.APPLICATION }}" > ./src/main/resources/application.yml
+        echo "${{ secrets.APPLICATION }}" | base64 --decode > ./src/main/resources/application.yml
 
     - name: Set application-test.yml
       run: |
         mkdir -p ./src/test/resources
         touch ./src/test/resources/application-test.yml
-        echo "${{ secrets.APPLICATION_TEST }}" > ./src/test/resources/application-test.yml
+        echo "${{ secrets.APPLICATION_TEST }}" | base64 --decode > ./src/test/resources/application-test.yml
 
     - name: Check application-test.yml content
       run: cat ./src/test/resources/application-test.yml
