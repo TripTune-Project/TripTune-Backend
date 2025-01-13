@@ -26,16 +26,6 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
 
-//    @Override
-//    protected boolean shouldNotFilter(HttpServletRequest request) {
-//        String requestURI = request.getRequestURI();
-//
-//        return Arrays.stream(AUTH_WHITELIST).anyMatch(pattern -> {
-//            AntPathMatcher matcher = new AntPathMatcher();
-//            return matcher.match(pattern, requestURI);
-//        });
-//    }
-
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         String token = jwtUtil.resolveToken(request);
