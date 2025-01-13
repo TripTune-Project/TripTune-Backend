@@ -1,0 +1,74 @@
+name: Backend-CD
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    services:
+      mongo:
+        image: mongo:4.4
+        ports:
+          - 27017:27017
+
+    steps:
+    - name: Repository Checkout
+      uses: actions/checkout@v4
+    
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+
+    - name: Set application.yml
+      run: |
+        mkdir -p ./src/main/resources
+        touch ./src/main/resources/application.yml
+        echo "${{ secrets.APPLICATION }}" | base64 --decode > ./src/main/resources/application.yml
+
+    - name: Set application-test.yml, application-mongo.yml
+      run: |
+        mkdir -p ./src/test/resources
+        touch ./src/test/resources/application-test.yml
+        touch ./src/test/resources/application-mongo.yml
+        echo "${{ secrets.APPLICATION_TEST }}" | base64 --decode > ./src/test/resources/application-test.yml
+        echo "${{ secrets.APPLICATION_MONGO }}" | base64 --decode > ./src/test/resources/application-mongo.yml
+        
+
+    - name: Grant execute permission for Gradle
+      run: chmod +x gradlew
+
+    - name: Build with Gradle Wrapper
+      run: ./gradlew build
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - name: Docker Hub build and Push
+        run: |
+          docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_REPO }}:triptune .
+          docker push ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_REPO }}:triptune
+
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_KEY }}
+          port: ${{ secrets.EC2_SSH_PORT }}
+
+          script: |
+            cd triptune
+            sudo docker-compose down ${{ secrets.SPRING_CONTAINER_NAME }}
+            sudo docker-compose rm -f
+            sudo docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+            sudo docker pull ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_REPO }}:triptune
+            sudo docker-compose up -d ${{ secrets.SPRING_CONTAINER_NAME }}
+            
