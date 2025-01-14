@@ -68,7 +68,7 @@ jobs:
 
           script: |
             cd triptune
-            sudo docker-compose down ${{ secrets.SPRING_CONTAINER_NAME }}
+            sudo docker-compose stop ${{ secrets.SPRING_CONTAINER_NAME }}
             sudo docker-compose rm -f
             sudo docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
             sudo docker pull ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_REPO }}:triptune
