@@ -50,6 +50,12 @@ jobs:
     needs: build
 
     steps:
+      - name: Debug current directory
+        run: |
+          echo "Current directory: $(pwd)"
+          ls -l
+
+    
       - name: Docker Hub login
         run: docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
         
