@@ -98,11 +98,4 @@ public class MemberController {
         return ApiResponse.okResponse();
     }
 
-    @GetMapping("/test")
-    public String test(@AuthenticationPrincipal CustomUserDetails userDetails){
-        System.out.println(">>>>>>>>>>" + userDetails.getUsername());
-        return "hello";
-    }
-
-
 }
