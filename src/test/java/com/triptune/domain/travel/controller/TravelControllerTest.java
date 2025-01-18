@@ -1,6 +1,5 @@
 package com.triptune.domain.travel.controller;
 
-import com.triptune.domain.bookmark.entity.Bookmark;
 import com.triptune.domain.bookmark.repository.BookmarkRepository;
 import com.triptune.domain.common.entity.*;
 import com.triptune.domain.common.repository.*;

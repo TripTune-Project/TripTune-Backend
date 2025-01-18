@@ -16,6 +16,7 @@ import com.triptune.domain.travel.entity.TravelImage;
 import com.triptune.domain.travel.entity.TravelPlace;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -28,6 +29,7 @@ public abstract class BaseTest {
     private ObjectMapper objectMapper;
 
     private final String refreshToken = "MemberRefreshToken";
+
 
     protected Member createMember(Long memberId, String userId){
         return Member.builder()
@@ -53,6 +55,19 @@ public abstract class BaseTest {
                 .isSocialLogin(false)
                 .createdAt(LocalDateTime.now())
                 .profileImage(profileImage)
+                .build();
+    }
+
+    protected Member createMember(Long memberId, String userId, String encodePassword){
+        return Member.builder()
+                .memberId(memberId)
+                .userId(userId)
+                .email(userId + "@email.com")
+                .password(encodePassword)
+                .nickname(userId)
+                .refreshToken(refreshToken)
+                .isSocialLogin(false)
+                .createdAt(LocalDateTime.now())
                 .build();
     }
 

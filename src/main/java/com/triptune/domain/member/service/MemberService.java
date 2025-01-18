@@ -115,7 +115,7 @@ public class MemberService {
     }
 
     public void validateSavedRefreshToken(Member member, String refreshToken){
-        if(!member.isEqualRefreshToken(refreshToken)){
+        if(!member.isMatchRefreshToken(refreshToken)){
             throw new CustomJwtBadRequestException(ErrorCode.MISMATCH_REFRESH_TOKEN);
         }
     }

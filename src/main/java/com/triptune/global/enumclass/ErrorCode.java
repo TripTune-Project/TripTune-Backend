@@ -16,6 +16,8 @@ public enum ErrorCode {
 
     // 입력 검증
     INCORRECT_PASSWORD_REPASSWORD(HttpStatus.BAD_REQUEST, "비밀번호와 재입력 비밀번호가 일치하지 않습니다."),
+    INCORRECT_PASSWORD(HttpStatus.BAD_REQUEST, "비밀번호가 일치하지 않습니다."),
+    CORRECT_NOWPASSWORD_NEWPASSWORD(HttpStatus.BAD_REQUEST, "현재 비밀번호와 변경 비밀번호가 같습니다."),
     ALREADY_EXISTED_USERID(HttpStatus.CONFLICT, "이미 존재하는 아이디입니다."),
     ALREADY_EXISTED_NICKNAME(HttpStatus.CONFLICT, "이미 존재하는 닉네임입니다."),
     ALREADY_EXISTED_EMAIL(HttpStatus.CONFLICT, "이미 가입되어 있는 이메일입니다."),
