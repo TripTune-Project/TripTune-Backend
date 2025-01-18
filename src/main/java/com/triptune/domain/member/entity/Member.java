@@ -7,7 +7,6 @@ import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -93,9 +92,8 @@ public class Member {
         this.password = password;
     }
 
-    public boolean isEqualRefreshToken(String refreshToken){
+    public boolean isMatchRefreshToken(String refreshToken){
         return this.refreshToken.equals(refreshToken);
     }
-
 
 }
