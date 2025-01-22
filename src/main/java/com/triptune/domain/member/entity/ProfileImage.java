@@ -4,7 +4,9 @@ import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.query.sqm.function.FunctionKind;
 
+import java.io.File;
 import java.time.LocalDateTime;
 
 @Entity
@@ -50,4 +52,17 @@ public class ProfileImage {
         this.fileSize = fileSize;
         this.createdAt = createdAt;
     }
+
+    public static ProfileImage of(String s3ObjectUrl, String originalName, String fileName, String fileType, double fileSize){
+        return ProfileImage.builder()
+                .s3ObjectUrl(s3ObjectUrl)
+                .originalName(originalName)
+                .fileName(fileName)
+                .fileType(fileType)
+                .fileSize(fileSize)
+                .createdAt(LocalDateTime.now())
+                .build();
+    }
+
+
 }
