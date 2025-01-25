@@ -60,7 +60,7 @@ public class GlobalExceptionHandler {
         response.sendRedirect(notFoundErrorURL);
     }
 
-    @ExceptionHandler
+    @ExceptionHandler(DataExistException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
     public ErrorResponse handleDataExistedException(DataExistException ex, HttpServletRequest request){
         log.error("DataExistException at {}: {}", request.getRequestURI(),  ex.getMessage());
@@ -79,6 +79,13 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleCustomNotValidException(CustomNotValidException ex, HttpServletRequest request){
         log.error("CustomNotValidException at {}: {}", request.getRequestURI(),  ex.getMessage());
+        return ErrorResponse.of(ex.getHttpStatus(), ex.getMessage());
+    }
+
+    @ExceptionHandler(FileBadRequestException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleFileBadRequestException(FileBadRequestException ex, HttpServletRequest request){
+        log.error("FileBadRequestException at {}: {}", request.getRequestURI(), ex.getMessage());
         return ErrorResponse.of(ex.getHttpStatus(), ex.getMessage());
     }
 

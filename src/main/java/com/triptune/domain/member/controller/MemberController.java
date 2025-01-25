@@ -10,7 +10,6 @@ import com.triptune.global.exception.CustomNotValidException;
 import com.triptune.global.response.ApiResponse;
 import com.triptune.domain.member.exception.FailLoginException;
 import com.triptune.domain.member.service.MemberService;
-import com.triptune.global.service.CustomUserDetails;
 import com.triptune.global.util.JwtUtil;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.swagger.v3.oas.annotations.Operation;
@@ -19,7 +18,6 @@ import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 
@@ -36,7 +34,7 @@ public class MemberController {
     @PostMapping("/join")
     @Operation(summary = "회원가입", description = "회원가입을 요청합니다.")
     public ApiResponse<?> join(@Valid @RequestBody MemberRequest memberRequest){
-        if(!memberRequest.getPassword().equals(memberRequest.getRepassword())){
+        if(!memberRequest.getPassword().equals(memberRequest.getRePassword())){
             throw new CustomNotValidException(ErrorCode.INCORRECT_PASSWORD_REPASSWORD);
         }
 
