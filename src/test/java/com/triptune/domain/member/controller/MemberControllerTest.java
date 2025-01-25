@@ -1,13 +1,14 @@
 package com.triptune.domain.member.controller;
 
+import com.triptune.domain.common.service.S3Service;
 import com.triptune.domain.email.service.EmailService;
 import com.triptune.domain.member.MemberTest;
 import com.triptune.domain.member.dto.request.MemberRequest;
 import com.triptune.domain.member.entity.Member;
 import com.triptune.domain.member.repository.MemberRepository;
+import com.triptune.domain.member.repository.ProfileImageRepository;
 import com.triptune.global.enumclass.ErrorCode;
 import com.triptune.global.enumclass.SuccessCode;
-import com.triptune.global.filter.JwtAuthFilter;
 import com.triptune.global.util.JwtUtil;
 import com.triptune.global.util.RedisUtil;
 import org.junit.jupiter.api.BeforeEach;
@@ -39,6 +40,7 @@ public class MemberControllerTest extends MemberTest{
     private final WebApplicationContext wac;
     private final JwtUtil jwtUtil;
     private final MemberRepository memberRepository;
+    private final ProfileImageRepository profileImageRepository;
 
     @MockBean
     private RedisUtil redisUtil;
@@ -46,13 +48,17 @@ public class MemberControllerTest extends MemberTest{
     @MockBean
     private EmailService emailService;
 
+    @MockBean
+    private S3Service s3Service;
+
     private MockMvc mockMvc;
 
     @Autowired
-    public MemberControllerTest(WebApplicationContext wac, JwtUtil jwtUtil, MemberRepository memberRepository) {
+    public MemberControllerTest(WebApplicationContext wac, JwtUtil jwtUtil, MemberRepository memberRepository, ProfileImageRepository profileImageRepository) {
         this.wac = wac;
         this.jwtUtil = jwtUtil;
         this.memberRepository = memberRepository;
+        this.profileImageRepository = profileImageRepository;
     }
 
     @BeforeEach
@@ -93,7 +99,7 @@ public class MemberControllerTest extends MemberTest{
     void join_CustomNotValidException() throws Exception {
         MemberRequest request = createMemberRequest();
         request.setPassword("password123@");
-        request.setRepassword("repassword123@");
+        request.setRePassword("repassword123@");
 
         mockMvc.perform(post("/api/members/join")
                         .contentType(MediaType.APPLICATION_JSON)
