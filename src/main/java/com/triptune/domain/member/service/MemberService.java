@@ -1,11 +1,13 @@
 package com.triptune.domain.member.service;
 
+import com.triptune.domain.common.service.S3Service;
 import com.triptune.domain.email.service.EmailService;
 import com.triptune.domain.member.dto.request.*;
 import com.triptune.domain.member.dto.response.FindIdResponse;
 import com.triptune.domain.member.dto.response.LoginResponse;
 import com.triptune.domain.member.dto.response.RefreshTokenResponse;
 import com.triptune.domain.member.entity.Member;
+import com.triptune.domain.member.entity.ProfileImage;
 import com.triptune.domain.member.exception.ChangePasswordException;
 import com.triptune.domain.member.exception.FailLoginException;
 import com.triptune.domain.member.repository.MemberRepository;
@@ -24,6 +26,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
+
 @Service
 @Transactional
 @RequiredArgsConstructor
@@ -35,6 +39,7 @@ public class MemberService {
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final RedisUtil redisUtil;
+    private final ProfileImageService profileImageService;
 
     @Value("${spring.jwt.token.access-expiration-time}")
     private long accessExpirationTime;
@@ -45,8 +50,10 @@ public class MemberService {
 
     public void join(MemberRequest memberRequest) {
         validateUniqueMemberInfo(memberRequest);
-        Member member = Member.from(memberRequest, passwordEncoder.encode(memberRequest.getPassword()));
 
+        ProfileImage profileImage = profileImageService.saveDefaultProfileImage();
+
+        Member member = Member.from(memberRequest, passwordEncoder.encode(memberRequest.getPassword()), profileImage);
         memberRepository.save(member);
     }
 

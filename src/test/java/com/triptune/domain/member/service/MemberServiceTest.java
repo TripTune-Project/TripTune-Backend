@@ -12,6 +12,7 @@ import com.triptune.domain.member.dto.response.FindIdResponse;
 import com.triptune.domain.member.dto.response.LoginResponse;
 import com.triptune.domain.member.dto.response.RefreshTokenResponse;
 import com.triptune.domain.member.entity.Member;
+import com.triptune.domain.member.entity.ProfileImage;
 import com.triptune.domain.member.exception.ChangePasswordException;
 import com.triptune.domain.member.exception.FailLoginException;
 import com.triptune.domain.member.repository.MemberRepository;
@@ -61,6 +62,9 @@ public class MemberServiceTest extends MemberTest {
     @Mock
     private PasswordEncoder passwordEncoder;
 
+    @Mock
+    private ProfileImageService profileImageService;
+
     private final String accessToken = "MemberAccessToken";
     private final String refreshToken = "MemberRefreshToken";
     private final String passwordToken = "MemberPasswordToken";
@@ -82,6 +86,7 @@ public class MemberServiceTest extends MemberTest {
         when(memberRepository.existsByUserId(anyString())).thenReturn(false);
         when(memberRepository.existsByNickname(anyString())).thenReturn(false);
         when(memberRepository.existsByEmail(anyString())).thenReturn(false);
+        when(profileImageService.saveDefaultProfileImage()).thenReturn(createProfileImage(1L, "test.jpg"));
 
         // when
         memberService.join(request);

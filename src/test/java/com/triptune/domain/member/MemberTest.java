@@ -15,7 +15,7 @@ public class MemberTest extends BaseTest {
         return MemberRequest.builder()
                 .userId("testUser")
                 .password("password123@")
-                .repassword("password123@")
+                .rePassword("password123@")
                 .nickname("test")
                 .email("test@test.com")
                 .build();
@@ -38,7 +38,7 @@ public class MemberTest extends BaseTest {
         return ChangePasswordRequest.builder()
                 .passwordToken(passwordToken)
                 .password(newPassword1)
-                .repassword(newPassword2)
+                .rePassword(newPassword2)
                 .build();
     }
 

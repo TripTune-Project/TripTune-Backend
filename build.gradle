@@ -88,6 +88,9 @@ dependencies {
 	// junit
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
+	// aws
+	implementation 'org.springframework.cloud:spring-cloud-starter-aws:2.2.6.RELEASE'
+
 	// 테스트용 DB
 	testImplementation group: 'com.h2database', name: 'h2', version: '1.4.200'
 	testImplementation 'com.h2database:h2'

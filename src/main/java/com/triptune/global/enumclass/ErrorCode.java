@@ -64,7 +64,11 @@ public enum ErrorCode {
 
     // 북마크
     BOOKMARK_NOT_FOUND(HttpStatus.NOT_FOUND, "북마크 정보를 찾을 수 없습니다."),
-    ALREADY_EXISTED_BOOKMARK(HttpStatus.CONFLICT, "이미 북마크 되어있는 여행지입니다.");
+    ALREADY_EXISTED_BOOKMARK(HttpStatus.CONFLICT, "이미 북마크 되어있는 여행지입니다."),
+
+    // 파일
+    PROFILE_IMAGE_NOT_FOUND(HttpStatus.NOT_FOUND, "기본 프로필 이미지 데이터를 찾을 수 없습니다."),
+    EXTENSION_NOT_FOUND(HttpStatus.NOT_FOUND, "파일의 확장자가 잘못됐습니다.");
 
     private final HttpStatus status;
     private final String message;

@@ -22,7 +22,7 @@ public class MemberRequest {
     private String password;
 
     @NotBlank(message = "비밀번호 재입력은 필수 입력 값입니다.")
-    private String repassword;
+    private String rePassword;
 
     @NotBlank(message = "닉네임은 필수 입력 값입니다.")
     @Pattern(regexp = "^(?=.*[a-zA-Z])[A-Za-z\\d]{4,15}$", message = "닉네임은 4자 이상 15자 이하의 영문 대/소문자, 한글, 숫자만 사용 가능합니다.")
@@ -32,10 +32,10 @@ public class MemberRequest {
     private String email;
 
     @Builder
-    public MemberRequest(String userId, String password, String repassword, String nickname, String email) {
+    public MemberRequest(String userId, String password, String rePassword, String nickname, String email) {
         this.userId = userId;
         this.password = password;
-        this.repassword = repassword;
+        this.rePassword = rePassword;
         this.nickname = nickname;
         this.email = email;
     }

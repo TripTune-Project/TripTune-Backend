@@ -72,13 +72,14 @@ public class Member {
         this.bookmarkList = bookmarkList;
     }
 
-    public static Member from(MemberRequest memberRequest, String encodePassword){
+    public static Member from(MemberRequest memberRequest, String encodePassword, ProfileImage profileImage){
         return Member.builder()
                 .userId(memberRequest.getUserId())
                 .password(encodePassword)
                 .nickname(memberRequest.getNickname())
                 .email(memberRequest.getEmail())
                 .isSocialLogin(false)
+                .profileImage(profileImage)
                 .createdAt(LocalDateTime.now())
                 .build();
     }
