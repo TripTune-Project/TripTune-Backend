@@ -1,5 +1,6 @@
 package com.triptune.domain.bookmark.service;
 
+import com.triptune.domain.BaseTest;
 import com.triptune.domain.bookmark.BookmarkTest;
 import com.triptune.domain.bookmark.dto.request.BookmarkRequest;
 import com.triptune.domain.bookmark.repository.BookmarkRepository;
@@ -129,12 +130,10 @@ public class BookmarkServiceTest extends BookmarkTest {
     @DisplayName("북마크 삭제")
     void deleteBookmark(){
         // given
-        BookmarkRequest request = createBookmarkRequest(1L);
-
         when(bookmarkRepository.existsByMember_UserIdAndTravelPlace_PlaceId(anyString(), anyLong())).thenReturn(true);
 
         // when
-        assertDoesNotThrow(() -> bookmarkService.deleteBookmark(member.getUserId(), request));
+        assertDoesNotThrow(() -> bookmarkService.deleteBookmark(member.getUserId(), 1L));
 
         // then
         verify(bookmarkRepository, times(1)).deleteByMember_UserIdAndTravelPlace_PlaceId(anyString(), anyLong());
@@ -144,12 +143,10 @@ public class BookmarkServiceTest extends BookmarkTest {
     @DisplayName("북마크 삭제 시 북마크 데이터가 존재하지 않아 예외 발생")
     void deleteBookmark_bookmarkNotFoundException(){
         // given
-        BookmarkRequest request = createBookmarkRequest(1L);
-
         when(bookmarkRepository.existsByMember_UserIdAndTravelPlace_PlaceId(anyString(), anyLong())).thenReturn(false);
 
         // when
-        DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> bookmarkService.deleteBookmark(member.getUserId(), request));
+        DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> bookmarkService.deleteBookmark(member.getUserId(), 1L));
 
         // then
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.BOOKMARK_NOT_FOUND.getStatus());

@@ -48,15 +48,15 @@ public class BookmarkService {
                 .orElseThrow(() -> new DataNotFoundException(ErrorCode.PLACE_NOT_FOUND));
     }
 
-    public boolean isExistBookmark(String userId, Long placeId){
-        return bookmarkRepository.existsByMember_UserIdAndTravelPlace_PlaceId(userId, placeId);
-    }
-
-    public void deleteBookmark(String userId, BookmarkRequest bookmarkRequest) {
-        if (!isExistBookmark(userId, bookmarkRequest.getPlaceId())){
+    public void deleteBookmark(String userId, Long placeId) {
+        if (!isExistBookmark(userId, placeId)){
             throw new DataNotFoundException(ErrorCode.BOOKMARK_NOT_FOUND);
         }
 
-        bookmarkRepository.deleteByMember_UserIdAndTravelPlace_PlaceId(userId, bookmarkRequest.getPlaceId());
+        bookmarkRepository.deleteByMember_UserIdAndTravelPlace_PlaceId(userId, placeId);
+    }
+
+    public boolean isExistBookmark(String userId, Long placeId){
+        return bookmarkRepository.existsByMember_UserIdAndTravelPlace_PlaceId(userId, placeId);
     }
 }
