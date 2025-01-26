@@ -27,11 +27,11 @@ public class BookmarkController {
         return ApiResponse.okResponse();
     }
 
-    @DeleteMapping
+    @DeleteMapping("/{placeId}")
     @Operation(summary = "북마크 취소", description = "북마크를 취소합니다.")
-    public ApiResponse<?> deleteBookmark(@Valid @RequestBody BookmarkRequest bookmarkRequest){
+    public ApiResponse<?> deleteBookmark(@PathVariable(name = "placeId") Long placeId){
         String userId = SecurityContextHolder.getContext().getAuthentication().getName();
-        bookmarkService.deleteBookmark(userId, bookmarkRequest);
+        bookmarkService.deleteBookmark(userId, placeId);
 
         return ApiResponse.okResponse();
 

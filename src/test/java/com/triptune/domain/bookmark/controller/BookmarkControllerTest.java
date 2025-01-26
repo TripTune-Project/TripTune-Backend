@@ -1,7 +1,6 @@
 package com.triptune.domain.bookmark.controller;
 
 import com.triptune.domain.bookmark.BookmarkTest;
-import com.triptune.domain.bookmark.entity.Bookmark;
 import com.triptune.domain.bookmark.repository.BookmarkRepository;
 import com.triptune.domain.common.entity.ApiCategory;
 import com.triptune.domain.common.entity.City;
@@ -160,9 +159,7 @@ class BookmarkControllerTest extends BookmarkTest {
         TravelPlace travelPlace = travelPlaceRepository.save(createTravelPlace(null, country, city, district, apiCategory));
         bookmarkRepository.save(createBookmark(null, member, travelPlace));
 
-        mockMvc.perform(delete("/api/bookmarks")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(createBookmarkRequest(travelPlace.getPlaceId()))))
+        mockMvc.perform(delete("/api/bookmarks/{placeId}", travelPlace.getPlaceId()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()));
@@ -178,9 +175,7 @@ class BookmarkControllerTest extends BookmarkTest {
         memberRepository.save(createMember(null, "member"));
         TravelPlace travelPlace = travelPlaceRepository.save(createTravelPlace(null, country, city, district, apiCategory));
 
-        mockMvc.perform(delete("/api/bookmarks")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(createBookmarkRequest(travelPlace.getPlaceId()))))
+        mockMvc.perform(delete("/api/bookmarks/{placeId}", travelPlace.getPlaceId()))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value(ErrorCode.BOOKMARK_NOT_FOUND.getMessage()));
