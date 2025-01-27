@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.triptune.domain.bookmark.entity.Bookmark;
 import com.triptune.domain.common.entity.*;
 import com.triptune.domain.member.entity.Member;
-import com.triptune.domain.member.entity.ProfileImage;
+import com.triptune.domain.profile.entity.ProfileImage;
 import com.triptune.domain.schedule.entity.ChatMessage;
 import com.triptune.domain.schedule.entity.TravelAttendee;
 import com.triptune.domain.schedule.entity.TravelRoute;
@@ -16,11 +16,9 @@ import com.triptune.domain.travel.entity.TravelImage;
 import com.triptune.domain.travel.entity.TravelPlace;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Transactional
 public abstract class BaseTest {

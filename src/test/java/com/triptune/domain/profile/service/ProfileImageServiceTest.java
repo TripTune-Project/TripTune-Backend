@@ -1,7 +1,7 @@
-package com.triptune.domain.member.service;
+package com.triptune.domain.profile.service;
 
-import com.triptune.domain.member.entity.ProfileImage;
-import com.triptune.domain.member.repository.ProfileImageRepository;
+import com.triptune.domain.profile.entity.ProfileImage;
+import com.triptune.domain.profile.repository.ProfileImageRepository;
 import com.triptune.global.properties.DefaultProfileImageProperties;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

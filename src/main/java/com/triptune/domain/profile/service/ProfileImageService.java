@@ -1,7 +1,7 @@
-package com.triptune.domain.member.service;
+package com.triptune.domain.profile.service;
 
-import com.triptune.domain.member.entity.ProfileImage;
-import com.triptune.domain.member.repository.ProfileImageRepository;
+import com.triptune.domain.profile.entity.ProfileImage;
+import com.triptune.domain.profile.repository.ProfileImageRepository;
 import com.triptune.global.properties.DefaultProfileImageProperties;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -11,20 +11,13 @@ import org.springframework.stereotype.Service;
 @Service
 @Transactional
 @RequiredArgsConstructor
-@Slf4j
 public class ProfileImageService {
 
     private final DefaultProfileImageProperties profileImageProperties;
     private final ProfileImageRepository profileImageRepository;
 
     public ProfileImage saveDefaultProfileImage() {
-        ProfileImage profileImage = ProfileImage.of(
-                profileImageProperties.getS3ObjectUrl(),
-                profileImageProperties.getOriginalName(),
-                profileImageProperties.getFileName(),
-                profileImageProperties.getExtension(),
-                profileImageProperties.getSize());
-
+        ProfileImage profileImage = ProfileImage.from(profileImageProperties);
         return profileImageRepository.save(profileImage);
     }
 

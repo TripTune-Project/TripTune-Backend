@@ -5,10 +5,10 @@ import lombok.Getter;
 import org.springframework.http.HttpStatus;
 
 @Getter
-public class ChangePasswordException extends RuntimeException{
+public class ChangeMemberInfoException extends RuntimeException{
     private final HttpStatus httpStatus;
 
-    public ChangePasswordException(ErrorCode errorCode){
+    public ChangeMemberInfoException(ErrorCode errorCode){
         super(errorCode.getMessage());
         this.httpStatus = errorCode.getStatus();
     }
