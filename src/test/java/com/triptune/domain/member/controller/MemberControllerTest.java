@@ -3,6 +3,7 @@ package com.triptune.domain.member.controller;
 import com.triptune.domain.common.service.S3Service;
 import com.triptune.domain.email.service.EmailService;
 import com.triptune.domain.member.MemberTest;
+import com.triptune.domain.member.dto.request.ChangePasswordRequest;
 import com.triptune.domain.member.dto.request.MemberRequest;
 import com.triptune.domain.member.entity.Member;
 import com.triptune.domain.member.repository.MemberRepository;
@@ -18,6 +19,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -41,6 +44,7 @@ public class MemberControllerTest extends MemberTest{
     private final JwtUtil jwtUtil;
     private final MemberRepository memberRepository;
     private final ProfileImageRepository profileImageRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @MockBean
     private RedisUtil redisUtil;
@@ -54,11 +58,12 @@ public class MemberControllerTest extends MemberTest{
     private MockMvc mockMvc;
 
     @Autowired
-    public MemberControllerTest(WebApplicationContext wac, JwtUtil jwtUtil, MemberRepository memberRepository, ProfileImageRepository profileImageRepository) {
+    public MemberControllerTest(WebApplicationContext wac, JwtUtil jwtUtil, MemberRepository memberRepository, ProfileImageRepository profileImageRepository, PasswordEncoder passwordEncoder) {
         this.wac = wac;
         this.jwtUtil = jwtUtil;
         this.memberRepository = memberRepository;
         this.profileImageRepository = profileImageRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @BeforeEach
@@ -280,14 +285,14 @@ public class MemberControllerTest extends MemberTest{
     }
 
     @Test
-    @DisplayName("비밀번호 변경")
-    void changePassword() throws Exception{
+    @DisplayName("비밀번호 초기화")
+    void resetPassword() throws Exception{
         Member member = memberRepository.save(createMember(null, "member"));
         when(redisUtil.getData(anyString())).thenReturn(member.getEmail());
 
-        mockMvc.perform(patch("/api/members/change-password")
+        mockMvc.perform(patch("/api/members/reset-password")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(createChangePasswordDTO("changePassword", "password12!@", "password12!@"))))
+                        .content(toJsonString(createResetPasswordDTO("changePassword", "password12!@", "password12!@"))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()));
@@ -295,13 +300,13 @@ public class MemberControllerTest extends MemberTest{
     }
 
     @Test
-    @DisplayName("비밀번호 변경 시 비밀번호와 재입력 비밀번호가 달라 예외 발생")
-    void changePassword_notMathPassword() throws Exception{
+    @DisplayName("비밀번호 초기화 시 비밀번호와 재입력 비밀번호가 달라 예외 발생")
+    void resetPassword_notMathPassword() throws Exception{
         memberRepository.save(createMember(null, "member"));
 
-        mockMvc.perform(patch("/api/members/change-password")
+        mockMvc.perform(patch("/api/members/reset-password")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(createChangePasswordDTO("changePassword", "password12!@", "password34!@"))))
+                        .content(toJsonString(createResetPasswordDTO("changePassword", "password12!@", "password34!@"))))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value(ErrorCode.INCORRECT_PASSWORD_REPASSWORD.getMessage()));
@@ -309,13 +314,13 @@ public class MemberControllerTest extends MemberTest{
     }
 
     @Test
-    @DisplayName("비밀번호 변경 시 저장된 비밀번호 변경 토큰이 존재하지 않아 예외 발생")
+    @DisplayName("비밀번호 초기화 시 저장된 비밀번호 변경 토큰이 존재하지 않아 예외 발생")
     void changePassword_PasswordTokenNotFoundException() throws Exception{
         memberRepository.save(createMember(null, "member"));
 
-        mockMvc.perform(patch("/api/members/change-password")
+        mockMvc.perform(patch("/api/members/reset-password")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(createChangePasswordDTO("changePassword", "password12!@", "password12!@"))))
+                        .content(toJsonString(createResetPasswordDTO("changePassword", "password12!@", "password12!@"))))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value(ErrorCode.INVALID_CHANGE_PASSWORD.getMessage()));
@@ -323,18 +328,106 @@ public class MemberControllerTest extends MemberTest{
     }
 
     @Test
-    @DisplayName("비밀번호 변경 시 사용자 데이터 존재하지 않아 예외 발생")
-    void changePassword_memberNotFoundException() throws Exception{
+    @DisplayName("비밀번호 초기화 시 사용자 데이터 존재하지 않아 예외 발생")
+    void resetPassword_memberNotFoundException() throws Exception{
         when(redisUtil.getData(anyString())).thenReturn("noMember@email.com");
 
-        mockMvc.perform(patch("/api/members/change-password")
+        mockMvc.perform(patch("/api/members/reset-password")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(createChangePasswordDTO("changePassword", "password12!@", "password12!@"))))
+                        .content(toJsonString(createResetPasswordDTO("changePassword", "password12!@", "password12!@"))))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value(ErrorCode.MEMBER_NOT_FOUND.getMessage()));
 
     }
 
+    @Test
+    @WithMockUser("member")
+    @DisplayName("비밀번호 변경")
+    void changePassword() throws Exception {
+        String encodePassword = passwordEncoder.encode("test123@");
+
+        memberRepository.save(createMember(0L, "member", encodePassword));
+        ChangePasswordRequest request = createChangePasswordRequest("test123@", "test123!", "test123!");
+
+        mockMvc.perform(patch("/api/members/change-password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJsonString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()));
+    }
+
+    @Test
+    @WithMockUser("member")
+    @DisplayName("비밀번호 변경 시 입력값 조건 틀려 예외 발생")
+    void changePassword_MethodArgumentNotValidException() throws Exception{
+        memberRepository.save(createMember(0L, "member"));
+        ChangePasswordRequest request = createChangePasswordRequest("틀린값1", "test123!", "test123!");
+
+        mockMvc.perform(patch("/api/members/change-password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJsonString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("비밀번호는 8자 이상 15자 이하의 영문, 숫자, 특수문자 조합이어야 합니다."));
+    }
+
+
+    @Test
+    @WithMockUser("member")
+    @DisplayName("비밀번호 변경 시 변경 비밀번호와 재입력 비밀번호가 일치하지 않아 예외 발생")
+    void changePassword_inCorrectNewPassword() throws Exception{
+        memberRepository.save(createMember(0L, "member"));
+        ChangePasswordRequest request = createChangePasswordRequest("test123@", "test123!", "test456!");
+
+        mockMvc.perform(patch("/api/members/change-password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJsonString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value(ErrorCode.INCORRECT_PASSWORD_REPASSWORD.getMessage()));
+
+    }
+
+    @Test
+    @WithMockUser("member")
+    @DisplayName("비밀번호 변경 시 현재 비밀번호와 변경 비밀번호가 같아 예외 발생")
+    void changePassword_correctNowPassword() throws Exception{
+        memberRepository.save(createMember(0L, "member"));
+        ChangePasswordRequest request = createChangePasswordRequest("test123@", "test123@", "test123@");
+
+        mockMvc.perform(patch("/api/members/change-password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJsonString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value(ErrorCode.CORRECT_NOWPASSWORD_NEWPASSWORD.getMessage()));
+    }
+
+    @Test
+    @WithMockUser("member1")
+    @DisplayName("사용자 정보를 찾을 수 없어 예외 발생")
+    void changePassword_memberNotFoundException() throws Exception{
+        ChangePasswordRequest request = createChangePasswordRequest("test123@", "test123!", "test123!");
+
+        mockMvc.perform(patch("/api/members/change-password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJsonString(request)))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").value(ErrorCode.MEMBER_NOT_FOUND.getMessage()));
+    }
+
+    @Test
+    @WithMockUser("member")
+    @DisplayName("비밀번호 변경 시 저장된 비밀번호와 현재 비밀번호가 일치하지 않아 예외 발생")
+    void changePassword_incorrectSavedPassword() throws Exception{
+        String encodePassword = passwordEncoder.encode("test123@");
+
+        memberRepository.save(createMember(0L, "member", encodePassword));
+        ChangePasswordRequest request = createChangePasswordRequest("test123!", "test123!!", "test123!!");
+
+        mockMvc.perform(patch("/api/members/change-password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJsonString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value(ErrorCode.INCORRECT_PASSWORD.getMessage()));
+    }
 
 }

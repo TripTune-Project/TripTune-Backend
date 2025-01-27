@@ -12,10 +12,10 @@ import com.triptune.domain.member.dto.response.FindIdResponse;
 import com.triptune.domain.member.dto.response.LoginResponse;
 import com.triptune.domain.member.dto.response.RefreshTokenResponse;
 import com.triptune.domain.member.entity.Member;
-import com.triptune.domain.member.entity.ProfileImage;
 import com.triptune.domain.member.exception.ChangePasswordException;
 import com.triptune.domain.member.exception.FailLoginException;
 import com.triptune.domain.member.repository.MemberRepository;
+import com.triptune.domain.member.dto.request.ChangePasswordRequest;
 import com.triptune.global.enumclass.ErrorCode;
 import com.triptune.global.exception.CustomJwtBadRequestException;
 import com.triptune.global.exception.DataExistException;
@@ -418,8 +418,8 @@ public class MemberServiceTest extends MemberTest {
 
 
     @Test
-    @DisplayName("비밀번호 변경")
-    void changePassword(){
+    @DisplayName("비밀번호 초기화")
+    void resetPassword(){
         // given
         String newPassword = "newPassword";
         String encodedPassword = "encodedPassword";
@@ -430,7 +430,7 @@ public class MemberServiceTest extends MemberTest {
 
 
         // when
-        memberService.changePassword(createChangePasswordDTO(passwordToken, newPassword, newPassword));
+        memberService.resetPassword(createResetPasswordDTO(passwordToken, newPassword, newPassword));
 
         // then
         verify(redisUtil, times(1)).getData(passwordToken);
@@ -440,15 +440,15 @@ public class MemberServiceTest extends MemberTest {
     }
 
     @Test
-    @DisplayName("비밀번호 변경 시 비밀번호 토큰 유효 시간이 만료되어 예외 발생")
-    void changePassword_changePasswordException(){
+    @DisplayName("비밀번호 초기화 시 비밀번호 토큰 유효 시간이 만료되어 예외 발생")
+    void changePassword_resetPasswordException(){
         // given
         String newPassword = "newPassword";
         when(redisUtil.getData(anyString())).thenReturn(null);
 
         // when
         ChangePasswordException fail = assertThrows(ChangePasswordException.class,
-                () -> memberService.changePassword(createChangePasswordDTO(accessToken, newPassword, newPassword)));
+                () -> memberService.resetPassword(createResetPasswordDTO(accessToken, newPassword, newPassword)));
 
         // then
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.INVALID_CHANGE_PASSWORD.getStatus());
@@ -456,8 +456,8 @@ public class MemberServiceTest extends MemberTest {
     }
 
     @Test
-    @DisplayName("비밀번호 변경 시 사용자 정보를 찾을 수 없어 얘외 발생")
-    void changePassword_dataNotFoundException(){
+    @DisplayName("비밀번호 초기화 시 사용자 정보를 찾을 수 없어 얘외 발생")
+    void resetPassword_dataNotFoundException(){
         // given
         String newPassword = "newPassword";
 
@@ -466,7 +466,7 @@ public class MemberServiceTest extends MemberTest {
 
         // when
         DataNotFoundException fail = assertThrows(DataNotFoundException.class,
-                () -> memberService.changePassword(createChangePasswordDTO(accessToken, newPassword, newPassword)));
+                () -> memberService.resetPassword(createResetPasswordDTO(accessToken, newPassword, newPassword)));
 
         // then
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.MEMBER_NOT_FOUND.getStatus());
@@ -506,5 +506,55 @@ public class MemberServiceTest extends MemberTest {
     }
 
 
+    @Test
+    @DisplayName("비밀번호 변경")
+    void changePassword(){
+        // given
+        ChangePasswordRequest request = createChangePasswordRequest("test123@", "test123!", "test123!");
+        Member member = createMember(1L, "member");
+
+        when(memberRepository.findByUserId(anyString())).thenReturn(Optional.of(member));
+        when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
+        when(passwordEncoder.encode(anyString())).thenReturn("encodingPassword");
+
+        // when, then
+        assertDoesNotThrow(() -> memberService.changePassword("member", request));
+
+    }
+
+    @Test
+    @DisplayName("비밀번호 변경 시 사용자 정보 찾을 수 없어 예외 발생")
+    void changePasswordMemberNotFoundException(){
+        // given
+        ChangePasswordRequest request = createChangePasswordRequest("test123@", "test123!", "test123!");
+
+        when(memberRepository.findByUserId(anyString())).thenReturn(Optional.empty());
+
+        // when
+        DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> memberService.changePassword("member", request));
+
+        // then
+        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.MEMBER_NOT_FOUND.getStatus());
+        assertThat(fail.getMessage()).isEqualTo(ErrorCode.MEMBER_NOT_FOUND.getMessage());
+    }
+
+
+    @Test
+    @DisplayName("비밀번호 변경 시 저장된 비밀번호와 일치하지 않아 예외 발생")
+    void changePasswordIncorrectSavedPassword(){
+        // given
+        ChangePasswordRequest request = createChangePasswordRequest("incorrect123@", "test123!", "test123!");
+        Member member = createMember(1L, "member");
+
+        when(memberRepository.findByUserId(anyString())).thenReturn(Optional.of(member));
+        when(passwordEncoder.matches(anyString(), anyString())).thenReturn(false);
+
+        // when
+        ChangePasswordException fail = assertThrows(ChangePasswordException.class, () -> memberService.changePassword("member", request));
+
+        // then
+        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.INCORRECT_PASSWORD.getStatus());
+        assertThat(fail.getMessage()).isEqualTo(ErrorCode.INCORRECT_PASSWORD.getMessage());
+    }
 
 }

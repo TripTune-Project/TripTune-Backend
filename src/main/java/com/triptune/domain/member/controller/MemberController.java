@@ -4,6 +4,8 @@ import com.triptune.domain.member.dto.request.*;
 import com.triptune.domain.member.dto.response.FindIdResponse;
 import com.triptune.domain.member.dto.response.LoginResponse;
 import com.triptune.domain.member.dto.response.RefreshTokenResponse;
+import com.triptune.domain.member.exception.ChangePasswordException;
+import com.triptune.domain.member.dto.request.ChangePasswordRequest;
 import com.triptune.global.enumclass.ErrorCode;
 import com.triptune.global.exception.CustomJwtBadRequestException;
 import com.triptune.global.exception.CustomNotValidException;
@@ -18,6 +20,7 @@ import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 
@@ -85,15 +88,34 @@ public class MemberController {
         return ApiResponse.okResponse();
     }
 
-    @PatchMapping("/change-password")
-    @Operation(summary = "비밀번호 변경", description = "비밀번호를 변경합니다.")
-    public ApiResponse<?> changePassword(@Valid @RequestBody ChangePasswordRequest changePasswordRequest){
-        if(!changePasswordRequest.isMatchPassword()){
+    @PatchMapping("/reset-password")
+    @Operation(summary = "비밀번호 초기화", description = "이메일 인증 후 비밀번호를 초기화합니다.")
+    public ApiResponse<?> resetPassword(@Valid @RequestBody ResetPasswordRequest resetPasswordRequest){
+        if(!resetPasswordRequest.isMatchPassword()){
             throw new FailLoginException(ErrorCode.INCORRECT_PASSWORD_REPASSWORD);
         }
 
-        memberService.changePassword(changePasswordRequest);
+        memberService.resetPassword(resetPasswordRequest);
         return ApiResponse.okResponse();
     }
+
+
+    @PatchMapping("/change-password")
+    @Operation(summary = "비밀번호 변경", description = "비밀번호를 변경합니다.")
+    public ApiResponse<?> changePassword(@Valid @RequestBody ChangePasswordRequest passwordRequest){
+        if(!passwordRequest.isMatchNewPassword()){
+            throw new ChangePasswordException(ErrorCode.INCORRECT_PASSWORD_REPASSWORD);
+        }
+
+        if(passwordRequest.isMatchNowPassword()){
+            throw new ChangePasswordException(ErrorCode.CORRECT_NOWPASSWORD_NEWPASSWORD);
+        }
+
+        String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+        memberService.changePassword(userId, passwordRequest);
+
+        return ApiResponse.okResponse();
+    }
+
 
 }
