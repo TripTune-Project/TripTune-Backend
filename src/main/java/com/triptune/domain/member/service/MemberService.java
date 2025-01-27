@@ -8,7 +8,7 @@ import com.triptune.domain.member.dto.response.MemberInfoResponse;
 import com.triptune.domain.member.dto.response.RefreshTokenResponse;
 import com.triptune.domain.member.entity.Member;
 import com.triptune.domain.member.entity.ProfileImage;
-import com.triptune.domain.member.exception.ChangePasswordException;
+import com.triptune.domain.member.exception.ChangeMemberInfoException;
 import com.triptune.domain.member.exception.FailLoginException;
 import com.triptune.domain.member.repository.MemberRepository;
 import com.triptune.domain.member.dto.request.ChangePasswordRequest;
@@ -47,28 +47,40 @@ public class MemberService {
     private long refreshExpirationTime;
 
 
-    public void join(MemberRequest memberRequest) {
-        validateUniqueMemberInfo(memberRequest);
+    public void join(JoinRequest joinRequest) {
+        validateUniqueMemberInfo(joinRequest);
 
         ProfileImage profileImage = profileImageService.saveDefaultProfileImage();
 
-        Member member = Member.from(memberRequest, passwordEncoder.encode(memberRequest.getPassword()), profileImage);
+        Member member = Member.from(joinRequest, passwordEncoder.encode(joinRequest.getPassword()), profileImage);
         memberRepository.save(member);
     }
 
 
-    public void validateUniqueMemberInfo(MemberRequest memberRequest){
-        if(memberRepository.existsByUserId(memberRequest.getUserId())){
+    public void validateUniqueMemberInfo(JoinRequest joinRequest){
+        if(isExistUserId(joinRequest.getUserId())){
             throw new DataExistException(ErrorCode.ALREADY_EXISTED_USERID);
         }
 
-        if(memberRepository.existsByNickname(memberRequest.getNickname())){
+        if(isExistNickname(joinRequest.getNickname())){
             throw new DataExistException(ErrorCode.ALREADY_EXISTED_NICKNAME);
         }
 
-        if(memberRepository.existsByEmail(memberRequest.getEmail())){
+        if(isExistEmail(joinRequest.getEmail())){
             throw new DataExistException(ErrorCode.ALREADY_EXISTED_EMAIL);
         }
+    }
+
+    public boolean isExistUserId(String userId){
+        return memberRepository.existsByUserId(userId);
+    }
+
+    public boolean isExistNickname(String nickname){
+        return memberRepository.existsByNickname(nickname);
+    }
+
+    public boolean isExistEmail(String email){
+        return memberRepository.existsByEmail(email);
     }
 
     public LoginResponse login(LoginRequest loginRequest) {
@@ -90,7 +102,7 @@ public class MemberService {
 
 
     public void logout(LogoutRequest logoutRequest, String accessToken) {
-        if (!isExistsMember(logoutRequest.getNickname())){
+        if (!isExistNickname(logoutRequest.getNickname())){
             throw new DataNotFoundException(ErrorCode.MEMBER_NOT_FOUND);
         }
 
@@ -98,9 +110,6 @@ public class MemberService {
         redisUtil.saveExpiredData(accessToken, "logout", LOGOUT_DURATION);
     }
 
-    public boolean isExistsMember(String nickname){
-        return memberRepository.existsByNickname(nickname);
-    }
 
     public RefreshTokenResponse refreshToken(RefreshTokenRequest refreshTokenRequest) throws ExpiredJwtException {
         String refreshToken = refreshTokenRequest.getRefreshToken();
@@ -146,11 +155,12 @@ public class MemberService {
         String email = redisUtil.getData(resetPasswordRequest.getPasswordToken());
 
         if (email == null) {
-            throw new ChangePasswordException(ErrorCode.INVALID_CHANGE_PASSWORD);
+            throw new ChangeMemberInfoException(ErrorCode.INVALID_CHANGE_PASSWORD);
         }
 
         Member member = findMemberByEmail(email);
         member.updatePassword(passwordEncoder.encode(resetPasswordRequest.getPassword()));
+        member.updateUpdatedAt();
 
     }
 
@@ -164,17 +174,28 @@ public class MemberService {
         Member member = findMemberByUserId(userId);
 
         boolean isMatch = passwordEncoder.matches(passwordRequest.getNowPassword(), member.getPassword());
-
         if(!isMatch){
-            throw new ChangePasswordException(ErrorCode.INCORRECT_PASSWORD);
+            throw new ChangeMemberInfoException(ErrorCode.INCORRECT_PASSWORD);
         }
 
         member.updatePassword(passwordEncoder.encode(passwordRequest.getNewPassword()));
+        member.updateUpdatedAt();
     }
 
 
     public MemberInfoResponse getMemberInfo(String userId) {
         Member member = findMemberByUserId(userId);
         return MemberInfoResponse.from(member);
+    }
+
+    public void changeNickname(String userId, ChangeNicknameRequest changeNicknameRequest) {
+        Member member = findMemberByUserId(userId);
+
+        if (isExistNickname(changeNicknameRequest.getNickname())){
+            throw new DataExistException(ErrorCode.ALREADY_EXISTED_NICKNAME);
+        }
+
+        member.updateNickname(changeNicknameRequest.getNickname());
+        member.updateUpdatedAt();
     }
 }

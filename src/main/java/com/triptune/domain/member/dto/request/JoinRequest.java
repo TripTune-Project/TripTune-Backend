@@ -11,7 +11,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-public class MemberRequest {
+public class JoinRequest {
 
     @NotBlank(message = "아이디는 필수 입력 값입니다.")
     @Pattern(regexp = "^(?=.*[a-zA-Z])[A-Za-z\\d]{4,15}$", message = "아이디 4자 이상 15자 이하의 대/소문자, 숫자만 사용 가능합니다.")
@@ -32,7 +32,7 @@ public class MemberRequest {
     private String email;
 
     @Builder
-    public MemberRequest(String userId, String password, String rePassword, String nickname, String email) {
+    public JoinRequest(String userId, String password, String rePassword, String nickname, String email) {
         this.userId = userId;
         this.password = password;
         this.rePassword = rePassword;

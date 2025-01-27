@@ -1,6 +1,6 @@
 package com.triptune.domain.member.exception.handler;
 
-import com.triptune.domain.member.exception.ChangePasswordException;
+import com.triptune.domain.member.exception.ChangeMemberInfoException;
 import com.triptune.domain.member.exception.FailLoginException;
 import com.triptune.global.response.ErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
@@ -23,7 +23,7 @@ public class MemberExceptionHandler {
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponse handleChangePasswordException(ChangePasswordException ex, HttpServletRequest request){
+    public ErrorResponse handleChangeMemberInfoException(ChangeMemberInfoException ex, HttpServletRequest request){
         log.error("ChangePasswordException at {}: {}", request.getRequestURI(), ex.getMessage());
         return ErrorResponse.of(ex.getHttpStatus(), ex.getMessage());
     }

@@ -3,8 +3,9 @@ package com.triptune.domain.member.controller;
 import com.triptune.domain.common.service.S3Service;
 import com.triptune.domain.email.service.EmailService;
 import com.triptune.domain.member.MemberTest;
+import com.triptune.domain.member.dto.request.ChangeNicknameRequest;
 import com.triptune.domain.member.dto.request.ChangePasswordRequest;
-import com.triptune.domain.member.dto.request.MemberRequest;
+import com.triptune.domain.member.dto.request.JoinRequest;
 import com.triptune.domain.member.entity.Member;
 import com.triptune.domain.member.entity.ProfileImage;
 import com.triptune.domain.member.repository.MemberRepository;
@@ -39,7 +40,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @ActiveProfiles("test")
-public class MemberControllerTest extends MemberTest{
+public class MemberControllerTest extends MemberTest {
     private final WebApplicationContext wac;
     private final JwtUtil jwtUtil;
     private final MemberRepository memberRepository;
@@ -88,7 +89,7 @@ public class MemberControllerTest extends MemberTest{
     @Test
     @DisplayName("회원 가입 시 비밀번호 유효성 검사로 예외 발생")
     void joinInvalidPassword_methodArgumentNotValidException() throws Exception {
-        MemberRequest request = createMemberRequest();
+        JoinRequest request = createMemberRequest();
         request.setPassword("password");
 
         mockMvc.perform(post("/api/members/join")
@@ -102,7 +103,7 @@ public class MemberControllerTest extends MemberTest{
     @Test
     @DisplayName("회원 가입 시 비밀번호, 비밀번호 재입력 불일치로 인한 예외 발생")
     void join_CustomNotValidException() throws Exception {
-        MemberRequest request = createMemberRequest();
+        JoinRequest request = createMemberRequest();
         request.setPassword("password123@");
         request.setRePassword("repassword123@");
 
@@ -117,7 +118,7 @@ public class MemberControllerTest extends MemberTest{
     @Test
     @DisplayName("회원 가입 시 이미 존재하는 아이디로 인해 예외 발생")
     void joinExistedUserId_dataExistException() throws Exception {
-        MemberRequest request = createMemberRequest();
+        JoinRequest request = createMemberRequest();
         memberRepository.save(createMember(null, request.getUserId()));
 
         mockMvc.perform(post("/api/members/join")
@@ -273,7 +274,7 @@ public class MemberControllerTest extends MemberTest{
     @Test
     @DisplayName("비밀번호 찾기 시 사용자 데이터 존재하지 않아 예외 발생")
     void findPassword_memberNotFoundException() throws Exception{
-        Member member = memberRepository.save(createMember(null, "member"));
+        memberRepository.save(createMember(null, "member"));
 
         mockMvc.perform(post("/api/members/find-password")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -451,6 +452,64 @@ public class MemberControllerTest extends MemberTest{
         mockMvc.perform(get("/api/members/info"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.message").value(ErrorCode.MEMBER_NOT_FOUND.getMessage()));
+    }
+
+
+    @Test
+    @WithMockUser("member")
+    @DisplayName("사용자 닉네임 변경")
+    void changeNickname() throws Exception{
+        memberRepository.save(createMember(null, "member"));
+        ChangeNicknameRequest request = createChangeNicknameRequest("newNickname");
+
+        mockMvc.perform(patch("/api/members/change-nickname")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJsonString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()));
+
+    }
+
+    @Test
+    @WithMockUser("member")
+    @DisplayName("사용자 닉네임 변경 시 입력 조건이 맞지 않아 예외 발생")
+    void changeNickname_methodInvalidArgumentException() throws Exception{
+        memberRepository.save(createMember(null, "member"));
+        ChangeNicknameRequest request = createChangeNicknameRequest("no");
+
+        mockMvc.perform(patch("/api/members/change-nickname")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJsonString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("닉네임은 4자 이상 15자 이하의 영문 대/소문자, 한글, 숫자만 사용 가능합니다."));
+
+    }
+
+    @Test
+    @WithMockUser("member1")
+    @DisplayName("사용자 닉네임 변경 시 사용자 데이터 없어 예외 발생")
+    void changeNickname_memberNotFoundException() throws Exception{
+        ChangeNicknameRequest request = createChangeNicknameRequest("newNickname");
+
+        mockMvc.perform(patch("/api/members/change-nickname")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJsonString(request)))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").value(ErrorCode.MEMBER_NOT_FOUND.getMessage()));
+    }
+
+    @Test
+    @WithMockUser("member")
+    @DisplayName("사용자 닉네임 변경 시 이미 존재하는 닉네임으로 예외 발생")
+    void changeNickname_dataExistException() throws Exception{
+        Member member = memberRepository.save(createMember(null, "member"));
+        ChangeNicknameRequest request = createChangeNicknameRequest(member.getNickname());
+
+        mockMvc.perform(patch("/api/members/change-nickname")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJsonString(request)))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.message").value(ErrorCode.ALREADY_EXISTED_NICKNAME.getMessage()));
     }
 
 

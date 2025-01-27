@@ -5,8 +5,8 @@ import com.triptune.domain.member.dto.request.*;
 
 public class MemberTest extends BaseTest {
 
-    protected MemberRequest createMemberRequest(){
-        return MemberRequest.builder()
+    protected JoinRequest createMemberRequest(){
+        return JoinRequest.builder()
                 .userId("testUser")
                 .password("password123@")
                 .rePassword("password123@")
@@ -62,5 +62,12 @@ public class MemberTest extends BaseTest {
                 .nowPassword(nowPassword)
                 .newPassword(newPassword)
                 .rePassword(rePassword).build();
+    }
+
+
+    protected ChangeNicknameRequest createChangeNicknameRequest(String newNickname) {
+        return ChangeNicknameRequest.builder()
+                .nickname(newNickname)
+                .build();
     }
 }

@@ -1,7 +1,7 @@
 package com.triptune.domain.member.entity;
 
 import com.triptune.domain.bookmark.entity.Bookmark;
-import com.triptune.domain.member.dto.request.MemberRequest;
+import com.triptune.domain.member.dto.request.JoinRequest;
 import com.triptune.domain.schedule.entity.TravelAttendee;
 import jakarta.persistence.*;
 import lombok.Builder;
@@ -72,12 +72,12 @@ public class Member {
         this.bookmarkList = bookmarkList;
     }
 
-    public static Member from(MemberRequest memberRequest, String encodePassword, ProfileImage profileImage){
+    public static Member from(JoinRequest joinRequest, String encodePassword, ProfileImage profileImage){
         return Member.builder()
-                .userId(memberRequest.getUserId())
+                .userId(joinRequest.getUserId())
                 .password(encodePassword)
-                .nickname(memberRequest.getNickname())
-                .email(memberRequest.getEmail())
+                .nickname(joinRequest.getNickname())
+                .email(joinRequest.getEmail())
                 .isSocialLogin(false)
                 .profileImage(profileImage)
                 .createdAt(LocalDateTime.now())
@@ -95,6 +95,14 @@ public class Member {
 
     public boolean isMatchRefreshToken(String refreshToken){
         return this.refreshToken.equals(refreshToken);
+    }
+
+    public void updateNickname(String nickname) {
+        this.nickname = nickname;
+    }
+
+    public void updateUpdatedAt() {
+        this.updatedAt = LocalDateTime.now();
     }
 
 }

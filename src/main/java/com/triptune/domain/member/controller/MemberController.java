@@ -5,7 +5,7 @@ import com.triptune.domain.member.dto.response.FindIdResponse;
 import com.triptune.domain.member.dto.response.LoginResponse;
 import com.triptune.domain.member.dto.response.MemberInfoResponse;
 import com.triptune.domain.member.dto.response.RefreshTokenResponse;
-import com.triptune.domain.member.exception.ChangePasswordException;
+import com.triptune.domain.member.exception.ChangeMemberInfoException;
 import com.triptune.domain.member.dto.request.ChangePasswordRequest;
 import com.triptune.global.enumclass.ErrorCode;
 import com.triptune.global.exception.CustomJwtBadRequestException;
@@ -20,7 +20,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
@@ -38,12 +37,12 @@ public class MemberController {
 
     @PostMapping("/join")
     @Operation(summary = "회원가입", description = "회원가입을 요청합니다.")
-    public ApiResponse<?> join(@Valid @RequestBody MemberRequest memberRequest){
-        if(!memberRequest.getPassword().equals(memberRequest.getRePassword())){
+    public ApiResponse<?> join(@Valid @RequestBody JoinRequest joinRequest){
+        if(!joinRequest.getPassword().equals(joinRequest.getRePassword())){
             throw new CustomNotValidException(ErrorCode.INCORRECT_PASSWORD_REPASSWORD);
         }
 
-        memberService.join(memberRequest);
+        memberService.join(joinRequest);
 
         return ApiResponse.okResponse();
     }
@@ -106,11 +105,11 @@ public class MemberController {
     @Operation(summary = "비밀번호 변경", description = "비밀번호를 변경합니다.")
     public ApiResponse<?> changePassword(@Valid @RequestBody ChangePasswordRequest passwordRequest){
         if(!passwordRequest.isMatchNewPassword()){
-            throw new ChangePasswordException(ErrorCode.INCORRECT_PASSWORD_REPASSWORD);
+            throw new ChangeMemberInfoException(ErrorCode.INCORRECT_PASSWORD_REPASSWORD);
         }
 
         if(passwordRequest.isMatchNowPassword()){
-            throw new ChangePasswordException(ErrorCode.CORRECT_NOWPASSWORD_NEWPASSWORD);
+            throw new ChangeMemberInfoException(ErrorCode.CORRECT_NOWPASSWORD_NEWPASSWORD);
         }
 
         String userId = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -126,5 +125,14 @@ public class MemberController {
 
         MemberInfoResponse response = memberService.getMemberInfo(userId);
         return ApiResponse.dataResponse(response);
+    }
+
+    @PatchMapping("/change-nickname")
+    @Operation(summary = "사용자 닉네임 변경", description = "사용자 닉네임을 변경합니다.")
+    public ApiResponse<?> changeNickname(@Valid @RequestBody ChangeNicknameRequest changeNicknameRequest){
+        String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+        memberService.changeNickname(userId, changeNicknameRequest);
+        return ApiResponse.okResponse();
+
     }
 }
