@@ -1,6 +1,5 @@
 package com.triptune.domain.member.service;
 
-import com.triptune.domain.common.service.S3Service;
 import com.triptune.domain.email.service.EmailService;
 import com.triptune.domain.member.dto.request.*;
 import com.triptune.domain.member.dto.response.FindIdResponse;
@@ -11,6 +10,7 @@ import com.triptune.domain.member.entity.ProfileImage;
 import com.triptune.domain.member.exception.ChangePasswordException;
 import com.triptune.domain.member.exception.FailLoginException;
 import com.triptune.domain.member.repository.MemberRepository;
+import com.triptune.domain.member.dto.request.ChangePasswordRequest;
 import com.triptune.global.enumclass.ErrorCode;
 import com.triptune.global.exception.CustomJwtBadRequestException;
 import com.triptune.global.exception.DataExistException;
@@ -25,8 +25,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
-import java.io.IOException;
 
 @Service
 @Transactional
@@ -143,21 +141,34 @@ public class MemberService {
     }
 
 
-    public void changePassword(ChangePasswordRequest changePasswordRequest) {
-        String email = redisUtil.getData(changePasswordRequest.getPasswordToken());
+    public void resetPassword(ResetPasswordRequest resetPasswordRequest) {
+        String email = redisUtil.getData(resetPasswordRequest.getPasswordToken());
 
         if (email == null) {
             throw new ChangePasswordException(ErrorCode.INVALID_CHANGE_PASSWORD);
         }
 
         Member member = findMemberByEmail(email);
-        member.updatePassword(passwordEncoder.encode(changePasswordRequest.getPassword()));
+        member.updatePassword(passwordEncoder.encode(resetPasswordRequest.getPassword()));
 
     }
 
     public Member findMemberByEmail(String email){
         return memberRepository.findByEmail(email)
                 .orElseThrow(() -> new DataNotFoundException(ErrorCode.MEMBER_NOT_FOUND));
+    }
+
+
+    public void changePassword(String userId, ChangePasswordRequest passwordRequest){
+        Member member = findMemberByUserId(userId);
+
+        boolean isMatch = passwordEncoder.matches(passwordRequest.getNowPassword(), member.getPassword());
+
+        if(!isMatch){
+            throw new ChangePasswordException(ErrorCode.INCORRECT_PASSWORD);
+        }
+
+        member.updatePassword(passwordEncoder.encode(passwordRequest.getNewPassword()));
     }
 
 

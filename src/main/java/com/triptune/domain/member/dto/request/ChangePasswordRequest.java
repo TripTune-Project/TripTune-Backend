@@ -5,32 +5,35 @@ import jakarta.validation.constraints.Pattern;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 @Getter
-@Setter
 @NoArgsConstructor
 public class ChangePasswordRequest {
 
-    @NotBlank(message = "비밀번호 변경 토큰은 필수 입력 값입니다.")
-    private String passwordToken;
-
-    @NotBlank(message = "비밀번호는 필수 입력 값입니다.")
+    @NotBlank(message = "현재 비밀번호는 필수 입력 값입니다.")
     @Pattern(regexp = "^(?=.*[A-Za-z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,15}$", message = "비밀번호는 8자 이상 15자 이하의 영문, 숫자, 특수문자 조합이어야 합니다.")
-    private String password;
+    private String nowPassword;
+
+    @NotBlank(message = "변경할 비밀번호는 필수 입력 값입니다.")
+    @Pattern(regexp = "^(?=.*[A-Za-z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,15}$", message = "비밀번호는 8자 이상 15자 이하의 영문, 숫자, 특수문자 조합이어야 합니다.")
+    private String newPassword;
 
     @NotBlank(message = "비밀번호 재입력은 필수 입력 값입니다.")
     @Pattern(regexp = "^(?=.*[A-Za-z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,15}$", message = "비밀번호는 8자 이상 15자 이하의 영문, 숫자, 특수문자 조합이어야 합니다.")
     private String rePassword;
 
     @Builder
-    public ChangePasswordRequest(String passwordToken, String password, String rePassword) {
-        this.passwordToken = passwordToken;
-        this.password = password;
+    public ChangePasswordRequest(String nowPassword, String newPassword, String rePassword) {
+        this.nowPassword = nowPassword;
+        this.newPassword = newPassword;
         this.rePassword = rePassword;
     }
 
-    public boolean isMatchPassword() {
-        return this.password.equals(this.rePassword);
+    public boolean isMatchNewPassword() {
+        return this.newPassword.equals(this.rePassword);
+    }
+
+    public boolean isMatchNowPassword(){
+        return this.nowPassword.equals(this.newPassword);
     }
 }

@@ -1,13 +1,7 @@
 package com.triptune.domain.member;
 
 import com.triptune.domain.BaseTest;
-import com.triptune.domain.member.dto.request.ChangePasswordRequest;
-import com.triptune.domain.member.dto.request.FindPasswordRequest;
-import com.triptune.domain.member.dto.request.LogoutRequest;
-import com.triptune.domain.member.dto.request.FindIdRequest;
-import com.triptune.domain.member.dto.request.LoginRequest;
-import com.triptune.domain.member.dto.request.MemberRequest;
-import com.triptune.domain.member.dto.request.RefreshTokenRequest;
+import com.triptune.domain.member.dto.request.*;
 
 public class MemberTest extends BaseTest {
 
@@ -34,8 +28,8 @@ public class MemberTest extends BaseTest {
                 .build();
     }
 
-    protected ChangePasswordRequest createChangePasswordDTO(String passwordToken, String newPassword1, String newPassword2){
-        return ChangePasswordRequest.builder()
+    protected ResetPasswordRequest createResetPasswordDTO(String passwordToken, String newPassword1, String newPassword2){
+        return ResetPasswordRequest.builder()
                 .passwordToken(passwordToken)
                 .password(newPassword1)
                 .rePassword(newPassword2)
@@ -61,5 +55,12 @@ public class MemberTest extends BaseTest {
                 .userId(userId)
                 .email(userId + "@email.com")
                 .build();
+    }
+
+    protected ChangePasswordRequest createChangePasswordRequest(String nowPassword, String newPassword, String rePassword){
+        return ChangePasswordRequest.builder()
+                .nowPassword(nowPassword)
+                .newPassword(newPassword)
+                .rePassword(rePassword).build();
     }
 }
