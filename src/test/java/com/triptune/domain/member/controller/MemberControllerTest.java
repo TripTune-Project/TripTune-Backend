@@ -6,6 +6,7 @@ import com.triptune.domain.member.MemberTest;
 import com.triptune.domain.member.dto.request.ChangePasswordRequest;
 import com.triptune.domain.member.dto.request.MemberRequest;
 import com.triptune.domain.member.entity.Member;
+import com.triptune.domain.member.entity.ProfileImage;
 import com.triptune.domain.member.repository.MemberRepository;
 import com.triptune.domain.member.repository.ProfileImageRepository;
 import com.triptune.global.enumclass.ErrorCode;
@@ -31,8 +32,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -347,7 +347,7 @@ public class MemberControllerTest extends MemberTest{
     void changePassword() throws Exception {
         String encodePassword = passwordEncoder.encode("test123@");
 
-        memberRepository.save(createMember(0L, "member", encodePassword));
+        memberRepository.save(createMember(null, "member", encodePassword));
         ChangePasswordRequest request = createChangePasswordRequest("test123@", "test123!", "test123!");
 
         mockMvc.perform(patch("/api/members/change-password")
@@ -361,7 +361,7 @@ public class MemberControllerTest extends MemberTest{
     @WithMockUser("member")
     @DisplayName("비밀번호 변경 시 입력값 조건 틀려 예외 발생")
     void changePassword_MethodArgumentNotValidException() throws Exception{
-        memberRepository.save(createMember(0L, "member"));
+        memberRepository.save(createMember(null, "member"));
         ChangePasswordRequest request = createChangePasswordRequest("틀린값1", "test123!", "test123!");
 
         mockMvc.perform(patch("/api/members/change-password")
@@ -376,7 +376,7 @@ public class MemberControllerTest extends MemberTest{
     @WithMockUser("member")
     @DisplayName("비밀번호 변경 시 변경 비밀번호와 재입력 비밀번호가 일치하지 않아 예외 발생")
     void changePassword_inCorrectNewPassword() throws Exception{
-        memberRepository.save(createMember(0L, "member"));
+        memberRepository.save(createMember(null, "member"));
         ChangePasswordRequest request = createChangePasswordRequest("test123@", "test123!", "test456!");
 
         mockMvc.perform(patch("/api/members/change-password")
@@ -391,7 +391,7 @@ public class MemberControllerTest extends MemberTest{
     @WithMockUser("member")
     @DisplayName("비밀번호 변경 시 현재 비밀번호와 변경 비밀번호가 같아 예외 발생")
     void changePassword_correctNowPassword() throws Exception{
-        memberRepository.save(createMember(0L, "member"));
+        memberRepository.save(createMember(null, "member"));
         ChangePasswordRequest request = createChangePasswordRequest("test123@", "test123@", "test123@");
 
         mockMvc.perform(patch("/api/members/change-password")
@@ -420,7 +420,7 @@ public class MemberControllerTest extends MemberTest{
     void changePassword_incorrectSavedPassword() throws Exception{
         String encodePassword = passwordEncoder.encode("test123@");
 
-        memberRepository.save(createMember(0L, "member", encodePassword));
+        memberRepository.save(createMember(null, "member", encodePassword));
         ChangePasswordRequest request = createChangePasswordRequest("test123!", "test123!!", "test123!!");
 
         mockMvc.perform(patch("/api/members/change-password")
@@ -429,5 +429,29 @@ public class MemberControllerTest extends MemberTest{
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").value(ErrorCode.INCORRECT_PASSWORD.getMessage()));
     }
+
+    @Test
+    @WithMockUser("member")
+    @DisplayName("사용자 정보 조회")
+    void getMemberInfo() throws Exception{
+        ProfileImage profileImage = profileImageRepository.save(createProfileImage(null, "profileImage"));
+        Member member = memberRepository.save(createMember(null, "member", profileImage));
+
+        mockMvc.perform(get("/api/members/info"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.userId").value(member.getUserId()))
+                .andExpect(jsonPath("$.data.nickname").value(member.getNickname()))
+                .andExpect(jsonPath("$.data.profileImage").value(profileImage.getS3ObjectUrl()));
+    }
+
+    @Test
+    @WithMockUser("member")
+    @DisplayName("사용자 정보 조회 시 사용자 데이터 없어 예외 발생")
+    void getMemberInfo_memberNotFoundException() throws Exception{
+        mockMvc.perform(get("/api/members/info"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").value(ErrorCode.MEMBER_NOT_FOUND.getMessage()));
+    }
+
 
 }

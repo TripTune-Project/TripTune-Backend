@@ -4,6 +4,7 @@ import com.triptune.domain.email.service.EmailService;
 import com.triptune.domain.member.dto.request.*;
 import com.triptune.domain.member.dto.response.FindIdResponse;
 import com.triptune.domain.member.dto.response.LoginResponse;
+import com.triptune.domain.member.dto.response.MemberInfoResponse;
 import com.triptune.domain.member.dto.response.RefreshTokenResponse;
 import com.triptune.domain.member.entity.Member;
 import com.triptune.domain.member.entity.ProfileImage;
@@ -172,5 +173,8 @@ public class MemberService {
     }
 
 
-
+    public MemberInfoResponse getMemberInfo(String userId) {
+        Member member = findMemberByUserId(userId);
+        return MemberInfoResponse.from(member);
+    }
 }

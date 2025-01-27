@@ -10,8 +10,10 @@ import com.triptune.domain.member.dto.request.MemberRequest;
 import com.triptune.domain.member.dto.request.RefreshTokenRequest;
 import com.triptune.domain.member.dto.response.FindIdResponse;
 import com.triptune.domain.member.dto.response.LoginResponse;
+import com.triptune.domain.member.dto.response.MemberInfoResponse;
 import com.triptune.domain.member.dto.response.RefreshTokenResponse;
 import com.triptune.domain.member.entity.Member;
+import com.triptune.domain.member.entity.ProfileImage;
 import com.triptune.domain.member.exception.ChangePasswordException;
 import com.triptune.domain.member.exception.FailLoginException;
 import com.triptune.domain.member.repository.MemberRepository;
@@ -32,6 +34,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.boot.convert.DataSizeUnit;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Optional;
@@ -555,6 +558,38 @@ public class MemberServiceTest extends MemberTest {
         // then
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.INCORRECT_PASSWORD.getStatus());
         assertThat(fail.getMessage()).isEqualTo(ErrorCode.INCORRECT_PASSWORD.getMessage());
+    }
+
+    @Test
+    @DisplayName("사용자 정보 조회")
+    void getMemberInfo(){
+        // given
+        ProfileImage savedProfileImage = createProfileImage(1L, "memberImage");
+        Member savedMember = createMember(1L, "member", savedProfileImage);
+
+        when(memberRepository.findByUserId(anyString())).thenReturn(Optional.of(savedMember));
+
+        // when
+        MemberInfoResponse response = memberService.getMemberInfo(member.getUserId());
+
+        // then
+        assertThat(response.getUserId()).isEqualTo(savedMember.getUserId());
+        assertThat(response.getNickname()).isEqualTo(savedMember.getNickname());
+        assertThat(response.getProfileImage()).isEqualTo(savedProfileImage.getS3ObjectUrl());
+    }
+
+    @Test
+    @DisplayName("사용자 정보 조회 시 사용자 데이터가 없어 예외 발생")
+    void getMemberInfo_memberNotFoundException(){
+        // given
+        when(memberRepository.findByUserId(anyString())).thenReturn(Optional.empty());
+
+        // when
+        DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> memberService.getMemberInfo(member.getUserId()));
+
+        // then
+        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.MEMBER_NOT_FOUND.getStatus());
+        assertThat(fail.getMessage()).isEqualTo(ErrorCode.MEMBER_NOT_FOUND.getMessage());
     }
 
 }

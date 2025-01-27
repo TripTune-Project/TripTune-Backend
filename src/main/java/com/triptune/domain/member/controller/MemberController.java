@@ -3,6 +3,7 @@ package com.triptune.domain.member.controller;
 import com.triptune.domain.member.dto.request.*;
 import com.triptune.domain.member.dto.response.FindIdResponse;
 import com.triptune.domain.member.dto.response.LoginResponse;
+import com.triptune.domain.member.dto.response.MemberInfoResponse;
 import com.triptune.domain.member.dto.response.RefreshTokenResponse;
 import com.triptune.domain.member.exception.ChangePasswordException;
 import com.triptune.domain.member.dto.request.ChangePasswordRequest;
@@ -19,6 +20,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
@@ -117,5 +119,12 @@ public class MemberController {
         return ApiResponse.okResponse();
     }
 
+    @GetMapping("/info")
+    @Operation(summary = "사용자 정보 조회", description = "사용자 정보를 조회합니다.")
+    public ApiResponse<MemberInfoResponse> getMemberInfo(){
+        String userId = SecurityContextHolder.getContext().getAuthentication().getName();
 
+        MemberInfoResponse response = memberService.getMemberInfo(userId);
+        return ApiResponse.dataResponse(response);
+    }
 }
