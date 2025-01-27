@@ -2,6 +2,7 @@ package com.triptune.domain.member.entity;
 
 import com.triptune.domain.bookmark.entity.Bookmark;
 import com.triptune.domain.member.dto.request.JoinRequest;
+import com.triptune.domain.profile.entity.ProfileImage;
 import com.triptune.domain.schedule.entity.TravelAttendee;
 import jakarta.persistence.*;
 import lombok.Builder;

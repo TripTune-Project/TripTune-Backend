@@ -1,7 +1,7 @@
 package com.triptune.domain.schedule.service;
 
 import com.triptune.domain.member.entity.Member;
-import com.triptune.domain.member.entity.ProfileImage;
+import com.triptune.domain.profile.entity.ProfileImage;
 import com.triptune.domain.member.repository.MemberRepository;
 import com.triptune.domain.schedule.ScheduleTest;
 import com.triptune.domain.schedule.dto.request.ChatMessageRequest;

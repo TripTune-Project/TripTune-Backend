@@ -1,9 +1,9 @@
 package com.triptune.domain.schedule.controller;
 
 import com.triptune.domain.member.entity.Member;
-import com.triptune.domain.member.entity.ProfileImage;
+import com.triptune.domain.profile.entity.ProfileImage;
 import com.triptune.domain.member.repository.MemberRepository;
-import com.triptune.domain.member.repository.ProfileImageRepository;
+import com.triptune.domain.profile.repository.ProfileImageRepository;
 import com.triptune.domain.schedule.ScheduleTest;
 import com.triptune.domain.schedule.entity.ChatMessage;
 import com.triptune.domain.schedule.entity.TravelAttendee;

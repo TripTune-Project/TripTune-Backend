@@ -1,12 +1,12 @@
-package com.triptune.domain.member.entity;
+package com.triptune.domain.profile.entity;
 
+import com.triptune.domain.member.entity.Member;
+import com.triptune.global.properties.DefaultProfileImageProperties;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.hibernate.query.sqm.function.FunctionKind;
 
-import java.io.File;
 import java.time.LocalDateTime;
 
 @Entity
@@ -53,13 +53,13 @@ public class ProfileImage {
         this.createdAt = createdAt;
     }
 
-    public static ProfileImage of(String s3ObjectUrl, String originalName, String fileName, String fileType, double fileSize){
+    public static ProfileImage from(DefaultProfileImageProperties imageProperties){
         return ProfileImage.builder()
-                .s3ObjectUrl(s3ObjectUrl)
-                .originalName(originalName)
-                .fileName(fileName)
-                .fileType(fileType)
-                .fileSize(fileSize)
+                .s3ObjectUrl(imageProperties.getS3ObjectUrl())
+                .originalName(imageProperties.getOriginalName())
+                .fileName(imageProperties.getFileName())
+                .fileType(imageProperties.getExtension())
+                .fileSize(imageProperties.getSize())
                 .createdAt(LocalDateTime.now())
                 .build();
     }

@@ -1,9 +1,9 @@
 package com.triptune.domain.schedule.controller;
 
 import com.triptune.domain.member.entity.Member;
-import com.triptune.domain.member.entity.ProfileImage;
+import com.triptune.domain.profile.entity.ProfileImage;
 import com.triptune.domain.member.repository.MemberRepository;
-import com.triptune.domain.member.repository.ProfileImageRepository;
+import com.triptune.domain.profile.repository.ProfileImageRepository;
 import com.triptune.domain.schedule.ScheduleTest;
 import com.triptune.domain.schedule.dto.request.AttendeePermissionRequest;
 import com.triptune.domain.schedule.dto.request.AttendeeRequest;
@@ -27,9 +27,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.filter.CharacterEncodingFilter;
-
-import java.util.ArrayList;
-import java.util.List;
 
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;

@@ -1,6 +1,6 @@
-package com.triptune.domain.member.repository;
+package com.triptune.domain.profile.repository;
 
-import com.triptune.domain.member.entity.ProfileImage;
+import com.triptune.domain.profile.entity.ProfileImage;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
