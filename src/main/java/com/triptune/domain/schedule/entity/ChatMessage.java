@@ -20,16 +20,14 @@ public class ChatMessage {
     private String messageId;
     private Long scheduleId;
     private Long memberId;
-    private String nickname;
     private String message;
     private LocalDateTime timestamp;
 
     @Builder
-    public ChatMessage(String messageId, Long scheduleId, Long memberId, String nickname, String message, LocalDateTime timestamp) {
+    public ChatMessage(String messageId, Long scheduleId, Long memberId, String message, LocalDateTime timestamp) {
         this.messageId = messageId;
         this.scheduleId = scheduleId;
         this.memberId = memberId;
-        this.nickname = nickname;
         this.message = message;
         this.timestamp = timestamp;
     }
@@ -38,7 +36,6 @@ public class ChatMessage {
         return ChatMessage.builder()
                 .scheduleId(chatMessageRequest.getScheduleId())
                 .memberId(member.getMemberId())
-                .nickname(member.getNickname())
                 .message(chatMessageRequest.getMessage())
                 .timestamp(LocalDateTime.now())
                 .build();
