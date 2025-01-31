@@ -635,7 +635,7 @@ public class ScheduleControllerTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("일정 수정 시 일정 종료일을 오늘 날짜 이전으로 설정해 예외 발생")
+    @DisplayName("일정 수정 시 필요 데이터 입력 안해 예외 발생")
     @WithMockUser(username = "member1")
     void updateSchedule_methodArgumentNotValidException() throws Exception {
         // given
@@ -647,9 +647,7 @@ public class ScheduleControllerTest extends ScheduleTest {
         RouteRequest routeRequest1 = createRouteRequest(1, travelPlace1.getPlaceId());
         RouteRequest routeRequest2 = createRouteRequest(2, travelPlace2.getPlaceId());
 
-        ScheduleUpdateRequest request = createUpdateScheduleRequest(new ArrayList<>(List.of(routeRequest1, routeRequest2)));
-        request.setEndDate(LocalDate.now().minusDays(10));
-
+        ScheduleUpdateRequest request = createUpdateScheduleRequest(null, new ArrayList<>(List.of(routeRequest1, routeRequest2)));
 
         // when
         mockMvc.perform(patch("/api/schedules/{scheduleId}", schedule1.getScheduleId())

@@ -25,6 +25,15 @@ public abstract class ScheduleTest extends BaseTest {
                 .build();
     }
 
+    protected ScheduleUpdateRequest createUpdateScheduleRequest(String scheduleName, List<RouteRequest> routeRequestList){
+        return ScheduleUpdateRequest.builder()
+                .scheduleName(scheduleName)
+                .startDate(LocalDate.now().plusDays(5))
+                .endDate(LocalDate.now().plusDays(20))
+                .travelRoute(routeRequestList)
+                .build();
+    }
+
     protected RouteRequest createRouteRequest(int routeOrder, Long placeId){
         return RouteRequest.of(routeOrder, placeId);
     }
