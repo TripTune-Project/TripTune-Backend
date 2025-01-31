@@ -192,7 +192,6 @@ public abstract class BaseTest {
                 .messageId(messageId)
                 .scheduleId(scheduleId)
                 .memberId(member.getMemberId())
-                .nickname(member.getNickname())
                 .message(message)
                 .timestamp(LocalDateTime.now())
                 .build();
