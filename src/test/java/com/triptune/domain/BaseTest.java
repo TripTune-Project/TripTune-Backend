@@ -45,6 +45,7 @@ public abstract class BaseTest {
     protected Member createMember(Long memberId, String userId, ProfileImage profileImage){
         return Member.builder()
                 .memberId(memberId)
+                .profileImage(profileImage)
                 .userId(userId)
                 .email(userId + "@email.com")
                 .password("test123@")
@@ -52,7 +53,6 @@ public abstract class BaseTest {
                 .refreshToken(refreshToken)
                 .isSocialLogin(false)
                 .createdAt(LocalDateTime.now())
-                .profileImage(profileImage)
                 .build();
     }
 
@@ -73,11 +73,29 @@ public abstract class BaseTest {
         return ProfileImage.builder()
                 .profileImageId(profileImageId)
                 .s3ObjectUrl("/test/" + fileName + ".jpg")
+                .s3FileKey("/img/test/" + fileName + ".jpg")
                 .originalName(fileName + "_original.jpg")
                 .fileName(fileName + ".jpg")
                 .fileType("jpg")
                 .fileSize(20)
                 .createdAt(LocalDateTime.now())
+                .updatedAt(null)
+                .build();
+    }
+
+
+    protected ProfileImage createProfileImage(Long profileImageId, String fileName, Member member){
+        return ProfileImage.builder()
+                .profileImageId(profileImageId)
+                .member(member)
+                .s3ObjectUrl("/test/" + fileName + ".jpg")
+                .s3FileKey("/img/test/" + fileName + ".jpg")
+                .originalName(fileName + "_original.jpg")
+                .fileName(fileName + ".jpg")
+                .fileType("jpg")
+                .fileSize(20)
+                .createdAt(LocalDateTime.now())
+                .updatedAt(null)
                 .build();
     }
 
