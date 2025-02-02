@@ -1,6 +1,6 @@
 package com.triptune.domain.member.controller;
 
-import com.triptune.domain.common.service.S3Service;
+import com.triptune.global.service.S3Service;
 import com.triptune.domain.email.service.EmailService;
 import com.triptune.domain.member.MemberTest;
 import com.triptune.domain.member.dto.request.ChangeNicknameRequest;

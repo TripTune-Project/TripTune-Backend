@@ -23,8 +23,7 @@ public class Member {
     @Column(name = "member_id")
     private Long memberId;
 
-    @OneToOne
-    @JoinColumn(name = "profile_image_id")
+    @OneToOne(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
     private ProfileImage profileImage;
 
     @Column(name = "user_id")

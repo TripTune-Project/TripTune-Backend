@@ -39,8 +39,8 @@ dependencies {
 
 	// spring
 	implementation 'org.springframework.boot:spring-boot-starter-web'
-	implementation 'org.springframework:spring-context:6.0.7'
-	implementation 'org.springframework:spring-context-support:6.0.7'
+	implementation 'org.springframework:spring-context'
+	implementation 'org.springframework:spring-context-support'
 
 	// swagger-ui
 	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.0.4'
@@ -91,8 +91,11 @@ dependencies {
 	// aws
 	implementation 'org.springframework.cloud:spring-cloud-starter-aws:2.2.6.RELEASE'
 
+	// tika
+	implementation 'org.apache.tika:tika-core:2.8.0'
+
+
 	// 테스트용 DB
-	testImplementation group: 'com.h2database', name: 'h2', version: '1.4.200'
 	testImplementation 'com.h2database:h2'
 	testRuntimeOnly 'com.h2database:h2'
 

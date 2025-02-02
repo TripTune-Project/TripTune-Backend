@@ -103,10 +103,10 @@ public class ScheduleServiceTest extends ScheduleTest {
         List<TravelImage> travelImageList2 = new ArrayList<>(List.of(travelImage3, travelImage4));
         travelPlace2.setTravelImageList(travelImageList2);
 
-        ProfileImage member1Image = createProfileImage(1L, "member1Image");
-        ProfileImage member2Image = createProfileImage(2L, "member2Image");
-        member1 = createMember(1L, "member1", member1Image);
-        member2 = createMember(2L, "member2", member2Image);
+        ProfileImage profileImage1 = createProfileImage(1L, "member1Image", member1);
+        ProfileImage profileImage2 = createProfileImage(2L, "member2Image", member2);
+        member1 = createMember(1L, "member1", profileImage1);
+        member2 = createMember(2L, "member2", profileImage2);
 
         schedule1 = createTravelSchedule(1L, "테스트1");
         schedule2 = createTravelSchedule(2L, "테스트2");

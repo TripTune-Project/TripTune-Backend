@@ -12,6 +12,7 @@ import org.springframework.context.annotation.Configuration;
 @ConfigurationProperties(prefix = "default-profile")
 public class DefaultProfileImageProperties {
     private String s3ObjectUrl;
+    private String s3FileKey;
     private String originalName;
     private String fileName;
     private String extension;

@@ -13,7 +13,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 @ActiveProfiles("test")
-class ProfileImageServiceTest {
+class ProfileImageServiceSpringTest {
     private static final long DEFAULT_PROFILE_IMAGE_SIZE = 14914;
     private static final String DEFAULT_PROFILE_IMAGE_NAME = "defaultProfileImage.png";
 
@@ -37,17 +37,7 @@ class ProfileImageServiceTest {
         assertThat(response.getOriginalName()).isEqualTo(DEFAULT_PROFILE_IMAGE_NAME);
         assertThat(response.getFileSize()).isEqualTo(DEFAULT_PROFILE_IMAGE_SIZE);
     }
-//
-//    @Test
-//    @DisplayName("기본 프로필 이미지 파일 가져오기")
-//    void getDefaultProfileImageFile(){
-//        // given, when
-//        File response = profileImageService.getDefaultProfileImageFile();
-//
-//        // then
-//        assertThat(response.length()).isEqualTo(DEFAULT_PROFILE_IMAGE_SIZE);
-//        assertThat(response.getName()).isEqualTo(DEFAULT_PROFILE_IMAGE_NAME);
-//    }
+
 
 
 }

@@ -1,4 +1,4 @@
-package com.triptune.domain.common.service;
+package com.triptune.global.service;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
