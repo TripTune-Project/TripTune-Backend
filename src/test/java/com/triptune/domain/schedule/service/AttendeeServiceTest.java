@@ -58,9 +58,9 @@ public class AttendeeServiceTest extends ScheduleTest {
 
     @BeforeEach
     void setUp(){
-        ProfileImage profileImage1 = createProfileImage(1L, "member1Image", member1);
-        ProfileImage profileImage2 = createProfileImage(2L, "member2Image", member2);
-        ProfileImage profileImage3 = createProfileImage(3L, "member3Image", member3);
+        ProfileImage profileImage1 = createProfileImage(1L, "member1Image");
+        ProfileImage profileImage2 = createProfileImage(2L, "member2Image");
+        ProfileImage profileImage3 = createProfileImage(3L, "member3Image");
         member1 = createMember(1L, "member1", profileImage1);
         member2 = createMember(2L, "member2", profileImage2);
         member3 = createMember(3L, "member3", profileImage3);

@@ -1,5 +1,6 @@
 package com.triptune.domain.profile.service;
 
+import com.triptune.domain.member.entity.Member;
 import com.triptune.domain.profile.entity.ProfileImage;
 import com.triptune.domain.profile.repository.ProfileImageRepository;
 import com.triptune.global.enumclass.ErrorCode;
@@ -21,33 +22,40 @@ import org.springframework.web.multipart.MultipartFile;
 @RequiredArgsConstructor
 public class ProfileImageService {
     private static final String FILE_TAG = "profileImage";
-    private static final String PROFILE_DIR = "img/profile/";
 
     private final DefaultProfileImageProperties profileImageProperties;
     private final ProfileImageRepository profileImageRepository;
     private final S3Service s3Service;
 
 
-    public ProfileImage saveDefaultProfileImage() {
-        ProfileImage profileImage = ProfileImage.from(profileImageProperties);
+    public ProfileImage saveDefaultProfileImage(Member member) {
+        ProfileImage profileImage = ProfileImage.from(member, profileImageProperties);
         return profileImageRepository.save(profileImage);
     }
 
     public void updateProfileImage(String userId, MultipartFile profileImageFile) {
-        if(!FileUtil.isValidExtension(profileImageFile)){
-            throw new FileBadRequestException(ErrorCode.INVALID_EXTENSION);
-        }
+        validateFileExtension(profileImageFile);
 
-        ProfileImage profileImage = profileImageRepository.findByMember_UserId(userId)
-                .orElseThrow(() -> new DataNotFoundException(ErrorCode.PROFILE_IMAGE_NOT_FOUND));
-
+        ProfileImage profileImage = findByUserId(userId);
         s3Service.deleteS3File(profileImage.getS3FileKey());
 
         String extension = FileUtil.getExtension(profileImageFile.getOriginalFilename());
         String savedFileName = s3Service.generateS3FileName(FILE_TAG, extension);
-        String s3FileKey = PROFILE_DIR + savedFileName;
+        String s3FileKey = s3Service.generateS3FileKey(savedFileName);
         String s3ObjectUrl = s3Service.uploadToS3(profileImageFile, s3FileKey);
 
         profileImage.update(profileImageFile, s3ObjectUrl, s3FileKey, savedFileName, extension);
+        profileImage.getMember().updateUpdatedAt();
+    }
+
+    private void validateFileExtension(MultipartFile profileImageFile){
+        if(!FileUtil.isValidExtension(profileImageFile)){
+            throw new FileBadRequestException(ErrorCode.INVALID_EXTENSION);
+        }
+    }
+
+    private ProfileImage findByUserId(String userId){
+        return profileImageRepository.findByMember_UserId(userId)
+                .orElseThrow(() -> new DataNotFoundException(ErrorCode.PROFILE_IMAGE_NOT_FOUND));
     }
 }

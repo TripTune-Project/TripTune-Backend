@@ -7,6 +7,7 @@ import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.triptune.global.enumclass.ErrorCode;
 import com.triptune.global.exception.DataNotFoundException;
+import com.triptune.global.util.FileUtil;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +26,7 @@ import java.util.UUID;
 @Transactional
 @Slf4j
 public class S3Service {
+    private static final String PROFILE_DIR = "img/profile/";
 
     private final AmazonS3Client amazonS3Client;
 
@@ -32,26 +34,25 @@ public class S3Service {
     private String bucket;
 
 
-    public String uploadToS3(MultipartFile uploadFile, String fileKey){
-        try{
-            ObjectMetadata metadata = new ObjectMetadata();
-            metadata.setContentLength(uploadFile.getSize());
-            metadata.setContentType(uploadFile.getContentType());
+    public String uploadToS3(MultipartFile uploadFile, String s3FileKey){
+        ObjectMetadata metadata = FileUtil.generateMetadata(uploadFile);
 
+        try{
             amazonS3Client.putObject(new PutObjectRequest(
                     bucket,
-                    fileKey,
+                    s3FileKey,
                     uploadFile.getInputStream(),
                     metadata
             ).withCannedAcl(CannedAccessControlList.PublicRead));
 
-            log.info("s3 이미지 업로드 성공: {}", fileKey);
-            return amazonS3Client.getUrl(bucket, fileKey).toString();
+            log.info("s3 이미지 업로드 성공: {}", s3FileKey);
+            return amazonS3Client.getUrl(bucket, s3FileKey).toString();
         } catch (Exception e){
-            log.error("S3 이미지 업로드 실패: {}", fileKey, e);
+            log.error("S3 이미지 업로드 실패: {}", s3FileKey, e);
             throw new AmazonS3Exception("s3 이미지 업로드 실패");
         }
     }
+
 
     public String generateS3FileName(String fileTag, String extension){
         String uuid = UUID.randomUUID().toString().substring(0, 8);
@@ -60,9 +61,7 @@ public class S3Service {
     }
 
     public void deleteS3File(String s3FileKey) {
-        boolean isObjectExist = amazonS3Client.doesObjectExist(bucket, s3FileKey);
-
-        if(!isObjectExist){
+        if(!isObjectExist(s3FileKey)){
             throw new DataNotFoundException(ErrorCode.PROFILE_IMAGE_NOT_FOUND);
         }
 
@@ -74,5 +73,13 @@ public class S3Service {
             throw new AmazonS3Exception("s3 이미지 업로드 실패");
         }
 
+    }
+
+    public boolean isObjectExist(String s3FileKey){
+        return amazonS3Client.doesObjectExist(bucket, s3FileKey);
+    }
+
+    public String generateS3FileKey(String savedFileName){
+        return PROFILE_DIR + savedFileName;
     }
 }

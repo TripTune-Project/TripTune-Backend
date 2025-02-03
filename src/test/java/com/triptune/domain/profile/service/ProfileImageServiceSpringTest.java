@@ -1,5 +1,8 @@
 package com.triptune.domain.profile.service;
 
+import com.triptune.domain.member.entity.Member;
+import com.triptune.domain.member.repository.MemberRepository;
+import com.triptune.domain.profile.ProfileImageTest;
 import com.triptune.domain.profile.entity.ProfileImage;
 import com.triptune.domain.profile.repository.ProfileImageRepository;
 import com.triptune.global.properties.DefaultProfileImageProperties;
@@ -13,25 +16,32 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 @ActiveProfiles("test")
-class ProfileImageServiceSpringTest {
+class ProfileImageServiceSpringTest extends ProfileImageTest {
     private static final long DEFAULT_PROFILE_IMAGE_SIZE = 14914;
     private static final String DEFAULT_PROFILE_IMAGE_NAME = "defaultProfileImage.png";
 
-    @Autowired
-    private ProfileImageService profileImageService;
+    private final ProfileImageService profileImageService;
+    private final ProfileImageRepository profileImageRepository;
+    private final DefaultProfileImageProperties profileImageProperties;
+    private final MemberRepository memberRepository;
 
     @Autowired
-    private ProfileImageRepository profileImageRepository;
-
-    @Autowired
-    private DefaultProfileImageProperties profileImageProperties;
+    ProfileImageServiceSpringTest(ProfileImageService profileImageService, ProfileImageRepository profileImageRepository, DefaultProfileImageProperties profileImageProperties, MemberRepository memberRepository) {
+        this.profileImageService = profileImageService;
+        this.profileImageRepository = profileImageRepository;
+        this.profileImageProperties = profileImageProperties;
+        this.memberRepository = memberRepository;
+    }
 
 
     @Test
     @DisplayName("프로필 이미지 업로드")
     void saveDefaultProfileImage(){
-        // given, when
-        ProfileImage response = profileImageService.saveDefaultProfileImage();
+        // given
+        Member member = memberRepository.save(createMember(null, "member"));
+
+        // when
+        ProfileImage response = profileImageService.saveDefaultProfileImage(member);
 
         // then
         assertThat(response.getOriginalName()).isEqualTo(DEFAULT_PROFILE_IMAGE_NAME);
