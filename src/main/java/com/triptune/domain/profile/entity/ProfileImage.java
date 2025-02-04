@@ -63,8 +63,9 @@ public class ProfileImage {
         this.updatedAt = updatedAt;
     }
 
-    public static ProfileImage from(DefaultProfileImageProperties imageProperties){
+    public static ProfileImage from(Member member, DefaultProfileImageProperties imageProperties){
         return ProfileImage.builder()
+                .member(member)
                 .s3ObjectUrl(imageProperties.getS3ObjectUrl())
                 .s3FileKey(imageProperties.getS3FileKey())
                 .originalName(imageProperties.getOriginalName())

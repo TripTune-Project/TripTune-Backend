@@ -51,10 +51,10 @@ public class MemberService {
     public void join(JoinRequest joinRequest) {
         validateUniqueMemberInfo(joinRequest);
 
-        ProfileImage profileImage = profileImageService.saveDefaultProfileImage();
+        Member member = Member.from(joinRequest, passwordEncoder.encode(joinRequest.getPassword()));
+        Member savedMember = memberRepository.save(member);
 
-        Member member = Member.from(joinRequest, passwordEncoder.encode(joinRequest.getPassword()), profileImage);
-        memberRepository.save(member);
+        profileImageService.saveDefaultProfileImage(savedMember);
     }
 
 
@@ -161,8 +161,6 @@ public class MemberService {
 
         Member member = findMemberByEmail(email);
         member.updatePassword(passwordEncoder.encode(resetPasswordRequest.getPassword()));
-        member.updateUpdatedAt();
-
     }
 
     public Member findMemberByEmail(String email){
@@ -180,7 +178,6 @@ public class MemberService {
         }
 
         member.updatePassword(passwordEncoder.encode(passwordRequest.getNewPassword()));
-        member.updateUpdatedAt();
     }
 
 
@@ -197,6 +194,5 @@ public class MemberService {
         }
 
         member.updateNickname(changeNicknameRequest.getNickname());
-        member.updateUpdatedAt();
     }
 }

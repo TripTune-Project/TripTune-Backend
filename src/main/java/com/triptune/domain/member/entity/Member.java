@@ -72,14 +72,13 @@ public class Member {
         this.bookmarkList = bookmarkList;
     }
 
-    public static Member from(JoinRequest joinRequest, String encodePassword, ProfileImage profileImage){
+    public static Member from(JoinRequest joinRequest, String encodePassword){
         return Member.builder()
                 .userId(joinRequest.getUserId())
                 .password(encodePassword)
                 .nickname(joinRequest.getNickname())
                 .email(joinRequest.getEmail())
                 .isSocialLogin(false)
-                .profileImage(profileImage)
                 .createdAt(LocalDateTime.now())
                 .build();
     }
@@ -91,6 +90,7 @@ public class Member {
 
     public void updatePassword(String password) {
         this.password = password;
+        updateUpdatedAt();
     }
 
     public boolean isMatchRefreshToken(String refreshToken){
@@ -99,6 +99,7 @@ public class Member {
 
     public void updateNickname(String nickname) {
         this.nickname = nickname;
+        updateUpdatedAt();
     }
 
     public void updateUpdatedAt() {

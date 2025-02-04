@@ -83,7 +83,7 @@ public class MemberServiceTest extends MemberTest {
         when(memberRepository.existsByUserId(anyString())).thenReturn(false);
         when(memberRepository.existsByNickname(anyString())).thenReturn(false);
         when(memberRepository.existsByEmail(anyString())).thenReturn(false);
-        when(profileImageService.saveDefaultProfileImage()).thenReturn(createProfileImage(1L, "test.jpg"));
+        when(profileImageService.saveDefaultProfileImage(any())).thenReturn(createProfileImage(1L, "test.jpg"));
 
         // when
         memberService.join(request);
