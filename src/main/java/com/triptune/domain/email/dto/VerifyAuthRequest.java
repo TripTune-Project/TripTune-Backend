@@ -2,12 +2,12 @@ package com.triptune.domain.email.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Getter
-@Setter
 @NoArgsConstructor
 public class VerifyAuthRequest {
 
@@ -18,4 +18,9 @@ public class VerifyAuthRequest {
     @NotBlank(message = "인증번호는 필수 입력 값입니다.")
     private String authCode;
 
+    @Builder
+    public VerifyAuthRequest(String email, String authCode) {
+        this.email = email;
+        this.authCode = authCode;
+    }
 }

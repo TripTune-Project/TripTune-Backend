@@ -393,7 +393,7 @@ public class MemberServiceTest extends MemberTest {
         assertDoesNotThrow(() -> memberService.findPassword(findPasswordRequest));
 
         // then
-        verify(emailService, times(1)).findPassword(findPasswordRequest);
+        verify(emailService, times(1)).sendResetPasswordEmail(findPasswordRequest);
     }
 
     @Test
@@ -410,7 +410,7 @@ public class MemberServiceTest extends MemberTest {
         // then
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.MEMBER_NOT_FOUND.getStatus());
         assertThat(fail.getMessage()).isEqualTo(ErrorCode.MEMBER_NOT_FOUND.getMessage());
-        verify(emailService, times(0)).findPassword(findPasswordRequest);
+        verify(emailService, times(0)).sendResetPasswordEmail(findPasswordRequest);
     }
 
 
