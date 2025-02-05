@@ -7,7 +7,6 @@ import com.triptune.domain.member.dto.response.LoginResponse;
 import com.triptune.domain.member.dto.response.MemberInfoResponse;
 import com.triptune.domain.member.dto.response.RefreshTokenResponse;
 import com.triptune.domain.member.entity.Member;
-import com.triptune.domain.profile.entity.ProfileImage;
 import com.triptune.domain.member.exception.ChangeMemberInfoException;
 import com.triptune.domain.member.exception.FailLoginException;
 import com.triptune.domain.member.repository.MemberRepository;
@@ -148,7 +147,7 @@ public class MemberService {
             throw new DataNotFoundException(ErrorCode.MEMBER_NOT_FOUND);
         }
 
-        emailService.findPassword(findPasswordRequest);
+        emailService.sendResetPasswordEmail(findPasswordRequest);
     }
 
 

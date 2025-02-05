@@ -1,5 +1,6 @@
 package com.triptune.domain.email.service;
 
+import com.triptune.domain.email.dto.EmailTemplateRequest;
 import com.triptune.domain.email.dto.VerifyAuthRequest;
 import com.triptune.domain.member.dto.request.FindPasswordRequest;
 import com.triptune.global.exception.DataExistException;
@@ -21,7 +22,9 @@ import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
+import java.util.UUID;
 
 @Slf4j
 @Service
@@ -29,13 +32,15 @@ import java.util.Random;
 @Transactional
 public class EmailService {
 
+    private static final String IMAGE_FOLDER_PATH = "static/images/";
+    private static final String LOGO_IMAGE_NAME = "logo-removebg.png";
+
     private final RedisUtil redisUtil;
     private final JavaMailSender javaMailSender;
     private final MemberRepository memberRepository;
     private final JwtUtil jwtUtil;
     private final TemplateEngine templateEngine;
 
-    private final String IMAGE_FOLDER_PATH = "static/images/";
 
     @Value("${spring.mail.username}")
     private String senderEmail;
@@ -46,16 +51,17 @@ public class EmailService {
     @Value("${spring.jwt.token.password-expiration-time}")
     private long passwordExpirationTime;
 
+    @Value("${app.email.certification-duration}")
+    private long certificationDuration;
 
-    /**
-     * 회원가입 인증번호 증명
-     * @param verifyAuthRequest
-     * @return 발급된 인증번호랑 사용자 입력이랑 같을 시 true, 다를 경우 false
-     */
-    public Boolean verify(VerifyAuthRequest verifyAuthRequest){
+    @Value("${app.email.reset-password-duration}")
+    private long resetPasswordDuration;
+
+
+    public boolean verifyAuthCode(VerifyAuthRequest verifyAuthRequest){
         String savedCode = redisUtil.getData(verifyAuthRequest.getEmail());
 
-        log.info("code found by email: {}", savedCode);
+        log.info("이메일에 저장된 인증 코드: {}", savedCode);
 
         if (savedCode == null){
             return false;
@@ -64,12 +70,28 @@ public class EmailService {
         return savedCode.equals(verifyAuthRequest.getAuthCode());
     }
 
-    /**
-     * 회원가입 인증번호 이메일 전송
-     * @param email
-     * @throws MessagingException
-     */
-    public void verifyRequest(String email) throws MessagingException {
+
+    public void sendCertificationEmail(String email) throws MessagingException {
+        validateEmail(email);
+
+        String authCode = createAuthCode();
+
+        EmailTemplateRequest templateRequest = new EmailTemplateRequest(
+                "[TripTune] 이메일 인증 코드가 발급되었습니다.",
+                email,
+                Map.of("authCode", authCode),
+                "certificationEmail"
+        );
+
+        MimeMessage emailForm = createEmailTemplate(templateRequest);
+
+        javaMailSender.send(emailForm);
+        redisUtil.saveExpiredData(email, authCode, certificationDuration);
+
+        log.info("인증 이메일 전송 완료");
+    }
+
+    public void validateEmail(String email){
         if(memberRepository.existsByEmail(email)){
             throw new DataExistException(ErrorCode.ALREADY_EXISTED_EMAIL);
         }
@@ -77,107 +99,49 @@ public class EmailService {
         if(redisUtil.existData(email)){
             redisUtil.deleteData(email);
         }
-
-        // 이메일 폼 생성
-        MimeMessage emailForm = certificationEmailTemplate(email);
-
-        // 이메일 발송
-        log.info("certification number email sent completed");
-        javaMailSender.send(emailForm);
     }
 
 
-    /**
-     * 비밀번호 찾기 이메일 요청 : 비밀번호 변경 링크 제공
-     * @param findPasswordRequest
-     * @throws MessagingException
-     */
-    public void findPassword(FindPasswordRequest findPasswordRequest) throws MessagingException {
-        MimeMessage emailForm = findPasswordEmailTemplate(findPasswordRequest);
-
-        log.info("password recovery email sent completed");
-        javaMailSender.send(emailForm);
-    }
-
-
-    /**
-     * 이메일 인증코드 생성 요청 후 회원가입 인증번호 이메일 폼 생성
-     * @param email 수신자 이메일
-     * @return 이메일 객체 {@link MimeMessage}
-     * @throws MessagingException
-     */
-    private MimeMessage certificationEmailTemplate(String email) throws MessagingException {
-        String authCode = createCode();
-
-        MimeMessage message = javaMailSender.createMimeMessage();
-        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-
-        helper.setSubject("[TripTune] 이메일 인증 코드가 발급되었습니다.");
-        helper.setTo(email);
-        helper.setCc(senderEmail);
-
-        HashMap<String, String> emailValues = new HashMap<>();
-        emailValues.put("authCode", authCode);
-
-        Context context = new Context();
-        emailValues.forEach((key, value) -> {
-            context.setVariable(key, value);
-        });
-
-        String certificationMailHTML = templateEngine.process("certificationMail", context);
-
-        helper.setText(certificationMailHTML, true);
-        helper.addInline("image", new ClassPathResource(IMAGE_FOLDER_PATH + "logo-removebg.png"));
-
-        // 유효기간 3분
-        redisUtil.saveExpiredData(email, authCode, 300);
-
-        return message;
-    }
-
-
-    /**
-     * 비밀번호 변경 링크가 포함된 비밀번호 찾기 템플릿 생성
-     * @param findPasswordRequest
-     * @return 이메일 객체 {@link MimeMessage}
-     * @throws MessagingException
-     */
-    private MimeMessage findPasswordEmailTemplate(FindPasswordRequest findPasswordRequest) throws MessagingException {
+    public void sendResetPasswordEmail(FindPasswordRequest findPasswordRequest) throws MessagingException {
         String passwordToken = jwtUtil.createToken(findPasswordRequest.getUserId(), passwordExpirationTime);
-        String changePasswordURL = passwordURL + passwordToken;
+        String resetPasswordURL = passwordURL + passwordToken;
 
+        EmailTemplateRequest templateRequest = new EmailTemplateRequest(
+                "[TripTune] 비밀번호 재설정을 위한 안내 메일입니다.",
+                findPasswordRequest.getEmail(),
+                Map.of("resetPasswordURL", resetPasswordURL),
+                "resetPasswordEmail"
+        );
+
+        MimeMessage emailForm = createEmailTemplate(templateRequest);
+
+        javaMailSender.send(emailForm);
+        redisUtil.saveExpiredData(passwordToken, findPasswordRequest.getEmail(), resetPasswordDuration);
+
+        log.info("비밀번호 초기화 이메일 전송 완료");
+    }
+
+    private MimeMessage createEmailTemplate(EmailTemplateRequest templateRequest) throws MessagingException {
         MimeMessage message = javaMailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
-        helper.setSubject("[TripTune] 비밀번호 재설정을 위한 안내 메일입니다.");
-        helper.setTo(findPasswordRequest.getEmail());
+        helper.setSubject(templateRequest.subject());
+        helper.setTo(templateRequest.recipientEmail());
         helper.setCc(senderEmail);
 
-        HashMap<String, String> emailValues = new HashMap<>();
-        emailValues.put("changePasswordURL", changePasswordURL);
-
         Context context = new Context();
-        emailValues.forEach((key, value) -> {
-            context.setVariable(key, value);
-        });
+        templateRequest.emailValues().forEach(context::setVariable);
 
-        String passwordMailHTML = templateEngine.process("passwordMail", context);
-        helper.setText(passwordMailHTML, true);
+        String emailHTML = templateEngine.process(templateRequest.templateName(), context);
+        helper.setText(emailHTML, true);
 
-        helper.addInline("image", new ClassPathResource(IMAGE_FOLDER_PATH + "logo-removebg.png"));
-
-        // 유효기간 1시간
-        redisUtil.saveExpiredData(passwordToken, findPasswordRequest.getEmail(), 3600);
+        helper.addInline("image", new ClassPathResource(IMAGE_FOLDER_PATH + LOGO_IMAGE_NAME));
 
         return message;
     }
 
 
-    /**
-     * 인증 코드 생성
-     * @return 인증 코드
-     */
-    private String createCode() {
+    public String createAuthCode() {
         int leftLimit = 48;
         int rightLimit = 122;
         int targetStringLength = 6;

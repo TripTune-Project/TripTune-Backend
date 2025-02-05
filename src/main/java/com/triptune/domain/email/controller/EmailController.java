@@ -29,7 +29,7 @@ public class EmailController {
     @PostMapping("/verify-request")
     @Operation(summary = "이메일 인증 요청", description = "이메일 인증을 요청합니다.")
     public ApiResponse<?> verifyRequest(@Valid @RequestBody VerifyEmailRequest verifyEmailRequest) throws MessagingException {
-        emailService.verifyRequest(verifyEmailRequest.getEmail());
+        emailService.sendCertificationEmail(verifyEmailRequest.getEmail());
 
         return ApiResponse.okResponse();
     }
@@ -37,7 +37,7 @@ public class EmailController {
     @PostMapping("/verify")
     @Operation(summary = "이메일 인증 번호 검증", description = "발급된 이메일 인증 번호를 검증합니다.")
     public ApiResponse<?> verify(@Valid @RequestBody VerifyAuthRequest verifyAuthRequest) {
-        boolean isVerify = emailService.verify(verifyAuthRequest);
+        boolean isVerify = emailService.verifyAuthCode(verifyAuthRequest);
 
         if (!isVerify){
             throw new EmailVerifyException(ErrorCode.EMAIL_VERIFY_FAIL);
