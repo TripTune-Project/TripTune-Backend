@@ -6,13 +6,12 @@ import com.triptune.domain.member.dto.response.LoginResponse;
 import com.triptune.domain.member.dto.response.MemberInfoResponse;
 import com.triptune.domain.member.dto.response.RefreshTokenResponse;
 import com.triptune.domain.member.exception.ChangeMemberInfoException;
-import com.triptune.domain.member.dto.request.ChangePasswordRequest;
-import com.triptune.global.enumclass.ErrorCode;
-import com.triptune.global.exception.CustomJwtBadRequestException;
-import com.triptune.global.exception.CustomNotValidException;
-import com.triptune.global.response.ApiResponse;
 import com.triptune.domain.member.exception.FailLoginException;
 import com.triptune.domain.member.service.MemberService;
+import com.triptune.global.enumclass.ErrorCode;
+import com.triptune.global.exception.CustomJwtUnAuthorizedException;
+import com.triptune.global.exception.CustomNotValidException;
+import com.triptune.global.response.ApiResponse;
 import com.triptune.global.util.JwtUtil;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.swagger.v3.oas.annotations.Operation;
@@ -61,7 +60,7 @@ public class MemberController {
         String accessToken = jwtUtil.resolveToken(request);
 
         if (accessToken == null){
-            throw new CustomJwtBadRequestException(ErrorCode.INVALID_JWT_TOKEN);
+            throw new CustomJwtUnAuthorizedException(ErrorCode.INVALID_JWT_TOKEN);
         }
 
         memberService.logout(logoutRequest, accessToken);
