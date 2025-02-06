@@ -31,7 +31,7 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
             log.error("401 CustomAuthenticationEntryPoint(미인증 접근 시도), URL: {}", request.getRequestURI());
             log.error("Header 의 Authorization {}", request.getHeader("Authorization") != null ? "존재함" : "존재하지 않음");
 
-            JwtUtil.writeJwtException(response, HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHORIZED_ACCESS.getMessage());
+            JwtUtil.writeJwtException(request, response, HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHORIZED_ACCESS.getMessage());
         }
     }
 }
