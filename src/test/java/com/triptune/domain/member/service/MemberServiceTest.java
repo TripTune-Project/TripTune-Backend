@@ -8,13 +8,13 @@ import com.triptune.domain.member.dto.response.LoginResponse;
 import com.triptune.domain.member.dto.response.MemberInfoResponse;
 import com.triptune.domain.member.dto.response.RefreshTokenResponse;
 import com.triptune.domain.member.entity.Member;
-import com.triptune.domain.profile.entity.ProfileImage;
 import com.triptune.domain.member.exception.ChangeMemberInfoException;
 import com.triptune.domain.member.exception.FailLoginException;
 import com.triptune.domain.member.repository.MemberRepository;
+import com.triptune.domain.profile.entity.ProfileImage;
 import com.triptune.domain.profile.service.ProfileImageService;
 import com.triptune.global.enumclass.ErrorCode;
-import com.triptune.global.exception.CustomJwtBadRequestException;
+import com.triptune.global.exception.CustomJwtUnAuthorizedException;
 import com.triptune.global.exception.DataExistException;
 import com.triptune.global.exception.DataNotFoundException;
 import com.triptune.global.util.JwtUtil;
@@ -34,7 +34,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
@@ -343,7 +344,7 @@ public class MemberServiceTest extends MemberTest {
         when(memberRepository.findByUserId(any())).thenReturn(Optional.of(member));
 
         // when
-        CustomJwtBadRequestException fail = assertThrows(CustomJwtBadRequestException.class, () -> memberService.refreshToken(request));
+        CustomJwtUnAuthorizedException fail = assertThrows(CustomJwtUnAuthorizedException.class, () -> memberService.refreshToken(request));
 
         // then
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.MISMATCH_REFRESH_TOKEN.getStatus());

@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.triptune.domain.schedule.exception.CustomJwtBadRequestChatException;
 import com.triptune.domain.schedule.exception.CustomJwtUnAuthorizedChatException;
 import com.triptune.global.enumclass.ErrorCode;
-import com.triptune.global.exception.CustomJwtBadRequestException;
 import com.triptune.global.exception.CustomJwtUnAuthorizedException;
 import com.triptune.global.response.ErrorResponse;
 import com.triptune.global.service.CustomUserDetailsService;
@@ -66,23 +65,23 @@ public class JwtUtil {
             Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
 
             if(redisUtil.existData(token)){
-                log.info("Already logged out user");
-                throw new CustomJwtBadRequestException(ErrorCode.BLACKLIST_TOKEN);
+                log.error("Already logged out user");
+                throw new CustomJwtUnAuthorizedException(ErrorCode.BLACKLIST_TOKEN);
             }
 
             return true;
         } catch (ExpiredJwtException e){
-            log.info("Expired JWT Token ", e);
+            log.error("Expired JWT Token ", e);
             throw new CustomJwtUnAuthorizedException(ErrorCode.EXPIRED_JWT_TOKEN);
         } catch (SecurityException | MalformedJwtException e) {
-            log.info("Invalid JWT Token ", e);
-            throw new CustomJwtBadRequestException(ErrorCode.INVALID_JWT_TOKEN);
+            log.error("Invalid JWT Token ", e);
+            throw new CustomJwtUnAuthorizedException(ErrorCode.INVALID_JWT_TOKEN);
         } catch (UnsupportedJwtException e){
-            log.info("Unsupported JWT Token ", e);
-            throw new CustomJwtBadRequestException(ErrorCode.UNSUPPORTED_JWT_TOKEN);
+            log.error("Unsupported JWT Token ", e);
+            throw new CustomJwtUnAuthorizedException(ErrorCode.UNSUPPORTED_JWT_TOKEN);
         } catch (IllegalArgumentException e){
-            log.info("JWT claims string is empty ", e);
-            throw new CustomJwtBadRequestException(ErrorCode.EMPTY_JWT_CLAIMS);
+            log.error("JWT claims string is empty ", e);
+            throw new CustomJwtUnAuthorizedException(ErrorCode.EMPTY_JWT_CLAIMS);
         }
     }
 

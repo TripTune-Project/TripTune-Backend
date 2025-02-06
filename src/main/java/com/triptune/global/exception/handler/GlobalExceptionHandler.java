@@ -37,19 +37,11 @@ public class GlobalExceptionHandler {
         return ErrorResponse.of(HttpStatus.BAD_REQUEST, message);
     }
 
-
-    @ExceptionHandler(CustomJwtBadRequestException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponse handleCustomJwtBadRequestException(CustomJwtBadRequestException ex, HttpServletRequest request){
-        log.error("CustomJwtBadRequestException at {}: {}", request.getRequestURI(), ex.getMessage());
-        return ErrorResponse.of(ex.getHttpStatus(), ex.getMessage());
-    }
-
     @ExceptionHandler(CustomJwtUnAuthorizedException.class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     public ErrorResponse handleCustomJwtUnAuthorizedException(CustomJwtUnAuthorizedException ex, HttpServletRequest request){
         log.error("CustomJwtUnAuthorizedException at {}: {}", request.getRequestURI(),  ex.getMessage());
-        return ErrorResponse.of(ex.getHttpStatus(), ex.getMessage());
+        return ErrorResponse.of(ex.getHttpStatus(), request.getRequestURI() + " : " + ex.getMessage());
     }
 
     @ExceptionHandler(NoHandlerFoundException.class)

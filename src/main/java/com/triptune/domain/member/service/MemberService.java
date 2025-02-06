@@ -10,10 +10,9 @@ import com.triptune.domain.member.entity.Member;
 import com.triptune.domain.member.exception.ChangeMemberInfoException;
 import com.triptune.domain.member.exception.FailLoginException;
 import com.triptune.domain.member.repository.MemberRepository;
-import com.triptune.domain.member.dto.request.ChangePasswordRequest;
 import com.triptune.domain.profile.service.ProfileImageService;
 import com.triptune.global.enumclass.ErrorCode;
-import com.triptune.global.exception.CustomJwtBadRequestException;
+import com.triptune.global.exception.CustomJwtUnAuthorizedException;
 import com.triptune.global.exception.DataExistException;
 import com.triptune.global.exception.DataNotFoundException;
 import com.triptune.global.util.JwtUtil;
@@ -131,7 +130,7 @@ public class MemberService {
 
     public void validateSavedRefreshToken(Member member, String refreshToken){
         if(!member.isMatchRefreshToken(refreshToken)){
-            throw new CustomJwtBadRequestException(ErrorCode.MISMATCH_REFRESH_TOKEN);
+            throw new CustomJwtUnAuthorizedException(ErrorCode.MISMATCH_REFRESH_TOKEN);
         }
     }
 

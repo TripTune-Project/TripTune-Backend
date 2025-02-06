@@ -154,9 +154,9 @@ public class MemberControllerTest extends MemberTest {
                         .header("Authorization", "Bea" + accessToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(toJsonString(createLogoutDTO(member.getNickname()))))
-                .andExpect(status().isBadRequest())
+                .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.success").value(false))
-                .andExpect(jsonPath("$.message").value(ErrorCode.INVALID_JWT_TOKEN.getMessage()));
+                .andExpect(jsonPath("$.message").value("/api/members/logout : " + ErrorCode.INVALID_JWT_TOKEN.getMessage()));
     }
 
     @Test
@@ -199,7 +199,7 @@ public class MemberControllerTest extends MemberTest {
                         .content(toJsonString(createRefreshTokenRequest(refreshToken))))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.success").value(false))
-                .andExpect(jsonPath("$.message").value(ErrorCode.EXPIRED_JWT_TOKEN.getMessage()));
+                .andExpect(jsonPath("$.message").value("/api/members/refresh : " + ErrorCode.EXPIRED_JWT_TOKEN.getMessage()));
     }
 
     @Test
@@ -225,9 +225,9 @@ public class MemberControllerTest extends MemberTest {
         mockMvc.perform(post("/api/members/refresh")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(toJsonString(createRefreshTokenRequest(refreshToken))))
-                .andExpect(status().isBadRequest())
+                .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.success").value(false))
-                .andExpect(jsonPath("$.message").value(ErrorCode.MISMATCH_REFRESH_TOKEN.getMessage()));
+                .andExpect(jsonPath("$.message").value("/api/members/refresh : " + ErrorCode.MISMATCH_REFRESH_TOKEN.getMessage()));
 
     }
 
