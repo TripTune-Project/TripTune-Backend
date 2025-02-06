@@ -1,7 +1,6 @@
 package com.triptune.global.util;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.triptune.domain.schedule.exception.CustomJwtBadRequestChatException;
 import com.triptune.domain.schedule.exception.CustomJwtUnAuthorizedChatException;
 import com.triptune.global.enumclass.ErrorCode;
 import com.triptune.global.exception.CustomJwtUnAuthorizedException;
@@ -91,7 +90,7 @@ public class JwtUtil {
 
             if(redisUtil.existData(token)){
                 log.info("Already logged out user");
-                throw new CustomJwtBadRequestChatException(ErrorCode.BLACKLIST_TOKEN);
+                throw new CustomJwtUnAuthorizedChatException(ErrorCode.BLACKLIST_TOKEN);
             }
 
         } catch (ExpiredJwtException e){
@@ -99,13 +98,13 @@ public class JwtUtil {
             throw new CustomJwtUnAuthorizedChatException(ErrorCode.EXPIRED_JWT_TOKEN);
         } catch (SecurityException | MalformedJwtException e) {
             log.info("Invalid JWT Token ", e);
-            throw new CustomJwtBadRequestChatException(ErrorCode.INVALID_JWT_TOKEN);
+            throw new CustomJwtUnAuthorizedChatException(ErrorCode.INVALID_JWT_TOKEN);
         } catch (UnsupportedJwtException e){
             log.info("Unsupported JWT Token ", e);
-            throw new CustomJwtBadRequestChatException(ErrorCode.UNSUPPORTED_JWT_TOKEN);
+            throw new CustomJwtUnAuthorizedChatException(ErrorCode.UNSUPPORTED_JWT_TOKEN);
         } catch (IllegalArgumentException e){
             log.info("JWT claims string is empty ", e);
-            throw new CustomJwtBadRequestChatException(ErrorCode.EMPTY_JWT_CLAIMS);
+            throw new CustomJwtUnAuthorizedChatException(ErrorCode.EMPTY_JWT_CLAIMS);
         }
     }
 
@@ -141,12 +140,12 @@ public class JwtUtil {
                 .compact();
     }
 
-    public static void writeJwtException(HttpServletResponse response, HttpStatus httpStatus, String message) throws IOException {
+    public static void writeJwtException(HttpServletRequest request, HttpServletResponse response, HttpStatus httpStatus, String message) throws IOException {
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.setStatus(httpStatus.value());
         response.setCharacterEncoding(Charset.defaultCharset().name());
 
-        ErrorResponse errorResponse = ErrorResponse.of(httpStatus, message);
+        ErrorResponse errorResponse = ErrorResponse.of(httpStatus, request.getRequestURI() + " : " + message);
         String result = new ObjectMapper().writeValueAsString(errorResponse);
 
         response.getWriter().write(result);

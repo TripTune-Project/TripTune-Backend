@@ -32,20 +32,6 @@ public class ChatExceptionHandler {
 
     @MessageExceptionHandler
     @SendToUser(destinations = "/queue/errors", broadcast = false)
-    public ErrorResponse handleBadRequestChatException(BadRequestChatException ex){
-        log.error("BadRequestChatException: {}", ex.getMessage());
-        return ErrorResponse.of(ex.getHttpStatus(), ex.getMessage());
-    }
-
-    @MessageExceptionHandler
-    @SendToUser(destinations = "/queue/errors", broadcast = false)
-    public ErrorResponse handleCustomJwtBadRequestChatException(CustomJwtBadRequestChatException ex){
-        log.error("CustomJwtBadRequestChatException: {}", ex.getMessage());
-        return ErrorResponse.of(ex.getHttpStatus(), ex.getMessage());
-    }
-
-    @MessageExceptionHandler
-    @SendToUser(destinations = "/queue/errors", broadcast = false)
     public ErrorResponse handleCustomJwtUnAuthorizedChatException(CustomJwtUnAuthorizedChatException ex){
         log.error("CustomJwtUnAuthorizedChatException: {}", ex.getMessage());
         return ErrorResponse.of(ex.getHttpStatus(), ex.getMessage());

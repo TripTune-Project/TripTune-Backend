@@ -33,7 +33,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
         } catch (CustomJwtUnAuthorizedException ex){
             log.error("CustomJwtUnAuthorizedException at {}: {}", request.getRequestURI(),  ex.getMessage());
-            JwtUtil.writeJwtException(response, ex.getHttpStatus(), ex.getMessage());
+            JwtUtil.writeJwtException(request, response, ex.getHttpStatus(), ex.getMessage());
         }
 
     }
