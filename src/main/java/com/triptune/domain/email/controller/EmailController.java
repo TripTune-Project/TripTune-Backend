@@ -40,7 +40,7 @@ public class EmailController {
         boolean isVerify = emailService.verifyAuthCode(verifyAuthRequest);
 
         if (!isVerify){
-            throw new EmailVerifyException(ErrorCode.EMAIL_VERIFY_FAIL);
+            throw new EmailVerifyException(ErrorCode.FAIL_VERIFIED_EMAIL);
         }
 
         return ApiResponse.okResponse();

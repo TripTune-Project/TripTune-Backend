@@ -1,6 +1,7 @@
 package com.triptune.domain.email.service;
 
 import com.triptune.domain.email.dto.VerifyAuthRequest;
+import com.triptune.domain.email.exception.EmailVerifyException;
 import com.triptune.domain.member.repository.MemberRepository;
 import com.triptune.global.enumclass.ErrorCode;
 import com.triptune.global.exception.DataExistException;
@@ -16,9 +17,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mail.javamail.JavaMailSender;
 
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
@@ -44,7 +46,7 @@ public class EmailServiceTest {
         // given
         VerifyAuthRequest request = new VerifyAuthRequest("test@email.com", "Abcd123");
 
-        when(redisUtil.getData(anyString())).thenReturn("Abcd123");
+        when(redisUtil.getEmailData(any(), anyString())).thenReturn("Abcd123");
 
         // when
         boolean response = emailService.verifyAuthCode(request);
@@ -59,7 +61,7 @@ public class EmailServiceTest {
         // given
         VerifyAuthRequest request = new VerifyAuthRequest("test@email.com", "Abcd123");
 
-        when(redisUtil.getData(anyString())).thenReturn("abcd123");
+        when(redisUtil.getEmailData(any(), anyString())).thenReturn("abcd123");
 
         // when
         boolean response = emailService.verifyAuthCode(request);
@@ -68,31 +70,8 @@ public class EmailServiceTest {
         assertThat(response).isFalse();
     }
 
-    @Test
-    @DisplayName("이메일 유효성 검증")
-    void validateEmail(){
-        // given
-        when(memberRepository.existsByEmail(anyString())).thenReturn(false);
-        when(redisUtil.existData(anyString())).thenReturn(false);
 
-        // when
-        assertDoesNotThrow(() -> emailService.validateEmail("test@email.com"));
-    }
 
-    @Test
-    @DisplayName("이메일 유효성 검증 시 존재하는 이메일로 예외 발생")
-    void validateEmail_alreadyExistedEmail(){
-        // given
-        when(memberRepository.existsByEmail(anyString())).thenReturn(true);
-
-        // when
-        DataExistException fail = assertThrows(DataExistException.class, () -> emailService.validateEmail("test@email.com"));
-
-        // then
-        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.ALREADY_EXISTED_EMAIL.getStatus());
-        assertThat(fail.getMessage()).isEqualTo(ErrorCode.ALREADY_EXISTED_EMAIL.getMessage());
-
-    }
 
     @RepeatedTest(10)
     @DisplayName("인증 코드 생성")

@@ -29,7 +29,8 @@ public enum ErrorCode {
 
 
     // 이메일
-    EMAIL_VERIFY_FAIL(HttpStatus.BAD_REQUEST, "이메일 인증에 실패했습니다."),
+    FAIL_VERIFIED_EMAIL(HttpStatus.BAD_REQUEST, "이메일 인증에 실패했습니다."),
+    NOT_VERIFIED_EMAIL(HttpStatus.BAD_REQUEST, "인증되지 않은 이메일입니다. 이메일 인증을 다시 진행해주세요."),
 
     // 토큰
     INVALID_JWT_TOKEN(HttpStatus.UNAUTHORIZED, "유효하지 않은 JWT 토큰입니다."),

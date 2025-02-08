@@ -1,5 +1,6 @@
 package com.triptune.domain.member.service;
 
+import com.triptune.domain.email.exception.EmailVerifyException;
 import com.triptune.domain.email.service.EmailService;
 import com.triptune.domain.member.dto.request.*;
 import com.triptune.domain.member.dto.response.FindIdResponse;
@@ -12,6 +13,7 @@ import com.triptune.domain.member.exception.FailLoginException;
 import com.triptune.domain.member.repository.MemberRepository;
 import com.triptune.domain.profile.service.ProfileImageService;
 import com.triptune.global.enumclass.ErrorCode;
+import com.triptune.global.enumclass.RedisKeyType;
 import com.triptune.global.exception.CustomJwtUnAuthorizedException;
 import com.triptune.global.exception.DataExistException;
 import com.triptune.global.exception.DataNotFoundException;
@@ -48,6 +50,7 @@ public class MemberService {
 
     public void join(JoinRequest joinRequest) {
         validateUniqueMemberInfo(joinRequest);
+        validateVerifiedEmail(joinRequest.getEmail());
 
         Member member = Member.from(joinRequest, passwordEncoder.encode(joinRequest.getPassword()));
         Member savedMember = memberRepository.save(member);
@@ -70,15 +73,24 @@ public class MemberService {
         }
     }
 
-    public boolean isExistUserId(String userId){
+    public void validateVerifiedEmail(String email){
+        String isVerified = redisUtil.getEmailData(RedisKeyType.VERIFIED, email);
+
+        if(isVerified == null || !isVerified.equals("true")){
+            throw new EmailVerifyException(ErrorCode.NOT_VERIFIED_EMAIL);
+        }
+    }
+
+
+    private boolean isExistUserId(String userId){
         return memberRepository.existsByUserId(userId);
     }
 
-    public boolean isExistNickname(String nickname){
+    private boolean isExistNickname(String nickname){
         return memberRepository.existsByNickname(nickname);
     }
 
-    public boolean isExistEmail(String email){
+    private boolean isExistEmail(String email){
         return memberRepository.existsByEmail(email);
     }
 
@@ -123,7 +135,7 @@ public class MemberService {
         return RefreshTokenResponse.of(newAccessToken);
     }
 
-    public Member findMemberByUserId(String userId){
+    private Member findMemberByUserId(String userId){
         return memberRepository.findByUserId(userId)
                 .orElseThrow(() -> new DataNotFoundException(ErrorCode.MEMBER_NOT_FOUND));
     }
@@ -161,7 +173,7 @@ public class MemberService {
         member.updatePassword(passwordEncoder.encode(resetPasswordRequest.getPassword()));
     }
 
-    public Member findMemberByEmail(String email){
+    private Member findMemberByEmail(String email){
         return memberRepository.findByEmail(email)
                 .orElseThrow(() -> new DataNotFoundException(ErrorCode.MEMBER_NOT_FOUND));
     }
@@ -193,4 +205,5 @@ public class MemberService {
 
         member.updateNickname(changeNicknameRequest.getNickname());
     }
+
 }
