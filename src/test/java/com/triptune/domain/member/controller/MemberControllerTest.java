@@ -29,6 +29,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.filter.CharacterEncodingFilter;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -79,6 +80,8 @@ public class MemberControllerTest extends MemberTest {
     @Test
     @DisplayName("회원가입")
     void join() throws Exception {
+        when(redisUtil.getEmailData(any(), anyString())).thenReturn("true");
+
         mockMvc.perform(post("/api/members/join")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(toJsonString(createMemberRequest())))
@@ -128,6 +131,19 @@ public class MemberControllerTest extends MemberTest {
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value(ErrorCode.ALREADY_EXISTED_USERID.getMessage()));
     }
+
+
+    @Test
+    @DisplayName("회원가입 시 인증되지 않은 이메일로 예외 발생")
+    void join_notVerifiedEmail() throws Exception {
+        mockMvc.perform(post("/api/members/join")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJsonString(createMemberRequest())))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value(ErrorCode.NOT_VERIFIED_EMAIL.getMessage()));;
+    }
+
+
 
     @Test
     @DisplayName("로그아웃")

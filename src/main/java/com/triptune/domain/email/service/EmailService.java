@@ -2,7 +2,9 @@ package com.triptune.domain.email.service;
 
 import com.triptune.domain.email.dto.EmailTemplateRequest;
 import com.triptune.domain.email.dto.VerifyAuthRequest;
+import com.triptune.domain.email.exception.EmailVerifyException;
 import com.triptune.domain.member.dto.request.FindPasswordRequest;
+import com.triptune.global.enumclass.RedisKeyType;
 import com.triptune.global.exception.DataExistException;
 import com.triptune.domain.member.repository.MemberRepository;
 import com.triptune.global.enumclass.ErrorCode;
@@ -34,6 +36,14 @@ public class EmailService {
 
     private static final String IMAGE_FOLDER_PATH = "static/images/";
     private static final String LOGO_IMAGE_NAME = "logo-removebg.png";
+    private static final int LEFT_LIMIT = 48;  // '0'의 ASCII 값
+    private static final int RIGHT_LIMIT = 122; // 'z'의 ASCII 값
+    private static final int NUMERIC_LIMIT = 57; // 숫자의 최대값 '9'
+    private static final int LOWERCASE_LIMIT = 97; // 소문자의 최소값 'a'
+    private static final int UPPERCASE_LIMIT = 65; // 대문자의 최소값 'A'
+    private static final int TARGET_STRING_LENGTH = 6; // 인증 코드 길이
+    private static final String VERIFIED_KEY_TYPE = "isVerified";
+    private static final String AUTHCODE_KEY_TYPE = "authCode";
 
     private final RedisUtil redisUtil;
     private final JavaMailSender javaMailSender;
@@ -54,22 +64,24 @@ public class EmailService {
     @Value("${app.email.certification-duration}")
     private long certificationDuration;
 
+    @Value("${app.email.verification-duration}")
+    private long verificationDuration;
+
     @Value("${app.email.reset-password-duration}")
     private long resetPasswordDuration;
 
 
+
     public boolean verifyAuthCode(VerifyAuthRequest verifyAuthRequest){
-        String savedCode = redisUtil.getData(verifyAuthRequest.getEmail());
+        String savedCode = redisUtil.getEmailData(RedisKeyType.AUTH_CODE, verifyAuthRequest.getEmail());
 
-        log.info("이메일에 저장된 인증 코드: {}", savedCode);
-
-        if (savedCode == null){
-            return false;
+        if (savedCode != null && savedCode.equals(verifyAuthRequest.getAuthCode())){
+            redisUtil.saveEmailData(RedisKeyType.VERIFIED, verifyAuthRequest.getEmail(), "true", verificationDuration);
+            return true;
         }
 
-        return savedCode.equals(verifyAuthRequest.getAuthCode());
+        return false;
     }
-
 
     public void sendCertificationEmail(String email) throws MessagingException {
         validateEmail(email);
@@ -86,21 +98,20 @@ public class EmailService {
         MimeMessage emailForm = createEmailTemplate(templateRequest);
 
         javaMailSender.send(emailForm);
-        redisUtil.saveExpiredData(email, authCode, certificationDuration);
+        redisUtil.saveEmailData(RedisKeyType.AUTH_CODE, email, authCode, certificationDuration);
 
-        log.info("인증 이메일 전송 완료");
+        log.info("인증 이메일 전송 완료 : {}", email);
     }
 
-    public void validateEmail(String email){
+    private void validateEmail(String email){
         if(memberRepository.existsByEmail(email)){
             throw new DataExistException(ErrorCode.ALREADY_EXISTED_EMAIL);
         }
 
-        if(redisUtil.existData(email)){
-            redisUtil.deleteData(email);
+        if(redisUtil.existEmailData(RedisKeyType.AUTH_CODE, email)){
+            redisUtil.deleteEmailData(RedisKeyType.AUTH_CODE, email);
         }
     }
-
 
     public void sendResetPasswordEmail(FindPasswordRequest findPasswordRequest) throws MessagingException {
         String passwordToken = jwtUtil.createToken(findPasswordRequest.getUserId(), passwordExpirationTime);
@@ -118,7 +129,7 @@ public class EmailService {
         javaMailSender.send(emailForm);
         redisUtil.saveExpiredData(passwordToken, findPasswordRequest.getEmail(), resetPasswordDuration);
 
-        log.info("비밀번호 초기화 이메일 전송 완료");
+        log.info("비밀번호 초기화 이메일 전송 완료 : {}", findPasswordRequest.getEmail());
     }
 
     private MimeMessage createEmailTemplate(EmailTemplateRequest templateRequest) throws MessagingException {
@@ -140,17 +151,15 @@ public class EmailService {
         return message;
     }
 
-
     public String createAuthCode() {
-        int leftLimit = 48;
-        int rightLimit = 122;
-        int targetStringLength = 6;
         Random random = new Random();
 
-        return random.ints(leftLimit, rightLimit + 1)
-                .filter(i -> (i <= 57 || i >= 65) && (i <= 90 || i >= 97))
-                .limit(targetStringLength)
+        return random.ints(LEFT_LIMIT, RIGHT_LIMIT + 1)
+                .filter(i -> (i <= NUMERIC_LIMIT || i >= UPPERCASE_LIMIT) && (i <= 90 || i >= LOWERCASE_LIMIT))
+                .limit(TARGET_STRING_LENGTH)
                 .collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
                 .toString();
     }
+
+
 }
