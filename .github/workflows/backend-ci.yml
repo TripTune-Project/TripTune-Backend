@@ -30,7 +30,7 @@ jobs:
         touch ./src/main/resources/application.yml
         echo "${{ secrets.APPLICATION }}" | base64 --decode > ./src/main/resources/application.yml
 
-    - name: Set application-test.yml, application-mongo.yml
+    - name: Set application-h2.yml, application-mongo.yml
       run: |
         mkdir -p ./src/test/resources
         touch ./src/test/resources/application-h2.yml
