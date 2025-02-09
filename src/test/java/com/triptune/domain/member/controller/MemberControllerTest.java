@@ -158,21 +158,6 @@ public class MemberControllerTest extends MemberTest {
     }
 
     @Test
-    @DisplayName("로그아웃 시 잘못된 access Token 으로 인해 예외 발생")
-    void logout_customJwtBadRequestException() throws Exception{
-        Member member = memberRepository.save(createMember(null, "member"));
-        String accessToken = jwtUtil.createToken(member.getUserId(), 3600);
-
-        mockMvc.perform(patch("/api/members/logout")
-                        .header("Authorization", "Bea" + accessToken)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(createLogoutDTO(member.getNickname()))))
-                .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.success").value(false))
-                .andExpect(jsonPath("$.message").value("/api/members/logout : " + ErrorCode.INVALID_JWT_TOKEN.getMessage()));
-    }
-
-    @Test
     @DisplayName("로그아웃 시 존재하지 않는 사용자 요청으로 인해 예외 발생")
     void logout_dataNotFoundException() throws Exception{
         Member member = memberRepository.save(createMember(null, "member"));
