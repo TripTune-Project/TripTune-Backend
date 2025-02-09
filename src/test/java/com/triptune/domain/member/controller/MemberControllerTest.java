@@ -132,7 +132,6 @@ public class MemberControllerTest extends MemberTest {
                 .andExpect(jsonPath("$.message").value(ErrorCode.ALREADY_EXISTED_USERID.getMessage()));
     }
 
-
     @Test
     @DisplayName("회원가입 시 인증되지 않은 이메일로 예외 발생")
     void join_notVerifiedEmail() throws Exception {
@@ -142,8 +141,6 @@ public class MemberControllerTest extends MemberTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").value(ErrorCode.NOT_VERIFIED_EMAIL.getMessage()));;
     }
-
-
 
     @Test
     @DisplayName("로그아웃")
@@ -527,6 +524,62 @@ public class MemberControllerTest extends MemberTest {
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.message").value(ErrorCode.ALREADY_EXISTED_NICKNAME.getMessage()));
     }
+
+    @Test
+    @WithMockUser("member")
+    @DisplayName("이메일 변경")
+    void changeEmail() throws Exception {
+        memberRepository.save(createMember(null, "member"));
+        when(redisUtil.getEmailData(any(), anyString())).thenReturn("true");
+
+        mockMvc.perform(patch("/api/members/change-email")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJsonString(createEmailRequest("changeEmail@email.com"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()));
+    }
+
+    @Test
+    @WithMockUser("member")
+    @DisplayName("이메일 변경 시 이미 존재하는 이메일로 예외 발생")
+    void changeEmail_duplicateEmail() throws Exception {
+        memberRepository.save(createMember(null, "member"));
+
+        mockMvc.perform(patch("/api/members/change-email")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJsonString(createEmailRequest("member@email.com"))))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.message").value(ErrorCode.ALREADY_EXISTED_EMAIL.getMessage()));;
+    }
+
+    @Test
+    @WithMockUser("member")
+    @DisplayName("이메일 변경 시 인증되지 않은 이메일로 예외 발생")
+    void changeEmail_notVerifiedEmail() throws Exception {
+        memberRepository.save(createMember(null, "member"));
+        when(redisUtil.getEmailData(any(), anyString())).thenReturn(null);
+
+        mockMvc.perform(patch("/api/members/change-email")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJsonString(createEmailRequest("changeEmail@email.com"))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value(ErrorCode.NOT_VERIFIED_EMAIL.getMessage()));;
+    }
+
+    @Test
+    @WithMockUser("member")
+    @DisplayName("이메일 변경 시 존재하지 않는 사용자로 예외 발생")
+    void changeEmail_memberNotFoundException() throws Exception {
+        when(redisUtil.getEmailData(any(), anyString())).thenReturn("true");
+
+        mockMvc.perform(patch("/api/members/change-email")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJsonString(createEmailRequest("changeEmail@email.com"))))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").value(ErrorCode.MEMBER_NOT_FOUND.getMessage()));;
+    }
+
+
 
 
 }

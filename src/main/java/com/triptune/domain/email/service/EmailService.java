@@ -2,12 +2,9 @@ package com.triptune.domain.email.service;
 
 import com.triptune.domain.email.dto.EmailTemplateRequest;
 import com.triptune.domain.email.dto.VerifyAuthRequest;
-import com.triptune.domain.email.exception.EmailVerifyException;
 import com.triptune.domain.member.dto.request.FindPasswordRequest;
 import com.triptune.global.enumclass.RedisKeyType;
-import com.triptune.global.exception.DataExistException;
 import com.triptune.domain.member.repository.MemberRepository;
-import com.triptune.global.enumclass.ErrorCode;
 import com.triptune.global.util.JwtUtil;
 import com.triptune.global.util.RedisUtil;
 import jakarta.mail.MessagingException;
@@ -23,10 +20,8 @@ import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
-import java.util.UUID;
 
 @Slf4j
 @Service
@@ -84,7 +79,7 @@ public class EmailService {
     }
 
     public void sendCertificationEmail(String email) throws MessagingException {
-        validateEmail(email);
+        deleteAuthCodeIfExists(email);
 
         String authCode = createAuthCode();
 
@@ -103,11 +98,7 @@ public class EmailService {
         log.info("인증 이메일 전송 완료 : {}", email);
     }
 
-    private void validateEmail(String email){
-        if(memberRepository.existsByEmail(email)){
-            throw new DataExistException(ErrorCode.ALREADY_EXISTED_EMAIL);
-        }
-
+    private void deleteAuthCodeIfExists(String email){
         if(redisUtil.existEmailData(RedisKeyType.AUTH_CODE, email)){
             redisUtil.deleteEmailData(RedisKeyType.AUTH_CODE, email);
         }

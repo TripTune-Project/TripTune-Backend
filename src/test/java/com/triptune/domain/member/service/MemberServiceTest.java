@@ -1,5 +1,6 @@
 package com.triptune.domain.member.service;
 
+import com.triptune.domain.email.dto.EmailRequest;
 import com.triptune.domain.email.exception.EmailVerifyException;
 import com.triptune.domain.email.service.EmailService;
 import com.triptune.domain.member.MemberTest;
@@ -132,8 +133,10 @@ public class MemberServiceTest extends MemberTest {
         verify(memberRepository, times(0)).save(any());
     }
 
+
+
     @Test
-    @DisplayName("회원가입 시 이미 가입한 닉네임이 존재해 예외 발생")
+    @DisplayName("회원가입 시 이미 가입한 이메일이 존재해 예외 발생")
     void join_emailExistException(){
         // given
         JoinRequest request = createMemberRequest();
@@ -165,74 +168,6 @@ public class MemberServiceTest extends MemberTest {
         assertThatThrownBy(() -> memberService.join(request))
                 .isInstanceOf(EmailVerifyException.class)
                 .hasMessage(ErrorCode.NOT_VERIFIED_EMAIL.getMessage());
-
-    }
-
-
-    @Test
-    @DisplayName("사용자 중복 체크")
-    void validateUniqueMemberInfo(){
-        // given
-        JoinRequest request = createMemberRequest();
-
-        when(memberRepository.existsByUserId(anyString())).thenReturn(false);
-        when(memberRepository.existsByNickname(anyString())).thenReturn(false);
-        when(memberRepository.existsByEmail(anyString())).thenReturn(false);
-
-
-        // when, then
-        assertThatCode(() -> memberService.validateUniqueMemberInfo(request))
-                .doesNotThrowAnyException();
-
-    }
-
-    @Test
-    @DisplayName("사용자 중복 체크 시 이미 가입한 아이디가 존재해 예외 발생")
-    void validateUniqueMemberInfo_userIdDataExistException(){
-        // given
-        JoinRequest request = createMemberRequest();
-
-        when(memberRepository.existsByUserId(anyString())).thenReturn(true);
-
-        // when, then
-        assertThatThrownBy(() -> memberService.validateUniqueMemberInfo(request))
-                .isInstanceOf(DataExistException.class)
-                .hasMessage(ErrorCode.ALREADY_EXISTED_USERID.getMessage());
-
-    }
-
-    @Test
-    @DisplayName("사용자 중복 체크 시 이미 가입한 닉네임이 존재해 예외 발생")
-    void validateUniqueMemberInfo_nicknameDataExistException(){
-        // given
-        JoinRequest request = createMemberRequest();
-
-        when(memberRepository.existsByUserId(anyString())).thenReturn(false);
-        when(memberRepository.existsByNickname(anyString())).thenReturn(true);
-
-        // when, then
-        assertThatThrownBy(() -> memberService.validateUniqueMemberInfo(request))
-                .isInstanceOf(DataExistException.class)
-                .hasMessage(ErrorCode.ALREADY_EXISTED_NICKNAME.getMessage());
-
-    }
-
-    @Test
-    @DisplayName("사용자 중복 체크 시 이미 가입한 이메일이 존재해 예외 발생")
-    void validateUniqueMemberInfo_emailDataExistException(){
-        // given
-        JoinRequest request = createMemberRequest();
-
-        when(memberRepository.existsByUserId(anyString())).thenReturn(false);
-        when(memberRepository.existsByNickname(anyString())).thenReturn(false);
-        when(memberRepository.existsByEmail(anyString())).thenReturn(true);
-
-        // when
-        DataExistException fail = assertThrows(DataExistException.class, () -> memberService.validateUniqueMemberInfo(request));
-
-        // then
-        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.ALREADY_EXISTED_EMAIL.getStatus());
-        assertThat(fail.getMessage()).isEqualTo(ErrorCode.ALREADY_EXISTED_EMAIL.getMessage());
 
     }
 
@@ -635,7 +570,6 @@ public class MemberServiceTest extends MemberTest {
         // given
         ChangeNicknameRequest request = createChangeNicknameRequest("newNickname");
 
-        when(memberRepository.findByUserId(anyString())).thenReturn(Optional.of(member));
         when(memberRepository.existsByNickname(anyString())).thenReturn(true);
 
         // when
@@ -645,6 +579,75 @@ public class MemberServiceTest extends MemberTest {
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.ALREADY_EXISTED_NICKNAME.getStatus());
         assertThat(fail.getMessage()).isEqualTo(ErrorCode.ALREADY_EXISTED_NICKNAME.getMessage());
     }
+
+    @Test
+    @DisplayName("이메일 변경")
+    void changeEmail(){
+        // given
+        EmailRequest emailRequest = createEmailRequest("changeMember@email.com");
+
+        when(memberRepository.existsByEmail(anyString())).thenReturn(false);
+        when(memberRepository.findByUserId(anyString())).thenReturn(Optional.of(member));
+        when(redisUtil.getEmailData(any(), anyString())).thenReturn("true");
+
+        // when
+        assertThatCode(() -> memberService.changeEmail("member", emailRequest))
+                .doesNotThrowAnyException();
+
+        // then
+        assertThat(member.getEmail()).isEqualTo(emailRequest.getEmail());
+    }
+
+    @Test
+    @DisplayName("이메일 변경 시 이미 존재하는 이메일로 예외 발생")
+    void changeEmail_duplicateEmailException(){
+        // given
+        EmailRequest emailRequest = createEmailRequest("changeMember@email.com");
+
+        when(memberRepository.existsByEmail(anyString())).thenReturn(true);
+
+        // when
+        assertThatThrownBy(() -> memberService.changeEmail("member", emailRequest))
+                .isInstanceOf(DataExistException.class)
+                .hasMessage(ErrorCode.ALREADY_EXISTED_EMAIL.getMessage());
+
+    }
+
+    @Test
+    @DisplayName("이메일 변경 시 인증된 이메일이 아니여서 예외 발생")
+    void changeEmail_notVerifiedEmailException(){
+        // given
+        EmailRequest emailRequest = createEmailRequest("changeMember@email.com");
+
+        when(memberRepository.existsByEmail(anyString())).thenReturn(false);
+        when(redisUtil.getEmailData(any(), anyString())).thenReturn(null);
+
+        // when
+        assertThatThrownBy(() -> memberService.changeEmail("member", emailRequest))
+                .isInstanceOf(EmailVerifyException.class)
+                .hasMessage(ErrorCode.NOT_VERIFIED_EMAIL.getMessage());
+
+    }
+
+    @Test
+    @DisplayName("이메일 변경 시 사용자 데이터 존재하지 않아 예외 발생")
+    void changeEmail_memberNotFoundException(){
+        // given
+        EmailRequest emailRequest = createEmailRequest("changeMember@email.com");
+
+        when(memberRepository.existsByEmail(anyString())).thenReturn(false);
+        when(redisUtil.getEmailData(any(), anyString())).thenReturn("true");
+        when(memberRepository.findByUserId(anyString())).thenReturn(Optional.empty());
+
+
+        // when, then
+        assertThatThrownBy(() -> memberService.changeEmail("member", emailRequest))
+                .isInstanceOf(DataNotFoundException.class)
+                .hasMessage(ErrorCode.MEMBER_NOT_FOUND.getMessage());
+    }
+
+
+
 
 
 }

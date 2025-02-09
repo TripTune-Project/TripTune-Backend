@@ -1,5 +1,6 @@
 package com.triptune.domain.member.controller;
 
+import com.triptune.domain.email.dto.EmailRequest;
 import com.triptune.domain.member.dto.request.*;
 import com.triptune.domain.member.dto.response.FindIdResponse;
 import com.triptune.domain.member.dto.response.LoginResponse;
@@ -133,5 +134,13 @@ public class MemberController {
         memberService.changeNickname(userId, changeNicknameRequest);
         return ApiResponse.okResponse();
 
+    }
+
+    @PatchMapping("/change-email")
+    @Operation(summary = "사용자 이메일 변경", description = "사용자 이메일을 변경합니다.")
+    public ApiResponse<?> changeEmail(@Valid @RequestBody EmailRequest emailRequest){
+        String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+        memberService.changeEmail(userId, emailRequest);
+        return ApiResponse.okResponse();
     }
 }
