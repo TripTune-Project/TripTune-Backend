@@ -37,12 +37,9 @@ public class EmailService {
     private static final int LOWERCASE_LIMIT = 97; // 소문자의 최소값 'a'
     private static final int UPPERCASE_LIMIT = 65; // 대문자의 최소값 'A'
     private static final int TARGET_STRING_LENGTH = 6; // 인증 코드 길이
-    private static final String VERIFIED_KEY_TYPE = "isVerified";
-    private static final String AUTHCODE_KEY_TYPE = "authCode";
 
     private final RedisUtil redisUtil;
     private final JavaMailSender javaMailSender;
-    private final MemberRepository memberRepository;
     private final JwtUtil jwtUtil;
     private final TemplateEngine templateEngine;
 
@@ -56,13 +53,13 @@ public class EmailService {
     @Value("${spring.jwt.token.password-expiration-time}")
     private long passwordExpirationTime;
 
-    @Value("${app.email.certification-duration}")
+    @Value("${app.backend.email.certification-duration}")
     private long certificationDuration;
 
-    @Value("${app.email.verification-duration}")
+    @Value("${app.backend.email.verification-duration}")
     private long verificationDuration;
 
-    @Value("${app.email.reset-password-duration}")
+    @Value("${app.backend.email.reset-password-duration}")
     private long resetPasswordDuration;
 
 

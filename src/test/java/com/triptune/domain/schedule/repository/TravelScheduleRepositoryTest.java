@@ -35,7 +35,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 @Import({QueryDSLConfig.class})
-@ActiveProfiles("test")
+@ActiveProfiles("h2")
 public class TravelScheduleRepositoryTest extends ScheduleTest {
     private final TravelScheduleRepository travelScheduleRepository;
     private final TravelAttendeeRepository travelAttendeeRepository;

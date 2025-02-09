@@ -21,7 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @SpringBootTest
-@ActiveProfiles("test")
+@ActiveProfiles("h2")
 public class TravelImageRepositoryTest extends TravelTest {
 
     private final TravelImageRepository travelImageRepository;

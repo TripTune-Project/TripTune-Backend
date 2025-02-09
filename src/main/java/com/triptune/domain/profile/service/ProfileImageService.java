@@ -12,6 +12,7 @@ import com.triptune.global.util.FileUtil;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.config.authentication.UserServiceBeanDefinitionParser;
 import org.springframework.stereotype.Service;
@@ -20,6 +21,7 @@ import org.springframework.web.multipart.MultipartFile;
 @Service
 @Transactional
 @RequiredArgsConstructor
+@EnableConfigurationProperties(DefaultProfileImageProperties.class)
 public class ProfileImageService {
     private static final String FILE_TAG = "profileImage";
 
