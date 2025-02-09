@@ -60,10 +60,6 @@ public class MemberController {
     public ApiResponse<?> logout(HttpServletRequest request, @Valid @RequestBody LogoutRequest logoutRequest){
         String accessToken = jwtUtil.resolveToken(request);
 
-        if (accessToken == null){
-            throw new CustomJwtUnAuthorizedException(ErrorCode.INVALID_JWT_TOKEN);
-        }
-
         memberService.logout(logoutRequest, accessToken);
         return ApiResponse.okResponse();
     }
