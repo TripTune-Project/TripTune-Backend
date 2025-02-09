@@ -102,8 +102,14 @@ public class Member {
         updateUpdatedAt();
     }
 
+    public void updateEmail(String email) {
+        this.email = email;
+        updateUpdatedAt();
+    }
+
     public void updateUpdatedAt() {
         this.updatedAt = LocalDateTime.now();
     }
+
 
 }

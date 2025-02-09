@@ -1,6 +1,7 @@
 package com.triptune.domain.member;
 
 import com.triptune.domain.BaseTest;
+import com.triptune.domain.email.dto.EmailRequest;
 import com.triptune.domain.member.dto.request.*;
 
 public class MemberTest extends BaseTest {
@@ -68,6 +69,12 @@ public class MemberTest extends BaseTest {
     protected ChangeNicknameRequest createChangeNicknameRequest(String newNickname) {
         return ChangeNicknameRequest.builder()
                 .nickname(newNickname)
+                .build();
+    }
+
+    protected EmailRequest createEmailRequest(String email){
+        return EmailRequest.builder()
+                .email(email)
                 .build();
     }
 }

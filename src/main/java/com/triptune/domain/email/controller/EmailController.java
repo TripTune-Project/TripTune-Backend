@@ -1,7 +1,8 @@
 package com.triptune.domain.email.controller;
 
 import com.triptune.domain.email.dto.VerifyAuthRequest;
-import com.triptune.domain.email.dto.VerifyEmailRequest;
+import com.triptune.domain.email.dto.EmailRequest;
+import com.triptune.domain.member.service.MemberService;
 import com.triptune.global.enumclass.ErrorCode;
 import com.triptune.global.response.ApiResponse;
 import com.triptune.domain.email.exception.EmailVerifyException;
@@ -24,12 +25,14 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "Email", description = "이메일 관련 API")
 public class EmailController {
 
+    private final MemberService memberService;
     private final EmailService emailService;
 
     @PostMapping("/verify-request")
     @Operation(summary = "이메일 인증 요청", description = "이메일 인증을 요청합니다.")
-    public ApiResponse<?> verifyRequest(@Valid @RequestBody VerifyEmailRequest verifyEmailRequest) throws MessagingException {
-        emailService.sendCertificationEmail(verifyEmailRequest.getEmail());
+    public ApiResponse<?> verifyRequest(@Valid @RequestBody EmailRequest emailRequest) throws MessagingException {
+        memberService.checkDuplicateEmail(emailRequest.getEmail());
+        emailService.sendCertificationEmail(emailRequest.getEmail());
 
         return ApiResponse.okResponse();
     }
