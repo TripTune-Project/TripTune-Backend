@@ -33,9 +33,9 @@ jobs:
     - name: Set application-test.yml, application-mongo.yml
       run: |
         mkdir -p ./src/test/resources
-        touch ./src/test/resources/application-test.yml
+        touch ./src/test/resources/application-h2.yml
         touch ./src/test/resources/application-mongo.yml
-        echo "${{ secrets.APPLICATION_TEST }}" | base64 --decode > ./src/test/resources/application-test.yml
+        echo "${{ secrets.APPLICATION_H2 }}" | base64 --decode > ./src/test/resources/application-h2.yml
         echo "${{ secrets.APPLICATION_MONGO }}" | base64 --decode > ./src/test/resources/application-mongo.yml
         
 
