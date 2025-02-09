@@ -33,7 +33,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
-@ActiveProfiles("test")
+@ActiveProfiles("h2")
 class ProfileImageControllerTest extends ProfileImageTest {
     private final WebApplicationContext wac;
     private final JwtUtil jwtUtil;

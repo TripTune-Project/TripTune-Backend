@@ -15,7 +15,7 @@ import org.springframework.test.context.ActiveProfiles;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
-@ActiveProfiles("test")
+@ActiveProfiles("h2")
 class ProfileImageServiceSpringTest extends ProfileImageTest {
     private static final long DEFAULT_PROFILE_IMAGE_SIZE = 14914;
     private static final String DEFAULT_PROFILE_IMAGE_NAME = "defaultProfileImage.png";
