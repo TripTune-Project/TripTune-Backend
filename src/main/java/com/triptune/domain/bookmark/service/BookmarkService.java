@@ -2,6 +2,7 @@ package com.triptune.domain.bookmark.service;
 
 import com.triptune.domain.bookmark.dto.request.BookmarkRequest;
 import com.triptune.domain.bookmark.entity.Bookmark;
+import com.triptune.domain.bookmark.enumclass.BookmarkSortType;
 import com.triptune.domain.bookmark.repository.BookmarkRepository;
 import com.triptune.domain.member.entity.Member;
 import com.triptune.domain.member.repository.MemberRepository;
@@ -12,6 +13,8 @@ import com.triptune.global.exception.DataExistException;
 import com.triptune.global.exception.DataNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -38,12 +41,12 @@ public class BookmarkService {
     }
 
 
-    public Member findMemberByUserId(String userId){
+    private Member findMemberByUserId(String userId){
         return memberRepository.findByUserId(userId)
                 .orElseThrow(() -> new DataNotFoundException(ErrorCode.MEMBER_NOT_FOUND));
     }
 
-    public TravelPlace findTravelPlaceByPlaceId(Long placeId){
+    private TravelPlace findTravelPlaceByPlaceId(Long placeId){
         return travelPlaceRepository.findByPlaceId(placeId)
                 .orElseThrow(() -> new DataNotFoundException(ErrorCode.PLACE_NOT_FOUND));
     }
@@ -56,7 +59,11 @@ public class BookmarkService {
         bookmarkRepository.deleteByMember_UserIdAndTravelPlace_PlaceId(userId, placeId);
     }
 
-    public boolean isExistBookmark(String userId, Long placeId){
+    private boolean isExistBookmark(String userId, Long placeId){
         return bookmarkRepository.existsByMember_UserIdAndTravelPlace_PlaceId(userId, placeId);
+    }
+
+    public Page<TravelPlace> getBookmarkTravelPlaces(String userId, Pageable pageable, BookmarkSortType sortType) {
+        return bookmarkRepository.getBookmarkTravelPlaces(userId, pageable, sortType);
     }
 }

@@ -19,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Transactional
 public abstract class BaseTest {
@@ -155,6 +156,47 @@ public abstract class BaseTest {
                 .build();
     }
 
+    protected TravelPlace createTravelPlace(Long placeId, Country country, City city, District district, ApiCategory apiCategory, String placeName){
+        return TravelPlace.builder()
+                .placeId(placeId)
+                .country(country)
+                .city(city)
+                .district(district)
+                .apiCategory(apiCategory)
+                .address("테스트 주소")
+                .detailAddress("테스트 상세주소")
+                .homepage("www.test.com")
+                .phoneNumber("010-0000-0000")
+                .latitude(37.5)
+                .longitude(127.0281573537)
+                .placeName(placeName)
+                .bookmarkCnt(0)
+                .createdAt(LocalDateTime.now())
+                .description("테스트 장소 설명")
+                .build();
+    }
+
+    protected TravelPlace createTravelPlace(Long placeId, Country country, City city, District district, ApiCategory apiCategory, List<TravelImage> travelImageList,  String placeName){
+        return TravelPlace.builder()
+                .placeId(placeId)
+                .country(country)
+                .city(city)
+                .district(district)
+                .apiCategory(apiCategory)
+                .address("테스트 주소")
+                .detailAddress("테스트 상세주소")
+                .homepage("www.test.com")
+                .phoneNumber("010-0000-0000")
+                .latitude(37.5)
+                .longitude(127.0281573537)
+                .placeName(placeName)
+                .bookmarkCnt(0)
+                .createdAt(LocalDateTime.now())
+                .description("테스트 장소 설명")
+                .travelImageList(travelImageList)
+                .build();
+    }
+
     protected TravelSchedule createTravelSchedule(Long scheduleId, String scheduleName){
         return TravelSchedule.builder()
                 .scheduleId(scheduleId)
@@ -164,7 +206,6 @@ public abstract class BaseTest {
                 .createdAt(LocalDateTime.now())
                 .build();
     }
-
 
 
     protected TravelImage createTravelImage(TravelPlace travelPlace, String fileName, boolean isThumbnail){
@@ -215,12 +256,12 @@ public abstract class BaseTest {
                 .build();
     }
 
-    protected Bookmark createBookmark(Long bookmarkId, Member member, TravelPlace travelPlace){
+    protected Bookmark createBookmark(Long bookmarkId, Member member, TravelPlace travelPlace, LocalDateTime localDateTime){
         return Bookmark.builder()
                 .bookmarkId(bookmarkId)
                 .member(member)
                 .travelPlace(travelPlace)
-                .createdAt(LocalDateTime.now())
+                .createdAt(localDateTime)
                 .build();
     }
 

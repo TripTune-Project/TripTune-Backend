@@ -1,5 +1,12 @@
 package com.triptune.domain.member.service;
 
+import com.triptune.domain.bookmark.enumclass.BookmarkSortType;
+import com.triptune.domain.bookmark.repository.BookmarkRepository;
+import com.triptune.domain.bookmark.service.BookmarkService;
+import com.triptune.domain.common.entity.ApiCategory;
+import com.triptune.domain.common.entity.City;
+import com.triptune.domain.common.entity.Country;
+import com.triptune.domain.common.entity.District;
 import com.triptune.domain.email.dto.EmailRequest;
 import com.triptune.domain.email.exception.EmailVerifyException;
 import com.triptune.domain.email.service.EmailService;
@@ -15,12 +22,15 @@ import com.triptune.domain.member.exception.FailLoginException;
 import com.triptune.domain.member.repository.MemberRepository;
 import com.triptune.domain.profile.entity.ProfileImage;
 import com.triptune.domain.profile.service.ProfileImageService;
+import com.triptune.domain.travel.dto.response.PlaceSimpleResponse;
+import com.triptune.domain.travel.entity.TravelImage;
+import com.triptune.domain.travel.entity.TravelPlace;
 import com.triptune.global.enumclass.ErrorCode;
-import com.triptune.global.enumclass.RedisKeyType;
 import com.triptune.global.exception.CustomJwtUnAuthorizedException;
 import com.triptune.global.exception.DataExistException;
 import com.triptune.global.exception.DataNotFoundException;
 import com.triptune.global.util.JwtUtil;
+import com.triptune.global.util.PageUtil;
 import com.triptune.global.util.RedisUtil;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -32,8 +42,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.*;
@@ -66,15 +80,32 @@ public class MemberServiceTest extends MemberTest {
     @Mock
     private ProfileImageService profileImageService;
 
+    @Mock
+    private BookmarkService bookmarkService;
+
     private final String accessToken = "MemberAccessToken";
     private final String refreshToken = "MemberRefreshToken";
     private final String passwordToken = "MemberPasswordToken";
 
     private Member member;
+    private TravelPlace travelPlace1;
+    private TravelPlace travelPlace2;
+    private TravelPlace travelPlace3;
 
     @BeforeEach
     void setUp(){
+        Country country = createCountry();
+        City city = createCity(country);
+        District district = createDistrict(city, "강남구");
+        ApiCategory apiCategory = createApiCategory();
+
         member = createMember(null, "member");
+        TravelImage travelImage1 = createTravelImage(travelPlace1, "test", true);
+        TravelImage travelImage2 = createTravelImage(travelPlace2, "test", true);
+        TravelImage travelImage3 = createTravelImage(travelPlace3, "test", true);
+        travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, List.of(travelImage1), "가장소");
+        travelPlace2 = createTravelPlace(2L, country, city, district, apiCategory, List.of(travelImage2), "나장소");
+        travelPlace3 = createTravelPlace(3L, country, city, district, apiCategory, List.of(travelImage3), "다장소");
     }
 
 
@@ -646,8 +677,77 @@ public class MemberServiceTest extends MemberTest {
                 .hasMessage(ErrorCode.MEMBER_NOT_FOUND.getMessage());
     }
 
+    @Test
+    @DisplayName("북마크로 등록된 여행지 데이터 조회 - 최신순")
+    void getMemberBookmarks_sortNewest(){
+        // given
+        Pageable pageable = PageUtil.bookmarkPageable(1);
+
+        List<TravelPlace> travelPlaceList = List.of(travelPlace1, travelPlace2, travelPlace3);
+        Page<TravelPlace> travelPlacePage = PageUtil.createPage(travelPlaceList, pageable, travelPlaceList.size());
+
+        when(bookmarkService.getBookmarkTravelPlaces(anyString(), any(), any()))
+                .thenReturn(travelPlacePage);
+
+        // when
+        Page<PlaceSimpleResponse> response = memberService.getMemberBookmarks(1, "member", BookmarkSortType.NEWEST);
+
+        // then
+        List<PlaceSimpleResponse> content = response.getContent();
+        assertThat(response.getTotalElements()).isEqualTo(3);
+        assertThat(content.get(0).getPlaceName()).isEqualTo(travelPlace1.getPlaceName());
+        assertThat(content.get(0).getAddress()).isEqualTo(travelPlace1.getAddress());
+        assertThat(content.get(1).getPlaceName()).isEqualTo(travelPlace2.getPlaceName());
+        assertThat(content.get(1).getAddress()).isEqualTo(travelPlace2.getAddress());
+        assertThat(content.get(2).getPlaceName()).isEqualTo(travelPlace3.getPlaceName());
+        assertThat(content.get(2).getAddress()).isEqualTo(travelPlace3.getAddress());
+    }
 
 
+    @Test
+    @DisplayName("북마크로 등록된 여행지 데이터 조회 - 이름 순")
+    void getMemberBookmarks_sortName(){
+        // given
+        Pageable pageable = PageUtil.bookmarkPageable(1);
+
+        List<TravelPlace> travelPlaceList = List.of(travelPlace1, travelPlace2, travelPlace3);
+        Page<TravelPlace> travelPlacePage = PageUtil.createPage(travelPlaceList, pageable, travelPlaceList.size());
+
+        when(bookmarkService.getBookmarkTravelPlaces(anyString(), any(), any()))
+                .thenReturn(travelPlacePage);
+
+        // when
+        Page<PlaceSimpleResponse> response = memberService.getMemberBookmarks(1, "member", BookmarkSortType.NAME);
+
+        // then
+        List<PlaceSimpleResponse> content = response.getContent();
+        assertThat(response.getTotalElements()).isEqualTo(3);
+        assertThat(content.get(0).getPlaceName()).isEqualTo(travelPlace1.getPlaceName());
+        assertThat(content.get(0).getAddress()).isEqualTo(travelPlace1.getAddress());
+        assertThat(content.get(1).getPlaceName()).isEqualTo(travelPlace2.getPlaceName());
+        assertThat(content.get(1).getAddress()).isEqualTo(travelPlace2.getAddress());
+        assertThat(content.get(2).getPlaceName()).isEqualTo(travelPlace3.getPlaceName());
+        assertThat(content.get(2).getAddress()).isEqualTo(travelPlace3.getAddress());
+    }
+
+    @Test
+    @DisplayName("북마크로 등록된 여행지 데이터 조회 시 데이터 없는 경우")
+    void getMemberBookmarks_emptyData(){
+        // given
+        Pageable pageable = PageUtil.bookmarkPageable(1);
+
+        Page<TravelPlace> travelPlacePage = PageUtil.createPage(new ArrayList<>(), pageable, 0);
+
+        when(bookmarkService.getBookmarkTravelPlaces(anyString(), any(), any()))
+                .thenReturn(travelPlacePage);
+
+        // when
+        Page<PlaceSimpleResponse> response = memberService.getMemberBookmarks(1, "member", BookmarkSortType.NAME);
+
+        // then
+        assertThat(response.getTotalElements()).isEqualTo(0);
+        assertThat(response.getContent()).isEmpty();
+    }
 
 
 }

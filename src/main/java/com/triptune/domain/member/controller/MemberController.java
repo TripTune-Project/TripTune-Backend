@@ -1,5 +1,6 @@
 package com.triptune.domain.member.controller;
 
+import com.triptune.domain.bookmark.enumclass.BookmarkSortType;
 import com.triptune.domain.email.dto.EmailRequest;
 import com.triptune.domain.member.dto.request.*;
 import com.triptune.domain.member.dto.response.FindIdResponse;
@@ -9,10 +10,11 @@ import com.triptune.domain.member.dto.response.RefreshTokenResponse;
 import com.triptune.domain.member.exception.ChangeMemberInfoException;
 import com.triptune.domain.member.exception.FailLoginException;
 import com.triptune.domain.member.service.MemberService;
+import com.triptune.domain.travel.dto.response.PlaceSimpleResponse;
 import com.triptune.global.enumclass.ErrorCode;
-import com.triptune.global.exception.CustomJwtUnAuthorizedException;
 import com.triptune.global.exception.CustomNotValidException;
 import com.triptune.global.response.ApiResponse;
+import com.triptune.global.response.pagination.ApiPageResponse;
 import com.triptune.global.util.JwtUtil;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.swagger.v3.oas.annotations.Operation;
@@ -21,6 +23,7 @@ import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
@@ -138,5 +141,15 @@ public class MemberController {
         String userId = SecurityContextHolder.getContext().getAuthentication().getName();
         memberService.changeEmail(userId, emailRequest);
         return ApiResponse.okResponse();
+    }
+
+    @GetMapping("/bookmark")
+    @Operation(summary = "사용자 북마크 조회", description = "사용자가 등록한 북마크를 조회합니다.")
+    public ApiPageResponse<PlaceSimpleResponse> getMemberBookmarks(@RequestParam(name = "page") int page, @RequestParam(name = "sort") String sort){
+        String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+        BookmarkSortType sortType = BookmarkSortType.from(sort);
+        Page<PlaceSimpleResponse> response = memberService.getMemberBookmarks(page, userId, sortType);
+
+        return ApiPageResponse.dataResponse(response);
     }
 }

@@ -1,5 +1,15 @@
 package com.triptune.domain.member.controller;
 
+import com.triptune.domain.bookmark.repository.BookmarkRepository;
+import com.triptune.domain.common.entity.ApiCategory;
+import com.triptune.domain.common.entity.City;
+import com.triptune.domain.common.entity.Country;
+import com.triptune.domain.common.entity.District;
+import com.triptune.domain.common.repository.*;
+import com.triptune.domain.travel.entity.TravelImage;
+import com.triptune.domain.travel.entity.TravelPlace;
+import com.triptune.domain.travel.repository.TravelImageRepository;
+import com.triptune.domain.travel.repository.TravelPlaceRepository;
 import com.triptune.global.service.S3Service;
 import com.triptune.domain.email.service.EmailService;
 import com.triptune.domain.member.MemberTest;
@@ -29,6 +39,10 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.filter.CharacterEncodingFilter;
 
+import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.List;
+
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
@@ -47,6 +61,13 @@ public class MemberControllerTest extends MemberTest {
     private final MemberRepository memberRepository;
     private final ProfileImageRepository profileImageRepository;
     private final PasswordEncoder passwordEncoder;
+    private final TravelPlaceRepository travelPlaceRepository;
+    private final CountryRepository countryRepository;
+    private final CityRepository cityRepository;
+    private final DistrictRepository districtRepository;
+    private final TravelImageRepository travelImageRepository;
+    private final ApiCategoryRepository apiCategoryRepository;
+    private final BookmarkRepository bookmarkRepository;
 
     @MockBean
     private RedisUtil redisUtil;
@@ -58,14 +79,28 @@ public class MemberControllerTest extends MemberTest {
     private S3Service s3Service;
 
     private MockMvc mockMvc;
+    private TravelPlace travelPlace1;
+    private TravelPlace travelPlace2;
+    private TravelPlace travelPlace3;
+    private TravelImage travelImage1;
+    private TravelImage travelImage2;
+    private TravelImage travelImage3;
+
 
     @Autowired
-    public MemberControllerTest(WebApplicationContext wac, JwtUtil jwtUtil, MemberRepository memberRepository, ProfileImageRepository profileImageRepository, PasswordEncoder passwordEncoder) {
+    public MemberControllerTest(WebApplicationContext wac, JwtUtil jwtUtil, MemberRepository memberRepository, ProfileImageRepository profileImageRepository, PasswordEncoder passwordEncoder, TravelPlaceRepository travelPlaceRepository, CountryRepository countryRepository, CityRepository cityRepository, DistrictRepository districtRepository, TravelImageRepository travelImageRepository, ApiCategoryRepository apiCategoryRepository, BookmarkRepository bookmarkRepository) {
         this.wac = wac;
         this.jwtUtil = jwtUtil;
         this.memberRepository = memberRepository;
         this.profileImageRepository = profileImageRepository;
         this.passwordEncoder = passwordEncoder;
+        this.travelPlaceRepository = travelPlaceRepository;
+        this.countryRepository = countryRepository;
+        this.cityRepository = cityRepository;
+        this.districtRepository = districtRepository;
+        this.travelImageRepository = travelImageRepository;
+        this.apiCategoryRepository = apiCategoryRepository;
+        this.bookmarkRepository = bookmarkRepository;
     }
 
     @BeforeEach
@@ -75,6 +110,20 @@ public class MemberControllerTest extends MemberTest {
                 .apply(springSecurity())
                 .alwaysDo(print())
                 .build();
+
+        Country country = countryRepository.save(createCountry());
+        City city = cityRepository.save(createCity(country));
+        District district = districtRepository.save(createDistrict(city, "강남"));
+        ApiCategory apiCategory = apiCategoryRepository.save(createApiCategory());
+
+        travelImage1 = travelImageRepository.save(createTravelImage(travelPlace1, "test1", true));
+        travelImage2 = travelImageRepository.save(createTravelImage(travelPlace2, "test1", true));
+        travelImage3 = travelImageRepository.save(createTravelImage(travelPlace3, "test1", true));
+        travelPlace1 = travelPlaceRepository.save(createTravelPlace(null, country, city, district, apiCategory, List.of(travelImage1), "가장소"));
+        travelPlace2 = travelPlaceRepository.save(createTravelPlace(null, country, city, district, apiCategory, List.of(travelImage2), "나장소"));
+        travelPlace3 = travelPlaceRepository.save(createTravelPlace(null, country, city, district, apiCategory, List.of(travelImage3), "다장소"));
+
+
     }
 
     @Test
@@ -562,6 +611,100 @@ public class MemberControllerTest extends MemberTest {
                         .content(toJsonString(createEmailRequest("changeEmail@email.com"))))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.message").value(ErrorCode.MEMBER_NOT_FOUND.getMessage()));;
+    }
+
+    @Test
+    @WithMockUser("member")
+    @DisplayName("사용자 북마크 조회 - 최신순")
+    void getMemberBookmarks_sortNewest() throws Exception{
+        Member member = memberRepository.save(createMember(null, "member"));
+        bookmarkRepository.save(createBookmark(null, member, travelPlace1, LocalDateTime.now()));
+        bookmarkRepository.save(createBookmark(null, member, travelPlace2, LocalDateTime.now().minusDays(1)));
+        bookmarkRepository.save(createBookmark(null, member, travelPlace3, LocalDateTime.now().minusDays(2)));
+
+        mockMvc.perform(get("/api/members/bookmark")
+                .param("page", "1")
+                .param("sort", "newest"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.totalElements").value(3))
+                .andExpect(jsonPath("$.data.content[0].placeName").value(travelPlace1.getPlaceName()))
+                .andExpect(jsonPath("$.data.content[0].thumbnailUrl").value(travelImage1.getS3ObjectUrl()))
+                .andExpect(jsonPath("$.data.content[1].placeName").value(travelPlace2.getPlaceName()))
+                .andExpect(jsonPath("$.data.content[1].thumbnailUrl").value(travelImage2.getS3ObjectUrl()))
+                .andExpect(jsonPath("$.data.content[2].placeName").value(travelPlace3.getPlaceName()))
+                .andExpect(jsonPath("$.data.content[2].thumbnailUrl").value(travelImage3.getS3ObjectUrl()));
+    }
+
+    @Test
+    @WithMockUser("member")
+    @DisplayName("사용자 북마크 조회 - 오래된 순")
+    void getMemberBookmarks_sortOldest() throws Exception{
+        Member member = memberRepository.save(createMember(null, "member"));
+        bookmarkRepository.save(createBookmark(null, member, travelPlace1, LocalDateTime.now()));
+        bookmarkRepository.save(createBookmark(null, member, travelPlace2, LocalDateTime.now().minusDays(1)));
+        bookmarkRepository.save(createBookmark(null, member, travelPlace3, LocalDateTime.now().minusDays(2)));
+
+        mockMvc.perform(get("/api/members/bookmark")
+                        .param("page", "1")
+                        .param("sort", "oldest"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.totalElements").value(3))
+                .andExpect(jsonPath("$.data.content[0].placeName").value(travelPlace3.getPlaceName()))
+                .andExpect(jsonPath("$.data.content[0].thumbnailUrl").value(travelImage3.getS3ObjectUrl()))
+                .andExpect(jsonPath("$.data.content[1].placeName").value(travelPlace2.getPlaceName()))
+                .andExpect(jsonPath("$.data.content[1].thumbnailUrl").value(travelImage2.getS3ObjectUrl()))
+                .andExpect(jsonPath("$.data.content[2].placeName").value(travelPlace1.getPlaceName()))
+                .andExpect(jsonPath("$.data.content[2].thumbnailUrl").value(travelImage1.getS3ObjectUrl()));
+    }
+
+    @Test
+    @WithMockUser("member")
+    @DisplayName("사용자 북마크 조회 - 이름순")
+    void getMemberBookmarks_sortName() throws Exception{
+        Member member = memberRepository.save(createMember(null, "member"));
+        bookmarkRepository.save(createBookmark(null, member, travelPlace1, LocalDateTime.now()));
+        bookmarkRepository.save(createBookmark(null, member, travelPlace2, LocalDateTime.now().minusDays(1)));
+        bookmarkRepository.save(createBookmark(null, member, travelPlace3, LocalDateTime.now().minusDays(2)));
+
+        mockMvc.perform(get("/api/members/bookmark")
+                        .param("page", "1")
+                        .param("sort", "name"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.totalElements").value(3))
+                .andExpect(jsonPath("$.data.content[0].placeName").value(travelPlace1.getPlaceName()))
+                .andExpect(jsonPath("$.data.content[0].thumbnailUrl").value(travelImage1.getS3ObjectUrl()))
+                .andExpect(jsonPath("$.data.content[1].placeName").value(travelPlace2.getPlaceName()))
+                .andExpect(jsonPath("$.data.content[1].thumbnailUrl").value(travelImage2.getS3ObjectUrl()))
+                .andExpect(jsonPath("$.data.content[2].placeName").value(travelPlace3.getPlaceName()))
+                .andExpect(jsonPath("$.data.content[2].thumbnailUrl").value(travelImage3.getS3ObjectUrl()));
+    }
+
+    @Test
+    @WithMockUser("member")
+    @DisplayName("사용자 북마크 조회 시 데이터 없는 경우")
+    void getMemberBookmarks_emptyData() throws Exception{
+        Member member = memberRepository.save(createMember(null, "member"));
+
+        mockMvc.perform(get("/api/members/bookmark")
+                        .param("page", "1")
+                        .param("sort", "newest"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.totalElements").value(0))
+                .andExpect(jsonPath("$.data.content").isEmpty());
+    }
+
+    @Test
+    @WithMockUser("member")
+    @DisplayName("사용자 북마크 조회 시 정렬 잘못된 값이 들어와 예외 발생")
+    void getMemberBookmarks_IllegalException() throws Exception{
+        Member member = memberRepository.save(createMember(null, "member"));
+
+        mockMvc.perform(get("/api/members/bookmark")
+                        .param("page", "1")
+                        .param("sort", "ne"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value(ErrorCode.ILLEGAL_BOOKMARK_SORT_TYPE.getMessage()));
     }
 
 

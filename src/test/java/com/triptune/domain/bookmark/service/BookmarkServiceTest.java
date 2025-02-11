@@ -1,8 +1,9 @@
 package com.triptune.domain.bookmark.service;
 
-import com.triptune.domain.BaseTest;
 import com.triptune.domain.bookmark.BookmarkTest;
 import com.triptune.domain.bookmark.dto.request.BookmarkRequest;
+import com.triptune.domain.bookmark.entity.Bookmark;
+import com.triptune.domain.bookmark.enumclass.BookmarkSortType;
 import com.triptune.domain.bookmark.repository.BookmarkRepository;
 import com.triptune.domain.common.entity.ApiCategory;
 import com.triptune.domain.common.entity.City;
@@ -15,6 +16,7 @@ import com.triptune.domain.travel.repository.TravelPlaceRepository;
 import com.triptune.global.enumclass.ErrorCode;
 import com.triptune.global.exception.DataExistException;
 import com.triptune.global.exception.DataNotFoundException;
+import com.triptune.global.util.PageUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -22,12 +24,15 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
@@ -48,7 +53,9 @@ public class BookmarkServiceTest extends BookmarkTest {
     private TravelPlaceRepository travelPlaceRepository;
 
     private Member member;
-    private TravelPlace travelPlace;
+    private TravelPlace travelPlace1;
+    private TravelPlace travelPlace2;
+    private TravelPlace travelPlace3;
 
     @BeforeEach
     void setUp(){
@@ -58,72 +65,72 @@ public class BookmarkServiceTest extends BookmarkTest {
         ApiCategory apiCategory = createApiCategory();
 
         member = createMember(1L, "member");
-        travelPlace = createTravelPlace(1L, country, city, district, apiCategory);
+        travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, "가장소");
+        travelPlace2 = createTravelPlace(2L, country, city, district, apiCategory, "나장소");
+        travelPlace3 = createTravelPlace(3L, country, city, district, apiCategory, "다장소");
+
     }
 
     @Test
     @DisplayName("북마크 추가")
     void createBookmark(){
         // given
-        BookmarkRequest request = createBookmarkRequest(travelPlace.getPlaceId());
+        BookmarkRequest request = createBookmarkRequest(travelPlace1.getPlaceId());
 
         when(bookmarkRepository.existsByMember_UserIdAndTravelPlace_PlaceId(anyString(), anyLong())).thenReturn(false);
         when(memberRepository.findByUserId(anyString())).thenReturn(Optional.of(member));
-        when(travelPlaceRepository.findByPlaceId(anyLong())).thenReturn(Optional.of(travelPlace));
+        when(travelPlaceRepository.findByPlaceId(anyLong())).thenReturn(Optional.of(travelPlace1));
 
         // when
-        assertDoesNotThrow(() -> bookmarkService.createBookmark(member.getUserId(), request));
+        assertThatCode(() -> bookmarkService.createBookmark(member.getUserId(), request))
+                .doesNotThrowAnyException();
     }
 
     @Test
     @DisplayName("북마크 추가 시 이미 북마크로 등록 되어 있어 예외 발생")
     void createBookmark_dataExistException(){
         // given
-        BookmarkRequest request = createBookmarkRequest(travelPlace.getPlaceId());
+        BookmarkRequest request = createBookmarkRequest(travelPlace1.getPlaceId());
 
         when(bookmarkRepository.existsByMember_UserIdAndTravelPlace_PlaceId(anyString(), anyLong())).thenReturn(true);
 
-        // when
-        DataExistException fail = assertThrows(DataExistException.class, () -> bookmarkService.createBookmark(member.getUserId(), request));
+        // when, then
+        assertThatThrownBy(() -> bookmarkService.createBookmark(member.getUserId(), request))
+                .isInstanceOf(DataExistException.class)
+                .hasMessage(ErrorCode.ALREADY_EXISTED_BOOKMARK.getMessage());
 
-        // then
-        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.ALREADY_EXISTED_BOOKMARK.getStatus());
-        assertThat(fail.getMessage()).isEqualTo(ErrorCode.ALREADY_EXISTED_BOOKMARK.getMessage());
     }
 
     @Test
     @DisplayName("북마크 추가 시 사용자 데이터 없어 예외 발생")
     void createBookmark_memberDataNotFoundException(){
         // given
-        BookmarkRequest request = createBookmarkRequest(travelPlace.getPlaceId());
+        BookmarkRequest request = createBookmarkRequest(travelPlace1.getPlaceId());
 
         when(bookmarkRepository.existsByMember_UserIdAndTravelPlace_PlaceId(anyString(), anyLong())).thenReturn(false);
         when(memberRepository.findByUserId(anyString())).thenReturn(Optional.empty());
 
-        // when
-        DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> bookmarkService.createBookmark(member.getUserId(), request));
-
-        // then
-        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.MEMBER_NOT_FOUND.getStatus());
-        assertThat(fail.getMessage()).isEqualTo(ErrorCode.MEMBER_NOT_FOUND.getMessage());
+        // when, then
+        assertThatThrownBy(() -> bookmarkService.createBookmark(member.getUserId(), request))
+                .isInstanceOf(DataNotFoundException.class)
+                .hasMessage(ErrorCode.MEMBER_NOT_FOUND.getMessage());
     }
 
     @Test
     @DisplayName("북마크 추가 시 여행지 데이터 없어 예외 발생")
     void createBookmark_travelPlaceDataNotFoundException(){
         // given
-        BookmarkRequest request = createBookmarkRequest(travelPlace.getPlaceId());
+        BookmarkRequest request = createBookmarkRequest(travelPlace1.getPlaceId());
 
         when(bookmarkRepository.existsByMember_UserIdAndTravelPlace_PlaceId(anyString(), anyLong())).thenReturn(false);
         when(memberRepository.findByUserId(anyString())).thenReturn(Optional.of(member));
         when(travelPlaceRepository.findByPlaceId(anyLong())).thenReturn(Optional.empty());
 
-        // when
-        DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> bookmarkService.createBookmark(member.getUserId(), request));
+        // when, then
+        assertThatThrownBy(() -> bookmarkService.createBookmark(member.getUserId(), request))
+                .isInstanceOf(DataNotFoundException.class)
+                .hasMessage(ErrorCode.PLACE_NOT_FOUND.getMessage());
 
-        // then
-        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.PLACE_NOT_FOUND.getStatus());
-        assertThat(fail.getMessage()).isEqualTo(ErrorCode.PLACE_NOT_FOUND.getMessage());
     }
 
     @Test
@@ -133,7 +140,8 @@ public class BookmarkServiceTest extends BookmarkTest {
         when(bookmarkRepository.existsByMember_UserIdAndTravelPlace_PlaceId(anyString(), anyLong())).thenReturn(true);
 
         // when
-        assertDoesNotThrow(() -> bookmarkService.deleteBookmark(member.getUserId(), 1L));
+        assertThatCode(() -> bookmarkService.deleteBookmark(member.getUserId(), 1L))
+                .doesNotThrowAnyException();
 
         // then
         verify(bookmarkRepository, times(1)).deleteByMember_UserIdAndTravelPlace_PlaceId(anyString(), anyLong());
@@ -145,11 +153,79 @@ public class BookmarkServiceTest extends BookmarkTest {
         // given
         when(bookmarkRepository.existsByMember_UserIdAndTravelPlace_PlaceId(anyString(), anyLong())).thenReturn(false);
 
+        // when, then
+        assertThatThrownBy(() -> bookmarkService.deleteBookmark(member.getUserId(), 1L))
+                .isInstanceOf(DataNotFoundException.class)
+                .hasMessage(ErrorCode.BOOKMARK_NOT_FOUND.getMessage());
+
+    }
+
+    @Test
+    @DisplayName("북마크로 등록된 여행지 데이터 조회 - 최신순")
+    void getBookmarkTravelPlaces_sortNewest(){
+        // given
+        Pageable pageable = PageUtil.bookmarkPageable(1);
+        Bookmark bookmark1 = createBookmark(1L, member, travelPlace1, LocalDateTime.now().minusDays(2));
+        Bookmark bookmark2 = createBookmark(2L, member, travelPlace2, LocalDateTime.now().minusDays(1));
+        Bookmark bookmark3 = createBookmark(3L, member, travelPlace3, LocalDateTime.now());
+
+        List<TravelPlace> travelPlaceList = List.of(travelPlace1, travelPlace2, travelPlace3);
+        Page<TravelPlace> travelPlacePage = PageUtil.createPage(travelPlaceList, pageable, travelPlaceList.size());
+
+        when(bookmarkRepository.getBookmarkTravelPlaces(anyString(), any(), any()))
+                .thenReturn(travelPlacePage);
+
         // when
-        DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> bookmarkService.deleteBookmark(member.getUserId(), 1L));
+        Page<TravelPlace> response = bookmarkService.getBookmarkTravelPlaces("member", pageable, BookmarkSortType.NEWEST);
 
         // then
-        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.BOOKMARK_NOT_FOUND.getStatus());
-        assertThat(fail.getMessage()).isEqualTo(ErrorCode.BOOKMARK_NOT_FOUND.getMessage());
+        assertThat(response.getTotalElements()).isEqualTo(3);
+        assertThat(response.getContent().get(0)).isEqualTo(travelPlace1);
+        assertThat(response.getContent().get(1)).isEqualTo(travelPlace2);
+        assertThat(response.getContent().get(2)).isEqualTo(travelPlace3);
     }
+
+    @Test
+    @DisplayName("북마크로 등록된 여행지 데이터 조회 - 이름 순")
+    void getBookmarkTravelPlaces_sortName(){
+        // given
+        Pageable pageable = PageUtil.bookmarkPageable(1);
+
+        List<TravelPlace> travelPlaceList = List.of(travelPlace1, travelPlace2, travelPlace3);
+        Page<TravelPlace> travelPlacePage = PageUtil.createPage(travelPlaceList, pageable, travelPlaceList.size());
+
+        when(bookmarkRepository.getBookmarkTravelPlaces(anyString(), any(), any()))
+                .thenReturn(travelPlacePage);
+
+        // when
+        Page<TravelPlace> response = bookmarkService.getBookmarkTravelPlaces("member", pageable, BookmarkSortType.OLDEST);
+
+        // then
+        assertThat(response.getTotalElements()).isEqualTo(3);
+        assertThat(response.getContent().get(0)).isEqualTo(travelPlace1);
+        assertThat(response.getContent().get(1)).isEqualTo(travelPlace2);
+        assertThat(response.getContent().get(2)).isEqualTo(travelPlace3);
+    }
+
+    @Test
+    @DisplayName("북마크로 등록된 여행지 데이터 조회 시 데이터가 없는 경우")
+    void getBookmarkTravelPlaces_emptyData(){
+        // given
+        Pageable pageable = PageUtil.bookmarkPageable(1);
+
+        Page<TravelPlace> travelPlacePage = PageUtil.createPage(new ArrayList<>(), pageable, 0);
+
+        when(bookmarkRepository.getBookmarkTravelPlaces(anyString(), any(), any()))
+                .thenReturn(travelPlacePage);
+
+        // when
+        Page<TravelPlace> response = bookmarkService.getBookmarkTravelPlaces("member", pageable, BookmarkSortType.OLDEST);
+
+        // then
+        assertThat(response.getTotalElements()).isEqualTo(0);
+        assertThat(response.getContent()).isEmpty();
+    }
+
+
+
 }
