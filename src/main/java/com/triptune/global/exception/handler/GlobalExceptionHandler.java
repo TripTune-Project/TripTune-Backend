@@ -81,4 +81,11 @@ public class GlobalExceptionHandler {
         return ErrorResponse.of(ex.getHttpStatus(), ex.getMessage());
     }
 
+    @ExceptionHandler(CustomIllegalArgumentException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleCustomIllegalArgumentException(CustomIllegalArgumentException ex, HttpServletRequest request){
+        log.error("CustomIllegalArgumentException at {}: {}", request.getRequestURI(), ex.getMessage());
+        return ErrorResponse.of(ex.getHttpStatus(), ex.getMessage());
+    }
+
 }

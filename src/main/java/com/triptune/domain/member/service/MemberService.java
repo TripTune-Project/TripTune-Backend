@@ -1,5 +1,7 @@
 package com.triptune.domain.member.service;
 
+import com.triptune.domain.bookmark.enumclass.BookmarkSortType;
+import com.triptune.domain.bookmark.service.BookmarkService;
 import com.triptune.domain.email.dto.EmailRequest;
 import com.triptune.domain.email.exception.EmailVerifyException;
 import com.triptune.domain.email.service.EmailService;
@@ -13,12 +15,15 @@ import com.triptune.domain.member.exception.ChangeMemberInfoException;
 import com.triptune.domain.member.exception.FailLoginException;
 import com.triptune.domain.member.repository.MemberRepository;
 import com.triptune.domain.profile.service.ProfileImageService;
+import com.triptune.domain.travel.dto.response.PlaceSimpleResponse;
+import com.triptune.domain.travel.entity.TravelPlace;
 import com.triptune.global.enumclass.ErrorCode;
 import com.triptune.global.enumclass.RedisKeyType;
 import com.triptune.global.exception.CustomJwtUnAuthorizedException;
 import com.triptune.global.exception.DataExistException;
 import com.triptune.global.exception.DataNotFoundException;
 import com.triptune.global.util.JwtUtil;
+import com.triptune.global.util.PageUtil;
 import com.triptune.global.util.RedisUtil;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -26,6 +31,8 @@ import jakarta.mail.MessagingException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -41,6 +48,7 @@ public class MemberService {
     private final JwtUtil jwtUtil;
     private final RedisUtil redisUtil;
     private final ProfileImageService profileImageService;
+    private final BookmarkService bookmarkService;
 
     @Value("${spring.jwt.token.access-expiration-time}")
     private long accessExpirationTime;
@@ -207,5 +215,12 @@ public class MemberService {
 
         Member member = findMemberByUserId(userId);
         member.updateEmail(emailRequest.getEmail());
+    }
+
+    public Page<PlaceSimpleResponse> getMemberBookmarks(int page, String userId, BookmarkSortType sortType) {
+        Pageable pageable = PageUtil.bookmarkPageable(page);
+        Page<TravelPlace> travelPlaces = bookmarkService.getBookmarkTravelPlaces(userId, pageable, sortType);
+
+        return travelPlaces.map(PlaceSimpleResponse::from);
     }
 }

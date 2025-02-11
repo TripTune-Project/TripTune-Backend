@@ -24,6 +24,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.filter.CharacterEncodingFilter;
 
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 
@@ -100,7 +101,7 @@ public class TravelControllerTest extends TravelTest {
     @DisplayName("로그인한 사용자의 현재 위치에 따른 여행지 목록을 제공하며 데이터가 존재하는 경우")
     @WithMockUser("member")
     void getNearByTravelPlaces_loginAndExitsData() throws Exception {
-        bookmarkRepository.save(createBookmark(null, member, travelPlace1));
+        bookmarkRepository.save(createBookmark(null, member, travelPlace1, LocalDateTime.now()));
 
         mockMvc.perform(post("/api/travels")
                         .param("page", "1")
@@ -120,7 +121,7 @@ public class TravelControllerTest extends TravelTest {
     @Test
     @DisplayName("익명의 사용자의 현재 위치에 따른 여행지 목록을 제공하며 데이터가 존재하는 경우")
     void getNearByTravelPlaces_anonymousAndExistsData() throws Exception {
-        bookmarkRepository.save(createBookmark(null, member, travelPlace1));
+        bookmarkRepository.save(createBookmark(null, member, travelPlace1, LocalDateTime.now()));
 
         mockMvc.perform(post("/api/travels")
                         .param("page", "1")
@@ -167,7 +168,7 @@ public class TravelControllerTest extends TravelTest {
     @DisplayName("로그인한 사용자의 여행지를 검색 시 검색 결과가 존재하는 경우")
     @WithMockUser("member")
     void searchTravelPlaces_loginAndExistsData() throws Exception {
-        bookmarkRepository.save(createBookmark(null, member, travelPlace1));
+        bookmarkRepository.save(createBookmark(null, member, travelPlace1, LocalDateTime.now()));
 
         mockMvc.perform(post("/api/travels/search")
                         .param("page", "1")
@@ -187,7 +188,7 @@ public class TravelControllerTest extends TravelTest {
     @Test
     @DisplayName("익명 사용자의 여행지를 검색 시 검색 결과가 존재하는 경우")
     void searchTravelPlaces_anonymousAndExistsData() throws Exception {
-        bookmarkRepository.save(createBookmark(null, member, travelPlace1));
+        bookmarkRepository.save(createBookmark(null, member, travelPlace1, LocalDateTime.now()));
 
         mockMvc.perform(post("/api/travels/search")
                         .param("page", "1")
@@ -247,7 +248,7 @@ public class TravelControllerTest extends TravelTest {
         ApiContentType apiContentType = createApiContentType("관광지");
         apiContentTypeRepository.save(apiContentType);
         travelPlace1.setApiContentType(apiContentType);
-        bookmarkRepository.save(createBookmark(null, member, travelPlace1));
+        bookmarkRepository.save(createBookmark(null, member, travelPlace1, LocalDateTime.now()));
 
         mockMvc.perform(get("/api/travels/{placeId}", travelPlace1.getPlaceId()))
                 .andExpect(status().isOk())
@@ -263,7 +264,7 @@ public class TravelControllerTest extends TravelTest {
         ApiContentType apiContentType = createApiContentType("관광지");
         apiContentTypeRepository.save(apiContentType);
         travelPlace1.setApiContentType(apiContentType);
-        bookmarkRepository.save(createBookmark(null, member, travelPlace1));
+        bookmarkRepository.save(createBookmark(null, member, travelPlace1, LocalDateTime.now()));
 
         mockMvc.perform(get("/api/travels/{placeId}", travelPlace1.getPlaceId()))
                 .andExpect(status().isOk())

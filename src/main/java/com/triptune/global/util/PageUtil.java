@@ -1,5 +1,6 @@
 package com.triptune.global.util;
 
+import com.triptune.domain.bookmark.enumclass.BookmarkSortType;
 import org.springframework.data.domain.*;
 
 import java.util.List;
@@ -9,6 +10,7 @@ public class PageUtil {
     private static final int DEFAULT_SIZE = 5;
     private static final int SCHEDULE_SIZE = 9;
     private static final int SCHEDULE_MODAL_SIZE = 3;
+    private static final int BOOKMARK_SIZE = 8;
     private static final int TRAVEL_SIZE = 4;
     private static final int CHAT_SIZE = 20;
 
@@ -26,6 +28,10 @@ public class PageUtil {
         return PageRequest.of(page - DEFAULT_PAGE, CHAT_SIZE, Sort.by(Sort.Direction.DESC, "timestamp"));
     }
 
+    public static Pageable bookmarkPageable(int page){
+        return PageRequest.of(page - DEFAULT_PAGE, BOOKMARK_SIZE);
+    }
+
     public static Pageable scheduleModalPageable(int page){
         return PageRequest.of(page - DEFAULT_PAGE, SCHEDULE_MODAL_SIZE);
     }
@@ -33,4 +39,7 @@ public class PageUtil {
     public static<T> Page<T> createPage(List<T> content, Pageable pageable, long totalElements){
         return new PageImpl<>(content, pageable, totalElements);
     }
+
+
 }
+
