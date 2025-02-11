@@ -15,7 +15,7 @@ import com.triptune.domain.travel.entity.TravelPlace;
 import com.triptune.domain.travel.repository.TravelImageRepository;
 import com.triptune.domain.travel.repository.TravelPlaceRepository;
 import com.triptune.global.config.QueryDSLConfig;
-import com.triptune.global.util.PageUtil;
+import com.triptune.global.util.PageUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -99,7 +99,7 @@ public class TravelScheduleRepositoryTest extends ScheduleTest {
     @DisplayName("전체 일정 목록 조회")
     void findTravelSchedulesByUserId(){
         // given
-        Pageable pageable = PageUtil.schedulePageable(1);
+        Pageable pageable = PageUtils.schedulePageable(1);
 
         TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(0L, member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
         TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(0L, member1, schedule2, AttendeeRole.GUEST, AttendeePermission.READ));
@@ -124,7 +124,7 @@ public class TravelScheduleRepositoryTest extends ScheduleTest {
     @DisplayName("전체 일정 목록 조회 시 데이터가 없는 경우")
     void findTravelSchedulesByUserIdWithoutData(){
         // given
-        Pageable pageable = PageUtil.schedulePageable(1);
+        Pageable pageable = PageUtils.schedulePageable(1);
 
         // when
         Page<TravelSchedule> response = travelScheduleRepository.findTravelSchedulesByUserId(pageable, member1.getUserId());
@@ -139,7 +139,7 @@ public class TravelScheduleRepositoryTest extends ScheduleTest {
     @DisplayName("공유된 일정 목록 조회")
     void findSharedTravelSchedulesByUserId(){
         // given
-        Pageable pageable = PageUtil.schedulePageable(1);
+        Pageable pageable = PageUtils.schedulePageable(1);
 
         TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(0L, member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
         TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(0L, member1, schedule2, AttendeeRole.AUTHOR, AttendeePermission.ALL));
@@ -165,7 +165,7 @@ public class TravelScheduleRepositoryTest extends ScheduleTest {
     @DisplayName("공유된 일정 목록 조회 시 데이터가 없는 경우")
     void findSharedTravelSchedulesByUserIdWithoutData(){
         // given
-        Pageable pageable = PageUtil.schedulePageable(1);
+        Pageable pageable = PageUtils.schedulePageable(1);
 
         // when
         Page<TravelSchedule> response = travelScheduleRepository.findTravelSchedulesByUserId(pageable, member1.getUserId());
@@ -249,7 +249,7 @@ public class TravelScheduleRepositoryTest extends ScheduleTest {
         schedule2.setTravelAttendeeList(new ArrayList<>(List.of(attendee2, attendee3)));
         schedule3.setTravelAttendeeList(new ArrayList<>(List.of(attendee4)));
 
-        Pageable pageable = PageUtil.schedulePageable(1);
+        Pageable pageable = PageUtils.schedulePageable(1);
 
         // when
         Page<TravelSchedule> response = travelScheduleRepository.searchTravelSchedulesByUserIdAndKeyword(pageable, "2", member1.getUserId());
@@ -266,7 +266,7 @@ public class TravelScheduleRepositoryTest extends ScheduleTest {
     @DisplayName("전체 일정 목록 검색 시 데이터가 없는 경우")
     void searchTravelSchedulesByUserIdWithoutData(){
         // given
-        Pageable pageable = PageUtil.schedulePageable(1);
+        Pageable pageable = PageUtils.schedulePageable(1);
 
         // when
         Page<TravelSchedule> response = travelScheduleRepository.searchTravelSchedulesByUserIdAndKeyword(pageable, "ㅁㄴㅇㄹ", member1.getUserId());
@@ -291,7 +291,7 @@ public class TravelScheduleRepositoryTest extends ScheduleTest {
         schedule2.setTravelAttendeeList(new ArrayList<>(List.of(attendee2, attendee3)));
         schedule3.setTravelAttendeeList(new ArrayList<>(List.of(attendee4)));
 
-        Pageable pageable = PageUtil.schedulePageable(1);
+        Pageable pageable = PageUtils.schedulePageable(1);
 
         // when
         Page<TravelSchedule> response = travelScheduleRepository.searchSharedTravelSchedulesByUserIdAndKeyword(pageable, "2", member1.getUserId());
@@ -308,7 +308,7 @@ public class TravelScheduleRepositoryTest extends ScheduleTest {
     @DisplayName("공유된 일정 목록 검색 시 데이터가 없는 경우")
     void searchSharedTravelSchedulesByUserIdAndKeywordWithoutData(){
         // given
-        Pageable pageable = PageUtil.schedulePageable(1);
+        Pageable pageable = PageUtils.schedulePageable(1);
 
         // when
         Page<TravelSchedule> response = travelScheduleRepository.searchSharedTravelSchedulesByUserIdAndKeyword(pageable, "ㅁㄴㅇㄹ", member1.getUserId());
@@ -395,7 +395,7 @@ public class TravelScheduleRepositoryTest extends ScheduleTest {
         assertTrue(attendees.isEmpty());
 
         // 해당 일정의 여행 루트 정보 삭제됐는지 확인
-        Page<TravelRoute> routes = travelRouteRepository.findAllByTravelSchedule_ScheduleId(PageUtil.defaultPageable(1), schedule1.getScheduleId());
+        Page<TravelRoute> routes = travelRouteRepository.findAllByTravelSchedule_ScheduleId(PageUtils.defaultPageable(1), schedule1.getScheduleId());
         assertEquals(routes.getTotalElements(), 0);
         assertTrue(routes.getContent().isEmpty());
 

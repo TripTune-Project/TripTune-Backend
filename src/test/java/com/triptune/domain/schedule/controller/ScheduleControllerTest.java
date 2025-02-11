@@ -15,7 +15,7 @@ import com.triptune.domain.schedule.entity.TravelRoute;
 import com.triptune.domain.schedule.entity.TravelSchedule;
 import com.triptune.domain.schedule.enumclass.AttendeePermission;
 import com.triptune.domain.schedule.enumclass.AttendeeRole;
-import com.triptune.domain.schedule.enumclass.ScheduleType;
+import com.triptune.domain.schedule.enumclass.ScheduleSearchType;
 import com.triptune.domain.schedule.repository.ChatMessageRepository;
 import com.triptune.domain.schedule.repository.TravelAttendeeRepository;
 import com.triptune.domain.schedule.repository.TravelRouteRepository;
@@ -343,7 +343,7 @@ public class ScheduleControllerTest extends ScheduleTest {
 
         mockMvc.perform(get("/api/schedules/search")
                         .param("page", "1")
-                        .param("type", ScheduleType.all.toString())
+                        .param("type", ScheduleSearchType.ALL.getValue())
                         .param("keyword", "1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.totalElements").value(1))
@@ -369,7 +369,7 @@ public class ScheduleControllerTest extends ScheduleTest {
 
         mockMvc.perform(get("/api/schedules/search")
                         .param("page", "1")
-                        .param("type", ScheduleType.all.toString())
+                        .param("type", ScheduleSearchType.ALL.getValue())
                         .param("keyword", "테스트"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.totalElements").value(3))
@@ -394,7 +394,7 @@ public class ScheduleControllerTest extends ScheduleTest {
 
         mockMvc.perform(get("/api/schedules/search")
                         .param("page", "1")
-                        .param("type", ScheduleType.all.toString())
+                        .param("type", ScheduleSearchType.ALL.getValue())
                         .param("keyword", "테스트"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.totalElements").value(3))
@@ -408,7 +408,7 @@ public class ScheduleControllerTest extends ScheduleTest {
     void searchSchedulesWithoutData() throws Exception {
         mockMvc.perform(get("/api/schedules/search")
                         .param("page", "1")
-                        .param("type", ScheduleType.all.toString())
+                        .param("type", ScheduleSearchType.ALL.getValue())
                         .param("keyword", "ㅁㄴㅇㄹ"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.totalElements").value(0))
@@ -438,7 +438,7 @@ public class ScheduleControllerTest extends ScheduleTest {
 
         mockMvc.perform(get("/api/schedules/search")
                         .param("page", "1")
-                        .param("type", ScheduleType.share.toString())
+                        .param("type", ScheduleSearchType.SHARE.getValue())
                         .param("keyword", "테스트"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.totalElements").value(3))
@@ -464,7 +464,7 @@ public class ScheduleControllerTest extends ScheduleTest {
 
         mockMvc.perform(get("/api/schedules/search")
                         .param("page", "1")
-                        .param("type", ScheduleType.share.toString())
+                        .param("type", ScheduleSearchType.SHARE.getValue())
                         .param("keyword", "테스트"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.totalElements").value(3))
@@ -481,12 +481,25 @@ public class ScheduleControllerTest extends ScheduleTest {
     void searchSharedSchedulesWithoutData() throws Exception {
         mockMvc.perform(get("/api/schedules/search")
                         .param("page", "1")
-                        .param("type", ScheduleType.share.toString())
+                        .param("type", ScheduleSearchType.SHARE.getValue())
                         .param("keyword", "ㅁㄴㅇㄹ"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.totalElements").value(0))
                 .andExpect(jsonPath("$.data.totalSharedElements").value(0))
                 .andExpect(jsonPath("$.data.content").isEmpty());
+    }
+
+    @Test
+    @WithMockUser(username = "member1")
+    @DisplayName("전체, 공유된 일정 검색 시 검색 타입이 없어 예외 발생")
+    void searchSchedules_illegalArgumentException() throws Exception {
+        mockMvc.perform(get("/api/schedules/search")
+                        .param("page", "1")
+                        .param("type", "not")
+                        .param("keyword", "ㅁㄴㅇㄹ"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value(ErrorCode.ILLEGAL_SCHEDULE_SEARCH_TYPE.getMessage()));
     }
 
     @Test

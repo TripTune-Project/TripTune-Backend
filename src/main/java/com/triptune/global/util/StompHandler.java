@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class StompHandler implements ChannelInterceptor {
 
-    private final JwtUtil jwtUtil;
+    private final JwtUtils jwtUtils;
 
     @Override
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
@@ -23,8 +23,8 @@ public class StompHandler implements ChannelInterceptor {
         if (StompCommand.CONNECT == accessor.getCommand()) {
             log.info("WebSocket 연결 요청: {}", accessor.getSessionId());
 
-            String token = jwtUtil.resolveBearerToken(accessor.getFirstNativeHeader("Authorization"));
-            jwtUtil.validateChatToken(token);
+            String token = jwtUtils.resolveBearerToken(accessor.getFirstNativeHeader("Authorization"));
+            jwtUtils.validateChatToken(token);
 
             log.info("WebSocket 연결 완료: {}", accessor.getSessionId());
         }

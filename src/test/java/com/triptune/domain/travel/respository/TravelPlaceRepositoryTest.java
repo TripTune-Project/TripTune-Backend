@@ -11,7 +11,7 @@ import com.triptune.domain.travel.entity.TravelPlace;
 import com.triptune.domain.travel.repository.TravelImageRepository;
 import com.triptune.domain.travel.repository.TravelPlaceRepository;
 import com.triptune.global.config.QueryDSLConfig;
-import com.triptune.global.util.PageUtil;
+import com.triptune.global.util.PageUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -78,7 +78,7 @@ public class TravelPlaceRepositoryTest extends TravelTest {
     @DisplayName("위치 정보에 따른 여행지 목록 조회 시 데이터 존재하는 경우")
     void findNearByTravelPlaceList_withData(){
         // given
-        Pageable pageable = PageUtil.defaultPageable(1);
+        Pageable pageable = PageUtils.defaultPageable(1);
         PlaceLocationRequest placeLocationRequest = createTravelLocationRequest(37.497, 127.0);
         int radius = 5;   // 5km 이내
 
@@ -101,7 +101,7 @@ public class TravelPlaceRepositoryTest extends TravelTest {
     @DisplayName("위치 정보에 따른 여행지 목록을 조회하며 조회 결과가 없는 경우")
     void findNearByTravelPlaceList_noData(){
         // given
-        Pageable pageable = PageUtil.defaultPageable(1);
+        Pageable pageable = PageUtils.defaultPageable(1);
         PlaceLocationRequest placeLocationRequest = createTravelLocationRequest(99.999999, 99.999999);
         int radius = 5;   // 5km 이내
 
@@ -116,7 +116,7 @@ public class TravelPlaceRepositoryTest extends TravelTest {
     @DisplayName("키워드 이용해 검색하며 검색 결과에 데이터가 존재하는 경우")
     void searchTravelPlacesWithLocation_withData(){
         // given
-        Pageable pageable = PageUtil.defaultPageable(1);
+        Pageable pageable = PageUtils.defaultPageable(1);
         PlaceSearchRequest request = createTravelSearchRequest(37.4970465429, 127.0281573537, "강남");
 
         // when
@@ -133,7 +133,7 @@ public class TravelPlaceRepositoryTest extends TravelTest {
     @DisplayName("키워드 이용해 검색하며 검색결과가 존재하지 않는 경우")
     void searchTravelPlacesWithLocation_noData(){
         // given
-        Pageable pageable = PageUtil.defaultPageable(1);
+        Pageable pageable = PageUtils.defaultPageable(1);
         PlaceSearchRequest request = createTravelSearchRequest(37.4970465429, 127.0281573537, "ㅁㄴㅇㄹ");
 
         // when
@@ -148,7 +148,7 @@ public class TravelPlaceRepositoryTest extends TravelTest {
     @DisplayName("키워드 이용해 검색하며 검색결과가 존재하는 경우")
     void searchTravelPlaces_withData(){
         // given
-        Pageable pageable = PageUtil.defaultPageable(1);
+        Pageable pageable = PageUtils.defaultPageable(1);
 
         // when
         Page<TravelPlace> response = travelPlaceRepository.searchTravelPlaces(pageable, "성북");
@@ -163,7 +163,7 @@ public class TravelPlaceRepositoryTest extends TravelTest {
     @DisplayName("키워드 이용해 검색하며 검색결과가 존재하지 않는 경우")
     void searchTravelPlaces_noData(){
         // given
-        Pageable pageable = PageUtil.defaultPageable(1);
+        Pageable pageable = PageUtils.defaultPageable(1);
 
         // when
         Page<TravelPlace> response = travelPlaceRepository.searchTravelPlaces(pageable, "ㅁㄴㅇㄹ");

@@ -3,7 +3,7 @@ package com.triptune.domain.schedule.dto.response;
 import com.triptune.domain.schedule.dto.AuthorDTO;
 import com.triptune.domain.schedule.entity.TravelSchedule;
 import com.triptune.domain.schedule.enumclass.AttendeeRole;
-import com.triptune.global.util.TimeUtil;
+import com.triptune.global.util.TimeUtils;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -38,9 +38,9 @@ public class ScheduleInfoResponse {
         String sinceUp = "";
 
         if (schedule.getUpdatedAt() != null){
-            sinceUp = TimeUtil.timeDuration(schedule.getUpdatedAt());
+            sinceUp = TimeUtils.timeDuration(schedule.getUpdatedAt());
         } else if(schedule.getCreatedAt() != null){
-            sinceUp = TimeUtil.timeDuration(schedule.getCreatedAt());
+            sinceUp = TimeUtils.timeDuration(schedule.getCreatedAt());
         }
 
         return sinceUp;

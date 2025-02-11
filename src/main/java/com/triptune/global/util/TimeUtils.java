@@ -4,9 +4,8 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.Date;
 
-public class TimeUtil {
+public class TimeUtils {
     private static final int MAX_DURATION_DAYS = 30;
     private static final int HOURS_IN_A_DAY = 24;
     private static final int MINUTES_IN_AN_HOUR = 60;

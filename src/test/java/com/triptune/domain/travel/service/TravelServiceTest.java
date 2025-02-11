@@ -14,7 +14,7 @@ import com.triptune.domain.travel.repository.TravelImageRepository;
 import com.triptune.domain.travel.repository.TravelPlaceRepository;
 import com.triptune.global.enumclass.ErrorCode;
 import com.triptune.global.exception.DataNotFoundException;
-import com.triptune.global.util.PageUtil;
+import com.triptune.global.util.PageUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -75,10 +75,10 @@ public class TravelServiceTest extends TravelTest {
         // given
         PlaceLocationRequest request = createTravelLocationRequest(37.4970465429, 127.0281573537);
 
-        Pageable pageable = PageUtil.defaultPageable(1);
+        Pageable pageable = PageUtils.defaultPageable(1);
         List<PlaceLocation> locationList = new ArrayList<>(List.of(createTravelLocation(travelPlace1), createTravelLocation(travelPlace2)));
 
-        Page<PlaceLocation> mockLocation = PageUtil.createPage(locationList, pageable, locationList.size());
+        Page<PlaceLocation> mockLocation = PageUtils.createPage(locationList, pageable, locationList.size());
 
         when(travelPlaceRepository.findNearByTravelPlaces(pageable, request, 5)).thenReturn(mockLocation);
         when(travelImageRepository.findThumbnailUrlByPlaceId(travelPlace1.getPlaceId())).thenReturn(travelImage.getS3ObjectUrl());
@@ -110,10 +110,10 @@ public class TravelServiceTest extends TravelTest {
         // given
         PlaceLocationRequest request = createTravelLocationRequest(37.4970465429, 127.0281573537);
 
-        Pageable pageable = PageUtil.defaultPageable(1);
+        Pageable pageable = PageUtils.defaultPageable(1);
         List<PlaceLocation> locationList = new ArrayList<>(List.of(createTravelLocation(travelPlace1), createTravelLocation(travelPlace2)));
 
-        Page<PlaceLocation> mockLocation = PageUtil.createPage(locationList, pageable, locationList.size());
+        Page<PlaceLocation> mockLocation = PageUtils.createPage(locationList, pageable, locationList.size());
 
         when(travelPlaceRepository.findNearByTravelPlaces(pageable, request, 5)).thenReturn(mockLocation);
         when(travelImageRepository.findThumbnailUrlByPlaceId(travelPlace1.getPlaceId())).thenReturn(travelImage.getS3ObjectUrl());
@@ -140,7 +140,7 @@ public class TravelServiceTest extends TravelTest {
         // given
         PlaceLocationRequest request = createTravelLocationRequest(0.0, 0.0);
 
-        Pageable pageable = PageUtil.defaultPageable(1);
+        Pageable pageable = PageUtils.defaultPageable(1);
         Page<PlaceLocation> mockLocation = new PageImpl<>(new ArrayList<>(), pageable, 0);
 
         when(travelPlaceRepository.findNearByTravelPlaces(pageable, request, 5)).thenReturn(mockLocation);
@@ -158,7 +158,7 @@ public class TravelServiceTest extends TravelTest {
         // given
         PlaceLocationRequest request = createTravelLocationRequest(0.0, 0.0);
 
-        Pageable pageable = PageUtil.defaultPageable(1);
+        Pageable pageable = PageUtils.defaultPageable(1);
         Page<PlaceLocation> mockLocation = new PageImpl<>(Collections.emptyList(), pageable, 0);
 
         when(travelPlaceRepository.findNearByTravelPlaces(pageable, request, 5)).thenReturn(mockLocation);
@@ -177,10 +177,10 @@ public class TravelServiceTest extends TravelTest {
         // given
         PlaceSearchRequest request = createTravelSearchRequest(37.49, 127.0, "테스트");
 
-        Pageable pageable = PageUtil.defaultPageable(1);
+        Pageable pageable = PageUtils.defaultPageable(1);
 
         List<PlaceLocation> locationList = new ArrayList<>(List.of(createTravelLocation(travelPlace1), createTravelLocation(travelPlace2)));
-        Page<PlaceLocation> mockLocation = PageUtil.createPage(locationList, pageable, locationList.size());
+        Page<PlaceLocation> mockLocation = PageUtils.createPage(locationList, pageable, locationList.size());
 
         when(travelPlaceRepository.searchTravelPlacesWithLocation(pageable, request)).thenReturn(mockLocation);
         when(travelImageRepository.findThumbnailUrlByPlaceId(travelPlace1.getPlaceId())).thenReturn(travelImage.getS3ObjectUrl());
@@ -209,10 +209,10 @@ public class TravelServiceTest extends TravelTest {
         // given
         PlaceSearchRequest request = createTravelSearchRequest(37.49, 127.0, "테스트");
 
-        Pageable pageable = PageUtil.defaultPageable(1);
+        Pageable pageable = PageUtils.defaultPageable(1);
 
         List<PlaceLocation> locationList = new ArrayList<>(List.of(createTravelLocation(travelPlace1), createTravelLocation(travelPlace2)));
-        Page<PlaceLocation> mockLocation = PageUtil.createPage(locationList, pageable, locationList.size());
+        Page<PlaceLocation> mockLocation = PageUtils.createPage(locationList, pageable, locationList.size());
 
         when(travelPlaceRepository.searchTravelPlacesWithLocation(pageable, request)).thenReturn(mockLocation);
         when(travelImageRepository.findThumbnailUrlByPlaceId(travelPlace1.getPlaceId())).thenReturn(travelImage.getS3ObjectUrl());
@@ -240,8 +240,8 @@ public class TravelServiceTest extends TravelTest {
         // given
         PlaceSearchRequest request = createTravelSearchRequest(37.49, 127.0, "ㅁㄴㅇㄹ");
 
-        Pageable pageable = PageUtil.defaultPageable(1);
-        Page<PlaceLocation> mockLocation = PageUtil.createPage(Collections.emptyList(), pageable, 0);
+        Pageable pageable = PageUtils.defaultPageable(1);
+        Page<PlaceLocation> mockLocation = PageUtils.createPage(Collections.emptyList(), pageable, 0);
 
         when(travelPlaceRepository.searchTravelPlacesWithLocation(pageable, request)).thenReturn(mockLocation);
 
@@ -259,8 +259,8 @@ public class TravelServiceTest extends TravelTest {
         // given
         PlaceSearchRequest request = createTravelSearchRequest(37.49, 127.0, "ㅁㄴㅇㄹ");
 
-        Pageable pageable = PageUtil.defaultPageable(1);
-        Page<PlaceLocation> mockLocation = PageUtil.createPage(Collections.emptyList(), pageable, 0);
+        Pageable pageable = PageUtils.defaultPageable(1);
+        Page<PlaceLocation> mockLocation = PageUtils.createPage(Collections.emptyList(), pageable, 0);
 
         when(travelPlaceRepository.searchTravelPlacesWithLocation(pageable, request)).thenReturn(mockLocation);
 

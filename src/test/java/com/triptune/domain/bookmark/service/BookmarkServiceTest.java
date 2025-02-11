@@ -16,7 +16,7 @@ import com.triptune.domain.travel.repository.TravelPlaceRepository;
 import com.triptune.global.enumclass.ErrorCode;
 import com.triptune.global.exception.DataExistException;
 import com.triptune.global.exception.DataNotFoundException;
-import com.triptune.global.util.PageUtil;
+import com.triptune.global.util.PageUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -164,13 +164,13 @@ public class BookmarkServiceTest extends BookmarkTest {
     @DisplayName("북마크로 등록된 여행지 데이터 조회 - 최신순")
     void getBookmarkTravelPlaces_sortNewest(){
         // given
-        Pageable pageable = PageUtil.bookmarkPageable(1);
+        Pageable pageable = PageUtils.bookmarkPageable(1);
         Bookmark bookmark1 = createBookmark(1L, member, travelPlace1, LocalDateTime.now().minusDays(2));
         Bookmark bookmark2 = createBookmark(2L, member, travelPlace2, LocalDateTime.now().minusDays(1));
         Bookmark bookmark3 = createBookmark(3L, member, travelPlace3, LocalDateTime.now());
 
         List<TravelPlace> travelPlaceList = List.of(travelPlace1, travelPlace2, travelPlace3);
-        Page<TravelPlace> travelPlacePage = PageUtil.createPage(travelPlaceList, pageable, travelPlaceList.size());
+        Page<TravelPlace> travelPlacePage = PageUtils.createPage(travelPlaceList, pageable, travelPlaceList.size());
 
         when(bookmarkRepository.getBookmarkTravelPlaces(anyString(), any(), any()))
                 .thenReturn(travelPlacePage);
@@ -189,10 +189,10 @@ public class BookmarkServiceTest extends BookmarkTest {
     @DisplayName("북마크로 등록된 여행지 데이터 조회 - 이름 순")
     void getBookmarkTravelPlaces_sortName(){
         // given
-        Pageable pageable = PageUtil.bookmarkPageable(1);
+        Pageable pageable = PageUtils.bookmarkPageable(1);
 
         List<TravelPlace> travelPlaceList = List.of(travelPlace1, travelPlace2, travelPlace3);
-        Page<TravelPlace> travelPlacePage = PageUtil.createPage(travelPlaceList, pageable, travelPlaceList.size());
+        Page<TravelPlace> travelPlacePage = PageUtils.createPage(travelPlaceList, pageable, travelPlaceList.size());
 
         when(bookmarkRepository.getBookmarkTravelPlaces(anyString(), any(), any()))
                 .thenReturn(travelPlacePage);
@@ -211,9 +211,9 @@ public class BookmarkServiceTest extends BookmarkTest {
     @DisplayName("북마크로 등록된 여행지 데이터 조회 시 데이터가 없는 경우")
     void getBookmarkTravelPlaces_emptyData(){
         // given
-        Pageable pageable = PageUtil.bookmarkPageable(1);
+        Pageable pageable = PageUtils.bookmarkPageable(1);
 
-        Page<TravelPlace> travelPlacePage = PageUtil.createPage(new ArrayList<>(), pageable, 0);
+        Page<TravelPlace> travelPlacePage = PageUtils.createPage(new ArrayList<>(), pageable, 0);
 
         when(bookmarkRepository.getBookmarkTravelPlaces(anyString(), any(), any()))
                 .thenReturn(travelPlacePage);

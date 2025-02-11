@@ -1,12 +1,8 @@
 package com.triptune.domain.email.service;
 
 import com.triptune.domain.email.dto.VerifyAuthRequest;
-import com.triptune.domain.email.exception.EmailVerifyException;
 import com.triptune.domain.member.repository.MemberRepository;
-import com.triptune.global.enumclass.ErrorCode;
-import com.triptune.global.exception.DataExistException;
-import com.triptune.global.util.RedisUtil;
-import jakarta.mail.internet.MimeMessage;
+import com.triptune.global.util.RedisUtils;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
@@ -32,7 +28,7 @@ public class EmailServiceTest {
     private EmailService emailService;
 
     @Mock
-    private RedisUtil redisUtil;
+    private RedisUtils redisUtils;
 
     @Mock
     private JavaMailSender javaMailSender;
@@ -46,7 +42,7 @@ public class EmailServiceTest {
         // given
         VerifyAuthRequest request = new VerifyAuthRequest("test@email.com", "Abcd123");
 
-        when(redisUtil.getEmailData(any(), anyString())).thenReturn("Abcd123");
+        when(redisUtils.getEmailData(any(), anyString())).thenReturn("Abcd123");
 
         // when
         boolean response = emailService.verifyAuthCode(request);
@@ -61,7 +57,7 @@ public class EmailServiceTest {
         // given
         VerifyAuthRequest request = new VerifyAuthRequest("test@email.com", "Abcd123");
 
-        when(redisUtil.getEmailData(any(), anyString())).thenReturn("abcd123");
+        when(redisUtils.getEmailData(any(), anyString())).thenReturn("abcd123");
 
         // when
         boolean response = emailService.verifyAuthCode(request);

@@ -15,7 +15,7 @@ import com.triptune.global.enumclass.ErrorCode;
 import com.triptune.global.exception.CustomNotValidException;
 import com.triptune.global.response.ApiResponse;
 import com.triptune.global.response.pagination.ApiPageResponse;
-import com.triptune.global.util.JwtUtil;
+import com.triptune.global.util.JwtUtils;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -35,7 +35,7 @@ import org.springframework.web.bind.annotation.*;
 public class MemberController {
 
     private final MemberService memberService;
-    private final JwtUtil jwtUtil;
+    private final JwtUtils jwtUtils;
 
 
     @PostMapping("/join")
@@ -61,7 +61,7 @@ public class MemberController {
     @PatchMapping("/logout")
     @Operation(summary = "로그아웃", description = "로그아웃을 실행합니다.")
     public ApiResponse<?> logout(HttpServletRequest request, @Valid @RequestBody LogoutRequest logoutRequest){
-        String accessToken = jwtUtil.resolveToken(request);
+        String accessToken = jwtUtils.resolveToken(request);
 
         memberService.logout(logoutRequest, accessToken);
         return ApiResponse.okResponse();

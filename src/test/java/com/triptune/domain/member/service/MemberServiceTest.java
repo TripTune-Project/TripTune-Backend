@@ -1,7 +1,6 @@
 package com.triptune.domain.member.service;
 
 import com.triptune.domain.bookmark.enumclass.BookmarkSortType;
-import com.triptune.domain.bookmark.repository.BookmarkRepository;
 import com.triptune.domain.bookmark.service.BookmarkService;
 import com.triptune.domain.common.entity.ApiCategory;
 import com.triptune.domain.common.entity.City;
@@ -29,9 +28,9 @@ import com.triptune.global.enumclass.ErrorCode;
 import com.triptune.global.exception.CustomJwtUnAuthorizedException;
 import com.triptune.global.exception.DataExistException;
 import com.triptune.global.exception.DataNotFoundException;
-import com.triptune.global.util.JwtUtil;
-import com.triptune.global.util.PageUtil;
-import com.triptune.global.util.RedisUtil;
+import com.triptune.global.util.JwtUtils;
+import com.triptune.global.util.PageUtils;
+import com.triptune.global.util.RedisUtils;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import jakarta.mail.MessagingException;
@@ -66,10 +65,10 @@ public class MemberServiceTest extends MemberTest {
     private MemberRepository memberRepository;
 
     @Mock
-    private JwtUtil jwtUtil;
+    private JwtUtils jwtUtils;
 
     @Mock
-    private RedisUtil redisUtil;
+    private RedisUtils redisUtils;
 
     @Mock
     private EmailService emailService;
@@ -118,7 +117,7 @@ public class MemberServiceTest extends MemberTest {
         when(memberRepository.existsByUserId(anyString())).thenReturn(false);
         when(memberRepository.existsByNickname(anyString())).thenReturn(false);
         when(memberRepository.existsByEmail(anyString())).thenReturn(false);
-        when(redisUtil.getEmailData(any(), anyString())).thenReturn("true");
+        when(redisUtils.getEmailData(any(), anyString())).thenReturn("true");
         when(profileImageService.saveDefaultProfileImage(any())).thenReturn(createProfileImage(1L, "test.jpg"));
 
         // when
@@ -193,7 +192,7 @@ public class MemberServiceTest extends MemberTest {
         when(memberRepository.existsByUserId(anyString())).thenReturn(false);
         when(memberRepository.existsByNickname(anyString())).thenReturn(false);
         when(memberRepository.existsByEmail(anyString())).thenReturn(false);
-        when(redisUtil.getEmailData(any(), anyString())).thenReturn(null);
+        when(redisUtils.getEmailData(any(), anyString())).thenReturn(null);
 
         // when
         assertThatThrownBy(() -> memberService.join(request))
@@ -206,7 +205,7 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("인증된 이메일인지 검증")
     void validateVerifiedEmail(){
         // given
-        when(redisUtil.getEmailData(any(), anyString())).thenReturn("true");
+        when(redisUtils.getEmailData(any(), anyString())).thenReturn("true");
 
         // when
         assertThatCode(() -> memberService.validateVerifiedEmail("member@email.com"))
@@ -217,7 +216,7 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("인증된 이메일이 아니여서 예외 발생")
     void validateVerifiedEmail_notVerifiedEmail (){
         // given
-        when(redisUtil.getEmailData(any(), anyString())).thenReturn(null);
+        when(redisUtils.getEmailData(any(), anyString())).thenReturn(null);
 
         // when
         assertThatThrownBy(() -> memberService.validateVerifiedEmail("member@email.com"))
@@ -234,8 +233,8 @@ public class MemberServiceTest extends MemberTest {
 
         when(memberRepository.findByUserId(anyString())).thenReturn(Optional.of(member));
         when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
-        when(jwtUtil.createToken(anyString(), anyLong())).thenReturn(accessToken);
-        when(jwtUtil.createToken(anyString(), anyLong())).thenReturn(refreshToken);
+        when(jwtUtils.createToken(anyString(), anyLong())).thenReturn(accessToken);
+        when(jwtUtils.createToken(anyString(), anyLong())).thenReturn(refreshToken);
 
         // when
         LoginResponse response = memberService.login(loginRequest);
@@ -294,7 +293,7 @@ public class MemberServiceTest extends MemberTest {
 
         // then
         verify(memberRepository, times(1)).deleteRefreshTokenByNickname(request.getNickname());
-        verify(redisUtil, times(1)).saveExpiredData(accessToken, "logout", 3600);
+        verify(redisUtils, times(1)).saveExpiredData(accessToken, "logout", 3600);
     }
 
     @Test
@@ -321,10 +320,10 @@ public class MemberServiceTest extends MemberTest {
         // given
         Claims mockClaims = Jwts.claims().setSubject("test");
 
-        when(jwtUtil.validateToken(anyString())).thenReturn(true);
-        when(jwtUtil.parseClaims(anyString())).thenReturn(mockClaims);
+        when(jwtUtils.validateToken(anyString())).thenReturn(true);
+        when(jwtUtils.parseClaims(anyString())).thenReturn(mockClaims);
         when(memberRepository.findByUserId(any())).thenReturn(Optional.of(member));
-        when(jwtUtil.createToken(anyString(), anyLong())).thenReturn(accessToken);
+        when(jwtUtils.createToken(anyString(), anyLong())).thenReturn(accessToken);
 
         RefreshTokenRequest request = createRefreshTokenRequest(refreshToken);
 
@@ -346,8 +345,8 @@ public class MemberServiceTest extends MemberTest {
 
         RefreshTokenRequest request = createRefreshTokenRequest(notEqualRefreshToken);
 
-        when(jwtUtil.validateToken(anyString())).thenReturn(true);
-        when(jwtUtil.parseClaims(anyString())).thenReturn(mockClaims);
+        when(jwtUtils.validateToken(anyString())).thenReturn(true);
+        when(jwtUtils.parseClaims(anyString())).thenReturn(mockClaims);
         when(memberRepository.findByUserId(any())).thenReturn(Optional.of(member));
 
         // when
@@ -429,7 +428,7 @@ public class MemberServiceTest extends MemberTest {
         String newPassword = "newPassword";
         String encodedPassword = "encodedPassword";
 
-        when(redisUtil.getData(anyString())).thenReturn(member.getEmail());
+        when(redisUtils.getData(anyString())).thenReturn(member.getEmail());
         when(memberRepository.findByEmail(anyString())).thenReturn(Optional.of(member));
         when(passwordEncoder.encode(newPassword)).thenReturn(encodedPassword);
 
@@ -438,7 +437,7 @@ public class MemberServiceTest extends MemberTest {
         memberService.resetPassword(createResetPasswordDTO(passwordToken, newPassword, newPassword));
 
         // then
-        verify(redisUtil, times(1)).getData(passwordToken);
+        verify(redisUtils, times(1)).getData(passwordToken);
         verify(memberRepository, times(1)).findByEmail(member.getEmail());
         verify(passwordEncoder, times(1)).encode(newPassword);
         assertThat(encodedPassword).isEqualTo(member.getPassword());
@@ -449,7 +448,7 @@ public class MemberServiceTest extends MemberTest {
     void changePassword_resetPasswordException(){
         // given
         String newPassword = "newPassword";
-        when(redisUtil.getData(anyString())).thenReturn(null);
+        when(redisUtils.getData(anyString())).thenReturn(null);
 
         // when
         ChangeMemberInfoException fail = assertThrows(ChangeMemberInfoException.class,
@@ -466,7 +465,7 @@ public class MemberServiceTest extends MemberTest {
         // given
         String newPassword = "newPassword";
 
-        when(redisUtil.getData(anyString())).thenReturn(member.getEmail());
+        when(redisUtils.getData(anyString())).thenReturn(member.getEmail());
         when(memberRepository.findByEmail(anyString())).thenReturn(Optional.empty());
 
         // when
@@ -619,7 +618,7 @@ public class MemberServiceTest extends MemberTest {
 
         when(memberRepository.existsByEmail(anyString())).thenReturn(false);
         when(memberRepository.findByUserId(anyString())).thenReturn(Optional.of(member));
-        when(redisUtil.getEmailData(any(), anyString())).thenReturn("true");
+        when(redisUtils.getEmailData(any(), anyString())).thenReturn("true");
 
         // when
         assertThatCode(() -> memberService.changeEmail("member", emailRequest))
@@ -651,7 +650,7 @@ public class MemberServiceTest extends MemberTest {
         EmailRequest emailRequest = createEmailRequest("changeMember@email.com");
 
         when(memberRepository.existsByEmail(anyString())).thenReturn(false);
-        when(redisUtil.getEmailData(any(), anyString())).thenReturn(null);
+        when(redisUtils.getEmailData(any(), anyString())).thenReturn(null);
 
         // when
         assertThatThrownBy(() -> memberService.changeEmail("member", emailRequest))
@@ -667,7 +666,7 @@ public class MemberServiceTest extends MemberTest {
         EmailRequest emailRequest = createEmailRequest("changeMember@email.com");
 
         when(memberRepository.existsByEmail(anyString())).thenReturn(false);
-        when(redisUtil.getEmailData(any(), anyString())).thenReturn("true");
+        when(redisUtils.getEmailData(any(), anyString())).thenReturn("true");
         when(memberRepository.findByUserId(anyString())).thenReturn(Optional.empty());
 
 
@@ -681,10 +680,10 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("북마크로 등록된 여행지 데이터 조회 - 최신순")
     void getMemberBookmarks_sortNewest(){
         // given
-        Pageable pageable = PageUtil.bookmarkPageable(1);
+        Pageable pageable = PageUtils.bookmarkPageable(1);
 
         List<TravelPlace> travelPlaceList = List.of(travelPlace1, travelPlace2, travelPlace3);
-        Page<TravelPlace> travelPlacePage = PageUtil.createPage(travelPlaceList, pageable, travelPlaceList.size());
+        Page<TravelPlace> travelPlacePage = PageUtils.createPage(travelPlaceList, pageable, travelPlaceList.size());
 
         when(bookmarkService.getBookmarkTravelPlaces(anyString(), any(), any()))
                 .thenReturn(travelPlacePage);
@@ -708,10 +707,10 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("북마크로 등록된 여행지 데이터 조회 - 이름 순")
     void getMemberBookmarks_sortName(){
         // given
-        Pageable pageable = PageUtil.bookmarkPageable(1);
+        Pageable pageable = PageUtils.bookmarkPageable(1);
 
         List<TravelPlace> travelPlaceList = List.of(travelPlace1, travelPlace2, travelPlace3);
-        Page<TravelPlace> travelPlacePage = PageUtil.createPage(travelPlaceList, pageable, travelPlaceList.size());
+        Page<TravelPlace> travelPlacePage = PageUtils.createPage(travelPlaceList, pageable, travelPlaceList.size());
 
         when(bookmarkService.getBookmarkTravelPlaces(anyString(), any(), any()))
                 .thenReturn(travelPlacePage);
@@ -734,9 +733,9 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("북마크로 등록된 여행지 데이터 조회 시 데이터 없는 경우")
     void getMemberBookmarks_emptyData(){
         // given
-        Pageable pageable = PageUtil.bookmarkPageable(1);
+        Pageable pageable = PageUtils.bookmarkPageable(1);
 
-        Page<TravelPlace> travelPlacePage = PageUtil.createPage(new ArrayList<>(), pageable, 0);
+        Page<TravelPlace> travelPlacePage = PageUtils.createPage(new ArrayList<>(), pageable, 0);
 
         when(bookmarkService.getBookmarkTravelPlaces(anyString(), any(), any()))
                 .thenReturn(travelPlacePage);

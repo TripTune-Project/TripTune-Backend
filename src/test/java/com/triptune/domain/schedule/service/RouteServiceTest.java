@@ -22,7 +22,7 @@ import com.triptune.domain.travel.entity.TravelPlace;
 import com.triptune.domain.travel.repository.TravelPlaceRepository;
 import com.triptune.global.enumclass.ErrorCode;
 import com.triptune.global.exception.DataNotFoundException;
-import com.triptune.global.util.PageUtil;
+import com.triptune.global.util.PageUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -110,10 +110,10 @@ public class RouteServiceTest extends ScheduleTest {
     @DisplayName("여행 루트 조회")
     void getTravelRoutes(){
         // given
-        Pageable pageable = PageUtil.defaultPageable(1);
+        Pageable pageable = PageUtils.defaultPageable(1);
 
         when(travelRouteRepository.findAllByTravelSchedule_ScheduleId(pageable, schedule1.getScheduleId()))
-                .thenReturn(PageUtil.createPage(schedule1.getTravelRouteList(), pageable, schedule1.getTravelRouteList().size()));
+                .thenReturn(PageUtils.createPage(schedule1.getTravelRouteList(), pageable, schedule1.getTravelRouteList().size()));
 
 
         // when
@@ -132,10 +132,10 @@ public class RouteServiceTest extends ScheduleTest {
     @DisplayName("여행 루트 조회 시 저장된 여행 루트 데이터 없는 경우")
     void getTravelRoutesWithoutData(){
         // given
-        Pageable pageable = PageUtil.defaultPageable(1);
+        Pageable pageable = PageUtils.defaultPageable(1);
 
         when(travelRouteRepository.findAllByTravelSchedule_ScheduleId(pageable, schedule1.getScheduleId()))
-                .thenReturn(PageUtil.createPage(new ArrayList<>(), pageable, 0));
+                .thenReturn(PageUtils.createPage(new ArrayList<>(), pageable, 0));
 
 
         // when

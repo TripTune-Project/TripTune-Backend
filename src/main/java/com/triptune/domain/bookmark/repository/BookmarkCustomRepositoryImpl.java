@@ -7,12 +7,11 @@ import com.triptune.domain.bookmark.entity.QBookmark;
 import com.triptune.domain.bookmark.enumclass.BookmarkSortType;
 import com.triptune.domain.travel.entity.QTravelPlace;
 import com.triptune.domain.travel.entity.TravelPlace;
-import com.triptune.global.util.PageUtil;
+import com.triptune.global.util.PageUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
@@ -46,7 +45,7 @@ public class BookmarkCustomRepositoryImpl implements BookmarkCustomRepository{
 
         int totalElements = countTotalElements(expression);
 
-        return PageUtil.createPage(content, pageable, totalElements);
+        return PageUtils.createPage(content, pageable, totalElements);
     }
 
     @Override

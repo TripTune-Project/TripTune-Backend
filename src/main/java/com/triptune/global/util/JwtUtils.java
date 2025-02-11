@@ -27,7 +27,7 @@ import java.util.Date;
 
 @Slf4j
 @Component
-public class JwtUtil {
+public class JwtUtils {
 
     private static final int BEARER_PREFIX_LENGTH = 7;
     private static final String BEARER_PREFIX = "Bearer ";
@@ -35,13 +35,13 @@ public class JwtUtil {
 
     private final Key key;
     private final CustomUserDetailsService userDetailsService;
-    private final RedisUtil redisUtil;
+    private final RedisUtils redisUtils;
 
-    public JwtUtil(@Value("${spring.jwt.secret}") String secretKey, CustomUserDetailsService userDetailsService, RedisUtil redisUtil){
+    public JwtUtils(@Value("${spring.jwt.secret}") String secretKey, CustomUserDetailsService userDetailsService, RedisUtils redisUtils){
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);
         this.key = Keys.hmacShaKeyFor(keyBytes);
         this.userDetailsService = userDetailsService;
-        this.redisUtil = redisUtil;
+        this.redisUtils = redisUtils;
     }
 
 
@@ -63,7 +63,7 @@ public class JwtUtil {
         try {
             Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
 
-            if(redisUtil.existData(token)){
+            if(redisUtils.existData(token)){
                 log.error("Already logged out user");
                 throw new CustomJwtUnAuthorizedException(ErrorCode.BLACKLIST_TOKEN);
             }
@@ -88,7 +88,7 @@ public class JwtUtil {
         try {
             Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
 
-            if(redisUtil.existData(token)){
+            if(redisUtils.existData(token)){
                 log.info("Already logged out user");
                 throw new CustomJwtUnAuthorizedChatException(ErrorCode.BLACKLIST_TOKEN);
             }

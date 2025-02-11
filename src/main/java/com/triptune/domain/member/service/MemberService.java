@@ -22,9 +22,9 @@ import com.triptune.global.enumclass.RedisKeyType;
 import com.triptune.global.exception.CustomJwtUnAuthorizedException;
 import com.triptune.global.exception.DataExistException;
 import com.triptune.global.exception.DataNotFoundException;
-import com.triptune.global.util.JwtUtil;
-import com.triptune.global.util.PageUtil;
-import com.triptune.global.util.RedisUtil;
+import com.triptune.global.util.JwtUtils;
+import com.triptune.global.util.PageUtils;
+import com.triptune.global.util.RedisUtils;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.mail.MessagingException;
@@ -45,8 +45,8 @@ public class MemberService {
     private final MemberRepository memberRepository;
     private final EmailService emailService;
     private final PasswordEncoder passwordEncoder;
-    private final JwtUtil jwtUtil;
-    private final RedisUtil redisUtil;
+    private final JwtUtils jwtUtils;
+    private final RedisUtils redisUtils;
     private final ProfileImageService profileImageService;
     private final BookmarkService bookmarkService;
 
@@ -92,7 +92,7 @@ public class MemberService {
     }
 
     public void validateVerifiedEmail(String email){
-        String isVerified = redisUtil.getEmailData(RedisKeyType.VERIFIED, email);
+        String isVerified = redisUtils.getEmailData(RedisKeyType.VERIFIED, email);
 
         if(isVerified == null || !isVerified.equals("true")){
             throw new EmailVerifyException(ErrorCode.NOT_VERIFIED_EMAIL);
@@ -109,8 +109,8 @@ public class MemberService {
             throw new FailLoginException(ErrorCode.FAILED_LOGIN);
         }
 
-        String accessToken = jwtUtil.createToken(loginRequest.getUserId(), accessExpirationTime);
-        String refreshToken = jwtUtil.createToken(loginRequest.getUserId(), refreshExpirationTime);
+        String accessToken = jwtUtils.createToken(loginRequest.getUserId(), accessExpirationTime);
+        String refreshToken = jwtUtils.createToken(loginRequest.getUserId(), refreshExpirationTime);
 
         member.updateRefreshToken(refreshToken);
 
@@ -124,20 +124,20 @@ public class MemberService {
         }
 
         memberRepository.deleteRefreshTokenByNickname(logoutRequest.getNickname());
-        redisUtil.saveExpiredData(accessToken, "logout", LOGOUT_DURATION);
+        redisUtils.saveExpiredData(accessToken, "logout", LOGOUT_DURATION);
     }
 
 
     public RefreshTokenResponse refreshToken(RefreshTokenRequest refreshTokenRequest) throws ExpiredJwtException {
         String refreshToken = refreshTokenRequest.getRefreshToken();
-        jwtUtil.validateToken(refreshToken);
+        jwtUtils.validateToken(refreshToken);
 
-        Claims claims = jwtUtil.parseClaims(refreshToken);
+        Claims claims = jwtUtils.parseClaims(refreshToken);
 
         Member member = findMemberByUserId(claims.getSubject());
         validateSavedRefreshToken(member, refreshToken);
 
-        String newAccessToken = jwtUtil.createToken(member.getUserId(), accessExpirationTime);
+        String newAccessToken = jwtUtils.createToken(member.getUserId(), accessExpirationTime);
         return RefreshTokenResponse.of(newAccessToken);
     }
 
@@ -169,7 +169,7 @@ public class MemberService {
 
 
     public void resetPassword(ResetPasswordRequest resetPasswordRequest) {
-        String email = redisUtil.getData(resetPasswordRequest.getPasswordToken());
+        String email = redisUtils.getData(resetPasswordRequest.getPasswordToken());
 
         if (email == null) {
             throw new ChangeMemberInfoException(ErrorCode.INVALID_CHANGE_PASSWORD);
@@ -218,7 +218,7 @@ public class MemberService {
     }
 
     public Page<PlaceSimpleResponse> getMemberBookmarks(int page, String userId, BookmarkSortType sortType) {
-        Pageable pageable = PageUtil.bookmarkPageable(page);
+        Pageable pageable = PageUtils.bookmarkPageable(page);
         Page<TravelPlace> travelPlaces = bookmarkService.getBookmarkTravelPlaces(userId, pageable, sortType);
 
         return travelPlaces.map(PlaceSimpleResponse::from);

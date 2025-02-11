@@ -4,9 +4,8 @@ import com.triptune.domain.email.dto.EmailTemplateRequest;
 import com.triptune.domain.email.dto.VerifyAuthRequest;
 import com.triptune.domain.member.dto.request.FindPasswordRequest;
 import com.triptune.global.enumclass.RedisKeyType;
-import com.triptune.domain.member.repository.MemberRepository;
-import com.triptune.global.util.JwtUtil;
-import com.triptune.global.util.RedisUtil;
+import com.triptune.global.util.JwtUtils;
+import com.triptune.global.util.RedisUtils;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.transaction.Transactional;
@@ -38,9 +37,9 @@ public class EmailService {
     private static final int UPPERCASE_LIMIT = 65; // 대문자의 최소값 'A'
     private static final int TARGET_STRING_LENGTH = 6; // 인증 코드 길이
 
-    private final RedisUtil redisUtil;
+    private final RedisUtils redisUtils;
     private final JavaMailSender javaMailSender;
-    private final JwtUtil jwtUtil;
+    private final JwtUtils jwtUtils;
     private final TemplateEngine templateEngine;
 
 
@@ -65,10 +64,10 @@ public class EmailService {
 
 
     public boolean verifyAuthCode(VerifyAuthRequest verifyAuthRequest){
-        String savedCode = redisUtil.getEmailData(RedisKeyType.AUTH_CODE, verifyAuthRequest.getEmail());
+        String savedCode = redisUtils.getEmailData(RedisKeyType.AUTH_CODE, verifyAuthRequest.getEmail());
 
         if (savedCode != null && savedCode.equals(verifyAuthRequest.getAuthCode())){
-            redisUtil.saveEmailData(RedisKeyType.VERIFIED, verifyAuthRequest.getEmail(), "true", verificationDuration);
+            redisUtils.saveEmailData(RedisKeyType.VERIFIED, verifyAuthRequest.getEmail(), "true", verificationDuration);
             return true;
         }
 
@@ -90,19 +89,19 @@ public class EmailService {
         MimeMessage emailForm = createEmailTemplate(templateRequest);
 
         javaMailSender.send(emailForm);
-        redisUtil.saveEmailData(RedisKeyType.AUTH_CODE, email, authCode, certificationDuration);
+        redisUtils.saveEmailData(RedisKeyType.AUTH_CODE, email, authCode, certificationDuration);
 
         log.info("인증 이메일 전송 완료 : {}", email);
     }
 
     private void deleteAuthCodeIfExists(String email){
-        if(redisUtil.existEmailData(RedisKeyType.AUTH_CODE, email)){
-            redisUtil.deleteEmailData(RedisKeyType.AUTH_CODE, email);
+        if(redisUtils.existEmailData(RedisKeyType.AUTH_CODE, email)){
+            redisUtils.deleteEmailData(RedisKeyType.AUTH_CODE, email);
         }
     }
 
     public void sendResetPasswordEmail(FindPasswordRequest findPasswordRequest) throws MessagingException {
-        String passwordToken = jwtUtil.createToken(findPasswordRequest.getUserId(), passwordExpirationTime);
+        String passwordToken = jwtUtils.createToken(findPasswordRequest.getUserId(), passwordExpirationTime);
         String resetPasswordURL = passwordURL + passwordToken;
 
         EmailTemplateRequest templateRequest = new EmailTemplateRequest(
@@ -115,7 +114,7 @@ public class EmailService {
         MimeMessage emailForm = createEmailTemplate(templateRequest);
 
         javaMailSender.send(emailForm);
-        redisUtil.saveExpiredData(passwordToken, findPasswordRequest.getEmail(), resetPasswordDuration);
+        redisUtils.saveExpiredData(passwordToken, findPasswordRequest.getEmail(), resetPasswordDuration);
 
         log.info("비밀번호 초기화 이메일 전송 완료 : {}", findPasswordRequest.getEmail());
     }

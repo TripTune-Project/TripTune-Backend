@@ -13,7 +13,7 @@ import com.triptune.domain.travel.entity.TravelPlace;
 import com.triptune.domain.travel.repository.TravelPlaceRepository;
 import com.triptune.global.enumclass.ErrorCode;
 import com.triptune.global.exception.DataNotFoundException;
-import com.triptune.global.util.PageUtil;
+import com.triptune.global.util.PageUtils;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -31,7 +31,7 @@ public class RouteService {
     private final TravelPlaceRepository travelPlaceRepository;
 
     public Page<RouteResponse> getTravelRoutes(Long scheduleId, int page) {
-        Pageable pageable = PageUtil.defaultPageable(page);
+        Pageable pageable = PageUtils.defaultPageable(page);
         Page<TravelRoute> travelRoutes = travelRouteRepository.findAllByTravelSchedule_ScheduleId(pageable, scheduleId);
 
         return travelRoutes.map(RouteResponse::from);

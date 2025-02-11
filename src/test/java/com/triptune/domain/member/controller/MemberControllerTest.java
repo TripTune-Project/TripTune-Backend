@@ -22,8 +22,8 @@ import com.triptune.domain.member.repository.MemberRepository;
 import com.triptune.domain.profile.repository.ProfileImageRepository;
 import com.triptune.global.enumclass.ErrorCode;
 import com.triptune.global.enumclass.SuccessCode;
-import com.triptune.global.util.JwtUtil;
-import com.triptune.global.util.RedisUtil;
+import com.triptune.global.util.JwtUtils;
+import com.triptune.global.util.RedisUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -40,7 +40,6 @@ import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.filter.CharacterEncodingFilter;
 
 import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -57,7 +56,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("h2")
 public class MemberControllerTest extends MemberTest {
     private final WebApplicationContext wac;
-    private final JwtUtil jwtUtil;
+    private final JwtUtils jwtUtils;
     private final MemberRepository memberRepository;
     private final ProfileImageRepository profileImageRepository;
     private final PasswordEncoder passwordEncoder;
@@ -70,7 +69,7 @@ public class MemberControllerTest extends MemberTest {
     private final BookmarkRepository bookmarkRepository;
 
     @MockBean
-    private RedisUtil redisUtil;
+    private RedisUtils redisUtils;
 
     @MockBean
     private EmailService emailService;
@@ -88,9 +87,9 @@ public class MemberControllerTest extends MemberTest {
 
 
     @Autowired
-    public MemberControllerTest(WebApplicationContext wac, JwtUtil jwtUtil, MemberRepository memberRepository, ProfileImageRepository profileImageRepository, PasswordEncoder passwordEncoder, TravelPlaceRepository travelPlaceRepository, CountryRepository countryRepository, CityRepository cityRepository, DistrictRepository districtRepository, TravelImageRepository travelImageRepository, ApiCategoryRepository apiCategoryRepository, BookmarkRepository bookmarkRepository) {
+    public MemberControllerTest(WebApplicationContext wac, JwtUtils jwtUtils, MemberRepository memberRepository, ProfileImageRepository profileImageRepository, PasswordEncoder passwordEncoder, TravelPlaceRepository travelPlaceRepository, CountryRepository countryRepository, CityRepository cityRepository, DistrictRepository districtRepository, TravelImageRepository travelImageRepository, ApiCategoryRepository apiCategoryRepository, BookmarkRepository bookmarkRepository) {
         this.wac = wac;
-        this.jwtUtil = jwtUtil;
+        this.jwtUtils = jwtUtils;
         this.memberRepository = memberRepository;
         this.profileImageRepository = profileImageRepository;
         this.passwordEncoder = passwordEncoder;
@@ -129,7 +128,7 @@ public class MemberControllerTest extends MemberTest {
     @Test
     @DisplayName("회원가입")
     void join() throws Exception {
-        when(redisUtil.getEmailData(any(), anyString())).thenReturn("true");
+        when(redisUtils.getEmailData(any(), anyString())).thenReturn("true");
 
         mockMvc.perform(post("/api/members/join")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -195,7 +194,7 @@ public class MemberControllerTest extends MemberTest {
     @DisplayName("로그아웃")
     void logout() throws Exception{
         Member member = memberRepository.save(createMember(null, "member"));
-        String accessToken = jwtUtil.createToken(member.getUserId(), 3600);
+        String accessToken = jwtUtils.createToken(member.getUserId(), 3600);
 
         mockMvc.perform(patch("/api/members/logout")
                         .header("Authorization", "Bearer " + accessToken)
@@ -210,7 +209,7 @@ public class MemberControllerTest extends MemberTest {
     @DisplayName("로그아웃 시 존재하지 않는 사용자 요청으로 인해 예외 발생")
     void logout_dataNotFoundException() throws Exception{
         Member member = memberRepository.save(createMember(null, "member"));
-        String accessToken = jwtUtil.createToken(member.getUserId(), 3600);
+        String accessToken = jwtUtils.createToken(member.getUserId(), 3600);
 
         mockMvc.perform(patch("/api/members/logout")
                         .header("Authorization", "Bearer " + accessToken)
@@ -225,7 +224,7 @@ public class MemberControllerTest extends MemberTest {
     @DisplayName("토큰 갱신")
     void refreshToken() throws Exception{
         Member member = memberRepository.save(createMember(null, "member"));
-        String refreshToken = jwtUtil.createToken(member.getUserId(), 10000000);
+        String refreshToken = jwtUtils.createToken(member.getUserId(), 10000000);
         member.updateRefreshToken(refreshToken);
 
         mockMvc.perform(post("/api/members/refresh")
@@ -239,7 +238,7 @@ public class MemberControllerTest extends MemberTest {
     @Test
     @DisplayName("토큰 갱신 시 refresh token 만료로 예외 발생")
     void refreshToken_unauthorizedExpiredException() throws Exception {
-        String refreshToken = jwtUtil.createToken("member", -604800000);
+        String refreshToken = jwtUtils.createToken("member", -604800000);
 
         mockMvc.perform(post("/api/members/refresh")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -252,7 +251,7 @@ public class MemberControllerTest extends MemberTest {
     @Test
     @DisplayName("토큰 갱신 시 사용자 데이터 존재하지 않아 예외 발생")
     void refreshToken_memberNotFoundException() throws Exception {
-        String refreshToken = jwtUtil.createToken("member", 100000000);
+        String refreshToken = jwtUtils.createToken("member", 100000000);
 
         mockMvc.perform(post("/api/members/refresh")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -267,7 +266,7 @@ public class MemberControllerTest extends MemberTest {
     @DisplayName("토큰 갱신 시 사용자가 요청과 저장된 refresh token 값이 달라 예외 발생")
     void refreshToken_NotEqualsRefreshToken() throws Exception {
         Member member = memberRepository.save(createMember(null, "member"));
-        String refreshToken = jwtUtil.createToken(member.getUserId(), 10000000);
+        String refreshToken = jwtUtils.createToken(member.getUserId(), 10000000);
 
         mockMvc.perform(post("/api/members/refresh")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -336,7 +335,7 @@ public class MemberControllerTest extends MemberTest {
     @DisplayName("비밀번호 초기화")
     void resetPassword() throws Exception{
         Member member = memberRepository.save(createMember(null, "member"));
-        when(redisUtil.getData(anyString())).thenReturn(member.getEmail());
+        when(redisUtils.getData(anyString())).thenReturn(member.getEmail());
 
         mockMvc.perform(patch("/api/members/reset-password")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -378,7 +377,7 @@ public class MemberControllerTest extends MemberTest {
     @Test
     @DisplayName("비밀번호 초기화 시 사용자 데이터 존재하지 않아 예외 발생")
     void resetPassword_memberNotFoundException() throws Exception{
-        when(redisUtil.getData(anyString())).thenReturn("noMember@email.com");
+        when(redisUtils.getData(anyString())).thenReturn("noMember@email.com");
 
         mockMvc.perform(patch("/api/members/reset-password")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -564,7 +563,7 @@ public class MemberControllerTest extends MemberTest {
     @DisplayName("이메일 변경")
     void changeEmail() throws Exception {
         memberRepository.save(createMember(null, "member"));
-        when(redisUtil.getEmailData(any(), anyString())).thenReturn("true");
+        when(redisUtils.getEmailData(any(), anyString())).thenReturn("true");
 
         mockMvc.perform(patch("/api/members/change-email")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -591,7 +590,7 @@ public class MemberControllerTest extends MemberTest {
     @DisplayName("이메일 변경 시 인증되지 않은 이메일로 예외 발생")
     void changeEmail_notVerifiedEmail() throws Exception {
         memberRepository.save(createMember(null, "member"));
-        when(redisUtil.getEmailData(any(), anyString())).thenReturn(null);
+        when(redisUtils.getEmailData(any(), anyString())).thenReturn(null);
 
         mockMvc.perform(patch("/api/members/change-email")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -604,7 +603,7 @@ public class MemberControllerTest extends MemberTest {
     @WithMockUser("member")
     @DisplayName("이메일 변경 시 존재하지 않는 사용자로 예외 발생")
     void changeEmail_memberNotFoundException() throws Exception {
-        when(redisUtil.getEmailData(any(), anyString())).thenReturn("true");
+        when(redisUtils.getEmailData(any(), anyString())).thenReturn("true");
 
         mockMvc.perform(patch("/api/members/change-email")
                         .contentType(MediaType.APPLICATION_JSON)

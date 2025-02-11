@@ -13,7 +13,7 @@ import com.triptune.domain.schedule.repository.TravelAttendeeRepository;
 import com.triptune.domain.schedule.repository.TravelScheduleRepository;
 import com.triptune.global.enumclass.ErrorCode;
 import com.triptune.global.exception.DataNotFoundException;
-import com.triptune.global.util.PageUtil;
+import com.triptune.global.util.PageUtils;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -35,7 +35,7 @@ public class ChatService {
 
 
     public Page<ChatResponse> getChatMessages(int page, Long scheduleId) {
-        Pageable pageable = PageUtil.chatPageable(page);
+        Pageable pageable = PageUtils.chatPageable(page);
         Page<ChatMessage> chatPage = chatMessageRepository.findAllByScheduleId(pageable, scheduleId);
 
         List<ChatResponse> chatResponseList = chatPage.getContent()
@@ -44,7 +44,7 @@ public class ChatService {
                 .sorted(Comparator.comparing(ChatResponse::getTimestamp))
                 .toList();
 
-        return PageUtil.createPage(chatResponseList, pageable, chatPage.getTotalElements());
+        return PageUtils.createPage(chatResponseList, pageable, chatPage.getTotalElements());
     }
 
 

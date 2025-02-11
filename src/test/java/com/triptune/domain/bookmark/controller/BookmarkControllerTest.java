@@ -17,7 +17,7 @@ import com.triptune.domain.travel.repository.TravelPlaceRepository;
 import com.triptune.global.enumclass.ErrorCode;
 import com.triptune.global.enumclass.SuccessCode;
 import com.triptune.global.filter.JwtAuthFilter;
-import com.triptune.global.util.JwtUtil;
+import com.triptune.global.util.JwtUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -46,7 +46,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class BookmarkControllerTest extends BookmarkTest {
 
     private final WebApplicationContext wac;
-    private final JwtUtil jwtUtil;
+    private final JwtUtils jwtUtils;
     private final BookmarkRepository bookmarkRepository;
     private final MemberRepository memberRepository;
     private final TravelPlaceRepository travelPlaceRepository;
@@ -63,9 +63,9 @@ class BookmarkControllerTest extends BookmarkTest {
     private ApiCategory apiCategory;
 
     @Autowired
-    public BookmarkControllerTest(WebApplicationContext wac, JwtUtil jwtUtil, BookmarkRepository bookmarkRepository, MemberRepository memberRepository, TravelPlaceRepository travelPlaceRepository, CountryRepository countryRepository, CityRepository cityRepository, DistrictRepository districtRepository, ApiCategoryRepository apiCategoryRepository) {
+    public BookmarkControllerTest(WebApplicationContext wac, JwtUtils jwtUtils, BookmarkRepository bookmarkRepository, MemberRepository memberRepository, TravelPlaceRepository travelPlaceRepository, CountryRepository countryRepository, CityRepository cityRepository, DistrictRepository districtRepository, ApiCategoryRepository apiCategoryRepository) {
         this.wac = wac;
-        this.jwtUtil = jwtUtil;
+        this.jwtUtils = jwtUtils;
         this.bookmarkRepository = bookmarkRepository;
         this.memberRepository = memberRepository;
         this.travelPlaceRepository = travelPlaceRepository;
@@ -78,7 +78,7 @@ class BookmarkControllerTest extends BookmarkTest {
     @BeforeEach
     void setUp(){
         mockMvc = MockMvcBuilders.webAppContextSetup(wac)
-                .addFilter(new JwtAuthFilter(jwtUtil))
+                .addFilter(new JwtAuthFilter(jwtUtils))
                 .addFilter(new CharacterEncodingFilter("UTF-8", true))
                 .apply(springSecurity())
                 .alwaysDo(print())

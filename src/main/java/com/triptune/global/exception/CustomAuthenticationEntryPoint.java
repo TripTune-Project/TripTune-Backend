@@ -2,7 +2,7 @@ package com.triptune.global.exception;
 
 import com.triptune.global.enumclass.ErrorCode;
 import com.triptune.global.util.HttpRequestEndpointChecker;
-import com.triptune.global.util.JwtUtil;
+import com.triptune.global.util.JwtUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -31,7 +31,7 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
             log.error("401 CustomAuthenticationEntryPoint(미인증 접근 시도), URL: {}", request.getRequestURI());
             log.error("Header 의 Authorization {}", request.getHeader("Authorization") != null ? "존재함" : "존재하지 않음");
 
-            JwtUtil.writeJwtException(request, response, HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHORIZED_ACCESS.getMessage());
+            JwtUtils.writeJwtException(request, response, HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHORIZED_ACCESS.getMessage());
         }
     }
 }

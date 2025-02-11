@@ -15,14 +15,14 @@ import java.util.stream.Stream;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-class FileUtilTest {
+class FileUtilsTest {
 
     @ParameterizedTest
     @CsvSource({"test.jpg", "/test.jpg", "/test/image.jpg"})
     @DisplayName("파일 확장자 추출")
     void getExtension(String fileName){
         // given, when
-        String response = FileUtil.getExtension(fileName);
+        String response = FileUtils.getExtension(fileName);
 
         // then
         assertThat(response).isEqualTo("jpg");
@@ -33,7 +33,7 @@ class FileUtilTest {
     @DisplayName("파일 확장자 추출 실패로 예외 발생")
     void getExtensionException(String fileName){
         // given, when
-        FileBadRequestException fail = assertThrows(FileBadRequestException.class, () -> FileUtil.getExtension(fileName));
+        FileBadRequestException fail = assertThrows(FileBadRequestException.class, () -> FileUtils.getExtension(fileName));
 
         // then
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.INVALID_EXTENSION.getStatus());
@@ -45,7 +45,7 @@ class FileUtilTest {
     @DisplayName("파일 메타데이터 생성")
     void generateMetadata(MockMultipartFile file){
         // given, when
-        ObjectMetadata response = FileUtil.generateMetadata(file);
+        ObjectMetadata response = FileUtils.generateMetadata(file);
 
         // then
         assertThat(response).isNotNull();

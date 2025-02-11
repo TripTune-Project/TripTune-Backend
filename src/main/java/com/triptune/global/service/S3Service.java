@@ -7,7 +7,7 @@ import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.triptune.global.enumclass.ErrorCode;
 import com.triptune.global.exception.DataNotFoundException;
-import com.triptune.global.util.FileUtil;
+import com.triptune.global.util.FileUtils;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,8 +15,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.UUID;
@@ -35,7 +33,7 @@ public class S3Service {
 
 
     public String uploadToS3(MultipartFile uploadFile, String s3FileKey){
-        ObjectMetadata metadata = FileUtil.generateMetadata(uploadFile);
+        ObjectMetadata metadata = FileUtils.generateMetadata(uploadFile);
 
         try{
             amazonS3Client.putObject(new PutObjectRequest(
