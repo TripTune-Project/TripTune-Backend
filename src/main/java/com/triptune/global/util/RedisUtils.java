@@ -10,7 +10,7 @@ import java.time.Duration;
 
 @RequiredArgsConstructor
 @Service
-public class RedisUtil {
+public class RedisUtils {
 
     private final StringRedisTemplate template;
 

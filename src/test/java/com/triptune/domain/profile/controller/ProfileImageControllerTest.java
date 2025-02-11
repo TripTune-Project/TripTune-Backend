@@ -3,12 +3,11 @@ package com.triptune.domain.profile.controller;
 import com.triptune.domain.member.entity.Member;
 import com.triptune.domain.member.repository.MemberRepository;
 import com.triptune.domain.profile.ProfileImageTest;
-import com.triptune.domain.profile.entity.ProfileImage;
 import com.triptune.domain.profile.repository.ProfileImageRepository;
 import com.triptune.global.enumclass.ErrorCode;
 import com.triptune.global.enumclass.SuccessCode;
 import com.triptune.global.service.S3Service;
-import com.triptune.global.util.JwtUtil;
+import com.triptune.global.util.JwtUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -20,7 +19,6 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.filter.CharacterEncodingFilter;
@@ -36,7 +34,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("h2")
 class ProfileImageControllerTest extends ProfileImageTest {
     private final WebApplicationContext wac;
-    private final JwtUtil jwtUtil;
+    private final JwtUtils jwtUtils;
     private final MemberRepository memberRepository;
     private final ProfileImageRepository profileImageRepository;
 
@@ -46,9 +44,9 @@ class ProfileImageControllerTest extends ProfileImageTest {
     private MockMvc mockMvc;
 
     @Autowired
-    public ProfileImageControllerTest(WebApplicationContext wac, JwtUtil jwtUtil, MemberRepository memberRepository, ProfileImageRepository profileImageRepository) {
+    public ProfileImageControllerTest(WebApplicationContext wac, JwtUtils jwtUtils, MemberRepository memberRepository, ProfileImageRepository profileImageRepository) {
         this.wac = wac;
-        this.jwtUtil = jwtUtil;
+        this.jwtUtils = jwtUtils;
         this.memberRepository = memberRepository;
         this.profileImageRepository = profileImageRepository;
     }

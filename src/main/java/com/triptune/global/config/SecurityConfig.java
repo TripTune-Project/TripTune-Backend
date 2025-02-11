@@ -3,8 +3,7 @@ package com.triptune.global.config;
 import com.triptune.global.exception.CustomAccessDeniedHandler;
 import com.triptune.global.exception.CustomAuthenticationEntryPoint;
 import com.triptune.global.filter.JwtAuthFilter;
-import com.triptune.global.util.HttpRequestEndpointChecker;
-import com.triptune.global.util.JwtUtil;
+import com.triptune.global.util.JwtUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -26,7 +25,7 @@ import static com.triptune.global.config.SecurityConstants.AUTH_WHITELIST;
 @EnableWebSecurity
 public class SecurityConfig {
 
-    private final JwtUtil jwtUtil;
+    private final JwtUtils jwtUtils;
     private final CustomAccessDeniedHandler customAccessDeniedHandler;
     private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
     private final CorsConfigurationSource corsConfigurationSource;
@@ -50,7 +49,7 @@ public class SecurityConfig {
                         .requestMatchers(AUTH_WHITELIST).permitAll()
                         .anyRequest().authenticated()
                 )
-                .addFilterBefore(new JwtAuthFilter(jwtUtil), UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(new JwtAuthFilter(jwtUtils), UsernamePasswordAuthenticationFilter.class)
                 .exceptionHandling((exceptionHandling) -> exceptionHandling
                         // 인증이 완료되었으나 해당 엔드포인트에 접근할 권한이 없을 경우 발생
                         .accessDeniedHandler(customAccessDeniedHandler)

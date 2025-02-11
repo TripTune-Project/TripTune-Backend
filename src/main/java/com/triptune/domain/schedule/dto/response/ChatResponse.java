@@ -2,7 +2,7 @@ package com.triptune.domain.schedule.dto.response;
 
 import com.triptune.domain.member.entity.Member;
 import com.triptune.domain.schedule.entity.ChatMessage;
-import com.triptune.global.util.TimeUtil;
+import com.triptune.global.util.TimeUtils;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -38,7 +38,7 @@ public class ChatResponse {
                 .nickname(member.getNickname())
                 .profileUrl(member.getProfileImage().getS3ObjectUrl())
                 .message(message.getMessage())
-                .timestamp(TimeUtil.convertToKST(message.getTimestamp()))
+                .timestamp(TimeUtils.convertToKST(message.getTimestamp()))
                 .build();
     }
 

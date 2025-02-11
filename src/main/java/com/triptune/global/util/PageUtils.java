@@ -1,11 +1,10 @@
 package com.triptune.global.util;
 
-import com.triptune.domain.bookmark.enumclass.BookmarkSortType;
 import org.springframework.data.domain.*;
 
 import java.util.List;
 
-public class PageUtil {
+public class PageUtils {
     private static final int DEFAULT_PAGE = 1;
     private static final int DEFAULT_SIZE = 5;
     private static final int SCHEDULE_SIZE = 9;

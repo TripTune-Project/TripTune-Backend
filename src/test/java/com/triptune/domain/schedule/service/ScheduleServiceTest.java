@@ -30,7 +30,7 @@ import com.triptune.domain.travel.repository.TravelPlaceRepository;
 import com.triptune.global.enumclass.ErrorCode;
 import com.triptune.global.exception.DataNotFoundException;
 import com.triptune.global.response.pagination.SchedulePageResponse;
-import com.triptune.global.util.PageUtil;
+import com.triptune.global.util.PageUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -133,10 +133,10 @@ public class ScheduleServiceTest extends ScheduleTest {
     @DisplayName("내 일정 목록 조회")
     void getAllSchedulesByUserId(){
         // given
-        Pageable pageable = PageUtil.schedulePageable(1);
+        Pageable pageable = PageUtils.schedulePageable(1);
 
         List<TravelSchedule> schedules = new ArrayList<>(List.of(schedule1, schedule2, schedule3));
-        Page<TravelSchedule> schedulePage = PageUtil.createPage(schedules, pageable, schedules.size());
+        Page<TravelSchedule> schedulePage = PageUtils.createPage(schedules, pageable, schedules.size());
 
         when(travelScheduleRepository.findTravelSchedulesByUserId(pageable, member1.getUserId())).thenReturn(schedulePage);
         when(travelScheduleRepository.countSharedTravelSchedulesByUserId(anyString())).thenReturn(2);
@@ -159,10 +159,10 @@ public class ScheduleServiceTest extends ScheduleTest {
     @DisplayName("내 일정 목록 조회 시 공유된 일정이 없는 경우")
     void getAllSchedulesByUserIdNotShared(){
         // given
-        Pageable pageable = PageUtil.schedulePageable(1);
+        Pageable pageable = PageUtils.schedulePageable(1);
 
         List<TravelSchedule> schedules = new ArrayList<>(List.of(schedule3));
-        Page<TravelSchedule> schedulePage = PageUtil.createPage(schedules, pageable, schedules.size());
+        Page<TravelSchedule> schedulePage = PageUtils.createPage(schedules, pageable, schedules.size());
 
         when(travelScheduleRepository.findTravelSchedulesByUserId(pageable, member1.getUserId())).thenReturn(schedulePage);
         when(travelScheduleRepository.countSharedTravelSchedulesByUserId(anyString())).thenReturn(0);
@@ -183,8 +183,8 @@ public class ScheduleServiceTest extends ScheduleTest {
     @DisplayName("내 일정 목록 조회 시 일정 데이터 없는 경우")
     void getAllSchedulesByUserIdNoScheduleData(){
         // given
-        Pageable pageable = PageUtil.schedulePageable(1);
-        Page<TravelSchedule> emptySchedulePage = PageUtil.createPage(new ArrayList<>(), pageable, 0);
+        Pageable pageable = PageUtils.schedulePageable(1);
+        Page<TravelSchedule> emptySchedulePage = PageUtils.createPage(new ArrayList<>(), pageable, 0);
 
         when(travelScheduleRepository.findTravelSchedulesByUserId(pageable, member1.getUserId())).thenReturn(emptySchedulePage);
         when(travelScheduleRepository.countSharedTravelSchedulesByUserId(anyString())).thenReturn(2);
@@ -203,11 +203,11 @@ public class ScheduleServiceTest extends ScheduleTest {
     @DisplayName("내 일정 목록 조회 시 이미지 썸네일 데이터 없는 경우")
     void getAllSchedulesByUserIdNoImageThumbnail(){
         // given
-        Pageable pageable = PageUtil.schedulePageable(1);
+        Pageable pageable = PageUtils.schedulePageable(1);
         travelPlace1.getTravelImageList().get(0).setThumbnail(false);
 
         List<TravelSchedule> schedules = new ArrayList<>(List.of(schedule1, schedule2));
-        Page<TravelSchedule> schedulePage = PageUtil.createPage(schedules, pageable, schedules.size());
+        Page<TravelSchedule> schedulePage = PageUtils.createPage(schedules, pageable, schedules.size());
 
         when(travelScheduleRepository.findTravelSchedulesByUserId(pageable, member1.getUserId())).thenReturn(schedulePage);
         when(travelScheduleRepository.countSharedTravelSchedulesByUserId(anyString())).thenReturn(1);
@@ -230,11 +230,11 @@ public class ScheduleServiceTest extends ScheduleTest {
     @DisplayName("내 일정 목록 조회 시 이미지 데이터 없는 경우")
     void getAllSchedulesByUserIdNoImageData(){
         // given
-        Pageable pageable = PageUtil.schedulePageable(1);
+        Pageable pageable = PageUtils.schedulePageable(1);
         travelPlace1.setTravelImageList(new ArrayList<>());
 
         List<TravelSchedule> schedules = new ArrayList<>(List.of(schedule1));
-        Page<TravelSchedule> schedulePage = PageUtil.createPage(schedules, pageable, schedules.size());
+        Page<TravelSchedule> schedulePage = PageUtils.createPage(schedules, pageable, schedules.size());
 
         when(travelScheduleRepository.findTravelSchedulesByUserId(pageable, member1.getUserId())).thenReturn(schedulePage);
         when(travelScheduleRepository.countSharedTravelSchedulesByUserId(anyString())).thenReturn(1);
@@ -256,10 +256,10 @@ public class ScheduleServiceTest extends ScheduleTest {
     @DisplayName("공유된 일정 목록 조회")
     void getSharedSchedulesByUserId(){
         // given
-        Pageable pageable = PageUtil.schedulePageable(1);
+        Pageable pageable = PageUtils.schedulePageable(1);
 
         List<TravelSchedule> schedules = new ArrayList<>(List.of(schedule1, schedule2));
-        Page<TravelSchedule> schedulePage = PageUtil.createPage(schedules, pageable, schedules.size());
+        Page<TravelSchedule> schedulePage = PageUtils.createPage(schedules, pageable, schedules.size());
 
         when(travelScheduleRepository.findSharedTravelSchedulesByUserId(pageable, member1.getUserId())).thenReturn(schedulePage);
         when(travelScheduleRepository.countTravelSchedulesByUserId(anyString())).thenReturn(3);
@@ -283,8 +283,8 @@ public class ScheduleServiceTest extends ScheduleTest {
     @DisplayName("공유된 일정 목록 조회 시 일정 데이터 없는 경우")
     void getSharedSchedulesByUserIdNoScheduleData(){
         // given
-        Pageable pageable = PageUtil.schedulePageable(1);
-        Page<TravelSchedule> emptySchedulePage = PageUtil.createPage(new ArrayList<>(), pageable, 0);
+        Pageable pageable = PageUtils.schedulePageable(1);
+        Page<TravelSchedule> emptySchedulePage = PageUtils.createPage(new ArrayList<>(), pageable, 0);
 
         when(travelScheduleRepository.findSharedTravelSchedulesByUserId(pageable, member1.getUserId())).thenReturn(emptySchedulePage);
         when(travelScheduleRepository.countTravelSchedulesByUserId(anyString())).thenReturn(2);
@@ -302,11 +302,11 @@ public class ScheduleServiceTest extends ScheduleTest {
     @DisplayName("공유된 일정 목록 조회 시 이미지 썸네일 데이터 없는 경우")
     void getSharedSchedulesByUserIdNoImageThumbnail(){
         // given
-        Pageable pageable = PageUtil.schedulePageable(1);
+        Pageable pageable = PageUtils.schedulePageable(1);
         travelPlace1.getTravelImageList().get(0).setThumbnail(false);
 
         List<TravelSchedule> schedules = new ArrayList<>(List.of(schedule1, schedule2));
-        Page<TravelSchedule> schedulePage = PageUtil.createPage(schedules, pageable, schedules.size());
+        Page<TravelSchedule> schedulePage = PageUtils.createPage(schedules, pageable, schedules.size());
 
         when(travelScheduleRepository.findSharedTravelSchedulesByUserId(pageable, member1.getUserId())).thenReturn(schedulePage);
         when(travelScheduleRepository.countTravelSchedulesByUserId(anyString())).thenReturn(3);
@@ -329,11 +329,11 @@ public class ScheduleServiceTest extends ScheduleTest {
     @DisplayName("내 일정 목록 조회 시 이미지 데이터 없는 경우")
     void getSharedSchedulesByUserIdNoImageData(){
         // given
-        Pageable pageable = PageUtil.schedulePageable(1);
+        Pageable pageable = PageUtils.schedulePageable(1);
         travelPlace1.setTravelImageList(new ArrayList<>());
 
         List<TravelSchedule> schedules = new ArrayList<>(List.of(schedule1));
-        Page<TravelSchedule> schedulePage = PageUtil.createPage(schedules, pageable, schedules.size());
+        Page<TravelSchedule> schedulePage = PageUtils.createPage(schedules, pageable, schedules.size());
 
         when(travelScheduleRepository.findSharedTravelSchedulesByUserId(pageable, member1.getUserId())).thenReturn(schedulePage);
         when(travelScheduleRepository.countTravelSchedulesByUserId(anyString())).thenReturn(1);
@@ -355,10 +355,10 @@ public class ScheduleServiceTest extends ScheduleTest {
     @DisplayName("수정 권한 있는 내 일정 목록 조회")
     void getEnableEditScheduleByUserId(){
         // given
-        Pageable pageable = PageUtil.scheduleModalPageable(1);
+        Pageable pageable = PageUtils.scheduleModalPageable(1);
 
         List<TravelSchedule> schedules = new ArrayList<>(List.of(schedule1));
-        Page<TravelSchedule> schedulePage = PageUtil.createPage(schedules, pageable, schedules.size());
+        Page<TravelSchedule> schedulePage = PageUtils.createPage(schedules, pageable, schedules.size());
 
         when(travelScheduleRepository.findEnableEditTravelSchedulesByUserId(any(), anyString())).thenReturn(schedulePage);
         when(travelAttendeeRepository.findAuthorNicknameByScheduleId(anyLong())).thenReturn(member1.getNickname());
@@ -377,9 +377,9 @@ public class ScheduleServiceTest extends ScheduleTest {
     @DisplayName("수정 권한 있는 내 일정 목록 조회 시 일정 데이터 존재하지 않는 경우")
     void getEnableEditScheduleByUserId_emptySchedules(){
         // given
-        Pageable pageable = PageUtil.scheduleModalPageable(1);
+        Pageable pageable = PageUtils.scheduleModalPageable(1);
 
-        Page<TravelSchedule> schedulePage = PageUtil.createPage(new ArrayList<>(), pageable, 0);
+        Page<TravelSchedule> schedulePage = PageUtils.createPage(new ArrayList<>(), pageable, 0);
 
         when(travelScheduleRepository.findEnableEditTravelSchedulesByUserId(any(), anyString())).thenReturn(schedulePage);
 
@@ -396,10 +396,10 @@ public class ScheduleServiceTest extends ScheduleTest {
     void searchAllSchedules(){
         // given
         String keyword = "테스트";
-        Pageable pageable = PageUtil.schedulePageable(1);
+        Pageable pageable = PageUtils.schedulePageable(1);
 
         List<TravelSchedule> schedules = new ArrayList<>(List.of(schedule1, schedule2, schedule3));
-        Page<TravelSchedule> schedulePage = PageUtil.createPage(schedules, pageable, schedules.size());
+        Page<TravelSchedule> schedulePage = PageUtils.createPage(schedules, pageable, schedules.size());
 
         when(travelScheduleRepository.searchTravelSchedulesByUserIdAndKeyword(pageable, keyword, member1.getUserId())).thenReturn(schedulePage);
         when(travelScheduleRepository.countSharedTravelSchedulesByUserIdAndKeyword(keyword, member1.getUserId())).thenReturn(1);
@@ -422,10 +422,10 @@ public class ScheduleServiceTest extends ScheduleTest {
     void searchAllSchedulesNotShared(){
         // given
         String keyword = "3";
-        Pageable pageable = PageUtil.schedulePageable(1);
+        Pageable pageable = PageUtils.schedulePageable(1);
 
         List<TravelSchedule> schedules = new ArrayList<>(List.of(schedule3));
-        Page<TravelSchedule> schedulePage = PageUtil.createPage(schedules, pageable, schedules.size());
+        Page<TravelSchedule> schedulePage = PageUtils.createPage(schedules, pageable, schedules.size());
 
         when(travelScheduleRepository.searchTravelSchedulesByUserIdAndKeyword(pageable, keyword, member1.getUserId())).thenReturn(schedulePage);
         when(travelScheduleRepository.countSharedTravelSchedulesByUserIdAndKeyword(keyword, member1.getUserId())).thenReturn(0);
@@ -447,8 +447,8 @@ public class ScheduleServiceTest extends ScheduleTest {
     void searchAllSchedulesNoData(){
         // given
         String keyword = "ㅁㄴㅇㄹ";
-        Pageable pageable = PageUtil.schedulePageable(1);
-        Page<TravelSchedule> emptySchedulePage = PageUtil.createPage(new ArrayList<>(), pageable, 0);
+        Pageable pageable = PageUtils.schedulePageable(1);
+        Page<TravelSchedule> emptySchedulePage = PageUtils.createPage(new ArrayList<>(), pageable, 0);
 
         when(travelScheduleRepository.searchTravelSchedulesByUserIdAndKeyword(pageable, keyword, member1.getUserId())).thenReturn(emptySchedulePage);
         when(travelScheduleRepository.countSharedTravelSchedulesByUserIdAndKeyword(keyword, member1.getUserId())).thenReturn(2);
@@ -467,11 +467,11 @@ public class ScheduleServiceTest extends ScheduleTest {
     void searchAllSchedulesNoImageThumbnail(){
         // given
         String keyword = "테스트";
-        Pageable pageable = PageUtil.schedulePageable(1);
+        Pageable pageable = PageUtils.schedulePageable(1);
         travelPlace1.getTravelImageList().get(0).setThumbnail(false);
 
         List<TravelSchedule> schedules = new ArrayList<>(List.of(schedule1, schedule2));
-        Page<TravelSchedule> schedulePage = PageUtil.createPage(schedules, pageable, schedules.size());
+        Page<TravelSchedule> schedulePage = PageUtils.createPage(schedules, pageable, schedules.size());
 
         when(travelScheduleRepository.searchTravelSchedulesByUserIdAndKeyword(pageable, keyword, member1.getUserId())).thenReturn(schedulePage);
         when(travelScheduleRepository.countSharedTravelSchedulesByUserIdAndKeyword(keyword, member1.getUserId())).thenReturn(1);
@@ -495,11 +495,11 @@ public class ScheduleServiceTest extends ScheduleTest {
     void searchAllSchedulesNoImageData(){
         // given
         String keyword = "1";
-        Pageable pageable = PageUtil.schedulePageable(1);
+        Pageable pageable = PageUtils.schedulePageable(1);
         travelPlace1.setTravelImageList(new ArrayList<>());
 
         List<TravelSchedule> schedules = new ArrayList<>(List.of(schedule1));
-        Page<TravelSchedule> schedulePage = PageUtil.createPage(schedules, pageable, schedules.size());
+        Page<TravelSchedule> schedulePage = PageUtils.createPage(schedules, pageable, schedules.size());
 
         when(travelScheduleRepository.searchTravelSchedulesByUserIdAndKeyword(pageable, keyword, member1.getUserId())).thenReturn(schedulePage);
         when(travelScheduleRepository.countSharedTravelSchedulesByUserIdAndKeyword(keyword, member1.getUserId())).thenReturn(1);
@@ -522,10 +522,10 @@ public class ScheduleServiceTest extends ScheduleTest {
     void searchSharedSchedules(){
         // given
         String keyword = "테스트";
-        Pageable pageable = PageUtil.schedulePageable(1);
+        Pageable pageable = PageUtils.schedulePageable(1);
 
         List<TravelSchedule> schedules = new ArrayList<>(List.of(schedule1, schedule2, schedule3));
-        Page<TravelSchedule> schedulePage = PageUtil.createPage(schedules, pageable, schedules.size());
+        Page<TravelSchedule> schedulePage = PageUtils.createPage(schedules, pageable, schedules.size());
 
         when(travelScheduleRepository.searchSharedTravelSchedulesByUserIdAndKeyword(pageable, keyword, member1.getUserId())).thenReturn(schedulePage);
         when(travelScheduleRepository.countTravelSchedulesByUserIdAndKeyword(keyword, member1.getUserId())).thenReturn(5);
@@ -550,8 +550,8 @@ public class ScheduleServiceTest extends ScheduleTest {
     void searchSharedSchedulesNoData(){
         // given
         String keyword = "테스트";
-        Pageable pageable = PageUtil.schedulePageable(1);
-        Page<TravelSchedule> emptySchedulePage = PageUtil.createPage(new ArrayList<>(), pageable, 0);
+        Pageable pageable = PageUtils.schedulePageable(1);
+        Page<TravelSchedule> emptySchedulePage = PageUtils.createPage(new ArrayList<>(), pageable, 0);
 
         when(travelScheduleRepository.searchSharedTravelSchedulesByUserIdAndKeyword(pageable, keyword, member1.getUserId())).thenReturn(emptySchedulePage);
         when(travelScheduleRepository.countTravelSchedulesByUserIdAndKeyword(keyword, member1.getUserId())).thenReturn(2);
@@ -570,11 +570,11 @@ public class ScheduleServiceTest extends ScheduleTest {
     void searchSharedSchedulesNoImageThumbnail(){
         // given
         String keyword = "테스트";
-        Pageable pageable = PageUtil.schedulePageable(1);
+        Pageable pageable = PageUtils.schedulePageable(1);
         travelPlace1.getTravelImageList().get(0).setThumbnail(false);
 
         List<TravelSchedule> schedules = new ArrayList<>(List.of(schedule1, schedule2));
-        Page<TravelSchedule> schedulePage = PageUtil.createPage(schedules, pageable, schedules.size());
+        Page<TravelSchedule> schedulePage = PageUtils.createPage(schedules, pageable, schedules.size());
 
         when(travelScheduleRepository.searchSharedTravelSchedulesByUserIdAndKeyword(pageable, keyword, member1.getUserId())).thenReturn(schedulePage);
         when(travelScheduleRepository.countTravelSchedulesByUserIdAndKeyword(keyword, member1.getUserId())).thenReturn(3);
@@ -598,11 +598,11 @@ public class ScheduleServiceTest extends ScheduleTest {
     void searchSharedSchedulesNoImageData(){
         // given
         String keyword = "테스트";
-        Pageable pageable = PageUtil.schedulePageable(1);
+        Pageable pageable = PageUtils.schedulePageable(1);
         travelPlace1.setTravelImageList(new ArrayList<>());
 
         List<TravelSchedule> schedules = new ArrayList<>(List.of(schedule1, schedule2));
-        Page<TravelSchedule> schedulePage = PageUtil.createPage(schedules, pageable, schedules.size());
+        Page<TravelSchedule> schedulePage = PageUtils.createPage(schedules, pageable, schedules.size());
 
         when(travelScheduleRepository.searchSharedTravelSchedulesByUserIdAndKeyword(pageable, keyword, member1.getUserId())).thenReturn(schedulePage);
         when(travelScheduleRepository.countTravelSchedulesByUserIdAndKeyword(keyword, member1.getUserId())).thenReturn(1);
@@ -625,7 +625,7 @@ public class ScheduleServiceTest extends ScheduleTest {
     void createScheduleInfoResponse(){
         // given
         List<TravelSchedule> travelScheduleList = new ArrayList<>(List.of(schedule1));
-        Page<TravelSchedule> schedulePage = PageUtil.createPage(travelScheduleList, PageUtil.schedulePageable(1), travelScheduleList.size());
+        Page<TravelSchedule> schedulePage = PageUtils.createPage(travelScheduleList, PageUtils.schedulePageable(1), travelScheduleList.size());
         // when
         List<ScheduleInfoResponse> response = scheduleService.createScheduleInfoResponse(schedulePage, member1.getUserId());
 
@@ -642,7 +642,7 @@ public class ScheduleServiceTest extends ScheduleTest {
     void createScheduleInfoResponseWithoutThumbnail(){
         // given
         List<TravelSchedule> travelScheduleList = new ArrayList<>(List.of(schedule1));
-        Page<TravelSchedule> schedulePage = PageUtil.createPage(travelScheduleList, PageUtil.schedulePageable(1), travelScheduleList.size());
+        Page<TravelSchedule> schedulePage = PageUtils.createPage(travelScheduleList, PageUtils.schedulePageable(1), travelScheduleList.size());
         travelPlace1.getTravelImageList().get(0).setThumbnail(false);
 
         // when
@@ -660,7 +660,7 @@ public class ScheduleServiceTest extends ScheduleTest {
     void createScheduleInfoResponse_notFoundException(){
         // given
         List<TravelSchedule> travelScheduleList = new ArrayList<>(List.of(schedule1));
-        Page<TravelSchedule> schedulePage = PageUtil.createPage(travelScheduleList, PageUtil.schedulePageable(1), travelScheduleList.size());
+        Page<TravelSchedule> schedulePage = PageUtils.createPage(travelScheduleList, PageUtils.schedulePageable(1), travelScheduleList.size());
         for(TravelAttendee attendee : schedule1.getTravelAttendeeList()){
             attendee.updateRole(AttendeeRole.GUEST);
         }
@@ -679,7 +679,7 @@ public class ScheduleServiceTest extends ScheduleTest {
     void createScheduleInfoResponse_forbiddenScheduleException(){
         // given
         List<TravelSchedule> travelScheduleList = new ArrayList<>(List.of(schedule3));
-        Page<TravelSchedule> schedulePage = PageUtil.createPage(travelScheduleList, PageUtil.schedulePageable(1), travelScheduleList.size());
+        Page<TravelSchedule> schedulePage = PageUtils.createPage(travelScheduleList, PageUtils.schedulePageable(1), travelScheduleList.size());
 
         // when
         ForbiddenScheduleException fail = assertThrows(ForbiddenScheduleException.class, () -> scheduleService.createScheduleInfoResponse(schedulePage, member2.getUserId()));
@@ -804,11 +804,11 @@ public class ScheduleServiceTest extends ScheduleTest {
         // given
         List<TravelPlace> placeList = new ArrayList<>(List.of(travelPlace1, travelPlace2));
 
-        Pageable pageable = PageUtil.defaultPageable(1);
+        Pageable pageable = PageUtils.defaultPageable(1);
 
         when(travelScheduleRepository.findByScheduleId(any())).thenReturn(Optional.of(schedule1));
         when(travelPlaceRepository.findAllByAreaData(any(), anyString(), anyString(), anyString()))
-                .thenReturn(PageUtil.createPage(placeList, pageable, 1));
+                .thenReturn(PageUtils.createPage(placeList, pageable, 1));
 
         // when
         ScheduleDetailResponse response = scheduleService.getScheduleDetail(schedule1.getScheduleId(), 1);
@@ -825,11 +825,11 @@ public class ScheduleServiceTest extends ScheduleTest {
     @DisplayName("일정 상세 조회 시 여행지 데이터 없는 경우")
     void getScheduleDetailWithoutData(){
         // given
-        Pageable pageable = PageUtil.defaultPageable(1);
+        Pageable pageable = PageUtils.defaultPageable(1);
 
         when(travelScheduleRepository.findByScheduleId(any())).thenReturn(Optional.of(schedule1));
         when(travelPlaceRepository.findAllByAreaData(any(), anyString(), anyString(), anyString()))
-                .thenReturn(PageUtil.createPage(new ArrayList<>(), pageable, 0));
+                .thenReturn(PageUtils.createPage(new ArrayList<>(), pageable, 0));
 
         // when
         ScheduleDetailResponse response = scheduleService.getScheduleDetail(schedule1.getScheduleId(), 1);

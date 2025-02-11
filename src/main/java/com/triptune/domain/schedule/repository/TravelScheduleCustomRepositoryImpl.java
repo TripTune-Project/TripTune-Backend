@@ -8,7 +8,7 @@ import com.triptune.domain.schedule.entity.QTravelAttendee;
 import com.triptune.domain.schedule.entity.QTravelSchedule;
 import com.triptune.domain.schedule.entity.TravelSchedule;
 import com.triptune.domain.schedule.enumclass.AttendeePermission;
-import com.triptune.global.util.PageUtil;
+import com.triptune.global.util.PageUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
@@ -44,7 +44,7 @@ public class TravelScheduleCustomRepositoryImpl implements TravelScheduleCustomR
 
         Integer totalElements = countTravelSchedulesByUserId(userId);
 
-        return PageUtil.createPage(travelSchedules, pageable, totalElements);
+        return PageUtils.createPage(travelSchedules, pageable, totalElements);
     }
 
     @Override
@@ -62,7 +62,7 @@ public class TravelScheduleCustomRepositoryImpl implements TravelScheduleCustomR
 
         Integer totalElements = countSharedTravelSchedulesByUserId(userId);
 
-        return PageUtil.createPage(travelSchedules, pageable, totalElements);
+        return PageUtils.createPage(travelSchedules, pageable, totalElements);
     }
 
     @Override
@@ -116,7 +116,7 @@ public class TravelScheduleCustomRepositoryImpl implements TravelScheduleCustomR
 
         int totalElements = countTravelSchedulesByUserIdAndKeyword(keyword, userId);
 
-        return PageUtil.createPage(content, pageable, totalElements);
+        return PageUtils.createPage(content, pageable, totalElements);
     }
 
     @Override
@@ -155,7 +155,7 @@ public class TravelScheduleCustomRepositoryImpl implements TravelScheduleCustomR
 
         int totalElements = countSharedTravelSchedulesByUserIdAndKeyword(keyword, userId);
 
-        return PageUtil.createPage(content, pageable, totalElements);
+        return PageUtils.createPage(content, pageable, totalElements);
     }
 
     @Override
@@ -190,7 +190,7 @@ public class TravelScheduleCustomRepositoryImpl implements TravelScheduleCustomR
 
         Integer totalElements = countEnableEditTravelSchedulesByUserId(userId);
 
-        return PageUtil.createPage(travelSchedules, pageable, totalElements);
+        return PageUtils.createPage(travelSchedules, pageable, totalElements);
     }
 
     @Override

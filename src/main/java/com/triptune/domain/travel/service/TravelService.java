@@ -11,7 +11,7 @@ import com.triptune.domain.travel.entity.TravelPlace;
 import com.triptune.domain.travel.repository.TravelImageRepository;
 import com.triptune.domain.travel.repository.TravelPlaceRepository;
 import com.triptune.global.enumclass.ErrorCode;
-import com.triptune.global.util.PageUtil;
+import com.triptune.global.util.PageUtils;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -19,7 +19,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -33,7 +32,7 @@ public class TravelService {
 
 
     public Page<PlaceDistanceResponse> getNearByTravelPlaces(int page, String userId, PlaceLocationRequest placeLocationRequest) {
-        Pageable pageable = PageUtil.defaultPageable(page);
+        Pageable pageable = PageUtils.defaultPageable(page);
         Page<PlaceLocation> travelPlacePage = travelPlaceRepository.findNearByTravelPlaces(pageable, placeLocationRequest, RADIUS_SIZE);
 
         setPlaceLocations(travelPlacePage.getContent(), userId);
@@ -41,7 +40,7 @@ public class TravelService {
     }
 
     public Page<PlaceDistanceResponse> searchTravelPlaces(int page, String userId, PlaceSearchRequest placeSearchRequest) {
-        Pageable pageable = PageUtil.defaultPageable(page);
+        Pageable pageable = PageUtils.defaultPageable(page);
         Page<PlaceLocation> travelPlacePage = travelPlaceRepository.searchTravelPlacesWithLocation(pageable, placeSearchRequest);
 
         setPlaceLocations(travelPlacePage.getContent(), userId);

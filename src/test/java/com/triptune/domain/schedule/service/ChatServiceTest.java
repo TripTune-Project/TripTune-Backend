@@ -18,7 +18,7 @@ import com.triptune.domain.schedule.repository.TravelAttendeeRepository;
 import com.triptune.domain.schedule.repository.TravelScheduleRepository;
 import com.triptune.global.enumclass.ErrorCode;
 import com.triptune.global.exception.DataNotFoundException;
-import com.triptune.global.util.PageUtil;
+import com.triptune.global.util.PageUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -79,7 +79,7 @@ class ChatServiceTest extends ScheduleTest {
     @DisplayName("채팅 메시지 조회")
     void getChatMessages(){
         // given
-        Pageable pageable = PageUtil.chatPageable(1);
+        Pageable pageable = PageUtils.chatPageable(1);
 
         ChatMessage message1 = createChatMessage("id1", schedule.getScheduleId(), member1, "hello1");
         ChatMessage message2 = createChatMessage("id2", schedule.getScheduleId(), member1, "hello2");
@@ -88,7 +88,7 @@ class ChatServiceTest extends ScheduleTest {
         ChatMessage message5 = createChatMessage("id5", schedule.getScheduleId(), member3, "hello5");
         ChatMessage message6 = createChatMessage("id6", schedule.getScheduleId(), member1, "hello6");
         List<ChatMessage> messageList = new ArrayList<>(List.of(message1, message2, message3, message4, message5, message6));
-        Page<ChatMessage> chatPage = PageUtil.createPage(messageList, pageable, messageList.size());
+        Page<ChatMessage> chatPage = PageUtils.createPage(messageList, pageable, messageList.size());
 
         when(chatMessageRepository.findAllByScheduleId(pageable, schedule.getScheduleId())).thenReturn(chatPage);
         when(memberRepository.findByMemberId(member1.getMemberId())).thenReturn(Optional.of(member1));
@@ -123,14 +123,14 @@ class ChatServiceTest extends ScheduleTest {
     @DisplayName("채팅 메시지 조회 시 한 사용자가 연속적인 채팅을 보낸 경우")
     void getChatMessagesOneMember(){
         // given
-        Pageable pageable = PageUtil.chatPageable(1);
+        Pageable pageable = PageUtils.chatPageable(1);
 
         ChatMessage message1 = createChatMessage("id1", schedule.getScheduleId(), member1, "hello1");
         ChatMessage message2 = createChatMessage("id2", schedule.getScheduleId(), member1, "hello2");
         ChatMessage message3 = createChatMessage("id3", schedule.getScheduleId(), member1, "hello3");
 
         List<ChatMessage> messageList = new ArrayList<>(List.of(message1, message2, message3));
-        Page<ChatMessage> chatPage = PageUtil.createPage(messageList, pageable, messageList.size());
+        Page<ChatMessage> chatPage = PageUtils.createPage(messageList, pageable, messageList.size());
 
         when(chatMessageRepository.findAllByScheduleId(pageable, schedule.getScheduleId())).thenReturn(chatPage);
         when(memberRepository.findByMemberId(anyLong())).thenReturn(Optional.of(member1));
@@ -150,13 +150,13 @@ class ChatServiceTest extends ScheduleTest {
     @DisplayName("채팅 메시지 조회 시 연속적인 대화가 없는 경우")
     void getChatMessagesOneChat(){
         // given
-        Pageable pageable = PageUtil.chatPageable(1);
+        Pageable pageable = PageUtils.chatPageable(1);
 
         ChatMessage message1 = createChatMessage("id1", schedule.getScheduleId(), member1, "hello1");
         ChatMessage message2 = createChatMessage("id4", schedule.getScheduleId(), member2, "hello2");
         ChatMessage message3 = createChatMessage("id5", schedule.getScheduleId(), member3, "hello3");
         List<ChatMessage> messageList = new ArrayList<>(List.of(message1, message2, message3));
-        Page<ChatMessage> chatPage = PageUtil.createPage(messageList, pageable, messageList.size());
+        Page<ChatMessage> chatPage = PageUtils.createPage(messageList, pageable, messageList.size());
 
         when(chatMessageRepository.findAllByScheduleId(pageable, schedule.getScheduleId())).thenReturn(chatPage);
         when(memberRepository.findByMemberId(member1.getMemberId())).thenReturn(Optional.of(member1));
@@ -184,9 +184,9 @@ class ChatServiceTest extends ScheduleTest {
     @DisplayName("채팅 메시지 조회 시 메시지가 없는 경우")
     void getChatMessagesNotMessages(){
         // given
-        Pageable pageable = PageUtil.chatPageable(1);
+        Pageable pageable = PageUtils.chatPageable(1);
 
-        Page<ChatMessage> chatPage = PageUtil.createPage(new ArrayList<>(), pageable, 0);
+        Page<ChatMessage> chatPage = PageUtils.createPage(new ArrayList<>(), pageable, 0);
 
         when(chatMessageRepository.findAllByScheduleId(pageable, schedule.getScheduleId())).thenReturn(chatPage);
 
@@ -203,11 +203,11 @@ class ChatServiceTest extends ScheduleTest {
     @DisplayName("채팅 메시지 조회 시 사용자 데이터 존재하지 않아 예외 발생")
     void getChatMessagesNotFoundUser_dataNotFoundException(){
         // given
-        Pageable pageable = PageUtil.chatPageable(1);
+        Pageable pageable = PageUtils.chatPageable(1);
 
         ChatMessage message1 = createChatMessage("id1", schedule.getScheduleId(), member1, "hello1");
         List<ChatMessage> messageList = new ArrayList<>(List.of(message1));
-        Page<ChatMessage> chatPage = PageUtil.createPage(messageList, pageable, messageList.size());
+        Page<ChatMessage> chatPage = PageUtils.createPage(messageList, pageable, messageList.size());
 
         when(chatMessageRepository.findAllByScheduleId(pageable, schedule.getScheduleId())).thenReturn(chatPage);
         when(memberRepository.findByMemberId(anyLong())).thenReturn(Optional.empty());

@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class TimeUtilTest {
+public class TimeUtilsTest {
 
     @Test
     @DisplayName("마지막 업데이트가 3달 전인 경우")
@@ -16,7 +16,7 @@ public class TimeUtilTest {
         LocalDateTime updateTime = LocalDateTime.now().minusMonths(3);
 
         // when
-        String response = TimeUtil.timeDuration(updateTime);
+        String response = TimeUtils.timeDuration(updateTime);
 
         // then
         assertThat(response).isEqualTo(updateTime.getYear() + "년 " + updateTime.getMonthValue() + "월 " + updateTime.getDayOfMonth() + "일");
@@ -30,7 +30,7 @@ public class TimeUtilTest {
         LocalDateTime updateTime = LocalDateTime.now().minusYears(200);
 
         // when
-        String response = TimeUtil.timeDuration(updateTime);
+        String response = TimeUtils.timeDuration(updateTime);
 
         // then
         assertThat(response).isEqualTo(updateTime.getYear() + "년 " + updateTime.getMonthValue() + "월 " + updateTime.getDayOfMonth() + "일");
@@ -44,7 +44,7 @@ public class TimeUtilTest {
         LocalDateTime updateTime = LocalDateTime.now().minusDays(29);
 
         // when
-        String response = TimeUtil.timeDuration(updateTime);
+        String response = TimeUtils.timeDuration(updateTime);
 
         // then
         assertThat(response).isEqualTo("29일 전");
@@ -58,7 +58,7 @@ public class TimeUtilTest {
         LocalDateTime updateTime = LocalDateTime.now().minusDays(31);
 
         // when
-        String response = TimeUtil.timeDuration(updateTime);
+        String response = TimeUtils.timeDuration(updateTime);
 
         // then
         assertThat(response).isEqualTo(updateTime.getYear() + "년 " + updateTime.getMonthValue() + "월 " + updateTime.getDayOfMonth() + "일");
@@ -73,7 +73,7 @@ public class TimeUtilTest {
         LocalDateTime updateTime = LocalDateTime.now().minusHours(5);
 
         // when
-        String response = TimeUtil.timeDuration(updateTime);
+        String response = TimeUtils.timeDuration(updateTime);
 
         // then
         assertThat(response).isEqualTo("5시간 전");
@@ -87,7 +87,7 @@ public class TimeUtilTest {
         LocalDateTime updateTime = LocalDateTime.now().minusDays(4).minusHours(5);
 
         // when
-        String response = TimeUtil.timeDuration(updateTime);
+        String response = TimeUtils.timeDuration(updateTime);
 
         // then
         assertThat(response).isEqualTo("4일 전");
@@ -101,7 +101,7 @@ public class TimeUtilTest {
         LocalDateTime updateTime = LocalDateTime.now().minusMinutes(5);
 
         // when
-        String response = TimeUtil.timeDuration(updateTime);
+        String response = TimeUtils.timeDuration(updateTime);
 
         // then
         assertThat(response).isEqualTo("5분 전");
@@ -116,7 +116,7 @@ public class TimeUtilTest {
         LocalDateTime updateTime = LocalDateTime.now().minusHours(2).minusMinutes(5);
 
         // when
-        String response = TimeUtil.timeDuration(updateTime);
+        String response = TimeUtils.timeDuration(updateTime);
 
         // then
         assertThat(response).isEqualTo("2시간 전");
@@ -130,7 +130,7 @@ public class TimeUtilTest {
         LocalDateTime updateTime = LocalDateTime.now().minusDays(10).minusHours(2).minusMinutes(5);
 
         // when
-        String response = TimeUtil.timeDuration(updateTime);
+        String response = TimeUtils.timeDuration(updateTime);
 
         // then
         assertThat(response).isEqualTo("10일 전");
@@ -144,7 +144,7 @@ public class TimeUtilTest {
         LocalDateTime updateTime = LocalDateTime.now().minusSeconds(8);
 
         // when
-        String response = TimeUtil.timeDuration(updateTime);
+        String response = TimeUtils.timeDuration(updateTime);
 
         // then
         assertThat(response).isEqualTo("지금");
@@ -162,7 +162,7 @@ public class TimeUtilTest {
                 .minusSeconds(8);
 
         // when
-        String response = TimeUtil.timeDuration(updateTime);
+        String response = TimeUtils.timeDuration(updateTime);
 
         // then
         assertThat(response).isEqualTo(updateTime.getYear() + "년 " + updateTime.getMonthValue() + "월 " + updateTime.getDayOfMonth() + "일");
@@ -179,7 +179,7 @@ public class TimeUtilTest {
                 .minusSeconds(8);
 
         // when
-        String response = TimeUtil.timeDuration(updateTime);
+        String response = TimeUtils.timeDuration(updateTime);
 
         // then
         assertThat(response).isEqualTo("20일 전");
@@ -196,7 +196,7 @@ public class TimeUtilTest {
                 .minusSeconds(8);
 
         // when
-        String response = TimeUtil.timeDuration(updateTime);
+        String response = TimeUtils.timeDuration(updateTime);
 
         // then
         assertThat(response).isEqualTo("5일 전");
@@ -213,7 +213,7 @@ public class TimeUtilTest {
                 .minusSeconds(8);
 
         // when
-        String response = TimeUtil.timeDuration(updateTime);
+        String response = TimeUtils.timeDuration(updateTime);
 
         // then
         assertThat(response).isEqualTo("23시간 전");
@@ -229,7 +229,7 @@ public class TimeUtilTest {
                 .minusSeconds(8);
 
         // when
-        String response = TimeUtil.timeDuration(updateTime);
+        String response = TimeUtils.timeDuration(updateTime);
 
         // then
         assertThat(response).isEqualTo("1분 전");
@@ -244,7 +244,7 @@ public class TimeUtilTest {
                 .minusHours(24);
 
         // when
-        String response = TimeUtil.timeDuration(updateTime);
+        String response = TimeUtils.timeDuration(updateTime);
 
         // then
         assertThat(response).isEqualTo("1일 전");
@@ -258,7 +258,7 @@ public class TimeUtilTest {
         LocalDateTime updateTime = LocalDateTime.now();
 
         // when
-        String response = TimeUtil.timeDuration(updateTime);
+        String response = TimeUtils.timeDuration(updateTime);
 
         // then
         assertThat(response).isEqualTo("지금");
@@ -272,7 +272,7 @@ public class TimeUtilTest {
         LocalDateTime testTime = LocalDateTime.now().minusHours(9);
 
         // when
-        LocalDateTime response = TimeUtil.convertToKST(testTime);
+        LocalDateTime response = TimeUtils.convertToKST(testTime);
 
         // then
         assertThat(response).isEqualTo(testTime.plusHours(9));

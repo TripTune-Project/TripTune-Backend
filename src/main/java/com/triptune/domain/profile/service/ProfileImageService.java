@@ -8,13 +8,10 @@ import com.triptune.global.exception.DataNotFoundException;
 import com.triptune.global.exception.FileBadRequestException;
 import com.triptune.global.properties.DefaultProfileImageProperties;
 import com.triptune.global.service.S3Service;
-import com.triptune.global.util.FileUtil;
+import com.triptune.global.util.FileUtils;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.http.HttpStatus;
-import org.springframework.security.config.authentication.UserServiceBeanDefinitionParser;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -41,7 +38,7 @@ public class ProfileImageService {
         ProfileImage profileImage = findByUserId(userId);
         s3Service.deleteS3File(profileImage.getS3FileKey());
 
-        String extension = FileUtil.getExtension(profileImageFile.getOriginalFilename());
+        String extension = FileUtils.getExtension(profileImageFile.getOriginalFilename());
         String savedFileName = s3Service.generateS3FileName(FILE_TAG, extension);
         String s3FileKey = s3Service.generateS3FileKey(savedFileName);
         String s3ObjectUrl = s3Service.uploadToS3(profileImageFile, s3FileKey);
@@ -51,7 +48,7 @@ public class ProfileImageService {
     }
 
     private void validateFileExtension(MultipartFile profileImageFile){
-        if(!FileUtil.isValidExtension(profileImageFile)){
+        if(!FileUtils.isValidExtension(profileImageFile)){
             throw new FileBadRequestException(ErrorCode.INVALID_EXTENSION);
         }
     }

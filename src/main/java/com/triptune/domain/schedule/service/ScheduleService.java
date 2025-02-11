@@ -27,7 +27,7 @@ import com.triptune.global.enumclass.ErrorCode;
 import com.triptune.global.exception.DataNotFoundException;
 import com.triptune.global.response.pagination.PageResponse;
 import com.triptune.global.response.pagination.SchedulePageResponse;
-import com.triptune.global.util.PageUtil;
+import com.triptune.global.util.PageUtils;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -52,31 +52,31 @@ public class ScheduleService {
     private final ChatMessageRepository chatMessageRepository;
 
     public SchedulePageResponse<ScheduleInfoResponse> getAllSchedulesByUserId(int page, String userId) {
-        Pageable pageable = PageUtil.schedulePageable(page);
+        Pageable pageable = PageUtils.schedulePageable(page);
         Page<TravelSchedule> schedulePage = travelScheduleRepository.findTravelSchedulesByUserId(pageable, userId);
 
         List<ScheduleInfoResponse> scheduleInfoResponseList = createScheduleInfoResponse(schedulePage, userId);
         int sharedScheduleCnt = travelScheduleRepository.countSharedTravelSchedulesByUserId(userId);
 
-        Page<ScheduleInfoResponse> scheduleInfoResponsePage = PageUtil.createPage(scheduleInfoResponseList, pageable, schedulePage.getTotalElements());
+        Page<ScheduleInfoResponse> scheduleInfoResponsePage = PageUtils.createPage(scheduleInfoResponseList, pageable, schedulePage.getTotalElements());
         return SchedulePageResponse.ofAll(scheduleInfoResponsePage, sharedScheduleCnt);
     }
 
 
     public SchedulePageResponse<ScheduleInfoResponse> getSharedSchedulesByUserId(int page, String userId) {
-        Pageable pageable = PageUtil.schedulePageable(page);
+        Pageable pageable = PageUtils.schedulePageable(page);
         Page<TravelSchedule> schedulePage = travelScheduleRepository.findSharedTravelSchedulesByUserId(pageable, userId);
 
         List<ScheduleInfoResponse> scheduleInfoResponseList = createScheduleInfoResponse(schedulePage, userId);
         int totalElements = travelScheduleRepository.countTravelSchedulesByUserId(userId);
 
-        Page<ScheduleInfoResponse> scheduleInfoResponsePage = PageUtil.createPage(scheduleInfoResponseList, pageable, schedulePage.getTotalElements());
+        Page<ScheduleInfoResponse> scheduleInfoResponsePage = PageUtils.createPage(scheduleInfoResponseList, pageable, schedulePage.getTotalElements());
         return SchedulePageResponse.ofShared(scheduleInfoResponsePage, totalElements);
     }
 
 
     public Page<OverviewScheduleResponse> getEnableEditScheduleByUserId(int page, String userId) {
-        Pageable pageable = PageUtil.scheduleModalPageable(page);
+        Pageable pageable = PageUtils.scheduleModalPageable(page);
 
         return travelScheduleRepository.findEnableEditTravelSchedulesByUserId(pageable, userId)
                 .map(schedule -> {
@@ -90,26 +90,26 @@ public class ScheduleService {
     }
 
     public SchedulePageResponse<ScheduleInfoResponse> searchAllSchedules(int page, String keyword, String userId) {
-        Pageable pageable = PageUtil.schedulePageable(page);
+        Pageable pageable = PageUtils.schedulePageable(page);
         Page<TravelSchedule> schedulesPage = travelScheduleRepository.searchTravelSchedulesByUserIdAndKeyword(pageable, keyword, userId);
 
         List<ScheduleInfoResponse> scheduleInfoResponseList = createScheduleInfoResponse(schedulesPage, userId);
         int sharedElements = travelScheduleRepository.countSharedTravelSchedulesByUserIdAndKeyword(keyword, userId);
 
-        Page<ScheduleInfoResponse> scheduleInfoResponsePage = PageUtil.createPage(scheduleInfoResponseList, pageable, schedulesPage.getTotalElements());
+        Page<ScheduleInfoResponse> scheduleInfoResponsePage = PageUtils.createPage(scheduleInfoResponseList, pageable, schedulesPage.getTotalElements());
         return SchedulePageResponse.ofAll(scheduleInfoResponsePage, sharedElements);
     }
 
 
 
     public SchedulePageResponse<ScheduleInfoResponse> searchSharedSchedules(int page, String keyword, String userId) {
-        Pageable pageable = PageUtil.schedulePageable(page);
+        Pageable pageable = PageUtils.schedulePageable(page);
         Page<TravelSchedule> schedulesPage = travelScheduleRepository.searchSharedTravelSchedulesByUserIdAndKeyword(pageable, keyword, userId);
 
         List<ScheduleInfoResponse> scheduleInfoResponseList = createScheduleInfoResponse(schedulesPage, userId);
         int totalElements = travelScheduleRepository.countTravelSchedulesByUserIdAndKeyword(keyword, userId);
 
-        Page<ScheduleInfoResponse> scheduleInfoResponsePage = PageUtil.createPage(scheduleInfoResponseList, pageable, schedulesPage.getTotalElements());
+        Page<ScheduleInfoResponse> scheduleInfoResponsePage = PageUtils.createPage(scheduleInfoResponseList, pageable, schedulesPage.getTotalElements());
         return SchedulePageResponse.ofShared(scheduleInfoResponsePage, totalElements);
     }
 
@@ -193,7 +193,7 @@ public class ScheduleService {
         TravelSchedule schedule = getScheduleByScheduleId(scheduleId);
 
         // 여행지 정보: Page<TravelPlace> -> PageResponse<TravelSimpleResponse> 로 변경
-        Pageable pageable = PageUtil.defaultPageable(page);
+        Pageable pageable = PageUtils.defaultPageable(page);
         Page<PlaceResponse> travelPlacesDTO = travelPlaceRepository.findAllByAreaData(pageable, "대한민국", "서울", "중구")
                 .map(PlaceResponse::from);
 

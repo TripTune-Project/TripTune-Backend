@@ -9,7 +9,7 @@ import com.triptune.domain.travel.dto.response.PlaceResponse;
 import com.triptune.domain.travel.entity.TravelImage;
 import com.triptune.domain.travel.entity.TravelPlace;
 import com.triptune.domain.travel.repository.TravelPlaceRepository;
-import com.triptune.global.util.PageUtil;
+import com.triptune.global.util.PageUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -65,10 +65,10 @@ public class ScheduleTravelServiceTest extends ScheduleTest {
     void getTravelPlaces(){
         // given
         List<TravelPlace> placeList = new ArrayList<>(List.of(travelPlace1, travelPlace2));
-        Pageable pageable = PageUtil.travelPageable(1);
+        Pageable pageable = PageUtils.travelPageable(1);
 
         when(travelPlaceRepository.findAllByAreaData(any(), anyString(), anyString(), anyString()))
-                .thenReturn(PageUtil.createPage(placeList, pageable, 1));
+                .thenReturn(PageUtils.createPage(placeList, pageable, 1));
 
         // when
         Page<PlaceResponse> response = scheduleTravelService.getTravelPlaces(1);
@@ -83,10 +83,10 @@ public class ScheduleTravelServiceTest extends ScheduleTest {
     @DisplayName("여행지 조회 시 여행지 데이터 없는 경우")
     void getTravelPlacesWithoutData(){
         // given
-        Pageable pageable = PageUtil.travelPageable(1);
+        Pageable pageable = PageUtils.travelPageable(1);
 
         when(travelPlaceRepository.findAllByAreaData(any(), anyString(), anyString(), anyString()))
-                .thenReturn(PageUtil.createPage(new ArrayList<>(), pageable, 0));
+                .thenReturn(PageUtils.createPage(new ArrayList<>(), pageable, 0));
 
         // when
         Page<PlaceResponse> response = scheduleTravelService.getTravelPlaces(1);
@@ -102,10 +102,10 @@ public class ScheduleTravelServiceTest extends ScheduleTest {
     void searchTravelPlaces(){
         // given
         String keyword = "중구";
-        Pageable pageable = PageUtil.travelPageable(1);
+        Pageable pageable = PageUtils.travelPageable(1);
 
         List<TravelPlace> travelPlaceList = new ArrayList<>(List.of(travelPlace1, travelPlace2));
-        Page<TravelPlace> travelPlacePage = PageUtil.createPage(travelPlaceList, pageable, travelPlaceList.size());
+        Page<TravelPlace> travelPlacePage = PageUtils.createPage(travelPlaceList, pageable, travelPlaceList.size());
 
         when(travelPlaceRepository.searchTravelPlaces(pageable, keyword)).thenReturn(travelPlacePage);
 
@@ -125,8 +125,8 @@ public class ScheduleTravelServiceTest extends ScheduleTest {
     void searchTravelPlacesWithoutData(){
         // given
         String keyword = "ㅁㄴㅇㄹ";
-        Pageable pageable = PageUtil.travelPageable(1);
-        Page<TravelPlace> travelPlacePage = PageUtil.createPage(new ArrayList<>(), pageable, 0);
+        Pageable pageable = PageUtils.travelPageable(1);
+        Page<TravelPlace> travelPlacePage = PageUtils.createPage(new ArrayList<>(), pageable, 0);
 
         when(travelPlaceRepository.searchTravelPlaces(pageable, keyword)).thenReturn(travelPlacePage);
 

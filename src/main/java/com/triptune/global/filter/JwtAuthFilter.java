@@ -1,7 +1,7 @@
 package com.triptune.global.filter;
 
 import com.triptune.global.exception.CustomJwtUnAuthorizedException;
-import com.triptune.global.util.JwtUtil;
+import com.triptune.global.util.JwtUtils;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -19,21 +19,21 @@ import java.io.IOException;
 @RequiredArgsConstructor
 public class JwtAuthFilter extends OncePerRequestFilter {
 
-    private final JwtUtil jwtUtil;
+    private final JwtUtils jwtUtils;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        String token = jwtUtil.resolveToken(request);
+        String token = jwtUtils.resolveToken(request);
         try{
-            if (token != null && jwtUtil.validateToken(token)){
-                Authentication auth = jwtUtil.getAuthentication(token);
+            if (token != null && jwtUtils.validateToken(token)){
+                Authentication auth = jwtUtils.getAuthentication(token);
                 SecurityContextHolder.getContext().setAuthentication(auth);
             }
 
             filterChain.doFilter(request, response);
         } catch (CustomJwtUnAuthorizedException ex){
             log.error("CustomJwtUnAuthorizedException at {}: {}", request.getRequestURI(),  ex.getMessage());
-            JwtUtil.writeJwtException(request, response, ex.getHttpStatus(), ex.getMessage());
+            JwtUtils.writeJwtException(request, response, ex.getHttpStatus(), ex.getMessage());
         }
 
     }

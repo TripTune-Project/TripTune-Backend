@@ -2,7 +2,6 @@ package com.triptune.global.util;
 
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.triptune.global.enumclass.ErrorCode;
-import com.triptune.global.exception.DataNotFoundException;
 import com.triptune.global.exception.FileBadRequestException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.tika.Tika;
@@ -12,7 +11,7 @@ import java.io.IOException;
 import java.util.List;
 
 @Slf4j
-public class FileUtil {
+public class FileUtils {
 
     public static String getExtension(String fileName){
         int dotIndex = fileName.lastIndexOf(".");
