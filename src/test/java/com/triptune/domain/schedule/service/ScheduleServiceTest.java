@@ -691,7 +691,7 @@ public class ScheduleServiceTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("작성자 조회해서 AuthorDTO 생성")
+    @DisplayName("작성자 조회해서 MemberProfileDTO 생성")
     void createAuthorDTO(){
         // given
         // when
@@ -704,7 +704,7 @@ public class ScheduleServiceTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("작성자 조회해서 AuthorDTO 생성 시 작성자가 없어 예외 발생")
+    @DisplayName("작성자 조회해서 MemberProfileDTO 생성 시 작성자가 없어 예외 발생")
     void createAuthorDTO_notFoundException(){
         // given
         for(TravelAttendee attendee : schedule1.getTravelAttendeeList()){

@@ -1,5 +1,6 @@
 package com.triptune.domain.schedule.dto.response;
 
+import com.triptune.domain.member.dto.response.MemberProfileResponse;
 import com.triptune.domain.member.entity.Member;
 import com.triptune.domain.schedule.entity.ChatMessage;
 import com.triptune.global.util.TimeUtils;
@@ -32,7 +33,17 @@ public class ChatResponse {
     }
 
 
-    public static ChatResponse from(Member member, ChatMessage message){
+    public static ChatResponse from(ChatMessage message, MemberProfileResponse memberProfileResponse){
+        return ChatResponse.builder()
+                .messageId(message.getMessageId())
+                .nickname(memberProfileResponse.getNickname())
+                .profileUrl(memberProfileResponse.getProfileUrl())
+                .message(message.getMessage())
+                .timestamp(TimeUtils.convertToKST(message.getTimestamp()))
+                .build();
+    }
+
+    public static ChatResponse from(ChatMessage message, Member member){
         return ChatResponse.builder()
                 .messageId(message.getMessageId())
                 .nickname(member.getNickname())
@@ -41,5 +52,4 @@ public class ChatResponse {
                 .timestamp(TimeUtils.convertToKST(message.getTimestamp()))
                 .build();
     }
-
 }

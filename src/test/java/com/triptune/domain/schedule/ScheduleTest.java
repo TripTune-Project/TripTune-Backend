@@ -1,6 +1,7 @@
 package com.triptune.domain.schedule;
 
 import com.triptune.domain.BaseTest;
+import com.triptune.domain.member.dto.response.MemberProfileResponse;
 import com.triptune.domain.schedule.dto.request.*;
 import com.triptune.domain.schedule.enumclass.AttendeePermission;
 
@@ -64,4 +65,11 @@ public abstract class ScheduleTest extends BaseTest {
         return RouteCreateRequest.builder().placeId(placeId).build();
     }
 
+    protected MemberProfileResponse createMemberProfileResponse(Long memberId, String nickname){
+        return MemberProfileResponse.builder()
+                .memberId(memberId)
+                .nickname(nickname)
+                .profileUrl(nickname + ".jpg")
+                .build();
+    }
 }
