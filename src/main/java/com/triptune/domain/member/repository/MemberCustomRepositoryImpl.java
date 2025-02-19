@@ -25,7 +25,7 @@ public class MemberCustomRepositoryImpl implements MemberCustomRepository {
     @Override
     public List<MemberProfileResponse> findMembersProfileByMemberId(Set<Long> memberIds) {
         return jpaQueryFactory
-                .select(Projections.fields(MemberProfileResponse.class,
+                .select(Projections.constructor(MemberProfileResponse.class,
                                 member.memberId,
                                 member.nickname,
                                 member.profileImage.s3ObjectUrl))

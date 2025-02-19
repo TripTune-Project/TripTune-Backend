@@ -27,14 +27,18 @@ class MemberCustomRepositoryImplTest extends MemberTest {
     @Autowired private MemberRepository memberRepository;
     @Autowired private ProfileImageRepository profileImageRepository;
 
+    private ProfileImage profileImage1;
+    private ProfileImage profileImage2;
+
     @Test
     @DisplayName("채팅 사용자들 프로필 조회")
     void findMembersProfileByMemberId() {
         // given
-        ProfileImage profileImage1 = profileImageRepository.save(createProfileImage(null, "member1Image"));
-        ProfileImage profileImage2 = profileImageRepository.save(createProfileImage(null, "member2Image"));
         Member member1 = memberRepository.save(createMember(null, "member1", profileImage1));
         Member member2 = memberRepository.save(createMember(null, "member2", profileImage2));
+        profileImage1 = profileImageRepository.save(createProfileImage(null, "member1Image", member1));
+        profileImage2 = profileImageRepository.save(createProfileImage(null, "member2Image", member2));
+
 
 
         Set<Long> request = new HashSet<>();
@@ -50,8 +54,10 @@ class MemberCustomRepositoryImplTest extends MemberTest {
         assertThat(response.size()).isEqualTo(2);
         assertThat(response.get(0).getMemberId()).isEqualTo(member1.getMemberId());
         assertThat(response.get(0).getNickname()).isEqualTo(member1.getNickname());
+        assertThat(response.get(0).getProfileUrl()).isEqualTo(profileImage1.getS3ObjectUrl());
         assertThat(response.get(1).getMemberId()).isEqualTo(member2.getMemberId());
         assertThat(response.get(1).getNickname()).isEqualTo(member2.getNickname());
+        assertThat(response.get(1).getProfileUrl()).isEqualTo(profileImage2.getS3ObjectUrl());
 
     }
 }
