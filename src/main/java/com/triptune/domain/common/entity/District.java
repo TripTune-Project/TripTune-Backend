@@ -26,7 +26,7 @@ public class District {
     @Column(name = "district_name")
     private String districtName;
 
-    @OneToMany(mappedBy = "district", fetch = FetchType.LAZY, orphanRemoval = true)
+    @OneToMany(mappedBy = "district", fetch = FetchType.LAZY)
     private List<TravelPlace> travelPlaceList;
 
 

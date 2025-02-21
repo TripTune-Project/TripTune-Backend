@@ -70,6 +70,21 @@ public abstract class BaseTest {
                 .build();
     }
 
+
+    protected Member createMember(Long memberId, String userId, String encodePassword, ProfileImage profileImage){
+        return Member.builder()
+                .memberId(memberId)
+                .profileImage(profileImage)
+                .userId(userId)
+                .email(userId + "@email.com")
+                .password(encodePassword)
+                .nickname(userId)
+                .refreshToken(refreshToken)
+                .isSocialLogin(false)
+                .createdAt(LocalDateTime.now())
+                .build();
+    }
+
     protected ProfileImage createProfileImage(Long profileImageId, String fileName){
         return ProfileImage.builder()
                 .profileImageId(profileImageId)

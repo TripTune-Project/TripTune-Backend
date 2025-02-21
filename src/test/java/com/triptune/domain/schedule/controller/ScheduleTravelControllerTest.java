@@ -109,9 +109,9 @@ public class ScheduleTravelControllerTest extends BaseTest {
         schedule1 = travelScheduleRepository.save(createTravelSchedule(null,"테스트1"));
         schedule2 = travelScheduleRepository.save(createTravelSchedule(null,"테스트2"));
 
-        TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(0L, member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
-        TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(0L, member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ));
-        TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(0L, member2, schedule2, AttendeeRole.AUTHOR, AttendeePermission.ALL));
+        TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(null, member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
+        TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(null, member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ));
+        TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(null, member2, schedule2, AttendeeRole.AUTHOR, AttendeePermission.ALL));
 
         schedule1.setTravelAttendeeList(new ArrayList<>(List.of(attendee1, attendee2)));
         schedule2.setTravelAttendeeList(new ArrayList<>(List.of(attendee3)));
@@ -135,12 +135,12 @@ public class ScheduleTravelControllerTest extends BaseTest {
                 .andExpect(jsonPath("$.data.content[0].thumbnailUrl").exists());
     }
 
-
     @Test
     @DisplayName("여행지 조회 시 여행지 데이터 존재하지 않는 경우")
     @WithMockUser(username = "member1")
     void getTravelPlacesWithoutData() throws Exception {
         // given
+        travelImageRepository.deleteAll();
         travelPlaceRepository.deleteAll();
 
         // when, then

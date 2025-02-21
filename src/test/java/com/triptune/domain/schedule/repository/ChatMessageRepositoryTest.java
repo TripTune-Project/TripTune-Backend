@@ -25,14 +25,14 @@ public class ChatMessageRepositoryTest extends ScheduleTest {
     private final MemberRepository memberRepository;
     private final TravelScheduleRepository travelScheduleRepository;
 
+    private TravelSchedule schedule;
+
     @Autowired
     public ChatMessageRepositoryTest(ChatMessageRepository chatMessageRepository, MemberRepository memberRepository, TravelScheduleRepository travelScheduleRepository) {
         this.chatMessageRepository = chatMessageRepository;
         this.memberRepository = memberRepository;
         this.travelScheduleRepository = travelScheduleRepository;
     }
-
-    private TravelSchedule schedule;
 
     @BeforeEach
     void setUp(){
