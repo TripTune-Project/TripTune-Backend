@@ -86,13 +86,13 @@ public class TravelPlace {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    @OneToMany(mappedBy = "travelPlace", fetch = FetchType.LAZY, orphanRemoval = true)
+    @OneToMany(mappedBy = "travelPlace", fetch = FetchType.LAZY)
     private List<TravelImage> travelImageList = new ArrayList<>();
 
-    @OneToMany(mappedBy = "travelPlace", fetch = FetchType.LAZY, orphanRemoval = true)
+    @OneToMany(mappedBy = "travelPlace", fetch = FetchType.LAZY)
     private List<TravelRoute> travelRouteList = new ArrayList<>();
 
-    @OneToMany(mappedBy = "travelPlace", fetch = FetchType.LAZY, orphanRemoval = true)
+    @OneToMany(mappedBy = "travelPlace", fetch = FetchType.LAZY)
     private List<Bookmark> bookmarkList = new ArrayList<>();
 
     @Builder

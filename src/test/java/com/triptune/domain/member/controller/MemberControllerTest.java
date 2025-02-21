@@ -6,6 +6,13 @@ import com.triptune.domain.common.entity.City;
 import com.triptune.domain.common.entity.Country;
 import com.triptune.domain.common.entity.District;
 import com.triptune.domain.common.repository.*;
+import com.triptune.domain.schedule.entity.TravelAttendee;
+import com.triptune.domain.schedule.entity.TravelSchedule;
+import com.triptune.domain.schedule.enumclass.AttendeePermission;
+import com.triptune.domain.schedule.enumclass.AttendeeRole;
+import com.triptune.domain.schedule.repository.ChatMessageRepository;
+import com.triptune.domain.schedule.repository.TravelAttendeeRepository;
+import com.triptune.domain.schedule.repository.TravelScheduleRepository;
 import com.triptune.domain.travel.entity.TravelImage;
 import com.triptune.domain.travel.entity.TravelPlace;
 import com.triptune.domain.travel.repository.TravelImageRepository;
@@ -53,7 +60,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
-@ActiveProfiles("h2")
+@ActiveProfiles("mongo")
 public class MemberControllerTest extends MemberTest {
     private final WebApplicationContext wac;
     private final JwtUtils jwtUtils;
@@ -67,6 +74,9 @@ public class MemberControllerTest extends MemberTest {
     private final TravelImageRepository travelImageRepository;
     private final ApiCategoryRepository apiCategoryRepository;
     private final BookmarkRepository bookmarkRepository;
+    private final TravelAttendeeRepository travelAttendeeRepository;
+    private final TravelScheduleRepository travelScheduleRepository;
+    private final ChatMessageRepository chatMessageRepository;
 
     @MockBean
     private RedisUtils redisUtils;
@@ -87,7 +97,7 @@ public class MemberControllerTest extends MemberTest {
 
 
     @Autowired
-    public MemberControllerTest(WebApplicationContext wac, JwtUtils jwtUtils, MemberRepository memberRepository, ProfileImageRepository profileImageRepository, PasswordEncoder passwordEncoder, TravelPlaceRepository travelPlaceRepository, CountryRepository countryRepository, CityRepository cityRepository, DistrictRepository districtRepository, TravelImageRepository travelImageRepository, ApiCategoryRepository apiCategoryRepository, BookmarkRepository bookmarkRepository) {
+    public MemberControllerTest(WebApplicationContext wac, JwtUtils jwtUtils, MemberRepository memberRepository, ProfileImageRepository profileImageRepository, PasswordEncoder passwordEncoder, TravelPlaceRepository travelPlaceRepository, CountryRepository countryRepository, CityRepository cityRepository, DistrictRepository districtRepository, TravelImageRepository travelImageRepository, ApiCategoryRepository apiCategoryRepository, BookmarkRepository bookmarkRepository, TravelAttendeeRepository travelAttendeeRepository, TravelScheduleRepository travelScheduleRepository, ChatMessageRepository chatMessageRepository) {
         this.wac = wac;
         this.jwtUtils = jwtUtils;
         this.memberRepository = memberRepository;
@@ -100,6 +110,9 @@ public class MemberControllerTest extends MemberTest {
         this.travelImageRepository = travelImageRepository;
         this.apiCategoryRepository = apiCategoryRepository;
         this.bookmarkRepository = bookmarkRepository;
+        this.travelAttendeeRepository = travelAttendeeRepository;
+        this.travelScheduleRepository = travelScheduleRepository;
+        this.chatMessageRepository = chatMessageRepository;
     }
 
     @BeforeEach
@@ -109,6 +122,8 @@ public class MemberControllerTest extends MemberTest {
                 .apply(springSecurity())
                 .alwaysDo(print())
                 .build();
+
+        chatMessageRepository.deleteAll();
 
         Country country = countryRepository.save(createCountry());
         City city = cityRepository.save(createCity(country));
@@ -121,7 +136,6 @@ public class MemberControllerTest extends MemberTest {
         travelPlace1 = travelPlaceRepository.save(createTravelPlace(null, country, city, district, apiCategory, List.of(travelImage1), "가장소"));
         travelPlace2 = travelPlaceRepository.save(createTravelPlace(null, country, city, district, apiCategory, List.of(travelImage2), "나장소"));
         travelPlace3 = travelPlaceRepository.save(createTravelPlace(null, country, city, district, apiCategory, List.of(travelImage3), "다장소"));
-
 
     }
 
@@ -705,6 +719,141 @@ public class MemberControllerTest extends MemberTest {
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value(ErrorCode.ILLEGAL_BOOKMARK_SORT_TYPE.getMessage()));
     }
+
+    @Test
+    @WithMockUser("member")
+    @DisplayName("사용자 탈퇴 - 작성자, 참석자 존재하는 경우")
+    void deactivateMember1() throws Exception{
+        String encodePassword = passwordEncoder.encode("test123@");
+
+        ProfileImage profileImage = profileImageRepository.save(createProfileImage(null, "test"));
+        Member member = memberRepository.save(createMember(null, "member", encodePassword, profileImage));
+
+        TravelSchedule schedule1 = travelScheduleRepository.save(createTravelSchedule(null, "테스트1"));
+        TravelSchedule schedule2 = travelScheduleRepository.save(createTravelSchedule(null, "테스트2"));
+
+        travelAttendeeRepository.save(createTravelAttendee(null, member, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
+        travelAttendeeRepository.save(createTravelAttendee(null, member, schedule2, AttendeeRole.GUEST, AttendeePermission.READ));
+
+        chatMessageRepository.save(createChatMessage(null, schedule1.getScheduleId(), member, "테스트1"));
+        chatMessageRepository.save(createChatMessage(null, schedule1.getScheduleId(), member, "테스트2"));
+
+        bookmarkRepository.save(createBookmark(null, member, travelPlace1, LocalDateTime.now()));
+        bookmarkRepository.save(createBookmark(null, member, travelPlace1, LocalDateTime.now()));
+
+        mockMvc.perform(patch("/api/members/deactivate")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJsonString(createDeactivateRequest("test123@"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()));
+    }
+
+    @Test
+    @WithMockUser("member")
+    @DisplayName("사용자 탈퇴 - 작성자만 존재하는 경우")
+    void deactivateMember2() throws Exception{
+        String encodePassword = passwordEncoder.encode("test123@");
+
+        ProfileImage profileImage = profileImageRepository.save(createProfileImage(null, "test"));
+        Member member = memberRepository.save(createMember(null, "member", encodePassword, profileImage));
+        Member otherMember = memberRepository.save(createMember(null, "otherMember"));
+
+        TravelSchedule schedule1 = travelScheduleRepository.save(createTravelSchedule(null, "테스트1"));
+
+        travelAttendeeRepository.save(createTravelAttendee(null, member, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
+        travelAttendeeRepository.save(createTravelAttendee(null, otherMember, schedule1, AttendeeRole.GUEST, AttendeePermission.READ));
+
+        chatMessageRepository.save(createChatMessage(null, schedule1.getScheduleId(), member, "테스트1"));
+        chatMessageRepository.save(createChatMessage(null, schedule1.getScheduleId(), member, "테스트2"));
+
+        bookmarkRepository.save(createBookmark(null, member, travelPlace1, LocalDateTime.now()));
+        bookmarkRepository.save(createBookmark(null, member, travelPlace1, LocalDateTime.now()));
+
+        mockMvc.perform(patch("/api/members/deactivate")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJsonString(createDeactivateRequest("test123@"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()));
+    }
+
+    @Test
+    @WithMockUser("member")
+    @DisplayName("사용자 탈퇴 - 참석자만 존재하는 경우")
+    void deactivateMember3() throws Exception{
+        String encodePassword = passwordEncoder.encode("test123@");
+
+        ProfileImage profileImage = profileImageRepository.save(createProfileImage(null, "test"));
+        Member member = memberRepository.save(createMember(null, "member", encodePassword, profileImage));
+
+        TravelSchedule schedule1 = travelScheduleRepository.save(createTravelSchedule(null, "테스트1"));
+
+        travelAttendeeRepository.save(createTravelAttendee(null, member, schedule1, AttendeeRole.GUEST, AttendeePermission.READ));
+
+        chatMessageRepository.save(createChatMessage(null, schedule1.getScheduleId(), member, "테스트1"));
+        chatMessageRepository.save(createChatMessage(null, schedule1.getScheduleId(), member, "테스트2"));
+
+        bookmarkRepository.save(createBookmark(null, member, travelPlace1, LocalDateTime.now()));
+        bookmarkRepository.save(createBookmark(null, member, travelPlace1, LocalDateTime.now()));
+
+        mockMvc.perform(patch("/api/members/deactivate")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJsonString(createDeactivateRequest("test123@"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()));
+    }
+
+    @Test
+    @WithMockUser("member")
+    @DisplayName("사용자 탈퇴 - 일정 데이터 없는 경우")
+    void deactivateMember4() throws Exception{
+        String encodePassword = passwordEncoder.encode("test123@");
+
+        ProfileImage profileImage = profileImageRepository.save(createProfileImage(null, "test"));
+        Member member = memberRepository.save(createMember(null, "member", encodePassword, profileImage));
+
+        bookmarkRepository.save(createBookmark(null, member, travelPlace1, LocalDateTime.now()));
+        bookmarkRepository.save(createBookmark(null, member, travelPlace1, LocalDateTime.now()));
+
+        mockMvc.perform(patch("/api/members/deactivate")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJsonString(createDeactivateRequest("test123@"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()));
+    }
+
+    @Test
+    @WithMockUser("member")
+    @DisplayName("사용자 탈퇴 시 사용자 데이터를 찾을 수 없는 경우")
+    void deactivateMember_memberNotFoundException() throws Exception{
+        mockMvc.perform(patch("/api/members/deactivate")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJsonString(createDeactivateRequest("test123@"))))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value(ErrorCode.MEMBER_NOT_FOUND.getMessage()));
+    }
+
+    @Test
+    @WithMockUser("member")
+    @DisplayName("사용자 탈퇴 시 비밀번호가 맞지 않아 예외 발생")
+    void deactivateMember_incorrectPassword() throws Exception{
+        String encodePassword = passwordEncoder.encode("incorrect12@");
+
+        ProfileImage profileImage = profileImageRepository.save(createProfileImage(null, "test"));
+        memberRepository.save(createMember(null, "member", encodePassword, profileImage));
+
+        mockMvc.perform(patch("/api/members/deactivate")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJsonString(createDeactivateRequest("test123@"))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value(ErrorCode.INCORRECT_PASSWORD.getMessage()));
+    }
+
 
 
 

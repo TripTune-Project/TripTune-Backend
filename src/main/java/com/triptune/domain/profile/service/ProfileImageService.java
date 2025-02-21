@@ -26,7 +26,6 @@ public class ProfileImageService {
     private final ProfileImageRepository profileImageRepository;
     private final S3Service s3Service;
 
-
     public ProfileImage saveDefaultProfileImage(Member member) {
         ProfileImage profileImage = ProfileImage.from(member, profileImageProperties);
         return profileImageRepository.save(profileImage);
@@ -35,15 +34,15 @@ public class ProfileImageService {
     public void updateProfileImage(String userId, MultipartFile profileImageFile) {
         validateFileExtension(profileImageFile);
 
-        ProfileImage profileImage = findByUserId(userId);
-        s3Service.deleteS3File(profileImage.getS3FileKey());
+        ProfileImage profileImage = getProfileImageByUserId(userId);
+        deleteS3File(profileImage);
 
         String extension = FileUtils.getExtension(profileImageFile.getOriginalFilename());
         String savedFileName = s3Service.generateS3FileName(FILE_TAG, extension);
         String s3FileKey = s3Service.generateS3FileKey(savedFileName);
         String s3ObjectUrl = s3Service.uploadToS3(profileImageFile, s3FileKey);
 
-        profileImage.update(profileImageFile, s3ObjectUrl, s3FileKey, savedFileName, extension);
+        profileImage.updateProfileImage(profileImageFile, s3ObjectUrl, s3FileKey, savedFileName, extension);
         profileImage.getMember().updateUpdatedAt();
     }
 
@@ -53,8 +52,21 @@ public class ProfileImageService {
         }
     }
 
-    private ProfileImage findByUserId(String userId){
+    private ProfileImage getProfileImageByUserId(String userId){
         return profileImageRepository.findByMember_UserId(userId)
                 .orElseThrow(() -> new DataNotFoundException(ErrorCode.PROFILE_IMAGE_NOT_FOUND));
+    }
+
+    public void updateDefaultProfileImage(Member member) {
+        ProfileImage profileImage = member.getProfileImage();
+
+        deleteS3File(profileImage);
+        profileImage.updateDefaultProfileImage(profileImageProperties);
+    }
+
+    public void deleteS3File(ProfileImage profileImage){
+        if(!profileImage.getS3FileKey().equals(profileImageProperties.getS3FileKey())){
+            s3Service.deleteS3File(profileImage.getS3FileKey());
+        }
     }
 }

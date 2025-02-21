@@ -7,6 +7,7 @@ import com.triptune.domain.profile.repository.ProfileImageRepository;
 import com.triptune.global.enumclass.ErrorCode;
 import com.triptune.global.exception.DataNotFoundException;
 import com.triptune.global.exception.FileBadRequestException;
+import com.triptune.global.properties.DefaultProfileImageProperties;
 import com.triptune.global.service.S3Service;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -20,13 +21,14 @@ import java.io.IOException;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-public class ProfileImageServiceJunitTest extends ProfileImageTest {
+public class ProfileImageServiceMockTest extends ProfileImageTest {
 
     @InjectMocks
     private ProfileImageService profileImageService;
@@ -37,6 +39,9 @@ public class ProfileImageServiceJunitTest extends ProfileImageTest {
     @Mock
     private ProfileImageRepository profileImageRepository;
 
+    @Mock
+    DefaultProfileImageProperties imageProperties;
+
     @Test
     @DisplayName("프로필 이미지 수정")
     void updateProfileImage() throws IOException {
@@ -46,7 +51,9 @@ public class ProfileImageServiceJunitTest extends ProfileImageTest {
 
         Member member = createMember(1L, "member");
         ProfileImage profileImage = createProfileImage(1L, "savedImage", member);
+
         when(profileImageRepository.findByMember_UserId(any())).thenReturn(Optional.of(profileImage));
+        when(imageProperties.getS3FileKey()).thenReturn(profileImage.getS3FileKey());
 
         // when
         assertDoesNotThrow(() -> profileImageService.updateProfileImage("member", mockMultipartFile));

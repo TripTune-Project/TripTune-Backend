@@ -1,6 +1,7 @@
 package com.triptune.domain.member.service;
 
 import com.triptune.domain.bookmark.enumclass.BookmarkSortType;
+import com.triptune.domain.bookmark.repository.BookmarkRepository;
 import com.triptune.domain.bookmark.service.BookmarkService;
 import com.triptune.domain.common.entity.ApiCategory;
 import com.triptune.domain.common.entity.City;
@@ -16,11 +17,18 @@ import com.triptune.domain.member.dto.response.LoginResponse;
 import com.triptune.domain.member.dto.response.MemberInfoResponse;
 import com.triptune.domain.member.dto.response.RefreshTokenResponse;
 import com.triptune.domain.member.entity.Member;
-import com.triptune.domain.member.exception.ChangeMemberInfoException;
+import com.triptune.domain.member.exception.IncorrectPasswordException;
 import com.triptune.domain.member.exception.FailLoginException;
 import com.triptune.domain.member.repository.MemberRepository;
 import com.triptune.domain.profile.entity.ProfileImage;
 import com.triptune.domain.profile.service.ProfileImageService;
+import com.triptune.domain.schedule.entity.TravelAttendee;
+import com.triptune.domain.schedule.entity.TravelSchedule;
+import com.triptune.domain.schedule.enumclass.AttendeePermission;
+import com.triptune.domain.schedule.enumclass.AttendeeRole;
+import com.triptune.domain.schedule.repository.ChatMessageRepository;
+import com.triptune.domain.schedule.repository.TravelAttendeeRepository;
+import com.triptune.domain.schedule.repository.TravelScheduleRepository;
 import com.triptune.domain.travel.dto.response.PlaceSimpleResponse;
 import com.triptune.domain.travel.entity.TravelImage;
 import com.triptune.domain.travel.entity.TravelPlace;
@@ -44,6 +52,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -81,6 +90,19 @@ public class MemberServiceTest extends MemberTest {
 
     @Mock
     private BookmarkService bookmarkService;
+
+    @Mock
+    private TravelAttendeeRepository travelAttendeeRepository;
+
+    @Mock
+    private ChatMessageRepository chatMessageRepository;
+
+    @Mock
+    private TravelScheduleRepository travelScheduleRepository;
+
+    @Mock
+    private BookmarkRepository bookmarkRepository;
+
 
     private final String accessToken = "MemberAccessToken";
     private final String refreshToken = "MemberRefreshToken";
@@ -451,7 +473,7 @@ public class MemberServiceTest extends MemberTest {
         when(redisUtils.getData(anyString())).thenReturn(null);
 
         // when
-        ChangeMemberInfoException fail = assertThrows(ChangeMemberInfoException.class,
+        IncorrectPasswordException fail = assertThrows(IncorrectPasswordException.class,
                 () -> memberService.resetPassword(createResetPasswordDTO(accessToken, newPassword, newPassword)));
 
         // then
@@ -525,7 +547,7 @@ public class MemberServiceTest extends MemberTest {
         when(passwordEncoder.matches(anyString(), anyString())).thenReturn(false);
 
         // when
-        ChangeMemberInfoException fail = assertThrows(ChangeMemberInfoException.class, () -> memberService.changePassword("member", request));
+        IncorrectPasswordException fail = assertThrows(IncorrectPasswordException.class, () -> memberService.changePassword("member", request));
 
         // then
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.INCORRECT_PASSWORD.getStatus());
@@ -748,5 +770,85 @@ public class MemberServiceTest extends MemberTest {
         assertThat(response.getContent()).isEmpty();
     }
 
+    @Test
+    @DisplayName("회원 탈퇴")
+    void deactivateMember1(){
+        // given
+        DeactivateRequest request = createDeactivateRequest(member.getPassword());
+
+        TravelSchedule schedule1 = createTravelSchedule(1L, "테스트1");
+        TravelSchedule schedule2 = createTravelSchedule(2L, "테스트2");
+
+        List<TravelAttendee> attendees = List.of(
+                createTravelAttendee(1L, member, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL),
+                createTravelAttendee(2L, member, schedule2, AttendeeRole.GUEST, AttendeePermission.READ)
+        );
+
+        when(memberRepository.findByUserId(anyString())).thenReturn(Optional.of(member));
+        when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
+        when(travelAttendeeRepository.findAllByMember_UserId(anyString())).thenReturn(attendees);
+
+        // when
+        assertThatCode(() -> memberService.deactivateMember(member.getUserId(), request))
+                .doesNotThrowAnyException();
+
+
+        // then
+        assertThat(member.getUserId()).isEqualTo("알 수 없음");
+        assertThat(member.getPassword()).isEqualTo("알 수 없음");
+    }
+
+
+    @Test
+    @DisplayName("회원 탈퇴 시 일정 데이터가 존재하지 않는 경우")
+    void deactivateMember_emptySchedule(){
+        // given
+        DeactivateRequest request = createDeactivateRequest(member.getPassword());
+
+        when(memberRepository.findByUserId(anyString())).thenReturn(Optional.of(member));
+        when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
+        when(travelAttendeeRepository.findAllByMember_UserId(anyString())).thenReturn(new ArrayList<>());
+
+        // when
+        assertThatCode(() -> memberService.deactivateMember(member.getUserId(), request))
+                .doesNotThrowAnyException();
+
+
+        // then
+        assertThat(member.getUserId()).isEqualTo("알 수 없음");
+        assertThat(member.getPassword()).isEqualTo("알 수 없음");
+    }
+
+    @Test
+    @DisplayName("회원 탈퇴 시 사용자 데이터가 존재하지 않아 예외 발생")
+    void deactivateMember_MemberDataNotFoundException(){
+        // given
+        DeactivateRequest request = createDeactivateRequest(member.getPassword());
+
+        when(memberRepository.findByUserId(anyString())).thenReturn(Optional.empty());
+
+        // when
+        // then
+        assertThatThrownBy(() -> memberService.deactivateMember(member.getUserId(), request))
+                .isInstanceOf(DataNotFoundException.class)
+                .hasMessage(ErrorCode.MEMBER_NOT_FOUND.getMessage());
+
+    }
+
+    @Test
+    @DisplayName("회원 탈퇴 요청 시 비밀번호가 맞지 않아 예외 발생")
+    void deactivateMember_incorrectPasswordException(){
+        // given
+        DeactivateRequest request = createDeactivateRequest("incorrect_password");
+
+        when(memberRepository.findByUserId(anyString())).thenReturn(Optional.of(member));
+        when(passwordEncoder.matches(anyString(), anyString())).thenReturn(false);
+
+        // when
+        assertThatThrownBy(() -> memberService.deactivateMember(member.getUserId(), request))
+                .isInstanceOf(IncorrectPasswordException.class)
+                .hasMessage(ErrorCode.INCORRECT_PASSWORD.getMessage());
+
+    }
 
 }

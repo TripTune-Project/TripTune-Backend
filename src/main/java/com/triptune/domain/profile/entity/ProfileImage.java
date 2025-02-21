@@ -76,7 +76,7 @@ public class ProfileImage {
                 .build();
     }
 
-    public void update(MultipartFile profileImageFile, String s3ObjectUrl, String s3FileKey, String savedFileName, String extension){
+    public void updateProfileImage(MultipartFile profileImageFile, String s3ObjectUrl, String s3FileKey, String savedFileName, String extension){
         this.s3ObjectUrl = s3ObjectUrl;
         this.s3FileKey = s3FileKey;
         this.originalName = profileImageFile.getOriginalFilename();
@@ -86,5 +86,13 @@ public class ProfileImage {
         this.updatedAt = LocalDateTime.now();
     }
 
-
+    public void updateDefaultProfileImage(DefaultProfileImageProperties imageProperties) {
+        this.s3ObjectUrl = imageProperties.getS3ObjectUrl();
+        this.s3FileKey = imageProperties.getS3FileKey();
+        this.originalName = imageProperties.getOriginalName();
+        this.fileName = imageProperties.getFileName();
+        this.fileType = imageProperties.getExtension();
+        this.fileSize = imageProperties.getSize();
+        this.updatedAt = LocalDateTime.now();
+    }
 }

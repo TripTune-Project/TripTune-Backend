@@ -77,4 +77,10 @@ public class MemberTest extends BaseTest {
                 .email(email)
                 .build();
     }
+
+    protected  DeactivateRequest createDeactivateRequest(String password){
+        return DeactivateRequest.builder()
+                .password(password)
+                .build();
+    }
 }

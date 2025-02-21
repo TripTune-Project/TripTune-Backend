@@ -39,10 +39,10 @@ public class TravelSchedule {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    @OneToMany(mappedBy = "travelSchedule", fetch = FetchType.LAZY, orphanRemoval = true)
+    @OneToMany(mappedBy = "travelSchedule", fetch = FetchType.LAZY, cascade = CascadeType.PERSIST, orphanRemoval = true)
     private List<TravelAttendee> travelAttendeeList = new ArrayList<>();
 
-    @OneToMany(mappedBy = "travelSchedule", fetch = FetchType.LAZY, orphanRemoval = true)
+    @OneToMany(mappedBy = "travelSchedule", fetch = FetchType.LAZY, cascade = CascadeType.PERSIST, orphanRemoval = true)
     private List<TravelRoute> travelRouteList = new ArrayList<>();
 
     @Builder
