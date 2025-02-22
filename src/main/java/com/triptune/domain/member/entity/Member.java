@@ -113,7 +113,7 @@ public class Member {
         this.updatedAt = LocalDateTime.now();
     }
 
-    public void updateAnonymous() {
+    public void updateDeactivate() {
         //(닉네임, 아이디, 비밀번호, 리프레시 토큰, 이메일)
         String unknown = AnonymousValue.ANONYMOUS.getValue();
 
@@ -121,7 +121,7 @@ public class Member {
         this.nickname = unknown;
         this.email = unknown;
         this.password = unknown;
-        this.refreshToken = unknown;
+        this.refreshToken = null;
         this.updatedAt = LocalDateTime.now();
         this.isActive = false;
     }

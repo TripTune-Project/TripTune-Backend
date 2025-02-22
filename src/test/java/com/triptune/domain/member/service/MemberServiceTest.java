@@ -789,7 +789,7 @@ public class MemberServiceTest extends MemberTest {
         when(travelAttendeeRepository.findAllByMember_UserId(anyString())).thenReturn(attendees);
 
         // when
-        assertThatCode(() -> memberService.deactivateMember(member.getUserId(), request))
+        assertThatCode(() -> memberService.deactivateMember(accessToken, member.getUserId(), request))
                 .doesNotThrowAnyException();
 
 
@@ -810,7 +810,7 @@ public class MemberServiceTest extends MemberTest {
         when(travelAttendeeRepository.findAllByMember_UserId(anyString())).thenReturn(new ArrayList<>());
 
         // when
-        assertThatCode(() -> memberService.deactivateMember(member.getUserId(), request))
+        assertThatCode(() -> memberService.deactivateMember(accessToken, member.getUserId(), request))
                 .doesNotThrowAnyException();
 
 
@@ -829,7 +829,7 @@ public class MemberServiceTest extends MemberTest {
 
         // when
         // then
-        assertThatThrownBy(() -> memberService.deactivateMember(member.getUserId(), request))
+        assertThatThrownBy(() -> memberService.deactivateMember(accessToken, member.getUserId(), request))
                 .isInstanceOf(DataNotFoundException.class)
                 .hasMessage(ErrorCode.MEMBER_NOT_FOUND.getMessage());
 
@@ -845,7 +845,7 @@ public class MemberServiceTest extends MemberTest {
         when(passwordEncoder.matches(anyString(), anyString())).thenReturn(false);
 
         // when
-        assertThatThrownBy(() -> memberService.deactivateMember(member.getUserId(), request))
+        assertThatThrownBy(() -> memberService.deactivateMember(accessToken, member.getUserId(), request))
                 .isInstanceOf(IncorrectPasswordException.class)
                 .hasMessage(ErrorCode.INCORRECT_PASSWORD.getMessage());
 
