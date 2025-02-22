@@ -1,7 +1,7 @@
 package com.triptune.global.aop;
 
-import com.triptune.domain.schedule.repository.TravelAttendeeRepository;
-import com.triptune.domain.schedule.repository.TravelScheduleRepository;
+import com.triptune.schedule.repository.TravelAttendeeRepository;
+import com.triptune.schedule.repository.TravelScheduleRepository;
 import com.triptune.global.enumclass.ErrorCode;
 import com.triptune.global.exception.DataNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -9,7 +9,6 @@ import lombok.RequiredArgsConstructor;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 @Aspect

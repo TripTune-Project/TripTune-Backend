@@ -1,7 +1,7 @@
 package com.triptune.global.util;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.triptune.domain.schedule.exception.CustomJwtUnAuthorizedChatException;
+import com.triptune.schedule.exception.CustomJwtUnAuthorizedChatException;
 import com.triptune.global.enumclass.ErrorCode;
 import com.triptune.global.exception.CustomJwtUnAuthorizedException;
 import com.triptune.global.response.ErrorResponse;
