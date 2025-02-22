@@ -156,9 +156,11 @@ public class MemberController {
 
     @PatchMapping("/deactivate")
     @Operation(summary = "회원 탈퇴", description = "회원을 탈퇴합니다.")
-    public ApiResponse<Void> deactivateMember(@RequestBody DeactivateRequest deactivateRequest){
+    public ApiResponse<Void> deactivateMember(HttpServletRequest request, @Valid @RequestBody DeactivateRequest deactivateRequest){
+        String accessToken = jwtUtils.resolveToken(request);
         String userId = SecurityUtils.getCurrentUserId();
-        memberService.deactivateMember(userId, deactivateRequest);
+
+        memberService.deactivateMember(accessToken, userId, deactivateRequest);
         return ApiResponse.okResponse();
     }
 }

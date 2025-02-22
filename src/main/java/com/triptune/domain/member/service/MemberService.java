@@ -27,7 +27,6 @@ import com.triptune.global.enumclass.RedisKeyType;
 import com.triptune.global.exception.CustomJwtUnAuthorizedException;
 import com.triptune.global.exception.DataExistException;
 import com.triptune.global.exception.DataNotFoundException;
-import com.triptune.global.properties.DefaultProfileImageProperties;
 import com.triptune.global.util.JwtUtils;
 import com.triptune.global.util.PageUtils;
 import com.triptune.global.util.RedisUtils;
@@ -37,7 +36,6 @@ import jakarta.mail.MessagingException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -239,7 +237,7 @@ public class MemberService {
     }
 
 
-    public void deactivateMember(String userId, DeactivateRequest deactivateRequest) {
+    public void deactivateMember(String accessToken, String userId, DeactivateRequest deactivateRequest) {
         // 1. 사용자 비밀번호 확인
         Member member = getMemberByUserId(userId);
 
@@ -269,8 +267,10 @@ public class MemberService {
         bookmarkRepository.deleteAllByMember_UserId(userId);
 
         // 5. 익명 데이터로 변경 (닉네임, 아이디, 비밀번호, 리프레시 토큰, 이메일)
-        member.updateAnonymous();
+        member.updateDeactivate();
 
+        // 6. 로그아웃
+        redisUtils.saveExpiredData(accessToken, "logout", LOGOUT_DURATION);
     }
 
 
