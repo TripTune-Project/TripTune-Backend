@@ -17,14 +17,14 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
-public class TravelScheduleCustomRepositoryImpl implements TravelScheduleCustomRepository{
+public class TravelScheduleRepositoryCustomImpl implements TravelScheduleRepositoryCustom {
 
     private final JPAQueryFactory jpaQueryFactory;
     private final QTravelSchedule travelSchedule;
     private final QTravelAttendee travelAttendee;
 
 
-    public TravelScheduleCustomRepositoryImpl(JPAQueryFactory jpaRepository){
+    public TravelScheduleRepositoryCustomImpl(JPAQueryFactory jpaRepository){
         this.jpaQueryFactory = jpaRepository;
         this.travelSchedule = QTravelSchedule.travelSchedule;
         this.travelAttendee = QTravelAttendee.travelAttendee;

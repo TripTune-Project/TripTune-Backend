@@ -1,5 +1,5 @@
 package com.triptune.schedule.repository;
 
-public interface TravelAttendeeCustomRepository {
+public interface TravelAttendeeRepositoryCustom {
     String findAuthorNicknameByScheduleId(Long scheduleId);
 }

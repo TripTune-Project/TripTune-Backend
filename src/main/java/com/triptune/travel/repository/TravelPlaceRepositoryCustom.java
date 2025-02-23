@@ -8,7 +8,7 @@ import com.triptune.travel.entity.TravelPlace;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-public interface TravelPlaceCustomRepository {
+public interface TravelPlaceRepositoryCustom {
     Page<TravelPlace> findAllByAreaData(Pageable pageable, String country, String city, String district);
     Page<TravelPlace> searchTravelPlaces(Pageable pageable, String keyword);
     Page<PlaceLocation> findNearByTravelPlaces(Pageable pageable, PlaceLocationRequest placeLocationRequest, int radius);

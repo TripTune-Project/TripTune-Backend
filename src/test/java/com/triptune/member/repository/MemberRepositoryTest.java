@@ -22,7 +22,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest
 @Import({QueryDSLConfig.class})
 @ActiveProfiles("h2")
-class MemberCustomRepositoryImplTest extends MemberTest {
+class MemberRepositoryTest extends MemberTest {
 
     @Autowired private MemberRepository memberRepository;
     @Autowired private ProfileImageRepository profileImageRepository;

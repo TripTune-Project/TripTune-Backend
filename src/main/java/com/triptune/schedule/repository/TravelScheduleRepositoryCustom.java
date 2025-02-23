@@ -4,7 +4,7 @@ import com.triptune.schedule.entity.TravelSchedule;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-public interface TravelScheduleCustomRepository {
+public interface TravelScheduleRepositoryCustom {
     Page<TravelSchedule> findTravelSchedulesByUserId(Pageable pageable, String userId);
     Page<TravelSchedule> findSharedTravelSchedulesByUserId(Pageable pageable, String userId);
     Integer countTravelSchedulesByUserId(String userId);

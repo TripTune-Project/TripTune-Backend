@@ -7,13 +7,13 @@ import com.triptune.schedule.enumclass.AttendeeRole;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public class TravelAttendeeCustomRepositoryImpl implements TravelAttendeeCustomRepository{
+public class TravelAttendeeRepositoryCustomImpl implements TravelAttendeeRepositoryCustom {
 
     private final JPAQueryFactory jpaQueryFactory;
     private final QMember member;
     private final QTravelAttendee travelAttendee;
 
-    public TravelAttendeeCustomRepositoryImpl(JPAQueryFactory jpaQueryFactory) {
+    public TravelAttendeeRepositoryCustomImpl(JPAQueryFactory jpaQueryFactory) {
         this.jpaQueryFactory = jpaQueryFactory;
         this.member = QMember.member;
         this.travelAttendee = QTravelAttendee.travelAttendee;

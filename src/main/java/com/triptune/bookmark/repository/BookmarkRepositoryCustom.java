@@ -6,7 +6,7 @@ import com.triptune.travel.entity.TravelPlace;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-public interface BookmarkCustomRepository {
+public interface BookmarkRepositoryCustom {
     Page<TravelPlace> getBookmarkTravelPlaces(String userId, Pageable pageable, BookmarkSortType sortType);
     Integer countTotalElements(BooleanExpression expression);
 }

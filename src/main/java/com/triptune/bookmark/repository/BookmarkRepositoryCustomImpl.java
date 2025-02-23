@@ -15,14 +15,14 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public class BookmarkCustomRepositoryImpl implements BookmarkCustomRepository{
+public class BookmarkRepositoryCustomImpl implements BookmarkRepositoryCustom {
 
     private final JPAQueryFactory jpaQueryFactory;
     private final QBookmark bookmark;
     private final QTravelPlace travelPlace;
 
 
-    public BookmarkCustomRepositoryImpl(JPAQueryFactory jpaQueryFactory) {
+    public BookmarkRepositoryCustomImpl(JPAQueryFactory jpaQueryFactory) {
         this.jpaQueryFactory = jpaQueryFactory;
         this.bookmark = QBookmark.bookmark;
         this.travelPlace = QTravelPlace.travelPlace;

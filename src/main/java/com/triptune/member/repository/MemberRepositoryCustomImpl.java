@@ -11,12 +11,12 @@ import java.util.List;
 import java.util.Set;
 
 @Repository
-public class MemberCustomRepositoryImpl implements MemberCustomRepository {
+public class MemberRepositoryCustomImpl implements MemberRepositoryCustom {
     private final JPAQueryFactory jpaQueryFactory;
     private final QMember member;
     private final QProfileImage profileImage;
 
-    public MemberCustomRepositoryImpl(JPAQueryFactory jpaQueryFactory) {
+    public MemberRepositoryCustomImpl(JPAQueryFactory jpaQueryFactory) {
         this.jpaQueryFactory = jpaQueryFactory;
         this.member = QMember.member;
         this.profileImage = QProfileImage.profileImage;

@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface TravelAttendeeRepository extends JpaRepository<TravelAttendee, Long>, TravelAttendeeCustomRepository{
+public interface TravelAttendeeRepository extends JpaRepository<TravelAttendee, Long>, TravelAttendeeRepositoryCustom {
     List<TravelAttendee> findAllByTravelSchedule_ScheduleId(Long scheduleId);
     boolean existsByTravelSchedule_ScheduleIdAndMember_UserId(Long scheduleId, String userId);
     Optional<TravelAttendee> findByTravelSchedule_ScheduleIdAndMember_UserId(Long scheduleId, String userId);

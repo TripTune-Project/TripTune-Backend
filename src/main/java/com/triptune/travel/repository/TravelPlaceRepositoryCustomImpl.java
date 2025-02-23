@@ -22,12 +22,12 @@ import static com.querydsl.core.types.dsl.Expressions.constant;
 import static com.querydsl.core.types.dsl.MathExpressions.*;
 
 @Repository
-public class TravelPlaceCustomRepositoryImpl implements TravelPlaceCustomRepository {
+public class TravelPlaceRepositoryCustomImpl implements TravelPlaceRepositoryCustom {
 
     private final JPAQueryFactory jpaQueryFactory;
     private final QTravelPlace travelPlace;
 
-    public TravelPlaceCustomRepositoryImpl(JPAQueryFactory jpaQueryFactory){
+    public TravelPlaceRepositoryCustomImpl(JPAQueryFactory jpaQueryFactory){
         this.jpaQueryFactory = jpaQueryFactory;
         this.travelPlace = QTravelPlace.travelPlace;
     }
