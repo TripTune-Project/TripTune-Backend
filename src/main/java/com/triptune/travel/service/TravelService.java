@@ -9,6 +9,7 @@ import com.triptune.travel.dto.request.PlaceLocationRequest;
 import com.triptune.travel.dto.request.PlaceSearchRequest;
 import com.triptune.travel.dto.response.PlaceDetailResponse;
 import com.triptune.travel.dto.response.PlaceDistanceResponse;
+import com.triptune.travel.dto.response.PlaceResponse;
 import com.triptune.travel.entity.TravelPlace;
 import com.triptune.travel.repository.TravelImageRepository;
 import com.triptune.travel.repository.TravelPlaceRepository;
@@ -39,7 +40,7 @@ public class TravelService {
         return travelPlacePage.map(PlaceDistanceResponse::from);
     }
 
-    public Page<PlaceDistanceResponse> searchTravelPlaces(int page, String userId, PlaceSearchRequest placeSearchRequest) {
+    public Page<PlaceDistanceResponse> searchTravelPlacesWithLocation(int page, String userId, PlaceSearchRequest placeSearchRequest) {
         Pageable pageable = PageUtils.defaultPageable(page);
         Page<PlaceLocation> travelPlacePage = travelPlaceRepository.searchTravelPlacesWithLocation(pageable, placeSearchRequest);
 
@@ -82,5 +83,15 @@ public class TravelService {
         return PlaceDetailResponse.from(travelPlace, isBookmark);
     }
 
+    public Page<PlaceResponse> getTravelPlacesByJungGu(int page) {
+        Pageable pageable = PageUtils.travelPageable(page);
+        return travelPlaceRepository.findAllByAreaData(pageable, "대한민국", "서울", "중구");
+    }
+
+
+    public Page<PlaceResponse> searchTravelPlaces(int page, String keyword) {
+        Pageable pageable = PageUtils.travelPageable(page);
+        return travelPlaceRepository.searchTravelPlaces(pageable, keyword);
+    }
 
 }

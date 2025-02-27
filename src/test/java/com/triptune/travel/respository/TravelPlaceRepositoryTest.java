@@ -6,6 +6,7 @@ import com.triptune.travel.TravelTest;
 import com.triptune.travel.dto.PlaceLocation;
 import com.triptune.travel.dto.request.PlaceLocationRequest;
 import com.triptune.travel.dto.request.PlaceSearchRequest;
+import com.triptune.travel.dto.response.PlaceResponse;
 import com.triptune.travel.entity.TravelImage;
 import com.triptune.travel.entity.TravelPlace;
 import com.triptune.travel.repository.TravelImageRepository;
@@ -25,6 +26,7 @@ import org.springframework.test.context.ActiveProfiles;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
@@ -40,6 +42,7 @@ public class TravelPlaceRepositoryTest extends TravelTest {
     private final ApiContentTypeRepository apiContentTypeRepository;
 
     private TravelPlace travelPlace1;
+    private TravelPlace travelPlace2;
 
     @Autowired
     public TravelPlaceRepositoryTest(TravelPlaceRepository travelPlaceRepository, CityRepository cityRepository, CountryRepository countryRepository, DistrictRepository districtRepository, ApiCategoryRepository apiCategoryRepository, TravelImageRepository travelImageRepository, ApiContentTypeRepository apiContentTypeRepository) {
@@ -60,17 +63,13 @@ public class TravelPlaceRepositoryTest extends TravelTest {
         District district2 = districtRepository.save(createDistrict(city, "성북구"));
         ApiCategory apiCategory = apiCategoryRepository.save(createApiCategory());
         ApiContentType apiContentType = apiContentTypeRepository.save(createApiContentType("관광지"));
-        travelPlace1 = travelPlaceRepository.save(createTravelPlace(null, country, city, district1, apiCategory));
-        TravelPlace travelPlace2 = travelPlaceRepository.save(createTravelPlace(null, country, city, district2, apiCategory));
         TravelImage travelImage1 = travelImageRepository.save(createTravelImage(travelPlace1, "test1", true));
         TravelImage travelImage2 = travelImageRepository.save(createTravelImage(travelPlace1, "test2", false));
         TravelImage travelImage3 = travelImageRepository.save(createTravelImage(travelPlace2, "test1", true));
         TravelImage travelImage4 = travelImageRepository.save(createTravelImage(travelPlace2, "test2", false));
 
-        travelPlace1.setApiContentType(apiContentType);
-        travelPlace1.setTravelImageList(new ArrayList<>(List.of(travelImage1, travelImage2)));
-        travelPlace2.setApiContentType(apiContentType);
-        travelPlace2.setTravelImageList(new ArrayList<>(List.of(travelImage3, travelImage4)));
+        travelPlace1 = travelPlaceRepository.save(createTravelPlace(null, country, city, district1, apiCategory, apiContentType, List.of(travelImage1, travelImage2)));
+        travelPlace2 = travelPlaceRepository.save(createTravelPlace(null, country, city, district2, apiCategory, apiContentType, List.of(travelImage3, travelImage4)));
     }
     
 
@@ -87,14 +86,11 @@ public class TravelPlaceRepositoryTest extends TravelTest {
 
         // then
         List<PlaceLocation> content = response.getContent();
-
-
-        assertNotEquals(response.getTotalElements(), 0);
-        assertEquals(content.get(0).getCity(), travelPlace1.getCity().getCityName());
-        assertEquals(content.get(0).getPlaceName(), travelPlace1.getPlaceName());
-        assertEquals(content.get(0).getAddress(), travelPlace1.getAddress());
-        assertNotEquals(content.get(0).getDistance(), 0.0);
-
+        assertThat(response.getTotalElements()).isNotEqualTo(0);
+        assertThat(content.get(0).getCity()).isEqualTo(travelPlace1.getCity().getCityName());
+        assertThat(content.get(0).getPlaceName()).isEqualTo(travelPlace1.getPlaceName());
+        assertThat(content.get(0).getAddress()).isEqualTo(travelPlace1.getAddress());
+        assertThat(content.get(0).getDistance()).isNotEqualTo(0.0);
     }
 
     @Test
@@ -109,7 +105,8 @@ public class TravelPlaceRepositoryTest extends TravelTest {
         Page<PlaceLocation> response = travelPlaceRepository.findNearByTravelPlaces(pageable, placeLocationRequest, radius);
 
         // then
-        assertEquals(response.getTotalElements(), 0);
+        assertThat(response.getTotalElements()).isEqualTo(0);
+        assertThat(response.getContent()).isEmpty();
     }
 
     @Test
@@ -123,9 +120,8 @@ public class TravelPlaceRepositoryTest extends TravelTest {
         Page<PlaceLocation> response = travelPlaceRepository.searchTravelPlacesWithLocation(pageable, request);
 
         // then
-        List<PlaceLocation> content = response.getContent();
-        assertEquals(response.getTotalElements(), 1);
-        assertTrue(content.get(0).getDistrict().contains("강남"));
+        assertThat(response.getTotalElements()).isEqualTo(1);
+        assertThat(response.getContent().get(0).getDistrict()).contains("강남");
     }
 
 
@@ -140,7 +136,8 @@ public class TravelPlaceRepositoryTest extends TravelTest {
         Page<PlaceLocation> response = travelPlaceRepository.searchTravelPlacesWithLocation(pageable, request);
 
         // then
-        assertEquals(response.getTotalElements(), 0);
+        assertThat(response.getTotalElements()).isEqualTo(0);
+        assertThat(response.getContent()).isEmpty();
     }
 
 
@@ -151,12 +148,11 @@ public class TravelPlaceRepositoryTest extends TravelTest {
         Pageable pageable = PageUtils.defaultPageable(1);
 
         // when
-        Page<TravelPlace> response = travelPlaceRepository.searchTravelPlaces(pageable, "성북");
+        Page<PlaceResponse> response = travelPlaceRepository.searchTravelPlaces(pageable, "성북");
 
         // then
-        List<TravelPlace> content = response.getContent();
-        assertEquals(response.getTotalElements(), 1);
-        assertTrue(content.get(0).getDistrict().getDistrictName().contains("성북"));
+        assertThat(response.getTotalElements()).isEqualTo(1);
+        assertThat(response.getContent().get(0).getDistrict()).contains("성북");
     }
 
     @Test
@@ -166,10 +162,11 @@ public class TravelPlaceRepositoryTest extends TravelTest {
         Pageable pageable = PageUtils.defaultPageable(1);
 
         // when
-        Page<TravelPlace> response = travelPlaceRepository.searchTravelPlaces(pageable, "ㅁㄴㅇㄹ");
+        Page<PlaceResponse> response = travelPlaceRepository.searchTravelPlaces(pageable, "ㅁㄴㅇㄹ");
 
         // then
-        assertEquals(response.getTotalElements(), 0);
+        assertThat(response.getTotalElements()).isEqualTo(0);
+        assertThat(response.getContent()).isEmpty();
     }
 
 }

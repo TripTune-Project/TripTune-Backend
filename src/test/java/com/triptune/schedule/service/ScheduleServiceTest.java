@@ -27,6 +27,7 @@ import com.triptune.schedule.repository.ChatMessageRepository;
 import com.triptune.schedule.repository.TravelAttendeeRepository;
 import com.triptune.schedule.repository.TravelRouteRepository;
 import com.triptune.schedule.repository.TravelScheduleRepository;
+import com.triptune.travel.dto.response.PlaceResponse;
 import com.triptune.travel.entity.TravelImage;
 import com.triptune.travel.entity.TravelPlace;
 import com.triptune.travel.repository.TravelPlaceRepository;
@@ -94,17 +95,13 @@ public class ScheduleServiceTest extends ScheduleTest {
         City city = createCity(country);
         District district = createDistrict(city, "중구");
         ApiCategory apiCategory = createApiCategory();
-        travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory);
         TravelImage travelImage1 = createTravelImage(travelPlace1, "test1", true);
         TravelImage travelImage2 = createTravelImage(travelPlace1, "test2", false);
-        List<TravelImage> travelImageList1 = new ArrayList<>(List.of(travelImage1, travelImage2));
-        travelPlace1.setTravelImageList(travelImageList1);
+        travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, List.of(travelImage1, travelImage2), "장소1");
 
-        travelPlace2 = createTravelPlace(2L, country, city, district, apiCategory);
         TravelImage travelImage3 = createTravelImage(travelPlace2, "test1", true);
         TravelImage travelImage4 = createTravelImage(travelPlace2, "test2", false);
-        List<TravelImage> travelImageList2 = new ArrayList<>(List.of(travelImage3, travelImage4));
-        travelPlace2.setTravelImageList(travelImageList2);
+        travelPlace2 = createTravelPlace(2L, country, city, district, apiCategory, List.of(travelImage3, travelImage4), "장소2");
 
         ProfileImage profileImage1 = createProfileImage(1L, "member1Image", member1);
         ProfileImage profileImage2 = createProfileImage(2L, "member2Image", member2);
@@ -805,8 +802,8 @@ public class ScheduleServiceTest extends ScheduleTest {
     @DisplayName("일정 상세 조회")
     void getScheduleDetail(){
         // given
-        List<TravelPlace> placeList = new ArrayList<>(List.of(travelPlace1, travelPlace2));
 
+        List<PlaceResponse> placeList = List.of(PlaceResponse.from(travelPlace1), PlaceResponse.from(travelPlace2));
         Pageable pageable = PageUtils.defaultPageable(1);
 
         when(travelScheduleRepository.findByScheduleId(any())).thenReturn(Optional.of(schedule1));

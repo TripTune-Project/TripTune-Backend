@@ -37,7 +37,7 @@ public class TravelController {
     @Operation(summary = "여행지 검색", description = "여행지 탐색 메뉴에서 여행지를 검색하며 검색 결과는 현재 위치와 가까운 순으로 제공된다.")
     public ApiPageResponse<PlaceDistanceResponse> searchTravelPlaces(@RequestBody @Valid PlaceSearchRequest placeSearchRequest, @RequestParam int page){
         String userId = authenticateUserId();
-        Page<PlaceDistanceResponse> response = travelService.searchTravelPlaces(page, userId, placeSearchRequest);
+        Page<PlaceDistanceResponse> response = travelService.searchTravelPlacesWithLocation(page, userId, placeSearchRequest);
         return ApiPageResponse.dataResponse(response);
     }
 
