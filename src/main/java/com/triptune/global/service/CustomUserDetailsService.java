@@ -1,7 +1,7 @@
 package com.triptune.global.service;
 
-import com.triptune.domain.member.entity.Member;
-import com.triptune.domain.member.repository.MemberRepository;
+import com.triptune.member.entity.Member;
+import com.triptune.member.repository.MemberRepository;
 import com.triptune.global.enumclass.ErrorCode;
 import com.triptune.global.exception.DataNotFoundException;
 import jakarta.transaction.Transactional;

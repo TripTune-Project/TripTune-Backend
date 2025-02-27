@@ -1,6 +1,6 @@
 package com.triptune.global.service;
 
-import com.triptune.domain.member.entity.Member;
+import com.triptune.member.entity.Member;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
