@@ -46,6 +46,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -79,6 +80,11 @@ public class ScheduleServiceTest extends ScheduleTest {
     @Mock
     private ChatMessageRepository chatMessageRepository;
 
+
+    private Country country;
+    private City city;
+    private District district;
+    private ApiCategory apiCategory;
     private TravelSchedule schedule1;
     private TravelSchedule schedule2;
     private TravelSchedule schedule3;
@@ -91,17 +97,11 @@ public class ScheduleServiceTest extends ScheduleTest {
 
     @BeforeEach
     void setUp(){
-        Country country = createCountry();
-        City city = createCity(country);
-        District district = createDistrict(city, "중구");
-        ApiCategory apiCategory = createApiCategory();
-        TravelImage travelImage1 = createTravelImage(travelPlace1, "test1", true);
-        TravelImage travelImage2 = createTravelImage(travelPlace1, "test2", false);
-        travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, List.of(travelImage1, travelImage2), "장소1");
+        country = createCountry();
+        city = createCity(country);
+        district = createDistrict(city, "중구");
+        apiCategory = createApiCategory();
 
-        TravelImage travelImage3 = createTravelImage(travelPlace2, "test1", true);
-        TravelImage travelImage4 = createTravelImage(travelPlace2, "test2", false);
-        travelPlace2 = createTravelPlace(2L, country, city, district, apiCategory, List.of(travelImage3, travelImage4), "장소2");
 
         ProfileImage profileImage1 = createProfileImage(1L, "member1Image", member1);
         ProfileImage profileImage2 = createProfileImage(2L, "member2Image", member2);
@@ -121,11 +121,6 @@ public class ScheduleServiceTest extends ScheduleTest {
         schedule2.setTravelAttendeeList(new ArrayList<>(List.of(attendee3, attendee4)));
         schedule3.setTravelAttendeeList(new ArrayList<>(List.of(attendee5)));
 
-        TravelRoute route1 = createTravelRoute(schedule1, travelPlace1, 1);
-        TravelRoute route2 = createTravelRoute(schedule1, travelPlace1, 2);
-        TravelRoute route3 = createTravelRoute(schedule1, travelPlace2, 3);
-        schedule1.setTravelRouteList(new ArrayList<>(List.of(route1, route2, route3)));
-        schedule2.setTravelRouteList(new ArrayList<>());
     }
 
 
@@ -134,6 +129,20 @@ public class ScheduleServiceTest extends ScheduleTest {
     void getAllSchedulesByUserId(){
         // given
         Pageable pageable = PageUtils.schedulePageable(1);
+
+        TravelImage travelImage1 = createTravelImage(travelPlace1, "test1", true);
+        TravelImage travelImage2 = createTravelImage(travelPlace1, "test2", false);
+        travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, List.of(travelImage1, travelImage2));
+
+        TravelImage travelImage3 = createTravelImage(travelPlace2, "test1", true);
+        TravelImage travelImage4 = createTravelImage(travelPlace2, "test2", false);
+        travelPlace2 = createTravelPlace(2L, country, city, district, apiCategory, List.of(travelImage3, travelImage4));
+
+        TravelRoute route1 = createTravelRoute(schedule1, travelPlace1, 1);
+        TravelRoute route2 = createTravelRoute(schedule1, travelPlace1, 2);
+        TravelRoute route3 = createTravelRoute(schedule1, travelPlace2, 3);
+        schedule1.setTravelRouteList(new ArrayList<>(List.of(route1, route2, route3)));
+        schedule2.setTravelRouteList(new ArrayList<>());
 
         List<TravelSchedule> schedules = new ArrayList<>(List.of(schedule1, schedule2, schedule3));
         Page<TravelSchedule> schedulePage = PageUtils.createPage(schedules, pageable, schedules.size());
@@ -204,7 +213,9 @@ public class ScheduleServiceTest extends ScheduleTest {
     void getAllSchedulesByUserIdNoImageThumbnail(){
         // given
         Pageable pageable = PageUtils.schedulePageable(1);
-        travelPlace1.getTravelImageList().get(0).setThumbnail(false);
+
+        travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, new ArrayList<>());
+        travelPlace2 = createTravelPlace(2L, country, city, district, apiCategory, new ArrayList<>());
 
         List<TravelSchedule> schedules = new ArrayList<>(List.of(schedule1, schedule2));
         Page<TravelSchedule> schedulePage = PageUtils.createPage(schedules, pageable, schedules.size());
@@ -231,7 +242,7 @@ public class ScheduleServiceTest extends ScheduleTest {
     void getAllSchedulesByUserIdNoImageData(){
         // given
         Pageable pageable = PageUtils.schedulePageable(1);
-        travelPlace1.setTravelImageList(new ArrayList<>());
+        travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, new ArrayList<>());
 
         List<TravelSchedule> schedules = new ArrayList<>(List.of(schedule1));
         Page<TravelSchedule> schedulePage = PageUtils.createPage(schedules, pageable, schedules.size());
@@ -257,6 +268,20 @@ public class ScheduleServiceTest extends ScheduleTest {
     void getSharedSchedulesByUserId(){
         // given
         Pageable pageable = PageUtils.schedulePageable(1);
+
+        TravelImage travelImage1 = createTravelImage(travelPlace1, "test1", true);
+        TravelImage travelImage2 = createTravelImage(travelPlace1, "test2", false);
+        travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, List.of(travelImage1, travelImage2));
+
+        TravelImage travelImage3 = createTravelImage(travelPlace2, "test1", true);
+        TravelImage travelImage4 = createTravelImage(travelPlace2, "test2", false);
+        travelPlace2 = createTravelPlace(2L, country, city, district, apiCategory, List.of(travelImage3, travelImage4));
+
+        TravelRoute route1 = createTravelRoute(schedule1, travelPlace1, 1);
+        TravelRoute route2 = createTravelRoute(schedule1, travelPlace1, 2);
+        TravelRoute route3 = createTravelRoute(schedule1, travelPlace2, 3);
+        schedule1.setTravelRouteList(new ArrayList<>(List.of(route1, route2, route3)));
+        schedule2.setTravelRouteList(new ArrayList<>());
 
         List<TravelSchedule> schedules = new ArrayList<>(List.of(schedule1, schedule2));
         Page<TravelSchedule> schedulePage = PageUtils.createPage(schedules, pageable, schedules.size());
@@ -303,7 +328,15 @@ public class ScheduleServiceTest extends ScheduleTest {
     void getSharedSchedulesByUserIdNoImageThumbnail(){
         // given
         Pageable pageable = PageUtils.schedulePageable(1);
-        travelPlace1.getTravelImageList().get(0).setThumbnail(false);
+
+        travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, new ArrayList<>());
+        travelPlace2 = createTravelPlace(2L, country, city, district, apiCategory, new ArrayList<>());
+
+        TravelRoute route1 = createTravelRoute(schedule1, travelPlace1, 1);
+        TravelRoute route2 = createTravelRoute(schedule1, travelPlace1, 2);
+        TravelRoute route3 = createTravelRoute(schedule1, travelPlace2, 3);
+        schedule1.setTravelRouteList(new ArrayList<>(List.of(route1, route2, route3)));
+        schedule2.setTravelRouteList(new ArrayList<>());
 
         List<TravelSchedule> schedules = new ArrayList<>(List.of(schedule1, schedule2));
         Page<TravelSchedule> schedulePage = PageUtils.createPage(schedules, pageable, schedules.size());
@@ -330,7 +363,7 @@ public class ScheduleServiceTest extends ScheduleTest {
     void getSharedSchedulesByUserIdNoImageData(){
         // given
         Pageable pageable = PageUtils.schedulePageable(1);
-        travelPlace1.setTravelImageList(new ArrayList<>());
+        travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, new ArrayList<>());
 
         List<TravelSchedule> schedules = new ArrayList<>(List.of(schedule1));
         Page<TravelSchedule> schedulePage = PageUtils.createPage(schedules, pageable, schedules.size());
@@ -468,9 +501,12 @@ public class ScheduleServiceTest extends ScheduleTest {
         // given
         String keyword = "테스트";
         Pageable pageable = PageUtils.schedulePageable(1);
-        travelPlace1.getTravelImageList().get(0).setThumbnail(false);
 
-        List<TravelSchedule> schedules = new ArrayList<>(List.of(schedule1, schedule2));
+        travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, new ArrayList<>());
+        travelPlace2 = createTravelPlace(2L, country, city, district, apiCategory, new ArrayList<>());
+
+
+        List<TravelSchedule> schedules = List.of(schedule1, schedule2);
         Page<TravelSchedule> schedulePage = PageUtils.createPage(schedules, pageable, schedules.size());
 
         when(travelScheduleRepository.searchTravelSchedulesByUserIdAndKeyword(pageable, keyword, member1.getUserId())).thenReturn(schedulePage);
@@ -496,9 +532,9 @@ public class ScheduleServiceTest extends ScheduleTest {
         // given
         String keyword = "1";
         Pageable pageable = PageUtils.schedulePageable(1);
-        travelPlace1.setTravelImageList(new ArrayList<>());
+        travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, new ArrayList<>());
 
-        List<TravelSchedule> schedules = new ArrayList<>(List.of(schedule1));
+        List<TravelSchedule> schedules = List.of(schedule1);
         Page<TravelSchedule> schedulePage = PageUtils.createPage(schedules, pageable, schedules.size());
 
         when(travelScheduleRepository.searchTravelSchedulesByUserIdAndKeyword(pageable, keyword, member1.getUserId())).thenReturn(schedulePage);
@@ -523,6 +559,21 @@ public class ScheduleServiceTest extends ScheduleTest {
         // given
         String keyword = "테스트";
         Pageable pageable = PageUtils.schedulePageable(1);
+
+
+        TravelImage travelImage1 = createTravelImage(travelPlace1, "test1", true);
+        TravelImage travelImage2 = createTravelImage(travelPlace1, "test2", false);
+        travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, List.of(travelImage1, travelImage2));
+
+        TravelImage travelImage3 = createTravelImage(travelPlace2, "test1", true);
+        TravelImage travelImage4 = createTravelImage(travelPlace2, "test2", false);
+        travelPlace2 = createTravelPlace(2L, country, city, district, apiCategory, List.of(travelImage3, travelImage4));
+
+        TravelRoute route1 = createTravelRoute(schedule1, travelPlace1, 1);
+        TravelRoute route2 = createTravelRoute(schedule1, travelPlace1, 2);
+        TravelRoute route3 = createTravelRoute(schedule1, travelPlace2, 3);
+        schedule1.setTravelRouteList(new ArrayList<>(List.of(route1, route2, route3)));
+        schedule2.setTravelRouteList(new ArrayList<>());
 
         List<TravelSchedule> schedules = new ArrayList<>(List.of(schedule1, schedule2, schedule3));
         Page<TravelSchedule> schedulePage = PageUtils.createPage(schedules, pageable, schedules.size());
@@ -571,7 +622,15 @@ public class ScheduleServiceTest extends ScheduleTest {
         // given
         String keyword = "테스트";
         Pageable pageable = PageUtils.schedulePageable(1);
-        travelPlace1.getTravelImageList().get(0).setThumbnail(false);
+
+        travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, new ArrayList<>());
+        travelPlace2 = createTravelPlace(2L, country, city, district, apiCategory, new ArrayList<>());
+
+        TravelRoute route1 = createTravelRoute(schedule1, travelPlace1, 1);
+        TravelRoute route2 = createTravelRoute(schedule1, travelPlace1, 2);
+        TravelRoute route3 = createTravelRoute(schedule1, travelPlace2, 3);
+        schedule1.setTravelRouteList(new ArrayList<>(List.of(route1, route2, route3)));
+        schedule2.setTravelRouteList(new ArrayList<>());
 
         List<TravelSchedule> schedules = new ArrayList<>(List.of(schedule1, schedule2));
         Page<TravelSchedule> schedulePage = PageUtils.createPage(schedules, pageable, schedules.size());
@@ -599,7 +658,7 @@ public class ScheduleServiceTest extends ScheduleTest {
         // given
         String keyword = "테스트";
         Pageable pageable = PageUtils.schedulePageable(1);
-        travelPlace1.setTravelImageList(new ArrayList<>());
+        travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, new ArrayList<>());
 
         List<TravelSchedule> schedules = new ArrayList<>(List.of(schedule1, schedule2));
         Page<TravelSchedule> schedulePage = PageUtils.createPage(schedules, pageable, schedules.size());
@@ -624,6 +683,20 @@ public class ScheduleServiceTest extends ScheduleTest {
     @DisplayName("TravelSchedule 를 ScheduleInfoResponse 로 변경")
     void createScheduleInfoResponse(){
         // given
+        TravelImage travelImage1 = createTravelImage(travelPlace1, "test1", true);
+        TravelImage travelImage2 = createTravelImage(travelPlace1, "test2", false);
+        travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, List.of(travelImage1, travelImage2));
+
+        TravelImage travelImage3 = createTravelImage(travelPlace2, "test1", true);
+        TravelImage travelImage4 = createTravelImage(travelPlace2, "test2", false);
+        travelPlace2 = createTravelPlace(2L, country, city, district, apiCategory, List.of(travelImage3, travelImage4));
+
+        TravelRoute route1 = createTravelRoute(schedule1, travelPlace1, 1);
+        TravelRoute route2 = createTravelRoute(schedule1, travelPlace1, 2);
+        TravelRoute route3 = createTravelRoute(schedule1, travelPlace2, 3);
+        schedule1.setTravelRouteList(new ArrayList<>(List.of(route1, route2, route3)));
+        schedule2.setTravelRouteList(new ArrayList<>());
+
         List<TravelSchedule> travelScheduleList = new ArrayList<>(List.of(schedule1));
         Page<TravelSchedule> schedulePage = PageUtils.createPage(travelScheduleList, PageUtils.schedulePageable(1), travelScheduleList.size());
         // when
@@ -641,9 +714,12 @@ public class ScheduleServiceTest extends ScheduleTest {
     @DisplayName("TravelSchedule 를 ScheduleInfoResponse 로 변경 시 썸네일 없는 경우")
     void createScheduleInfoResponseWithoutThumbnail(){
         // given
+        travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, new ArrayList<>());
+        travelPlace2 = createTravelPlace(2L, country, city, district, apiCategory, new ArrayList<>());
+
         List<TravelSchedule> travelScheduleList = new ArrayList<>(List.of(schedule1));
         Page<TravelSchedule> schedulePage = PageUtils.createPage(travelScheduleList, PageUtils.schedulePageable(1), travelScheduleList.size());
-        travelPlace1.getTravelImageList().get(0).setThumbnail(false);
+
 
         // when
         List<ScheduleInfoResponse> response = scheduleService.createScheduleInfoResponse(schedulePage, member1.getUserId());
@@ -721,45 +797,6 @@ public class ScheduleServiceTest extends ScheduleTest {
     }
 
 
-    @Test
-    @DisplayName("썸네일 조회")
-    void getThumbnailUrl(){
-        // given
-        // when
-        String response = scheduleService.getThumbnailUrl(schedule1);
-
-        // then
-        System.out.println(response);
-        assertNotNull(response);
-    }
-
-    @Test
-    @DisplayName("썸네일 조회 시 썸네일 이미지 없는 경우")
-    void getThumbnailUrlNoThumbnailImage(){
-        // given
-        travelPlace1.getTravelImageList().get(0).setThumbnail(false);
-
-        // when
-        String response = scheduleService.getThumbnailUrl(schedule1);
-
-        // then
-        assertNull(response);
-    }
-
-
-    @Test
-    @DisplayName("썸네일 조회 시 저장된 이미지 없는 경우")
-    void getThumbnailUrlNoImageData(){
-        // given
-        travelPlace1.setTravelImageList(new ArrayList<>());
-
-        // when
-        String response = scheduleService.getThumbnailUrl(schedule1);
-
-        // then
-        assertNull(response);
-    }
-
 
     @Test
     @DisplayName("일정 생성")
@@ -802,6 +839,13 @@ public class ScheduleServiceTest extends ScheduleTest {
     @DisplayName("일정 상세 조회")
     void getScheduleDetail(){
         // given
+        TravelImage travelImage1 = createTravelImage(travelPlace1, "test1", true);
+        TravelImage travelImage2 = createTravelImage(travelPlace1, "test2", false);
+        travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, List.of(travelImage1, travelImage2));
+
+        TravelImage travelImage3 = createTravelImage(travelPlace2, "test1", true);
+        TravelImage travelImage4 = createTravelImage(travelPlace2, "test2", false);
+        travelPlace2 = createTravelPlace(2L, country, city, district, apiCategory, List.of(travelImage3, travelImage4));
 
         List<PlaceResponse> placeList = List.of(PlaceResponse.from(travelPlace1), PlaceResponse.from(travelPlace2));
         Pageable pageable = PageUtils.defaultPageable(1);
@@ -861,6 +905,15 @@ public class ScheduleServiceTest extends ScheduleTest {
         String userId = member1.getUserId();
         Long scheduleId = schedule1.getScheduleId();
 
+        TravelImage travelImage1 = createTravelImage(travelPlace1, "test1", true);
+        TravelImage travelImage2 = createTravelImage(travelPlace1, "test2", false);
+        travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, List.of(travelImage1, travelImage2));
+
+        TravelImage travelImage3 = createTravelImage(travelPlace2, "test1", true);
+        TravelImage travelImage4 = createTravelImage(travelPlace2, "test2", false);
+        travelPlace2 = createTravelPlace(2L, country, city, district, apiCategory, List.of(travelImage3, travelImage4));
+
+
         RouteRequest routeRequest1 = createRouteRequest(1, travelPlace1.getPlaceId());
         RouteRequest routeRequest2 = createRouteRequest(2, travelPlace2.getPlaceId());
         ScheduleUpdateRequest scheduleUpdateRequest = createUpdateScheduleRequest(new ArrayList<>(List.of(routeRequest1, routeRequest2)));
@@ -886,6 +939,15 @@ public class ScheduleServiceTest extends ScheduleTest {
         String userId = member1.getUserId();
         Long scheduleId = schedule2.getScheduleId();
 
+
+        TravelImage travelImage1 = createTravelImage(travelPlace1, "test1", true);
+        TravelImage travelImage2 = createTravelImage(travelPlace1, "test2", false);
+        travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, List.of(travelImage1, travelImage2));
+
+        TravelImage travelImage3 = createTravelImage(travelPlace2, "test1", true);
+        TravelImage travelImage4 = createTravelImage(travelPlace2, "test2", false);
+        travelPlace2 = createTravelPlace(2L, country, city, district, apiCategory, List.of(travelImage3, travelImage4));
+
         RouteRequest routeRequest1 = createRouteRequest(1, travelPlace1.getPlaceId());
         RouteRequest routeRequest2 = createRouteRequest(2, travelPlace2.getPlaceId());
         ScheduleUpdateRequest scheduleUpdateRequest = createUpdateScheduleRequest(new ArrayList<>(List.of(routeRequest1, routeRequest2)));
@@ -907,6 +969,20 @@ public class ScheduleServiceTest extends ScheduleTest {
     @Test
     @DisplayName("일정의 여행 루트 수정 시 기존에 저장된 여행 루트가 존재하는 경우")
     void updateTravelRouteInSchedule(){
+        TravelImage travelImage1 = createTravelImage(travelPlace1, "test1", true);
+        TravelImage travelImage2 = createTravelImage(travelPlace1, "test2", false);
+        travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, List.of(travelImage1, travelImage2));
+
+        TravelImage travelImage3 = createTravelImage(travelPlace2, "test1", true);
+        TravelImage travelImage4 = createTravelImage(travelPlace2, "test2", false);
+        travelPlace2 = createTravelPlace(2L, country, city, district, apiCategory, List.of(travelImage3, travelImage4));
+
+        TravelRoute route1 = createTravelRoute(schedule1, travelPlace1, 1);
+        TravelRoute route2 = createTravelRoute(schedule1, travelPlace1, 2);
+        TravelRoute route3 = createTravelRoute(schedule1, travelPlace2, 3);
+        schedule1.setTravelRouteList(new ArrayList<>(List.of(route1, route2, route3)));
+        schedule2.setTravelRouteList(new ArrayList<>());
+
         RouteRequest routeRequest1 = createRouteRequest(1, travelPlace1.getPlaceId());
         RouteRequest routeRequest2 = createRouteRequest(2, travelPlace2.getPlaceId());
         ScheduleUpdateRequest scheduleUpdateRequest = createUpdateScheduleRequest(new ArrayList<>(List.of(routeRequest1, routeRequest2)));
@@ -930,6 +1006,14 @@ public class ScheduleServiceTest extends ScheduleTest {
         String userId = member1.getUserId();
         Long scheduleId = schedule1.getScheduleId();
 
+        TravelImage travelImage1 = createTravelImage(travelPlace1, "test1", true);
+        TravelImage travelImage2 = createTravelImage(travelPlace1, "test2", false);
+        travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, List.of(travelImage1, travelImage2));
+
+        TravelImage travelImage3 = createTravelImage(travelPlace2, "test1", true);
+        TravelImage travelImage4 = createTravelImage(travelPlace2, "test2", false);
+        travelPlace2 = createTravelPlace(2L, country, city, district, apiCategory, List.of(travelImage3, travelImage4));
+
         RouteRequest routeRequest1 = createRouteRequest(1, travelPlace1.getPlaceId());
         RouteRequest routeRequest2 = createRouteRequest(2, travelPlace2.getPlaceId());
         ScheduleUpdateRequest scheduleUpdateRequest = createUpdateScheduleRequest(new ArrayList<>(List.of(routeRequest1, routeRequest2)));
@@ -951,6 +1035,20 @@ public class ScheduleServiceTest extends ScheduleTest {
         // given
         String userId = member2.getUserId();
         Long scheduleId = schedule3.getScheduleId();
+
+        TravelImage travelImage1 = createTravelImage(travelPlace1, "test1", true);
+        TravelImage travelImage2 = createTravelImage(travelPlace1, "test2", false);
+        travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, List.of(travelImage1, travelImage2));
+
+        TravelImage travelImage3 = createTravelImage(travelPlace2, "test1", true);
+        TravelImage travelImage4 = createTravelImage(travelPlace2, "test2", false);
+        travelPlace2 = createTravelPlace(2L, country, city, district, apiCategory, List.of(travelImage3, travelImage4));
+
+        TravelRoute route1 = createTravelRoute(schedule1, travelPlace1, 1);
+        TravelRoute route2 = createTravelRoute(schedule1, travelPlace1, 2);
+        TravelRoute route3 = createTravelRoute(schedule1, travelPlace2, 3);
+        schedule1.setTravelRouteList(new ArrayList<>(List.of(route1, route2, route3)));
+        schedule2.setTravelRouteList(new ArrayList<>());
 
         RouteRequest routeRequest1 = createRouteRequest(1, travelPlace1.getPlaceId());
         RouteRequest routeRequest2 = createRouteRequest(2, travelPlace2.getPlaceId());
@@ -974,6 +1072,15 @@ public class ScheduleServiceTest extends ScheduleTest {
         String userId = member2.getUserId();
         Long scheduleId = schedule1.getScheduleId();
 
+        TravelImage travelImage1 = createTravelImage(travelPlace1, "test1", true);
+        TravelImage travelImage2 = createTravelImage(travelPlace1, "test2", false);
+        travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, List.of(travelImage1, travelImage2));
+
+        TravelImage travelImage3 = createTravelImage(travelPlace2, "test1", true);
+        TravelImage travelImage4 = createTravelImage(travelPlace2, "test2", false);
+        travelPlace2 = createTravelPlace(2L, country, city, district, apiCategory, List.of(travelImage3, travelImage4));
+
+
         RouteRequest routeRequest1 = createRouteRequest(1, travelPlace1.getPlaceId());
         RouteRequest routeRequest2 = createRouteRequest(2, travelPlace2.getPlaceId());
         ScheduleUpdateRequest scheduleUpdateRequest = createUpdateScheduleRequest(new ArrayList<>(List.of(routeRequest1, routeRequest2)));
@@ -995,6 +1102,16 @@ public class ScheduleServiceTest extends ScheduleTest {
         // given
         String userId = member1.getUserId();
         Long scheduleId = schedule1.getScheduleId();
+
+
+        TravelImage travelImage1 = createTravelImage(travelPlace1, "test1", true);
+        TravelImage travelImage2 = createTravelImage(travelPlace1, "test2", false);
+        travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, List.of(travelImage1, travelImage2));
+
+        TravelImage travelImage3 = createTravelImage(travelPlace2, "test1", true);
+        TravelImage travelImage4 = createTravelImage(travelPlace2, "test2", false);
+        travelPlace2 = createTravelPlace(2L, country, city, district, apiCategory, List.of(travelImage3, travelImage4));
+
 
         RouteRequest routeRequest1 = createRouteRequest(1, travelPlace1.getPlaceId());
         RouteRequest routeRequest2 = createRouteRequest(2, travelPlace2.getPlaceId());
@@ -1231,15 +1348,21 @@ public class ScheduleServiceTest extends ScheduleTest {
     @DisplayName("저장된 여행지 조회")
     void getPlaceByPlaceId(){
         // given
-        Long placeId = travelPlace1.getPlaceId();
+        TravelImage travelImage1 = createTravelImage(travelPlace1, "test1", true);
+        TravelImage travelImage2 = createTravelImage(travelPlace1, "test2", false);
+        travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, List.of(travelImage1, travelImage2));
+
+        TravelImage travelImage3 = createTravelImage(travelPlace2, "test1", true);
+        TravelImage travelImage4 = createTravelImage(travelPlace2, "test2", false);
+        travelPlace2 = createTravelPlace(2L, country, city, district, apiCategory, List.of(travelImage3, travelImage4));
 
         when(travelPlaceRepository.findByPlaceId(anyLong())).thenReturn(Optional.of(travelPlace1));
 
         // when
-        TravelPlace response = scheduleService.getPlaceByPlaceId(placeId);
+        TravelPlace response = scheduleService.getPlaceByPlaceId(travelPlace1.getPlaceId());
 
         // then
-        assertEquals(response.getPlaceId(), placeId);
+        assertEquals(response.getPlaceId(), travelPlace1.getPlaceId());
         assertEquals(response.getPlaceName(), travelPlace1.getPlaceName());
 
     }
@@ -1248,12 +1371,10 @@ public class ScheduleServiceTest extends ScheduleTest {
     @DisplayName("저장된 여행지 데이터 조회 시 데이터 존재하지 않아 예외 발생")
     void getPlaceByPlaceId_dataNotFoundException(){
         // given
-        Long placeId = travelPlace1.getPlaceId();
-
         when(travelPlaceRepository.findByPlaceId(anyLong())).thenReturn(Optional.empty());
 
         // when
-        DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> scheduleService.getPlaceByPlaceId(placeId));
+        DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> scheduleService.getPlaceByPlaceId(0L));
 
         // then
         assertEquals(fail.getHttpStatus(), ErrorCode.PLACE_NOT_FOUND.getStatus());

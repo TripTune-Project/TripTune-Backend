@@ -4,6 +4,7 @@ import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.core.types.dsl.NumberExpression;
+import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.triptune.travel.dto.request.PlaceLocationRequest;
 import com.triptune.travel.dto.PlaceLocation;
@@ -54,10 +55,14 @@ public class TravelPlaceRepositoryCustomImpl implements TravelPlaceRepositoryCus
                         travelPlace.longitude,
                         travelPlace.latitude,
                         travelPlace.placeName,
-                        travelImage.s3ObjectUrl))
+                        JPAExpressions
+                                .select(travelImage.s3ObjectUrl)
+                                .from(travelImage)
+                                .where(travelImage.travelPlace.placeId.eq(travelPlace.placeId)
+                                        .and(travelImage.isThumbnail.isTrue()))
+                                .limit(1)
+                ))
                 .from(travelPlace)
-                .leftJoin(travelPlace.travelImageList, travelImage)
-                .on(travelImage.isThumbnail.isTrue())
                 .where(expression)
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())

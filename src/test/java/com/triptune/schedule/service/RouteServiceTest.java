@@ -63,6 +63,7 @@ public class RouteServiceTest extends ScheduleTest {
 
     private TravelSchedule schedule1;
     private TravelPlace travelPlace1;
+    private TravelPlace travelPlace2;
     private TravelPlace travelPlace3;
     private TravelAttendee attendee1;
     private TravelAttendee attendee2;
@@ -75,19 +76,14 @@ public class RouteServiceTest extends ScheduleTest {
         City city = createCity(country);
         District district = createDistrict(city, "중구");
         ApiCategory apiCategory = createApiCategory();
-        travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory);
         TravelImage travelImage1 = createTravelImage(travelPlace1, "test1", true);
         TravelImage travelImage2 = createTravelImage(travelPlace1, "test2", false);
-        List<TravelImage> travelImageList1 = new ArrayList<>(List.of(travelImage1, travelImage2));
-        travelPlace1.setTravelImageList(travelImageList1);
+        travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, List.of(travelImage1, travelImage2));
 
-        TravelPlace travelPlace2 = createTravelPlace(2L, country, city, district, apiCategory);
         TravelImage travelImage3 = createTravelImage(travelPlace2, "test1", true);
         TravelImage travelImage4 = createTravelImage(travelPlace2, "test2", false);
-        List<TravelImage> travelImageList2 = new ArrayList<>(List.of(travelImage3, travelImage4));
-        travelPlace2.setTravelImageList(travelImageList2);
-
-        travelPlace3 = createTravelPlace(3L, country, city, district, apiCategory);
+        travelPlace2 = createTravelPlace(2L, country, city, district, apiCategory, List.of(travelImage3, travelImage4));
+        travelPlace3 = createTravelPlace(3L, country, city, district, apiCategory, new ArrayList<>());
 
         member1 = createMember(1L, "member1");
         member2 = createMember(2L, "member2");

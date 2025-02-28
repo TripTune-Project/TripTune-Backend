@@ -52,21 +52,29 @@ public class TravelServiceTest extends TravelTest {
     @Mock
     private BookmarkRepository bookmarkRepository;
 
+    private Country country;
+    private City city;
+    private District district;
+    private ApiCategory apiCategory;
+
     private TravelPlace travelPlace1;
     private TravelPlace travelPlace2;
+
     private TravelImage travelImage1;
+    private TravelImage travelImage2;
+
 
 
     @BeforeEach
     void setUp(){
-        Country country = createCountry();
-        City city = createCity(country);
-        District district = createDistrict(city, "강남구");
-        ApiCategory apiCategory = createApiCategory();
+        country = createCountry();
+        city = createCity(country);
+        district = createDistrict(city, "강남구");
+        apiCategory = createApiCategory();
 
         travelImage1 = createTravelImage(travelPlace1, "test", true);
-        TravelImage travelImage2 = createTravelImage(travelPlace1, "test2", false);
-        travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, List.of(travelImage1, travelImage2), "여행지1");
+        travelImage2 = createTravelImage(travelPlace1, "test2", false);
+        travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, List.of(travelImage1, travelImage2));
 
         TravelImage travelImage3 = createTravelImage(travelPlace2, "test1", true);
         TravelImage travelImage4 = createTravelImage(travelPlace2, "test2", false);
@@ -282,11 +290,7 @@ public class TravelServiceTest extends TravelTest {
     void getTravelDetails_loginAndExceptLodging(){
         // given
         ApiContentType apiContentType = createApiContentType("관광지");
-        travelPlace1.setUseTime("상시");
-        travelPlace1.setApiContentType(apiContentType);
-
-        List<TravelImage> imageList = new ArrayList<>(List.of(travelImage1));
-        travelPlace1.setTravelImageList(imageList);
+        travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, apiContentType, "상시", List.of(travelImage1, travelImage2));
 
         when(travelPlaceRepository.findByPlaceId(anyLong())).thenReturn(Optional.of(travelPlace1));
         when(bookmarkRepository.existsByMember_UserIdAndTravelPlace_PlaceId(anyString(), anyLong())).thenReturn(true);
@@ -311,11 +315,8 @@ public class TravelServiceTest extends TravelTest {
     void getTravelDetails_anonymousAndExceptLodging(){
         // given
         ApiContentType apiContentType = createApiContentType("관광지");
-        travelPlace1.setUseTime("상시");
-        travelPlace1.setApiContentType(apiContentType);
+        travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, apiContentType, "상시", List.of(travelImage1, travelImage2));
 
-        List<TravelImage> imageList = new ArrayList<>(List.of(travelImage1));
-        travelPlace1.setTravelImageList(imageList);
 
         when(travelPlaceRepository.findByPlaceId(anyLong())).thenReturn(Optional.of(travelPlace1));
 
@@ -339,12 +340,7 @@ public class TravelServiceTest extends TravelTest {
     void getTravelDetails_loginAndLodging(){
         // given
         ApiContentType apiContentType = createApiContentType("숙박");
-        travelPlace1.setCheckInTime("13:00");
-        travelPlace1.setCheckOutTime("11:00");
-        travelPlace1.setApiContentType(apiContentType);
-
-        List<TravelImage> imageList = new ArrayList<>(List.of(travelImage1));
-        travelPlace1.setTravelImageList(imageList);
+        travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, apiContentType, "13:00", "11:00", List.of(travelImage1, travelImage2));
 
         when(travelPlaceRepository.findByPlaceId(anyLong())).thenReturn(Optional.of(travelPlace1));
         when(bookmarkRepository.existsByMember_UserIdAndTravelPlace_PlaceId(anyString(), anyLong())).thenReturn(true);
@@ -372,12 +368,7 @@ public class TravelServiceTest extends TravelTest {
     void getTravelDetails_anonymousAndLodging(){
         // given
         ApiContentType apiContentType = createApiContentType("숙박");
-        travelPlace1.setCheckInTime("13:00");
-        travelPlace1.setCheckOutTime("11:00");
-        travelPlace1.setApiContentType(apiContentType);
-
-        List<TravelImage> imageList = new ArrayList<>(List.of(travelImage1));
-        travelPlace1.setTravelImageList(imageList);
+        travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, apiContentType, "13:00", "11:00", List.of(travelImage1, travelImage2));
 
         when(travelPlaceRepository.findByPlaceId(anyLong())).thenReturn(Optional.of(travelPlace1));
 

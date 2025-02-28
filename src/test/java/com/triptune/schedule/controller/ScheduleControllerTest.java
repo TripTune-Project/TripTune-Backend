@@ -53,20 +53,19 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @ActiveProfiles("mongo")
 public class ScheduleControllerTest extends ScheduleTest {
-    private final WebApplicationContext wac;
-    private final TravelScheduleRepository travelScheduleRepository;
-    private final TravelAttendeeRepository travelAttendeeRepository;
-    private final MemberRepository memberRepository;
-    private final TravelPlaceRepository travelPlaceRepository;
-    private final CountryRepository countryRepository;
-    private final CityRepository cityRepository;
-    private final DistrictRepository districtRepository;
-    private final ApiCategoryRepository apiCategoryRepository;
-    private final TravelImageRepository travelImageRepository;
-    private final TravelRouteRepository travelRouteRepository;
-    private final ApiContentTypeRepository apiContentTypeRepository;
-    private final ProfileImageRepository profileImageRepository;
-    private final ChatMessageRepository chatMessageRepository;
+    @Autowired private WebApplicationContext wac;
+    @Autowired private TravelScheduleRepository travelScheduleRepository;
+    @Autowired private TravelAttendeeRepository travelAttendeeRepository;
+    @Autowired private MemberRepository memberRepository;
+    @Autowired private TravelPlaceRepository travelPlaceRepository;
+    @Autowired private CountryRepository countryRepository;
+    @Autowired private CityRepository cityRepository;
+    @Autowired private DistrictRepository districtRepository;
+    @Autowired private ApiCategoryRepository apiCategoryRepository;
+    @Autowired private TravelImageRepository travelImageRepository;
+    @Autowired private TravelRouteRepository travelRouteRepository;
+    @Autowired private ProfileImageRepository profileImageRepository;
+    @Autowired private ChatMessageRepository chatMessageRepository;
 
     private MockMvc mockMvc;
 
@@ -81,24 +80,6 @@ public class ScheduleControllerTest extends ScheduleTest {
     private TravelPlace travelPlace1;
     private TravelPlace travelPlace2;
 
-
-    @Autowired
-    public ScheduleControllerTest(WebApplicationContext wac, TravelScheduleRepository travelScheduleRepository, TravelAttendeeRepository travelAttendeeRepository, MemberRepository memberRepository, TravelPlaceRepository travelPlaceRepository, CountryRepository countryRepository, CityRepository cityRepository, DistrictRepository districtRepository, ApiCategoryRepository apiCategoryRepository, TravelImageRepository travelImageRepository, TravelRouteRepository travelRouteRepository, ApiContentTypeRepository apiContentTypeRepository, ProfileImageRepository profileImageRepository, ChatMessageRepository chatMessageRepository) {
-        this.wac = wac;
-        this.travelScheduleRepository = travelScheduleRepository;
-        this.travelAttendeeRepository = travelAttendeeRepository;
-        this.memberRepository = memberRepository;
-        this.travelPlaceRepository = travelPlaceRepository;
-        this.countryRepository = countryRepository;
-        this.cityRepository = cityRepository;
-        this.districtRepository = districtRepository;
-        this.apiCategoryRepository = apiCategoryRepository;
-        this.travelImageRepository = travelImageRepository;
-        this.travelRouteRepository = travelRouteRepository;
-        this.apiContentTypeRepository = apiContentTypeRepository;
-        this.profileImageRepository = profileImageRepository;
-        this.chatMessageRepository = chatMessageRepository;
-    }
 
     @BeforeEach
     void setUp(){
@@ -123,21 +104,22 @@ public class ScheduleControllerTest extends ScheduleTest {
         District district1 = districtRepository.save(createDistrict(city, "강남구"));
         District district2 = districtRepository.save(createDistrict(city, "중구"));
         ApiCategory apiCategory = apiCategoryRepository.save(createApiCategory());
-        ApiContentType apiContentType = apiContentTypeRepository.save(createApiContentType("관광지"));
-        travelPlace1 = travelPlaceRepository.save(createTravelPlace(null, country, city, district1, apiCategory));
-        travelPlace2 = travelPlaceRepository.save(createTravelPlace(null, country, city, district2, apiCategory));
-        TravelImage travelImage1 = travelImageRepository.save(createTravelImage(travelPlace1, "test1", true));
-        TravelImage travelImage2 = travelImageRepository.save(createTravelImage(travelPlace1, "test2", false));
-        TravelImage travelImage3 = travelImageRepository.save(createTravelImage(travelPlace2, "test1", true));
-        TravelImage travelImage4 = travelImageRepository.save(createTravelImage(travelPlace2, "test2", false));
-        travelPlace1.setApiContentType(apiContentType);
-        travelPlace1.setTravelImageList(new ArrayList<>(List.of(travelImage1, travelImage2)));
-        travelPlace2.setApiContentType(apiContentType);
-        travelPlace2.setTravelImageList(new ArrayList<>(List.of(travelImage3, travelImage4)));
 
         schedule1 = travelScheduleRepository.save(createTravelSchedule(null,"테스트1"));
         schedule2 = travelScheduleRepository.save(createTravelSchedule(null,"테스트2"));
         schedule3 = travelScheduleRepository.save(createTravelSchedule(null,"테스트3"));
+
+        travelPlace1 = travelPlaceRepository.save(createTravelPlace(null, country, city, district1, apiCategory));
+        travelPlace2 = travelPlaceRepository.save(createTravelPlace(null, country, city, district2, apiCategory));
+
+        TravelImage travelImage1 = travelImageRepository.save(createTravelImage(travelPlace1, "test1", true));
+        TravelImage travelImage2 = travelImageRepository.save(createTravelImage(travelPlace1, "test2", false));
+        TravelImage travelImage3 = travelImageRepository.save(createTravelImage(travelPlace2, "test1", true));
+        TravelImage travelImage4 = travelImageRepository.save(createTravelImage(travelPlace2, "test2", false));
+
+        travelPlace1 = travelPlaceRepository.save(createTravelPlace(travelPlace1.getPlaceId(), country, city, district1, apiCategory, List.of(travelImage1, travelImage2)));
+        travelPlace2 = travelPlaceRepository.save(createTravelPlace(travelPlace2.getPlaceId(), country, city, district2, apiCategory, List.of(travelImage3, travelImage4)));
+
     }
 
     @Test
@@ -558,8 +540,9 @@ public class ScheduleControllerTest extends ScheduleTest {
         TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(null, member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
         TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(null, member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ));
 
-        schedule1.setTravelAttendeeList(new ArrayList<>(List.of(attendee1, attendee2)));
 
+
+        schedule1.setTravelAttendeeList(new ArrayList<>(List.of(attendee1, attendee2)));
 
         // when, then
         mockMvc.perform(get("/api/schedules/{scheduleId}", schedule1.getScheduleId())

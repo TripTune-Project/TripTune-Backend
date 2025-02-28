@@ -46,20 +46,24 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @ActiveProfiles("h2")
 public class RouteControllerTest extends ScheduleTest {
-    private final WebApplicationContext wac;
-    private final TravelScheduleRepository travelScheduleRepository;
-    private final TravelAttendeeRepository travelAttendeeRepository;
-    private final MemberRepository memberRepository;
-    private final TravelPlaceRepository travelPlaceRepository;
-    private final CountryRepository countryRepository;
-    private final CityRepository cityRepository;
-    private final DistrictRepository districtRepository;
-    private final ApiCategoryRepository apiCategoryRepository;
-    private final TravelImageRepository travelImageRepository;
-    private final TravelRouteRepository travelRouteRepository;
-    private final ApiContentTypeRepository apiContentTypeRepository;
+    @Autowired private WebApplicationContext wac;
+    @Autowired private TravelScheduleRepository travelScheduleRepository;
+    @Autowired private TravelAttendeeRepository travelAttendeeRepository;
+    @Autowired private MemberRepository memberRepository;
+    @Autowired private TravelPlaceRepository travelPlaceRepository;
+    @Autowired private CountryRepository countryRepository;
+    @Autowired private CityRepository cityRepository;
+    @Autowired private DistrictRepository districtRepository;
+    @Autowired private ApiCategoryRepository apiCategoryRepository;
+    @Autowired private TravelImageRepository travelImageRepository;
+    @Autowired private TravelRouteRepository travelRouteRepository;
 
     private MockMvc mockMvc;
+
+    private Country country;
+    private City city;
+    private District district;
+    private ApiCategory apiCategory;
 
     private TravelSchedule schedule1;
     private TravelSchedule schedule2;
@@ -68,21 +72,12 @@ public class RouteControllerTest extends ScheduleTest {
     private TravelPlace travelPlace2;
     private TravelPlace travelPlace3;
 
-    @Autowired
-    public RouteControllerTest(WebApplicationContext wac, TravelScheduleRepository travelScheduleRepository, TravelAttendeeRepository travelAttendeeRepository, MemberRepository memberRepository, TravelPlaceRepository travelPlaceRepository, CountryRepository countryRepository, CityRepository cityRepository, DistrictRepository districtRepository, ApiCategoryRepository apiCategoryRepository, TravelImageRepository travelImageRepository, TravelRouteRepository travelRouteRepository, ApiContentTypeRepository apiContentTypeRepository) {
-        this.wac = wac;
-        this.travelScheduleRepository = travelScheduleRepository;
-        this.travelAttendeeRepository = travelAttendeeRepository;
-        this.memberRepository = memberRepository;
-        this.travelPlaceRepository = travelPlaceRepository;
-        this.countryRepository = countryRepository;
-        this.cityRepository = cityRepository;
-        this.districtRepository = districtRepository;
-        this.apiCategoryRepository = apiCategoryRepository;
-        this.travelImageRepository = travelImageRepository;
-        this.travelRouteRepository = travelRouteRepository;
-        this.apiContentTypeRepository = apiContentTypeRepository;
-    }
+    private TravelImage travelImage1;
+    private TravelImage travelImage2;
+    private TravelImage travelImage3;
+    private TravelImage travelImage4;
+
+
 
     @BeforeEach
     void setUp(){
@@ -92,25 +87,15 @@ public class RouteControllerTest extends ScheduleTest {
                 .alwaysDo(print())
                 .build();
 
-        Country country = countryRepository.save(createCountry());
-        City city = cityRepository.save(createCity(country));
-        District district1 = districtRepository.save(createDistrict(city, "강남구"));
-        District district2 = districtRepository.save(createDistrict(city, "중구"));
-        ApiCategory apiCategory = apiCategoryRepository.save(createApiCategory());
-        ApiContentType apiContentType = apiContentTypeRepository.save(createApiContentType("관광지"));
-        travelPlace1 = travelPlaceRepository.save(createTravelPlace(null, country, city, district1, apiCategory));
-        travelPlace2 = travelPlaceRepository.save(createTravelPlace(null, country, city, district2, apiCategory));
-        travelPlace3 = travelPlaceRepository.save(createTravelPlace(null,country, city, district2, apiCategory));
-        TravelImage travelImage1 = travelImageRepository.save(createTravelImage(travelPlace1, "test1", true));
-        TravelImage travelImage2 = travelImageRepository.save(createTravelImage(travelPlace1, "test2", false));
-        TravelImage travelImage3 = travelImageRepository.save(createTravelImage(travelPlace2, "test1", true));
-        TravelImage travelImage4 = travelImageRepository.save(createTravelImage(travelPlace2, "test2", false));
-        travelPlace1.setApiContentType(apiContentType);
-        travelPlace1.setTravelImageList(Arrays.asList(travelImage1, travelImage2));
-        travelPlace2.setApiContentType(apiContentType);
-        travelPlace2.setTravelImageList(Arrays.asList(travelImage3, travelImage4));
-        travelPlace3.setApiContentType(apiContentType);
+        country = countryRepository.save(createCountry());
+        city = cityRepository.save(createCity(country));
+        district = districtRepository.save(createDistrict(city, "강남구"));
+        apiCategory = apiCategoryRepository.save(createApiCategory());
 
+        travelImage1 = travelImageRepository.save(createTravelImage(travelPlace1, "test1", true));
+        travelImage2 = travelImageRepository.save(createTravelImage(travelPlace1, "test2", false));
+        travelImage3 = travelImageRepository.save(createTravelImage(travelPlace2, "test1", true));
+        travelImage4 = travelImageRepository.save(createTravelImage(travelPlace2, "test2", false));
 
         Member member1 = memberRepository.save(createMember(null, "member1"));
         Member member2 = memberRepository.save(createMember(null, "member2"));
@@ -125,6 +110,7 @@ public class RouteControllerTest extends ScheduleTest {
         schedule1.setTravelAttendeeList(new ArrayList<>(List.of(attendee1, attendee2)));
         schedule2.setTravelAttendeeList(new ArrayList<>(List.of(attendee3)));
 
+        travelPlace3 = travelPlaceRepository.save(createTravelPlace(null, country, city, district, apiCategory, List.of(travelImage3), new ArrayList<>()));
     }
 
 
@@ -133,13 +119,15 @@ public class RouteControllerTest extends ScheduleTest {
     @WithMockUser(username = "member1")
     void getTravelRoutes() throws Exception {
         // given
+        travelPlace1 = travelPlaceRepository.save(createTravelPlace(null, country, city, district, apiCategory, List.of(travelImage1, travelImage2)));
+        travelPlace2 = travelPlaceRepository.save(createTravelPlace(null, country, city, district, apiCategory, List.of(travelImage3, travelImage4)));
+
         TravelRoute route1 = travelRouteRepository.save(createTravelRoute(schedule1, travelPlace1, 1));
         TravelRoute route2 = travelRouteRepository.save(createTravelRoute(schedule1, travelPlace1, 2));
         TravelRoute route3 = travelRouteRepository.save(createTravelRoute(schedule1, travelPlace2, 3));
 
-        schedule1.setTravelRouteList(new ArrayList<>(List.of(route1, route2, route3)));
-        travelPlace1.setTravelRouteList(new ArrayList<>(List.of(route1, route2)));
-        travelPlace2.setTravelRouteList(new ArrayList<>(List.of(route3)));
+        schedule1.setTravelRouteList(List.of(route1, route2, route3));
+
 
         // when, then
         mockMvc.perform(get("/api/schedules/{scheduleId}/routes", schedule1.getScheduleId())
@@ -158,8 +146,6 @@ public class RouteControllerTest extends ScheduleTest {
     @DisplayName("여행 루트 조회 시 저장된 여행 루트 데이터 없는 경우")
     @WithMockUser(username = "member1")
     void getTravelRoutesWithoutData() throws Exception {
-        // given
-        // when, then
         mockMvc.perform(get("/api/schedules/{scheduleId}/routes", schedule1.getScheduleId())
                         .param("page", "1"))
                 .andExpect(status().isOk())
@@ -171,8 +157,6 @@ public class RouteControllerTest extends ScheduleTest {
     @DisplayName("여행 루트 조회 시 일정 데이터 존재하지 않아 예외 발생")
     @WithMockUser(username = "member1")
     void getTravelRoutes_dataNotFoundException() throws Exception {
-        // given
-        // when, then
         mockMvc.perform(get("/api/schedules/{scheduleId}/routes", 0L)
                         .param("page", "1"))
                 .andExpect(status().isNotFound())
@@ -184,7 +168,6 @@ public class RouteControllerTest extends ScheduleTest {
     @DisplayName("여행 루트 조회 시 해당 일정에 접근 권한이 없어 예외 발생")
     @WithMockUser(username = "member1")
     void getTravelRoutes_forbiddenScheduleException() throws Exception {
-        // given, when, then
         mockMvc.perform(get("/api/schedules/{scheduleId}/routes", schedule2.getScheduleId())
                         .param("page", "1"))
                 .andExpect(status().isForbidden())
@@ -201,9 +184,10 @@ public class RouteControllerTest extends ScheduleTest {
         TravelRoute route3 = travelRouteRepository.save(createTravelRoute(schedule1, travelPlace2, 3));
 
         schedule1.setTravelRouteList(new ArrayList<>(List.of(route1, route2, route3)));
-        travelPlace1.setTravelRouteList(new ArrayList<>(List.of(route1, route2)));
-        travelPlace2.setTravelRouteList(new ArrayList<>(List.of(route3)));
-        
+        travelPlace1 = travelPlaceRepository.save(createTravelPlace(null, country, city, district, apiCategory, List.of(travelImage1, travelImage2), List.of(route1, route2)));
+        travelPlace2 = travelPlaceRepository.save(createTravelPlace(null, country, city, district, apiCategory, List.of(travelImage3, travelImage4), List.of(route3)));
+
+
         // when, then
         mockMvc.perform(post("/api/schedules/{scheduleId}/routes", schedule1.getScheduleId())
                         .contentType(MediaType.APPLICATION_JSON)
@@ -217,7 +201,6 @@ public class RouteControllerTest extends ScheduleTest {
     @DisplayName("여행 루트의 마지막 여행지 추가 시 저장된 여행 루트가 없는 경우")
     @WithMockUser(username = "member1")
     void createLastRoute_emptyRouteList() throws Exception{
-        // given, when, then
         schedule1.setTravelRouteList(new ArrayList<>());
 
         mockMvc.perform(post("/api/schedules/{scheduleId}/routes", schedule1.getScheduleId())
@@ -232,8 +215,6 @@ public class RouteControllerTest extends ScheduleTest {
     @DisplayName("여행 루트의 마지막 여행지 추가 시 일정 데이터 존재하지 않아 예외 발생")
     @WithMockUser(username = "member1")
     void createLastRoute_scheduleNotFoundException() throws Exception {
-        // given
-        // when, then
         mockMvc.perform(post("/api/schedules/{scheduleId}/routes", 0L)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(toJsonString(createRouteCreateRequest(travelPlace3.getPlaceId()))))
@@ -247,8 +228,6 @@ public class RouteControllerTest extends ScheduleTest {
     @DisplayName("여행 루트의 마지막 여행지 추가 시 참석자 데이터 존재하지 않아 예외 발생")
     @WithMockUser(username = "member3")
     void createLastRoute_attendeeNotFoundException() throws Exception {
-        // given
-        // when, then
         mockMvc.perform(post("/api/schedules/{scheduleId}/routes", schedule1.getScheduleId())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(toJsonString(createRouteCreateRequest(travelPlace3.getPlaceId()))))
@@ -267,9 +246,10 @@ public class RouteControllerTest extends ScheduleTest {
         TravelRoute route2 = travelRouteRepository.save(createTravelRoute(schedule1, travelPlace1, 2));
         TravelRoute route3 = travelRouteRepository.save(createTravelRoute(schedule1, travelPlace2, 3));
 
-        schedule1.setTravelRouteList(new ArrayList<>(List.of(route1, route2, route3)));
-        travelPlace1.setTravelRouteList(new ArrayList<>(List.of(route1, route2)));
-        travelPlace2.setTravelRouteList(new ArrayList<>(List.of(route3)));
+        schedule1.setTravelRouteList(List.of(route1, route2, route3));
+        travelPlace1 = travelPlaceRepository.save(createTravelPlace(null, country, city, district, apiCategory, List.of(travelImage1, travelImage2), List.of(route1, route2)));
+        travelPlace2 = travelPlaceRepository.save(createTravelPlace(null, country, city, district, apiCategory, List.of(travelImage3, travelImage4), List.of(route3)));
+
 
         // when, then
         mockMvc.perform(post("/api/schedules/{scheduleId}/routes", schedule1.getScheduleId())
@@ -284,8 +264,6 @@ public class RouteControllerTest extends ScheduleTest {
     @DisplayName("여행 루트의 마지막 여행지 추가 시 여행지 데이터 존재하지 않아 예외 발생")
     @WithMockUser(username = "member1")
     void createLastRoute_placeNotFoundException() throws Exception {
-        // given
-        // when, then
         mockMvc.perform(post("/api/schedules/{scheduleId}/routes", schedule1.getScheduleId())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(toJsonString(createRouteCreateRequest(0L))))

@@ -49,6 +49,7 @@ public class TravelScheduleRepositoryTest extends ScheduleTest {
     private final ApiContentTypeRepository apiContentTypeRepository;
     private final MemberRepository memberRepository;
 
+    private TravelPlace travelPlace;
     private TravelSchedule schedule1;
     private TravelSchedule schedule2;
     private TravelSchedule schedule3;
@@ -78,12 +79,10 @@ public class TravelScheduleRepositoryTest extends ScheduleTest {
         District district = districtRepository.save(createDistrict(city, "강남구"));
         ApiCategory apiCategory = apiCategoryRepository.save(createApiCategory());
         ApiContentType apiContentType = apiContentTypeRepository.save(createApiContentType("관광지"));
-        TravelPlace travelPlace = travelPlaceRepository.save(createTravelPlace(null, country, city, district, apiCategory));
+
         TravelImage travelImage1 = travelImageRepository.save(createTravelImage(travelPlace, "test1", true));
         TravelImage travelImage2 = travelImageRepository.save(createTravelImage(travelPlace, "test2", false));
-
-        travelPlace.setApiContentType(apiContentType);
-        travelPlace.setTravelImageList(new ArrayList<>(List.of(travelImage1, travelImage2)));
+        travelPlace = travelPlaceRepository.save(createTravelPlace(null, country, city, district, apiCategory, apiContentType, List.of(travelImage1, travelImage2)));
 
         member1 = memberRepository.save(createMember(null, "member1"));
         member2 = memberRepository.save(createMember(null, "member2"));

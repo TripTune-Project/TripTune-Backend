@@ -123,9 +123,9 @@ public class MemberServiceTest extends MemberTest {
         TravelImage travelImage1 = createTravelImage(travelPlace1, "test", true);
         TravelImage travelImage2 = createTravelImage(travelPlace2, "test", true);
         TravelImage travelImage3 = createTravelImage(travelPlace3, "test", true);
-        travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, List.of(travelImage1), "가장소");
-        travelPlace2 = createTravelPlace(2L, country, city, district, apiCategory, List.of(travelImage2), "나장소");
-        travelPlace3 = createTravelPlace(3L, country, city, district, apiCategory, List.of(travelImage3), "다장소");
+        travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, "가장소", List.of(travelImage1));
+        travelPlace2 = createTravelPlace(2L, country, city, district, apiCategory, "나장소", List.of(travelImage2));
+        travelPlace3 = createTravelPlace(3L, country, city, district, apiCategory, "다장소", List.of(travelImage3));
     }
 
 

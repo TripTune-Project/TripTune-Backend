@@ -214,6 +214,28 @@ public abstract class BaseTest {
                 .build();
     }
 
+    protected TravelPlace createTravelPlace(Long placeId, Country country, City city, District district, ApiCategory apiCategory, List<TravelImage> travelImageList, List<TravelRoute> travelRouteList){
+        return TravelPlace.builder()
+                .placeId(placeId)
+                .country(country)
+                .city(city)
+                .district(district)
+                .apiCategory(apiCategory)
+                .address("테스트 주소")
+                .detailAddress("테스트 상세주소")
+                .homepage("www.test.com")
+                .phoneNumber("010-0000-0000")
+                .latitude(37.5)
+                .longitude(127.0281573537)
+                .placeName("테스트 장소명")
+                .bookmarkCnt(0)
+                .createdAt(LocalDateTime.now())
+                .description("테스트 장소 설명")
+                .travelImageList(travelImageList)
+                .travelRouteList(travelRouteList)
+                .build();
+    }
+
     protected TravelPlace createTravelPlace(Long placeId, Country country, City city, District district, ApiCategory apiCategory, String placeName){
         return TravelPlace.builder()
                 .placeId(placeId)
@@ -234,7 +256,8 @@ public abstract class BaseTest {
                 .build();
     }
 
-    protected TravelPlace createTravelPlace(Long placeId, Country country, City city, District district, ApiCategory apiCategory, List<TravelImage> travelImageList,  String placeName){
+
+    protected TravelPlace createTravelPlace(Long placeId, Country country, City city, District district, ApiCategory apiCategory, String placeName, List<TravelImage> travelImageList){
         return TravelPlace.builder()
                 .placeId(placeId)
                 .country(country)
@@ -251,6 +274,76 @@ public abstract class BaseTest {
                 .bookmarkCnt(0)
                 .createdAt(LocalDateTime.now())
                 .description("테스트 장소 설명")
+                .travelImageList(travelImageList)
+                .build();
+    }
+
+    protected TravelPlace createTravelPlace(Long placeId, Country country, City city, District district, ApiCategory apiCategory, List<TravelImage> travelImageList){
+        return TravelPlace.builder()
+                .placeId(placeId)
+                .country(country)
+                .city(city)
+                .district(district)
+                .apiCategory(apiCategory)
+                .address("테스트 주소")
+                .detailAddress("테스트 상세주소")
+                .homepage("www.test.com")
+                .phoneNumber("010-0000-0000")
+                .latitude(37.5)
+                .longitude(127.0281573537)
+                .placeName("장소")
+                .bookmarkCnt(0)
+                .createdAt(LocalDateTime.now())
+                .description("테스트 장소 설명")
+                .travelImageList(travelImageList)
+                .build();
+    }
+
+
+    protected TravelPlace createTravelPlace(Long placeId, Country country, City city, District district, ApiCategory apiCategory, ApiContentType apiContentType, String useTime, List<TravelImage> travelImageList){
+        return TravelPlace.builder()
+                .placeId(placeId)
+                .country(country)
+                .city(city)
+                .district(district)
+                .apiCategory(apiCategory)
+                .apiContentType(apiContentType)
+                .address("테스트 주소")
+                .detailAddress("테스트 상세주소")
+                .homepage("www.test.com")
+                .phoneNumber("010-0000-0000")
+                .latitude(37.5)
+                .longitude(127.0281573537)
+                .placeName("장소")
+                .bookmarkCnt(0)
+                .createdAt(LocalDateTime.now())
+                .description("테스트 장소 설명")
+                .useTime(useTime)
+                .travelImageList(travelImageList)
+                .build();
+    }
+
+
+    protected TravelPlace createTravelPlace(Long placeId, Country country, City city, District district, ApiCategory apiCategory, ApiContentType apiContentType, String checkInTime, String checkOutTime, List<TravelImage> travelImageList){
+        return TravelPlace.builder()
+                .placeId(placeId)
+                .country(country)
+                .city(city)
+                .district(district)
+                .apiCategory(apiCategory)
+                .apiContentType(apiContentType)
+                .address("테스트 주소")
+                .detailAddress("테스트 상세주소")
+                .homepage("www.test.com")
+                .phoneNumber("010-0000-0000")
+                .latitude(37.5)
+                .longitude(127.0281573537)
+                .placeName("장소")
+                .bookmarkCnt(0)
+                .createdAt(LocalDateTime.now())
+                .description("테스트 장소 설명")
+                .checkInTime(checkInTime)
+                .checkOutTime(checkOutTime)
                 .travelImageList(travelImageList)
                 .build();
     }

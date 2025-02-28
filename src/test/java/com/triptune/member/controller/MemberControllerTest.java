@@ -135,9 +135,9 @@ public class MemberControllerTest extends MemberTest {
         travelImage1 = travelImageRepository.save(createTravelImage(travelPlace1, "test1", true));
         travelImage2 = travelImageRepository.save(createTravelImage(travelPlace2, "test1", true));
         travelImage3 = travelImageRepository.save(createTravelImage(travelPlace3, "test1", true));
-        travelPlace1 = travelPlaceRepository.save(createTravelPlace(null, country, city, district, apiCategory, List.of(travelImage1), "가장소"));
-        travelPlace2 = travelPlaceRepository.save(createTravelPlace(null, country, city, district, apiCategory, List.of(travelImage2), "나장소"));
-        travelPlace3 = travelPlaceRepository.save(createTravelPlace(null, country, city, district, apiCategory, List.of(travelImage3), "다장소"));
+        travelPlace1 = travelPlaceRepository.save(createTravelPlace(null, country, city, district, apiCategory, "가장소", List.of(travelImage1)));
+        travelPlace2 = travelPlaceRepository.save(createTravelPlace(null, country, city, district, apiCategory, "나장소", List.of(travelImage2)));
+        travelPlace3 = travelPlaceRepository.save(createTravelPlace(null, country, city, district, apiCategory, "다장소", List.of(travelImage3)));
 
     }
 

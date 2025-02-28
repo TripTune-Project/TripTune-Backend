@@ -52,9 +52,19 @@ public class TravelControllerTest extends TravelTest {
 
 
     private MockMvc mockMvc;
+
+    private Country country;
+    private City city;
+    private District district1;
+    private District district2;
+    private ApiCategory apiCategory;
+
     private TravelPlace travelPlace1;
     private TravelPlace travelPlace2;
+
     private TravelImage travelImage1;
+    private TravelImage travelImage2;
+
     private Member member;
 
     @Autowired
@@ -80,19 +90,17 @@ public class TravelControllerTest extends TravelTest {
                 .alwaysDo(print())
                 .build();
 
-        Country country = countryRepository.save(createCountry());
-        City city = cityRepository.save(createCity(country));
-        District district1 = districtRepository.save(createDistrict(city, "강남"));
-        District district2 = districtRepository.save(createDistrict(city, "강남구"));
-        ApiCategory apiCategory = apiCategoryRepository.save(createApiCategory());
+        country = countryRepository.save(createCountry());
+        city = cityRepository.save(createCity(country));
+        district1 = districtRepository.save(createDistrict(city, "강남"));
+        district2 = districtRepository.save(createDistrict(city, "강남구"));
+        apiCategory = apiCategoryRepository.save(createApiCategory());
 
         travelPlace1 = travelPlaceRepository.save(createTravelPlace(null, country, city, district1, apiCategory));
-        travelImage1 = travelImageRepository.save(createTravelImage(travelPlace1, "test1", true));
-        TravelImage travelImage2 = travelImageRepository.save(createTravelImage(travelPlace1, "test2", false));
-        List<TravelImage> travelImageList = Arrays.asList(travelImage1, travelImage2);
-        travelPlace1.setTravelImageList(travelImageList);
-
         travelPlace2 = travelPlaceRepository.save(createTravelPlace(null, country, city, district2, apiCategory, 37.50303, 127.0731));
+
+        travelImage1 = travelImageRepository.save(createTravelImage(travelPlace1, "test1", true));
+        travelImage2 = travelImageRepository.save(createTravelImage(travelPlace1, "test2", false));
 
         member = memberRepository.save(createMember(null, "member"));
     }
@@ -245,9 +253,9 @@ public class TravelControllerTest extends TravelTest {
     @DisplayName("로그인한 사용자의 여행지 상세정보 조회")
     @WithMockUser("member")
     void getTravelDetails_login() throws Exception {
-        ApiContentType apiContentType = createApiContentType("관광지");
-        apiContentTypeRepository.save(apiContentType);
-        travelPlace1.setApiContentType(apiContentType);
+        ApiContentType apiContentType = apiContentTypeRepository.save(createApiContentType("관광지"));
+        travelPlace1 = travelPlaceRepository.save(createTravelPlace(null, country, city, district1, apiCategory, apiContentType, List.of(travelImage1, travelImage2)));
+
         bookmarkRepository.save(createBookmark(null, member, travelPlace1, LocalDateTime.now()));
 
         mockMvc.perform(get("/api/travels/{placeId}", travelPlace1.getPlaceId()))
@@ -261,9 +269,9 @@ public class TravelControllerTest extends TravelTest {
     @Test
     @DisplayName("익명 사용자의 여행지 상세정보 조회")
     void getTravelDetails_anonymous() throws Exception {
-        ApiContentType apiContentType = createApiContentType("관광지");
-        apiContentTypeRepository.save(apiContentType);
-        travelPlace1.setApiContentType(apiContentType);
+        ApiContentType apiContentType = apiContentTypeRepository.save(createApiContentType("관광지"));
+        travelPlace1 = travelPlaceRepository.save(createTravelPlace(null, country, city, district1, apiCategory, apiContentType, List.of(travelImage1, travelImage2)));
+
         bookmarkRepository.save(createBookmark(null, member, travelPlace1, LocalDateTime.now()));
 
         mockMvc.perform(get("/api/travels/{placeId}", travelPlace1.getPlaceId()))
