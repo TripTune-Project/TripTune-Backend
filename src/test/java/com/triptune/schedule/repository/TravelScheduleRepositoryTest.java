@@ -49,6 +49,7 @@ public class TravelScheduleRepositoryTest extends ScheduleTest {
     private final ApiContentTypeRepository apiContentTypeRepository;
     private final MemberRepository memberRepository;
 
+    private TravelPlace travelPlace;
     private TravelSchedule schedule1;
     private TravelSchedule schedule2;
     private TravelSchedule schedule3;
@@ -78,12 +79,10 @@ public class TravelScheduleRepositoryTest extends ScheduleTest {
         District district = districtRepository.save(createDistrict(city, "강남구"));
         ApiCategory apiCategory = apiCategoryRepository.save(createApiCategory());
         ApiContentType apiContentType = apiContentTypeRepository.save(createApiContentType("관광지"));
-        TravelPlace travelPlace = travelPlaceRepository.save(createTravelPlace(null, country, city, district, apiCategory));
+
         TravelImage travelImage1 = travelImageRepository.save(createTravelImage(travelPlace, "test1", true));
         TravelImage travelImage2 = travelImageRepository.save(createTravelImage(travelPlace, "test2", false));
-
-        travelPlace.setApiContentType(apiContentType);
-        travelPlace.setTravelImageList(new ArrayList<>(List.of(travelImage1, travelImage2)));
+        travelPlace = travelPlaceRepository.save(createTravelPlace(null, country, city, district, apiCategory, apiContentType, List.of(travelImage1, travelImage2)));
 
         member1 = memberRepository.save(createMember(null, "member1"));
         member2 = memberRepository.save(createMember(null, "member2"));
@@ -192,7 +191,7 @@ public class TravelScheduleRepositoryTest extends ScheduleTest {
         Integer response = travelScheduleRepository.countTravelSchedulesByUserId(member1.getUserId());
 
         // then
-        assertEquals(response, 2);
+        assertThat(response).isEqualTo(2);
     }
 
     @Test
@@ -202,7 +201,7 @@ public class TravelScheduleRepositoryTest extends ScheduleTest {
         Integer response = travelScheduleRepository.countTravelSchedulesByUserId(member1.getUserId());
 
         // then
-        assertEquals(response, 0);
+        assertThat(response).isEqualTo(0);
     }
 
     @Test
@@ -222,7 +221,7 @@ public class TravelScheduleRepositoryTest extends ScheduleTest {
         Integer response = travelScheduleRepository.countSharedTravelSchedulesByUserId(member1.getUserId());
 
         // then
-        assertEquals(response, 1);
+        assertThat(response).isEqualTo(1);
     }
 
     @Test
@@ -232,7 +231,7 @@ public class TravelScheduleRepositoryTest extends ScheduleTest {
         Integer response = travelScheduleRepository.countSharedTravelSchedulesByUserId(member1.getUserId());
 
         // then
-        assertEquals(response, 0);
+        assertThat(response).isEqualTo(0);
     }
 
     @Test
@@ -335,7 +334,7 @@ public class TravelScheduleRepositoryTest extends ScheduleTest {
         Integer response = travelScheduleRepository.countTravelSchedulesByUserIdAndKeyword("2", member1.getUserId());
 
         // then
-        assertEquals(response, 1);
+        assertThat(response).isEqualTo(1);
     }
 
     @Test
@@ -346,7 +345,7 @@ public class TravelScheduleRepositoryTest extends ScheduleTest {
         Integer response = travelScheduleRepository.countTravelSchedulesByUserIdAndKeyword("ㅁㄴㅇㄹ", member1.getUserId());
 
         // then
-        assertEquals(response, 0);
+        assertThat(response).isEqualTo(0);
     }
 
     @Test
@@ -366,7 +365,7 @@ public class TravelScheduleRepositoryTest extends ScheduleTest {
         Integer response = travelScheduleRepository.countSharedTravelSchedulesByUserIdAndKeyword("2", member1.getUserId());
 
         // then
-        assertEquals(response, 1);
+        assertThat(response).isEqualTo(1);
     }
 
     @Test
@@ -376,7 +375,7 @@ public class TravelScheduleRepositoryTest extends ScheduleTest {
         Integer response = travelScheduleRepository.countSharedTravelSchedulesByUserIdAndKeyword("ㅁㄴㅇㄹ", member1.getUserId());
 
         // then
-        assertEquals(response, 0);
+        assertThat(response).isEqualTo(0);
     }
 
     @Test
@@ -388,20 +387,20 @@ public class TravelScheduleRepositoryTest extends ScheduleTest {
         // then
         // 일정 삭제됐는지 확인
         Optional<TravelSchedule> schedule = travelScheduleRepository.findByScheduleId(schedule1.getScheduleId());
-        assertTrue(schedule.isEmpty());
+        assertThat(schedule).isEmpty();
 
         // 해당 일정의 참석자 정보 삭제됐는지 확인
         List<TravelAttendee> attendees = travelAttendeeRepository.findAllByTravelSchedule_ScheduleId(schedule1.getScheduleId());
-        assertTrue(attendees.isEmpty());
+        assertThat(attendees).isEmpty();
 
         // 해당 일정의 여행 루트 정보 삭제됐는지 확인
         Page<TravelRoute> routes = travelRouteRepository.findAllByTravelSchedule_ScheduleId(PageUtils.defaultPageable(1), schedule1.getScheduleId());
-        assertEquals(routes.getTotalElements(), 0);
-        assertTrue(routes.getContent().isEmpty());
+        assertThat(routes.getTotalElements()).isEqualTo(0);
+        assertThat(routes.getContent()).isEmpty();
 
         // 사용자 정보 삭제 안됐는지 확인
         Optional<Member> member = memberRepository.findByUserId(member1.getUserId());
-        assertFalse(member.isEmpty());
+        assertThat(member).isNotEmpty();
     }
 
 

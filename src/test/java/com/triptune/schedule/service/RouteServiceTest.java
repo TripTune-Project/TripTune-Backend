@@ -63,6 +63,7 @@ public class RouteServiceTest extends ScheduleTest {
 
     private TravelSchedule schedule1;
     private TravelPlace travelPlace1;
+    private TravelPlace travelPlace2;
     private TravelPlace travelPlace3;
     private TravelAttendee attendee1;
     private TravelAttendee attendee2;
@@ -75,19 +76,14 @@ public class RouteServiceTest extends ScheduleTest {
         City city = createCity(country);
         District district = createDistrict(city, "중구");
         ApiCategory apiCategory = createApiCategory();
-        travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory);
         TravelImage travelImage1 = createTravelImage(travelPlace1, "test1", true);
         TravelImage travelImage2 = createTravelImage(travelPlace1, "test2", false);
-        List<TravelImage> travelImageList1 = new ArrayList<>(List.of(travelImage1, travelImage2));
-        travelPlace1.setTravelImageList(travelImageList1);
+        travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, List.of(travelImage1, travelImage2));
 
-        TravelPlace travelPlace2 = createTravelPlace(2L, country, city, district, apiCategory);
         TravelImage travelImage3 = createTravelImage(travelPlace2, "test1", true);
         TravelImage travelImage4 = createTravelImage(travelPlace2, "test2", false);
-        List<TravelImage> travelImageList2 = new ArrayList<>(List.of(travelImage3, travelImage4));
-        travelPlace2.setTravelImageList(travelImageList2);
-
-        travelPlace3 = createTravelPlace(3L, country, city, district, apiCategory);
+        travelPlace2 = createTravelPlace(2L, country, city, district, apiCategory, List.of(travelImage3, travelImage4));
+        travelPlace3 = createTravelPlace(3L, country, city, district, apiCategory, new ArrayList<>());
 
         member1 = createMember(1L, "member1");
         member2 = createMember(2L, "member2");
@@ -121,11 +117,11 @@ public class RouteServiceTest extends ScheduleTest {
 
         // then
         List<RouteResponse> content = response.getContent();
-        assertEquals(response.getTotalElements(), schedule1.getTravelRouteList().size());
-        assertEquals(content.get(0).getAddress(), travelPlace1.getAddress());
-        assertEquals(content.get(0).getRouteOrder(), schedule1.getTravelRouteList().get(0).getRouteOrder());
-        assertEquals(content.get(1).getRouteOrder(), schedule1.getTravelRouteList().get(1).getRouteOrder());
-        assertEquals(content.get(2).getRouteOrder(), schedule1.getTravelRouteList().get(2).getRouteOrder());
+        assertThat(response.getTotalElements()).isEqualTo(schedule1.getTravelRouteList().size());
+        assertThat(content.get(0).getAddress()).isEqualTo(travelPlace1.getAddress());
+        assertThat(content.get(0).getRouteOrder()).isEqualTo(schedule1.getTravelRouteList().get(0).getRouteOrder());
+        assertThat(content.get(1).getRouteOrder()).isEqualTo(schedule1.getTravelRouteList().get(1).getRouteOrder());
+        assertThat(content.get(2).getRouteOrder()).isEqualTo(schedule1.getTravelRouteList().get(2).getRouteOrder());
     }
 
     @Test
@@ -142,8 +138,8 @@ public class RouteServiceTest extends ScheduleTest {
         Page<RouteResponse> response = routeService.getTravelRoutes(schedule1.getScheduleId(), 1);
 
         // then
-        assertEquals(response.getTotalElements(), 0);
-        assertTrue(response.getContent().isEmpty());
+        assertThat(response.getTotalElements()).isEqualTo(0);
+        assertThat(response.getContent()).isEmpty();
     }
 
     @Test

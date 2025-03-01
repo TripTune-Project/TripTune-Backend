@@ -4,6 +4,8 @@ import com.triptune.BaseTest;
 import com.triptune.member.dto.response.MemberProfileResponse;
 import com.triptune.schedule.dto.request.*;
 import com.triptune.schedule.enumclass.AttendeePermission;
+import com.triptune.travel.dto.response.PlaceResponse;
+import com.triptune.travel.entity.TravelPlace;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -72,4 +74,5 @@ public abstract class ScheduleTest extends BaseTest {
                 .profileUrl(nickname + ".jpg")
                 .build();
     }
+
 }

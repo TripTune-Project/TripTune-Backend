@@ -1,5 +1,6 @@
 package com.triptune.travel.dto;
 
+import com.triptune.travel.dto.response.PlaceResponse;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -23,8 +24,7 @@ public class PlaceLocation {
     private boolean bookmarkStatus;
 
     @Builder
-    public PlaceLocation(Long placeId, String country, String city, String district, String address, String detailAddress, double longitude, double latitude, String placeName, Double distance) {
-        // travelImageFileList 포함되지 않은 생성자 -> TravelPlaceCustomRepositoryImpl 에서 사용
+    public PlaceLocation(Long placeId, String country, String city, String district, String address, String detailAddress, Double longitude, Double latitude, String placeName, String thumbnailUrl, Double distance) {
         this.placeId = placeId;
         this.country = country;
         this.city = city;
@@ -34,12 +34,12 @@ public class PlaceLocation {
         this.longitude = longitude;
         this.latitude = latitude;
         this.placeName = placeName;
+        this.thumbnailUrl = thumbnailUrl;
         this.distance = distance;
     }
 
     @Builder
     public PlaceLocation(Long placeId, String country, String city, String district, String address, String detailAddress, double longitude, double latitude, String placeName, String thumbnailUrl, Double distance, boolean bookmarkStatus) {
-        // travelImageFileList 포함 생성자
         this.placeId = placeId;
         this.country = country;
         this.city = city;
@@ -54,9 +54,21 @@ public class PlaceLocation {
         this.bookmarkStatus = bookmarkStatus;
     }
 
-    public void updateThumbnailUrl(String thumbnailUrl){
-        this.thumbnailUrl = thumbnailUrl;
+    public static PlaceLocation from(PlaceResponse placeResponse){
+        return PlaceLocation.builder()
+                .placeId(placeResponse.getPlaceId())
+                .country(placeResponse.getCountry())
+                .city(placeResponse.getCity())
+                .district(placeResponse.getDistrict())
+                .address(placeResponse.getAddress())
+                .detailAddress(placeResponse.getDetailAddress())
+                .longitude(placeResponse.getLongitude())
+                .latitude(placeResponse.getLatitude())
+                .placeName(placeResponse.getPlaceName())
+                .thumbnailUrl(placeResponse.getThumbnailUrl())
+                .build();
     }
+
 
     public void updateBookmarkStatusTrue(){
         this.bookmarkStatus = true;

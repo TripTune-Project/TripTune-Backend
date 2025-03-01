@@ -27,6 +27,7 @@ import com.triptune.schedule.repository.ChatMessageRepository;
 import com.triptune.schedule.repository.TravelAttendeeRepository;
 import com.triptune.schedule.repository.TravelRouteRepository;
 import com.triptune.schedule.repository.TravelScheduleRepository;
+import com.triptune.travel.dto.response.PlaceResponse;
 import com.triptune.travel.entity.TravelImage;
 import com.triptune.travel.entity.TravelPlace;
 import com.triptune.travel.repository.TravelPlaceRepository;
@@ -45,6 +46,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -78,6 +80,11 @@ public class ScheduleServiceTest extends ScheduleTest {
     @Mock
     private ChatMessageRepository chatMessageRepository;
 
+
+    private Country country;
+    private City city;
+    private District district;
+    private ApiCategory apiCategory;
     private TravelSchedule schedule1;
     private TravelSchedule schedule2;
     private TravelSchedule schedule3;
@@ -90,21 +97,11 @@ public class ScheduleServiceTest extends ScheduleTest {
 
     @BeforeEach
     void setUp(){
-        Country country = createCountry();
-        City city = createCity(country);
-        District district = createDistrict(city, "중구");
-        ApiCategory apiCategory = createApiCategory();
-        travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory);
-        TravelImage travelImage1 = createTravelImage(travelPlace1, "test1", true);
-        TravelImage travelImage2 = createTravelImage(travelPlace1, "test2", false);
-        List<TravelImage> travelImageList1 = new ArrayList<>(List.of(travelImage1, travelImage2));
-        travelPlace1.setTravelImageList(travelImageList1);
+        country = createCountry();
+        city = createCity(country);
+        district = createDistrict(city, "중구");
+        apiCategory = createApiCategory();
 
-        travelPlace2 = createTravelPlace(2L, country, city, district, apiCategory);
-        TravelImage travelImage3 = createTravelImage(travelPlace2, "test1", true);
-        TravelImage travelImage4 = createTravelImage(travelPlace2, "test2", false);
-        List<TravelImage> travelImageList2 = new ArrayList<>(List.of(travelImage3, travelImage4));
-        travelPlace2.setTravelImageList(travelImageList2);
 
         ProfileImage profileImage1 = createProfileImage(1L, "member1Image", member1);
         ProfileImage profileImage2 = createProfileImage(2L, "member2Image", member2);
@@ -124,11 +121,6 @@ public class ScheduleServiceTest extends ScheduleTest {
         schedule2.setTravelAttendeeList(new ArrayList<>(List.of(attendee3, attendee4)));
         schedule3.setTravelAttendeeList(new ArrayList<>(List.of(attendee5)));
 
-        TravelRoute route1 = createTravelRoute(schedule1, travelPlace1, 1);
-        TravelRoute route2 = createTravelRoute(schedule1, travelPlace1, 2);
-        TravelRoute route3 = createTravelRoute(schedule1, travelPlace2, 3);
-        schedule1.setTravelRouteList(new ArrayList<>(List.of(route1, route2, route3)));
-        schedule2.setTravelRouteList(new ArrayList<>());
     }
 
 
@@ -137,6 +129,20 @@ public class ScheduleServiceTest extends ScheduleTest {
     void getAllSchedulesByUserId(){
         // given
         Pageable pageable = PageUtils.schedulePageable(1);
+
+        TravelImage travelImage1 = createTravelImage(travelPlace1, "test1", true);
+        TravelImage travelImage2 = createTravelImage(travelPlace1, "test2", false);
+        travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, List.of(travelImage1, travelImage2));
+
+        TravelImage travelImage3 = createTravelImage(travelPlace2, "test1", true);
+        TravelImage travelImage4 = createTravelImage(travelPlace2, "test2", false);
+        travelPlace2 = createTravelPlace(2L, country, city, district, apiCategory, List.of(travelImage3, travelImage4));
+
+        TravelRoute route1 = createTravelRoute(schedule1, travelPlace1, 1);
+        TravelRoute route2 = createTravelRoute(schedule1, travelPlace1, 2);
+        TravelRoute route3 = createTravelRoute(schedule1, travelPlace2, 3);
+        schedule1.setTravelRouteList(new ArrayList<>(List.of(route1, route2, route3)));
+        schedule2.setTravelRouteList(new ArrayList<>());
 
         List<TravelSchedule> schedules = new ArrayList<>(List.of(schedule1, schedule2, schedule3));
         Page<TravelSchedule> schedulePage = PageUtils.createPage(schedules, pageable, schedules.size());
@@ -149,13 +155,13 @@ public class ScheduleServiceTest extends ScheduleTest {
 
         // then
         List<ScheduleInfoResponse> content = response.getContent();
-        assertEquals(response.getTotalElements(), 3);
-        assertEquals(response.getTotalSharedElements(), 2);
-        assertEquals(content.get(0).getScheduleName(), schedule1.getScheduleName());
-        assertNotNull(content.get(0).getSinceUpdate());
-        assertNotNull(content.get(0).getThumbnailUrl());
-        assertEquals(content.get(0).getAuthor().getNickname(), member1.getNickname());
-        assertEquals(content.get(0).getRole(), AttendeeRole.AUTHOR);
+        assertThat(response.getTotalElements()).isEqualTo(3);
+        assertThat(response.getTotalSharedElements()).isEqualTo(2);
+        assertThat(content.get(0).getScheduleName()).isEqualTo(schedule1.getScheduleName());
+        assertThat(content.get(0).getSinceUpdate()).isNotNull();
+        assertThat(content.get(0).getThumbnailUrl()).isNotNull();
+        assertThat(content.get(0).getAuthor().getNickname()).isEqualTo(member1.getNickname());
+        assertThat(content.get(0).getRole()).isEqualTo(AttendeeRole.AUTHOR);
     }
 
     @Test
@@ -175,11 +181,11 @@ public class ScheduleServiceTest extends ScheduleTest {
 
         // then
         List<ScheduleInfoResponse> content = response.getContent();
-        assertEquals(response.getTotalElements(), 1);
-        assertEquals(response.getTotalSharedElements(), 0);
-        assertEquals(content.get(0).getScheduleName(), schedule3.getScheduleName());
-        assertNotNull(content.get(0).getSinceUpdate());
-        assertEquals(content.get(0).getAuthor().getNickname(), member1.getNickname());
+        assertThat(response.getTotalElements()).isEqualTo(1);
+        assertThat(response.getTotalSharedElements()).isEqualTo(0);
+        assertThat(content.get(0).getScheduleName()).isEqualTo(schedule3.getScheduleName());
+        assertThat(content.get(0).getSinceUpdate()).isNotNull();
+        assertThat(content.get(0).getAuthor().getNickname()).isEqualTo(member1.getNickname());
     }
 
     @Test
@@ -196,9 +202,9 @@ public class ScheduleServiceTest extends ScheduleTest {
         SchedulePageResponse<ScheduleInfoResponse> response = scheduleService.getAllSchedulesByUserId(1, member1.getUserId());
 
         // then
-        assertEquals(response.getTotalElements(), 0);
-        assertEquals(response.getTotalSharedElements(), 2);
-        assertTrue(response.getContent().isEmpty());
+        assertThat(response.getTotalElements()).isEqualTo(0);
+        assertThat(response.getTotalSharedElements()).isEqualTo(2);
+        assertThat(response.getContent()).isEmpty();
         verify(travelRouteRepository, times(0)).findAllByTravelSchedule_ScheduleId(any(), any());
     }
 
@@ -207,7 +213,9 @@ public class ScheduleServiceTest extends ScheduleTest {
     void getAllSchedulesByUserIdNoImageThumbnail(){
         // given
         Pageable pageable = PageUtils.schedulePageable(1);
-        travelPlace1.getTravelImageList().get(0).setThumbnail(false);
+
+        travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, new ArrayList<>());
+        travelPlace2 = createTravelPlace(2L, country, city, district, apiCategory, new ArrayList<>());
 
         List<TravelSchedule> schedules = new ArrayList<>(List.of(schedule1, schedule2));
         Page<TravelSchedule> schedulePage = PageUtils.createPage(schedules, pageable, schedules.size());
@@ -220,11 +228,11 @@ public class ScheduleServiceTest extends ScheduleTest {
 
         // then
         List<ScheduleInfoResponse> content = response.getContent();
-        assertEquals(response.getTotalElements(), 2);
-        assertEquals(response.getTotalSharedElements(), 1);
-        assertEquals(content.get(0).getScheduleName(), "테스트1");
-        assertNotNull(content.get(0).getSinceUpdate());
-        assertNull(content.get(0).getThumbnailUrl());
+        assertThat(response.getTotalElements()).isEqualTo(2);
+        assertThat(response.getTotalSharedElements()).isEqualTo(1);
+        assertThat(content.get(0).getScheduleName()).isEqualTo("테스트1");
+        assertThat(content.get(0).getSinceUpdate()).isNotNull();
+        assertThat(content.get(0).getThumbnailUrl()).isNull();
 
     }
 
@@ -234,7 +242,7 @@ public class ScheduleServiceTest extends ScheduleTest {
     void getAllSchedulesByUserIdNoImageData(){
         // given
         Pageable pageable = PageUtils.schedulePageable(1);
-        travelPlace1.setTravelImageList(new ArrayList<>());
+        travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, new ArrayList<>());
 
         List<TravelSchedule> schedules = new ArrayList<>(List.of(schedule1));
         Page<TravelSchedule> schedulePage = PageUtils.createPage(schedules, pageable, schedules.size());
@@ -247,11 +255,11 @@ public class ScheduleServiceTest extends ScheduleTest {
 
         // then
         List<ScheduleInfoResponse> content = response.getContent();
-        assertEquals(response.getTotalElements(), 1);
-        assertEquals(response.getTotalSharedElements(), 1);
-        assertEquals(content.get(0).getScheduleName(), "테스트1");
-        assertNotNull(content.get(0).getSinceUpdate());
-        assertNull(content.get(0).getThumbnailUrl());
+        assertThat(response.getTotalElements()).isEqualTo(1);
+        assertThat(response.getTotalSharedElements()).isEqualTo(1);
+        assertThat(content.get(0).getScheduleName()).isEqualTo("테스트1");
+        assertThat(content.get(0).getSinceUpdate()).isNotNull();
+        assertThat(content.get(0).getThumbnailUrl()).isNull();
 
     }
 
@@ -260,6 +268,20 @@ public class ScheduleServiceTest extends ScheduleTest {
     void getSharedSchedulesByUserId(){
         // given
         Pageable pageable = PageUtils.schedulePageable(1);
+
+        TravelImage travelImage1 = createTravelImage(travelPlace1, "test1", true);
+        TravelImage travelImage2 = createTravelImage(travelPlace1, "test2", false);
+        travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, List.of(travelImage1, travelImage2));
+
+        TravelImage travelImage3 = createTravelImage(travelPlace2, "test1", true);
+        TravelImage travelImage4 = createTravelImage(travelPlace2, "test2", false);
+        travelPlace2 = createTravelPlace(2L, country, city, district, apiCategory, List.of(travelImage3, travelImage4));
+
+        TravelRoute route1 = createTravelRoute(schedule1, travelPlace1, 1);
+        TravelRoute route2 = createTravelRoute(schedule1, travelPlace1, 2);
+        TravelRoute route3 = createTravelRoute(schedule1, travelPlace2, 3);
+        schedule1.setTravelRouteList(new ArrayList<>(List.of(route1, route2, route3)));
+        schedule2.setTravelRouteList(new ArrayList<>());
 
         List<TravelSchedule> schedules = new ArrayList<>(List.of(schedule1, schedule2));
         Page<TravelSchedule> schedulePage = PageUtils.createPage(schedules, pageable, schedules.size());
@@ -272,13 +294,13 @@ public class ScheduleServiceTest extends ScheduleTest {
 
         // then
         List<ScheduleInfoResponse> content = response.getContent();
-        assertEquals(response.getTotalElements(), 3);
-        assertEquals(response.getTotalSharedElements(), 2);
-        assertEquals(content.get(0).getScheduleName(), schedule1.getScheduleName());
-        assertNotNull(content.get(0).getSinceUpdate());
-        assertNotNull(content.get(0).getThumbnailUrl());
-        assertEquals(content.get(0).getAuthor().getNickname(), member1.getNickname());
-        assertEquals(content.get(0).getRole(), AttendeeRole.AUTHOR);
+        assertThat(response.getTotalElements()).isEqualTo(3);
+        assertThat(response.getTotalSharedElements()).isEqualTo(2);
+        assertThat(content.get(0).getScheduleName()).isEqualTo(schedule1.getScheduleName());
+        assertThat(content.get(0).getSinceUpdate()).isNotNull();
+        assertThat(content.get(0).getThumbnailUrl()).isNotNull();
+        assertThat(content.get(0).getAuthor().getNickname()).isEqualTo(member1.getNickname());
+        assertThat(content.get(0).getRole()).isEqualTo(AttendeeRole.AUTHOR);
     }
 
 
@@ -296,9 +318,9 @@ public class ScheduleServiceTest extends ScheduleTest {
         SchedulePageResponse<ScheduleInfoResponse> response = scheduleService.getSharedSchedulesByUserId(1, member1.getUserId());
 
         // then
-        assertEquals(response.getTotalElements(), 2);
-        assertEquals(response.getTotalSharedElements(), 0);
-        assertTrue(response.getContent().isEmpty());
+        assertThat(response.getTotalElements()).isEqualTo(2);
+        assertThat(response.getTotalSharedElements()).isEqualTo(0);
+        assertThat(response.getContent()).isEmpty();
     }
 
     @Test
@@ -306,7 +328,15 @@ public class ScheduleServiceTest extends ScheduleTest {
     void getSharedSchedulesByUserIdNoImageThumbnail(){
         // given
         Pageable pageable = PageUtils.schedulePageable(1);
-        travelPlace1.getTravelImageList().get(0).setThumbnail(false);
+
+        travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, new ArrayList<>());
+        travelPlace2 = createTravelPlace(2L, country, city, district, apiCategory, new ArrayList<>());
+
+        TravelRoute route1 = createTravelRoute(schedule1, travelPlace1, 1);
+        TravelRoute route2 = createTravelRoute(schedule1, travelPlace1, 2);
+        TravelRoute route3 = createTravelRoute(schedule1, travelPlace2, 3);
+        schedule1.setTravelRouteList(new ArrayList<>(List.of(route1, route2, route3)));
+        schedule2.setTravelRouteList(new ArrayList<>());
 
         List<TravelSchedule> schedules = new ArrayList<>(List.of(schedule1, schedule2));
         Page<TravelSchedule> schedulePage = PageUtils.createPage(schedules, pageable, schedules.size());
@@ -319,11 +349,11 @@ public class ScheduleServiceTest extends ScheduleTest {
 
         // then
         List<ScheduleInfoResponse> content = response.getContent();
-        assertEquals(response.getTotalElements(), 3);
-        assertEquals(response.getTotalSharedElements(), 2);
-        assertEquals(content.get(0).getScheduleName(), "테스트1");
-        assertNotNull(content.get(0).getSinceUpdate());
-        assertNull(content.get(0).getThumbnailUrl());
+        assertThat(response.getTotalElements()).isEqualTo(3);
+        assertThat(response.getTotalSharedElements()).isEqualTo(2);
+        assertThat(content.get(0).getScheduleName()).isEqualTo("테스트1");
+        assertThat(content.get(0).getSinceUpdate()).isNotNull();
+        assertThat(content.get(0).getThumbnailUrl()).isNull();
 
     }
 
@@ -333,7 +363,7 @@ public class ScheduleServiceTest extends ScheduleTest {
     void getSharedSchedulesByUserIdNoImageData(){
         // given
         Pageable pageable = PageUtils.schedulePageable(1);
-        travelPlace1.setTravelImageList(new ArrayList<>());
+        travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, new ArrayList<>());
 
         List<TravelSchedule> schedules = new ArrayList<>(List.of(schedule1));
         Page<TravelSchedule> schedulePage = PageUtils.createPage(schedules, pageable, schedules.size());
@@ -346,11 +376,11 @@ public class ScheduleServiceTest extends ScheduleTest {
 
         // then
         List<ScheduleInfoResponse> content = response.getContent();
-        assertEquals(response.getTotalElements(), 1);
-        assertEquals(response.getTotalSharedElements(), 1);
-        assertEquals(content.get(0).getScheduleName(), "테스트1");
-        assertNotNull(content.get(0).getSinceUpdate());
-        assertNull(content.get(0).getThumbnailUrl());
+        assertThat(response.getTotalElements()).isEqualTo(1);
+        assertThat(response.getTotalSharedElements()).isEqualTo(1);
+        assertThat(content.get(0).getScheduleName()).isEqualTo("테스트1");
+        assertThat(content.get(0).getSinceUpdate()).isNotNull();
+        assertThat(content.get(0).getThumbnailUrl()).isNull();
 
     }
 
@@ -412,12 +442,12 @@ public class ScheduleServiceTest extends ScheduleTest {
 
         // then
         List<ScheduleInfoResponse> content = response.getContent();
-        assertEquals(response.getTotalElements(), 3);
-        assertEquals(response.getTotalSharedElements(), 1);
-        assertNotNull(content.get(0).getScheduleName());
-        assertNotNull(content.get(0).getSinceUpdate());
-        assertEquals(content.get(0).getAuthor().getNickname(), member1.getNickname());
-        assertEquals(content.get(0).getRole(), AttendeeRole.AUTHOR);
+        assertThat(response.getTotalElements()).isEqualTo(3);
+        assertThat(response.getTotalSharedElements()).isEqualTo(1);
+        assertThat(content.get(0).getScheduleName()).isNotNull();
+        assertThat(content.get(0).getSinceUpdate()).isNotNull();
+        assertThat(content.get(0).getAuthor().getNickname()).isEqualTo(member1.getNickname());
+        assertThat(content.get(0).getRole()).isEqualTo(AttendeeRole.AUTHOR);
     }
 
     @Test
@@ -438,11 +468,11 @@ public class ScheduleServiceTest extends ScheduleTest {
 
         // then
         List<ScheduleInfoResponse> content = response.getContent();
-        assertEquals(response.getTotalElements(), 1);
-        assertEquals(response.getTotalSharedElements(), 0);
-        assertEquals(content.get(0).getScheduleName(), schedule3.getScheduleName());
-        assertNotNull(content.get(0).getSinceUpdate());
-        assertEquals(content.get(0).getAuthor().getNickname(), member1.getNickname());
+        assertThat(response.getTotalElements()).isEqualTo(1);
+        assertThat(response.getTotalSharedElements()).isEqualTo(0);
+        assertThat(content.get(0).getScheduleName()).isEqualTo(schedule3.getScheduleName());
+        assertThat(content.get(0).getSinceUpdate()).isNotNull();
+        assertThat(content.get(0).getAuthor().getNickname()).isEqualTo(member1.getNickname());
     }
 
     @Test
@@ -460,9 +490,9 @@ public class ScheduleServiceTest extends ScheduleTest {
         SchedulePageResponse<ScheduleInfoResponse> response = scheduleService.searchAllSchedules(1, keyword, member1.getUserId());
 
         // then
-        assertEquals(response.getTotalElements(), 0);
-        assertEquals(response.getTotalSharedElements(), 2);
-        assertTrue(response.getContent().isEmpty());
+        assertThat(response.getTotalElements()).isEqualTo(0);
+        assertThat(response.getTotalSharedElements()).isEqualTo(2);
+        assertThat(response.getContent()).isEmpty();
     }
 
     @Test
@@ -471,9 +501,12 @@ public class ScheduleServiceTest extends ScheduleTest {
         // given
         String keyword = "테스트";
         Pageable pageable = PageUtils.schedulePageable(1);
-        travelPlace1.getTravelImageList().get(0).setThumbnail(false);
 
-        List<TravelSchedule> schedules = new ArrayList<>(List.of(schedule1, schedule2));
+        travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, new ArrayList<>());
+        travelPlace2 = createTravelPlace(2L, country, city, district, apiCategory, new ArrayList<>());
+
+
+        List<TravelSchedule> schedules = List.of(schedule1, schedule2);
         Page<TravelSchedule> schedulePage = PageUtils.createPage(schedules, pageable, schedules.size());
 
         when(travelScheduleRepository.searchTravelSchedulesByUserIdAndKeyword(pageable, keyword, member1.getUserId())).thenReturn(schedulePage);
@@ -484,11 +517,11 @@ public class ScheduleServiceTest extends ScheduleTest {
 
         // then
         List<ScheduleInfoResponse> content = response.getContent();
-        assertEquals(response.getTotalElements(), 2);
-        assertEquals(response.getTotalSharedElements(), 1);
-        assertEquals(content.get(0).getScheduleName(), "테스트1");
-        assertNotNull(content.get(0).getSinceUpdate());
-        assertNull(content.get(0).getThumbnailUrl());
+        assertThat(response.getTotalElements()).isEqualTo(2);
+        assertThat(response.getTotalSharedElements()).isEqualTo(1);
+        assertThat(content.get(0).getScheduleName()).isEqualTo("테스트1");
+        assertThat(content.get(0).getSinceUpdate()).isNotNull();
+        assertThat(content.get(0).getThumbnailUrl()).isNull();
 
     }
 
@@ -499,9 +532,9 @@ public class ScheduleServiceTest extends ScheduleTest {
         // given
         String keyword = "1";
         Pageable pageable = PageUtils.schedulePageable(1);
-        travelPlace1.setTravelImageList(new ArrayList<>());
+        travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, new ArrayList<>());
 
-        List<TravelSchedule> schedules = new ArrayList<>(List.of(schedule1));
+        List<TravelSchedule> schedules = List.of(schedule1);
         Page<TravelSchedule> schedulePage = PageUtils.createPage(schedules, pageable, schedules.size());
 
         when(travelScheduleRepository.searchTravelSchedulesByUserIdAndKeyword(pageable, keyword, member1.getUserId())).thenReturn(schedulePage);
@@ -512,11 +545,11 @@ public class ScheduleServiceTest extends ScheduleTest {
 
         // then
         List<ScheduleInfoResponse> content = response.getContent();
-        assertEquals(response.getTotalElements(), 1);
-        assertEquals(response.getTotalSharedElements(), 1);
-        assertEquals(content.get(0).getScheduleName(), "테스트1");
-        assertNotNull(content.get(0).getSinceUpdate());
-        assertNull(content.get(0).getThumbnailUrl());
+        assertThat(response.getTotalElements()).isEqualTo(1);
+        assertThat(response.getTotalSharedElements()).isEqualTo(1);
+        assertThat(content.get(0).getScheduleName()).isEqualTo("테스트1");
+        assertThat(content.get(0).getSinceUpdate()).isNotNull();
+        assertThat(content.get(0).getThumbnailUrl()).isNull();
 
     }
 
@@ -526,6 +559,21 @@ public class ScheduleServiceTest extends ScheduleTest {
         // given
         String keyword = "테스트";
         Pageable pageable = PageUtils.schedulePageable(1);
+
+
+        TravelImage travelImage1 = createTravelImage(travelPlace1, "test1", true);
+        TravelImage travelImage2 = createTravelImage(travelPlace1, "test2", false);
+        travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, List.of(travelImage1, travelImage2));
+
+        TravelImage travelImage3 = createTravelImage(travelPlace2, "test1", true);
+        TravelImage travelImage4 = createTravelImage(travelPlace2, "test2", false);
+        travelPlace2 = createTravelPlace(2L, country, city, district, apiCategory, List.of(travelImage3, travelImage4));
+
+        TravelRoute route1 = createTravelRoute(schedule1, travelPlace1, 1);
+        TravelRoute route2 = createTravelRoute(schedule1, travelPlace1, 2);
+        TravelRoute route3 = createTravelRoute(schedule1, travelPlace2, 3);
+        schedule1.setTravelRouteList(new ArrayList<>(List.of(route1, route2, route3)));
+        schedule2.setTravelRouteList(new ArrayList<>());
 
         List<TravelSchedule> schedules = new ArrayList<>(List.of(schedule1, schedule2, schedule3));
         Page<TravelSchedule> schedulePage = PageUtils.createPage(schedules, pageable, schedules.size());
@@ -538,13 +586,13 @@ public class ScheduleServiceTest extends ScheduleTest {
 
         // then
         List<ScheduleInfoResponse> content = response.getContent();
-        assertEquals(response.getTotalElements(), 5);
-        assertEquals(response.getTotalSharedElements(), 3);
-        assertEquals(content.get(0).getScheduleName(), schedule1.getScheduleName());
-        assertNotNull(content.get(0).getSinceUpdate());
-        assertNotNull(content.get(0).getThumbnailUrl());
-        assertEquals(content.get(0).getAuthor().getNickname(), member1.getNickname());
-        assertEquals(content.get(0).getRole(), AttendeeRole.AUTHOR);
+        assertThat(response.getTotalElements()).isEqualTo(5);
+        assertThat(response.getTotalSharedElements()).isEqualTo(3);
+        assertThat(content.get(0).getScheduleName()).isEqualTo(schedule1.getScheduleName());
+        assertThat(content.get(0).getSinceUpdate()).isNotNull();
+        assertThat(content.get(0).getThumbnailUrl()).isNotNull();
+        assertThat(content.get(0).getAuthor().getNickname()).isEqualTo(member1.getNickname());
+        assertThat(content.get(0).getRole()).isEqualTo(AttendeeRole.AUTHOR);
     }
 
 
@@ -563,9 +611,9 @@ public class ScheduleServiceTest extends ScheduleTest {
         SchedulePageResponse<ScheduleInfoResponse> response = scheduleService.searchSharedSchedules(1, keyword, member1.getUserId());
 
         // then
-        assertEquals(response.getTotalElements(), 2);
-        assertEquals(response.getTotalSharedElements(), 0);
-        assertTrue(response.getContent().isEmpty());
+        assertThat(response.getTotalElements()).isEqualTo(2);
+        assertThat(response.getTotalSharedElements()).isEqualTo(0);
+        assertThat(response.getContent()).isEmpty();
     }
 
     @Test
@@ -574,7 +622,15 @@ public class ScheduleServiceTest extends ScheduleTest {
         // given
         String keyword = "테스트";
         Pageable pageable = PageUtils.schedulePageable(1);
-        travelPlace1.getTravelImageList().get(0).setThumbnail(false);
+
+        travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, new ArrayList<>());
+        travelPlace2 = createTravelPlace(2L, country, city, district, apiCategory, new ArrayList<>());
+
+        TravelRoute route1 = createTravelRoute(schedule1, travelPlace1, 1);
+        TravelRoute route2 = createTravelRoute(schedule1, travelPlace1, 2);
+        TravelRoute route3 = createTravelRoute(schedule1, travelPlace2, 3);
+        schedule1.setTravelRouteList(new ArrayList<>(List.of(route1, route2, route3)));
+        schedule2.setTravelRouteList(new ArrayList<>());
 
         List<TravelSchedule> schedules = new ArrayList<>(List.of(schedule1, schedule2));
         Page<TravelSchedule> schedulePage = PageUtils.createPage(schedules, pageable, schedules.size());
@@ -587,11 +643,11 @@ public class ScheduleServiceTest extends ScheduleTest {
 
         // then
         List<ScheduleInfoResponse> content = response.getContent();
-        assertEquals(response.getTotalElements(), 3);
-        assertEquals(response.getTotalSharedElements(), 2);
-        assertEquals(content.get(0).getScheduleName(), "테스트1");
-        assertNotNull(content.get(0).getSinceUpdate());
-        assertNull(content.get(0).getThumbnailUrl());
+        assertThat(response.getTotalElements()).isEqualTo(3);
+        assertThat(response.getTotalSharedElements()).isEqualTo(2);
+        assertThat(content.get(0).getScheduleName()).isEqualTo("테스트1");
+        assertThat(content.get(0).getSinceUpdate()).isNotNull();
+        assertThat(content.get(0).getThumbnailUrl()).isNull();
 
     }
 
@@ -602,7 +658,7 @@ public class ScheduleServiceTest extends ScheduleTest {
         // given
         String keyword = "테스트";
         Pageable pageable = PageUtils.schedulePageable(1);
-        travelPlace1.setTravelImageList(new ArrayList<>());
+        travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, new ArrayList<>());
 
         List<TravelSchedule> schedules = new ArrayList<>(List.of(schedule1, schedule2));
         Page<TravelSchedule> schedulePage = PageUtils.createPage(schedules, pageable, schedules.size());
@@ -615,11 +671,11 @@ public class ScheduleServiceTest extends ScheduleTest {
 
         // then
         List<ScheduleInfoResponse> content = response.getContent();
-        assertEquals(response.getTotalElements(), 1);
-        assertEquals(response.getTotalSharedElements(), 2);
-        assertEquals(content.get(0).getScheduleName(), "테스트1");
-        assertNotNull(content.get(0).getSinceUpdate());
-        assertNull(content.get(0).getThumbnailUrl());
+        assertThat(response.getTotalElements()).isEqualTo(1);
+        assertThat(response.getTotalSharedElements()).isEqualTo(2);
+        assertThat(content.get(0).getScheduleName()).isEqualTo("테스트1");
+        assertThat(content.get(0).getSinceUpdate()).isNotNull();
+        assertThat(content.get(0).getThumbnailUrl()).isNull();
 
     }
 
@@ -627,35 +683,52 @@ public class ScheduleServiceTest extends ScheduleTest {
     @DisplayName("TravelSchedule 를 ScheduleInfoResponse 로 변경")
     void createScheduleInfoResponse(){
         // given
+        TravelImage travelImage1 = createTravelImage(travelPlace1, "test1", true);
+        TravelImage travelImage2 = createTravelImage(travelPlace1, "test2", false);
+        travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, List.of(travelImage1, travelImage2));
+
+        TravelImage travelImage3 = createTravelImage(travelPlace2, "test1", true);
+        TravelImage travelImage4 = createTravelImage(travelPlace2, "test2", false);
+        travelPlace2 = createTravelPlace(2L, country, city, district, apiCategory, List.of(travelImage3, travelImage4));
+
+        TravelRoute route1 = createTravelRoute(schedule1, travelPlace1, 1);
+        TravelRoute route2 = createTravelRoute(schedule1, travelPlace1, 2);
+        TravelRoute route3 = createTravelRoute(schedule1, travelPlace2, 3);
+        schedule1.setTravelRouteList(new ArrayList<>(List.of(route1, route2, route3)));
+        schedule2.setTravelRouteList(new ArrayList<>());
+
         List<TravelSchedule> travelScheduleList = new ArrayList<>(List.of(schedule1));
         Page<TravelSchedule> schedulePage = PageUtils.createPage(travelScheduleList, PageUtils.schedulePageable(1), travelScheduleList.size());
         // when
         List<ScheduleInfoResponse> response = scheduleService.createScheduleInfoResponse(schedulePage, member1.getUserId());
 
         // then
-        assertEquals(response.size(), 1);
-        assertEquals(response.get(0).getScheduleName(), schedule1.getScheduleName());
-        assertNotNull(response.get(0).getSinceUpdate());
-        assertNotNull(response.get(0).getThumbnailUrl());
-        assertEquals(response.get(0).getAuthor().getNickname(), member1.getNickname());
+        assertThat(response.size()).isEqualTo(1);
+        assertThat(response.get(0).getScheduleName()).isEqualTo(schedule1.getScheduleName());
+        assertThat(response.get(0).getSinceUpdate()).isNotNull();
+        assertThat(response.get(0).getThumbnailUrl()).isNotNull();
+        assertThat(response.get(0).getAuthor().getNickname()).isEqualTo(member1.getNickname());
     }
 
     @Test
     @DisplayName("TravelSchedule 를 ScheduleInfoResponse 로 변경 시 썸네일 없는 경우")
     void createScheduleInfoResponseWithoutThumbnail(){
         // given
+        travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, new ArrayList<>());
+        travelPlace2 = createTravelPlace(2L, country, city, district, apiCategory, new ArrayList<>());
+
         List<TravelSchedule> travelScheduleList = new ArrayList<>(List.of(schedule1));
         Page<TravelSchedule> schedulePage = PageUtils.createPage(travelScheduleList, PageUtils.schedulePageable(1), travelScheduleList.size());
-        travelPlace1.getTravelImageList().get(0).setThumbnail(false);
+
 
         // when
         List<ScheduleInfoResponse> response = scheduleService.createScheduleInfoResponse(schedulePage, member1.getUserId());
 
         // then
-        assertEquals(response.get(0).getScheduleName(), schedule1.getScheduleName());
-        assertNotNull(response.get(0).getSinceUpdate());
-        assertNull(response.get(0).getThumbnailUrl());
-        assertEquals(response.get(0).getAuthor().getNickname(), member1.getNickname());
+        assertThat(response.get(0).getScheduleName()).isEqualTo(schedule1.getScheduleName());
+        assertThat(response.get(0).getSinceUpdate()).isNotNull();
+        assertThat(response.get(0).getThumbnailUrl()).isNull();
+        assertThat(response.get(0).getAuthor().getNickname()).isEqualTo(member1.getNickname());
     }
 
     @Test
@@ -672,8 +745,8 @@ public class ScheduleServiceTest extends ScheduleTest {
         DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> scheduleService.createScheduleInfoResponse(schedulePage, member1.getUserId()));
 
         // then
-        assertEquals(fail.getHttpStatus(), ErrorCode.AUTHOR_NOT_FOUND.getStatus());
-        assertEquals(fail.getMessage(), ErrorCode.AUTHOR_NOT_FOUND.getMessage());
+        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.AUTHOR_NOT_FOUND.getStatus());
+        assertThat(fail.getMessage()).isEqualTo(ErrorCode.AUTHOR_NOT_FOUND.getMessage());
 
     }
 
@@ -688,8 +761,8 @@ public class ScheduleServiceTest extends ScheduleTest {
         ForbiddenScheduleException fail = assertThrows(ForbiddenScheduleException.class, () -> scheduleService.createScheduleInfoResponse(schedulePage, member2.getUserId()));
 
         // then
-        assertEquals(fail.getHttpStatus(), ErrorCode.FORBIDDEN_ACCESS_SCHEDULE.getStatus());
-        assertEquals(fail.getMessage(), ErrorCode.FORBIDDEN_ACCESS_SCHEDULE.getMessage());
+        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.FORBIDDEN_ACCESS_SCHEDULE.getStatus());
+        assertThat(fail.getMessage()).isEqualTo(ErrorCode.FORBIDDEN_ACCESS_SCHEDULE.getMessage());
 
     }
 
@@ -701,8 +774,8 @@ public class ScheduleServiceTest extends ScheduleTest {
         AuthorDTO response = scheduleService.createAuthorDTO(schedule1);
 
         // then
-        assertEquals(response.getNickname(), member1.getNickname());
-        assertEquals(response.getProfileUrl(), member1.getProfileImage().getS3ObjectUrl());
+        assertThat(response.getNickname()).isEqualTo(member1.getNickname());
+        assertThat(response.getProfileUrl()).isEqualTo(member1.getProfileImage().getS3ObjectUrl());
 
     }
 
@@ -718,50 +791,11 @@ public class ScheduleServiceTest extends ScheduleTest {
         DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> scheduleService.createAuthorDTO(schedule1));
 
         // then
-        assertEquals(fail.getHttpStatus(), ErrorCode.AUTHOR_NOT_FOUND.getStatus());
-        assertEquals(fail.getMessage(), ErrorCode.AUTHOR_NOT_FOUND.getMessage());
+        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.AUTHOR_NOT_FOUND.getStatus());
+        assertThat(fail.getMessage()).isEqualTo(ErrorCode.AUTHOR_NOT_FOUND.getMessage());
 
     }
 
-
-    @Test
-    @DisplayName("썸네일 조회")
-    void getThumbnailUrl(){
-        // given
-        // when
-        String response = scheduleService.getThumbnailUrl(schedule1);
-
-        // then
-        System.out.println(response);
-        assertNotNull(response);
-    }
-
-    @Test
-    @DisplayName("썸네일 조회 시 썸네일 이미지 없는 경우")
-    void getThumbnailUrlNoThumbnailImage(){
-        // given
-        travelPlace1.getTravelImageList().get(0).setThumbnail(false);
-
-        // when
-        String response = scheduleService.getThumbnailUrl(schedule1);
-
-        // then
-        assertNull(response);
-    }
-
-
-    @Test
-    @DisplayName("썸네일 조회 시 저장된 이미지 없는 경우")
-    void getThumbnailUrlNoImageData(){
-        // given
-        travelPlace1.setTravelImageList(new ArrayList<>());
-
-        // when
-        String response = scheduleService.getThumbnailUrl(schedule1);
-
-        // then
-        assertNull(response);
-    }
 
 
     @Test
@@ -779,7 +813,7 @@ public class ScheduleServiceTest extends ScheduleTest {
 
         // then
         verify(travelAttendeeRepository, times(1)).save(any(TravelAttendee.class));
-        assertEquals(response.getScheduleId(), schedule1.getScheduleId());
+        assertThat(response.getScheduleId()).isEqualTo(schedule1.getScheduleId());
 
     }
 
@@ -796,8 +830,8 @@ public class ScheduleServiceTest extends ScheduleTest {
         DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> scheduleService.createSchedule(request, "test"));
 
         // then
-        assertEquals(fail.getHttpStatus(), ErrorCode.MEMBER_NOT_FOUND.getStatus());
-        assertEquals(fail.getMessage(), ErrorCode.MEMBER_NOT_FOUND.getMessage());
+        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.MEMBER_NOT_FOUND.getStatus());
+        assertThat(fail.getMessage()).isEqualTo(ErrorCode.MEMBER_NOT_FOUND.getMessage());
 
     }
 
@@ -805,8 +839,15 @@ public class ScheduleServiceTest extends ScheduleTest {
     @DisplayName("일정 상세 조회")
     void getScheduleDetail(){
         // given
-        List<TravelPlace> placeList = new ArrayList<>(List.of(travelPlace1, travelPlace2));
+        TravelImage travelImage1 = createTravelImage(travelPlace1, "test1", true);
+        TravelImage travelImage2 = createTravelImage(travelPlace1, "test2", false);
+        travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, List.of(travelImage1, travelImage2));
 
+        TravelImage travelImage3 = createTravelImage(travelPlace2, "test1", true);
+        TravelImage travelImage4 = createTravelImage(travelPlace2, "test2", false);
+        travelPlace2 = createTravelPlace(2L, country, city, district, apiCategory, List.of(travelImage3, travelImage4));
+
+        List<PlaceResponse> placeList = List.of(PlaceResponse.from(travelPlace1), PlaceResponse.from(travelPlace2));
         Pageable pageable = PageUtils.defaultPageable(1);
 
         when(travelScheduleRepository.findByScheduleId(any())).thenReturn(Optional.of(schedule1));
@@ -817,11 +858,11 @@ public class ScheduleServiceTest extends ScheduleTest {
         ScheduleDetailResponse response = scheduleService.getScheduleDetail(schedule1.getScheduleId(), 1);
 
         // then
-        assertEquals(response.getScheduleName(), schedule1.getScheduleName());
-        assertEquals(response.getCreatedAt(), schedule1.getCreatedAt());
-        assertEquals(response.getPlaceList().getTotalElements(), placeList.size());
-        assertEquals(response.getPlaceList().getContent().get(0).getPlaceName(), placeList.get(0).getPlaceName());
-        assertNotNull(response.getPlaceList().getContent().get(0).getThumbnailUrl());
+        assertThat(response.getScheduleName()).isEqualTo(schedule1.getScheduleName());
+        assertThat(response.getCreatedAt()).isEqualTo(schedule1.getCreatedAt());
+        assertThat(response.getPlaceList().getTotalElements()).isEqualTo(placeList.size());
+        assertThat(response.getPlaceList().getContent().get(0).getPlaceName()).isEqualTo(placeList.get(0).getPlaceName());
+        assertThat(response.getPlaceList().getContent().get(0).getThumbnailUrl()).isNotNull();
     }
 
     @Test
@@ -838,10 +879,10 @@ public class ScheduleServiceTest extends ScheduleTest {
         ScheduleDetailResponse response = scheduleService.getScheduleDetail(schedule1.getScheduleId(), 1);
 
         // then
-        assertEquals(response.getScheduleName(), schedule1.getScheduleName());
-        assertEquals(response.getCreatedAt(), schedule1.getCreatedAt());
-        assertEquals(response.getPlaceList().getTotalElements(), 0);
-        assertTrue(response.getPlaceList().getContent().isEmpty());
+        assertThat(response.getScheduleName()).isEqualTo(schedule1.getScheduleName());
+        assertThat(response.getCreatedAt()).isEqualTo(schedule1.getCreatedAt());
+        assertThat(response.getPlaceList().getTotalElements()).isEqualTo(0);
+        assertThat(response.getPlaceList().getContent()).isEmpty();
     }
 
     @Test
@@ -854,8 +895,8 @@ public class ScheduleServiceTest extends ScheduleTest {
         DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> scheduleService.getScheduleDetail(0L, 1));
 
         // then
-        assertEquals(fail.getHttpStatus(), ErrorCode.SCHEDULE_NOT_FOUND.getStatus());
-        assertEquals(fail.getMessage(), ErrorCode.SCHEDULE_NOT_FOUND.getMessage());
+        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.SCHEDULE_NOT_FOUND.getStatus());
+        assertThat(fail.getMessage()).isEqualTo(ErrorCode.SCHEDULE_NOT_FOUND.getMessage());
     }
 
     @Test
@@ -863,6 +904,15 @@ public class ScheduleServiceTest extends ScheduleTest {
     void updateSchedule(){
         String userId = member1.getUserId();
         Long scheduleId = schedule1.getScheduleId();
+
+        TravelImage travelImage1 = createTravelImage(travelPlace1, "test1", true);
+        TravelImage travelImage2 = createTravelImage(travelPlace1, "test2", false);
+        travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, List.of(travelImage1, travelImage2));
+
+        TravelImage travelImage3 = createTravelImage(travelPlace2, "test1", true);
+        TravelImage travelImage4 = createTravelImage(travelPlace2, "test2", false);
+        travelPlace2 = createTravelPlace(2L, country, city, district, apiCategory, List.of(travelImage3, travelImage4));
+
 
         RouteRequest routeRequest1 = createRouteRequest(1, travelPlace1.getPlaceId());
         RouteRequest routeRequest2 = createRouteRequest(2, travelPlace2.getPlaceId());
@@ -876,10 +926,10 @@ public class ScheduleServiceTest extends ScheduleTest {
         assertDoesNotThrow(() -> scheduleService.updateSchedule(userId, scheduleId, scheduleUpdateRequest));
 
         // then
-        assertEquals(schedule1.getTravelRouteList().size(), 2);
-        assertEquals(schedule1.getScheduleName(), scheduleUpdateRequest.getScheduleName());
-        assertEquals(schedule1.getStartDate(), scheduleUpdateRequest.getStartDate());
-        assertEquals(schedule1.getTravelRouteList().get(0).getTravelPlace().getPlaceName(), travelPlace1.getPlaceName());
+        assertThat(schedule1.getTravelRouteList().size()).isEqualTo(2);
+        assertThat(schedule1.getScheduleName()).isEqualTo(scheduleUpdateRequest.getScheduleName());
+        assertThat(schedule1.getStartDate()).isEqualTo(scheduleUpdateRequest.getStartDate());
+        assertThat(schedule1.getTravelRouteList().get(0).getTravelPlace().getPlaceName()).isEqualTo(travelPlace1.getPlaceName());
     }
 
     @Test
@@ -888,6 +938,15 @@ public class ScheduleServiceTest extends ScheduleTest {
         // given
         String userId = member1.getUserId();
         Long scheduleId = schedule2.getScheduleId();
+
+
+        TravelImage travelImage1 = createTravelImage(travelPlace1, "test1", true);
+        TravelImage travelImage2 = createTravelImage(travelPlace1, "test2", false);
+        travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, List.of(travelImage1, travelImage2));
+
+        TravelImage travelImage3 = createTravelImage(travelPlace2, "test1", true);
+        TravelImage travelImage4 = createTravelImage(travelPlace2, "test2", false);
+        travelPlace2 = createTravelPlace(2L, country, city, district, apiCategory, List.of(travelImage3, travelImage4));
 
         RouteRequest routeRequest1 = createRouteRequest(1, travelPlace1.getPlaceId());
         RouteRequest routeRequest2 = createRouteRequest(2, travelPlace2.getPlaceId());
@@ -901,15 +960,29 @@ public class ScheduleServiceTest extends ScheduleTest {
         assertDoesNotThrow(() -> scheduleService.updateSchedule(userId, scheduleId, scheduleUpdateRequest));
 
         // then
-        assertEquals(schedule2.getTravelRouteList().size(), 2);
-        assertEquals(schedule2.getScheduleName(), scheduleUpdateRequest.getScheduleName());
-        assertEquals(schedule2.getStartDate(), scheduleUpdateRequest.getStartDate());
-        assertEquals(schedule2.getTravelRouteList().get(0).getTravelPlace().getPlaceName(), travelPlace1.getPlaceName());
+        assertThat(schedule2.getTravelRouteList().size()).isEqualTo(2);
+        assertThat(schedule2.getScheduleName()).isEqualTo(scheduleUpdateRequest.getScheduleName());
+        assertThat(schedule2.getStartDate()).isEqualTo(scheduleUpdateRequest.getStartDate());
+        assertThat(schedule2.getTravelRouteList().get(0).getTravelPlace().getPlaceName()).isEqualTo(travelPlace1.getPlaceName());
     }
 
     @Test
     @DisplayName("일정의 여행 루트 수정 시 기존에 저장된 여행 루트가 존재하는 경우")
     void updateTravelRouteInSchedule(){
+        TravelImage travelImage1 = createTravelImage(travelPlace1, "test1", true);
+        TravelImage travelImage2 = createTravelImage(travelPlace1, "test2", false);
+        travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, List.of(travelImage1, travelImage2));
+
+        TravelImage travelImage3 = createTravelImage(travelPlace2, "test1", true);
+        TravelImage travelImage4 = createTravelImage(travelPlace2, "test2", false);
+        travelPlace2 = createTravelPlace(2L, country, city, district, apiCategory, List.of(travelImage3, travelImage4));
+
+        TravelRoute route1 = createTravelRoute(schedule1, travelPlace1, 1);
+        TravelRoute route2 = createTravelRoute(schedule1, travelPlace1, 2);
+        TravelRoute route3 = createTravelRoute(schedule1, travelPlace2, 3);
+        schedule1.setTravelRouteList(new ArrayList<>(List.of(route1, route2, route3)));
+        schedule2.setTravelRouteList(new ArrayList<>());
+
         RouteRequest routeRequest1 = createRouteRequest(1, travelPlace1.getPlaceId());
         RouteRequest routeRequest2 = createRouteRequest(2, travelPlace2.getPlaceId());
         ScheduleUpdateRequest scheduleUpdateRequest = createUpdateScheduleRequest(new ArrayList<>(List.of(routeRequest1, routeRequest2)));
@@ -921,8 +994,8 @@ public class ScheduleServiceTest extends ScheduleTest {
         assertDoesNotThrow(() -> scheduleService.updateTravelRouteInSchedule(schedule1, scheduleUpdateRequest.getTravelRoute()));
 
         // then
-        assertEquals(schedule1.getTravelRouteList().size(), 2);
-        assertEquals(schedule1.getTravelRouteList().get(0).getTravelPlace().getPlaceName(), travelPlace1.getPlaceName());
+        assertThat(schedule1.getTravelRouteList().size()).isEqualTo(2);
+        assertThat(schedule1.getTravelRouteList().get(0).getTravelPlace().getPlaceName()).isEqualTo(travelPlace1.getPlaceName());
     }
 
 
@@ -932,6 +1005,14 @@ public class ScheduleServiceTest extends ScheduleTest {
         // given
         String userId = member1.getUserId();
         Long scheduleId = schedule1.getScheduleId();
+
+        TravelImage travelImage1 = createTravelImage(travelPlace1, "test1", true);
+        TravelImage travelImage2 = createTravelImage(travelPlace1, "test2", false);
+        travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, List.of(travelImage1, travelImage2));
+
+        TravelImage travelImage3 = createTravelImage(travelPlace2, "test1", true);
+        TravelImage travelImage4 = createTravelImage(travelPlace2, "test2", false);
+        travelPlace2 = createTravelPlace(2L, country, city, district, apiCategory, List.of(travelImage3, travelImage4));
 
         RouteRequest routeRequest1 = createRouteRequest(1, travelPlace1.getPlaceId());
         RouteRequest routeRequest2 = createRouteRequest(2, travelPlace2.getPlaceId());
@@ -943,8 +1024,8 @@ public class ScheduleServiceTest extends ScheduleTest {
         DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> scheduleService.updateSchedule(userId, scheduleId, scheduleUpdateRequest));
 
         // then
-        assertEquals(fail.getHttpStatus(), ErrorCode.SCHEDULE_NOT_FOUND.getStatus());
-        assertEquals(fail.getMessage(), ErrorCode.SCHEDULE_NOT_FOUND.getMessage());
+        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.SCHEDULE_NOT_FOUND.getStatus());
+        assertThat(fail.getMessage()).isEqualTo(ErrorCode.SCHEDULE_NOT_FOUND.getMessage());
 
     }
 
@@ -954,6 +1035,20 @@ public class ScheduleServiceTest extends ScheduleTest {
         // given
         String userId = member2.getUserId();
         Long scheduleId = schedule3.getScheduleId();
+
+        TravelImage travelImage1 = createTravelImage(travelPlace1, "test1", true);
+        TravelImage travelImage2 = createTravelImage(travelPlace1, "test2", false);
+        travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, List.of(travelImage1, travelImage2));
+
+        TravelImage travelImage3 = createTravelImage(travelPlace2, "test1", true);
+        TravelImage travelImage4 = createTravelImage(travelPlace2, "test2", false);
+        travelPlace2 = createTravelPlace(2L, country, city, district, apiCategory, List.of(travelImage3, travelImage4));
+
+        TravelRoute route1 = createTravelRoute(schedule1, travelPlace1, 1);
+        TravelRoute route2 = createTravelRoute(schedule1, travelPlace1, 2);
+        TravelRoute route3 = createTravelRoute(schedule1, travelPlace2, 3);
+        schedule1.setTravelRouteList(new ArrayList<>(List.of(route1, route2, route3)));
+        schedule2.setTravelRouteList(new ArrayList<>());
 
         RouteRequest routeRequest1 = createRouteRequest(1, travelPlace1.getPlaceId());
         RouteRequest routeRequest2 = createRouteRequest(2, travelPlace2.getPlaceId());
@@ -965,8 +1060,8 @@ public class ScheduleServiceTest extends ScheduleTest {
         ForbiddenScheduleException fail = assertThrows(ForbiddenScheduleException.class, () -> scheduleService.updateSchedule(userId, scheduleId, scheduleUpdateRequest));
 
         // then
-        assertEquals(fail.getHttpStatus(), ErrorCode.FORBIDDEN_ACCESS_SCHEDULE.getStatus());
-        assertEquals(fail.getMessage(), ErrorCode.FORBIDDEN_ACCESS_SCHEDULE.getMessage());
+        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.FORBIDDEN_ACCESS_SCHEDULE.getStatus());
+        assertThat(fail.getMessage()).isEqualTo(ErrorCode.FORBIDDEN_ACCESS_SCHEDULE.getMessage());
 
     }
 
@@ -976,6 +1071,15 @@ public class ScheduleServiceTest extends ScheduleTest {
         // given
         String userId = member2.getUserId();
         Long scheduleId = schedule1.getScheduleId();
+
+        TravelImage travelImage1 = createTravelImage(travelPlace1, "test1", true);
+        TravelImage travelImage2 = createTravelImage(travelPlace1, "test2", false);
+        travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, List.of(travelImage1, travelImage2));
+
+        TravelImage travelImage3 = createTravelImage(travelPlace2, "test1", true);
+        TravelImage travelImage4 = createTravelImage(travelPlace2, "test2", false);
+        travelPlace2 = createTravelPlace(2L, country, city, district, apiCategory, List.of(travelImage3, travelImage4));
+
 
         RouteRequest routeRequest1 = createRouteRequest(1, travelPlace1.getPlaceId());
         RouteRequest routeRequest2 = createRouteRequest(2, travelPlace2.getPlaceId());
@@ -987,8 +1091,8 @@ public class ScheduleServiceTest extends ScheduleTest {
         ForbiddenScheduleException fail = assertThrows(ForbiddenScheduleException.class, () -> scheduleService.updateSchedule(userId, scheduleId, scheduleUpdateRequest));
 
         // then
-        assertEquals(fail.getHttpStatus(), ErrorCode.FORBIDDEN_EDIT_SCHEDULE.getStatus());
-        assertEquals(fail.getMessage(), ErrorCode.FORBIDDEN_EDIT_SCHEDULE.getMessage());
+        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.FORBIDDEN_EDIT_SCHEDULE.getStatus());
+        assertThat(fail.getMessage()).isEqualTo(ErrorCode.FORBIDDEN_EDIT_SCHEDULE.getMessage());
     }
 
 
@@ -998,6 +1102,16 @@ public class ScheduleServiceTest extends ScheduleTest {
         // given
         String userId = member1.getUserId();
         Long scheduleId = schedule1.getScheduleId();
+
+
+        TravelImage travelImage1 = createTravelImage(travelPlace1, "test1", true);
+        TravelImage travelImage2 = createTravelImage(travelPlace1, "test2", false);
+        travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, List.of(travelImage1, travelImage2));
+
+        TravelImage travelImage3 = createTravelImage(travelPlace2, "test1", true);
+        TravelImage travelImage4 = createTravelImage(travelPlace2, "test2", false);
+        travelPlace2 = createTravelPlace(2L, country, city, district, apiCategory, List.of(travelImage3, travelImage4));
+
 
         RouteRequest routeRequest1 = createRouteRequest(1, travelPlace1.getPlaceId());
         RouteRequest routeRequest2 = createRouteRequest(2, travelPlace2.getPlaceId());
@@ -1010,8 +1124,8 @@ public class ScheduleServiceTest extends ScheduleTest {
         DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> scheduleService.updateSchedule(userId, scheduleId, scheduleUpdateRequest));
 
         // then
-        assertEquals(fail.getHttpStatus(), ErrorCode.PLACE_NOT_FOUND.getStatus());
-        assertEquals(fail.getMessage(), ErrorCode.PLACE_NOT_FOUND.getMessage());
+        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.PLACE_NOT_FOUND.getStatus());
+        assertThat(fail.getMessage()).isEqualTo(ErrorCode.PLACE_NOT_FOUND.getMessage());
     }
 
     @Test
@@ -1022,8 +1136,8 @@ public class ScheduleServiceTest extends ScheduleTest {
         TravelAttendee response = scheduleService.getAttendeeInfo(schedule1, member1.getUserId());
 
         // then
-        assertEquals(response.getMember().getUserId(), member1.getUserId());
-        assertEquals(response.getTravelSchedule().getScheduleName(), schedule1.getScheduleName());
+        assertThat(response.getMember().getUserId()).isEqualTo(member1.getUserId());
+        assertThat(response.getTravelSchedule().getScheduleName()).isEqualTo(schedule1.getScheduleName());
     }
 
     @Test
@@ -1034,8 +1148,8 @@ public class ScheduleServiceTest extends ScheduleTest {
         ForbiddenScheduleException fail = assertThrows(ForbiddenScheduleException.class, () -> scheduleService.getAttendeeInfo(schedule3, member2.getUserId()));
 
         // then
-        assertEquals(fail.getHttpStatus(), ErrorCode.FORBIDDEN_ACCESS_SCHEDULE.getStatus());
-        assertEquals(fail.getMessage(), ErrorCode.FORBIDDEN_ACCESS_SCHEDULE.getMessage());
+        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.FORBIDDEN_ACCESS_SCHEDULE.getStatus());
+        assertThat(fail.getMessage()).isEqualTo(ErrorCode.FORBIDDEN_ACCESS_SCHEDULE.getMessage());
 
     }
 
@@ -1070,8 +1184,8 @@ public class ScheduleServiceTest extends ScheduleTest {
         ForbiddenScheduleException fail = assertThrows(ForbiddenScheduleException.class, () -> scheduleService.checkScheduleEditPermission(attendee1));
 
         // then
-        assertEquals(fail.getHttpStatus(), ErrorCode.FORBIDDEN_EDIT_SCHEDULE.getStatus());
-        assertEquals(fail.getMessage(), ErrorCode.FORBIDDEN_EDIT_SCHEDULE.getMessage());
+        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.FORBIDDEN_EDIT_SCHEDULE.getStatus());
+        assertThat(fail.getMessage()).isEqualTo(ErrorCode.FORBIDDEN_EDIT_SCHEDULE.getMessage());
     }
 
     @Test
@@ -1084,8 +1198,8 @@ public class ScheduleServiceTest extends ScheduleTest {
         ForbiddenScheduleException fail = assertThrows(ForbiddenScheduleException.class, () -> scheduleService.checkScheduleEditPermission(attendee1));
 
         // then
-        assertEquals(fail.getHttpStatus(), ErrorCode.FORBIDDEN_EDIT_SCHEDULE.getStatus());
-        assertEquals(fail.getMessage(), ErrorCode.FORBIDDEN_EDIT_SCHEDULE.getMessage());
+        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.FORBIDDEN_EDIT_SCHEDULE.getStatus());
+        assertThat(fail.getMessage()).isEqualTo(ErrorCode.FORBIDDEN_EDIT_SCHEDULE.getMessage());
     }
 
     @Test
@@ -1130,8 +1244,8 @@ public class ScheduleServiceTest extends ScheduleTest {
         // when
         ForbiddenScheduleException fail = assertThrows(ForbiddenScheduleException.class, () -> scheduleService.deleteSchedule(schedule1.getScheduleId(), member2.getUserId()));
 
-        assertEquals(fail.getHttpStatus(), ErrorCode.FORBIDDEN_DELETE_SCHEDULE.getStatus());
-        assertEquals(fail.getMessage(), ErrorCode.FORBIDDEN_DELETE_SCHEDULE.getMessage());
+        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.FORBIDDEN_DELETE_SCHEDULE.getStatus());
+        assertThat(fail.getMessage()).isEqualTo(ErrorCode.FORBIDDEN_DELETE_SCHEDULE.getMessage());
     }
 
     @Test
@@ -1181,9 +1295,9 @@ public class ScheduleServiceTest extends ScheduleTest {
         Member response = scheduleService.getMemberByUserId(userId);
 
         // then
-        assertEquals(response.getUserId(), userId);
-        assertEquals(response.getEmail(), member1.getEmail());
-        assertEquals(response.getNickname(), member1.getNickname());
+        assertThat(response.getUserId()).isEqualTo(userId);
+        assertThat(response.getEmail()).isEqualTo(member1.getEmail());
+        assertThat(response.getNickname()).isEqualTo(member1.getNickname());
 
     }
 
@@ -1197,8 +1311,8 @@ public class ScheduleServiceTest extends ScheduleTest {
         DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> scheduleService.getMemberByUserId("notUser"));
 
         // then
-        assertEquals(fail.getHttpStatus(), ErrorCode.MEMBER_NOT_FOUND.getStatus());
-        assertEquals(fail.getMessage(), ErrorCode.MEMBER_NOT_FOUND.getMessage());
+        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.MEMBER_NOT_FOUND.getStatus());
+        assertThat(fail.getMessage()).isEqualTo(ErrorCode.MEMBER_NOT_FOUND.getMessage());
     }
 
     @Test
@@ -1211,9 +1325,9 @@ public class ScheduleServiceTest extends ScheduleTest {
         TravelSchedule response = scheduleService.getScheduleByScheduleId(schedule1.getScheduleId());
 
         // then
-        assertEquals(response.getScheduleName(), schedule1.getScheduleName());
-        assertEquals(response.getStartDate(), schedule1.getStartDate());
-        assertEquals(response.getEndDate(), schedule1.getEndDate());
+        assertThat(response.getScheduleName()).isEqualTo(schedule1.getScheduleName());
+        assertThat(response.getStartDate()).isEqualTo(schedule1.getStartDate());
+        assertThat(response.getEndDate()).isEqualTo(schedule1.getEndDate());
     }
 
     @Test
@@ -1226,24 +1340,30 @@ public class ScheduleServiceTest extends ScheduleTest {
         DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> scheduleService.getScheduleByScheduleId(0L));
 
         // then
-        assertEquals(fail.getHttpStatus(), ErrorCode.SCHEDULE_NOT_FOUND.getStatus());
-        assertEquals(fail.getMessage(), ErrorCode.SCHEDULE_NOT_FOUND.getMessage());
+        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.SCHEDULE_NOT_FOUND.getStatus());
+        assertThat(fail.getMessage()).isEqualTo(ErrorCode.SCHEDULE_NOT_FOUND.getMessage());
     }
 
     @Test
     @DisplayName("저장된 여행지 조회")
     void getPlaceByPlaceId(){
         // given
-        Long placeId = travelPlace1.getPlaceId();
+        TravelImage travelImage1 = createTravelImage(travelPlace1, "test1", true);
+        TravelImage travelImage2 = createTravelImage(travelPlace1, "test2", false);
+        travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, List.of(travelImage1, travelImage2));
+
+        TravelImage travelImage3 = createTravelImage(travelPlace2, "test1", true);
+        TravelImage travelImage4 = createTravelImage(travelPlace2, "test2", false);
+        travelPlace2 = createTravelPlace(2L, country, city, district, apiCategory, List.of(travelImage3, travelImage4));
 
         when(travelPlaceRepository.findByPlaceId(anyLong())).thenReturn(Optional.of(travelPlace1));
 
         // when
-        TravelPlace response = scheduleService.getPlaceByPlaceId(placeId);
+        TravelPlace response = scheduleService.getPlaceByPlaceId(travelPlace1.getPlaceId());
 
         // then
-        assertEquals(response.getPlaceId(), placeId);
-        assertEquals(response.getPlaceName(), travelPlace1.getPlaceName());
+        assertThat(response.getPlaceId()).isEqualTo(travelPlace1.getPlaceId());
+        assertThat(response.getPlaceName()).isEqualTo(travelPlace1.getPlaceName());
 
     }
 
@@ -1251,16 +1371,14 @@ public class ScheduleServiceTest extends ScheduleTest {
     @DisplayName("저장된 여행지 데이터 조회 시 데이터 존재하지 않아 예외 발생")
     void getPlaceByPlaceId_dataNotFoundException(){
         // given
-        Long placeId = travelPlace1.getPlaceId();
-
         when(travelPlaceRepository.findByPlaceId(anyLong())).thenReturn(Optional.empty());
 
         // when
-        DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> scheduleService.getPlaceByPlaceId(placeId));
+        DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> scheduleService.getPlaceByPlaceId(0L));
 
         // then
-        assertEquals(fail.getHttpStatus(), ErrorCode.PLACE_NOT_FOUND.getStatus());
-        assertEquals(fail.getMessage(), ErrorCode.PLACE_NOT_FOUND.getMessage());
+        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.PLACE_NOT_FOUND.getStatus());
+        assertThat(fail.getMessage()).isEqualTo(ErrorCode.PLACE_NOT_FOUND.getMessage());
 
     }
 

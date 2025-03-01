@@ -4,6 +4,7 @@ import com.triptune.BaseTest;
 import com.triptune.travel.dto.PlaceLocation;
 import com.triptune.travel.dto.request.PlaceLocationRequest;
 import com.triptune.travel.dto.request.PlaceSearchRequest;
+import com.triptune.travel.dto.response.PlaceResponse;
 import com.triptune.travel.entity.TravelPlace;
 
 public abstract class TravelTest extends BaseTest {
@@ -15,7 +16,7 @@ public abstract class TravelTest extends BaseTest {
     }
 
 
-    protected PlaceSearchRequest createTravelSearchRequest(double longitude, double latitude, String keyword){
+    protected PlaceSearchRequest createTravelSearchRequest(Double longitude, Double latitude, String keyword){
         return PlaceSearchRequest.builder()
                 .longitude(longitude)
                 .latitude(latitude)
@@ -23,7 +24,13 @@ public abstract class TravelTest extends BaseTest {
                 .build();
     }
 
-    protected PlaceLocation createTravelLocation(TravelPlace travelPlace){
+    protected PlaceSearchRequest createTravelSearchRequest(String keyword){
+        return PlaceSearchRequest.builder()
+                .keyword(keyword)
+                .build();
+    }
+
+    protected PlaceLocation createPlaceLocation(TravelPlace travelPlace, String thumbnailUrl){
         return PlaceLocation.builder()
                 .placeId(travelPlace.getPlaceId())
                 .country(travelPlace.getCountry().getCountryName())
@@ -34,7 +41,23 @@ public abstract class TravelTest extends BaseTest {
                 .latitude(travelPlace.getLatitude())
                 .longitude(travelPlace.getLongitude())
                 .placeName(travelPlace.getPlaceName())
+                .thumbnailUrl(thumbnailUrl)
                 .distance(0.2345234234)
+                .build();
+    }
+
+    protected PlaceResponse createPlaceResponse(TravelPlace travelPlace, String thumbnailUrl){
+        return PlaceResponse.builder()
+                .placeId(travelPlace.getPlaceId())
+                .country(travelPlace.getCountry().getCountryName())
+                .city(travelPlace.getCity().getCityName())
+                .district(travelPlace.getDistrict().getDistrictName())
+                .address(travelPlace.getAddress())
+                .detailAddress(travelPlace.getDetailAddress())
+                .latitude(travelPlace.getLatitude())
+                .longitude(travelPlace.getLongitude())
+                .placeName(travelPlace.getPlaceName())
+                .thumbnailUrl(thumbnailUrl)
                 .build();
     }
 

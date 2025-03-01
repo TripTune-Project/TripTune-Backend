@@ -42,17 +42,16 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("h2")
 public class ScheduleTravelControllerTest extends BaseTest {
 
-    private final WebApplicationContext wac;
-    private final TravelScheduleRepository travelScheduleRepository;
-    private final TravelAttendeeRepository travelAttendeeRepository;
-    private final MemberRepository memberRepository;
-    private final TravelPlaceRepository travelPlaceRepository;
-    private final CountryRepository countryRepository;
-    private final CityRepository cityRepository;
-    private final DistrictRepository districtRepository;
-    private final ApiCategoryRepository apiCategoryRepository;
-    private final TravelImageRepository travelImageRepository;
-    private final ApiContentTypeRepository apiContentTypeRepository;
+    @Autowired private WebApplicationContext wac;
+    @Autowired private TravelScheduleRepository travelScheduleRepository;
+    @Autowired private TravelAttendeeRepository travelAttendeeRepository;
+    @Autowired private MemberRepository memberRepository;
+    @Autowired private TravelPlaceRepository travelPlaceRepository;
+    @Autowired private CountryRepository countryRepository;
+    @Autowired private CityRepository cityRepository;
+    @Autowired private DistrictRepository districtRepository;
+    @Autowired private ApiCategoryRepository apiCategoryRepository;
+    @Autowired private TravelImageRepository travelImageRepository;
 
     private MockMvc mockMvc;
 
@@ -62,21 +61,7 @@ public class ScheduleTravelControllerTest extends BaseTest {
     private TravelPlace travelPlace1;
     private TravelPlace travelPlace2;
 
-
-    @Autowired
-    public ScheduleTravelControllerTest(WebApplicationContext wac, TravelScheduleRepository travelScheduleRepository, TravelAttendeeRepository travelAttendeeRepository, MemberRepository memberRepository, TravelPlaceRepository travelPlaceRepository, CountryRepository countryRepository, CityRepository cityRepository, DistrictRepository districtRepository, ApiCategoryRepository apiCategoryRepository, TravelImageRepository travelImageRepository, ApiContentTypeRepository apiContentTypeRepository) {
-        this.wac = wac;
-        this.travelScheduleRepository = travelScheduleRepository;
-        this.travelAttendeeRepository = travelAttendeeRepository;
-        this.memberRepository = memberRepository;
-        this.travelPlaceRepository = travelPlaceRepository;
-        this.countryRepository = countryRepository;
-        this.cityRepository = cityRepository;
-        this.districtRepository = districtRepository;
-        this.apiCategoryRepository = apiCategoryRepository;
-        this.travelImageRepository = travelImageRepository;
-        this.apiContentTypeRepository = apiContentTypeRepository;
-    }
+    private TravelImage travelImage1;
 
     @BeforeEach
     void setUp(){
@@ -91,17 +76,14 @@ public class ScheduleTravelControllerTest extends BaseTest {
         District district1 = districtRepository.save(createDistrict(city, "강남구"));
         District district2 = districtRepository.save(createDistrict(city, "중구"));
         ApiCategory apiCategory = apiCategoryRepository.save(createApiCategory());
-        ApiContentType apiContentType = apiContentTypeRepository.save(createApiContentType("관광지"));
+
         travelPlace1 = travelPlaceRepository.save(createTravelPlace(null, country, city, district1, apiCategory));
         travelPlace2 = travelPlaceRepository.save(createTravelPlace(null, country, city, district2, apiCategory));
-        TravelImage travelImage1 = travelImageRepository.save(createTravelImage(travelPlace1, "test1", true));
-        TravelImage travelImage2 = travelImageRepository.save(createTravelImage(travelPlace1, "test2", false));
-        TravelImage travelImage3 = travelImageRepository.save(createTravelImage(travelPlace2, "test1", true));
-        TravelImage travelImage4 = travelImageRepository.save(createTravelImage(travelPlace2, "test2", false));
-        travelPlace1.setApiContentType(apiContentType);
-        travelPlace1.setTravelImageList(Arrays.asList(travelImage1, travelImage2));
-        travelPlace2.setApiContentType(apiContentType);
-        travelPlace2.setTravelImageList(Arrays.asList(travelImage3, travelImage4));
+
+        travelImage1 = travelImageRepository.save(createTravelImage(travelPlace1, "test1", true));
+        travelImageRepository.save(createTravelImage(travelPlace1, "test2", false));
+        travelImageRepository.save(createTravelImage(travelPlace2, "test1", true));
+        travelImageRepository.save(createTravelImage(travelPlace2, "test2", false));
 
         Member member1 = memberRepository.save(createMember(null, "member1"));
         Member member2 = memberRepository.save(createMember(null, "member2"));
@@ -123,7 +105,6 @@ public class ScheduleTravelControllerTest extends BaseTest {
     @DisplayName("여행지 조회")
     @WithMockUser(username = "member1")
     void getTravelPlaces() throws Exception {
-        // given, when, then
         mockMvc.perform(get("/api/schedules/{scheduleId}/travels", schedule1.getScheduleId())
                         .param("page", "1"))
                 .andExpect(status().isOk())
@@ -132,7 +113,7 @@ public class ScheduleTravelControllerTest extends BaseTest {
                 .andExpect(jsonPath("$.data.content[0].placeName").value(travelPlace2.getPlaceName()))
                 .andExpect(jsonPath("$.data.content[0].longitude").isNotEmpty())
                 .andExpect(jsonPath("$.data.content[0].latitude").isNotEmpty())
-                .andExpect(jsonPath("$.data.content[0].thumbnailUrl").exists());
+                .andExpect(jsonPath("$.data.content[0].thumbnailUrl").value(travelImage1.getS3ObjectUrl()));
     }
 
     @Test
@@ -155,7 +136,6 @@ public class ScheduleTravelControllerTest extends BaseTest {
     @DisplayName("여행지 조회 시 해당 일정에 접근 권한이 없어 예외 발생")
     @WithMockUser(username = "member1")
     void getTravelPlaces_forbiddenScheduleException() throws Exception {
-        // given, when, then
         mockMvc.perform(get("/api/schedules/{scheduleId}/travels", schedule2.getScheduleId())
                         .param("page", "1"))
                 .andExpect(status().isForbidden())
@@ -168,7 +148,6 @@ public class ScheduleTravelControllerTest extends BaseTest {
     @DisplayName("여행지 조회 시 일정 데이터 존재하지 않아 예외 발생")
     @WithMockUser(username = "member1")
     void getTravelPlaces_dataNotFoundException() throws Exception {
-        // given, when, then
         mockMvc.perform(get("/api/schedules/{scheduleId}/travels", 0L)
                         .param("page", "1"))
                 .andExpect(status().isNotFound())
@@ -181,7 +160,6 @@ public class ScheduleTravelControllerTest extends BaseTest {
     @DisplayName("여행지 검색")
     @WithMockUser(username = "member1")
     void searchTravelPlaces() throws Exception {
-        // given, when, then
         mockMvc.perform(get("/api/schedules/{scheduleId}/travels/search", schedule1.getScheduleId())
                         .param("page", "1")
                         .param("keyword", "강남"))
@@ -191,15 +169,13 @@ public class ScheduleTravelControllerTest extends BaseTest {
                 .andExpect(jsonPath("$.data.content[0].placeName").value(travelPlace1.getPlaceName()))
                 .andExpect(jsonPath("$.data.content[0].longitude").isNotEmpty())
                 .andExpect(jsonPath("$.data.content[0].latitude").isNotEmpty())
-                .andExpect(jsonPath("$.data.content[0].thumbnailUrl").exists());
+                .andExpect(jsonPath("$.data.content[0].thumbnailUrl").value(travelImage1.getS3ObjectUrl()));
     }
 
     @Test
     @DisplayName("여행지 검색 시 검색 결과가 존재하지 않는 경우")
     @WithMockUser(username = "member1")
     void searchTravelPlacesWithoutData() throws Exception {
-        // given
-        // when, then
         mockMvc.perform(get("/api/schedules/{scheduleId}/travels/search", schedule1.getScheduleId())
                         .param("page", "1")
                         .param("keyword", "ㅁㄴㅇㄹ"))
@@ -213,8 +189,7 @@ public class ScheduleTravelControllerTest extends BaseTest {
     @DisplayName("여행지 검색 시 일정 데이터 존재하지 않아 예외 발생")
     @WithMockUser(username = "member1")
     void searchTravelPlaces_dataNotFoundException() throws Exception {
-        // given
-        // when, then
+        // given, when, then
         mockMvc.perform(get("/api/schedules/{scheduleId}/travels/search", 0L)
                         .param("page", "1")
                         .param("keyword", "ㅁㄴㅇㄹ"))
@@ -228,8 +203,6 @@ public class ScheduleTravelControllerTest extends BaseTest {
     @DisplayName("여행지 검색 시 해당 일정에 접근 권한이 없어 예외 발생")
     @WithMockUser(username = "member1")
     void searchTravelPlaces_forbiddenScheduleException() throws Exception {
-        // given
-        // when, then
         mockMvc.perform(get("/api/schedules/{scheduleId}/travels/search", schedule2.getScheduleId())
                         .param("page", "1")
                         .param("keyword", "중구"))

@@ -14,38 +14,23 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
-import java.util.ArrayList;
-import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @SpringBootTest
 @ActiveProfiles("h2")
 public class TravelImageRepositoryTest extends TravelTest {
 
-    private final TravelImageRepository travelImageRepository;
-    private final CountryRepository countryRepository;
-    private final CityRepository cityRepository;
-    private final DistrictRepository districtRepository;
-    private final ApiCategoryRepository apiCategoryRepository;
-    private final ApiContentTypeRepository apiContentTypeRepository;
-    private final TravelPlaceRepository travelPlaceRepository;
+    @Autowired private TravelImageRepository travelImageRepository;
+    @Autowired private CountryRepository countryRepository;
+    @Autowired private CityRepository cityRepository;
+    @Autowired private DistrictRepository districtRepository;
+    @Autowired private ApiCategoryRepository apiCategoryRepository;
+    @Autowired private TravelPlaceRepository travelPlaceRepository;
 
     private TravelPlace travelPlace;
     private TravelImage travelImage1;
-    private TravelImage travelImage2;
 
-    @Autowired
-    public TravelImageRepositoryTest(TravelImageRepository travelImageRepository, CountryRepository countryRepository, CityRepository cityRepository, DistrictRepository districtRepository, ApiCategoryRepository apiCategoryRepository, ApiContentTypeRepository apiContentTypeRepository, TravelPlaceRepository travelPlaceRepository) {
-        this.travelImageRepository = travelImageRepository;
-        this.countryRepository = countryRepository;
-        this.cityRepository = cityRepository;
-        this.districtRepository = districtRepository;
-        this.apiCategoryRepository = apiCategoryRepository;
-        this.apiContentTypeRepository = apiContentTypeRepository;
-        this.travelPlaceRepository = travelPlaceRepository;
-    }
 
     @BeforeEach
     void setUp(){
@@ -53,13 +38,9 @@ public class TravelImageRepositoryTest extends TravelTest {
         City city = cityRepository.save(createCity(country));
         District district = districtRepository.save(createDistrict(city, "강남구"));
         ApiCategory apiCategory = apiCategoryRepository.save(createApiCategory());
-        ApiContentType apiContentType = apiContentTypeRepository.save(createApiContentType("관광지"));
         travelPlace = travelPlaceRepository.save(createTravelPlace(null, country, city, district, apiCategory));
         travelImage1 = travelImageRepository.save(createTravelImage(travelPlace, "test1", true));
-        travelImage2 = travelImageRepository.save(createTravelImage(travelPlace, "test2", false));
-
-        travelPlace.setApiContentType(apiContentType);
-        travelPlace.setTravelImageList(new ArrayList<>(List.of(travelImage1, travelImage2)));
+        travelImageRepository.save(createTravelImage(travelPlace, "test2", false));
     }
 
     @Test
