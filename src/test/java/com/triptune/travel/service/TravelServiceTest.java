@@ -10,7 +10,6 @@ import com.triptune.travel.dto.PlaceLocation;
 import com.triptune.travel.dto.request.PlaceLocationRequest;
 import com.triptune.travel.dto.request.PlaceSearchRequest;
 import com.triptune.travel.dto.response.PlaceDetailResponse;
-import com.triptune.travel.dto.response.PlaceDistanceResponse;
 import com.triptune.travel.dto.response.PlaceResponse;
 import com.triptune.travel.entity.TravelImage;
 import com.triptune.travel.entity.TravelPlace;
@@ -24,7 +23,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 
 import java.util.ArrayList;
@@ -64,7 +62,6 @@ public class TravelServiceTest extends TravelTest {
     private TravelImage travelImage2;
 
 
-
     @BeforeEach
     void setUp(){
         country = createCountry();
@@ -72,13 +69,12 @@ public class TravelServiceTest extends TravelTest {
         district = createDistrict(city, "강남구");
         apiCategory = createApiCategory();
 
-        travelImage1 = createTravelImage(travelPlace1, "test", true);
+        travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory);
+        travelImage1 = createTravelImage(travelPlace1, "test1", true);
         travelImage2 = createTravelImage(travelPlace1, "test2", false);
-        travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, List.of(travelImage1, travelImage2));
 
-        TravelImage travelImage3 = createTravelImage(travelPlace2, "test1", true);
-        TravelImage travelImage4 = createTravelImage(travelPlace2, "test2", false);
-        travelPlace2 = createTravelPlace(2L, country, city, district, apiCategory, 12.333, 160.3333, List.of(travelImage3, travelImage4));
+        travelPlace2 = createTravelPlace(2L, country, city, district, apiCategory, 12.333, 160.3333);
+
     }
 
 
@@ -89,32 +85,31 @@ public class TravelServiceTest extends TravelTest {
         PlaceLocationRequest request = createTravelLocationRequest(37.4970465429, 127.0281573537);
 
         Pageable pageable = PageUtils.defaultPageable(1);
-        List<PlaceLocation> locationList = new ArrayList<>(List.of(createTravelLocation(travelPlace1), createTravelLocation(travelPlace2)));
+        List<PlaceLocation> locationList = List.of(
+                createPlaceLocation(travelPlace1, travelImage1.getS3ObjectUrl()),
+                createPlaceLocation(travelPlace2, null)
+        );
+        Page<PlaceLocation> mockResponse = PageUtils.createPage(locationList, pageable, locationList.size());
 
-        Page<PlaceLocation> mockLocation = PageUtils.createPage(locationList, pageable, locationList.size());
-
-        when(travelPlaceRepository.findNearByTravelPlaces(pageable, request, 5)).thenReturn(mockLocation);
-        when(travelImageRepository.findThumbnailUrlByPlaceId(travelPlace1.getPlaceId())).thenReturn(travelImage1.getS3ObjectUrl());
+        when(travelPlaceRepository.findNearByTravelPlaces(pageable, request, 5)).thenReturn(mockResponse);
         when(bookmarkRepository.existsByMember_UserIdAndTravelPlace_PlaceId("member", travelPlace1.getPlaceId())).thenReturn(true);
-        when(travelImageRepository.findThumbnailUrlByPlaceId(travelPlace2.getPlaceId())).thenReturn(null);
         when(bookmarkRepository.existsByMember_UserIdAndTravelPlace_PlaceId("member", travelPlace2.getPlaceId())).thenReturn(false);
 
         // when
-        Page<PlaceDistanceResponse> response = travelService.getNearByTravelPlaces(1, "member", request);
+        Page<PlaceLocation> response = travelService.getNearByTravelPlaces(1, "member", request);
 
         // then
-        List<PlaceDistanceResponse> content = response.getContent();
+        List<PlaceLocation> content = response.getContent();
         assertThat(response.getTotalElements()).isEqualTo(2);
         assertThat(content.get(0).getCity()).isEqualTo(travelPlace1.getCity().getCityName());
         assertThat(content.get(0).getPlaceName()).isEqualTo(travelPlace1.getPlaceName());
         assertThat(content.get(0).getThumbnailUrl()).isEqualTo(travelImage1.getS3ObjectUrl());
         assertThat(content.get(0).isBookmarkStatus()).isTrue();
-        assertThat(content.get(0).getDistance()).isNotEqualTo(0.0);
+        assertThat(content.get(0).getDistance()).isNotNull();
         assertThat(content.get(1).getThumbnailUrl()).isNull();
         assertThat(content.get(1).isBookmarkStatus()).isFalse();
+        assertThat(content.get(1).getDistance()).isNotNull();
     }
-
-
 
 
     @Test
@@ -124,27 +119,28 @@ public class TravelServiceTest extends TravelTest {
         PlaceLocationRequest request = createTravelLocationRequest(37.4970465429, 127.0281573537);
 
         Pageable pageable = PageUtils.defaultPageable(1);
-        List<PlaceLocation> locationList = new ArrayList<>(List.of(createTravelLocation(travelPlace1), createTravelLocation(travelPlace2)));
+        List<PlaceLocation> locationList = List.of(
+                createPlaceLocation(travelPlace1, travelImage1.getS3ObjectUrl()),
+                createPlaceLocation(travelPlace2, null)
+        );
+        Page<PlaceLocation> mockResponse = PageUtils.createPage(locationList, pageable, locationList.size());
 
-        Page<PlaceLocation> mockLocation = PageUtils.createPage(locationList, pageable, locationList.size());
-
-        when(travelPlaceRepository.findNearByTravelPlaces(pageable, request, 5)).thenReturn(mockLocation);
-        when(travelImageRepository.findThumbnailUrlByPlaceId(travelPlace1.getPlaceId())).thenReturn(travelImage1.getS3ObjectUrl());
-        when(travelImageRepository.findThumbnailUrlByPlaceId(travelPlace2.getPlaceId())).thenReturn(null);
+        when(travelPlaceRepository.findNearByTravelPlaces(pageable, request, 5)).thenReturn(mockResponse);
 
         // when
-        Page<PlaceDistanceResponse> response = travelService.getNearByTravelPlaces(1, null, request);
+        Page<PlaceLocation> response = travelService.getNearByTravelPlaces(1, null, request);
 
         // then
-        List<PlaceDistanceResponse> content = response.getContent();
+        List<PlaceLocation> content = response.getContent();
         assertThat(response.getTotalElements()).isEqualTo(2);
         assertThat(content.get(0).getCity()).isEqualTo(travelPlace1.getCity().getCityName());
         assertThat(content.get(0).getPlaceName()).isEqualTo(travelPlace1.getPlaceName());
         assertThat(content.get(0).getThumbnailUrl()).isEqualTo(travelImage1.getS3ObjectUrl());
         assertThat(content.get(0).isBookmarkStatus()).isFalse();
-        assertThat(content.get(0).getDistance()).isNotEqualTo(0.0);
+        assertThat(content.get(0).getDistance()).isNotNull();
         assertThat(content.get(1).getThumbnailUrl()).isNull();
         assertThat(content.get(1).isBookmarkStatus()).isFalse();
+        assertThat(content.get(1).getDistance()).isNotNull();
     }
 
     @Test
@@ -154,12 +150,12 @@ public class TravelServiceTest extends TravelTest {
         PlaceLocationRequest request = createTravelLocationRequest(0.0, 0.0);
 
         Pageable pageable = PageUtils.defaultPageable(1);
-        Page<PlaceLocation> mockLocation = new PageImpl<>(new ArrayList<>(), pageable, 0);
+        Page<PlaceLocation> mockResponse = PageUtils.createPage(new ArrayList<>(), pageable, 0);
 
-        when(travelPlaceRepository.findNearByTravelPlaces(pageable, request, 5)).thenReturn(mockLocation);
+        when(travelPlaceRepository.findNearByTravelPlaces(pageable, request, 5)).thenReturn(mockResponse);
 
         // when
-        Page<PlaceDistanceResponse> response = travelService.getNearByTravelPlaces(1, "member", request);
+        Page<PlaceLocation> response = travelService.getNearByTravelPlaces(1, "member", request);
 
         // then
         assertThat(response.getTotalElements()).isEqualTo(0);
@@ -172,12 +168,12 @@ public class TravelServiceTest extends TravelTest {
         PlaceLocationRequest request = createTravelLocationRequest(0.0, 0.0);
 
         Pageable pageable = PageUtils.defaultPageable(1);
-        Page<PlaceLocation> mockLocation = new PageImpl<>(Collections.emptyList(), pageable, 0);
+        Page<PlaceLocation> mockResponse = PageUtils.createPage(Collections.emptyList(), pageable, 0);
 
-        when(travelPlaceRepository.findNearByTravelPlaces(pageable, request, 5)).thenReturn(mockLocation);
+        when(travelPlaceRepository.findNearByTravelPlaces(pageable, request, 5)).thenReturn(mockResponse);
 
         // when
-        Page<PlaceDistanceResponse> response = travelService.getNearByTravelPlaces(1, null, request);
+        Page<PlaceLocation> response = travelService.getNearByTravelPlaces(1, null, request);
 
         // then
         assertThat(response.getTotalElements()).isEqualTo(0);
@@ -185,62 +181,164 @@ public class TravelServiceTest extends TravelTest {
 
 
     @Test
-    @DisplayName("로그인한 사용자의 여행지 검색 시 데이터 존재하는 경우")
-    void searchTravelPlaces_WithLocation_loginAndExistsData(){
+    @DisplayName("로그인한 사용자의 여행지 검색 시 데이터 존재하는 경우 - 위치 데이터 존재")
+    void searchTravelPlacesWithLocation_loginAndExistsData(){
         // given
         PlaceSearchRequest request = createTravelSearchRequest(37.49, 127.0, "테스트");
 
         Pageable pageable = PageUtils.defaultPageable(1);
+        List<PlaceLocation> locationList = List.of(
+                createPlaceLocation(travelPlace1, travelImage1.getS3ObjectUrl()),
+                createPlaceLocation(travelPlace2, null)
+        );
+        Page<PlaceLocation> mockResponse = PageUtils.createPage(locationList, pageable, locationList.size());
 
-        List<PlaceLocation> locationList = new ArrayList<>(List.of(createTravelLocation(travelPlace1), createTravelLocation(travelPlace2)));
-        Page<PlaceLocation> mockLocation = PageUtils.createPage(locationList, pageable, locationList.size());
-
-        when(travelPlaceRepository.searchTravelPlacesWithLocation(pageable, request)).thenReturn(mockLocation);
-        when(travelImageRepository.findThumbnailUrlByPlaceId(travelPlace1.getPlaceId())).thenReturn(travelImage1.getS3ObjectUrl());
+        when(travelPlaceRepository.searchTravelPlacesWithLocation(pageable, request)).thenReturn(mockResponse);
         when(bookmarkRepository.existsByMember_UserIdAndTravelPlace_PlaceId("member", travelPlace1.getPlaceId())).thenReturn(true);
-        when(travelImageRepository.findThumbnailUrlByPlaceId(travelPlace2.getPlaceId())).thenReturn(null);
         when(bookmarkRepository.existsByMember_UserIdAndTravelPlace_PlaceId("member", travelPlace2.getPlaceId())).thenReturn(false);
 
         // when
-        Page<PlaceDistanceResponse> response = travelService.searchTravelPlacesWithLocation(1, "member", request);
+        Page<PlaceLocation> response = travelService.searchTravelPlacesWithLocation(1, "member", request);
 
         // then
-        List<PlaceDistanceResponse> content = response.getContent();
+        List<PlaceLocation> content = response.getContent();
         assertThat(response.getTotalElements()).isEqualTo(2);
         assertThat(content.get(0).getCity()).isEqualTo(travelPlace1.getCity().getCityName());
         assertThat(content.get(0).getPlaceName()).isEqualTo(travelPlace1.getPlaceName());
         assertThat(content.get(0).getThumbnailUrl()).isEqualTo(travelImage1.getS3ObjectUrl());
         assertThat(content.get(0).isBookmarkStatus()).isTrue();
-        assertThat(content.get(0).getDistance()).isNotEqualTo(0.0);
+        assertThat(content.get(0).getDistance()).isNotNull();
+        assertThat(content.get(1).getThumbnailUrl()).isNull();
+        assertThat(content.get(1).isBookmarkStatus()).isFalse();
+        assertThat(content.get(1).getDistance()).isNotNull();
+    }
+
+    @Test
+    @DisplayName("익명 사용자의 여행지 검색 시 데이터 존재하는 경우 - 위치 데이터 존재")
+    void searchTravelPlacesWithLocation_anonymousAndExistsData(){
+        // given
+        PlaceSearchRequest request = createTravelSearchRequest(37.49, 127.0, "테스트");
+
+        Pageable pageable = PageUtils.defaultPageable(1);
+        List<PlaceLocation> locationList = List.of(
+                createPlaceLocation(travelPlace1, travelImage1.getS3ObjectUrl()),
+                createPlaceLocation(travelPlace2, null)
+        );
+        Page<PlaceLocation> mockResponse = PageUtils.createPage(locationList, pageable, locationList.size());
+
+        when(travelPlaceRepository.searchTravelPlacesWithLocation(pageable, request)).thenReturn(mockResponse);
+
+        // when
+        Page<PlaceLocation> response = travelService.searchTravelPlacesWithLocation(1, null, request);
+
+        // then
+        List<PlaceLocation> content = response.getContent();
+        assertThat(response.getTotalElements()).isEqualTo(2);
+        assertThat(content.get(0).getCity()).isEqualTo(travelPlace1.getCity().getCityName());
+        assertThat(content.get(0).getPlaceName()).isEqualTo(travelPlace1.getPlaceName());
+        assertThat(content.get(0).getThumbnailUrl()).isEqualTo(travelImage1.getS3ObjectUrl());
+        assertThat(content.get(0).getDistance()).isNotNull();
+        assertThat(content.get(0).isBookmarkStatus()).isFalse();
+        assertThat(content.get(1).getThumbnailUrl()).isNull();
+        assertThat(content.get(0).isBookmarkStatus()).isFalse();
+        assertThat(content.get(1).getDistance()).isNotNull();
+    }
+
+
+    @Test
+    @DisplayName("로그인한 사용자의 여행지 검색 시 데이터 없는 경우 - 위치 데이터 존재")
+    void searchTravelPlacesWithLocation_loginAndNoData(){
+        // given
+        PlaceSearchRequest request = createTravelSearchRequest(37.49, 127.0, "ㅁㄴㅇㄹ");
+
+        Pageable pageable = PageUtils.defaultPageable(1);
+        Page<PlaceLocation> mockResponse = PageUtils.createPage(Collections.emptyList(), pageable, 0);
+
+        when(travelPlaceRepository.searchTravelPlacesWithLocation(pageable, request)).thenReturn(mockResponse);
+
+        // when
+        Page<PlaceLocation> response = travelService.searchTravelPlacesWithLocation(1, "member", request);
+
+        // then
+        assertThat(response.getTotalElements()).isEqualTo(0);
+
+    }
+
+    @Test
+    @DisplayName("익명 사용자의 여행지 검색 시 데이터 없는 경우 - 위치 데이터 존재")
+    void searchTravelPlacesWithLocation_anonymousAndNoData(){
+        // given
+        PlaceSearchRequest request = createTravelSearchRequest(37.49, 127.0, "ㅁㄴㅇㄹ");
+
+        Pageable pageable = PageUtils.defaultPageable(1);
+        Page<PlaceLocation> mockResponse = PageUtils.createPage(Collections.emptyList(), pageable, 0);
+
+        when(travelPlaceRepository.searchTravelPlacesWithLocation(pageable, request)).thenReturn(mockResponse);
+
+        // when
+        Page<PlaceLocation> response = travelService.searchTravelPlacesWithLocation(1, null, request);
+
+        // then
+        assertThat(response.getTotalElements()).isEqualTo(0);
+
+    }
+
+
+    @Test
+    @DisplayName("로그인한 사용자의 여행지 검색 시 데이터 존재하는 경우 - 위치 데이터 없는 경우")
+    void searchTravelPlacesWithoutLocation_loginAndExistsData(){
+        // given
+        PlaceSearchRequest request = createTravelSearchRequest("테스트");
+
+        Pageable pageable = PageUtils.defaultPageable(1);
+        List<PlaceResponse> locationList = List.of(
+                createPlaceResponse(travelPlace1, travelImage1.getS3ObjectUrl()),
+                createPlaceResponse(travelPlace2, null)
+        );
+        Page<PlaceResponse> mockResponse = PageUtils.createPage(locationList, pageable, locationList.size());
+
+        when(travelPlaceRepository.searchTravelPlaces(pageable, request.getKeyword())).thenReturn(mockResponse);
+        when(bookmarkRepository.existsByMember_UserIdAndTravelPlace_PlaceId("member", travelPlace1.getPlaceId())).thenReturn(true);
+        when(bookmarkRepository.existsByMember_UserIdAndTravelPlace_PlaceId("member", travelPlace2.getPlaceId())).thenReturn(false);
+
+        // when
+        Page<PlaceLocation> response = travelService.searchTravelPlacesWithoutLocation(1, "member", request);
+
+        // then
+        List<PlaceLocation> content = response.getContent();
+        assertThat(response.getTotalElements()).isEqualTo(2);
+        assertThat(content.get(0).getCity()).isEqualTo(travelPlace1.getCity().getCityName());
+        assertThat(content.get(0).getPlaceName()).isEqualTo(travelPlace1.getPlaceName());
+        assertThat(content.get(0).getThumbnailUrl()).isEqualTo(travelImage1.getS3ObjectUrl());
+        assertThat(content.get(0).isBookmarkStatus()).isTrue();
         assertThat(content.get(1).getThumbnailUrl()).isNull();
         assertThat(content.get(1).isBookmarkStatus()).isFalse();
     }
 
     @Test
-    @DisplayName("익명 사용자의 여행지 검색 시 데이터 존재하는 경우")
-    void searchTravelPlaces_WithLocation_anonymousAndExistsData(){
+    @DisplayName("익명 사용자의 여행지 검색 시 데이터 존재하는 경우 - 위치 데이터 없는 경우")
+    void searchTravelPlacesWithoutLocation_anonymousAndExistsData(){
         // given
-        PlaceSearchRequest request = createTravelSearchRequest(37.49, 127.0, "테스트");
+        PlaceSearchRequest request = createTravelSearchRequest("테스트");
 
         Pageable pageable = PageUtils.defaultPageable(1);
+        List<PlaceResponse> locationList = List.of(
+                createPlaceResponse(travelPlace1, travelImage1.getS3ObjectUrl()),
+                createPlaceResponse(travelPlace2, null)
+        );
+        Page<PlaceResponse> mockResponse = PageUtils.createPage(locationList, pageable, locationList.size());
 
-        List<PlaceLocation> locationList = new ArrayList<>(List.of(createTravelLocation(travelPlace1), createTravelLocation(travelPlace2)));
-        Page<PlaceLocation> mockLocation = PageUtils.createPage(locationList, pageable, locationList.size());
-
-        when(travelPlaceRepository.searchTravelPlacesWithLocation(pageable, request)).thenReturn(mockLocation);
-        when(travelImageRepository.findThumbnailUrlByPlaceId(travelPlace1.getPlaceId())).thenReturn(travelImage1.getS3ObjectUrl());
-        when(travelImageRepository.findThumbnailUrlByPlaceId(travelPlace2.getPlaceId())).thenReturn(null);
+        when(travelPlaceRepository.searchTravelPlaces(pageable, request.getKeyword())).thenReturn(mockResponse);
 
         // when
-        Page<PlaceDistanceResponse> response = travelService.searchTravelPlacesWithLocation(1, null, request);
+        Page<PlaceLocation> response = travelService.searchTravelPlacesWithoutLocation(1, null, request);
 
         // then
-        List<PlaceDistanceResponse> content = response.getContent();
+        List<PlaceLocation> content = response.getContent();
         assertThat(response.getTotalElements()).isEqualTo(2);
         assertThat(content.get(0).getCity()).isEqualTo(travelPlace1.getCity().getCityName());
         assertThat(content.get(0).getPlaceName()).isEqualTo(travelPlace1.getPlaceName());
         assertThat(content.get(0).getThumbnailUrl()).isEqualTo(travelImage1.getS3ObjectUrl());
-        assertThat(content.get(0).getDistance()).isNotEqualTo(0.0);
         assertThat(content.get(0).isBookmarkStatus()).isFalse();
         assertThat(content.get(1).getThumbnailUrl()).isNull();
         assertThat(content.get(0).isBookmarkStatus()).isFalse();
@@ -248,18 +346,18 @@ public class TravelServiceTest extends TravelTest {
 
 
     @Test
-    @DisplayName("로그인한 사용자의 여행지 검색 시 데이터 없는 경우")
-    void searchTravelPlaces_WithLocation_loginAndNoData(){
+    @DisplayName("로그인한 사용자의 여행지 검색 시 데이터 없는 경우 - 위치 데이터 없는 경우")
+    void searchTravelPlacesWithoutLocation_loginAndNoData(){
         // given
-        PlaceSearchRequest request = createTravelSearchRequest(37.49, 127.0, "ㅁㄴㅇㄹ");
+        PlaceSearchRequest request = createTravelSearchRequest("ㅁㄴㅇㄹ");
 
         Pageable pageable = PageUtils.defaultPageable(1);
-        Page<PlaceLocation> mockLocation = PageUtils.createPage(Collections.emptyList(), pageable, 0);
+        Page<PlaceResponse> mockResponse = PageUtils.createPage(Collections.emptyList(), pageable, 0);
 
-        when(travelPlaceRepository.searchTravelPlacesWithLocation(pageable, request)).thenReturn(mockLocation);
+        when(travelPlaceRepository.searchTravelPlaces(pageable, request.getKeyword())).thenReturn(mockResponse);
 
         // when
-        Page<PlaceDistanceResponse> response = travelService.searchTravelPlacesWithLocation(1, "member", request);
+        Page<PlaceLocation> response = travelService.searchTravelPlacesWithoutLocation(1, "member", request);
 
         // then
         assertThat(response.getTotalElements()).isEqualTo(0);
@@ -267,22 +365,21 @@ public class TravelServiceTest extends TravelTest {
     }
 
     @Test
-    @DisplayName("익명 사용자의 여행지 검색 시 데이터 없는 경우")
-    void searchTravelPlaces_WithLocation_anonymousAndNoData(){
+    @DisplayName("익명 사용자의 여행지 검색 시 데이터 없는 경우 - 위치 데이터 없는 경우")
+    void searchTravelPlacesWithoutLocation_anonymousAndNoData(){
         // given
-        PlaceSearchRequest request = createTravelSearchRequest(37.49, 127.0, "ㅁㄴㅇㄹ");
+        PlaceSearchRequest request = createTravelSearchRequest("ㅁㄴㅇㄹ");
 
         Pageable pageable = PageUtils.defaultPageable(1);
-        Page<PlaceLocation> mockLocation = PageUtils.createPage(Collections.emptyList(), pageable, 0);
+        Page<PlaceResponse> mockResponse = PageUtils.createPage(Collections.emptyList(), pageable, 0);
 
-        when(travelPlaceRepository.searchTravelPlacesWithLocation(pageable, request)).thenReturn(mockLocation);
+        when(travelPlaceRepository.searchTravelPlaces(pageable, request.getKeyword())).thenReturn(mockResponse);
 
         // when
-        Page<PlaceDistanceResponse> response = travelService.searchTravelPlacesWithLocation(1, null, request);
+        Page<PlaceLocation> response = travelService.searchTravelPlacesWithoutLocation(1, null, request);
 
         // then
         assertThat(response.getTotalElements()).isEqualTo(0);
-
     }
 
     @Test
@@ -400,8 +497,8 @@ public class TravelServiceTest extends TravelTest {
         DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> travelService.getTravelPlaceDetails(1L, "member"));
 
         // then
-        assertEquals(fail.getHttpStatus(), ErrorCode.DATA_NOT_FOUND.getStatus());
-        assertEquals(fail.getMessage(), ErrorCode.DATA_NOT_FOUND.getMessage());
+        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.DATA_NOT_FOUND.getStatus());
+        assertThat(fail.getMessage()).isEqualTo(ErrorCode.DATA_NOT_FOUND.getMessage());
     }
 
 
@@ -410,19 +507,24 @@ public class TravelServiceTest extends TravelTest {
     @DisplayName("중구 기준 여행지 조회")
     void getTravelPlacesByJungGu(){
         // given
-        List<PlaceResponse> placeList = List.of(PlaceResponse.from(travelPlace1), PlaceResponse.from(travelPlace2));
         Pageable pageable = PageUtils.travelPageable(1);
+        List<PlaceResponse> mockResponse = List.of(
+                createPlaceResponse(travelPlace1, travelImage1.getS3ObjectUrl()),
+                createPlaceResponse(travelPlace2, null)
+        );
 
         when(travelPlaceRepository.findAllByAreaData(any(), anyString(), anyString(), anyString()))
-                .thenReturn(PageUtils.createPage(placeList, pageable, 1));
+                .thenReturn(PageUtils.createPage(mockResponse, pageable, 1));
 
         // when
         Page<PlaceResponse> response = travelService.getTravelPlacesByJungGu(1);
 
         // then
-        assertEquals(response.getTotalElements(), placeList.size());
-        assertEquals(response.getContent().get(0).getPlaceName(), placeList.get(0).getPlaceName());
-        assertNotNull(response.getContent().get(0).getThumbnailUrl());
+        List<PlaceResponse> content = response.getContent();
+        assertThat(response.getTotalElements()).isEqualTo(mockResponse.size());
+        assertThat(content.get(0).getPlaceName()).isEqualTo(mockResponse.get(0).getPlaceName());
+        assertThat(content.get(0).getThumbnailUrl()).isEqualTo(travelImage1.getS3ObjectUrl());
+        assertThat(content.get(1).getThumbnailUrl()).isNull();
     }
 
     @Test
@@ -438,8 +540,8 @@ public class TravelServiceTest extends TravelTest {
         Page<PlaceResponse> response = travelService.getTravelPlacesByJungGu(1);
 
         // then
-        assertEquals(response.getTotalElements(), 0);
-        assertTrue(response.getContent().isEmpty());
+        assertThat(response.getTotalElements()).isEqualTo(0);
+        assertThat(response.getContent()).isEmpty();
     }
 
 
@@ -448,22 +550,25 @@ public class TravelServiceTest extends TravelTest {
     void searchTravelPlacesWithLocation(){
         // given
         String keyword = "중구";
-        Pageable pageable = PageUtils.travelPageable(1);
 
-        List<PlaceResponse> travelPlaceList = List.of(PlaceResponse.from(travelPlace1), PlaceResponse.from(travelPlace2));
+        Pageable pageable = PageUtils.travelPageable(1);
+        List<PlaceResponse> mockResponse = List.of(
+                createPlaceResponse(travelPlace1, travelImage1.getS3ObjectUrl()),
+                createPlaceResponse(travelPlace2, null)
+        );
 
         when(travelPlaceRepository.searchTravelPlaces(pageable, keyword))
-                .thenReturn(PageUtils.createPage(travelPlaceList, pageable, travelPlaceList.size()));
+                .thenReturn(PageUtils.createPage(mockResponse, pageable, mockResponse.size()));
 
         // when
         Page<PlaceResponse> response = travelService.searchTravelPlaces(1, keyword);
 
-
         // then
         List<PlaceResponse> content = response.getContent();
-        assertEquals(content.get(0).getPlaceName(), travelPlace1.getPlaceName());
-        assertEquals(content.get(0).getAddress(), travelPlace1.getAddress());
-        assertNotNull(content.get(0).getThumbnailUrl());
+        assertThat(content.get(0).getPlaceName()).isEqualTo(travelPlace1.getPlaceName());
+        assertThat(content.get(0).getAddress()).isEqualTo(travelPlace1.getAddress());
+        assertThat(content.get(0).getThumbnailUrl()).isEqualTo(travelImage1.getS3ObjectUrl());
+        assertThat(content.get(1).getThumbnailUrl()).isNull();
     }
 
     @Test
@@ -480,7 +585,7 @@ public class TravelServiceTest extends TravelTest {
 
 
         // then
-        assertEquals(response.getTotalElements(), 0);
+        assertThat(response.getTotalElements()).isEqualTo(0);
     }
 
 

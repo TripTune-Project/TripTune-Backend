@@ -17,8 +17,6 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest
 @Import({QueryDSLConfig.class})
@@ -69,7 +67,7 @@ public class TravelAttendeeRepositoryTest extends ScheduleTest {
         boolean response = travelAttendeeRepository.existsByTravelSchedule_ScheduleIdAndMember_UserId(schedule1.getScheduleId(), member1.getUserId());
 
         // then
-        assertTrue(response);
+        assertThat(response).isTrue();
     }
 
     @Test
@@ -79,7 +77,7 @@ public class TravelAttendeeRepositoryTest extends ScheduleTest {
         boolean response = travelAttendeeRepository.existsByTravelSchedule_ScheduleIdAndMember_UserId(schedule1.getScheduleId(), member2.getUserId());
 
         // then
-        assertFalse(response);
+        assertThat(response).isFalse();
     }
 
     @Test

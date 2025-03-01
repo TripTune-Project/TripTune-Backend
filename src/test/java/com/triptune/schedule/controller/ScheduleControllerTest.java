@@ -43,7 +43,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -626,8 +626,8 @@ public class ScheduleControllerTest extends ScheduleTest {
                 .andExpect(jsonPath("$.success").value(true));
 
         // then
-        assertEquals(schedule1.getScheduleName(), request.getScheduleName());
-        assertEquals(schedule1.getTravelRouteList().size(), 2);
+        assertThat(schedule1.getScheduleName()).isEqualTo(request.getScheduleName());
+        assertThat(schedule1.getTravelRouteList().size()).isEqualTo(2);
     }
 
     @Test
@@ -675,8 +675,8 @@ public class ScheduleControllerTest extends ScheduleTest {
                 .andExpect(jsonPath("$.success").value(true));
 
         // then
-        assertEquals(schedule1.getScheduleName(), request.getScheduleName());
-        assertEquals(schedule1.getTravelRouteList().size(), 1);
+        assertThat(schedule1.getScheduleName()).isEqualTo(request.getScheduleName());
+        assertThat(schedule1.getTravelRouteList().size()).isEqualTo(1);
     }
 
     @Test

@@ -117,11 +117,11 @@ public class RouteServiceTest extends ScheduleTest {
 
         // then
         List<RouteResponse> content = response.getContent();
-        assertEquals(response.getTotalElements(), schedule1.getTravelRouteList().size());
-        assertEquals(content.get(0).getAddress(), travelPlace1.getAddress());
-        assertEquals(content.get(0).getRouteOrder(), schedule1.getTravelRouteList().get(0).getRouteOrder());
-        assertEquals(content.get(1).getRouteOrder(), schedule1.getTravelRouteList().get(1).getRouteOrder());
-        assertEquals(content.get(2).getRouteOrder(), schedule1.getTravelRouteList().get(2).getRouteOrder());
+        assertThat(response.getTotalElements()).isEqualTo(schedule1.getTravelRouteList().size());
+        assertThat(content.get(0).getAddress()).isEqualTo(travelPlace1.getAddress());
+        assertThat(content.get(0).getRouteOrder()).isEqualTo(schedule1.getTravelRouteList().get(0).getRouteOrder());
+        assertThat(content.get(1).getRouteOrder()).isEqualTo(schedule1.getTravelRouteList().get(1).getRouteOrder());
+        assertThat(content.get(2).getRouteOrder()).isEqualTo(schedule1.getTravelRouteList().get(2).getRouteOrder());
     }
 
     @Test
@@ -138,8 +138,8 @@ public class RouteServiceTest extends ScheduleTest {
         Page<RouteResponse> response = routeService.getTravelRoutes(schedule1.getScheduleId(), 1);
 
         // then
-        assertEquals(response.getTotalElements(), 0);
-        assertTrue(response.getContent().isEmpty());
+        assertThat(response.getTotalElements()).isEqualTo(0);
+        assertThat(response.getContent()).isEmpty();
     }
 
     @Test

@@ -8,7 +8,6 @@ import com.triptune.travel.dto.PlaceLocation;
 import com.triptune.travel.dto.request.PlaceLocationRequest;
 import com.triptune.travel.dto.request.PlaceSearchRequest;
 import com.triptune.travel.dto.response.PlaceDetailResponse;
-import com.triptune.travel.dto.response.PlaceDistanceResponse;
 import com.triptune.travel.dto.response.PlaceResponse;
 import com.triptune.travel.entity.TravelPlace;
 import com.triptune.travel.repository.TravelImageRepository;
@@ -28,45 +27,45 @@ public class TravelService {
     private static final int RADIUS_SIZE = 5;
 
     private final TravelPlaceRepository travelPlaceRepository;
-    private final TravelImageRepository travelImageRepository;
     private final BookmarkRepository bookmarkRepository;
 
 
-    public Page<PlaceDistanceResponse> getNearByTravelPlaces(int page, String userId, PlaceLocationRequest placeLocationRequest) {
+    public Page<PlaceLocation> getNearByTravelPlaces(int page, String userId, PlaceLocationRequest placeLocationRequest) {
         Pageable pageable = PageUtils.defaultPageable(page);
-        Page<PlaceLocation> travelPlacePage = travelPlaceRepository.findNearByTravelPlaces(pageable, placeLocationRequest, RADIUS_SIZE);
+        Page<PlaceLocation> placeResponsePage = travelPlaceRepository.findNearByTravelPlaces(pageable, placeLocationRequest, RADIUS_SIZE);
 
-        setPlaceLocations(travelPlacePage.getContent(), userId);
-        return travelPlacePage.map(PlaceDistanceResponse::from);
+        markBookmarkedTravelPlaces(placeResponsePage.getContent(), userId);
+        return placeResponsePage;
     }
 
-    public Page<PlaceDistanceResponse> searchTravelPlacesWithLocation(int page, String userId, PlaceSearchRequest placeSearchRequest) {
+    public Page<PlaceLocation> searchTravelPlacesWithLocation(int page, String userId, PlaceSearchRequest placeSearchRequest) {
         Pageable pageable = PageUtils.defaultPageable(page);
-        Page<PlaceLocation> travelPlacePage = travelPlaceRepository.searchTravelPlacesWithLocation(pageable, placeSearchRequest);
+        Page<PlaceLocation> placeResponsePage = travelPlaceRepository.searchTravelPlacesWithLocation(pageable, placeSearchRequest);
 
-        setPlaceLocations(travelPlacePage.getContent(), userId);
-        return travelPlacePage.map(PlaceDistanceResponse::from);
+        markBookmarkedTravelPlaces(placeResponsePage.getContent(), userId);
+        return placeResponsePage;
     }
 
-    public void setPlaceLocations(List<PlaceLocation> placeLocations, String userId){
-        placeLocations.forEach(this::updateThumbnailUrl);
+    public Page<PlaceLocation> searchTravelPlacesWithoutLocation(int page, String userId, PlaceSearchRequest placeSearchRequest) {
+        Pageable pageable = PageUtils.defaultPageable(page);
+        Page<PlaceResponse> placeResponsePage = travelPlaceRepository.searchTravelPlaces(pageable, placeSearchRequest.getKeyword());
 
+        Page<PlaceLocation> placeLocationPage = placeResponsePage.map(PlaceLocation::from);
+        markBookmarkedTravelPlaces(placeLocationPage.getContent(), userId);
+        return placeLocationPage;
+    }
+
+    public void markBookmarkedTravelPlaces(List<PlaceLocation> placeResponses, String userId){
         if (userId != null){
-            placeLocations.forEach(location -> updateBookmarkStatus(userId, location));
+            placeResponses.forEach(placeResponse -> updateBookmarkStatus(userId, placeResponse));
         }
-
     }
 
-    public void updateThumbnailUrl(PlaceLocation location){
-        location.updateThumbnailUrl(travelImageRepository.findThumbnailUrlByPlaceId(location.getPlaceId()));
-    }
-
-
-    public void updateBookmarkStatus(String userId, PlaceLocation location){
-        boolean isBookmark = bookmarkRepository.existsByMember_UserIdAndTravelPlace_PlaceId(userId, location.getPlaceId());
+    public void updateBookmarkStatus(String userId, PlaceLocation placeResponse){
+        boolean isBookmark = bookmarkRepository.existsByMember_UserIdAndTravelPlace_PlaceId(userId, placeResponse.getPlaceId());
 
         if (isBookmark){
-            location.updateBookmarkStatusTrue();
+            placeResponse.updateBookmarkStatusTrue();
         }
     }
 

@@ -173,9 +173,9 @@ public class TravelControllerTest extends TravelTest {
 
 
     @Test
-    @DisplayName("로그인한 사용자의 여행지를 검색 시 검색 결과가 존재하는 경우")
+    @DisplayName("로그인한 사용자의 여행지를 검색 시 검색 결과가 존재하는 경우 - 위치 데이터 존재")
     @WithMockUser("member")
-    void searchTravelPlaces_loginAndExistsData() throws Exception {
+    void searchTravelPlacesWithLocation_loginAndExistsData() throws Exception {
         bookmarkRepository.save(createBookmark(null, member, travelPlace1, LocalDateTime.now()));
 
         mockMvc.perform(post("/api/travels/search")
@@ -194,8 +194,8 @@ public class TravelControllerTest extends TravelTest {
     }
 
     @Test
-    @DisplayName("익명 사용자의 여행지를 검색 시 검색 결과가 존재하는 경우")
-    void searchTravelPlaces_anonymousAndExistsData() throws Exception {
+    @DisplayName("익명 사용자의 여행지를 검색 시 검색 결과가 존재하는 경우 - 위치 데이터 존재")
+    void searchTravelPlacesWithLocation_anonymousAndExistsData() throws Exception {
         bookmarkRepository.save(createBookmark(null, member, travelPlace1, LocalDateTime.now()));
 
         mockMvc.perform(post("/api/travels/search")
@@ -214,9 +214,9 @@ public class TravelControllerTest extends TravelTest {
     }
 
     @Test
-    @DisplayName("로그인한 사용자의 여행지를 검색 시 검색 결과가 존재하지 않는 경우")
+    @DisplayName("로그인한 사용자의 여행지를 검색 시 검색 결과가 존재하지 않는 경우 - 위치 데이터 존재")
     @WithMockUser("member")
-    void searchTravelPlaces_loginAndNoData() throws Exception {
+    void searchTravelPlacesWithLocation_loginAndNoData() throws Exception {
         mockMvc.perform(post("/api/travels/search")
                         .param("page", "1")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -227,12 +227,79 @@ public class TravelControllerTest extends TravelTest {
     }
 
     @Test
-    @DisplayName("익명 사용자의 여행지를 검색 시 검색 결과가 존재하지 않는 경우")
-    void searchTravelPlaces_anonymousAndNoData() throws Exception {
+    @DisplayName("익명 사용자의 여행지를 검색 시 검색 결과가 존재하지 않는 경우 - 위치 데이터 존재")
+    void searchTravelPlacesWithLocation_anonymousAndNoData() throws Exception {
         mockMvc.perform(post("/api/travels/search")
                         .param("page", "1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(toJsonString(createTravelSearchRequest(9999.9999, 9999.9999, "ㅁㄴㅇㄹ"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.totalElements").value(0))
+                .andExpect(jsonPath("$.data.content").isEmpty());
+    }
+
+
+    @Test
+    @DisplayName("로그인한 사용자의 여행지를 검색 시 검색 결과가 존재하는 경우 - 위치 데이터 존재하지 않는 경우")
+    @WithMockUser("member")
+    void searchTravelPlacesWithoutLocation_loginAndExistsData() throws Exception {
+        bookmarkRepository.save(createBookmark(null, member, travelPlace1, LocalDateTime.now()));
+
+        mockMvc.perform(post("/api/travels/search")
+                        .param("page", "1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJsonString(createTravelSearchRequest("강남"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.totalElements").value(2))
+                .andExpect(jsonPath("$.data.content[0].district").value(travelPlace1.getDistrict().getDistrictName()))
+                .andExpect(jsonPath("$.data.content[0].placeName").value(travelPlace1.getPlaceName()))
+                .andExpect(jsonPath("$.data.content[0].thumbnailUrl").value(travelImage1.getS3ObjectUrl()))
+                .andExpect(jsonPath("$.data.content[0].bookmarkStatus").value(true))
+                .andExpect(jsonPath("$.data.content[1].placeName").value(travelPlace2.getPlaceName()))
+                .andExpect(jsonPath("$.data.content[1].thumbnailUrl").doesNotExist())
+                .andExpect(jsonPath("$.data.content[1].bookmarkStatus").value(false));
+    }
+
+    @Test
+    @DisplayName("익명 사용자의 여행지를 검색 시 검색 결과가 존재하는 경우 - 위치 데이터 존재하지 않는 경우")
+    void searchTravelPlacesWithoutLocation_anonymousAndExistsData() throws Exception {
+        bookmarkRepository.save(createBookmark(null, member, travelPlace1, LocalDateTime.now()));
+
+        mockMvc.perform(post("/api/travels/search")
+                        .param("page", "1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJsonString(createTravelSearchRequest( "강남"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.totalElements").value(2))
+                .andExpect(jsonPath("$.data.content[0].district").value(travelPlace1.getDistrict().getDistrictName()))
+                .andExpect(jsonPath("$.data.content[0].placeName").value(travelPlace1.getPlaceName()))
+                .andExpect(jsonPath("$.data.content[0].thumbnailUrl").value(travelImage1.getS3ObjectUrl()))
+                .andExpect(jsonPath("$.data.content[0].bookmarkStatus").value(false))
+                .andExpect(jsonPath("$.data.content[1].placeName").value(travelPlace2.getPlaceName()))
+                .andExpect(jsonPath("$.data.content[1].thumbnailUrl").doesNotExist())
+                .andExpect(jsonPath("$.data.content[1].bookmarkStatus").value(false));
+    }
+
+    @Test
+    @DisplayName("로그인한 사용자의 여행지를 검색 시 검색 결과가 존재하지 않는 경우 - 위치 데이터 존재하지 않는 경우")
+    @WithMockUser("member")
+    void searchTravelPlacesWithoutLocation_loginAndNoData() throws Exception {
+        mockMvc.perform(post("/api/travels/search")
+                        .param("page", "1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJsonString(createTravelSearchRequest("ㅁㄴㅇㄹ"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.totalElements").value(0))
+                .andExpect(jsonPath("$.data.content").isEmpty());
+    }
+
+    @Test
+    @DisplayName("익명 사용자의 여행지를 검색 시 검색 결과가 존재하지 않는 경우 - 위치 데이터 존재하지 않는 경우")
+    void searchTravelPlacesWithoutLocation_anonymousAndNoData() throws Exception {
+        mockMvc.perform(post("/api/travels/search")
+                        .param("page", "1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJsonString(createTravelSearchRequest("ㅁㄴㅇㄹ"))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.totalElements").value(0))
                 .andExpect(jsonPath("$.data.content").isEmpty());

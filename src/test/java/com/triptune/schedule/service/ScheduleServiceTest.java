@@ -155,13 +155,13 @@ public class ScheduleServiceTest extends ScheduleTest {
 
         // then
         List<ScheduleInfoResponse> content = response.getContent();
-        assertEquals(response.getTotalElements(), 3);
-        assertEquals(response.getTotalSharedElements(), 2);
-        assertEquals(content.get(0).getScheduleName(), schedule1.getScheduleName());
-        assertNotNull(content.get(0).getSinceUpdate());
-        assertNotNull(content.get(0).getThumbnailUrl());
-        assertEquals(content.get(0).getAuthor().getNickname(), member1.getNickname());
-        assertEquals(content.get(0).getRole(), AttendeeRole.AUTHOR);
+        assertThat(response.getTotalElements()).isEqualTo(3);
+        assertThat(response.getTotalSharedElements()).isEqualTo(2);
+        assertThat(content.get(0).getScheduleName()).isEqualTo(schedule1.getScheduleName());
+        assertThat(content.get(0).getSinceUpdate()).isNotNull();
+        assertThat(content.get(0).getThumbnailUrl()).isNotNull();
+        assertThat(content.get(0).getAuthor().getNickname()).isEqualTo(member1.getNickname());
+        assertThat(content.get(0).getRole()).isEqualTo(AttendeeRole.AUTHOR);
     }
 
     @Test
@@ -181,11 +181,11 @@ public class ScheduleServiceTest extends ScheduleTest {
 
         // then
         List<ScheduleInfoResponse> content = response.getContent();
-        assertEquals(response.getTotalElements(), 1);
-        assertEquals(response.getTotalSharedElements(), 0);
-        assertEquals(content.get(0).getScheduleName(), schedule3.getScheduleName());
-        assertNotNull(content.get(0).getSinceUpdate());
-        assertEquals(content.get(0).getAuthor().getNickname(), member1.getNickname());
+        assertThat(response.getTotalElements()).isEqualTo(1);
+        assertThat(response.getTotalSharedElements()).isEqualTo(0);
+        assertThat(content.get(0).getScheduleName()).isEqualTo(schedule3.getScheduleName());
+        assertThat(content.get(0).getSinceUpdate()).isNotNull();
+        assertThat(content.get(0).getAuthor().getNickname()).isEqualTo(member1.getNickname());
     }
 
     @Test
@@ -202,9 +202,9 @@ public class ScheduleServiceTest extends ScheduleTest {
         SchedulePageResponse<ScheduleInfoResponse> response = scheduleService.getAllSchedulesByUserId(1, member1.getUserId());
 
         // then
-        assertEquals(response.getTotalElements(), 0);
-        assertEquals(response.getTotalSharedElements(), 2);
-        assertTrue(response.getContent().isEmpty());
+        assertThat(response.getTotalElements()).isEqualTo(0);
+        assertThat(response.getTotalSharedElements()).isEqualTo(2);
+        assertThat(response.getContent()).isEmpty();
         verify(travelRouteRepository, times(0)).findAllByTravelSchedule_ScheduleId(any(), any());
     }
 
@@ -228,11 +228,11 @@ public class ScheduleServiceTest extends ScheduleTest {
 
         // then
         List<ScheduleInfoResponse> content = response.getContent();
-        assertEquals(response.getTotalElements(), 2);
-        assertEquals(response.getTotalSharedElements(), 1);
-        assertEquals(content.get(0).getScheduleName(), "테스트1");
-        assertNotNull(content.get(0).getSinceUpdate());
-        assertNull(content.get(0).getThumbnailUrl());
+        assertThat(response.getTotalElements()).isEqualTo(2);
+        assertThat(response.getTotalSharedElements()).isEqualTo(1);
+        assertThat(content.get(0).getScheduleName()).isEqualTo("테스트1");
+        assertThat(content.get(0).getSinceUpdate()).isNotNull();
+        assertThat(content.get(0).getThumbnailUrl()).isNull();
 
     }
 
@@ -255,11 +255,11 @@ public class ScheduleServiceTest extends ScheduleTest {
 
         // then
         List<ScheduleInfoResponse> content = response.getContent();
-        assertEquals(response.getTotalElements(), 1);
-        assertEquals(response.getTotalSharedElements(), 1);
-        assertEquals(content.get(0).getScheduleName(), "테스트1");
-        assertNotNull(content.get(0).getSinceUpdate());
-        assertNull(content.get(0).getThumbnailUrl());
+        assertThat(response.getTotalElements()).isEqualTo(1);
+        assertThat(response.getTotalSharedElements()).isEqualTo(1);
+        assertThat(content.get(0).getScheduleName()).isEqualTo("테스트1");
+        assertThat(content.get(0).getSinceUpdate()).isNotNull();
+        assertThat(content.get(0).getThumbnailUrl()).isNull();
 
     }
 
@@ -294,13 +294,13 @@ public class ScheduleServiceTest extends ScheduleTest {
 
         // then
         List<ScheduleInfoResponse> content = response.getContent();
-        assertEquals(response.getTotalElements(), 3);
-        assertEquals(response.getTotalSharedElements(), 2);
-        assertEquals(content.get(0).getScheduleName(), schedule1.getScheduleName());
-        assertNotNull(content.get(0).getSinceUpdate());
-        assertNotNull(content.get(0).getThumbnailUrl());
-        assertEquals(content.get(0).getAuthor().getNickname(), member1.getNickname());
-        assertEquals(content.get(0).getRole(), AttendeeRole.AUTHOR);
+        assertThat(response.getTotalElements()).isEqualTo(3);
+        assertThat(response.getTotalSharedElements()).isEqualTo(2);
+        assertThat(content.get(0).getScheduleName()).isEqualTo(schedule1.getScheduleName());
+        assertThat(content.get(0).getSinceUpdate()).isNotNull();
+        assertThat(content.get(0).getThumbnailUrl()).isNotNull();
+        assertThat(content.get(0).getAuthor().getNickname()).isEqualTo(member1.getNickname());
+        assertThat(content.get(0).getRole()).isEqualTo(AttendeeRole.AUTHOR);
     }
 
 
@@ -318,9 +318,9 @@ public class ScheduleServiceTest extends ScheduleTest {
         SchedulePageResponse<ScheduleInfoResponse> response = scheduleService.getSharedSchedulesByUserId(1, member1.getUserId());
 
         // then
-        assertEquals(response.getTotalElements(), 2);
-        assertEquals(response.getTotalSharedElements(), 0);
-        assertTrue(response.getContent().isEmpty());
+        assertThat(response.getTotalElements()).isEqualTo(2);
+        assertThat(response.getTotalSharedElements()).isEqualTo(0);
+        assertThat(response.getContent()).isEmpty();
     }
 
     @Test
@@ -349,11 +349,11 @@ public class ScheduleServiceTest extends ScheduleTest {
 
         // then
         List<ScheduleInfoResponse> content = response.getContent();
-        assertEquals(response.getTotalElements(), 3);
-        assertEquals(response.getTotalSharedElements(), 2);
-        assertEquals(content.get(0).getScheduleName(), "테스트1");
-        assertNotNull(content.get(0).getSinceUpdate());
-        assertNull(content.get(0).getThumbnailUrl());
+        assertThat(response.getTotalElements()).isEqualTo(3);
+        assertThat(response.getTotalSharedElements()).isEqualTo(2);
+        assertThat(content.get(0).getScheduleName()).isEqualTo("테스트1");
+        assertThat(content.get(0).getSinceUpdate()).isNotNull();
+        assertThat(content.get(0).getThumbnailUrl()).isNull();
 
     }
 
@@ -376,11 +376,11 @@ public class ScheduleServiceTest extends ScheduleTest {
 
         // then
         List<ScheduleInfoResponse> content = response.getContent();
-        assertEquals(response.getTotalElements(), 1);
-        assertEquals(response.getTotalSharedElements(), 1);
-        assertEquals(content.get(0).getScheduleName(), "테스트1");
-        assertNotNull(content.get(0).getSinceUpdate());
-        assertNull(content.get(0).getThumbnailUrl());
+        assertThat(response.getTotalElements()).isEqualTo(1);
+        assertThat(response.getTotalSharedElements()).isEqualTo(1);
+        assertThat(content.get(0).getScheduleName()).isEqualTo("테스트1");
+        assertThat(content.get(0).getSinceUpdate()).isNotNull();
+        assertThat(content.get(0).getThumbnailUrl()).isNull();
 
     }
 
@@ -442,12 +442,12 @@ public class ScheduleServiceTest extends ScheduleTest {
 
         // then
         List<ScheduleInfoResponse> content = response.getContent();
-        assertEquals(response.getTotalElements(), 3);
-        assertEquals(response.getTotalSharedElements(), 1);
-        assertNotNull(content.get(0).getScheduleName());
-        assertNotNull(content.get(0).getSinceUpdate());
-        assertEquals(content.get(0).getAuthor().getNickname(), member1.getNickname());
-        assertEquals(content.get(0).getRole(), AttendeeRole.AUTHOR);
+        assertThat(response.getTotalElements()).isEqualTo(3);
+        assertThat(response.getTotalSharedElements()).isEqualTo(1);
+        assertThat(content.get(0).getScheduleName()).isNotNull();
+        assertThat(content.get(0).getSinceUpdate()).isNotNull();
+        assertThat(content.get(0).getAuthor().getNickname()).isEqualTo(member1.getNickname());
+        assertThat(content.get(0).getRole()).isEqualTo(AttendeeRole.AUTHOR);
     }
 
     @Test
@@ -468,11 +468,11 @@ public class ScheduleServiceTest extends ScheduleTest {
 
         // then
         List<ScheduleInfoResponse> content = response.getContent();
-        assertEquals(response.getTotalElements(), 1);
-        assertEquals(response.getTotalSharedElements(), 0);
-        assertEquals(content.get(0).getScheduleName(), schedule3.getScheduleName());
-        assertNotNull(content.get(0).getSinceUpdate());
-        assertEquals(content.get(0).getAuthor().getNickname(), member1.getNickname());
+        assertThat(response.getTotalElements()).isEqualTo(1);
+        assertThat(response.getTotalSharedElements()).isEqualTo(0);
+        assertThat(content.get(0).getScheduleName()).isEqualTo(schedule3.getScheduleName());
+        assertThat(content.get(0).getSinceUpdate()).isNotNull();
+        assertThat(content.get(0).getAuthor().getNickname()).isEqualTo(member1.getNickname());
     }
 
     @Test
@@ -490,9 +490,9 @@ public class ScheduleServiceTest extends ScheduleTest {
         SchedulePageResponse<ScheduleInfoResponse> response = scheduleService.searchAllSchedules(1, keyword, member1.getUserId());
 
         // then
-        assertEquals(response.getTotalElements(), 0);
-        assertEquals(response.getTotalSharedElements(), 2);
-        assertTrue(response.getContent().isEmpty());
+        assertThat(response.getTotalElements()).isEqualTo(0);
+        assertThat(response.getTotalSharedElements()).isEqualTo(2);
+        assertThat(response.getContent()).isEmpty();
     }
 
     @Test
@@ -517,11 +517,11 @@ public class ScheduleServiceTest extends ScheduleTest {
 
         // then
         List<ScheduleInfoResponse> content = response.getContent();
-        assertEquals(response.getTotalElements(), 2);
-        assertEquals(response.getTotalSharedElements(), 1);
-        assertEquals(content.get(0).getScheduleName(), "테스트1");
-        assertNotNull(content.get(0).getSinceUpdate());
-        assertNull(content.get(0).getThumbnailUrl());
+        assertThat(response.getTotalElements()).isEqualTo(2);
+        assertThat(response.getTotalSharedElements()).isEqualTo(1);
+        assertThat(content.get(0).getScheduleName()).isEqualTo("테스트1");
+        assertThat(content.get(0).getSinceUpdate()).isNotNull();
+        assertThat(content.get(0).getThumbnailUrl()).isNull();
 
     }
 
@@ -545,11 +545,11 @@ public class ScheduleServiceTest extends ScheduleTest {
 
         // then
         List<ScheduleInfoResponse> content = response.getContent();
-        assertEquals(response.getTotalElements(), 1);
-        assertEquals(response.getTotalSharedElements(), 1);
-        assertEquals(content.get(0).getScheduleName(), "테스트1");
-        assertNotNull(content.get(0).getSinceUpdate());
-        assertNull(content.get(0).getThumbnailUrl());
+        assertThat(response.getTotalElements()).isEqualTo(1);
+        assertThat(response.getTotalSharedElements()).isEqualTo(1);
+        assertThat(content.get(0).getScheduleName()).isEqualTo("테스트1");
+        assertThat(content.get(0).getSinceUpdate()).isNotNull();
+        assertThat(content.get(0).getThumbnailUrl()).isNull();
 
     }
 
@@ -586,13 +586,13 @@ public class ScheduleServiceTest extends ScheduleTest {
 
         // then
         List<ScheduleInfoResponse> content = response.getContent();
-        assertEquals(response.getTotalElements(), 5);
-        assertEquals(response.getTotalSharedElements(), 3);
-        assertEquals(content.get(0).getScheduleName(), schedule1.getScheduleName());
-        assertNotNull(content.get(0).getSinceUpdate());
-        assertNotNull(content.get(0).getThumbnailUrl());
-        assertEquals(content.get(0).getAuthor().getNickname(), member1.getNickname());
-        assertEquals(content.get(0).getRole(), AttendeeRole.AUTHOR);
+        assertThat(response.getTotalElements()).isEqualTo(5);
+        assertThat(response.getTotalSharedElements()).isEqualTo(3);
+        assertThat(content.get(0).getScheduleName()).isEqualTo(schedule1.getScheduleName());
+        assertThat(content.get(0).getSinceUpdate()).isNotNull();
+        assertThat(content.get(0).getThumbnailUrl()).isNotNull();
+        assertThat(content.get(0).getAuthor().getNickname()).isEqualTo(member1.getNickname());
+        assertThat(content.get(0).getRole()).isEqualTo(AttendeeRole.AUTHOR);
     }
 
 
@@ -611,9 +611,9 @@ public class ScheduleServiceTest extends ScheduleTest {
         SchedulePageResponse<ScheduleInfoResponse> response = scheduleService.searchSharedSchedules(1, keyword, member1.getUserId());
 
         // then
-        assertEquals(response.getTotalElements(), 2);
-        assertEquals(response.getTotalSharedElements(), 0);
-        assertTrue(response.getContent().isEmpty());
+        assertThat(response.getTotalElements()).isEqualTo(2);
+        assertThat(response.getTotalSharedElements()).isEqualTo(0);
+        assertThat(response.getContent()).isEmpty();
     }
 
     @Test
@@ -643,11 +643,11 @@ public class ScheduleServiceTest extends ScheduleTest {
 
         // then
         List<ScheduleInfoResponse> content = response.getContent();
-        assertEquals(response.getTotalElements(), 3);
-        assertEquals(response.getTotalSharedElements(), 2);
-        assertEquals(content.get(0).getScheduleName(), "테스트1");
-        assertNotNull(content.get(0).getSinceUpdate());
-        assertNull(content.get(0).getThumbnailUrl());
+        assertThat(response.getTotalElements()).isEqualTo(3);
+        assertThat(response.getTotalSharedElements()).isEqualTo(2);
+        assertThat(content.get(0).getScheduleName()).isEqualTo("테스트1");
+        assertThat(content.get(0).getSinceUpdate()).isNotNull();
+        assertThat(content.get(0).getThumbnailUrl()).isNull();
 
     }
 
@@ -671,11 +671,11 @@ public class ScheduleServiceTest extends ScheduleTest {
 
         // then
         List<ScheduleInfoResponse> content = response.getContent();
-        assertEquals(response.getTotalElements(), 1);
-        assertEquals(response.getTotalSharedElements(), 2);
-        assertEquals(content.get(0).getScheduleName(), "테스트1");
-        assertNotNull(content.get(0).getSinceUpdate());
-        assertNull(content.get(0).getThumbnailUrl());
+        assertThat(response.getTotalElements()).isEqualTo(1);
+        assertThat(response.getTotalSharedElements()).isEqualTo(2);
+        assertThat(content.get(0).getScheduleName()).isEqualTo("테스트1");
+        assertThat(content.get(0).getSinceUpdate()).isNotNull();
+        assertThat(content.get(0).getThumbnailUrl()).isNull();
 
     }
 
@@ -703,11 +703,11 @@ public class ScheduleServiceTest extends ScheduleTest {
         List<ScheduleInfoResponse> response = scheduleService.createScheduleInfoResponse(schedulePage, member1.getUserId());
 
         // then
-        assertEquals(response.size(), 1);
-        assertEquals(response.get(0).getScheduleName(), schedule1.getScheduleName());
-        assertNotNull(response.get(0).getSinceUpdate());
-        assertNotNull(response.get(0).getThumbnailUrl());
-        assertEquals(response.get(0).getAuthor().getNickname(), member1.getNickname());
+        assertThat(response.size()).isEqualTo(1);
+        assertThat(response.get(0).getScheduleName()).isEqualTo(schedule1.getScheduleName());
+        assertThat(response.get(0).getSinceUpdate()).isNotNull();
+        assertThat(response.get(0).getThumbnailUrl()).isNotNull();
+        assertThat(response.get(0).getAuthor().getNickname()).isEqualTo(member1.getNickname());
     }
 
     @Test
@@ -725,10 +725,10 @@ public class ScheduleServiceTest extends ScheduleTest {
         List<ScheduleInfoResponse> response = scheduleService.createScheduleInfoResponse(schedulePage, member1.getUserId());
 
         // then
-        assertEquals(response.get(0).getScheduleName(), schedule1.getScheduleName());
-        assertNotNull(response.get(0).getSinceUpdate());
-        assertNull(response.get(0).getThumbnailUrl());
-        assertEquals(response.get(0).getAuthor().getNickname(), member1.getNickname());
+        assertThat(response.get(0).getScheduleName()).isEqualTo(schedule1.getScheduleName());
+        assertThat(response.get(0).getSinceUpdate()).isNotNull();
+        assertThat(response.get(0).getThumbnailUrl()).isNull();
+        assertThat(response.get(0).getAuthor().getNickname()).isEqualTo(member1.getNickname());
     }
 
     @Test
@@ -745,8 +745,8 @@ public class ScheduleServiceTest extends ScheduleTest {
         DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> scheduleService.createScheduleInfoResponse(schedulePage, member1.getUserId()));
 
         // then
-        assertEquals(fail.getHttpStatus(), ErrorCode.AUTHOR_NOT_FOUND.getStatus());
-        assertEquals(fail.getMessage(), ErrorCode.AUTHOR_NOT_FOUND.getMessage());
+        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.AUTHOR_NOT_FOUND.getStatus());
+        assertThat(fail.getMessage()).isEqualTo(ErrorCode.AUTHOR_NOT_FOUND.getMessage());
 
     }
 
@@ -761,8 +761,8 @@ public class ScheduleServiceTest extends ScheduleTest {
         ForbiddenScheduleException fail = assertThrows(ForbiddenScheduleException.class, () -> scheduleService.createScheduleInfoResponse(schedulePage, member2.getUserId()));
 
         // then
-        assertEquals(fail.getHttpStatus(), ErrorCode.FORBIDDEN_ACCESS_SCHEDULE.getStatus());
-        assertEquals(fail.getMessage(), ErrorCode.FORBIDDEN_ACCESS_SCHEDULE.getMessage());
+        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.FORBIDDEN_ACCESS_SCHEDULE.getStatus());
+        assertThat(fail.getMessage()).isEqualTo(ErrorCode.FORBIDDEN_ACCESS_SCHEDULE.getMessage());
 
     }
 
@@ -774,8 +774,8 @@ public class ScheduleServiceTest extends ScheduleTest {
         AuthorDTO response = scheduleService.createAuthorDTO(schedule1);
 
         // then
-        assertEquals(response.getNickname(), member1.getNickname());
-        assertEquals(response.getProfileUrl(), member1.getProfileImage().getS3ObjectUrl());
+        assertThat(response.getNickname()).isEqualTo(member1.getNickname());
+        assertThat(response.getProfileUrl()).isEqualTo(member1.getProfileImage().getS3ObjectUrl());
 
     }
 
@@ -791,8 +791,8 @@ public class ScheduleServiceTest extends ScheduleTest {
         DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> scheduleService.createAuthorDTO(schedule1));
 
         // then
-        assertEquals(fail.getHttpStatus(), ErrorCode.AUTHOR_NOT_FOUND.getStatus());
-        assertEquals(fail.getMessage(), ErrorCode.AUTHOR_NOT_FOUND.getMessage());
+        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.AUTHOR_NOT_FOUND.getStatus());
+        assertThat(fail.getMessage()).isEqualTo(ErrorCode.AUTHOR_NOT_FOUND.getMessage());
 
     }
 
@@ -813,7 +813,7 @@ public class ScheduleServiceTest extends ScheduleTest {
 
         // then
         verify(travelAttendeeRepository, times(1)).save(any(TravelAttendee.class));
-        assertEquals(response.getScheduleId(), schedule1.getScheduleId());
+        assertThat(response.getScheduleId()).isEqualTo(schedule1.getScheduleId());
 
     }
 
@@ -830,8 +830,8 @@ public class ScheduleServiceTest extends ScheduleTest {
         DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> scheduleService.createSchedule(request, "test"));
 
         // then
-        assertEquals(fail.getHttpStatus(), ErrorCode.MEMBER_NOT_FOUND.getStatus());
-        assertEquals(fail.getMessage(), ErrorCode.MEMBER_NOT_FOUND.getMessage());
+        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.MEMBER_NOT_FOUND.getStatus());
+        assertThat(fail.getMessage()).isEqualTo(ErrorCode.MEMBER_NOT_FOUND.getMessage());
 
     }
 
@@ -858,11 +858,11 @@ public class ScheduleServiceTest extends ScheduleTest {
         ScheduleDetailResponse response = scheduleService.getScheduleDetail(schedule1.getScheduleId(), 1);
 
         // then
-        assertEquals(response.getScheduleName(), schedule1.getScheduleName());
-        assertEquals(response.getCreatedAt(), schedule1.getCreatedAt());
-        assertEquals(response.getPlaceList().getTotalElements(), placeList.size());
-        assertEquals(response.getPlaceList().getContent().get(0).getPlaceName(), placeList.get(0).getPlaceName());
-        assertNotNull(response.getPlaceList().getContent().get(0).getThumbnailUrl());
+        assertThat(response.getScheduleName()).isEqualTo(schedule1.getScheduleName());
+        assertThat(response.getCreatedAt()).isEqualTo(schedule1.getCreatedAt());
+        assertThat(response.getPlaceList().getTotalElements()).isEqualTo(placeList.size());
+        assertThat(response.getPlaceList().getContent().get(0).getPlaceName()).isEqualTo(placeList.get(0).getPlaceName());
+        assertThat(response.getPlaceList().getContent().get(0).getThumbnailUrl()).isNotNull();
     }
 
     @Test
@@ -879,10 +879,10 @@ public class ScheduleServiceTest extends ScheduleTest {
         ScheduleDetailResponse response = scheduleService.getScheduleDetail(schedule1.getScheduleId(), 1);
 
         // then
-        assertEquals(response.getScheduleName(), schedule1.getScheduleName());
-        assertEquals(response.getCreatedAt(), schedule1.getCreatedAt());
-        assertEquals(response.getPlaceList().getTotalElements(), 0);
-        assertTrue(response.getPlaceList().getContent().isEmpty());
+        assertThat(response.getScheduleName()).isEqualTo(schedule1.getScheduleName());
+        assertThat(response.getCreatedAt()).isEqualTo(schedule1.getCreatedAt());
+        assertThat(response.getPlaceList().getTotalElements()).isEqualTo(0);
+        assertThat(response.getPlaceList().getContent()).isEmpty();
     }
 
     @Test
@@ -895,8 +895,8 @@ public class ScheduleServiceTest extends ScheduleTest {
         DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> scheduleService.getScheduleDetail(0L, 1));
 
         // then
-        assertEquals(fail.getHttpStatus(), ErrorCode.SCHEDULE_NOT_FOUND.getStatus());
-        assertEquals(fail.getMessage(), ErrorCode.SCHEDULE_NOT_FOUND.getMessage());
+        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.SCHEDULE_NOT_FOUND.getStatus());
+        assertThat(fail.getMessage()).isEqualTo(ErrorCode.SCHEDULE_NOT_FOUND.getMessage());
     }
 
     @Test
@@ -926,10 +926,10 @@ public class ScheduleServiceTest extends ScheduleTest {
         assertDoesNotThrow(() -> scheduleService.updateSchedule(userId, scheduleId, scheduleUpdateRequest));
 
         // then
-        assertEquals(schedule1.getTravelRouteList().size(), 2);
-        assertEquals(schedule1.getScheduleName(), scheduleUpdateRequest.getScheduleName());
-        assertEquals(schedule1.getStartDate(), scheduleUpdateRequest.getStartDate());
-        assertEquals(schedule1.getTravelRouteList().get(0).getTravelPlace().getPlaceName(), travelPlace1.getPlaceName());
+        assertThat(schedule1.getTravelRouteList().size()).isEqualTo(2);
+        assertThat(schedule1.getScheduleName()).isEqualTo(scheduleUpdateRequest.getScheduleName());
+        assertThat(schedule1.getStartDate()).isEqualTo(scheduleUpdateRequest.getStartDate());
+        assertThat(schedule1.getTravelRouteList().get(0).getTravelPlace().getPlaceName()).isEqualTo(travelPlace1.getPlaceName());
     }
 
     @Test
@@ -960,10 +960,10 @@ public class ScheduleServiceTest extends ScheduleTest {
         assertDoesNotThrow(() -> scheduleService.updateSchedule(userId, scheduleId, scheduleUpdateRequest));
 
         // then
-        assertEquals(schedule2.getTravelRouteList().size(), 2);
-        assertEquals(schedule2.getScheduleName(), scheduleUpdateRequest.getScheduleName());
-        assertEquals(schedule2.getStartDate(), scheduleUpdateRequest.getStartDate());
-        assertEquals(schedule2.getTravelRouteList().get(0).getTravelPlace().getPlaceName(), travelPlace1.getPlaceName());
+        assertThat(schedule2.getTravelRouteList().size()).isEqualTo(2);
+        assertThat(schedule2.getScheduleName()).isEqualTo(scheduleUpdateRequest.getScheduleName());
+        assertThat(schedule2.getStartDate()).isEqualTo(scheduleUpdateRequest.getStartDate());
+        assertThat(schedule2.getTravelRouteList().get(0).getTravelPlace().getPlaceName()).isEqualTo(travelPlace1.getPlaceName());
     }
 
     @Test
@@ -994,8 +994,8 @@ public class ScheduleServiceTest extends ScheduleTest {
         assertDoesNotThrow(() -> scheduleService.updateTravelRouteInSchedule(schedule1, scheduleUpdateRequest.getTravelRoute()));
 
         // then
-        assertEquals(schedule1.getTravelRouteList().size(), 2);
-        assertEquals(schedule1.getTravelRouteList().get(0).getTravelPlace().getPlaceName(), travelPlace1.getPlaceName());
+        assertThat(schedule1.getTravelRouteList().size()).isEqualTo(2);
+        assertThat(schedule1.getTravelRouteList().get(0).getTravelPlace().getPlaceName()).isEqualTo(travelPlace1.getPlaceName());
     }
 
 
@@ -1024,8 +1024,8 @@ public class ScheduleServiceTest extends ScheduleTest {
         DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> scheduleService.updateSchedule(userId, scheduleId, scheduleUpdateRequest));
 
         // then
-        assertEquals(fail.getHttpStatus(), ErrorCode.SCHEDULE_NOT_FOUND.getStatus());
-        assertEquals(fail.getMessage(), ErrorCode.SCHEDULE_NOT_FOUND.getMessage());
+        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.SCHEDULE_NOT_FOUND.getStatus());
+        assertThat(fail.getMessage()).isEqualTo(ErrorCode.SCHEDULE_NOT_FOUND.getMessage());
 
     }
 
@@ -1060,8 +1060,8 @@ public class ScheduleServiceTest extends ScheduleTest {
         ForbiddenScheduleException fail = assertThrows(ForbiddenScheduleException.class, () -> scheduleService.updateSchedule(userId, scheduleId, scheduleUpdateRequest));
 
         // then
-        assertEquals(fail.getHttpStatus(), ErrorCode.FORBIDDEN_ACCESS_SCHEDULE.getStatus());
-        assertEquals(fail.getMessage(), ErrorCode.FORBIDDEN_ACCESS_SCHEDULE.getMessage());
+        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.FORBIDDEN_ACCESS_SCHEDULE.getStatus());
+        assertThat(fail.getMessage()).isEqualTo(ErrorCode.FORBIDDEN_ACCESS_SCHEDULE.getMessage());
 
     }
 
@@ -1091,8 +1091,8 @@ public class ScheduleServiceTest extends ScheduleTest {
         ForbiddenScheduleException fail = assertThrows(ForbiddenScheduleException.class, () -> scheduleService.updateSchedule(userId, scheduleId, scheduleUpdateRequest));
 
         // then
-        assertEquals(fail.getHttpStatus(), ErrorCode.FORBIDDEN_EDIT_SCHEDULE.getStatus());
-        assertEquals(fail.getMessage(), ErrorCode.FORBIDDEN_EDIT_SCHEDULE.getMessage());
+        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.FORBIDDEN_EDIT_SCHEDULE.getStatus());
+        assertThat(fail.getMessage()).isEqualTo(ErrorCode.FORBIDDEN_EDIT_SCHEDULE.getMessage());
     }
 
 
@@ -1124,8 +1124,8 @@ public class ScheduleServiceTest extends ScheduleTest {
         DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> scheduleService.updateSchedule(userId, scheduleId, scheduleUpdateRequest));
 
         // then
-        assertEquals(fail.getHttpStatus(), ErrorCode.PLACE_NOT_FOUND.getStatus());
-        assertEquals(fail.getMessage(), ErrorCode.PLACE_NOT_FOUND.getMessage());
+        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.PLACE_NOT_FOUND.getStatus());
+        assertThat(fail.getMessage()).isEqualTo(ErrorCode.PLACE_NOT_FOUND.getMessage());
     }
 
     @Test
@@ -1136,8 +1136,8 @@ public class ScheduleServiceTest extends ScheduleTest {
         TravelAttendee response = scheduleService.getAttendeeInfo(schedule1, member1.getUserId());
 
         // then
-        assertEquals(response.getMember().getUserId(), member1.getUserId());
-        assertEquals(response.getTravelSchedule().getScheduleName(), schedule1.getScheduleName());
+        assertThat(response.getMember().getUserId()).isEqualTo(member1.getUserId());
+        assertThat(response.getTravelSchedule().getScheduleName()).isEqualTo(schedule1.getScheduleName());
     }
 
     @Test
@@ -1148,8 +1148,8 @@ public class ScheduleServiceTest extends ScheduleTest {
         ForbiddenScheduleException fail = assertThrows(ForbiddenScheduleException.class, () -> scheduleService.getAttendeeInfo(schedule3, member2.getUserId()));
 
         // then
-        assertEquals(fail.getHttpStatus(), ErrorCode.FORBIDDEN_ACCESS_SCHEDULE.getStatus());
-        assertEquals(fail.getMessage(), ErrorCode.FORBIDDEN_ACCESS_SCHEDULE.getMessage());
+        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.FORBIDDEN_ACCESS_SCHEDULE.getStatus());
+        assertThat(fail.getMessage()).isEqualTo(ErrorCode.FORBIDDEN_ACCESS_SCHEDULE.getMessage());
 
     }
 
@@ -1184,8 +1184,8 @@ public class ScheduleServiceTest extends ScheduleTest {
         ForbiddenScheduleException fail = assertThrows(ForbiddenScheduleException.class, () -> scheduleService.checkScheduleEditPermission(attendee1));
 
         // then
-        assertEquals(fail.getHttpStatus(), ErrorCode.FORBIDDEN_EDIT_SCHEDULE.getStatus());
-        assertEquals(fail.getMessage(), ErrorCode.FORBIDDEN_EDIT_SCHEDULE.getMessage());
+        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.FORBIDDEN_EDIT_SCHEDULE.getStatus());
+        assertThat(fail.getMessage()).isEqualTo(ErrorCode.FORBIDDEN_EDIT_SCHEDULE.getMessage());
     }
 
     @Test
@@ -1198,8 +1198,8 @@ public class ScheduleServiceTest extends ScheduleTest {
         ForbiddenScheduleException fail = assertThrows(ForbiddenScheduleException.class, () -> scheduleService.checkScheduleEditPermission(attendee1));
 
         // then
-        assertEquals(fail.getHttpStatus(), ErrorCode.FORBIDDEN_EDIT_SCHEDULE.getStatus());
-        assertEquals(fail.getMessage(), ErrorCode.FORBIDDEN_EDIT_SCHEDULE.getMessage());
+        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.FORBIDDEN_EDIT_SCHEDULE.getStatus());
+        assertThat(fail.getMessage()).isEqualTo(ErrorCode.FORBIDDEN_EDIT_SCHEDULE.getMessage());
     }
 
     @Test
@@ -1244,8 +1244,8 @@ public class ScheduleServiceTest extends ScheduleTest {
         // when
         ForbiddenScheduleException fail = assertThrows(ForbiddenScheduleException.class, () -> scheduleService.deleteSchedule(schedule1.getScheduleId(), member2.getUserId()));
 
-        assertEquals(fail.getHttpStatus(), ErrorCode.FORBIDDEN_DELETE_SCHEDULE.getStatus());
-        assertEquals(fail.getMessage(), ErrorCode.FORBIDDEN_DELETE_SCHEDULE.getMessage());
+        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.FORBIDDEN_DELETE_SCHEDULE.getStatus());
+        assertThat(fail.getMessage()).isEqualTo(ErrorCode.FORBIDDEN_DELETE_SCHEDULE.getMessage());
     }
 
     @Test
@@ -1295,9 +1295,9 @@ public class ScheduleServiceTest extends ScheduleTest {
         Member response = scheduleService.getMemberByUserId(userId);
 
         // then
-        assertEquals(response.getUserId(), userId);
-        assertEquals(response.getEmail(), member1.getEmail());
-        assertEquals(response.getNickname(), member1.getNickname());
+        assertThat(response.getUserId()).isEqualTo(userId);
+        assertThat(response.getEmail()).isEqualTo(member1.getEmail());
+        assertThat(response.getNickname()).isEqualTo(member1.getNickname());
 
     }
 
@@ -1311,8 +1311,8 @@ public class ScheduleServiceTest extends ScheduleTest {
         DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> scheduleService.getMemberByUserId("notUser"));
 
         // then
-        assertEquals(fail.getHttpStatus(), ErrorCode.MEMBER_NOT_FOUND.getStatus());
-        assertEquals(fail.getMessage(), ErrorCode.MEMBER_NOT_FOUND.getMessage());
+        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.MEMBER_NOT_FOUND.getStatus());
+        assertThat(fail.getMessage()).isEqualTo(ErrorCode.MEMBER_NOT_FOUND.getMessage());
     }
 
     @Test
@@ -1325,9 +1325,9 @@ public class ScheduleServiceTest extends ScheduleTest {
         TravelSchedule response = scheduleService.getScheduleByScheduleId(schedule1.getScheduleId());
 
         // then
-        assertEquals(response.getScheduleName(), schedule1.getScheduleName());
-        assertEquals(response.getStartDate(), schedule1.getStartDate());
-        assertEquals(response.getEndDate(), schedule1.getEndDate());
+        assertThat(response.getScheduleName()).isEqualTo(schedule1.getScheduleName());
+        assertThat(response.getStartDate()).isEqualTo(schedule1.getStartDate());
+        assertThat(response.getEndDate()).isEqualTo(schedule1.getEndDate());
     }
 
     @Test
@@ -1340,8 +1340,8 @@ public class ScheduleServiceTest extends ScheduleTest {
         DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> scheduleService.getScheduleByScheduleId(0L));
 
         // then
-        assertEquals(fail.getHttpStatus(), ErrorCode.SCHEDULE_NOT_FOUND.getStatus());
-        assertEquals(fail.getMessage(), ErrorCode.SCHEDULE_NOT_FOUND.getMessage());
+        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.SCHEDULE_NOT_FOUND.getStatus());
+        assertThat(fail.getMessage()).isEqualTo(ErrorCode.SCHEDULE_NOT_FOUND.getMessage());
     }
 
     @Test
@@ -1362,8 +1362,8 @@ public class ScheduleServiceTest extends ScheduleTest {
         TravelPlace response = scheduleService.getPlaceByPlaceId(travelPlace1.getPlaceId());
 
         // then
-        assertEquals(response.getPlaceId(), travelPlace1.getPlaceId());
-        assertEquals(response.getPlaceName(), travelPlace1.getPlaceName());
+        assertThat(response.getPlaceId()).isEqualTo(travelPlace1.getPlaceId());
+        assertThat(response.getPlaceName()).isEqualTo(travelPlace1.getPlaceName());
 
     }
 
@@ -1377,8 +1377,8 @@ public class ScheduleServiceTest extends ScheduleTest {
         DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> scheduleService.getPlaceByPlaceId(0L));
 
         // then
-        assertEquals(fail.getHttpStatus(), ErrorCode.PLACE_NOT_FOUND.getStatus());
-        assertEquals(fail.getMessage(), ErrorCode.PLACE_NOT_FOUND.getMessage());
+        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.PLACE_NOT_FOUND.getStatus());
+        assertThat(fail.getMessage()).isEqualTo(ErrorCode.PLACE_NOT_FOUND.getMessage());
 
     }
 

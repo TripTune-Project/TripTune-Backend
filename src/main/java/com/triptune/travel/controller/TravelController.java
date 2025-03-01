@@ -1,9 +1,11 @@
 package com.triptune.travel.controller;
 
+import com.triptune.travel.dto.PlaceLocation;
 import com.triptune.travel.dto.response.PlaceDetailResponse;
 import com.triptune.travel.dto.request.PlaceLocationRequest;
 import com.triptune.travel.dto.response.PlaceDistanceResponse;
 import com.triptune.travel.dto.request.PlaceSearchRequest;
+import com.triptune.travel.dto.response.PlaceResponse;
 import com.triptune.travel.service.TravelService;
 import com.triptune.global.response.pagination.ApiPageResponse;
 import com.triptune.global.response.ApiResponse;
@@ -26,18 +28,24 @@ public class TravelController {
 
     @PostMapping
     @Operation(summary = "현재 위치와 가까운 여행지 목록 조회", description = "여행지 탐색 메뉴에서 사용자 현재 위치와 가까운 여행지 목록을 제공한다.")
-    public ApiPageResponse<PlaceDistanceResponse> getNearByTravelPlaces(@RequestBody @Valid PlaceLocationRequest placeLocationRequest, @RequestParam int page){
+    public ApiPageResponse<PlaceLocation> getNearByTravelPlaces(@RequestBody @Valid PlaceLocationRequest placeLocationRequest, @RequestParam int page){
         String userId = authenticateUserId();
-        Page<PlaceDistanceResponse> response = travelService.getNearByTravelPlaces(page, userId, placeLocationRequest);
+        Page<PlaceLocation> response = travelService.getNearByTravelPlaces(page, userId, placeLocationRequest);
         return ApiPageResponse.dataResponse(response);
     }
 
 
     @PostMapping("/search")
-    @Operation(summary = "여행지 검색", description = "여행지 탐색 메뉴에서 여행지를 검색하며 검색 결과는 현재 위치와 가까운 순으로 제공된다.")
-    public ApiPageResponse<PlaceDistanceResponse> searchTravelPlaces(@RequestBody @Valid PlaceSearchRequest placeSearchRequest, @RequestParam int page){
+    @Operation(summary = "여행지 검색", description = "여행지 탐색 메뉴에서 여행지를 검색한다.")
+    public ApiPageResponse<PlaceLocation> searchTravelPlaces(@RequestBody @Valid PlaceSearchRequest placeSearchRequest, @RequestParam int page){
         String userId = authenticateUserId();
-        Page<PlaceDistanceResponse> response = travelService.searchTravelPlacesWithLocation(page, userId, placeSearchRequest);
+
+        boolean hasLocation = placeSearchRequest.getLongitude() != null && placeSearchRequest.getLatitude() != null;
+
+        Page<PlaceLocation> response = hasLocation
+                ? travelService.searchTravelPlacesWithLocation(page, userId, placeSearchRequest)
+                : travelService.searchTravelPlacesWithoutLocation(page, userId, placeSearchRequest);
+
         return ApiPageResponse.dataResponse(response);
     }
 

@@ -19,6 +19,7 @@ public class PlaceResponse {
     private String placeName;
     private String thumbnailUrl;
 
+
     @Builder
     public PlaceResponse(Long placeId, String country, String city, String district, String address, String detailAddress, double longitude, double latitude, String placeName, String thumbnailUrl) {
         this.placeId = placeId;
@@ -47,5 +48,6 @@ public class PlaceResponse {
                 .thumbnailUrl(travelPlace.getThumbnailUrl())
                 .build();
     }
+
 
 }

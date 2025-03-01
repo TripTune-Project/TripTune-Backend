@@ -14,8 +14,7 @@ import org.springframework.test.context.ActiveProfiles;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 @ActiveProfiles("mongo")
@@ -55,10 +54,10 @@ public class ChatMessageRepositoryTest extends ScheduleTest {
         List<ChatMessage> response = chatMessageRepository.findAllByScheduleId(schedule.getScheduleId());
 
         // then
-        assertEquals(response.size(), 3);
-        assertEquals(response.get(0).getMessage(), message1.getMessage());
-        assertEquals(response.get(1).getMessage(), message2.getMessage());
-        assertEquals(response.get(2).getMessage(), message3.getMessage());
+        assertThat(response.size()).isEqualTo(3);
+        assertThat(response.get(0).getMessage()).isEqualTo(message1.getMessage());
+        assertThat(response.get(1).getMessage()).isEqualTo(message2.getMessage());
+        assertThat(response.get(2).getMessage()).isEqualTo(message3.getMessage());
     }
 
     @Test
@@ -68,7 +67,7 @@ public class ChatMessageRepositoryTest extends ScheduleTest {
         List<ChatMessage> response = chatMessageRepository.findAllByScheduleId(schedule.getScheduleId());
 
         // then
-        assertEquals(response.size(), 0);
+        assertThat(response.size()).isEqualTo(0);
     }
 
     @Test
@@ -87,7 +86,7 @@ public class ChatMessageRepositoryTest extends ScheduleTest {
 
         // then
         List<ChatMessage> chatMessages = chatMessageRepository.findAllByScheduleId(schedule.getScheduleId());
-        assertTrue(chatMessages.isEmpty());
+        assertThat(chatMessages).isEmpty();
     }
 
 
@@ -99,7 +98,7 @@ public class ChatMessageRepositoryTest extends ScheduleTest {
 
         // then
         List<ChatMessage> chatMessages = chatMessageRepository.findAllByScheduleId(schedule.getScheduleId());
-        assertTrue(chatMessages.isEmpty());
+        assertThat(chatMessages).isEmpty();
     }
 
 }
