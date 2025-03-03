@@ -1,6 +1,7 @@
 package com.triptune.schedule.exception.handler;
 
 import com.triptune.schedule.exception.ConflictAttendeeException;
+import com.triptune.schedule.exception.ForbiddenAttendeeException;
 import com.triptune.schedule.exception.ForbiddenScheduleException;
 import com.triptune.global.response.ErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
@@ -18,6 +19,13 @@ public class ScheduleExceptionHandler {
     @ResponseStatus(HttpStatus.FORBIDDEN)
     public ErrorResponse handleForbiddenScheduleException(ForbiddenScheduleException ex, HttpServletRequest request){
         log.error("ForbiddenScheduleException at {}: {}", request.getRequestURI(), ex.getMessage());
+        return ErrorResponse.of(ex.getHttpStatus(), ex.getMessage());
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public ErrorResponse handleForbiddenAttendeeException(ForbiddenAttendeeException ex, HttpServletRequest request){
+        log.error("ForbiddenAttendeeException at {}: {}", request.getRequestURI(), ex.getMessage());
         return ErrorResponse.of(ex.getHttpStatus(), ex.getMessage());
     }
 

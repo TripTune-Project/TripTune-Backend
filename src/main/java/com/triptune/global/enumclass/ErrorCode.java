@@ -57,9 +57,11 @@ public enum ErrorCode {
     ALREADY_ATTENDEE(HttpStatus.CONFLICT, "이미 공유되어 있는 사용자입니다."),
     OVER_ATTENDEE_NUMBER(HttpStatus.CONFLICT, "일정은 최대 5명까지 공유할 수 있습니다."),
     FORBIDDEN_SHARE_ATTENDEE(HttpStatus.FORBIDDEN, "일정 공유는 작성자만 가능합니다."),
-    FORBIDDEN_REMOVE_AUTHOR_ATTENDEE(HttpStatus.FORBIDDEN, "작성자는 일정에서 나갈 수 없습니다."),
-    FORBIDDEN_UPDATE_AUTHOR_ATTENDEE_PERMISSION(HttpStatus.FORBIDDEN, "작성자의 접근 권한은 수정 불가합니다."),
+    FORBIDDEN_LEAVE_AUTHOR(HttpStatus.FORBIDDEN, "작성자는 일정에서 나갈 수 없습니다."),
+    FORBIDDEN_UPDATE_AUTHOR_PERMISSION(HttpStatus.FORBIDDEN, "작성자의 접근 권한은 수정 불가합니다."),
     FORBIDDEN_UPDATE_ATTENDEE_PERMISSION(HttpStatus.FORBIDDEN, "일정 접근 권한은 작성자만 수정 가능합니다."),
+    FORBIDDEN_REMOVE_ATTENDEE(HttpStatus.FORBIDDEN, "일정 내보내기는 작성자만 가능합니다."),
+
 
     // 채팅
     FORBIDDEN_CHAT_ATTENDEE(HttpStatus.FORBIDDEN, "채팅 권한이 없는 사용자 입니다."),
