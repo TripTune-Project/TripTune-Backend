@@ -1,9 +1,8 @@
 package com.triptune.global.aop;
 
-import com.triptune.schedule.repository.TravelAttendeeRepository;
-import com.triptune.schedule.repository.TravelScheduleRepository;
 import com.triptune.global.enumclass.ErrorCode;
 import com.triptune.global.exception.DataNotFoundException;
+import com.triptune.schedule.repository.TravelScheduleRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -17,11 +16,10 @@ import org.springframework.stereotype.Component;
 public class ScheduleCheckAspect {
 
     private final TravelScheduleRepository travelScheduleRepository;
-    private final TravelAttendeeRepository travelAttendeeRepository;
     private final HttpServletRequest httpServletRequest;
 
     @Around("@annotation(ScheduleCheck)")
-    public Object authorCheck(ProceedingJoinPoint joinPoint) throws Throwable {
+    public Object scheduleCheck(ProceedingJoinPoint joinPoint) throws Throwable {
         Long scheduleId = extractScheduleIdFromPath(httpServletRequest.getRequestURI());
 
         if(!isExistSchedule(scheduleId)){

@@ -1,5 +1,7 @@
 package com.triptune.schedule.service;
 
+import com.triptune.global.enumclass.ErrorCode;
+import com.triptune.global.exception.DataNotFoundException;
 import com.triptune.member.entity.Member;
 import com.triptune.member.repository.MemberRepository;
 import com.triptune.schedule.dto.request.AttendeePermissionRequest;
@@ -9,11 +11,9 @@ import com.triptune.schedule.entity.TravelAttendee;
 import com.triptune.schedule.entity.TravelSchedule;
 import com.triptune.schedule.enumclass.AttendeeRole;
 import com.triptune.schedule.exception.ConflictAttendeeException;
-import com.triptune.schedule.exception.ForbiddenScheduleException;
+import com.triptune.schedule.exception.ForbiddenAttendeeException;
 import com.triptune.schedule.repository.TravelAttendeeRepository;
 import com.triptune.schedule.repository.TravelScheduleRepository;
-import com.triptune.global.enumclass.ErrorCode;
-import com.triptune.global.exception.DataNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -40,10 +40,10 @@ public class AttendeeService {
     }
 
     public void createAttendee(Long scheduleId, String userId, AttendeeRequest attendeeRequest) {
-        TravelSchedule schedule = findScheduleByScheduleId(scheduleId);
+        TravelSchedule schedule = getScheduleByScheduleId(scheduleId);
         validateAttendeeAddition(scheduleId, userId);
 
-        Member guest = findMemberByEmail(attendeeRequest.getEmail());
+        Member guest = getMemberByEmail(attendeeRequest.getEmail());
         validateAttendeeAlreadyExists(scheduleId, guest.getUserId());
 
         TravelAttendee travelAttendee = TravelAttendee.of(schedule, guest, attendeeRequest.getPermission());
@@ -55,7 +55,7 @@ public class AttendeeService {
         validateAuthor(scheduleId, userId, ErrorCode.FORBIDDEN_SHARE_ATTENDEE);
     }
 
-    public TravelSchedule findScheduleByScheduleId(Long scheduleId){
+    private TravelSchedule getScheduleByScheduleId(Long scheduleId){
         return travelScheduleRepository.findByScheduleId(scheduleId)
                 .orElseThrow(() -> new DataNotFoundException(ErrorCode.SCHEDULE_NOT_FOUND));
     }
@@ -73,11 +73,11 @@ public class AttendeeService {
                 .existsByTravelSchedule_ScheduleIdAndMember_UserIdAndRole(scheduleId, userId, AttendeeRole.AUTHOR);
 
         if(!isAuthor){
-            throw new ForbiddenScheduleException(errorCode);
+            throw new ForbiddenAttendeeException(errorCode);
         }
     }
 
-    public Member findMemberByEmail(String email){
+    private Member getMemberByEmail(String email){
         return memberRepository.findByEmail(email)
                 .orElseThrow(() -> new DataNotFoundException(ErrorCode.MEMBER_NOT_FOUND));
     }
@@ -98,23 +98,35 @@ public class AttendeeService {
                 .orElseThrow(() -> new DataNotFoundException(ErrorCode.ATTENDEE_NOT_FOUND));
 
         if (attendee.getRole().isAuthor()){
-            throw new ForbiddenScheduleException(ErrorCode.FORBIDDEN_UPDATE_AUTHOR_ATTENDEE_PERMISSION);
+            throw new ForbiddenAttendeeException(ErrorCode.FORBIDDEN_UPDATE_AUTHOR_PERMISSION);
         }
 
         attendee.updatePermission(attendeePermissionRequest.getPermission());
     }
 
 
-    public void leaveScheduleAsGuest(Long scheduleId, String userId) {
+    public void leaveAttendee(Long scheduleId, String userId) {
         TravelAttendee attendee = travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_UserId(scheduleId, userId)
-                .orElseThrow(() -> new ForbiddenScheduleException(ErrorCode.FORBIDDEN_ACCESS_SCHEDULE));
+                .orElseThrow(() -> new ForbiddenAttendeeException(ErrorCode.FORBIDDEN_ACCESS_SCHEDULE));
 
         if (attendee.getRole().isAuthor()){
-            throw new ForbiddenScheduleException(ErrorCode.FORBIDDEN_REMOVE_AUTHOR_ATTENDEE);
+            throw new ForbiddenAttendeeException(ErrorCode.FORBIDDEN_LEAVE_AUTHOR);
         }
 
         travelAttendeeRepository.deleteById(attendee.getAttendeeId());
     }
 
 
+    public void removeAttendee(Long scheduleId, String userId, Long attendeeId) {
+        validateAuthor(scheduleId, userId, ErrorCode.FORBIDDEN_REMOVE_ATTENDEE);
+
+        TravelAttendee attendee = travelAttendeeRepository.findById(attendeeId)
+                .orElseThrow(() -> new DataNotFoundException(ErrorCode.ATTENDEE_NOT_FOUND));
+
+        if (attendee.getMember().getUserId().equals(userId)){
+            throw new ForbiddenAttendeeException(ErrorCode.FORBIDDEN_LEAVE_AUTHOR);
+        }
+
+        travelAttendeeRepository.delete(attendee);
+    }
 }

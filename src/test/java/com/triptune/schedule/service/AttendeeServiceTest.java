@@ -12,6 +12,7 @@ import com.triptune.schedule.entity.TravelSchedule;
 import com.triptune.schedule.enumclass.AttendeePermission;
 import com.triptune.schedule.enumclass.AttendeeRole;
 import com.triptune.schedule.exception.ConflictAttendeeException;
+import com.triptune.schedule.exception.ForbiddenAttendeeException;
 import com.triptune.schedule.exception.ForbiddenScheduleException;
 import com.triptune.schedule.repository.TravelAttendeeRepository;
 import com.triptune.schedule.repository.TravelScheduleRepository;
@@ -165,7 +166,7 @@ public class AttendeeServiceTest extends ScheduleTest {
 
     @Test
     @DisplayName("일정 참석자 추가 시 작성자가 아닌 사람의 요청으로 예외 발생")
-    void createAttendeeNotAuthor_forbiddenScheduleException(){
+    void createAttendeeNotAuthor_forbiddenAttendeeException(){
         // given
         AttendeeRequest attendeeRequest = createAttendeeRequest(member3.getEmail(), AttendeePermission.CHAT);
 
@@ -175,7 +176,7 @@ public class AttendeeServiceTest extends ScheduleTest {
                 .thenReturn(false);
 
         // when, then
-        ForbiddenScheduleException fail = assertThrows(ForbiddenScheduleException.class, () ->  attendeeService.createAttendee(schedule1.getScheduleId(), member1.getUserId(), attendeeRequest));
+        ForbiddenAttendeeException fail = assertThrows(ForbiddenAttendeeException.class, () ->  attendeeService.createAttendee(schedule1.getScheduleId(), member1.getUserId(), attendeeRequest));
 
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.FORBIDDEN_SHARE_ATTENDEE.getStatus());
         assertThat(fail.getMessage()).isEqualTo(ErrorCode.FORBIDDEN_SHARE_ATTENDEE.getMessage());
@@ -260,12 +261,12 @@ public class AttendeeServiceTest extends ScheduleTest {
 
     @Test
     @DisplayName("작성자인지 검증 시 예외 발생")
-    void validateAuthor_forbiddenScheduleException(){
+    void validateAuthor_forbiddenAttendeeException(){
         // given
         when(travelAttendeeRepository.existsByTravelSchedule_ScheduleIdAndMember_UserIdAndRole(anyLong(), anyString(), any())).thenReturn(false);
 
         // when, then
-        ForbiddenScheduleException fail = assertThrows(ForbiddenScheduleException.class, () -> attendeeService.validateAuthor(schedule1.getScheduleId(), member1.getUserId(), ErrorCode.FORBIDDEN_ACCESS_SCHEDULE));
+        ForbiddenAttendeeException fail = assertThrows(ForbiddenAttendeeException.class, () -> attendeeService.validateAuthor(schedule1.getScheduleId(), member1.getUserId(), ErrorCode.FORBIDDEN_ACCESS_SCHEDULE));
 
         // then
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.FORBIDDEN_ACCESS_SCHEDULE.getStatus());
@@ -315,14 +316,14 @@ public class AttendeeServiceTest extends ScheduleTest {
 
     @Test
     @DisplayName("일정 참석자 허용 권한 수정 시 요청자가 작성자가 아니여서 예외 발생")
-    void updateAttendeePermission_forbiddenUpdateAttendeePermission(){
+    void updateAttendeePermission_forbiddenAttendeeException(){
         // given
         AttendeePermissionRequest request = createAttendeePermissionRequest(AttendeePermission.READ);
 
         when(travelAttendeeRepository.existsByTravelSchedule_ScheduleIdAndMember_UserIdAndRole(anyLong(), anyString(), any())).thenReturn(false);
 
         // when
-        ForbiddenScheduleException fail = assertThrows(ForbiddenScheduleException.class, () -> attendeeService.updateAttendeePermission(schedule1.getScheduleId(), member3.getUserId(), attendee2.getAttendeeId(), request));
+        ForbiddenAttendeeException fail = assertThrows(ForbiddenAttendeeException.class, () -> attendeeService.updateAttendeePermission(schedule1.getScheduleId(), member3.getUserId(), attendee2.getAttendeeId(), request));
 
         // then
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.FORBIDDEN_UPDATE_ATTENDEE_PERMISSION.getStatus());
@@ -350,7 +351,7 @@ public class AttendeeServiceTest extends ScheduleTest {
 
     @Test
     @DisplayName("일정 참석자 허용 권한 수정 시 작성자의 접근 권한 수정 시도로 예외 발생")
-    void updateAttendeePermission_forbiddenUpdateAuthorAttendeePermission(){
+    void updateAttendeePermission_forbiddenUpdateAuthorPermissionException(){
         // given
         AttendeePermissionRequest request = createAttendeePermissionRequest(AttendeePermission.READ);
 
@@ -358,23 +359,23 @@ public class AttendeeServiceTest extends ScheduleTest {
         when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndAttendeeId(anyLong(), anyLong())).thenReturn(Optional.of(attendee1));
 
         // when
-        ForbiddenScheduleException fail = assertThrows(ForbiddenScheduleException.class, () -> attendeeService.updateAttendeePermission(schedule1.getScheduleId(), member1.getUserId(), attendee1.getAttendeeId(), request));
+        ForbiddenAttendeeException fail = assertThrows(ForbiddenAttendeeException.class, () -> attendeeService.updateAttendeePermission(schedule1.getScheduleId(), member1.getUserId(), attendee1.getAttendeeId(), request));
 
         // then
-        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.FORBIDDEN_UPDATE_AUTHOR_ATTENDEE_PERMISSION.getStatus());
-        assertThat(fail.getMessage()).isEqualTo(ErrorCode.FORBIDDEN_UPDATE_AUTHOR_ATTENDEE_PERMISSION.getMessage());
+        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.FORBIDDEN_UPDATE_AUTHOR_PERMISSION.getStatus());
+        assertThat(fail.getMessage()).isEqualTo(ErrorCode.FORBIDDEN_UPDATE_AUTHOR_PERMISSION.getMessage());
     }
 
 
 
     @Test
     @DisplayName("일정 나가기")
-    void leaveScheduleAsGuest(){
+    void leaveAttendee(){
         // given
         when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_UserId(anyLong(), anyString())).thenReturn(Optional.of(attendee2));
 
         // when
-        attendeeService.leaveScheduleAsGuest(schedule1.getScheduleId(), member2.getUserId());
+        attendeeService.leaveAttendee(schedule1.getScheduleId(), member2.getUserId());
 
         // then
         verify(travelAttendeeRepository, times(1)).deleteById(any());
@@ -382,12 +383,12 @@ public class AttendeeServiceTest extends ScheduleTest {
 
     @Test
     @DisplayName("일정 나가기 요청 시 참가자 정보가 없어 예외 발생")
-    void leaveScheduleAsGuest_forbiddenScheduleException(){
+    void leaveAttendee_forbiddenAttendeeException(){
         // given
         when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_UserId(anyLong(), anyString())).thenReturn(Optional.empty());
 
         // when
-        ForbiddenScheduleException fail = assertThrows(ForbiddenScheduleException.class, () -> attendeeService.leaveScheduleAsGuest(schedule1.getScheduleId(), member1.getUserId()));
+        ForbiddenAttendeeException fail = assertThrows(ForbiddenAttendeeException.class, () -> attendeeService.leaveAttendee(schedule1.getScheduleId(), member1.getUserId()));
 
         // then
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.FORBIDDEN_ACCESS_SCHEDULE.getStatus());
@@ -396,16 +397,79 @@ public class AttendeeServiceTest extends ScheduleTest {
 
     @Test
     @DisplayName("일정 나가기 요청 시 요청자가 작성자여서 예외 발생")
-    void leaveScheduleAsGuestValidateAuthor_forbiddenScheduleException(){
+    void leaveAttendeeValidateAuthor_forbiddenAttendeeException(){
         // given
         when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_UserId(anyLong(), anyString())).thenReturn(Optional.of(attendee1));
 
         // when
-        ForbiddenScheduleException fail = assertThrows(ForbiddenScheduleException.class, () -> attendeeService.leaveScheduleAsGuest(schedule1.getScheduleId(), member1.getUserId()));
+        ForbiddenAttendeeException fail = assertThrows(ForbiddenAttendeeException.class, () -> attendeeService.leaveAttendee(schedule1.getScheduleId(), member1.getUserId()));
 
         // then
-        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.FORBIDDEN_REMOVE_AUTHOR_ATTENDEE.getStatus());
-        assertThat(fail.getMessage()).isEqualTo(ErrorCode.FORBIDDEN_REMOVE_AUTHOR_ATTENDEE.getMessage());
+        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.FORBIDDEN_LEAVE_AUTHOR.getStatus());
+        assertThat(fail.getMessage()).isEqualTo(ErrorCode.FORBIDDEN_LEAVE_AUTHOR.getMessage());
+    }
+
+    @Test
+    @DisplayName("일정 내보내기")
+    void removeAttendee(){
+        // given
+        when(travelAttendeeRepository.existsByTravelSchedule_ScheduleIdAndMember_UserIdAndRole(anyLong(), anyString(), any()))
+                .thenReturn(true);
+        when(travelAttendeeRepository.findById(anyLong())).thenReturn(Optional.of(attendee2));
+
+        // when
+        // then
+        assertDoesNotThrow(() -> attendeeService.removeAttendee(schedule1.getScheduleId(), member1.getUserId(), attendee2.getAttendeeId()));
+    }
+
+    @Test
+    @DisplayName("일정 내보내기 시 작성자 요청이 아니여서 예외 발생")
+    void removeAttendee_forbiddenAttendeeException(){
+        // given
+        when(travelAttendeeRepository.existsByTravelSchedule_ScheduleIdAndMember_UserIdAndRole(anyLong(), anyString(), any()))
+                .thenReturn(false);
+
+        // when
+        ForbiddenAttendeeException fail = assertThrows(ForbiddenAttendeeException.class,
+                () -> attendeeService.removeAttendee(schedule1.getScheduleId(), member1.getUserId(), attendee2.getAttendeeId()));
+
+        // then
+        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.FORBIDDEN_REMOVE_ATTENDEE.getStatus());
+        assertThat(fail.getMessage()).isEqualTo(ErrorCode.FORBIDDEN_REMOVE_ATTENDEE.getMessage());
+    }
+
+    @Test
+    @DisplayName("일정 내보내기 시 참석자를 찾을 수 없어 예외 발생")
+    void removeAttendee_DataNotFoundException(){
+        // given
+        when(travelAttendeeRepository.existsByTravelSchedule_ScheduleIdAndMember_UserIdAndRole(anyLong(), anyString(), any()))
+                .thenReturn(true);
+        when(travelAttendeeRepository.findById(anyLong())).thenReturn(Optional.empty());
+
+        // when
+        DataNotFoundException fail = assertThrows(DataNotFoundException.class,
+                () -> attendeeService.removeAttendee(schedule1.getScheduleId(), member1.getUserId(), attendee2.getAttendeeId()));
+
+        // then
+        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.ATTENDEE_NOT_FOUND.getStatus());
+        assertThat(fail.getMessage()).isEqualTo(ErrorCode.ATTENDEE_NOT_FOUND.getMessage());
+    }
+
+    @Test
+    @DisplayName("일정 내보내기 시 작성자 내보내기 시도로 예외 발생")
+    void removeAttendee_ForbiddenRemoveAuthorException(){
+        // given
+        when(travelAttendeeRepository.existsByTravelSchedule_ScheduleIdAndMember_UserIdAndRole(anyLong(), anyString(), any()))
+                .thenReturn(true);
+        when(travelAttendeeRepository.findById(anyLong())).thenReturn(Optional.of(attendee1));
+
+        // when
+        ForbiddenAttendeeException fail = assertThrows(ForbiddenAttendeeException.class,
+                () -> attendeeService.removeAttendee(schedule1.getScheduleId(), member1.getUserId(), attendee2.getAttendeeId()));
+
+        // then
+        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.FORBIDDEN_LEAVE_AUTHOR.getStatus());
+        assertThat(fail.getMessage()).isEqualTo(ErrorCode.FORBIDDEN_LEAVE_AUTHOR.getMessage());
     }
 
 }

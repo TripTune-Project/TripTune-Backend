@@ -1,5 +1,6 @@
 package com.triptune.schedule.controller;
 
+import com.triptune.global.util.SecurityUtils;
 import com.triptune.schedule.dto.request.AttendeePermissionRequest;
 import com.triptune.schedule.dto.response.AttendeeResponse;
 import com.triptune.schedule.dto.request.AttendeeRequest;
@@ -17,7 +18,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/schedules/{scheduleId}")
+@RequestMapping("/api/schedules/{scheduleId}/attendees")
 @RequiredArgsConstructor
 @Tag(name = "Schedule - Attendee", description = "일정 만들기 중 참석자 관련 API")
 public class AttendeeController {
@@ -25,7 +26,7 @@ public class AttendeeController {
     private final AttendeeService attendeeService;
 
     @AttendeeCheck
-    @GetMapping("/attendees")
+    @GetMapping
     @Operation(summary = "일정 참석자 조회", description = "일정 참석자를 조회합니다.")
     public ApiResponse<List<AttendeeResponse>> getAttendees(@PathVariable(name = "scheduleId") Long scheduleId){
         List<AttendeeResponse> response = attendeeService.getAttendeesByScheduleId(scheduleId);
@@ -33,23 +34,23 @@ public class AttendeeController {
         return ApiResponse.dataResponse(response);
     }
 
-    @PostMapping("/attendees")
+    @PostMapping
     @Operation(summary = "일정 참석자 추가", description = "일정을 공유함으로 참석자를 추가합니다.")
-    public ApiResponse<?> createAttendee(@PathVariable(name = "scheduleId") Long scheduleId,
+    public ApiResponse<Void> createAttendee(@PathVariable(name = "scheduleId") Long scheduleId,
                                       @Valid @RequestBody AttendeeRequest attendeeRequest){
-        String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+        String userId = SecurityUtils.getCurrentUserId();
         attendeeService.createAttendee(scheduleId, userId, attendeeRequest);
 
         return ApiResponse.okResponse();
     }
 
     @ScheduleCheck
-    @PatchMapping("/attendees/{attendeeId}")
+    @PatchMapping("/{attendeeId}")
     @Operation(summary = "일정 참석자 접근 권한 수정", description = "일정 참석자 접근 권한을 수정합니다.")
-    public ApiResponse<?> updateAttendeePermission(@PathVariable(name = "scheduleId") Long scheduleId,
+    public ApiResponse<Void> updateAttendeePermission(@PathVariable(name = "scheduleId") Long scheduleId,
                                                         @PathVariable(name = "attendeeId") Long attendeeId,
                                                         @Valid @RequestBody AttendeePermissionRequest attendeePermissionRequest){
-        String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+        String userId = SecurityUtils.getCurrentUserId();
         attendeeService.updateAttendeePermission(scheduleId, userId, attendeeId, attendeePermissionRequest);
 
         return ApiResponse.okResponse();
@@ -57,12 +58,20 @@ public class AttendeeController {
 
 
     @ScheduleCheck
-    @DeleteMapping("/attendees")
+    @DeleteMapping
     @Operation(summary = "일정 나가기", description = "일정에 참석자 목록에서 삭제됩니다.")
-    public ApiResponse<?> leaveScheduleAsGuest(@PathVariable(name = "scheduleId") Long scheduleId){
-        String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+    public ApiResponse<Void> leaveAttendee(@PathVariable(name = "scheduleId") Long scheduleId){
+        String userId = SecurityUtils.getCurrentUserId();
+        attendeeService.leaveAttendee(scheduleId, userId);
+        return ApiResponse.okResponse();
+    }
 
-        attendeeService.leaveScheduleAsGuest(scheduleId, userId);
+    @ScheduleCheck
+    @DeleteMapping("/{attendeeId}")
+    @Operation(summary = "일정 내보내기", description = "작성자가 일정 참석자를 내보냅니다.")
+    public ApiResponse<Void> removeAttendee(@PathVariable(name = "scheduleId") Long scheduleId, @PathVariable(name = "attendeeId") Long attendeeId){
+        String userId = SecurityUtils.getCurrentUserId();
+        attendeeService.removeAttendee(scheduleId, userId, attendeeId);
         return ApiResponse.okResponse();
     }
 

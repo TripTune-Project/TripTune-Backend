@@ -1,8 +1,10 @@
 package com.triptune.schedule.controller;
 
+import com.triptune.global.enumclass.ErrorCode;
+import com.triptune.global.enumclass.SuccessCode;
 import com.triptune.member.entity.Member;
-import com.triptune.profile.entity.ProfileImage;
 import com.triptune.member.repository.MemberRepository;
+import com.triptune.profile.entity.ProfileImage;
 import com.triptune.profile.repository.ProfileImageRepository;
 import com.triptune.schedule.ScheduleTest;
 import com.triptune.schedule.dto.request.AttendeePermissionRequest;
@@ -13,8 +15,6 @@ import com.triptune.schedule.enumclass.AttendeePermission;
 import com.triptune.schedule.enumclass.AttendeeRole;
 import com.triptune.schedule.repository.TravelAttendeeRepository;
 import com.triptune.schedule.repository.TravelScheduleRepository;
-import com.triptune.global.enumclass.ErrorCode;
-import com.triptune.global.enumclass.SuccessCode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -28,6 +28,9 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.filter.CharacterEncodingFilter;
 
+import java.util.Optional;
+
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -37,11 +40,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @ActiveProfiles("h2")
 public class AttendeeControllerTest extends ScheduleTest {
-    private final WebApplicationContext wac;
-    private final TravelScheduleRepository travelScheduleRepository;
-    private final TravelAttendeeRepository travelAttendeeRepository;
-    private final MemberRepository memberRepository;
-    private final ProfileImageRepository profileImageRepository;
+    @Autowired private WebApplicationContext wac;
+    @Autowired private TravelScheduleRepository travelScheduleRepository;
+    @Autowired private TravelAttendeeRepository travelAttendeeRepository;
+    @Autowired private MemberRepository memberRepository;
+    @Autowired private ProfileImageRepository profileImageRepository;
 
     private MockMvc mockMvc;
 
@@ -55,15 +58,6 @@ public class AttendeeControllerTest extends ScheduleTest {
     TravelAttendee attendee1;
     TravelAttendee attendee2;
     TravelAttendee attendee3;
-
-    @Autowired
-    public AttendeeControllerTest(WebApplicationContext wac, TravelScheduleRepository travelScheduleRepository, TravelAttendeeRepository travelAttendeeRepository, MemberRepository memberRepository, ProfileImageRepository profileImageRepository) {
-        this.wac = wac;
-        this.travelScheduleRepository = travelScheduleRepository;
-        this.travelAttendeeRepository = travelAttendeeRepository;
-        this.memberRepository = memberRepository;
-        this.profileImageRepository = profileImageRepository;
-    }
 
 
     @BeforeEach
@@ -85,9 +79,9 @@ public class AttendeeControllerTest extends ScheduleTest {
         schedule1 = travelScheduleRepository.save(createTravelSchedule(null,"테스트1"));
         schedule2 = travelScheduleRepository.save(createTravelSchedule(null,"테스트2"));
 
-        attendee1 = travelAttendeeRepository.save(createTravelAttendee(0L, member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
-        attendee2 = travelAttendeeRepository.save(createTravelAttendee(0L, member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ));
-        attendee3 = travelAttendeeRepository.save(createTravelAttendee(0L, member3, schedule2, AttendeeRole.AUTHOR, AttendeePermission.ALL));
+        attendee1 = travelAttendeeRepository.save(createTravelAttendee(null, member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
+        attendee2 = travelAttendeeRepository.save(createTravelAttendee(null, member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ));
+        attendee3 = travelAttendeeRepository.save(createTravelAttendee(null, member3, schedule2, AttendeeRole.AUTHOR, AttendeePermission.ALL));
 
     }
 
@@ -269,23 +263,26 @@ public class AttendeeControllerTest extends ScheduleTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(toJsonString(request)))
                 .andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.message").value(ErrorCode.FORBIDDEN_UPDATE_AUTHOR_ATTENDEE_PERMISSION.getMessage()));
+                .andExpect(jsonPath("$.message").value(ErrorCode.FORBIDDEN_UPDATE_AUTHOR_PERMISSION.getMessage()));
     }
 
     @Test
     @DisplayName("일정 나가기")
     @WithMockUser(username = "member2")
-    void leaveScheduleAsGuest() throws Exception {
+    void leaveAttendee() throws Exception {
         mockMvc.perform(delete("/api/schedules/{scheduleId}/attendees", schedule1.getScheduleId()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value("200(성공)"));
+
+        Optional<TravelAttendee> result = travelAttendeeRepository.findById(attendee2.getAttendeeId());
+        assertThat(result).isEmpty();
     }
 
     @Test
     @DisplayName("일정 나가기 요청 시 일정 데이터 존재하지 않아 예외 발생")
     @WithMockUser(username = "member2")
-    void leaveScheduleAsGuest_scheduleDataNotFoundException() throws Exception {
+    void leaveAttendee_scheduleDataNotFoundException() throws Exception {
         mockMvc.perform(delete("/api/schedules/{scheduleId}/attendees", 0L))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.success").value(false))
@@ -296,20 +293,75 @@ public class AttendeeControllerTest extends ScheduleTest {
     @Test
     @DisplayName("일정 나가기 요청 시 사용자가 작성자여서 예외 발생")
     @WithMockUser(username = "member1")
-    void leaveScheduleAsGuestIsAuthor_forbiddenScheduleException() throws Exception {
+    void leaveAttendeeIsAuthor_forbiddenScheduleException() throws Exception {
         mockMvc.perform(delete("/api/schedules/{scheduleId}/attendees", schedule1.getScheduleId()))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.success").value(false))
-                .andExpect(jsonPath("$.message").value(ErrorCode.FORBIDDEN_REMOVE_AUTHOR_ATTENDEE.getMessage()));
+                .andExpect(jsonPath("$.message").value(ErrorCode.FORBIDDEN_LEAVE_AUTHOR.getMessage()));
     }
 
     @Test
     @DisplayName("일정 나가기 요청 시 사용자가 일정에 접근 권한이 없어 예외 발생")
     @WithMockUser(username = "member1")
-    void leaveScheduleAsGuest_forbiddenScheduleException() throws Exception {
+    void leaveAttendee_forbiddenScheduleException() throws Exception {
         mockMvc.perform(delete("/api/schedules/{scheduleId}/attendees", schedule2.getScheduleId()))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value(ErrorCode.FORBIDDEN_ACCESS_SCHEDULE.getMessage()));
+    }
+
+    @Test
+    @DisplayName("일정 내보내기")
+    @WithMockUser(username = "member1")
+    void removeAttendee() throws Exception{
+        mockMvc.perform(delete("/api/schedules/{scheduleId}/attendees/{attendeeId}", schedule1.getScheduleId(), attendee2.getAttendeeId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()));
+
+        Optional<TravelAttendee> result = travelAttendeeRepository.findById(attendee2.getAttendeeId());
+        assertThat(result).isEmpty();
+    }
+
+    @Test
+    @DisplayName("일정 나가기 요청 시 일정 데이터 존재하지 않아 예외 발생")
+    @WithMockUser(username = "member1")
+    void removeAttendee_scheduleDataNotFoundException() throws Exception {
+        mockMvc.perform(delete("/api/schedules/{scheduleId}/attendees/{attendeeId}", 0L, attendee2.getAttendeeId()))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value(ErrorCode.SCHEDULE_NOT_FOUND.getMessage()));
+    }
+
+
+    @Test
+    @DisplayName("일정 내보내기 시 작성자 요청이 아니여서 예외 발생")
+    @WithMockUser(username = "member2")
+    void removeAttendee_forbiddenAttendeeException() throws Exception{
+        mockMvc.perform(delete("/api/schedules/{scheduleId}/attendees/{attendeeId}", schedule1.getScheduleId(), attendee2.getAttendeeId()))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value(ErrorCode.FORBIDDEN_REMOVE_ATTENDEE.getMessage()));
+    }
+
+    @Test
+    @DisplayName("일정 내보내기 시 참석자를 찾을 수 없어 예외 발생")
+    @WithMockUser(username = "member1")
+    void removeAttendee_DataNotFoundException() throws Exception{
+        mockMvc.perform(delete("/api/schedules/{scheduleId}/attendees/{attendeeId}", schedule1.getScheduleId(), 0L))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value(ErrorCode.ATTENDEE_NOT_FOUND.getMessage()));
+}
+
+    @Test
+    @DisplayName("일정 내보내기 시 작성자 내보내기 시도로 예외 발생")
+    @WithMockUser(username = "member1")
+    void removeAttendee_ForbiddenRemoveAuthorException() throws Exception{
+        mockMvc.perform(delete("/api/schedules/{scheduleId}/attendees/{attendeeId}", schedule1.getScheduleId(), attendee1.getAttendeeId()))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value(ErrorCode.FORBIDDEN_LEAVE_AUTHOR.getMessage()));
+
     }
 }
