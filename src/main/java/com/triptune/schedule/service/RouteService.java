@@ -64,7 +64,7 @@ public class RouteService {
     }
 
     public TravelPlace findTravelPlaceByPlaceId(Long placeId){
-        return travelPlaceRepository.findByPlaceId(placeId)
+        return travelPlaceRepository.findById(placeId)
                 .orElseThrow(() -> new DataNotFoundException(ErrorCode.PLACE_NOT_FOUND));
     }
 

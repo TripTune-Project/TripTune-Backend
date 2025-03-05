@@ -47,7 +47,7 @@ public class BookmarkService {
     }
 
     private TravelPlace findTravelPlaceByPlaceId(Long placeId){
-        return travelPlaceRepository.findByPlaceId(placeId)
+        return travelPlaceRepository.findById(placeId)
                 .orElseThrow(() -> new DataNotFoundException(ErrorCode.PLACE_NOT_FOUND));
     }
 

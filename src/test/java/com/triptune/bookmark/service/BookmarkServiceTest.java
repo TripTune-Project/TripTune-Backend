@@ -79,7 +79,7 @@ public class BookmarkServiceTest extends BookmarkTest {
 
         when(bookmarkRepository.existsByMember_UserIdAndTravelPlace_PlaceId(anyString(), anyLong())).thenReturn(false);
         when(memberRepository.findByUserId(anyString())).thenReturn(Optional.of(member));
-        when(travelPlaceRepository.findByPlaceId(anyLong())).thenReturn(Optional.of(travelPlace1));
+        when(travelPlaceRepository.findById(anyLong())).thenReturn(Optional.of(travelPlace1));
 
         // when
         assertThatCode(() -> bookmarkService.createBookmark(member.getUserId(), request))
@@ -124,7 +124,7 @@ public class BookmarkServiceTest extends BookmarkTest {
 
         when(bookmarkRepository.existsByMember_UserIdAndTravelPlace_PlaceId(anyString(), anyLong())).thenReturn(false);
         when(memberRepository.findByUserId(anyString())).thenReturn(Optional.of(member));
-        when(travelPlaceRepository.findByPlaceId(anyLong())).thenReturn(Optional.empty());
+        when(travelPlaceRepository.findById(anyLong())).thenReturn(Optional.empty());
 
         // when, then
         assertThatThrownBy(() -> bookmarkService.createBookmark(member.getUserId(), request))
