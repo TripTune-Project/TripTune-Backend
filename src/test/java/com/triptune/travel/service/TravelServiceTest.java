@@ -389,7 +389,7 @@ public class TravelServiceTest extends TravelTest {
         ApiContentType apiContentType = createApiContentType("관광지");
         travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, apiContentType, "상시", List.of(travelImage1, travelImage2));
 
-        when(travelPlaceRepository.findByPlaceId(anyLong())).thenReturn(Optional.of(travelPlace1));
+        when(travelPlaceRepository.findById(anyLong())).thenReturn(Optional.of(travelPlace1));
         when(bookmarkRepository.existsByMember_UserIdAndTravelPlace_PlaceId(anyString(), anyLong())).thenReturn(true);
 
         // when
@@ -415,7 +415,7 @@ public class TravelServiceTest extends TravelTest {
         travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, apiContentType, "상시", List.of(travelImage1, travelImage2));
 
 
-        when(travelPlaceRepository.findByPlaceId(anyLong())).thenReturn(Optional.of(travelPlace1));
+        when(travelPlaceRepository.findById(anyLong())).thenReturn(Optional.of(travelPlace1));
 
         // when
         PlaceDetailResponse response = travelService.getTravelPlaceDetails(travelPlace1.getPlaceId(), null);
@@ -439,7 +439,7 @@ public class TravelServiceTest extends TravelTest {
         ApiContentType apiContentType = createApiContentType("숙박");
         travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, apiContentType, "13:00", "11:00", List.of(travelImage1, travelImage2));
 
-        when(travelPlaceRepository.findByPlaceId(anyLong())).thenReturn(Optional.of(travelPlace1));
+        when(travelPlaceRepository.findById(anyLong())).thenReturn(Optional.of(travelPlace1));
         when(bookmarkRepository.existsByMember_UserIdAndTravelPlace_PlaceId(anyString(), anyLong())).thenReturn(true);
 
 
@@ -467,7 +467,7 @@ public class TravelServiceTest extends TravelTest {
         ApiContentType apiContentType = createApiContentType("숙박");
         travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, apiContentType, "13:00", "11:00", List.of(travelImage1, travelImage2));
 
-        when(travelPlaceRepository.findByPlaceId(anyLong())).thenReturn(Optional.of(travelPlace1));
+        when(travelPlaceRepository.findById(anyLong())).thenReturn(Optional.of(travelPlace1));
 
 
         // when
@@ -491,7 +491,7 @@ public class TravelServiceTest extends TravelTest {
     @DisplayName("여행지 상세 조회 시 데이터가 존재하지 않아 예외 발생")
     void getTravelDetails_DataNotFoundException(){
         // given
-        when(travelPlaceRepository.findByPlaceId(anyLong())).thenReturn(Optional.empty());
+        when(travelPlaceRepository.findById(anyLong())).thenReturn(Optional.empty());
 
         // when
         DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> travelService.getTravelPlaceDetails(1L, "member"));

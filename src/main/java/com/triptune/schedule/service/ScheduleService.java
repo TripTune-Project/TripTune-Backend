@@ -210,8 +210,8 @@ public class ScheduleService {
     }
 
 
-    public TravelSchedule getScheduleByScheduleId(Long scheduleId){
-        return travelScheduleRepository.findByScheduleId(scheduleId)
+    private TravelSchedule getScheduleByScheduleId(Long scheduleId){
+        return travelScheduleRepository.findById(scheduleId)
                 .orElseThrow(() -> new DataNotFoundException(ErrorCode.SCHEDULE_NOT_FOUND));
     }
 
@@ -243,7 +243,7 @@ public class ScheduleService {
 
 
     public TravelPlace getPlaceByPlaceId(Long placeId){
-        return travelPlaceRepository.findByPlaceId(placeId)
+        return travelPlaceRepository.findById(placeId)
                 .orElseThrow(() ->  new DataNotFoundException(ErrorCode.PLACE_NOT_FOUND));
     }
 

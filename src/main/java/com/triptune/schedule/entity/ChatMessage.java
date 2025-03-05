@@ -5,17 +5,21 @@ import com.triptune.schedule.dto.request.ChatMessageRequest;
 import jakarta.persistence.Id;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
 import java.time.LocalDateTime;
 
 @Getter
+@NoArgsConstructor
 @Document(collection = "chat_message")
 public class ChatMessage {
+
     @Id
     @Field("_id")
     private String messageId;
+
     private Long scheduleId;
     private Long memberId;
     private String message;

@@ -49,7 +49,7 @@ public class RouteService {
     }
 
     public TravelSchedule findTravelScheduleByScheduleId(Long scheduleId){
-        return travelScheduleRepository.findByScheduleId(scheduleId)
+        return travelScheduleRepository.findById(scheduleId)
                 .orElseThrow(() -> new DataNotFoundException(ErrorCode.SCHEDULE_NOT_FOUND));
     }
 
@@ -64,7 +64,7 @@ public class RouteService {
     }
 
     public TravelPlace findTravelPlaceByPlaceId(Long placeId){
-        return travelPlaceRepository.findByPlaceId(placeId)
+        return travelPlaceRepository.findById(placeId)
                 .orElseThrow(() -> new DataNotFoundException(ErrorCode.PLACE_NOT_FOUND));
     }
 

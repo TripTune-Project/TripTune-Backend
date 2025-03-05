@@ -11,15 +11,13 @@ import java.util.Optional;
 
 @Repository
 public interface MemberRepository extends JpaRepository<Member, Long>, MemberRepositoryCustom {
-    boolean existsByUserId(String userId);
-    boolean existsByNickname(String nickname);
-    boolean existsByEmail(String email);
-    Optional<Member> findByUserId(String userId);
-    Optional<Member> findByEmail(String email);
-    Optional<Member> findByMemberId(Long memberId);
-    Optional<Member> findByNickname(String nickname);
-    boolean existsByUserIdAndEmail(String userId, String email);
-    Long findMemberIdByUserId(String userId);
+    boolean existsByUserId(@Param("userId") String userId);
+    boolean existsByNickname(@Param("nickname") String nickname);
+    boolean existsByEmail(@Param("email") String email);
+    Optional<Member> findByUserId(@Param("userId") String userId);
+    Optional<Member> findByEmail(@Param("email") String email);
+    Optional<Member> findByNickname(@Param("nickname") String nickname);
+    boolean existsByUserIdAndEmail(@Param("userId") String userId, @Param("email") String email);
 
     @Modifying
     @Query("UPDATE Member m SET m.refreshToken = NULL WHERE m.nickname = :nickname")

@@ -850,7 +850,7 @@ public class ScheduleServiceTest extends ScheduleTest {
         List<PlaceResponse> placeList = List.of(PlaceResponse.from(travelPlace1), PlaceResponse.from(travelPlace2));
         Pageable pageable = PageUtils.defaultPageable(1);
 
-        when(travelScheduleRepository.findByScheduleId(any())).thenReturn(Optional.of(schedule1));
+        when(travelScheduleRepository.findById(any())).thenReturn(Optional.of(schedule1));
         when(travelPlaceRepository.findAllByAreaData(any(), anyString(), anyString(), anyString()))
                 .thenReturn(PageUtils.createPage(placeList, pageable, 1));
 
@@ -871,7 +871,7 @@ public class ScheduleServiceTest extends ScheduleTest {
         // given
         Pageable pageable = PageUtils.defaultPageable(1);
 
-        when(travelScheduleRepository.findByScheduleId(any())).thenReturn(Optional.of(schedule1));
+        when(travelScheduleRepository.findById(any())).thenReturn(Optional.of(schedule1));
         when(travelPlaceRepository.findAllByAreaData(any(), anyString(), anyString(), anyString()))
                 .thenReturn(PageUtils.createPage(new ArrayList<>(), pageable, 0));
 
@@ -889,7 +889,7 @@ public class ScheduleServiceTest extends ScheduleTest {
     @DisplayName("일정 상세 조회 시 일정을 찾을 수 없어 DataNotFoundException 발생")
     void getScheduleDetail_dataNotFoundException(){
         // given
-        when(travelScheduleRepository.findByScheduleId(any())).thenReturn(Optional.empty());
+        when(travelScheduleRepository.findById(any())).thenReturn(Optional.empty());
 
         // when
         DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> scheduleService.getScheduleDetail(0L, 1));
@@ -918,9 +918,9 @@ public class ScheduleServiceTest extends ScheduleTest {
         RouteRequest routeRequest2 = createRouteRequest(2, travelPlace2.getPlaceId());
         ScheduleUpdateRequest scheduleUpdateRequest = createUpdateScheduleRequest(new ArrayList<>(List.of(routeRequest1, routeRequest2)));
 
-        when(travelScheduleRepository.findByScheduleId(scheduleId)).thenReturn(Optional.of(schedule1));
-        when(travelPlaceRepository.findByPlaceId(travelPlace1.getPlaceId())).thenReturn(Optional.of(travelPlace1));
-        when(travelPlaceRepository.findByPlaceId(travelPlace2.getPlaceId())).thenReturn(Optional.of(travelPlace2));
+        when(travelScheduleRepository.findById(scheduleId)).thenReturn(Optional.of(schedule1));
+        when(travelPlaceRepository.findById(travelPlace1.getPlaceId())).thenReturn(Optional.of(travelPlace1));
+        when(travelPlaceRepository.findById(travelPlace2.getPlaceId())).thenReturn(Optional.of(travelPlace2));
 
         // when
         assertDoesNotThrow(() -> scheduleService.updateSchedule(userId, scheduleId, scheduleUpdateRequest));
@@ -952,9 +952,9 @@ public class ScheduleServiceTest extends ScheduleTest {
         RouteRequest routeRequest2 = createRouteRequest(2, travelPlace2.getPlaceId());
         ScheduleUpdateRequest scheduleUpdateRequest = createUpdateScheduleRequest(new ArrayList<>(List.of(routeRequest1, routeRequest2)));
 
-        when(travelScheduleRepository.findByScheduleId(scheduleId)).thenReturn(Optional.of(schedule2));
-        when(travelPlaceRepository.findByPlaceId(travelPlace1.getPlaceId())).thenReturn(Optional.of(travelPlace1));
-        when(travelPlaceRepository.findByPlaceId(travelPlace2.getPlaceId())).thenReturn(Optional.of(travelPlace2));
+        when(travelScheduleRepository.findById(scheduleId)).thenReturn(Optional.of(schedule2));
+        when(travelPlaceRepository.findById(travelPlace1.getPlaceId())).thenReturn(Optional.of(travelPlace1));
+        when(travelPlaceRepository.findById(travelPlace2.getPlaceId())).thenReturn(Optional.of(travelPlace2));
 
         // when
         assertDoesNotThrow(() -> scheduleService.updateSchedule(userId, scheduleId, scheduleUpdateRequest));
@@ -987,8 +987,8 @@ public class ScheduleServiceTest extends ScheduleTest {
         RouteRequest routeRequest2 = createRouteRequest(2, travelPlace2.getPlaceId());
         ScheduleUpdateRequest scheduleUpdateRequest = createUpdateScheduleRequest(new ArrayList<>(List.of(routeRequest1, routeRequest2)));
 
-        when(travelPlaceRepository.findByPlaceId(travelPlace1.getPlaceId())).thenReturn(Optional.of(travelPlace1));
-        when(travelPlaceRepository.findByPlaceId(travelPlace2.getPlaceId())).thenReturn(Optional.of(travelPlace2));
+        when(travelPlaceRepository.findById(travelPlace1.getPlaceId())).thenReturn(Optional.of(travelPlace1));
+        when(travelPlaceRepository.findById(travelPlace2.getPlaceId())).thenReturn(Optional.of(travelPlace2));
 
         // when
         assertDoesNotThrow(() -> scheduleService.updateTravelRouteInSchedule(schedule1, scheduleUpdateRequest.getTravelRoute()));
@@ -1018,7 +1018,7 @@ public class ScheduleServiceTest extends ScheduleTest {
         RouteRequest routeRequest2 = createRouteRequest(2, travelPlace2.getPlaceId());
         ScheduleUpdateRequest scheduleUpdateRequest = createUpdateScheduleRequest(new ArrayList<>(List.of(routeRequest1, routeRequest2)));
 
-        when(travelScheduleRepository.findByScheduleId(scheduleId)).thenReturn(Optional.empty());
+        when(travelScheduleRepository.findById(scheduleId)).thenReturn(Optional.empty());
 
         // when
         DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> scheduleService.updateSchedule(userId, scheduleId, scheduleUpdateRequest));
@@ -1054,7 +1054,7 @@ public class ScheduleServiceTest extends ScheduleTest {
         RouteRequest routeRequest2 = createRouteRequest(2, travelPlace2.getPlaceId());
         ScheduleUpdateRequest scheduleUpdateRequest = createUpdateScheduleRequest(new ArrayList<>(List.of(routeRequest1, routeRequest2)));
 
-        when(travelScheduleRepository.findByScheduleId(scheduleId)).thenReturn(Optional.of(schedule3));
+        when(travelScheduleRepository.findById(scheduleId)).thenReturn(Optional.of(schedule3));
 
         // when
         ForbiddenScheduleException fail = assertThrows(ForbiddenScheduleException.class, () -> scheduleService.updateSchedule(userId, scheduleId, scheduleUpdateRequest));
@@ -1085,7 +1085,7 @@ public class ScheduleServiceTest extends ScheduleTest {
         RouteRequest routeRequest2 = createRouteRequest(2, travelPlace2.getPlaceId());
         ScheduleUpdateRequest scheduleUpdateRequest = createUpdateScheduleRequest(new ArrayList<>(List.of(routeRequest1, routeRequest2)));
 
-        when(travelScheduleRepository.findByScheduleId(scheduleId)).thenReturn(Optional.of(schedule1));
+        when(travelScheduleRepository.findById(scheduleId)).thenReturn(Optional.of(schedule1));
 
         // when
         ForbiddenScheduleException fail = assertThrows(ForbiddenScheduleException.class, () -> scheduleService.updateSchedule(userId, scheduleId, scheduleUpdateRequest));
@@ -1117,8 +1117,8 @@ public class ScheduleServiceTest extends ScheduleTest {
         RouteRequest routeRequest2 = createRouteRequest(2, travelPlace2.getPlaceId());
         ScheduleUpdateRequest scheduleUpdateRequest = createUpdateScheduleRequest(new ArrayList<>(List.of(routeRequest1, routeRequest2)));
 
-        when(travelScheduleRepository.findByScheduleId(scheduleId)).thenReturn(Optional.of(schedule1));
-        when(travelPlaceRepository.findByPlaceId(anyLong())).thenReturn(Optional.empty());
+        when(travelScheduleRepository.findById(scheduleId)).thenReturn(Optional.of(schedule1));
+        when(travelPlaceRepository.findById(anyLong())).thenReturn(Optional.empty());
 
         // when
         DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> scheduleService.updateSchedule(userId, scheduleId, scheduleUpdateRequest));
@@ -1315,34 +1315,6 @@ public class ScheduleServiceTest extends ScheduleTest {
         assertThat(fail.getMessage()).isEqualTo(ErrorCode.MEMBER_NOT_FOUND.getMessage());
     }
 
-    @Test
-    @DisplayName("저장된 일정 조회")
-    void getScheduleByScheduleId(){
-        // given
-        when(travelScheduleRepository.findByScheduleId(any())).thenReturn(Optional.of(schedule1));
-
-        // when
-        TravelSchedule response = scheduleService.getScheduleByScheduleId(schedule1.getScheduleId());
-
-        // then
-        assertThat(response.getScheduleName()).isEqualTo(schedule1.getScheduleName());
-        assertThat(response.getStartDate()).isEqualTo(schedule1.getStartDate());
-        assertThat(response.getEndDate()).isEqualTo(schedule1.getEndDate());
-    }
-
-    @Test
-    @DisplayName("저장된 일정 조회 시 데이터 찾을 수 없어 예외 발생")
-    void getScheduleBySchedule_Id_dataNotFoundException(){
-        // given
-        when(travelScheduleRepository.findByScheduleId(any())).thenReturn(Optional.empty());
-
-        // when
-        DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> scheduleService.getScheduleByScheduleId(0L));
-
-        // then
-        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.SCHEDULE_NOT_FOUND.getStatus());
-        assertThat(fail.getMessage()).isEqualTo(ErrorCode.SCHEDULE_NOT_FOUND.getMessage());
-    }
 
     @Test
     @DisplayName("저장된 여행지 조회")
@@ -1356,7 +1328,7 @@ public class ScheduleServiceTest extends ScheduleTest {
         TravelImage travelImage4 = createTravelImage(travelPlace2, "test2", false);
         travelPlace2 = createTravelPlace(2L, country, city, district, apiCategory, List.of(travelImage3, travelImage4));
 
-        when(travelPlaceRepository.findByPlaceId(anyLong())).thenReturn(Optional.of(travelPlace1));
+        when(travelPlaceRepository.findById(anyLong())).thenReturn(Optional.of(travelPlace1));
 
         // when
         TravelPlace response = scheduleService.getPlaceByPlaceId(travelPlace1.getPlaceId());
@@ -1371,7 +1343,7 @@ public class ScheduleServiceTest extends ScheduleTest {
     @DisplayName("저장된 여행지 데이터 조회 시 데이터 존재하지 않아 예외 발생")
     void getPlaceByPlaceId_dataNotFoundException(){
         // given
-        when(travelPlaceRepository.findByPlaceId(anyLong())).thenReturn(Optional.empty());
+        when(travelPlaceRepository.findById(anyLong())).thenReturn(Optional.empty());
 
         // when
         DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> scheduleService.getPlaceByPlaceId(0L));

@@ -70,7 +70,7 @@ public class TravelService {
     }
 
     public PlaceDetailResponse getTravelPlaceDetails(Long placeId, String userId) {
-        TravelPlace travelPlace = travelPlaceRepository.findByPlaceId(placeId)
+        TravelPlace travelPlace = travelPlaceRepository.findById(placeId)
                 .orElseThrow(()-> new DataNotFoundException(ErrorCode.DATA_NOT_FOUND));
 
         boolean isBookmark = false;
