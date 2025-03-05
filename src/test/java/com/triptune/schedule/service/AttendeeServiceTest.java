@@ -119,7 +119,7 @@ public class AttendeeServiceTest extends ScheduleTest {
         // given
         AttendeeRequest attendeeRequest = createAttendeeRequest(member3.getEmail(), AttendeePermission.CHAT);
 
-        when(travelScheduleRepository.findByScheduleId(anyLong())).thenReturn(Optional.of(schedule1));
+        when(travelScheduleRepository.findById(anyLong())).thenReturn(Optional.of(schedule1));
         when(travelAttendeeRepository.existsByTravelSchedule_ScheduleIdAndMember_UserIdAndRole(schedule1.getScheduleId(), member1.getUserId(), AttendeeRole.AUTHOR))
                 .thenReturn(true);
         when(memberRepository.findByEmail(member3.getEmail())).thenReturn(Optional.of(member3));
@@ -137,7 +137,7 @@ public class AttendeeServiceTest extends ScheduleTest {
         // given
         AttendeeRequest attendeeRequest = createAttendeeRequest(member3.getEmail(), AttendeePermission.CHAT);
 
-        when(travelScheduleRepository.findByScheduleId(anyLong())).thenReturn(Optional.empty());
+        when(travelScheduleRepository.findById(anyLong())).thenReturn(Optional.empty());
 
         // when, then
         DataNotFoundException fail = assertThrows(DataNotFoundException.class, () ->  attendeeService.createAttendee(schedule1.getScheduleId(), member1.getUserId(), attendeeRequest));
@@ -153,7 +153,7 @@ public class AttendeeServiceTest extends ScheduleTest {
         // given
         AttendeeRequest attendeeRequest = createAttendeeRequest(member3.getEmail(), AttendeePermission.CHAT);
 
-        when(travelScheduleRepository.findByScheduleId(anyLong())).thenReturn(Optional.of(schedule1));
+        when(travelScheduleRepository.findById(anyLong())).thenReturn(Optional.of(schedule1));
         when(travelAttendeeRepository.countByTravelSchedule_ScheduleId(anyLong())).thenReturn(5);
 
         // when, then
@@ -170,7 +170,7 @@ public class AttendeeServiceTest extends ScheduleTest {
         // given
         AttendeeRequest attendeeRequest = createAttendeeRequest(member3.getEmail(), AttendeePermission.CHAT);
 
-        when(travelScheduleRepository.findByScheduleId(anyLong())).thenReturn(Optional.of(schedule1));
+        when(travelScheduleRepository.findById(anyLong())).thenReturn(Optional.of(schedule1));
         when(travelAttendeeRepository.countByTravelSchedule_ScheduleId(anyLong())).thenReturn(4);
         when(travelAttendeeRepository.existsByTravelSchedule_ScheduleIdAndMember_UserIdAndRole(schedule1.getScheduleId(), member1.getUserId(), AttendeeRole.AUTHOR))
                 .thenReturn(false);
@@ -189,7 +189,7 @@ public class AttendeeServiceTest extends ScheduleTest {
         // given
         AttendeeRequest attendeeRequest = createAttendeeRequest(member3.getEmail(), AttendeePermission.CHAT);
 
-        when(travelScheduleRepository.findByScheduleId(anyLong())).thenReturn(Optional.of(schedule1));
+        when(travelScheduleRepository.findById(anyLong())).thenReturn(Optional.of(schedule1));
         when(travelAttendeeRepository.countByTravelSchedule_ScheduleId(anyLong())).thenReturn(4);
         when(travelAttendeeRepository.existsByTravelSchedule_ScheduleIdAndMember_UserIdAndRole(schedule1.getScheduleId(), member1.getUserId(), AttendeeRole.AUTHOR))
                 .thenReturn(true);
@@ -209,7 +209,7 @@ public class AttendeeServiceTest extends ScheduleTest {
         // given
         AttendeeRequest attendeeRequest = createAttendeeRequest(member3.getEmail(), AttendeePermission.CHAT);
 
-        when(travelScheduleRepository.findByScheduleId(anyLong())).thenReturn(Optional.of(schedule1));
+        when(travelScheduleRepository.findById(anyLong())).thenReturn(Optional.of(schedule1));
         when(travelAttendeeRepository.countByTravelSchedule_ScheduleId(anyLong())).thenReturn(4);
         when(travelAttendeeRepository.existsByTravelSchedule_ScheduleIdAndMember_UserIdAndRole(schedule1.getScheduleId(), member1.getUserId(), AttendeeRole.AUTHOR))
                 .thenReturn(true);

@@ -8,5 +8,4 @@ import java.util.Optional;
 
 @Repository
 public interface TravelScheduleRepository extends JpaRepository<TravelSchedule, Long>, TravelScheduleRepositoryCustom {
-    Optional<TravelSchedule> findByScheduleId(Long scheduleId);
 }

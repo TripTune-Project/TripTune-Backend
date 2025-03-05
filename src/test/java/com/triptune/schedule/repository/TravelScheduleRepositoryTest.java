@@ -386,7 +386,7 @@ public class TravelScheduleRepositoryTest extends ScheduleTest {
 
         // then
         // 일정 삭제됐는지 확인
-        Optional<TravelSchedule> schedule = travelScheduleRepository.findByScheduleId(schedule1.getScheduleId());
+        Optional<TravelSchedule> schedule = travelScheduleRepository.findById(schedule1.getScheduleId());
         assertThat(schedule).isEmpty();
 
         // 해당 일정의 참석자 정보 삭제됐는지 확인
