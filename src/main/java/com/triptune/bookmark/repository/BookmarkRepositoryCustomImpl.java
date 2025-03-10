@@ -29,7 +29,7 @@ public class BookmarkRepositoryCustomImpl implements BookmarkRepositoryCustom {
     }
 
     @Override
-    public Page<TravelPlace> getBookmarkTravelPlaces(String userId, Pageable pageable, BookmarkSortType sortType) {
+    public Page<TravelPlace> findBookmarksByUserId(String userId, Pageable pageable, BookmarkSortType sortType) {
         BooleanExpression expression = bookmark.member.userId.eq(userId);
         OrderSpecifier<?> orderBySortType = getOrderBySortType(sortType);
 

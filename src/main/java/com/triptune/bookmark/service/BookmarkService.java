@@ -64,6 +64,6 @@ public class BookmarkService {
     }
 
     public Page<TravelPlace> getBookmarkTravelPlaces(String userId, Pageable pageable, BookmarkSortType sortType) {
-        return bookmarkRepository.getBookmarkTravelPlaces(userId, pageable, sortType);
+        return bookmarkRepository.findBookmarksByUserId(userId, pageable, sortType);
     }
 }

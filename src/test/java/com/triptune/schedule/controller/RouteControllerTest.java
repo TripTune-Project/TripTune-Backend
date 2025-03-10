@@ -110,7 +110,7 @@ public class RouteControllerTest extends ScheduleTest {
         schedule1.setTravelAttendeeList(new ArrayList<>(List.of(attendee1, attendee2)));
         schedule2.setTravelAttendeeList(new ArrayList<>(List.of(attendee3)));
 
-        travelPlace3 = travelPlaceRepository.save(createTravelPlace(null, country, city, district, apiCategory, List.of(travelImage3), new ArrayList<>()));
+        travelPlace3 = travelPlaceRepository.save(createTravelPlace(null, country, city, district, apiCategory, List.of(travelImage3)));
     }
 
 
@@ -184,8 +184,8 @@ public class RouteControllerTest extends ScheduleTest {
         TravelRoute route3 = travelRouteRepository.save(createTravelRoute(schedule1, travelPlace2, 3));
 
         schedule1.setTravelRouteList(new ArrayList<>(List.of(route1, route2, route3)));
-        travelPlace1 = travelPlaceRepository.save(createTravelPlace(null, country, city, district, apiCategory, List.of(travelImage1, travelImage2), List.of(route1, route2)));
-        travelPlace2 = travelPlaceRepository.save(createTravelPlace(null, country, city, district, apiCategory, List.of(travelImage3, travelImage4), List.of(route3)));
+        travelPlace1 = travelPlaceRepository.save(createTravelPlace(null, country, city, district, apiCategory, List.of(travelImage1, travelImage2)));
+        travelPlace2 = travelPlaceRepository.save(createTravelPlace(null, country, city, district, apiCategory, List.of(travelImage3, travelImage4)));
 
 
         // when, then
@@ -247,8 +247,8 @@ public class RouteControllerTest extends ScheduleTest {
         TravelRoute route3 = travelRouteRepository.save(createTravelRoute(schedule1, travelPlace2, 3));
 
         schedule1.setTravelRouteList(List.of(route1, route2, route3));
-        travelPlace1 = travelPlaceRepository.save(createTravelPlace(null, country, city, district, apiCategory, List.of(travelImage1, travelImage2), List.of(route1, route2)));
-        travelPlace2 = travelPlaceRepository.save(createTravelPlace(null, country, city, district, apiCategory, List.of(travelImage3, travelImage4), List.of(route3)));
+        travelPlace1 = travelPlaceRepository.save(createTravelPlace(null, country, city, district, apiCategory, List.of(travelImage1, travelImage2)));
+        travelPlace2 = travelPlaceRepository.save(createTravelPlace(null, country, city, district, apiCategory, List.of(travelImage3, travelImage4)));
 
 
         // when, then

@@ -21,17 +21,10 @@ public class Country {
     @Column(name = "country_name")
     private String countryName;
 
-    @OneToMany(mappedBy = "country", fetch = FetchType.LAZY)
-    private List<City> cityList;
-
-    @OneToMany(mappedBy = "country", fetch = FetchType.LAZY)
-    private List<TravelPlace> travelPlaceList;
 
     @Builder
-    public Country(Long countryId, String countryName, List<City> cityList, List<TravelPlace> travelPlaceList) {
+    public Country(Long countryId, String countryName) {
         CountryId = countryId;
         this.countryName = countryName;
-        this.cityList = cityList;
-        this.travelPlaceList = travelPlaceList;
     }
 }

@@ -21,13 +21,10 @@ public class ApiContentType {
     @Column(name = "content_type_name")
     private String contentTypeName;
 
-    @OneToMany(mappedBy = "apiContentType", fetch = FetchType.LAZY)
-    private List<TravelPlace> travelPlaceList;
 
     @Builder
-    public ApiContentType(Long contentTypeId, String contentTypeName, List<TravelPlace> travelPlaceList) {
+    public ApiContentType(Long contentTypeId, String contentTypeName) {
         this.contentTypeId = contentTypeId;
         this.contentTypeName = contentTypeName;
-        this.travelPlaceList = travelPlaceList;
     }
 }

@@ -172,7 +172,7 @@ public class BookmarkServiceTest extends BookmarkTest {
         List<TravelPlace> travelPlaceList = List.of(travelPlace1, travelPlace2, travelPlace3);
         Page<TravelPlace> travelPlacePage = PageUtils.createPage(travelPlaceList, pageable, travelPlaceList.size());
 
-        when(bookmarkRepository.getBookmarkTravelPlaces(anyString(), any(), any()))
+        when(bookmarkRepository.findBookmarksByUserId(anyString(), any(), any()))
                 .thenReturn(travelPlacePage);
 
         // when
@@ -194,7 +194,7 @@ public class BookmarkServiceTest extends BookmarkTest {
         List<TravelPlace> travelPlaceList = List.of(travelPlace1, travelPlace2, travelPlace3);
         Page<TravelPlace> travelPlacePage = PageUtils.createPage(travelPlaceList, pageable, travelPlaceList.size());
 
-        when(bookmarkRepository.getBookmarkTravelPlaces(anyString(), any(), any()))
+        when(bookmarkRepository.findBookmarksByUserId(anyString(), any(), any()))
                 .thenReturn(travelPlacePage);
 
         // when
@@ -215,7 +215,7 @@ public class BookmarkServiceTest extends BookmarkTest {
 
         Page<TravelPlace> travelPlacePage = PageUtils.createPage(new ArrayList<>(), pageable, 0);
 
-        when(bookmarkRepository.getBookmarkTravelPlaces(anyString(), any(), any()))
+        when(bookmarkRepository.findBookmarksByUserId(anyString(), any(), any()))
                 .thenReturn(travelPlacePage);
 
         // when
