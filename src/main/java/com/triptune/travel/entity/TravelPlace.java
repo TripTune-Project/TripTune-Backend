@@ -88,14 +88,9 @@ public class TravelPlace {
     @OneToMany(mappedBy = "travelPlace", fetch = FetchType.LAZY)
     private List<TravelImage> travelImageList = new ArrayList<>();
 
-    @OneToMany(mappedBy = "travelPlace", fetch = FetchType.LAZY)
-    private List<TravelRoute> travelRouteList = new ArrayList<>();
-
-    @OneToMany(mappedBy = "travelPlace", fetch = FetchType.LAZY)
-    private List<Bookmark> bookmarkList = new ArrayList<>();
 
     @Builder
-    public TravelPlace(Long placeId, Country country, City city, District district, ApiCategory apiCategory, ApiContentType apiContentType, String placeName, String address, String detailAddress, String useTime, String checkInTime, String checkOutTime, String homepage, String phoneNumber, double longitude, double latitude, String description, int bookmarkCnt, LocalDateTime createdAt, LocalDateTime updatedAt, List<TravelImage> travelImageList, List<TravelRoute> travelRouteList, List<Bookmark> bookmarkList) {
+    public TravelPlace(Long placeId, Country country, City city, District district, ApiCategory apiCategory, ApiContentType apiContentType, String placeName, String address, String detailAddress, String useTime, String checkInTime, String checkOutTime, String homepage, String phoneNumber, double longitude, double latitude, String description, int bookmarkCnt, LocalDateTime createdAt, LocalDateTime updatedAt, List<TravelImage> travelImageList) {
         this.placeId = placeId;
         this.country = country;
         this.city = city;
@@ -117,8 +112,6 @@ public class TravelPlace {
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
         this.travelImageList = travelImageList;
-        this.travelRouteList = travelRouteList;
-        this.bookmarkList = bookmarkList;
     }
 
     public String getThumbnailUrl(){

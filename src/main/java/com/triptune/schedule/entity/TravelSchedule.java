@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-@Entity(name = "travel_schedule")
+@Entity
 @Getter
 @Setter
 @NoArgsConstructor

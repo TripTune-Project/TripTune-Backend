@@ -54,14 +54,9 @@ public class Member {
     @Column(name = "is_active")
     private boolean isActive;
 
-    @OneToMany(mappedBy = "member", fetch = FetchType.LAZY)
-    private List<TravelAttendee> travelAttendeeList = new ArrayList<>();
-
-    @OneToMany(mappedBy = "member", fetch = FetchType.LAZY)
-    private List<Bookmark> bookmarkList = new ArrayList<>();
 
     @Builder
-    public Member(Long memberId, ProfileImage profileImage, String userId, String nickname, String email, String password, String refreshToken, boolean isSocialLogin, LocalDateTime createdAt, LocalDateTime updatedAt, boolean isActive, List<TravelAttendee> travelAttendeeList, List<Bookmark> bookmarkList) {
+    public Member(Long memberId, ProfileImage profileImage, String userId, String nickname, String email, String password, String refreshToken, boolean isSocialLogin, LocalDateTime createdAt, LocalDateTime updatedAt, boolean isActive) {
         this.memberId = memberId;
         this.profileImage = profileImage;
         this.userId = userId;
@@ -73,8 +68,6 @@ public class Member {
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
         this.isActive = isActive;
-        this.travelAttendeeList = travelAttendeeList;
-        this.bookmarkList = bookmarkList;
     }
 
     public static Member from(JoinRequest joinRequest, String encodePassword){

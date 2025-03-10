@@ -25,19 +25,11 @@ public class City {
     @Column(name = "city_name")
     private String cityName;
 
-    @OneToMany(mappedBy = "city", fetch = FetchType.LAZY)
-    private List<District> districtList;
-
-    @OneToMany(mappedBy = "city",fetch = FetchType.LAZY)
-    private List<TravelPlace> travelPlaceList;
-
 
     @Builder
-    public City(Long cityId, Country country, String cityName, List<District> districtList, List<TravelPlace> travelPlaceList) {
+    public City(Long cityId, Country country, String cityName) {
         this.cityId = cityId;
         this.country = country;
         this.cityName = cityName;
-        this.districtList = districtList;
-        this.travelPlaceList = travelPlaceList;
     }
 }

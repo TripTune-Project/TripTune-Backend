@@ -26,16 +26,13 @@ public class ApiCategory {
     @Column(name = "level")
     private int level;
 
-    @OneToMany(mappedBy = "apiCategory", fetch = FetchType.LAZY)
-    private List<TravelPlace> travelPlaceList;
 
 
     @Builder
-    public ApiCategory(String categoryCode, String categoryName, String parentCode, int level, List<TravelPlace> travelPlaceList) {
+    public ApiCategory(String categoryCode, String categoryName, String parentCode, int level) {
         this.categoryCode = categoryCode;
         this.categoryName = categoryName;
         this.parentCode = parentCode;
         this.level = level;
-        this.travelPlaceList = travelPlaceList;
     }
 }
