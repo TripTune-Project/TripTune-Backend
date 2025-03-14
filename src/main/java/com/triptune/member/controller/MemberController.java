@@ -16,7 +16,7 @@ import com.triptune.member.dto.response.RefreshTokenResponse;
 import com.triptune.member.exception.FailLoginException;
 import com.triptune.member.exception.IncorrectPasswordException;
 import com.triptune.member.service.MemberService;
-import com.triptune.travel.dto.response.PlaceSimpleResponse;
+import com.triptune.travel.dto.response.PlaceBookmarkResponse;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -146,10 +146,10 @@ public class MemberController {
 
     @GetMapping("/bookmark")
     @Operation(summary = "사용자 북마크 조회", description = "사용자가 등록한 북마크를 조회합니다.")
-    public ApiPageResponse<PlaceSimpleResponse> getMemberBookmarks(@RequestParam(name = "page") int page, @RequestParam(name = "sort") String sort){
+    public ApiPageResponse<PlaceBookmarkResponse> getMemberBookmarks(@RequestParam(name = "page") int page, @RequestParam(name = "sort") String sort){
         String userId = SecurityContextHolder.getContext().getAuthentication().getName();
         BookmarkSortType sortType = BookmarkSortType.from(sort);
-        Page<PlaceSimpleResponse> response = memberService.getMemberBookmarks(page, userId, sortType);
+        Page<PlaceBookmarkResponse> response = memberService.getMemberBookmarks(page, userId, sortType);
 
         return ApiPageResponse.dataResponse(response);
     }

@@ -28,7 +28,7 @@ import com.triptune.schedule.entity.TravelAttendee;
 import com.triptune.schedule.repository.ChatMessageRepository;
 import com.triptune.schedule.repository.TravelAttendeeRepository;
 import com.triptune.schedule.repository.TravelScheduleRepository;
-import com.triptune.travel.dto.response.PlaceSimpleResponse;
+import com.triptune.travel.dto.response.PlaceBookmarkResponse;
 import com.triptune.travel.entity.TravelPlace;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -229,11 +229,11 @@ public class MemberService {
         member.updateEmail(emailRequest.getEmail());
     }
 
-    public Page<PlaceSimpleResponse> getMemberBookmarks(int page, String userId, BookmarkSortType sortType) {
+    public Page<PlaceBookmarkResponse> getMemberBookmarks(int page, String userId, BookmarkSortType sortType) {
         Pageable pageable = PageUtils.bookmarkPageable(page);
         Page<TravelPlace> travelPlaces = bookmarkService.getBookmarkTravelPlaces(userId, pageable, sortType);
 
-        return travelPlaces.map(PlaceSimpleResponse::from);
+        return travelPlaces.map(PlaceBookmarkResponse::from);
     }
 
 

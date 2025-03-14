@@ -3,9 +3,9 @@ package com.triptune.travel.controller;
 import com.triptune.travel.dto.PlaceLocation;
 import com.triptune.travel.dto.response.PlaceDetailResponse;
 import com.triptune.travel.dto.request.PlaceLocationRequest;
-import com.triptune.travel.dto.response.PlaceDistanceResponse;
 import com.triptune.travel.dto.request.PlaceSearchRequest;
-import com.triptune.travel.dto.response.PlaceResponse;
+import com.triptune.travel.dto.response.PlaceSimpleResponse;
+import com.triptune.travel.enumclass.CityType;
 import com.triptune.travel.service.TravelService;
 import com.triptune.global.response.pagination.ApiPageResponse;
 import com.triptune.global.response.ApiResponse;
@@ -17,6 +17,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/travels")
@@ -55,6 +57,14 @@ public class TravelController {
     public ApiResponse<PlaceDetailResponse> getTravelPlaceDetails(@PathVariable("placeId") Long placeId){
         String userId = authenticateUserId();
         PlaceDetailResponse response = travelService.getTravelPlaceDetails(placeId, userId);
+        return ApiResponse.dataResponse(response);
+    }
+
+    @GetMapping("/popular")
+    @Operation(summary = "지역별 인기 여행지 조회", description = "지역에 따른 인기 여행지 목록을 조회한다.")
+    public ApiResponse<List<PlaceSimpleResponse>> getPopularTravelPlacesByCity(@RequestParam("city") String city){
+        CityType cityType = CityType.from(city);
+        List<PlaceSimpleResponse> response = travelService.getPopularTravelPlacesByCity(cityType);
         return ApiResponse.dataResponse(response);
     }
 

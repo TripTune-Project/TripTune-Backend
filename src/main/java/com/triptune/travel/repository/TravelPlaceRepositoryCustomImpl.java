@@ -6,14 +6,17 @@ import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.core.types.dsl.NumberExpression;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import com.triptune.common.entity.QCity;
 import com.triptune.travel.dto.request.PlaceLocationRequest;
 import com.triptune.travel.dto.PlaceLocation;
 import com.triptune.travel.dto.request.PlaceSearchRequest;
 import com.triptune.travel.dto.response.PlaceResponse;
+import com.triptune.travel.dto.response.PlaceSimpleResponse;
 import com.triptune.travel.entity.QTravelImage;
 import com.triptune.travel.entity.QTravelPlace;
 import com.triptune.travel.entity.TravelPlace;
 import com.triptune.global.util.PageUtils;
+import com.triptune.travel.enumclass.CityType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -26,16 +29,18 @@ import static com.querydsl.core.types.dsl.MathExpressions.*;
 
 @Repository
 public class TravelPlaceRepositoryCustomImpl implements TravelPlaceRepositoryCustom {
+    private static final int CAROUSEL_LIMIT = 20;
 
     private final JPAQueryFactory jpaQueryFactory;
     private final QTravelPlace travelPlace;
     private final QTravelImage travelImage;
+    private final QCity city;
 
     public TravelPlaceRepositoryCustomImpl(JPAQueryFactory jpaQueryFactory){
         this.jpaQueryFactory = jpaQueryFactory;
         this.travelPlace = QTravelPlace.travelPlace;
         this.travelImage = QTravelImage.travelImage;
-
+        this.city = QCity.city;
     }
 
 
@@ -240,6 +245,27 @@ public class TravelPlaceRepositoryCustomImpl implements TravelPlaceRepositoryCus
         if (totalElements == null) totalElements = 0L;
 
         return totalElements.intValue();
+    }
+
+    @Override
+    public List<PlaceSimpleResponse> findPopularTravelPlacesByCity(CityType cityType) {
+        return jpaQueryFactory
+                .select(Projections.constructor(PlaceSimpleResponse.class,
+                        travelPlace.placeId,
+                        travelPlace.address,
+                        travelPlace.detailAddress,
+                        travelPlace.placeName,
+                        travelImage.s3ObjectUrl
+                ))
+                .from(travelPlace)
+                .leftJoin(travelImage)
+                .on(travelImage.travelPlace.placeId.eq(travelPlace.placeId)
+                        .and(travelImage.isThumbnail.isTrue()))
+                .join(travelPlace.city, city)
+                .where(travelPlace.city.cityName.in(cityType.getDbCityGrouping()))
+                .orderBy(travelPlace.bookmarkCnt.desc())
+                .limit(CAROUSEL_LIMIT)
+                .fetch();
     }
 
 

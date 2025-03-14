@@ -29,7 +29,7 @@ import com.triptune.schedule.enumclass.AttendeeRole;
 import com.triptune.schedule.repository.ChatMessageRepository;
 import com.triptune.schedule.repository.TravelAttendeeRepository;
 import com.triptune.schedule.repository.TravelScheduleRepository;
-import com.triptune.travel.dto.response.PlaceSimpleResponse;
+import com.triptune.travel.dto.response.PlaceBookmarkResponse;
 import com.triptune.travel.entity.TravelImage;
 import com.triptune.travel.entity.TravelPlace;
 import com.triptune.global.enumclass.ErrorCode;
@@ -710,10 +710,10 @@ public class MemberServiceTest extends MemberTest {
                 .thenReturn(travelPlacePage);
 
         // when
-        Page<PlaceSimpleResponse> response = memberService.getMemberBookmarks(1, "member", BookmarkSortType.NEWEST);
+        Page<PlaceBookmarkResponse> response = memberService.getMemberBookmarks(1, "member", BookmarkSortType.NEWEST);
 
         // then
-        List<PlaceSimpleResponse> content = response.getContent();
+        List<PlaceBookmarkResponse> content = response.getContent();
         assertThat(response.getTotalElements()).isEqualTo(3);
         assertThat(content.get(0).getPlaceName()).isEqualTo(travelPlace1.getPlaceName());
         assertThat(content.get(0).getAddress()).isEqualTo(travelPlace1.getAddress());
@@ -737,10 +737,10 @@ public class MemberServiceTest extends MemberTest {
                 .thenReturn(travelPlacePage);
 
         // when
-        Page<PlaceSimpleResponse> response = memberService.getMemberBookmarks(1, "member", BookmarkSortType.NAME);
+        Page<PlaceBookmarkResponse> response = memberService.getMemberBookmarks(1, "member", BookmarkSortType.NAME);
 
         // then
-        List<PlaceSimpleResponse> content = response.getContent();
+        List<PlaceBookmarkResponse> content = response.getContent();
         assertThat(response.getTotalElements()).isEqualTo(3);
         assertThat(content.get(0).getPlaceName()).isEqualTo(travelPlace1.getPlaceName());
         assertThat(content.get(0).getAddress()).isEqualTo(travelPlace1.getAddress());
@@ -762,7 +762,7 @@ public class MemberServiceTest extends MemberTest {
                 .thenReturn(travelPlacePage);
 
         // when
-        Page<PlaceSimpleResponse> response = memberService.getMemberBookmarks(1, "member", BookmarkSortType.NAME);
+        Page<PlaceBookmarkResponse> response = memberService.getMemberBookmarks(1, "member", BookmarkSortType.NAME);
 
         // then
         assertThat(response.getTotalElements()).isEqualTo(0);
