@@ -3,11 +3,14 @@ package com.triptune.travel.controller;
 import com.triptune.bookmark.repository.BookmarkRepository;
 import com.triptune.common.entity.*;
 import com.triptune.common.repository.*;
+import com.triptune.global.enumclass.SuccessCode;
 import com.triptune.member.entity.Member;
 import com.triptune.member.repository.MemberRepository;
 import com.triptune.travel.TravelTest;
+import com.triptune.travel.dto.response.PlaceSimpleResponse;
 import com.triptune.travel.entity.TravelImage;
 import com.triptune.travel.entity.TravelPlace;
+import com.triptune.travel.enumclass.CityType;
 import com.triptune.travel.repository.TravelImageRepository;
 import com.triptune.travel.repository.TravelPlaceRepository;
 import com.triptune.global.enumclass.ErrorCode;
@@ -28,6 +31,7 @@ import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -357,6 +361,86 @@ public class TravelControllerTest extends TravelTest {
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.errorCode").value(ErrorCode.DATA_NOT_FOUND.getStatus().value()))
                 .andExpect(jsonPath("$.message").value(ErrorCode.DATA_NOT_FOUND.getMessage()));
+    }
+
+
+    @Test
+    @DisplayName("인기 여행지 조회 - 전체")
+    void findPopularTravelPlacesByCity_ALL() throws Exception {
+        City busan = cityRepository.save(createCity(country, "부산"));
+        District busanDistrict = districtRepository.save(createDistrict(busan, "금정구"));
+        TravelPlace travelPlace3 = travelPlaceRepository.save(createTravelPlace(null, country, busan, busanDistrict, apiCategory, 5));
+        TravelImage busanImage1 = travelImageRepository.save(createTravelImage(travelPlace3, "부산이미지1", true));
+        travelImageRepository.save(createTravelImage(travelPlace3, "부산이미지2", false));
+
+        City jeolla = cityRepository.save(createCity(country, "전라남도"));
+        District jeollaDistrict = districtRepository.save(createDistrict(busan, "보성구"));
+        TravelPlace travelPlace4 = travelPlaceRepository.save(createTravelPlace(null, country, jeolla, jeollaDistrict, apiCategory, 10));
+
+        mockMvc.perform(get("/api/travels/popular")
+                        .param("city", CityType.ALL.getValue()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()))
+                .andExpect(jsonPath("$.data[0].placeId").value(travelPlace4.getPlaceId()))
+                .andExpect(jsonPath("$.data[0].thumbnailUrl").isEmpty())
+                .andExpect(jsonPath("$.data[1].placeId").value(travelPlace3.getPlaceId()))
+                .andExpect(jsonPath("$.data[1].thumbnailUrl").value(busanImage1.getS3ObjectUrl()))
+                .andExpect(jsonPath("$.data[2].placeId").value(travelPlace1.getPlaceId()))
+                .andExpect(jsonPath("$.data[2].thumbnailUrl").value(travelImage1.getS3ObjectUrl()))
+                .andExpect(jsonPath("$.data[3].placeId").value(travelPlace2.getPlaceId()))
+                .andExpect(jsonPath("$.data[3].thumbnailUrl").isEmpty());
+
+    }
+
+    @Test
+    @DisplayName("인기 여행지 조회 - 경상도")
+    void findPopularTravelPlacesByCity_GUEONGSANG() throws Exception {
+        // given
+        City gueongsang1 = cityRepository.save(createCity(country, "경상북도"));
+        District gueongsang1District = districtRepository.save(createDistrict(gueongsang1, "구미시"));
+        TravelPlace travelPlace3 = travelPlaceRepository.save(createTravelPlace(null, country, gueongsang1, gueongsang1District, apiCategory, 10));
+        TravelImage gueongsang1Image1 = travelImageRepository.save(createTravelImage(travelPlace3, "경상이미지1", true));
+        travelImageRepository.save(createTravelImage(travelPlace3, "경상이미지2", false));
+
+        City gueongsang2 = cityRepository.save(createCity(country, "경상남도"));
+        District gueongsang2District = districtRepository.save(createDistrict(gueongsang2, "통영시"));
+        TravelPlace travelPlace4 = travelPlaceRepository.save(createTravelPlace(null, country, gueongsang2, gueongsang2District, apiCategory, 5));
+
+        mockMvc.perform(get("/api/travels/popular")
+                        .param("city", CityType.GUEONGSANG.getValue()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()))
+                .andExpect(jsonPath("$.data[0].placeId").value(travelPlace3.getPlaceId()))
+                .andExpect(jsonPath("$.data[0].thumbnailUrl").value(gueongsang1Image1.getS3ObjectUrl()))
+                .andExpect(jsonPath("$.data[1].placeId").value(travelPlace4.getPlaceId()))
+                .andExpect(jsonPath("$.data[1].thumbnailUrl").isEmpty());
+
+    }
+
+
+    @Test
+    @DisplayName("인기 여행지 조회 시 데이터 없는 경우")
+    void findPopularTravelPlacesByCity_empty() throws Exception {
+        mockMvc.perform(get("/api/travels/popular")
+                        .param("city", CityType.GUEONGSANG.getValue()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()))
+                .andExpect(jsonPath("$.data").isEmpty());
+
+    }
+
+    @Test
+    @DisplayName("인기 여행지 조회 시 파라미터 매칭 실패로 예외 발생")
+    void findPopularTravelPlacesByCity_illegalParam() throws Exception {
+        mockMvc.perform(get("/api/travels/popular")
+                        .param("city", "seou"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value(ErrorCode.ILLEGAL_CITY_TYPE.getMessage()));
+
     }
 
 

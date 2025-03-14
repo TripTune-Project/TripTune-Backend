@@ -5,6 +5,7 @@ import com.triptune.travel.dto.PlaceLocation;
 import com.triptune.travel.dto.request.PlaceLocationRequest;
 import com.triptune.travel.dto.request.PlaceSearchRequest;
 import com.triptune.travel.dto.response.PlaceResponse;
+import com.triptune.travel.dto.response.PlaceSimpleResponse;
 import com.triptune.travel.entity.TravelPlace;
 
 public abstract class TravelTest extends BaseTest {
@@ -56,6 +57,17 @@ public abstract class TravelTest extends BaseTest {
                 .detailAddress(travelPlace.getDetailAddress())
                 .latitude(travelPlace.getLatitude())
                 .longitude(travelPlace.getLongitude())
+                .placeName(travelPlace.getPlaceName())
+                .thumbnailUrl(thumbnailUrl)
+                .build();
+    }
+
+
+    protected PlaceSimpleResponse createPlaceSimpleResponse(TravelPlace travelPlace, String thumbnailUrl){
+        return PlaceSimpleResponse.builder()
+                .placeId(travelPlace.getPlaceId())
+                .address(travelPlace.getAddress())
+                .detailAddress(travelPlace.getDetailAddress())
                 .placeName(travelPlace.getPlaceName())
                 .thumbnailUrl(thumbnailUrl)
                 .build();

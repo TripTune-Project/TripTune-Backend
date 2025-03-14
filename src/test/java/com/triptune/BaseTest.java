@@ -123,6 +123,10 @@ public abstract class BaseTest {
         return City.builder().cityName("서울").country(country).build();
     }
 
+    protected City createCity(Country country, String cityName){
+        return City.builder().cityName(cityName).country(country).build();
+    }
+
     protected District createDistrict(City city, String districtName){
         return District.builder().districtName(districtName).city(city).build();
     }
@@ -253,6 +257,26 @@ public abstract class BaseTest {
                 .createdAt(LocalDateTime.now())
                 .description("테스트 장소 설명")
                 .travelImageList(travelImageList)
+                .build();
+    }
+
+    protected TravelPlace createTravelPlace(Long placeId, Country country, City city, District district, ApiCategory apiCategory, int bookmarkCnt){
+        return TravelPlace.builder()
+                .placeId(placeId)
+                .country(country)
+                .city(city)
+                .district(district)
+                .apiCategory(apiCategory)
+                .address("테스트 주소")
+                .detailAddress("테스트 상세주소")
+                .homepage("www.test.com")
+                .phoneNumber("010-0000-0000")
+                .latitude(37.5)
+                .longitude(127.0281573537)
+                .placeName("테스트")
+                .bookmarkCnt(bookmarkCnt)
+                .createdAt(LocalDateTime.now())
+                .description("테스트 장소 설명")
                 .build();
     }
 

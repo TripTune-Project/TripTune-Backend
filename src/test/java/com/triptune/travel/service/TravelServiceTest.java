@@ -11,8 +11,10 @@ import com.triptune.travel.dto.request.PlaceLocationRequest;
 import com.triptune.travel.dto.request.PlaceSearchRequest;
 import com.triptune.travel.dto.response.PlaceDetailResponse;
 import com.triptune.travel.dto.response.PlaceResponse;
+import com.triptune.travel.dto.response.PlaceSimpleResponse;
 import com.triptune.travel.entity.TravelImage;
 import com.triptune.travel.entity.TravelPlace;
+import com.triptune.travel.enumclass.CityType;
 import com.triptune.travel.repository.TravelImageRepository;
 import com.triptune.travel.repository.TravelPlaceRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -33,6 +35,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -43,9 +46,6 @@ public class TravelServiceTest extends TravelTest {
 
     @Mock
     private TravelPlaceRepository travelPlaceRepository;
-
-    @Mock
-    private TravelImageRepository travelImageRepository;
 
     @Mock
     private BookmarkRepository bookmarkRepository;
@@ -583,9 +583,93 @@ public class TravelServiceTest extends TravelTest {
         // when
         Page<PlaceResponse> response = travelService.searchTravelPlaces(1, keyword);
 
-
         // then
         assertThat(response.getTotalElements()).isEqualTo(0);
+    }
+
+
+    @Test
+    @DisplayName("인기 여행지 조회 - 전체")
+    void findPopularTravelPlacesByCity_ALL(){
+        // given
+        City busan = createCity(country, "부산");
+        District busanDistrict = createDistrict(busan, "금정구");
+        TravelPlace travelPlace3 = createTravelPlace(3L, country, busan, busanDistrict, apiCategory, 5);
+        TravelImage busanImage1 = createTravelImage(travelPlace3, "부산이미지1", true);
+
+        City jeolla = createCity(country, "전라남도");
+        District jeollaDistrict = createDistrict(busan, "보성구");
+        TravelPlace travelPlace4 = createTravelPlace(4L, country, jeolla, jeollaDistrict, apiCategory, 10);
+
+        List<PlaceSimpleResponse> mockResult = List.of(
+                createPlaceSimpleResponse(travelPlace4, null),
+                createPlaceSimpleResponse(travelPlace3, busanImage1.getS3ObjectUrl()),
+                createPlaceSimpleResponse(travelPlace1, travelImage1.getS3ObjectUrl()),
+                createPlaceSimpleResponse(travelPlace2, null)
+        );
+
+        when(travelPlaceRepository.findPopularTravelPlacesByCity(CityType.ALL)).thenReturn(mockResult);
+
+        // when
+        List<PlaceSimpleResponse> response = travelPlaceRepository.findPopularTravelPlacesByCity(CityType.ALL);
+
+        // then
+        assertThat(response.size()).isEqualTo(4);
+        assertThat(response.get(0).getPlaceId()).isEqualTo(travelPlace4.getPlaceId());
+        assertThat(response.get(0).getThumbnailUrl()).isNull();
+        assertThat(response.get(1).getPlaceId()).isEqualTo(travelPlace3.getPlaceId());
+        assertThat(response.get(1).getThumbnailUrl()).isEqualTo(busanImage1.getS3ObjectUrl());
+        assertThat(response.get(2).getPlaceId()).isEqualTo(travelPlace1.getPlaceId());
+        assertThat(response.get(2).getThumbnailUrl()).isEqualTo(travelImage1.getS3ObjectUrl());
+        assertThat(response.get(3).getPlaceId()).isEqualTo(travelPlace2.getPlaceId());
+        assertThat(response.get(3).getThumbnailUrl()).isNull();
+    }
+
+    @Test
+    @DisplayName("인기 여행지 조회 - 전라도")
+    void findPopularTravelPlacesByCity_JEOLLA(){
+        // given
+        City jeolla1 = createCity(country, "전북특별자치도");
+        District jeolla1District = createDistrict(jeolla1, "고창군");
+        TravelPlace travelPlace3 = createTravelPlace(3L, country, jeolla1, jeolla1District, apiCategory, 5);
+        TravelImage jeolla1Image1 = createTravelImage(travelPlace3, "부산이미지1", true);
+
+        City jeolla2 = createCity(country, "전라남도");
+        District jeolla2District = createDistrict(jeolla2, "보성구");
+        TravelPlace travelPlace4 = createTravelPlace(4L, country, jeolla2, jeolla2District, apiCategory, 10);
+
+        List<PlaceSimpleResponse> mockResult = List.of(
+                createPlaceSimpleResponse(travelPlace4, null),
+                createPlaceSimpleResponse(travelPlace3, jeolla1Image1.getS3ObjectUrl())
+        );
+
+        when(travelPlaceRepository.findPopularTravelPlacesByCity(CityType.JEOLLA)).thenReturn(mockResult);
+
+        // when
+        List<PlaceSimpleResponse> response = travelPlaceRepository.findPopularTravelPlacesByCity(CityType.JEOLLA);
+
+        // then
+        assertThat(response.size()).isEqualTo(2);
+        assertThat(response.get(0).getPlaceId()).isEqualTo(travelPlace4.getPlaceId());
+        assertThat(response.get(0).getThumbnailUrl()).isNull();
+        assertThat(response.get(1).getPlaceId()).isEqualTo(travelPlace3.getPlaceId());
+        assertThat(response.get(1).getThumbnailUrl()).isEqualTo(jeolla1Image1.getS3ObjectUrl());
+    }
+
+
+    @Test
+    @DisplayName("인기 여행지 조회 시 데이터 없는 경우")
+    void findPopularTravelPlacesByCity_empty(){
+        // given
+        when(travelPlaceRepository.findPopularTravelPlacesByCity(CityType.JEOLLA)).thenReturn(new ArrayList<>());
+
+        // when
+        List<PlaceSimpleResponse> response = travelPlaceRepository.findPopularTravelPlacesByCity(CityType.JEOLLA);
+
+        // then
+        assertThat(response.size()).isEqualTo(0);
+        assertThat(response).isEmpty();
+
     }
 
 
