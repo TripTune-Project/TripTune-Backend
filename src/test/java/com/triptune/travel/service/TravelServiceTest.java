@@ -69,7 +69,7 @@ public class TravelServiceTest extends TravelTest {
         district = createDistrict(city, "강남구");
         apiCategory = createApiCategory();
 
-        travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory);
+        travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, "강남 여행지1", 0);
         travelImage1 = createTravelImage(travelPlace1, "test1", true);
         travelImage2 = createTravelImage(travelPlace1, "test2", false);
 
@@ -594,12 +594,12 @@ public class TravelServiceTest extends TravelTest {
         // given
         City busan = createCity(country, "부산");
         District busanDistrict = createDistrict(busan, "금정구");
-        TravelPlace travelPlace3 = createTravelPlace(3L, country, busan, busanDistrict, apiCategory, 5);
+        TravelPlace travelPlace3 = createTravelPlace(3L, country, busan, busanDistrict, apiCategory, "금정 여행지", 5);
         TravelImage busanImage1 = createTravelImage(travelPlace3, "부산이미지1", true);
 
         City jeolla = createCity(country, "전라남도");
         District jeollaDistrict = createDistrict(busan, "보성구");
-        TravelPlace travelPlace4 = createTravelPlace(4L, country, jeolla, jeollaDistrict, apiCategory, 10);
+        TravelPlace travelPlace4 = createTravelPlace(4L, country, jeolla, jeollaDistrict, apiCategory, "보성 여행지", 10);
 
         List<PlaceSimpleResponse> mockResult = List.of(
                 createPlaceSimpleResponse(travelPlace4, null),
@@ -615,13 +615,13 @@ public class TravelServiceTest extends TravelTest {
 
         // then
         assertThat(response.size()).isEqualTo(4);
-        assertThat(response.get(0).getPlaceId()).isEqualTo(travelPlace4.getPlaceId());
+        assertThat(response.get(0).getPlaceName()).isEqualTo(travelPlace4.getPlaceName());
         assertThat(response.get(0).getThumbnailUrl()).isNull();
-        assertThat(response.get(1).getPlaceId()).isEqualTo(travelPlace3.getPlaceId());
+        assertThat(response.get(1).getPlaceName()).isEqualTo(travelPlace3.getPlaceName());
         assertThat(response.get(1).getThumbnailUrl()).isEqualTo(busanImage1.getS3ObjectUrl());
-        assertThat(response.get(2).getPlaceId()).isEqualTo(travelPlace1.getPlaceId());
+        assertThat(response.get(2).getPlaceName()).isEqualTo(travelPlace1.getPlaceName());
         assertThat(response.get(2).getThumbnailUrl()).isEqualTo(travelImage1.getS3ObjectUrl());
-        assertThat(response.get(3).getPlaceId()).isEqualTo(travelPlace2.getPlaceId());
+        assertThat(response.get(3).getPlaceName()).isEqualTo(travelPlace2.getPlaceName());
         assertThat(response.get(3).getThumbnailUrl()).isNull();
     }
 
@@ -631,12 +631,12 @@ public class TravelServiceTest extends TravelTest {
         // given
         City jeolla1 = createCity(country, "전북특별자치도");
         District jeolla1District = createDistrict(jeolla1, "고창군");
-        TravelPlace travelPlace3 = createTravelPlace(3L, country, jeolla1, jeolla1District, apiCategory, 5);
+        TravelPlace travelPlace3 = createTravelPlace(3L, country, jeolla1, jeolla1District, apiCategory, "고창 여행지", 5);
         TravelImage jeolla1Image1 = createTravelImage(travelPlace3, "부산이미지1", true);
 
         City jeolla2 = createCity(country, "전라남도");
         District jeolla2District = createDistrict(jeolla2, "보성구");
-        TravelPlace travelPlace4 = createTravelPlace(4L, country, jeolla2, jeolla2District, apiCategory, 10);
+        TravelPlace travelPlace4 = createTravelPlace(4L, country, jeolla2, jeolla2District, apiCategory, "보성 여행지", 10);
 
         List<PlaceSimpleResponse> mockResult = List.of(
                 createPlaceSimpleResponse(travelPlace4, null),
@@ -650,9 +650,9 @@ public class TravelServiceTest extends TravelTest {
 
         // then
         assertThat(response.size()).isEqualTo(2);
-        assertThat(response.get(0).getPlaceId()).isEqualTo(travelPlace4.getPlaceId());
+        assertThat(response.get(0).getPlaceName()).isEqualTo(travelPlace4.getPlaceName());
         assertThat(response.get(0).getThumbnailUrl()).isNull();
-        assertThat(response.get(1).getPlaceId()).isEqualTo(travelPlace3.getPlaceId());
+        assertThat(response.get(1).getPlaceName()).isEqualTo(travelPlace3.getPlaceName());
         assertThat(response.get(1).getThumbnailUrl()).isEqualTo(jeolla1Image1.getS3ObjectUrl());
     }
 

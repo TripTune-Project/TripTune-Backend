@@ -158,7 +158,7 @@ class BookmarkControllerTest extends BookmarkTest {
     @WithMockUser("member")
     void deleteBookmark() throws Exception{
         Member member = memberRepository.save(createMember(null, "member"));
-        TravelPlace travelPlace = travelPlaceRepository.save(createTravelPlace(null, country, city, district, apiCategory));
+        TravelPlace travelPlace = travelPlaceRepository.save(createTravelPlace(null, country, city, district, apiCategory, "여행지", 10));
         bookmarkRepository.save(createBookmark(null, member, travelPlace, LocalDateTime.now()));
 
         mockMvc.perform(delete("/api/bookmarks/{placeId}", travelPlace.getPlaceId()))
@@ -167,6 +167,7 @@ class BookmarkControllerTest extends BookmarkTest {
                 .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()));
 
         assertThat(bookmarkRepository.existsByMember_UserIdAndTravelPlace_PlaceId(member.getUserId(), travelPlace.getPlaceId())).isFalse();
+        assertThat(travelPlace.getBookmarkCnt()).isEqualTo(9);
     }
 
 
@@ -175,13 +176,15 @@ class BookmarkControllerTest extends BookmarkTest {
     @WithMockUser("member")
     void deleteBookmark_bookmarkNotFoundException() throws Exception{
         memberRepository.save(createMember(null, "member"));
-        TravelPlace travelPlace = travelPlaceRepository.save(createTravelPlace(null, country, city, district, apiCategory));
+        TravelPlace travelPlace = travelPlaceRepository.save(createTravelPlace(null, country, city, district, apiCategory, "여행지", 0));
 
         mockMvc.perform(delete("/api/bookmarks/{placeId}", travelPlace.getPlaceId()))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value(ErrorCode.BOOKMARK_NOT_FOUND.getMessage()));
     }
+
+
 
 
 
