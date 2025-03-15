@@ -260,7 +260,7 @@ public abstract class BaseTest {
                 .build();
     }
 
-    protected TravelPlace createTravelPlace(Long placeId, Country country, City city, District district, ApiCategory apiCategory, int bookmarkCnt){
+    protected TravelPlace createTravelPlace(Long placeId, Country country, City city, District district, ApiCategory apiCategory, String placeName, int bookmarkCnt){
         return TravelPlace.builder()
                 .placeId(placeId)
                 .country(country)
@@ -273,7 +273,7 @@ public abstract class BaseTest {
                 .phoneNumber("010-0000-0000")
                 .latitude(37.5)
                 .longitude(127.0281573537)
-                .placeName("테스트")
+                .placeName(placeName)
                 .bookmarkCnt(bookmarkCnt)
                 .createdAt(LocalDateTime.now())
                 .description("테스트 장소 설명")
