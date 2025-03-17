@@ -396,7 +396,7 @@ public class TravelControllerTest extends TravelTest {
         TravelPlace travelPlace4 = travelPlaceRepository.save(createTravelPlace(null, country, gueongsang2, gueongsang2District, apiCategory, "통영 여행지", 5));
 
         mockMvc.perform(get("/api/travels/popular")
-                        .param("city", CityType.GUEONGSANG.getValue()))
+                        .param("city", CityType.GYEONGSANG.getValue()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()))
@@ -412,7 +412,7 @@ public class TravelControllerTest extends TravelTest {
     @DisplayName("인기 여행지 조회 시 데이터 없는 경우")
     void findPopularTravelPlacesByCity_empty() throws Exception {
         mockMvc.perform(get("/api/travels/popular")
-                        .param("city", CityType.GUEONGSANG.getValue()))
+                        .param("city", CityType.GYEONGSANG.getValue()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()))
