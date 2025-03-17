@@ -1,13 +1,10 @@
 package com.triptune.travel.entity;
 
-import com.triptune.bookmark.entity.Bookmark;
 import com.triptune.common.entity.*;
-import com.triptune.schedule.entity.TravelRoute;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -122,7 +119,11 @@ public class TravelPlace {
                 .orElse(null);
     }
 
-    public void updateBookmarkCnt() {
+    public void increaseBookmarkCnt() {
         this.bookmarkCnt++;
+    }
+
+    public void decreaseBookmarkCnt(){
+        this.bookmarkCnt--;
     }
 }

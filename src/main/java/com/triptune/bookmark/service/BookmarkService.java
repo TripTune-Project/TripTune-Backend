@@ -37,7 +37,7 @@ public class BookmarkService {
         Bookmark bookmark = Bookmark.from(member, travelPlace);
         bookmarkRepository.save(bookmark);
 
-        travelPlace.updateBookmarkCnt();
+        travelPlace.increaseBookmarkCnt();
     }
 
 
@@ -57,6 +57,9 @@ public class BookmarkService {
         }
 
         bookmarkRepository.deleteByMember_UserIdAndTravelPlace_PlaceId(userId, placeId);
+
+        TravelPlace travelPlace = findTravelPlaceByPlaceId(placeId);
+        travelPlace.decreaseBookmarkCnt();
     }
 
     private boolean isExistBookmark(String userId, Long placeId){

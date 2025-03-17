@@ -84,6 +84,7 @@ public class TravelControllerTest extends TravelTest {
         city = cityRepository.save(createCity(country));
         district1 = districtRepository.save(createDistrict(city, "강남"));
         District district2 = districtRepository.save(createDistrict(city, "강남구"));
+
         apiCategory = apiCategoryRepository.save(createApiCategory());
         attractionContentType = apiContentTypeRepository.save(createApiContentType(ThemeType.ATTRACTIONS));
 
@@ -356,26 +357,26 @@ public class TravelControllerTest extends TravelTest {
     void findPopularTravelPlacesByCity_ALL() throws Exception {
         City busan = cityRepository.save(createCity(country, "부산"));
         District busanDistrict = districtRepository.save(createDistrict(busan, "금정구"));
-        TravelPlace travelPlace3 = travelPlaceRepository.save(createTravelPlace(null, country, busan, busanDistrict, apiCategory, 5));
+        TravelPlace travelPlace3 = travelPlaceRepository.save(createTravelPlace(null, country, busan, busanDistrict, apiCategory, "금정 여행지", 5));
         TravelImage busanImage1 = travelImageRepository.save(createTravelImage(travelPlace3, "부산이미지1", true));
         travelImageRepository.save(createTravelImage(travelPlace3, "부산이미지2", false));
 
         City jeolla = cityRepository.save(createCity(country, "전라남도"));
         District jeollaDistrict = districtRepository.save(createDistrict(busan, "보성구"));
-        TravelPlace travelPlace4 = travelPlaceRepository.save(createTravelPlace(null, country, jeolla, jeollaDistrict, apiCategory, 10));
+        TravelPlace travelPlace4 = travelPlaceRepository.save(createTravelPlace(null, country, jeolla, jeollaDistrict, apiCategory, "보성 여행지", 10));
 
         mockMvc.perform(get("/api/travels/popular")
                         .param("city", CityType.ALL.getValue()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()))
-                .andExpect(jsonPath("$.data[0].placeId").value(travelPlace4.getPlaceId()))
+                .andExpect(jsonPath("$.data[0].placeName").value(travelPlace4.getPlaceName()))
                 .andExpect(jsonPath("$.data[0].thumbnailUrl").isEmpty())
-                .andExpect(jsonPath("$.data[1].placeId").value(travelPlace3.getPlaceId()))
+                .andExpect(jsonPath("$.data[1].placeName").value(travelPlace3.getPlaceName()))
                 .andExpect(jsonPath("$.data[1].thumbnailUrl").value(busanImage1.getS3ObjectUrl()))
-                .andExpect(jsonPath("$.data[2].placeId").value(travelPlace1.getPlaceId()))
+                .andExpect(jsonPath("$.data[2].placeName").value(travelPlace1.getPlaceName()))
                 .andExpect(jsonPath("$.data[2].thumbnailUrl").value(travelImage1.getS3ObjectUrl()))
-                .andExpect(jsonPath("$.data[3].placeId").value(travelPlace2.getPlaceId()))
+                .andExpect(jsonPath("$.data[3].placeName").value(travelPlace2.getPlaceName()))
                 .andExpect(jsonPath("$.data[3].thumbnailUrl").isEmpty());
 
     }
@@ -386,22 +387,22 @@ public class TravelControllerTest extends TravelTest {
         // given
         City gueongsang1 = cityRepository.save(createCity(country, "경상북도"));
         District gueongsang1District = districtRepository.save(createDistrict(gueongsang1, "구미시"));
-        TravelPlace travelPlace3 = travelPlaceRepository.save(createTravelPlace(null, country, gueongsang1, gueongsang1District, apiCategory, 10));
+        TravelPlace travelPlace3 = travelPlaceRepository.save(createTravelPlace(null, country, gueongsang1, gueongsang1District, apiCategory, "구미 여행지", 10));
         TravelImage gueongsang1Image1 = travelImageRepository.save(createTravelImage(travelPlace3, "경상이미지1", true));
         travelImageRepository.save(createTravelImage(travelPlace3, "경상이미지2", false));
 
         City gueongsang2 = cityRepository.save(createCity(country, "경상남도"));
         District gueongsang2District = districtRepository.save(createDistrict(gueongsang2, "통영시"));
-        TravelPlace travelPlace4 = travelPlaceRepository.save(createTravelPlace(null, country, gueongsang2, gueongsang2District, apiCategory, 5));
+        TravelPlace travelPlace4 = travelPlaceRepository.save(createTravelPlace(null, country, gueongsang2, gueongsang2District, apiCategory, "통영 여행지", 5));
 
         mockMvc.perform(get("/api/travels/popular")
                         .param("city", CityType.GUEONGSANG.getValue()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()))
-                .andExpect(jsonPath("$.data[0].placeId").value(travelPlace3.getPlaceId()))
+                .andExpect(jsonPath("$.data[0].placeName").value(travelPlace3.getPlaceName()))
                 .andExpect(jsonPath("$.data[0].thumbnailUrl").value(gueongsang1Image1.getS3ObjectUrl()))
-                .andExpect(jsonPath("$.data[1].placeId").value(travelPlace4.getPlaceId()))
+                .andExpect(jsonPath("$.data[1].placeName").value(travelPlace4.getPlaceName()))
                 .andExpect(jsonPath("$.data[1].thumbnailUrl").isEmpty());
 
     }
