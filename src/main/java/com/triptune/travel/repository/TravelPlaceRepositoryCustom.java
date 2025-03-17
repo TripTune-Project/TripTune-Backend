@@ -8,6 +8,7 @@ import com.triptune.travel.dto.response.PlaceResponse;
 import com.triptune.travel.dto.response.PlaceSimpleResponse;
 import com.triptune.travel.entity.TravelPlace;
 import com.triptune.travel.enumclass.CityType;
+import com.triptune.travel.enumclass.ThemeType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -20,4 +21,5 @@ public interface TravelPlaceRepositoryCustom {
     Page<PlaceResponse> searchTravelPlaces(Pageable pageable, String keyword);
     Integer countTotalElements(BooleanExpression booleanExpression);
     List<PlaceSimpleResponse> findPopularTravelPlacesByCity(CityType cityType);
+    List<PlaceSimpleResponse> findRecommendTravelPlacesByTheme(ThemeType themeType);
 }

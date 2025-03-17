@@ -6,17 +6,18 @@ import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.core.types.dsl.NumberExpression;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import com.triptune.common.entity.QApiContentType;
 import com.triptune.common.entity.QCity;
-import com.triptune.travel.dto.request.PlaceLocationRequest;
+import com.triptune.global.util.PageUtils;
 import com.triptune.travel.dto.PlaceLocation;
+import com.triptune.travel.dto.request.PlaceLocationRequest;
 import com.triptune.travel.dto.request.PlaceSearchRequest;
 import com.triptune.travel.dto.response.PlaceResponse;
 import com.triptune.travel.dto.response.PlaceSimpleResponse;
 import com.triptune.travel.entity.QTravelImage;
 import com.triptune.travel.entity.QTravelPlace;
-import com.triptune.travel.entity.TravelPlace;
-import com.triptune.global.util.PageUtils;
 import com.triptune.travel.enumclass.CityType;
+import com.triptune.travel.enumclass.ThemeType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -35,12 +36,14 @@ public class TravelPlaceRepositoryCustomImpl implements TravelPlaceRepositoryCus
     private final QTravelPlace travelPlace;
     private final QTravelImage travelImage;
     private final QCity city;
+    private final QApiContentType apiContentType;
 
     public TravelPlaceRepositoryCustomImpl(JPAQueryFactory jpaQueryFactory){
         this.jpaQueryFactory = jpaQueryFactory;
         this.travelPlace = QTravelPlace.travelPlace;
         this.travelImage = QTravelImage.travelImage;
         this.city = QCity.city;
+        this.apiContentType = QApiContentType.apiContentType;
     }
 
 
@@ -140,6 +143,23 @@ public class TravelPlaceRepositoryCustomImpl implements TravelPlaceRepositoryCus
         int totalElements = countTotalElements(booleanExpression);
 
         return PageUtils.createPage(content, pageable, totalElements);
+    }
+
+
+
+    private NumberExpression<Double> getHarversineFormula(double latRad, double lonRad){
+        double earthRadius = 6371.0;
+
+        // harversine 공식을 적용하여 거리 계산
+        return acos(
+                sin(radians(constant(latRad)))
+                        .multiply(sin(radians(travelPlace.latitude)))
+                        .add(
+                                cos(radians(constant(latRad)))
+                                        .multiply(cos(radians(travelPlace.latitude)))
+                                        .multiply(cos(radians(constant(lonRad)).subtract(radians(travelPlace.longitude))))
+                        )
+        ).multiply(earthRadius);
     }
 
 
@@ -268,21 +288,33 @@ public class TravelPlaceRepositoryCustomImpl implements TravelPlaceRepositoryCus
                 .fetch();
     }
 
+    @Override
+    public List<PlaceSimpleResponse> findRecommendTravelPlacesByTheme(ThemeType themeType) {
+        return jpaQueryFactory
+                .select(Projections.constructor(PlaceSimpleResponse.class,
+                        travelPlace.placeId,
+                        travelPlace.address,
+                        travelPlace.detailAddress,
+                        travelPlace.placeName,
+                        travelImage.s3ObjectUrl))
+                .from(travelPlace)
+                .leftJoin(travelImage)
+                .on(travelImage.travelPlace.placeId.eq(travelPlace.placeId)
+                        .and(travelImage.isThumbnail.isTrue()))
+                .join(travelPlace.apiContentType, apiContentType)
+                .where(themeTypeCondition(themeType))
+                .orderBy(travelPlace.bookmarkCnt.desc())
+                .limit(CAROUSEL_LIMIT)
+                .fetch();
 
-    private NumberExpression<Double> getHarversineFormula(double latRad, double lonRad){
-        double earthRadius = 6371.0;
+    }
 
-        // harversine 공식을 적용하여 거리 계산
+    private BooleanExpression themeTypeCondition(ThemeType themeType){
+        if (themeType == ThemeType.All){
+            return null;
+        }
 
-        return acos(
-                sin(radians(constant(latRad)))
-                        .multiply(sin(radians(travelPlace.latitude)))
-                        .add(
-                                cos(radians(constant(latRad)))
-                                        .multiply(cos(radians(travelPlace.latitude)))
-                                        .multiply(cos(radians(constant(lonRad)).subtract(radians(travelPlace.longitude))))
-                        )
-        ).multiply(earthRadius);
+        return travelPlace.apiContentType.apiContentTypeId.eq(themeType.getApiContentTypeId());
     }
 
     private String accuracyQuery(){

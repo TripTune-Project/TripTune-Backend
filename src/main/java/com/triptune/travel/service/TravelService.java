@@ -12,6 +12,7 @@ import com.triptune.travel.dto.response.PlaceResponse;
 import com.triptune.travel.dto.response.PlaceSimpleResponse;
 import com.triptune.travel.entity.TravelPlace;
 import com.triptune.travel.enumclass.CityType;
+import com.triptune.travel.enumclass.ThemeType;
 import com.triptune.travel.repository.TravelImageRepository;
 import com.triptune.travel.repository.TravelPlaceRepository;
 import jakarta.transaction.Transactional;
@@ -97,5 +98,9 @@ public class TravelService {
 
     public List<PlaceSimpleResponse> getPopularTravelPlacesByCity(CityType cityType) {
         return travelPlaceRepository.findPopularTravelPlacesByCity(cityType);
+    }
+
+    public List<PlaceSimpleResponse> getRecommendTravelPlacesByTheme(ThemeType themeType) {
+        return travelPlaceRepository.findRecommendTravelPlacesByTheme(themeType);
     }
 }

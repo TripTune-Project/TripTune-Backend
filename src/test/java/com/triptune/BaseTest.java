@@ -14,6 +14,7 @@ import com.triptune.schedule.enumclass.AttendeePermission;
 import com.triptune.schedule.enumclass.AttendeeRole;
 import com.triptune.travel.entity.TravelImage;
 import com.triptune.travel.entity.TravelPlace;
+import com.triptune.travel.enumclass.ThemeType;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -155,6 +156,50 @@ public abstract class BaseTest {
                 .build();
     }
 
+
+    protected TravelPlace createTravelPlace(Long placeId, Country country, City city, District district, ApiCategory apiCategory, ApiContentType apiContentType){
+        return TravelPlace.builder()
+                .placeId(placeId)
+                .country(country)
+                .city(city)
+                .district(district)
+                .apiCategory(apiCategory)
+                .apiContentType(apiContentType)
+                .address("테스트 주소")
+                .detailAddress("테스트 상세주소")
+                .homepage("www.test.com")
+                .phoneNumber("010-0000-0000")
+                .latitude(37.5)
+                .longitude(127.0281573537)
+                .placeName("테스트 장소명")
+                .bookmarkCnt(0)
+                .createdAt(LocalDateTime.now())
+                .description("테스트 장소 설명")
+                .build();
+    }
+
+
+    protected TravelPlace createTravelPlace(Long placeId, Country country, City city, District district, ApiCategory apiCategory, ApiContentType apiContentType, int bookmarkCnt){
+        return TravelPlace.builder()
+                .placeId(placeId)
+                .country(country)
+                .city(city)
+                .district(district)
+                .apiCategory(apiCategory)
+                .apiContentType(apiContentType)
+                .address("테스트 주소")
+                .detailAddress("테스트 상세주소")
+                .homepage("www.test.com")
+                .phoneNumber("010-0000-0000")
+                .latitude(37.5)
+                .longitude(127.0281573537)
+                .placeName("테스트 장소명")
+                .bookmarkCnt(bookmarkCnt)
+                .createdAt(LocalDateTime.now())
+                .description("테스트 장소 설명")
+                .build();
+    }
+
     protected TravelPlace createTravelPlace(Long placeId, Country country, City city, District district, ApiCategory apiCategory, double latitude, double longitude, List<TravelImage> travelImageList){
         return TravelPlace.builder()
                 .placeId(placeId)
@@ -173,6 +218,28 @@ public abstract class BaseTest {
                 .createdAt(LocalDateTime.now())
                 .description("테스트 장소 설명")
                 .travelImageList(travelImageList)
+                .build();
+    }
+
+
+    protected TravelPlace createTravelPlace(Long placeId, Country country, City city, District district, ApiCategory apiCategory, ApiContentType apiContentType, double latitude, double longitude){
+        return TravelPlace.builder()
+                .placeId(placeId)
+                .country(country)
+                .city(city)
+                .district(district)
+                .apiCategory(apiCategory)
+                .apiContentType(apiContentType)
+                .address("테스트 주소")
+                .detailAddress("테스트 상세주소")
+                .homepage("www.test.com")
+                .phoneNumber("010-0000-0000")
+                .latitude(latitude)
+                .longitude(longitude)
+                .placeName("테스트 장소명")
+                .bookmarkCnt(0)
+                .createdAt(LocalDateTime.now())
+                .description("테스트 장소 설명")
                 .build();
     }
 
@@ -375,9 +442,10 @@ public abstract class BaseTest {
     }
 
 
-    protected ApiContentType createApiContentType(String contentTypeName){
+    protected ApiContentType createApiContentType(ThemeType themeType){
         return ApiContentType.builder()
-                .contentTypeName(contentTypeName)
+                .contentTypeName(themeType.getApiContentTypeName())
+                .apiContentTypeId(themeType.getApiContentTypeId())
                 .build();
     }
 

@@ -12,6 +12,7 @@ import com.triptune.schedule.enumclass.AttendeePermission;
 import com.triptune.schedule.enumclass.AttendeeRole;
 import com.triptune.travel.entity.TravelImage;
 import com.triptune.travel.entity.TravelPlace;
+import com.triptune.travel.enumclass.ThemeType;
 import com.triptune.travel.repository.TravelImageRepository;
 import com.triptune.travel.repository.TravelPlaceRepository;
 import com.triptune.global.config.QueryDSLConfig;
@@ -78,7 +79,7 @@ public class TravelScheduleRepositoryTest extends ScheduleTest {
         City city = cityRepository.save(createCity(country));
         District district = districtRepository.save(createDistrict(city, "강남구"));
         ApiCategory apiCategory = apiCategoryRepository.save(createApiCategory());
-        ApiContentType apiContentType = apiContentTypeRepository.save(createApiContentType("관광지"));
+        ApiContentType apiContentType = apiContentTypeRepository.save(createApiContentType(ThemeType.ATTRACTIONS));
 
         TravelImage travelImage1 = travelImageRepository.save(createTravelImage(travelPlace, "test1", true));
         TravelImage travelImage2 = travelImageRepository.save(createTravelImage(travelPlace, "test2", false));

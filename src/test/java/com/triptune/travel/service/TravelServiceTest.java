@@ -15,6 +15,7 @@ import com.triptune.travel.dto.response.PlaceSimpleResponse;
 import com.triptune.travel.entity.TravelImage;
 import com.triptune.travel.entity.TravelPlace;
 import com.triptune.travel.enumclass.CityType;
+import com.triptune.travel.enumclass.ThemeType;
 import com.triptune.travel.repository.TravelImageRepository;
 import com.triptune.travel.repository.TravelPlaceRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -61,6 +62,8 @@ public class TravelServiceTest extends TravelTest {
     private TravelImage travelImage1;
     private TravelImage travelImage2;
 
+    private ApiContentType attractionContentType;
+
 
     @BeforeEach
     void setUp(){
@@ -68,13 +71,16 @@ public class TravelServiceTest extends TravelTest {
         city = createCity(country);
         district = createDistrict(city, "강남구");
         apiCategory = createApiCategory();
-
-        travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, "강남 여행지1", 0);
+        attractionContentType = createApiContentType(ThemeType.ATTRACTIONS);
+      
+        travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, attractionContentType, 0);
+          
         travelImage1 = createTravelImage(travelPlace1, "test1", true);
         travelImage2 = createTravelImage(travelPlace1, "test2", false);
 
-        travelPlace2 = createTravelPlace(2L, country, city, district, apiCategory, 12.333, 160.3333);
 
+        ApiContentType sportsContentType = createApiContentType(ThemeType.SPORTS);
+        travelPlace2 = createTravelPlace(2L, country, city, district, apiCategory, sportsContentType, 12.333, 160.3333);
     }
 
 
@@ -386,7 +392,7 @@ public class TravelServiceTest extends TravelTest {
     @DisplayName("로그인한 사용자의 숙박을 제외한 여행지 상세 조회")
     void getTravelDetails_loginAndExceptLodging(){
         // given
-        ApiContentType apiContentType = createApiContentType("관광지");
+        ApiContentType apiContentType = createApiContentType(ThemeType.ATTRACTIONS);
         travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, apiContentType, "상시", List.of(travelImage1, travelImage2));
 
         when(travelPlaceRepository.findById(anyLong())).thenReturn(Optional.of(travelPlace1));
@@ -411,7 +417,7 @@ public class TravelServiceTest extends TravelTest {
     @DisplayName("익명의 사용자의 숙박을 제외한 여행지 상세 조회")
     void getTravelDetails_anonymousAndExceptLodging(){
         // given
-        ApiContentType apiContentType = createApiContentType("관광지");
+        ApiContentType apiContentType = createApiContentType(ThemeType.ATTRACTIONS);
         travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, apiContentType, "상시", List.of(travelImage1, travelImage2));
 
 
@@ -436,7 +442,7 @@ public class TravelServiceTest extends TravelTest {
     @DisplayName("로그인한 사용자의 숙박 여행지 상세 조회")
     void getTravelDetails_loginAndLodging(){
         // given
-        ApiContentType apiContentType = createApiContentType("숙박");
+        ApiContentType apiContentType = createApiContentType(ThemeType.LODGING);
         travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, apiContentType, "13:00", "11:00", List.of(travelImage1, travelImage2));
 
         when(travelPlaceRepository.findById(anyLong())).thenReturn(Optional.of(travelPlace1));
@@ -464,7 +470,7 @@ public class TravelServiceTest extends TravelTest {
     @DisplayName("익명의 사용자의 숙박 여행지 상세 조회")
     void getTravelDetails_anonymousAndLodging(){
         // given
-        ApiContentType apiContentType = createApiContentType("숙박");
+        ApiContentType apiContentType = createApiContentType(ThemeType.ATTRACTIONS);
         travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, apiContentType, "13:00", "11:00", List.of(travelImage1, travelImage2));
 
         when(travelPlaceRepository.findById(anyLong())).thenReturn(Optional.of(travelPlace1));
@@ -665,6 +671,88 @@ public class TravelServiceTest extends TravelTest {
 
         // when
         List<PlaceSimpleResponse> response = travelPlaceRepository.findPopularTravelPlacesByCity(CityType.JEOLLA);
+
+        // then
+        assertThat(response.size()).isEqualTo(0);
+        assertThat(response).isEmpty();
+
+    }
+
+
+    @Test
+    @DisplayName("추천 테마 여행지 조회 - 전체")
+    void findRecommendTravelPlacesByTheme_ALL(){
+        // given
+        City busan = createCity(country, "부산");
+        District busanDistrict = createDistrict(busan, "금정구");
+        ApiContentType cultureContentType = createApiContentType(ThemeType.CULTURE);
+        TravelPlace travelPlace3 = createTravelPlace(null, country, busan, busanDistrict, apiCategory, cultureContentType, 5);
+        TravelImage busanImage1 = createTravelImage(travelPlace3, "부산이미지1", true);
+
+        City jeolla = createCity(country, "전라남도");
+        District jeollaDistrict = createDistrict(busan, "보성구");
+        TravelPlace travelPlace4 = createTravelPlace(null, country, jeolla, jeollaDistrict, apiCategory, attractionContentType, 10);
+
+        List<PlaceSimpleResponse> mockResult = List.of(
+                createPlaceSimpleResponse(travelPlace4, null),
+                createPlaceSimpleResponse(travelPlace3, busanImage1.getS3ObjectUrl()),
+                createPlaceSimpleResponse(travelPlace1, travelImage1.getS3ObjectUrl()),
+                createPlaceSimpleResponse(travelPlace2, null)
+        );
+
+        when(travelPlaceRepository.findRecommendTravelPlacesByTheme(ThemeType.All)).thenReturn(mockResult);
+
+
+        // when
+        List<PlaceSimpleResponse> response = travelPlaceRepository.findRecommendTravelPlacesByTheme(ThemeType.All);
+
+        // then
+        assertThat(response.size()).isEqualTo(4);
+        assertThat(response.get(0).getPlaceId()).isEqualTo(travelPlace4.getPlaceId());
+        assertThat(response.get(0).getThumbnailUrl()).isNull();
+        assertThat(response.get(1).getPlaceId()).isEqualTo(travelPlace3.getPlaceId());
+        assertThat(response.get(1).getThumbnailUrl()).isEqualTo(busanImage1.getS3ObjectUrl());
+        assertThat(response.get(2).getPlaceId()).isEqualTo(travelPlace1.getPlaceId());
+        assertThat(response.get(2).getThumbnailUrl()).isEqualTo(travelImage1.getS3ObjectUrl());
+        assertThat(response.get(3).getPlaceId()).isEqualTo(travelPlace2.getPlaceId());
+        assertThat(response.get(3).getThumbnailUrl()).isNull();
+
+    }
+
+    @Test
+    @DisplayName("추천 테마 여행지 조회 - 관광지")
+    void findRecommendTravelPlacesByTheme_ATTRACTIONS(){
+        // given
+        City jeolla2 = createCity(country, "전라남도");
+        District jeolla2District = createDistrict(jeolla2, "보성구");
+        TravelPlace travelPlace4 = createTravelPlace(null, country, jeolla2, jeolla2District, apiCategory, attractionContentType, 10);
+
+        List<PlaceSimpleResponse> mockResult = List.of(
+                createPlaceSimpleResponse(travelPlace4, null),
+                createPlaceSimpleResponse(travelPlace1, travelImage1.getS3ObjectUrl())
+        );
+
+        when(travelPlaceRepository.findRecommendTravelPlacesByTheme(ThemeType.ATTRACTIONS)).thenReturn(mockResult);
+
+        // when
+        List<PlaceSimpleResponse> response = travelPlaceRepository.findRecommendTravelPlacesByTheme(ThemeType.ATTRACTIONS);
+
+        // then
+        assertThat(response.size()).isEqualTo(2);
+        assertThat(response.get(0).getPlaceId()).isEqualTo(travelPlace4.getPlaceId());
+        assertThat(response.get(0).getThumbnailUrl()).isNull();
+        assertThat(response.get(1).getPlaceId()).isEqualTo(travelPlace1.getPlaceId());
+        assertThat(response.get(1).getThumbnailUrl()).isEqualTo(travelImage1.getS3ObjectUrl());
+
+    }
+
+
+    @Test
+    @DisplayName("추천 테마 여행지 조회 시 데이터 없는 경우")
+    void findRecommendTravelPlacesByTheme_empty(){
+        // given
+        // when
+        List<PlaceSimpleResponse> response = travelPlaceRepository.findRecommendTravelPlacesByTheme(ThemeType.FOOD);
 
         // then
         assertThat(response.size()).isEqualTo(0);
