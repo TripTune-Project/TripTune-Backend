@@ -24,6 +24,7 @@ public enum ErrorCode {
     ILLEGAL_BOOKMARK_SORT_TYPE(HttpStatus.BAD_REQUEST, "잘못된 정렬 요청입니다"),
     ILLEGAL_SCHEDULE_SEARCH_TYPE(HttpStatus.BAD_REQUEST, "잘못된 검색 타입 요청입니다"),
     ILLEGAL_CITY_TYPE(HttpStatus.BAD_REQUEST, "잘못된 지역 요청입니다."),
+    ILLEGAL_THEME_TYPE(HttpStatus.BAD_REQUEST, "잘못된 테마 요청입니다."),
 
     // 사용자
     MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "사용자 정보를 찾을 수 없습니다."),

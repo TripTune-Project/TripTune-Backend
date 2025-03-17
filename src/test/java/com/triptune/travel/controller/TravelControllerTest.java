@@ -11,6 +11,7 @@ import com.triptune.travel.dto.response.PlaceSimpleResponse;
 import com.triptune.travel.entity.TravelImage;
 import com.triptune.travel.entity.TravelPlace;
 import com.triptune.travel.enumclass.CityType;
+import com.triptune.travel.enumclass.ThemeType;
 import com.triptune.travel.repository.TravelImageRepository;
 import com.triptune.travel.repository.TravelPlaceRepository;
 import com.triptune.global.enumclass.ErrorCode;
@@ -32,6 +33,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -42,26 +44,24 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @ActiveProfiles("h2")
 public class TravelControllerTest extends TravelTest {
-
-    private final WebApplicationContext wac;
-    private final TravelPlaceRepository travelPlaceRepository;
-    private final CountryRepository countryRepository;
-    private final CityRepository cityRepository;
-    private final DistrictRepository districtRepository;
-    private final ApiCategoryRepository apiCategoryRepository;
-    private final TravelImageRepository travelImageRepository;
-    private final ApiContentTypeRepository apiContentTypeRepository;
-    private final BookmarkRepository bookmarkRepository;
-    private final MemberRepository memberRepository;
-
+    @Autowired private WebApplicationContext wac;
+    @Autowired private TravelPlaceRepository travelPlaceRepository;
+    @Autowired private CountryRepository countryRepository;
+    @Autowired private CityRepository cityRepository;
+    @Autowired private DistrictRepository districtRepository;
+    @Autowired private ApiCategoryRepository apiCategoryRepository;
+    @Autowired private TravelImageRepository travelImageRepository;
+    @Autowired private ApiContentTypeRepository apiContentTypeRepository;
+    @Autowired private BookmarkRepository bookmarkRepository;
+    @Autowired private MemberRepository memberRepository;
 
     private MockMvc mockMvc;
 
     private Country country;
     private City city;
     private District district1;
-    private District district2;
     private ApiCategory apiCategory;
+    private ApiContentType attractionContentType;
 
     private TravelPlace travelPlace1;
     private TravelPlace travelPlace2;
@@ -71,23 +71,9 @@ public class TravelControllerTest extends TravelTest {
 
     private Member member;
 
-    @Autowired
-    public TravelControllerTest(WebApplicationContext wac, TravelPlaceRepository travelPlaceRepository, CountryRepository countryRepository, CityRepository cityRepository, DistrictRepository districtRepository, ApiCategoryRepository apiCategoryRepository, TravelImageRepository travelImageRepository, ApiContentTypeRepository apiContentTypeRepository, BookmarkRepository bookmarkRepository, MemberRepository memberRepository) {
-        this.wac = wac;
-        this.travelPlaceRepository = travelPlaceRepository;
-        this.countryRepository = countryRepository;
-        this.cityRepository = cityRepository;
-        this.districtRepository = districtRepository;
-        this.apiCategoryRepository = apiCategoryRepository;
-        this.travelImageRepository = travelImageRepository;
-        this.apiContentTypeRepository = apiContentTypeRepository;
-        this.bookmarkRepository = bookmarkRepository;
-        this.memberRepository = memberRepository;
-    }
-
 
     @BeforeEach
-    void setUp(){
+    void setUp() {
         mockMvc = MockMvcBuilders.webAppContextSetup(wac)
                 .addFilter(new CharacterEncodingFilter("UTF-8", true))
                 .apply(springSecurity())
@@ -97,11 +83,12 @@ public class TravelControllerTest extends TravelTest {
         country = countryRepository.save(createCountry());
         city = cityRepository.save(createCity(country));
         district1 = districtRepository.save(createDistrict(city, "강남"));
-        district2 = districtRepository.save(createDistrict(city, "강남구"));
+        District district2 = districtRepository.save(createDistrict(city, "강남구"));
         apiCategory = apiCategoryRepository.save(createApiCategory());
+        attractionContentType = apiContentTypeRepository.save(createApiContentType(ThemeType.ATTRACTIONS));
 
-        travelPlace1 = travelPlaceRepository.save(createTravelPlace(null, country, city, district1, apiCategory));
-        travelPlace2 = travelPlaceRepository.save(createTravelPlace(null, country, city, district2, apiCategory, 37.50303, 127.0731));
+        travelPlace1 = travelPlaceRepository.save(createTravelPlace(null, country, city, district1, apiCategory, attractionContentType, 0));
+        travelPlace2 = travelPlaceRepository.save(createTravelPlace(null, country, city, district2, apiCategory, attractionContentType, 37.50303, 127.0731));
 
         travelImage1 = travelImageRepository.save(createTravelImage(travelPlace1, "test1", true));
         travelImage2 = travelImageRepository.save(createTravelImage(travelPlace1, "test2", false));
@@ -272,7 +259,7 @@ public class TravelControllerTest extends TravelTest {
         mockMvc.perform(post("/api/travels/search")
                         .param("page", "1")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(createTravelSearchRequest( "강남"))))
+                        .content(toJsonString(createTravelSearchRequest("강남"))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.totalElements").value(2))
                 .andExpect(jsonPath("$.data.content[0].district").value(travelPlace1.getDistrict().getDistrictName()))
@@ -324,7 +311,7 @@ public class TravelControllerTest extends TravelTest {
     @DisplayName("로그인한 사용자의 여행지 상세정보 조회")
     @WithMockUser("member")
     void getTravelDetails_login() throws Exception {
-        ApiContentType apiContentType = apiContentTypeRepository.save(createApiContentType("관광지"));
+        ApiContentType apiContentType = apiContentTypeRepository.save(createApiContentType(ThemeType.ATTRACTIONS));
         travelPlace1 = travelPlaceRepository.save(createTravelPlace(null, country, city, district1, apiCategory, apiContentType, List.of(travelImage1, travelImage2)));
 
         bookmarkRepository.save(createBookmark(null, member, travelPlace1, LocalDateTime.now()));
@@ -340,7 +327,7 @@ public class TravelControllerTest extends TravelTest {
     @Test
     @DisplayName("익명 사용자의 여행지 상세정보 조회")
     void getTravelDetails_anonymous() throws Exception {
-        ApiContentType apiContentType = apiContentTypeRepository.save(createApiContentType("관광지"));
+        ApiContentType apiContentType = apiContentTypeRepository.save(createApiContentType(ThemeType.ATTRACTIONS));
         travelPlace1 = travelPlaceRepository.save(createTravelPlace(null, country, city, district1, apiCategory, apiContentType, List.of(travelImage1, travelImage2)));
 
         bookmarkRepository.save(createBookmark(null, member, travelPlace1, LocalDateTime.now()));
@@ -429,7 +416,6 @@ public class TravelControllerTest extends TravelTest {
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()))
                 .andExpect(jsonPath("$.data").isEmpty());
-
     }
 
     @Test
@@ -440,8 +426,87 @@ public class TravelControllerTest extends TravelTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value(ErrorCode.ILLEGAL_CITY_TYPE.getMessage()));
-
     }
 
 
+    @Test
+    @DisplayName("추천 테마 여행지 조회 - 전체")
+    void findRecommendTravelPlacesByTheme_ALL() throws Exception{
+        // given
+        City busan = cityRepository.save(createCity(country, "부산"));
+        District busanDistrict = districtRepository.save(createDistrict(busan, "금정구"));
+        ApiContentType cultureContentType = apiContentTypeRepository.save(createApiContentType(ThemeType.CULTURE));
+        TravelPlace travelPlace3 = travelPlaceRepository.save(createTravelPlace(null, country, busan, busanDistrict, apiCategory, cultureContentType, 5));
+        TravelImage busanImage1 = travelImageRepository.save(createTravelImage(travelPlace3, "부산이미지1", true));
+        travelImageRepository.save(createTravelImage(travelPlace3, "부산이미지2", false));
+
+        City jeolla = cityRepository.save(createCity(country, "전라남도"));
+        District jeollaDistrict = districtRepository.save(createDistrict(busan, "보성구"));
+        TravelPlace travelPlace4 = travelPlaceRepository.save(createTravelPlace(null, country, jeolla, jeollaDistrict, apiCategory, attractionContentType, 10));
+
+        mockMvc.perform(get("/api/travels/recommend")
+                        .param("theme", ThemeType.All.getValue()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()))
+                .andExpect(jsonPath("$.data[0].placeId").value(travelPlace4.getPlaceId()))
+                .andExpect(jsonPath("$.data[0].thumbnailUrl").isEmpty())
+                .andExpect(jsonPath("$.data[1].placeId").value(travelPlace3.getPlaceId()))
+                .andExpect(jsonPath("$.data[1].thumbnailUrl").value(busanImage1.getS3ObjectUrl()))
+                .andExpect(jsonPath("$.data[2].placeId").value(travelPlace1.getPlaceId()))
+                .andExpect(jsonPath("$.data[2].thumbnailUrl").value(travelImage1.getS3ObjectUrl()))
+                .andExpect(jsonPath("$.data[3].placeId").value(travelPlace2.getPlaceId()))
+                .andExpect(jsonPath("$.data[3].thumbnailUrl").isEmpty());
+
+    }
+
+    @Test
+    @DisplayName("추천 테마 여행지 조회 - 관광지")
+    void findRecommendTravelPlacesByTheme_ATTRACTIONS() throws Exception {
+        // given
+        City jeolla1 = cityRepository.save(createCity(country, "전북특별자치도"));
+        District jeolla1District = districtRepository.save(createDistrict(jeolla1, "고창군"));
+        ApiContentType cultureContentType = apiContentTypeRepository.save(createApiContentType(ThemeType.CULTURE));
+        TravelPlace travelPlace3 = travelPlaceRepository.save(createTravelPlace(null, country, jeolla1, jeolla1District, apiCategory, cultureContentType, 5));
+        travelImageRepository.save(createTravelImage(travelPlace3, "부산이미지1", true));
+        travelImageRepository.save(createTravelImage(travelPlace3, "부산이미지2", false));
+
+        City jeolla2 = cityRepository.save(createCity(country, "전라남도"));
+        District jeolla2District = districtRepository.save(createDistrict(jeolla2, "보성구"));
+        TravelPlace travelPlace4 = travelPlaceRepository.save(createTravelPlace(null, country, jeolla2, jeolla2District, apiCategory, attractionContentType, 10));
+
+        mockMvc.perform(get("/api/travels/recommend")
+                        .param("theme", ThemeType.ATTRACTIONS.getValue()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()))
+                .andExpect(jsonPath("$.data[0].placeId").value(travelPlace4.getPlaceId()))
+                .andExpect(jsonPath("$.data[0].thumbnailUrl").isEmpty())
+                .andExpect(jsonPath("$.data[1].placeId").value(travelPlace1.getPlaceId()))
+                .andExpect(jsonPath("$.data[1].thumbnailUrl").value(travelImage1.getS3ObjectUrl()));
+    }
+
+
+    @Test
+    @DisplayName("추천 테마 여행지 조회 시 데이터 없는 경우")
+    void findRecommendTravelPlacesByTheme_empty() throws Exception {
+        mockMvc.perform(get("/api/travels/recommend")
+                        .param("theme", ThemeType.FOOD.getValue()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()))
+                .andExpect(jsonPath("$.data").isEmpty());
+
+    }
+
+    @Test
+    @DisplayName("추천 테마 여행지 조회 시 파라미터 매칭 실패로 예외 발생")
+    void findRecommendTravelPlacesByTheme_illegalParam() throws Exception {
+        mockMvc.perform(get("/api/travels/recommend")
+                        .param("theme", "foo"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value(ErrorCode.ILLEGAL_THEME_TYPE.getMessage()));
+
+    }
 }

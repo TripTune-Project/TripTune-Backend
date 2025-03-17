@@ -6,6 +6,7 @@ import com.triptune.travel.dto.request.PlaceLocationRequest;
 import com.triptune.travel.dto.request.PlaceSearchRequest;
 import com.triptune.travel.dto.response.PlaceSimpleResponse;
 import com.triptune.travel.enumclass.CityType;
+import com.triptune.travel.enumclass.ThemeType;
 import com.triptune.travel.service.TravelService;
 import com.triptune.global.response.pagination.ApiPageResponse;
 import com.triptune.global.response.ApiResponse;
@@ -65,6 +66,14 @@ public class TravelController {
     public ApiResponse<List<PlaceSimpleResponse>> getPopularTravelPlacesByCity(@RequestParam("city") String city){
         CityType cityType = CityType.from(city);
         List<PlaceSimpleResponse> response = travelService.getPopularTravelPlacesByCity(cityType);
+        return ApiResponse.dataResponse(response);
+    }
+
+    @GetMapping("/recommend")
+    @Operation(summary = "추천 테마별 여행지 조회", description = "여행 테마에 따른 여행지 목록을 조회한다.")
+    public ApiResponse<List<PlaceSimpleResponse>> getRecommendTravelPlacesByTheme(@RequestParam("theme") String theme){
+        ThemeType themeType = ThemeType.from(theme);
+        List<PlaceSimpleResponse> response = travelService.getRecommendTravelPlacesByTheme(themeType);
         return ApiResponse.dataResponse(response);
     }
 
