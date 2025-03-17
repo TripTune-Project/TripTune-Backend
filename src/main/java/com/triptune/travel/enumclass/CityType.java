@@ -17,7 +17,7 @@ public enum CityType {
     JEJU( "jeju", Set.of("제주도")),
     GYEONGGI("gyeonggi", Set.of("경기도")),
     GANGWON("gangwon", Set.of("강원특별자치도")),
-    GUEONGSANG("gueongsang", Set.of("경상북도", "경상남도")),
+    GYEONGSANG("gyeongsang", Set.of("경상북도", "경상남도")),
     JEOLLA("jeolla", Set.of("전북특별자치도", "전라남도")),
     CHUNGCHEONG("chungcheong", Set.of("충청북도", "충청남도"));
 
