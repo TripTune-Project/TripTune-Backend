@@ -43,6 +43,15 @@ jobs:
 
     - name: Build with Gradle Wrapper
       run: ./gradlew build
+
+    - name: Download Pinpoint Agent from S3
+      run: |
+        mkdir -p ./pinpoint-agent
+        aws s3 cp s3://triptune/pinpoint-agent-3.0.1 ./poinpoint-agent --recursive
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_REGION: ${{ secrets.AWS_REGION }}
     
     - name: Docker Hub login
       run: docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
