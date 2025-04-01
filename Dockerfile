@@ -14,7 +14,7 @@ ENTRYPOINT [
   "-javaagent:/pinpoint-agent/pinpoint-bootstrap-3.0.1.jar", \
   "-Dpinpoint.agentId=appDev", \
   "-Dpinpoint.applicationName=app1", \
-  "-Dpinpoint.config=/pinpoint-agent-3.0.1/pinpoint-root.config", \
+  "-Dpinpoint.config=/pinpoint-agent/pinpoint-root.config", \
   "-Duser.timezone=Asia/Seoul", \
   "-jar", \
   "/app.jar" \
