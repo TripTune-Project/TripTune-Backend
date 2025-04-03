@@ -3,6 +3,7 @@ package com.triptune.profile.controller;
 import com.triptune.member.entity.Member;
 import com.triptune.member.repository.MemberRepository;
 import com.triptune.profile.ProfileImageTest;
+import com.triptune.profile.entity.ProfileImage;
 import com.triptune.profile.repository.ProfileImageRepository;
 import com.triptune.global.enumclass.ErrorCode;
 import com.triptune.global.enumclass.SuccessCode;
@@ -33,23 +34,15 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @ActiveProfiles("h2")
 class ProfileImageControllerTest extends ProfileImageTest {
-    private final WebApplicationContext wac;
-    private final JwtUtils jwtUtils;
-    private final MemberRepository memberRepository;
-    private final ProfileImageRepository profileImageRepository;
 
-    @MockBean
-    private S3Service s3Service;
+    @Autowired private WebApplicationContext wac;
+    @Autowired private JwtUtils jwtUtils;
+    @Autowired private MemberRepository memberRepository;
+    @Autowired private ProfileImageRepository profileImageRepository;
+
+    @MockBean private S3Service s3Service;
 
     private MockMvc mockMvc;
-
-    @Autowired
-    public ProfileImageControllerTest(WebApplicationContext wac, JwtUtils jwtUtils, MemberRepository memberRepository, ProfileImageRepository profileImageRepository) {
-        this.wac = wac;
-        this.jwtUtils = jwtUtils;
-        this.memberRepository = memberRepository;
-        this.profileImageRepository = profileImageRepository;
-    }
 
     @BeforeEach
     void setUp(){
@@ -68,7 +61,9 @@ class ProfileImageControllerTest extends ProfileImageTest {
         MockMultipartFile mockMultipartFile = new MockMultipartFile("profileImage", "newFileOriginalName.jpg", "image/jpg", content);
 
         Member member = memberRepository.save(createMember(null, "member"));
-        profileImageRepository.save(createProfileImage(null, "beforeImage", member));
+        ProfileImage profileImage = profileImageRepository.save(createProfileImage(null, "beforeImage", member));
+
+        member.updateProfileImage(profileImage);
 
         mockMvc.perform(multipart(HttpMethod.PATCH,"/api/profiles")
                         .file(mockMultipartFile))

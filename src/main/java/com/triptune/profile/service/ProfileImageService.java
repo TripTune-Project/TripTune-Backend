@@ -1,6 +1,7 @@
 package com.triptune.profile.service;
 
 import com.triptune.member.entity.Member;
+import com.triptune.member.repository.MemberRepository;
 import com.triptune.profile.entity.ProfileImage;
 import com.triptune.profile.repository.ProfileImageRepository;
 import com.triptune.global.enumclass.ErrorCode;
@@ -53,7 +54,7 @@ public class ProfileImageService {
     }
 
     private ProfileImage getProfileImageByUserId(String userId){
-        return profileImageRepository.findByMember_UserId(userId)
+        return profileImageRepository.findByUserId(userId)
                 .orElseThrow(() -> new DataNotFoundException(ErrorCode.PROFILE_IMAGE_NOT_FOUND));
     }
 

@@ -1,18 +1,14 @@
 package com.triptune.member.entity;
 
-import com.triptune.bookmark.entity.Bookmark;
 import com.triptune.member.dto.request.JoinRequest;
 import com.triptune.member.enumclass.AnonymousValue;
 import com.triptune.profile.entity.ProfileImage;
-import com.triptune.schedule.entity.TravelAttendee;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 @Entity
 @Getter
@@ -24,7 +20,8 @@ public class Member {
     @Column(name = "member_id")
     private Long memberId;
 
-    @OneToOne(mappedBy = "member", cascade = CascadeType.ALL)
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "profile_image_id")
     private ProfileImage profileImage;
 
     @Column(name = "user_id")
@@ -121,5 +118,9 @@ public class Member {
 
     public void updateUpdatedAt() {
         this.updatedAt = LocalDateTime.now();
+    }
+
+    public void updateProfileImage(ProfileImage profileImage) {
+        this.profileImage = profileImage;
     }
 }
