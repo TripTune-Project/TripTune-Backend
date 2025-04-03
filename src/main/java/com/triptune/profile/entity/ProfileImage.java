@@ -20,8 +20,7 @@ public class ProfileImage {
     @Column(name = "profile_image_id")
     private Long profileImageId;
 
-    @OneToOne
-    @JoinColumn(name = "member_id")
+    @OneToOne(mappedBy = "profileImage", fetch = FetchType.LAZY)
     private Member member;
 
     @Column(name = "s3_object_url")
@@ -95,4 +94,5 @@ public class ProfileImage {
         this.fileSize = imageProperties.getSize();
         this.updatedAt = LocalDateTime.now();
     }
+
 }
