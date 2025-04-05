@@ -1,5 +1,6 @@
 package com.triptune.global.filter;
 
+import com.triptune.global.config.SecurityConstants;
 import com.triptune.global.exception.CustomJwtUnAuthorizedException;
 import com.triptune.global.util.JwtUtils;
 import jakarta.servlet.FilterChain;
@@ -13,6 +14,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Arrays;
+
+import static com.triptune.global.config.SecurityConstants.AUTH_WHITELIST;
 
 
 @Slf4j
@@ -23,6 +27,11 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+        if(SecurityConstants.isWhitelisted(request.getRequestURI())){
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         String token = jwtUtils.resolveToken(request);
         try{
             if (token != null && jwtUtils.validateToken(token)){
