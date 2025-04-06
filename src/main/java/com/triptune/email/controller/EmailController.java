@@ -31,7 +31,7 @@ public class EmailController {
     @PostMapping("/verify-request")
     @Operation(summary = "이메일 인증 요청", description = "이메일 인증을 요청합니다.")
     public ApiResponse<?> verifyRequest(@Valid @RequestBody EmailRequest emailRequest) throws MessagingException {
-        memberService.checkDuplicateEmail(emailRequest.getEmail());
+        memberService.validateUniqueEmail(emailRequest.getEmail());
         emailService.sendCertificationEmail(emailRequest.getEmail());
 
         return ApiResponse.okResponse();
