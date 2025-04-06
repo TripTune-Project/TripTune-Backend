@@ -23,6 +23,7 @@ import com.triptune.member.entity.Member;
 import com.triptune.member.exception.FailLoginException;
 import com.triptune.member.exception.IncorrectPasswordException;
 import com.triptune.member.repository.MemberRepository;
+import com.triptune.profile.entity.ProfileImage;
 import com.triptune.profile.service.ProfileImageService;
 import com.triptune.schedule.entity.TravelAttendee;
 import com.triptune.schedule.repository.ChatMessageRepository;
@@ -74,10 +75,12 @@ public class MemberService {
         validateUniqueEmail(joinRequest.getEmail());
         validateVerifiedEmail(joinRequest.getEmail());
 
-        Member member = Member.from(joinRequest, passwordEncoder.encode(joinRequest.getPassword()));
-        Member savedMember = memberRepository.save(member);
+        ProfileImage profileImage = profileImageService.saveDefaultProfileImage();
 
-        profileImageService.saveDefaultProfileImage(savedMember);
+        Member member = Member.from(joinRequest, profileImage, passwordEncoder.encode(joinRequest.getPassword()));
+        memberRepository.save(member);
+
+
     }
 
     private void validateUniqueUserId(String userId){

@@ -67,8 +67,9 @@ public class Member {
         this.isActive = isActive;
     }
 
-    public static Member from(JoinRequest joinRequest, String encodePassword){
+    public static Member from(JoinRequest joinRequest, ProfileImage profileImage, String encodePassword){
         return Member.builder()
+                .profileImage(profileImage)
                 .userId(joinRequest.getUserId())
                 .nickname(joinRequest.getNickname())
                 .email(joinRequest.getEmail())
