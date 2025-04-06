@@ -27,8 +27,8 @@ public class ProfileImageService {
     private final ProfileImageRepository profileImageRepository;
     private final S3Service s3Service;
 
-    public ProfileImage saveDefaultProfileImage(Member member) {
-        ProfileImage profileImage = ProfileImage.from(member, profileImageProperties);
+    public ProfileImage saveDefaultProfileImage() {
+        ProfileImage profileImage = ProfileImage.from(profileImageProperties);
         return profileImageRepository.save(profileImage);
     }
 

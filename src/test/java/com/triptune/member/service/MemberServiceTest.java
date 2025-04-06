@@ -139,7 +139,7 @@ public class MemberServiceTest extends MemberTest {
         when(memberRepository.existsByNickname(anyString())).thenReturn(false);
         when(memberRepository.existsByEmail(anyString())).thenReturn(false);
         when(redisUtils.getEmailData(any(), anyString())).thenReturn("true");
-        when(profileImageService.saveDefaultProfileImage(any())).thenReturn(createProfileImage(1L, "test.jpg"));
+        when(profileImageService.saveDefaultProfileImage()).thenReturn(createProfileImage(1L, "test.jpg"));
 
         // when
         assertThatCode(() -> memberService.join(request))

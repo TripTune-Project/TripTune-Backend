@@ -24,13 +24,13 @@ public class Member {
     @JoinColumn(name = "profile_image_id")
     private ProfileImage profileImage;
 
-    @Column(name = "user_id")
+    @Column(name = "user_id", unique = true)
     private String userId;
 
-    @Column(name = "nickname")
+    @Column(name = "nickname", unique = true)
     private String nickname;
 
-    @Column(name = "email")
+    @Column(name = "email", unique = true)
     private String email;
 
     @Column(name = "password")
@@ -67,8 +67,9 @@ public class Member {
         this.isActive = isActive;
     }
 
-    public static Member from(JoinRequest joinRequest, String encodePassword){
+    public static Member from(JoinRequest joinRequest, ProfileImage profileImage, String encodePassword){
         return Member.builder()
+                .profileImage(profileImage)
                 .userId(joinRequest.getUserId())
                 .nickname(joinRequest.getNickname())
                 .email(joinRequest.getEmail())

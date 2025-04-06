@@ -23,6 +23,7 @@ import com.triptune.member.entity.Member;
 import com.triptune.member.exception.FailLoginException;
 import com.triptune.member.exception.IncorrectPasswordException;
 import com.triptune.member.repository.MemberRepository;
+import com.triptune.profile.entity.ProfileImage;
 import com.triptune.profile.service.ProfileImageService;
 import com.triptune.schedule.entity.TravelAttendee;
 import com.triptune.schedule.repository.ChatMessageRepository;
@@ -69,24 +70,26 @@ public class MemberService {
 
 
     public void join(JoinRequest joinRequest) {
-        checkDuplicateUserId(joinRequest.getUserId());
-        checkDuplicateNickname(joinRequest.getNickname());
-        checkDuplicateEmail(joinRequest.getEmail());
+        validateUniqueUserId(joinRequest.getUserId());
+        validateUniqueNickname(joinRequest.getNickname());
+        validateUniqueEmail(joinRequest.getEmail());
         validateVerifiedEmail(joinRequest.getEmail());
 
-        Member member = Member.from(joinRequest, passwordEncoder.encode(joinRequest.getPassword()));
-        Member savedMember = memberRepository.save(member);
+        ProfileImage profileImage = profileImageService.saveDefaultProfileImage();
 
-        profileImageService.saveDefaultProfileImage(savedMember);
+        Member member = Member.from(joinRequest, profileImage, passwordEncoder.encode(joinRequest.getPassword()));
+        memberRepository.save(member);
+
+
     }
 
-    private void checkDuplicateUserId(String userId){
+    private void validateUniqueUserId(String userId){
         if(memberRepository.existsByUserId(userId)){
             throw new DataExistException(ErrorCode.ALREADY_EXISTED_USERID);
         }
     }
 
-    private void checkDuplicateNickname(String nickname){
+    private void validateUniqueNickname(String nickname){
         if(isExistNickname(nickname)){
             throw new DataExistException(ErrorCode.ALREADY_EXISTED_NICKNAME);
         }
@@ -96,7 +99,7 @@ public class MemberService {
         return memberRepository.existsByNickname(nickname);
     }
 
-    public void checkDuplicateEmail(String email){
+    public void validateUniqueEmail(String email){
         if(memberRepository.existsByEmail(email)){
             throw new DataExistException(ErrorCode.ALREADY_EXISTED_EMAIL);
         }
@@ -215,14 +218,14 @@ public class MemberService {
     }
 
     public void changeNickname(String userId, ChangeNicknameRequest changeNicknameRequest) {
-        checkDuplicateNickname(changeNicknameRequest.getNickname());
+        validateUniqueNickname(changeNicknameRequest.getNickname());
 
         Member member = getMemberByUserId(userId);
         member.updateNickname(changeNicknameRequest.getNickname());
     }
 
     public void changeEmail(String userId, EmailRequest emailRequest) {
-        checkDuplicateEmail(emailRequest.getEmail());
+        validateUniqueEmail(emailRequest.getEmail());
         validateVerifiedEmail(emailRequest.getEmail());
 
         Member member = getMemberByUserId(userId);
