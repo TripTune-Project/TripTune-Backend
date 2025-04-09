@@ -95,15 +95,15 @@ public class ScheduleTravelControllerTest extends BaseTest {
         TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(null, member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ));
         TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(null, member2, schedule2, AttendeeRole.AUTHOR, AttendeePermission.ALL));
 
-        schedule1.setTravelAttendeeList(new ArrayList<>(List.of(attendee1, attendee2)));
-        schedule2.setTravelAttendeeList(new ArrayList<>(List.of(attendee3)));
+        schedule1.setTravelAttendeeList(List.of(attendee1, attendee2));
+        schedule2.setTravelAttendeeList(List.of(attendee3));
 
     }
 
 
     @Test
     @DisplayName("여행지 조회")
-    @WithMockUser(username = "member1")
+    @WithMockUser(username = "member1@email.com")
     void getTravelPlaces() throws Exception {
         mockMvc.perform(get("/api/schedules/{scheduleId}/travels", schedule1.getScheduleId())
                         .param("page", "1"))
@@ -118,7 +118,7 @@ public class ScheduleTravelControllerTest extends BaseTest {
 
     @Test
     @DisplayName("여행지 조회 시 여행지 데이터 존재하지 않는 경우")
-    @WithMockUser(username = "member1")
+    @WithMockUser(username = "member1@email.com")
     void getTravelPlacesWithoutData() throws Exception {
         // given
         travelImageRepository.deleteAll();
@@ -134,7 +134,7 @@ public class ScheduleTravelControllerTest extends BaseTest {
 
     @Test
     @DisplayName("여행지 조회 시 해당 일정에 접근 권한이 없어 예외 발생")
-    @WithMockUser(username = "member1")
+    @WithMockUser(username = "member1@email.com")
     void getTravelPlaces_forbiddenScheduleException() throws Exception {
         mockMvc.perform(get("/api/schedules/{scheduleId}/travels", schedule2.getScheduleId())
                         .param("page", "1"))
@@ -146,7 +146,7 @@ public class ScheduleTravelControllerTest extends BaseTest {
 
     @Test
     @DisplayName("여행지 조회 시 일정 데이터 존재하지 않아 예외 발생")
-    @WithMockUser(username = "member1")
+    @WithMockUser(username = "member1@email.com")
     void getTravelPlaces_dataNotFoundException() throws Exception {
         mockMvc.perform(get("/api/schedules/{scheduleId}/travels", 0L)
                         .param("page", "1"))
@@ -158,7 +158,7 @@ public class ScheduleTravelControllerTest extends BaseTest {
 
     @Test
     @DisplayName("여행지 검색")
-    @WithMockUser(username = "member1")
+    @WithMockUser(username = "member1@email.com")
     void searchTravelPlaces() throws Exception {
         mockMvc.perform(get("/api/schedules/{scheduleId}/travels/search", schedule1.getScheduleId())
                         .param("page", "1")
@@ -174,7 +174,7 @@ public class ScheduleTravelControllerTest extends BaseTest {
 
     @Test
     @DisplayName("여행지 검색 시 검색 결과가 존재하지 않는 경우")
-    @WithMockUser(username = "member1")
+    @WithMockUser(username = "member1@email.com")
     void searchTravelPlacesWithoutData() throws Exception {
         mockMvc.perform(get("/api/schedules/{scheduleId}/travels/search", schedule1.getScheduleId())
                         .param("page", "1")
@@ -187,7 +187,7 @@ public class ScheduleTravelControllerTest extends BaseTest {
 
     @Test
     @DisplayName("여행지 검색 시 일정 데이터 존재하지 않아 예외 발생")
-    @WithMockUser(username = "member1")
+    @WithMockUser(username = "member1@email.com")
     void searchTravelPlaces_dataNotFoundException() throws Exception {
         // given, when, then
         mockMvc.perform(get("/api/schedules/{scheduleId}/travels/search", 0L)
@@ -201,7 +201,7 @@ public class ScheduleTravelControllerTest extends BaseTest {
 
     @Test
     @DisplayName("여행지 검색 시 해당 일정에 접근 권한이 없어 예외 발생")
-    @WithMockUser(username = "member1")
+    @WithMockUser(username = "member1@email.com")
     void searchTravelPlaces_forbiddenScheduleException() throws Exception {
         mockMvc.perform(get("/api/schedules/{scheduleId}/travels/search", schedule2.getScheduleId())
                         .param("page", "1")

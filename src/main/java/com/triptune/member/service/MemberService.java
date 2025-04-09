@@ -3,7 +3,7 @@ package com.triptune.member.service;
 import com.triptune.bookmark.enumclass.BookmarkSortType;
 import com.triptune.bookmark.repository.BookmarkRepository;
 import com.triptune.bookmark.service.BookmarkService;
-import com.triptune.email.dto.EmailRequest;
+import com.triptune.email.dto.request.EmailRequest;
 import com.triptune.email.exception.EmailVerifyException;
 import com.triptune.email.service.EmailService;
 import com.triptune.global.enumclass.ErrorCode;
@@ -15,7 +15,6 @@ import com.triptune.global.util.JwtUtils;
 import com.triptune.global.util.PageUtils;
 import com.triptune.global.util.RedisUtils;
 import com.triptune.member.dto.request.*;
-import com.triptune.member.dto.response.FindIdResponse;
 import com.triptune.member.dto.response.LoginResponse;
 import com.triptune.member.dto.response.MemberInfoResponse;
 import com.triptune.member.dto.response.RefreshTokenResponse;
@@ -70,22 +69,20 @@ public class MemberService {
 
 
     public void join(JoinRequest joinRequest) {
-        validateUniqueUserId(joinRequest.getUserId());
-        validateUniqueNickname(joinRequest.getNickname());
         validateUniqueEmail(joinRequest.getEmail());
+        validateUniqueNickname(joinRequest.getNickname());
         validateVerifiedEmail(joinRequest.getEmail());
 
         ProfileImage profileImage = profileImageService.saveDefaultProfileImage();
 
         Member member = Member.from(joinRequest, profileImage, passwordEncoder.encode(joinRequest.getPassword()));
         memberRepository.save(member);
-
-
     }
 
-    private void validateUniqueUserId(String userId){
-        if(memberRepository.existsByUserId(userId)){
-            throw new DataExistException(ErrorCode.ALREADY_EXISTED_USERID);
+
+    public void validateUniqueEmail(String email){
+        if(memberRepository.existsByEmail(email)){
+            throw new DataExistException(ErrorCode.ALREADY_EXISTED_EMAIL);
         }
     }
 
@@ -99,11 +96,6 @@ public class MemberService {
         return memberRepository.existsByNickname(nickname);
     }
 
-    public void validateUniqueEmail(String email){
-        if(memberRepository.existsByEmail(email)){
-            throw new DataExistException(ErrorCode.ALREADY_EXISTED_EMAIL);
-        }
-    }
 
     public void validateVerifiedEmail(String email){
         String isVerified = redisUtils.getEmailData(RedisKeyType.VERIFIED, email);
@@ -115,15 +107,15 @@ public class MemberService {
 
 
     public LoginResponse login(LoginRequest loginRequest) {
-        Member member = memberRepository.findByUserId(loginRequest.getUserId())
+        Member member = memberRepository.findByEmail(loginRequest.getEmail())
                 .orElseThrow(() -> new FailLoginException(ErrorCode.FAILED_LOGIN));
 
         if (!isPasswordMatch(loginRequest.getPassword(), member.getPassword())) {
             throw new FailLoginException(ErrorCode.FAILED_LOGIN);
         }
 
-        String accessToken = jwtUtils.createToken(loginRequest.getUserId(), accessExpirationTime);
-        String refreshToken = jwtUtils.createToken(loginRequest.getUserId(), refreshExpirationTime);
+        String accessToken = jwtUtils.createToken(member.getEmail(), accessExpirationTime);
+        String refreshToken = jwtUtils.createToken(member.getEmail(), refreshExpirationTime);
 
         member.updateRefreshToken(refreshToken);
 
@@ -143,22 +135,21 @@ public class MemberService {
         redisUtils.saveExpiredData(accessToken, "logout", LOGOUT_DURATION);
     }
 
-
     public RefreshTokenResponse refreshToken(RefreshTokenRequest refreshTokenRequest) throws ExpiredJwtException {
         String refreshToken = refreshTokenRequest.getRefreshToken();
         jwtUtils.validateToken(refreshToken);
 
         Claims claims = jwtUtils.parseClaims(refreshToken);
 
-        Member member = getMemberByUserId(claims.getSubject());
+        Member member = getMemberByEmail(claims.getSubject());
         validateSavedRefreshToken(member, refreshToken);
 
-        String newAccessToken = jwtUtils.createToken(member.getUserId(), accessExpirationTime);
+        String newAccessToken = jwtUtils.createToken(member.getEmail(), accessExpirationTime);
         return RefreshTokenResponse.of(newAccessToken);
     }
 
-    private Member getMemberByUserId(String userId){
-        return memberRepository.findByUserId(userId)
+    private Member getMemberByEmail(String email){
+        return memberRepository.findByEmail(email)
                 .orElseThrow(() -> new DataNotFoundException(ErrorCode.MEMBER_NOT_FOUND));
     }
 
@@ -168,14 +159,8 @@ public class MemberService {
         }
     }
 
-    public FindIdResponse findId(FindIdRequest findIdRequest) {
-        Member member = getMemberByEmail(findIdRequest.getEmail());
-        return FindIdResponse.of(member.getUserId());
-    }
-
-
     public void findPassword(FindPasswordRequest findPasswordRequest) throws MessagingException {
-        boolean isExistsMember = memberRepository.existsByUserIdAndEmail(findPasswordRequest.getUserId(), findPasswordRequest.getEmail());
+        boolean isExistsMember = memberRepository.existsByEmail(findPasswordRequest.getEmail());
         if (!isExistsMember){
             throw new DataNotFoundException(ErrorCode.MEMBER_NOT_FOUND);
         }
@@ -195,14 +180,9 @@ public class MemberService {
         member.updatePassword(passwordEncoder.encode(resetPasswordRequest.getPassword()));
     }
 
-    private Member getMemberByEmail(String email){
-        return memberRepository.findByEmail(email)
-                .orElseThrow(() -> new DataNotFoundException(ErrorCode.MEMBER_NOT_FOUND));
-    }
 
-
-    public void changePassword(String userId, ChangePasswordRequest passwordRequest){
-        Member member = getMemberByUserId(userId);
+    public void changePassword(String email, ChangePasswordRequest passwordRequest){
+        Member member = getMemberByEmail(email);
 
         if(!isPasswordMatch(passwordRequest.getNowPassword(), member.getPassword())){
             throw new IncorrectPasswordException(ErrorCode.INCORRECT_PASSWORD);
@@ -212,37 +192,37 @@ public class MemberService {
     }
 
 
-    public MemberInfoResponse getMemberInfo(String userId) {
-        Member member = getMemberByUserId(userId);
+    public MemberInfoResponse getMemberInfo(String email) {
+        Member member = getMemberByEmail(email);
         return MemberInfoResponse.from(member);
     }
 
-    public void changeNickname(String userId, ChangeNicknameRequest changeNicknameRequest) {
+    public void changeNickname(String email, ChangeNicknameRequest changeNicknameRequest) {
         validateUniqueNickname(changeNicknameRequest.getNickname());
 
-        Member member = getMemberByUserId(userId);
+        Member member = getMemberByEmail(email);
         member.updateNickname(changeNicknameRequest.getNickname());
     }
 
-    public void changeEmail(String userId, EmailRequest emailRequest) {
+    public void changeEmail(String email, EmailRequest emailRequest) {
         validateUniqueEmail(emailRequest.getEmail());
         validateVerifiedEmail(emailRequest.getEmail());
 
-        Member member = getMemberByUserId(userId);
+        Member member = getMemberByEmail(email);
         member.updateEmail(emailRequest.getEmail());
     }
 
-    public Page<PlaceBookmarkResponse> getMemberBookmarks(int page, String userId, BookmarkSortType sortType) {
+    public Page<PlaceBookmarkResponse> getMemberBookmarks(int page, String email, BookmarkSortType sortType) {
         Pageable pageable = PageUtils.bookmarkPageable(page);
-        Page<TravelPlace> travelPlaces = bookmarkService.getBookmarkTravelPlaces(userId, pageable, sortType);
+        Page<TravelPlace> travelPlaces = bookmarkService.getBookmarkTravelPlaces(email, pageable, sortType);
 
         return travelPlaces.map(PlaceBookmarkResponse::from);
     }
 
 
-    public void deactivateMember(String accessToken, String userId, DeactivateRequest deactivateRequest) {
+    public void deactivateMember(String accessToken, String email, DeactivateRequest deactivateRequest) {
         // 1. 사용자 비밀번호 확인
-        Member member = getMemberByUserId(userId);
+        Member member = getMemberByEmail(email);
 
         if(!isPasswordMatch(deactivateRequest.getPassword(), member.getPassword())){
             throw new IncorrectPasswordException(ErrorCode.INCORRECT_PASSWORD);
@@ -253,7 +233,7 @@ public class MemberService {
 
         // 3-1. 작성자인 경우 참석자, 일정, 채팅방 삭제
         // 3-2. 참석자인 경우 참석자 삭제
-        List<TravelAttendee> attendees = travelAttendeeRepository.findAllByMember_UserId(userId);
+        List<TravelAttendee> attendees = travelAttendeeRepository.findAllByMember_Email(email);
 
         for (TravelAttendee attendee : attendees) {
             if (attendee.getRole().isAuthor()) {
@@ -267,7 +247,7 @@ public class MemberService {
         }
 
         // 4. 북마크 삭제
-        bookmarkRepository.deleteAllByMember_UserId(userId);
+        bookmarkRepository.deleteAllByMember_Email(email);
 
         // 5. 익명 데이터로 변경 (닉네임, 아이디, 비밀번호, 리프레시 토큰, 이메일)
         member.updateDeactivate();

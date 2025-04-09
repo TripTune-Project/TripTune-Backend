@@ -11,7 +11,6 @@ import lombok.Setter;
 import java.time.LocalDate;
 
 @Getter
-@Setter
 @NoArgsConstructor
 public class ScheduleCreateRequest {
     @NotBlank(message = "여행지 이름은 필수 입력 값입니다.")

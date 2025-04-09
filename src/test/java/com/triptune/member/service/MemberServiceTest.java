@@ -7,12 +7,11 @@ import com.triptune.common.entity.ApiCategory;
 import com.triptune.common.entity.City;
 import com.triptune.common.entity.Country;
 import com.triptune.common.entity.District;
-import com.triptune.email.dto.EmailRequest;
+import com.triptune.email.dto.request.EmailRequest;
 import com.triptune.email.exception.EmailVerifyException;
 import com.triptune.email.service.EmailService;
 import com.triptune.member.MemberTest;
 import com.triptune.member.dto.request.*;
-import com.triptune.member.dto.response.FindIdResponse;
 import com.triptune.member.dto.response.LoginResponse;
 import com.triptune.member.dto.response.MemberInfoResponse;
 import com.triptune.member.dto.response.RefreshTokenResponse;
@@ -66,42 +65,18 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 public class MemberServiceTest extends MemberTest {
 
-    @InjectMocks
-    private MemberService memberService;
-
-    @Mock
-    private MemberRepository memberRepository;
-
-    @Mock
-    private JwtUtils jwtUtils;
-
-    @Mock
-    private RedisUtils redisUtils;
-
-    @Mock
-    private EmailService emailService;
-
-    @Mock
-    private PasswordEncoder passwordEncoder;
-
-    @Mock
-    private ProfileImageService profileImageService;
-
-    @Mock
-    private BookmarkService bookmarkService;
-
-    @Mock
-    private TravelAttendeeRepository travelAttendeeRepository;
-
-    @Mock
-    private ChatMessageRepository chatMessageRepository;
-
-    @Mock
-    private TravelScheduleRepository travelScheduleRepository;
-
-    @Mock
-    private BookmarkRepository bookmarkRepository;
-
+    @InjectMocks private MemberService memberService;
+    @Mock private MemberRepository memberRepository;
+    @Mock private JwtUtils jwtUtils;
+    @Mock private RedisUtils redisUtils;
+    @Mock private EmailService emailService;
+    @Mock private PasswordEncoder passwordEncoder;
+    @Mock private ProfileImageService profileImageService;
+    @Mock private BookmarkService bookmarkService;
+    @Mock private TravelAttendeeRepository travelAttendeeRepository;
+    @Mock private ChatMessageRepository chatMessageRepository;
+    @Mock private TravelScheduleRepository travelScheduleRepository;
+    @Mock private BookmarkRepository bookmarkRepository;
 
     private final String accessToken = "MemberAccessToken";
     private final String refreshToken = "MemberRefreshToken";
@@ -133,92 +108,75 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("회원가입")
     void join(){
         // given
-        JoinRequest request = createMemberRequest();
+        JoinRequest request = createMemberRequest("member", "password12!@", "password12!@");
 
-        when(memberRepository.existsByUserId(anyString())).thenReturn(false);
+        when(memberRepository.existsByEmail(anyString())).thenReturn(false);
         when(memberRepository.existsByNickname(anyString())).thenReturn(false);
         when(memberRepository.existsByEmail(anyString())).thenReturn(false);
         when(redisUtils.getEmailData(any(), anyString())).thenReturn("true");
         when(profileImageService.saveDefaultProfileImage()).thenReturn(createProfileImage(1L, "test.jpg"));
 
         // when
-        assertThatCode(() -> memberService.join(request))
-                .doesNotThrowAnyException();
+        assertDoesNotThrow(() -> memberService.join(request));
 
         // then
         verify(memberRepository, times(1)).save(any(Member.class));
     }
-
-    @Test
-    @DisplayName("회원가입 시 이미 가입한 아이디가 존재해 예외 발생")
-    void join_userIdExistException(){
-        // given
-        JoinRequest request = createMemberRequest();
-
-        when(memberRepository.existsByUserId(anyString())).thenReturn(true);
-
-        // when
-        assertThatThrownBy(() -> memberService.join(request))
-                .isInstanceOf(DataExistException.class)
-                .hasMessage(ErrorCode.ALREADY_EXISTED_USERID.getMessage());
-
-        // then
-        verify(memberRepository, times(0)).save(any());
-    }
-
-    @Test
-    @DisplayName("회원가입 시 이미 가입한 닉네임이 존재해 예외 발생")
-    void join_nicknameExistException(){
-        // given
-        JoinRequest request = createMemberRequest();
-
-        when(memberRepository.existsByUserId(anyString())).thenReturn(false);
-        when(memberRepository.existsByNickname(anyString())).thenReturn(true);
-
-        // when
-        assertThatThrownBy(() -> memberService.join(request))
-                .isInstanceOf(DataExistException.class)
-                .hasMessage(ErrorCode.ALREADY_EXISTED_NICKNAME.getMessage());
-
-        // then
-        verify(memberRepository, times(0)).save(any());
-    }
-
 
 
     @Test
     @DisplayName("회원가입 시 이미 가입한 이메일이 존재해 예외 발생")
     void join_emailExistException(){
         // given
-        JoinRequest request = createMemberRequest();
+        JoinRequest request = createMemberRequest("member", "password12!@", "password12!@");
 
-        when(memberRepository.existsByUserId(anyString())).thenReturn(false);
-        when(memberRepository.existsByNickname(anyString())).thenReturn(false);
         when(memberRepository.existsByEmail(anyString())).thenReturn(true);
 
         // when
-        assertThatThrownBy(() -> memberService.join(request))
-                .isInstanceOf(DataExistException.class)
-                .hasMessage(ErrorCode.ALREADY_EXISTED_EMAIL.getMessage());
+        DataExistException fail = assertThrows(DataExistException.class, () -> memberService.join(request));
+
         // then
         verify(memberRepository, times(0)).save(any(Member.class));
+        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.ALREADY_EXISTED_EMAIL.getStatus());
+        assertThat(fail.getMessage()).isEqualTo(ErrorCode.ALREADY_EXISTED_EMAIL.getMessage());
     }
+
+    @Test
+    @DisplayName("회원가입 시 이미 가입한 닉네임이 존재해 예외 발생")
+    void join_nicknameExistException(){
+        // given
+        JoinRequest request = createMemberRequest("member", "password12!@", "password12!@");
+
+        when(memberRepository.existsByEmail(anyString())).thenReturn(false);
+        when(memberRepository.existsByNickname(anyString())).thenReturn(true);
+
+        // when
+        DataExistException fail = assertThrows(DataExistException.class, () -> memberService.join(request));
+
+        // then
+        verify(memberRepository, times(0)).save(any());
+        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.ALREADY_EXISTED_NICKNAME.getStatus());
+        assertThat(fail.getMessage()).isEqualTo(ErrorCode.ALREADY_EXISTED_NICKNAME.getMessage());
+    }
+
+
 
     @Test
     @DisplayName("회원가입 시 인증된 이메일이 아니여서 예외 발생")
     void join_notVerifiedEmail(){
         // given
-        JoinRequest request = createMemberRequest();
+        JoinRequest request = createMemberRequest("member", "password12!@", "password12!@");
 
-        when(memberRepository.existsByUserId(anyString())).thenReturn(false);
-        when(memberRepository.existsByNickname(anyString())).thenReturn(false);
         when(memberRepository.existsByEmail(anyString())).thenReturn(false);
+        when(memberRepository.existsByNickname(anyString())).thenReturn(false);
         when(redisUtils.getEmailData(any(), anyString())).thenReturn(null);
 
         // when
-        assertThatThrownBy(() -> memberService.join(request))
-                .isInstanceOf(EmailVerifyException.class)
-                .hasMessage(ErrorCode.NOT_VERIFIED_EMAIL.getMessage());
+        EmailVerifyException fail = assertThrows(EmailVerifyException.class, () -> memberService.join(request));
+
+        // then
+        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.NOT_VERIFIED_EMAIL.getStatus());
+        assertThat(fail.getMessage()).isEqualTo(ErrorCode.NOT_VERIFIED_EMAIL.getMessage());
 
     }
 
@@ -229,8 +187,7 @@ public class MemberServiceTest extends MemberTest {
         when(redisUtils.getEmailData(any(), anyString())).thenReturn("true");
 
         // when
-        assertThatCode(() -> memberService.validateVerifiedEmail("member@email.com"))
-                .doesNotThrowAnyException();
+        assertDoesNotThrow(() -> memberService.validateVerifiedEmail("member@email.com"));
     }
 
     @Test
@@ -240,9 +197,11 @@ public class MemberServiceTest extends MemberTest {
         when(redisUtils.getEmailData(any(), anyString())).thenReturn(null);
 
         // when
-        assertThatThrownBy(() -> memberService.validateVerifiedEmail("member@email.com"))
-                .isInstanceOf(EmailVerifyException.class)
-                .hasMessage(ErrorCode.NOT_VERIFIED_EMAIL.getMessage());
+        EmailVerifyException fail = assertThrows(EmailVerifyException.class, () -> memberService.validateVerifiedEmail("member@email.com"));
+
+        // then
+        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.NOT_VERIFIED_EMAIL.getStatus());
+        assertThat(fail.getMessage()).isEqualTo(ErrorCode.NOT_VERIFIED_EMAIL.getMessage());
     }
 
 
@@ -250,9 +209,9 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("로그인")
     void login(){
         // given
-        LoginRequest loginRequest = createLoginRequest(member.getUserId(), passwordToken);
+        LoginRequest loginRequest = createLoginRequest(member.getEmail(), passwordToken);
 
-        when(memberRepository.findByUserId(anyString())).thenReturn(Optional.of(member));
+        when(memberRepository.findByEmail(anyString())).thenReturn(Optional.of(member));
         when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
         when(jwtUtils.createToken(anyString(), anyLong())).thenReturn(accessToken);
         when(jwtUtils.createToken(anyString(), anyLong())).thenReturn(refreshToken);
@@ -270,9 +229,9 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("로그인 시 사용자 데이터 없어 예외 발생")
     void loginNotFoundUser_failLoginException(){
         // given
-        LoginRequest loginRequest = createLoginRequest(member.getUserId(), passwordToken);
+        LoginRequest loginRequest = createLoginRequest(member.getEmail(), passwordToken);
 
-        when(memberRepository.findByUserId(anyString())).thenReturn(Optional.empty());
+        when(memberRepository.findByEmail(anyString())).thenReturn(Optional.empty());
 
         // when
         FailLoginException fail = assertThrows(FailLoginException.class, () -> memberService.login(loginRequest));
@@ -286,9 +245,9 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("로그인 시 비밀번호 맞지 않아 예외 발생")
     void loginMismatchPassword_failLoginException(){
         // given
-        LoginRequest loginRequest = createLoginRequest(member.getUserId(), passwordToken);
+        LoginRequest loginRequest = createLoginRequest(member.getEmail(), passwordToken);
 
-        when(memberRepository.findByUserId(anyString())).thenReturn(Optional.of(member));
+        when(memberRepository.findByEmail(anyString())).thenReturn(Optional.of(member));
         when(passwordEncoder.matches(anyString(), anyString())).thenReturn(false);
 
         // when
@@ -305,7 +264,7 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("로그아웃")
     void logout(){
         // given
-        LogoutRequest request = createLogoutDTO(member.getNickname());
+        LogoutRequest request = createLogoutRequest(member.getNickname());
 
         when(memberRepository.existsByNickname(anyString())).thenReturn(true);
 
@@ -321,7 +280,7 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("로그아웃 요청 시 사용자 데이터 없어 예외 발생")
     void logout_dataNotFoundException(){
         // given
-        LogoutRequest request = createLogoutDTO("notMember");
+        LogoutRequest request = createLogoutRequest("notMember");
 
         when(memberRepository.existsByNickname(anyString())).thenReturn(false);
 
@@ -343,7 +302,7 @@ public class MemberServiceTest extends MemberTest {
 
         when(jwtUtils.validateToken(anyString())).thenReturn(true);
         when(jwtUtils.parseClaims(anyString())).thenReturn(mockClaims);
-        when(memberRepository.findByUserId(any())).thenReturn(Optional.of(member));
+        when(memberRepository.findByEmail(any())).thenReturn(Optional.of(member));
         when(jwtUtils.createToken(anyString(), anyLong())).thenReturn(accessToken);
 
         RefreshTokenRequest request = createRefreshTokenRequest(refreshToken);
@@ -368,7 +327,7 @@ public class MemberServiceTest extends MemberTest {
 
         when(jwtUtils.validateToken(anyString())).thenReturn(true);
         when(jwtUtils.parseClaims(anyString())).thenReturn(mockClaims);
-        when(memberRepository.findByUserId(any())).thenReturn(Optional.of(member));
+        when(memberRepository.findByEmail(any())).thenReturn(Optional.of(member));
 
         // when
         CustomJwtUnAuthorizedException fail = assertThrows(CustomJwtUnAuthorizedException.class, () -> memberService.refreshToken(request));
@@ -379,43 +338,12 @@ public class MemberServiceTest extends MemberTest {
     }
 
     @Test
-    @DisplayName("아이디 찾기 성공")
-    void findId() {
-        // given
-        FindIdRequest findIdRequest = createFindIdRequest("test@email.com");
-
-        when(memberRepository.findByEmail(anyString())).thenReturn(Optional.of(createMember(1L, "test")));
-
-        // when
-        FindIdResponse response = memberService.findId(findIdRequest);
-
-        // then
-        assertThat(response.getUserId()).isEqualTo("test");
-    }
-
-    @Test
-    @DisplayName("아이디 찾기 시 이메일 맞지 않아 예외 발생")
-    void findIdNotEqualsEmail_DataNotFoundException() {
-        // given
-        FindIdRequest findIdRequest = createFindIdRequest("fail@email.com");
-
-        when(memberRepository.findByEmail(anyString())).thenReturn(Optional.empty());
-
-        // when
-        DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> memberService.findId(findIdRequest));
-
-        // then
-        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.MEMBER_NOT_FOUND.getStatus());
-        assertThat(fail.getMessage()).isEqualTo(ErrorCode.MEMBER_NOT_FOUND.getMessage());
-    }
-
-    @Test
     @DisplayName("비밀번호 찾기 성공")
     void findPassword() throws MessagingException {
         // given
-        FindPasswordRequest findPasswordRequest = createFindPasswordDTO("test");
+        FindPasswordRequest findPasswordRequest = createFindPasswordRequest("test");
 
-        when(memberRepository.existsByUserIdAndEmail(anyString(), anyString())).thenReturn(true);
+        when(memberRepository.existsByEmail(anyString())).thenReturn(true);
 
         // when
         assertDoesNotThrow(() -> memberService.findPassword(findPasswordRequest));
@@ -426,11 +354,11 @@ public class MemberServiceTest extends MemberTest {
 
     @Test
     @DisplayName("비밀번호 찾기 시 사용자 정보 존재하지 않아 예외 발생")
-    void findPasswordNotEqualsUserId_DataNotFoundException() throws MessagingException {
+    void findPassword_DataNotFoundException() throws MessagingException {
         // given
-        FindPasswordRequest findPasswordRequest = createFindPasswordDTO("fail");
+        FindPasswordRequest findPasswordRequest = createFindPasswordRequest("fail");
 
-        when(memberRepository.existsByUserIdAndEmail(anyString(), anyString())).thenReturn(false);
+        when(memberRepository.existsByEmail(anyString())).thenReturn(false);
 
         // when
         DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> memberService.findPassword(findPasswordRequest));
@@ -455,7 +383,7 @@ public class MemberServiceTest extends MemberTest {
 
 
         // when
-        memberService.resetPassword(createResetPasswordDTO(passwordToken, newPassword, newPassword));
+        memberService.resetPassword(createResetPasswordRequest(passwordToken, newPassword, newPassword));
 
         // then
         verify(redisUtils, times(1)).getData(passwordToken);
@@ -473,7 +401,7 @@ public class MemberServiceTest extends MemberTest {
 
         // when
         IncorrectPasswordException fail = assertThrows(IncorrectPasswordException.class,
-                () -> memberService.resetPassword(createResetPasswordDTO(accessToken, newPassword, newPassword)));
+                () -> memberService.resetPassword(createResetPasswordRequest(accessToken, newPassword, newPassword)));
 
         // then
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.INVALID_CHANGE_PASSWORD.getStatus());
@@ -491,7 +419,7 @@ public class MemberServiceTest extends MemberTest {
 
         // when
         DataNotFoundException fail = assertThrows(DataNotFoundException.class,
-                () -> memberService.resetPassword(createResetPasswordDTO(accessToken, newPassword, newPassword)));
+                () -> memberService.resetPassword(createResetPasswordRequest(accessToken, newPassword, newPassword)));
 
         // then
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.MEMBER_NOT_FOUND.getStatus());
@@ -509,7 +437,7 @@ public class MemberServiceTest extends MemberTest {
         ChangePasswordRequest request = createChangePasswordRequest("test123@", "test123!", "test123!");
         Member member = createMember(1L, "member");
 
-        when(memberRepository.findByUserId(anyString())).thenReturn(Optional.of(member));
+        when(memberRepository.findByEmail(anyString())).thenReturn(Optional.of(member));
         when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
         when(passwordEncoder.encode(anyString())).thenReturn("encodingPassword");
 
@@ -524,7 +452,7 @@ public class MemberServiceTest extends MemberTest {
         // given
         ChangePasswordRequest request = createChangePasswordRequest("test123@", "test123!", "test123!");
 
-        when(memberRepository.findByUserId(anyString())).thenReturn(Optional.empty());
+        when(memberRepository.findByEmail(anyString())).thenReturn(Optional.empty());
 
         // when
         DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> memberService.changePassword("member", request));
@@ -542,7 +470,7 @@ public class MemberServiceTest extends MemberTest {
         ChangePasswordRequest request = createChangePasswordRequest("incorrect123@", "test123!", "test123!");
         Member member = createMember(1L, "member");
 
-        when(memberRepository.findByUserId(anyString())).thenReturn(Optional.of(member));
+        when(memberRepository.findByEmail(anyString())).thenReturn(Optional.of(member));
         when(passwordEncoder.matches(anyString(), anyString())).thenReturn(false);
 
         // when
@@ -560,13 +488,13 @@ public class MemberServiceTest extends MemberTest {
         ProfileImage savedProfileImage = createProfileImage(1L, "memberImage");
         Member savedMember = createMember(1L, "member", savedProfileImage);
 
-        when(memberRepository.findByUserId(anyString())).thenReturn(Optional.of(savedMember));
+        when(memberRepository.findByEmail(anyString())).thenReturn(Optional.of(savedMember));
 
         // when
-        MemberInfoResponse response = memberService.getMemberInfo(member.getUserId());
+        MemberInfoResponse response = memberService.getMemberInfo(member.getEmail());
 
         // then
-        assertThat(response.getUserId()).isEqualTo(savedMember.getUserId());
+        assertThat(response.getEmail()).isEqualTo(savedMember.getEmail());
         assertThat(response.getNickname()).isEqualTo(savedMember.getNickname());
         assertThat(response.getProfileImage()).isEqualTo(savedProfileImage.getS3ObjectUrl());
     }
@@ -575,10 +503,11 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("사용자 정보 조회 시 사용자 데이터가 없어 예외 발생")
     void getMemberInfo_memberNotFoundException(){
         // given
-        when(memberRepository.findByUserId(anyString())).thenReturn(Optional.empty());
+        when(memberRepository.findByEmail(anyString())).thenReturn(Optional.empty());
 
         // when
-        DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> memberService.getMemberInfo(member.getUserId()));
+        DataNotFoundException fail = assertThrows(DataNotFoundException.class,
+                () -> memberService.getMemberInfo(member.getEmail()));
 
         // then
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.MEMBER_NOT_FOUND.getStatus());
@@ -591,11 +520,11 @@ public class MemberServiceTest extends MemberTest {
         // given
         ChangeNicknameRequest request = createChangeNicknameRequest("newNickname");
 
-        when(memberRepository.findByUserId(anyString())).thenReturn(Optional.of(member));
+        when(memberRepository.findByEmail(anyString())).thenReturn(Optional.of(member));
         when(memberRepository.existsByNickname(request.getNickname())).thenReturn(false);
 
         // when, then
-        assertDoesNotThrow(() -> memberService.changeNickname(member.getUserId(), request));
+        assertDoesNotThrow(() -> memberService.changeNickname(member.getEmail(), request));
         assertThat(member.getNickname()).isEqualTo(request.getNickname());
     }
 
@@ -605,10 +534,11 @@ public class MemberServiceTest extends MemberTest {
         // given
         ChangeNicknameRequest request = createChangeNicknameRequest("newNickname");
 
-        when(memberRepository.findByUserId(anyString())).thenReturn(Optional.empty());
+        when(memberRepository.findByEmail(anyString())).thenReturn(Optional.empty());
 
         // when
-        DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> memberService.changeNickname(member.getUserId(), request));
+        DataNotFoundException fail = assertThrows(DataNotFoundException.class,
+                () -> memberService.changeNickname(member.getEmail(), request));
 
         // then
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.MEMBER_NOT_FOUND.getStatus());
@@ -624,7 +554,8 @@ public class MemberServiceTest extends MemberTest {
         when(memberRepository.existsByNickname(anyString())).thenReturn(true);
 
         // when
-        DataExistException fail = assertThrows(DataExistException.class, () -> memberService.changeNickname(member.getUserId(), request));
+        DataExistException fail = assertThrows(DataExistException.class,
+                () -> memberService.changeNickname(member.getEmail(), request));
 
         // then
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.ALREADY_EXISTED_NICKNAME.getStatus());
@@ -638,7 +569,7 @@ public class MemberServiceTest extends MemberTest {
         EmailRequest emailRequest = createEmailRequest("changeMember@email.com");
 
         when(memberRepository.existsByEmail(anyString())).thenReturn(false);
-        when(memberRepository.findByUserId(anyString())).thenReturn(Optional.of(member));
+        when(memberRepository.findByEmail(anyString())).thenReturn(Optional.of(member));
         when(redisUtils.getEmailData(any(), anyString())).thenReturn("true");
 
         // when
@@ -688,7 +619,7 @@ public class MemberServiceTest extends MemberTest {
 
         when(memberRepository.existsByEmail(anyString())).thenReturn(false);
         when(redisUtils.getEmailData(any(), anyString())).thenReturn("true");
-        when(memberRepository.findByUserId(anyString())).thenReturn(Optional.empty());
+        when(memberRepository.findByEmail(anyString())).thenReturn(Optional.empty());
 
 
         // when, then
@@ -783,17 +714,16 @@ public class MemberServiceTest extends MemberTest {
                 createTravelAttendee(2L, member, schedule2, AttendeeRole.GUEST, AttendeePermission.READ)
         );
 
-        when(memberRepository.findByUserId(anyString())).thenReturn(Optional.of(member));
+        when(memberRepository.findByEmail(anyString())).thenReturn(Optional.of(member));
         when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
-        when(travelAttendeeRepository.findAllByMember_UserId(anyString())).thenReturn(attendees);
+        when(travelAttendeeRepository.findAllByMember_Email(anyString())).thenReturn(attendees);
 
         // when
-        assertThatCode(() -> memberService.deactivateMember(accessToken, member.getUserId(), request))
-                .doesNotThrowAnyException();
+        assertDoesNotThrow(() -> memberService.deactivateMember(accessToken, member.getEmail(), request));
 
 
         // then
-        assertThat(member.getUserId()).isEqualTo("알 수 없음");
+        assertThat(member.getEmail()).isEqualTo("알 수 없음");
         assertThat(member.getPassword()).isEqualTo("알 수 없음");
     }
 
@@ -804,17 +734,16 @@ public class MemberServiceTest extends MemberTest {
         // given
         DeactivateRequest request = createDeactivateRequest(member.getPassword());
 
-        when(memberRepository.findByUserId(anyString())).thenReturn(Optional.of(member));
+        when(memberRepository.findByEmail(anyString())).thenReturn(Optional.of(member));
         when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
-        when(travelAttendeeRepository.findAllByMember_UserId(anyString())).thenReturn(new ArrayList<>());
+        when(travelAttendeeRepository.findAllByMember_Email(anyString())).thenReturn(new ArrayList<>());
 
         // when
-        assertThatCode(() -> memberService.deactivateMember(accessToken, member.getUserId(), request))
-                .doesNotThrowAnyException();
+        assertDoesNotThrow(() -> memberService.deactivateMember(accessToken, member.getEmail(), request));
 
 
         // then
-        assertThat(member.getUserId()).isEqualTo("알 수 없음");
+        assertThat(member.getEmail()).isEqualTo("알 수 없음");
         assertThat(member.getPassword()).isEqualTo("알 수 없음");
     }
 
@@ -824,13 +753,15 @@ public class MemberServiceTest extends MemberTest {
         // given
         DeactivateRequest request = createDeactivateRequest(member.getPassword());
 
-        when(memberRepository.findByUserId(anyString())).thenReturn(Optional.empty());
+        when(memberRepository.findByEmail(anyString())).thenReturn(Optional.empty());
 
         // when
+        DataNotFoundException fail = assertThrows(DataNotFoundException.class,
+                () -> memberService.deactivateMember(accessToken, member.getEmail(), request));
+
         // then
-        assertThatThrownBy(() -> memberService.deactivateMember(accessToken, member.getUserId(), request))
-                .isInstanceOf(DataNotFoundException.class)
-                .hasMessage(ErrorCode.MEMBER_NOT_FOUND.getMessage());
+        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.MEMBER_NOT_FOUND.getStatus());
+        assertThat(fail.getMessage()).isEqualTo(ErrorCode.MEMBER_NOT_FOUND.getMessage());
 
     }
 
@@ -840,13 +771,16 @@ public class MemberServiceTest extends MemberTest {
         // given
         DeactivateRequest request = createDeactivateRequest("incorrect_password");
 
-        when(memberRepository.findByUserId(anyString())).thenReturn(Optional.of(member));
+        when(memberRepository.findByEmail(anyString())).thenReturn(Optional.of(member));
         when(passwordEncoder.matches(anyString(), anyString())).thenReturn(false);
 
         // when
-        assertThatThrownBy(() -> memberService.deactivateMember(accessToken, member.getUserId(), request))
-                .isInstanceOf(IncorrectPasswordException.class)
-                .hasMessage(ErrorCode.INCORRECT_PASSWORD.getMessage());
+        IncorrectPasswordException fail = assertThrows(IncorrectPasswordException.class,
+                () -> memberService.deactivateMember(accessToken, member.getEmail(), request));
+
+        // then
+        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.INCORRECT_PASSWORD.getStatus());
+        assertThat(fail.getMessage()).isEqualTo(ErrorCode.INCORRECT_PASSWORD.getMessage());
 
     }
 

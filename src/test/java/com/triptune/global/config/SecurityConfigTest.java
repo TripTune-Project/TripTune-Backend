@@ -22,11 +22,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 public class SecurityConfigTest {
 
-    @Autowired
-    private WebApplicationContext wac;
-
-    @MockBean
-    private HttpRequestEndpointChecker endpointChecker;
+    @Autowired private WebApplicationContext wac;
+    @MockBean private HttpRequestEndpointChecker endpointChecker;
 
     private MockMvc mockMvc;
 

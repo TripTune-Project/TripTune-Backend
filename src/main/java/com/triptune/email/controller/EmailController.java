@@ -1,7 +1,7 @@
 package com.triptune.email.controller;
 
-import com.triptune.email.dto.VerifyAuthRequest;
-import com.triptune.email.dto.EmailRequest;
+import com.triptune.email.dto.request.VerifyAuthRequest;
+import com.triptune.email.dto.request.EmailRequest;
 import com.triptune.member.service.MemberService;
 import com.triptune.email.exception.EmailVerifyException;
 import com.triptune.email.service.EmailService;

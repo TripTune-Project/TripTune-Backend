@@ -1,24 +1,23 @@
 package com.triptune.member;
 
 import com.triptune.BaseTest;
-import com.triptune.email.dto.EmailRequest;
+import com.triptune.email.dto.request.EmailRequest;
 import com.triptune.member.dto.request.*;
 
 public class MemberTest extends BaseTest {
 
-    protected JoinRequest createMemberRequest(){
+    protected JoinRequest createMemberRequest(String email, String password, String repassword){
         return JoinRequest.builder()
-                .userId("testUser")
-                .password("password123@")
-                .rePassword("password123@")
-                .nickname("test")
-                .email("test@test.com")
+                .email(email + "@email.com")
+                .password(password)
+                .rePassword(repassword)
+                .nickname(email)
                 .build();
     }
 
-    protected LoginRequest createLoginRequest(String userId, String password){
+    protected LoginRequest createLoginRequest(String email, String password){
         return LoginRequest.builder()
-                .userId(userId)
+                .email(email + "@email.com")
                 .password(password)
                 .build();
     }
@@ -29,7 +28,7 @@ public class MemberTest extends BaseTest {
                 .build();
     }
 
-    protected ResetPasswordRequest createResetPasswordDTO(String passwordToken, String newPassword1, String newPassword2){
+    protected ResetPasswordRequest createResetPasswordRequest(String passwordToken, String newPassword1, String newPassword2){
         return ResetPasswordRequest.builder()
                 .passwordToken(passwordToken)
                 .password(newPassword1)
@@ -37,24 +36,16 @@ public class MemberTest extends BaseTest {
                 .build();
     }
 
-    protected LogoutRequest createLogoutDTO(String nickname){
+    protected LogoutRequest createLogoutRequest(String nickname){
         return LogoutRequest.builder()
                 .nickname(nickname)
                 .build();
 
     }
 
-
-    protected FindIdRequest createFindIdRequest(String email){
-        return FindIdRequest.builder()
-                .email(email)
-                .build();
-    }
-
-    protected FindPasswordRequest createFindPasswordDTO(String userId){
+    protected FindPasswordRequest createFindPasswordRequest(String email){
         return FindPasswordRequest.builder()
-                .userId(userId)
-                .email(userId + "@email.com")
+                .email(email + "@email.com")
                 .build();
     }
 

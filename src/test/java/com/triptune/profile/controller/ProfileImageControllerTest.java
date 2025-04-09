@@ -54,7 +54,7 @@ class ProfileImageControllerTest extends ProfileImageTest {
     }
 
     @Test
-    @WithMockUser("member")
+    @WithMockUser("member@email.com")
     @DisplayName("프로필 이미지 수정")
     void updateProfileImage() throws Exception{
         byte[] content = createTestImage("jpg");
@@ -72,7 +72,7 @@ class ProfileImageControllerTest extends ProfileImageTest {
     }
 
     @Test
-    @WithMockUser("member")
+    @WithMockUser("member@email.com")
     @DisplayName("프로필 이미지 수정 시 이미지 확장자 예외 발생")
     void updateProfileImage_invalidExtensionException() throws Exception{
         byte[] content = createTestImage("gif");
@@ -89,7 +89,7 @@ class ProfileImageControllerTest extends ProfileImageTest {
     }
 
     @Test
-    @WithMockUser("member")
+    @WithMockUser("member@email.com")
     @DisplayName("프로필 이미지 수정 시 이미지 데이터 존재하지 않아 예외 발생")
     void updateProfileImage_profileImageNotFoundException() throws Exception{
         byte[] content = createTestImage("png");

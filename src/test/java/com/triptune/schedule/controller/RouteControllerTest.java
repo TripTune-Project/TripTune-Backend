@@ -78,7 +78,6 @@ public class RouteControllerTest extends ScheduleTest {
     private TravelImage travelImage4;
 
 
-
     @BeforeEach
     void setUp(){
         mockMvc = MockMvcBuilders.webAppContextSetup(wac)
@@ -107,8 +106,8 @@ public class RouteControllerTest extends ScheduleTest {
         TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(0L, member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ));
         TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(0L, member2, schedule2, AttendeeRole.AUTHOR, AttendeePermission.ALL));
 
-        schedule1.setTravelAttendeeList(new ArrayList<>(List.of(attendee1, attendee2)));
-        schedule2.setTravelAttendeeList(new ArrayList<>(List.of(attendee3)));
+        schedule1.setTravelAttendeeList(List.of(attendee1, attendee2));
+        schedule2.setTravelAttendeeList(List.of(attendee3));
 
         travelPlace3 = travelPlaceRepository.save(createTravelPlace(null, country, city, district, apiCategory, List.of(travelImage3)));
     }
@@ -116,7 +115,7 @@ public class RouteControllerTest extends ScheduleTest {
 
     @Test
     @DisplayName("여행 루트 조회 성공")
-    @WithMockUser(username = "member1")
+    @WithMockUser(username = "member1@email.com")
     void getTravelRoutes() throws Exception {
         // given
         travelPlace1 = travelPlaceRepository.save(createTravelPlace(null, country, city, district, apiCategory, List.of(travelImage1, travelImage2)));
@@ -144,7 +143,7 @@ public class RouteControllerTest extends ScheduleTest {
 
     @Test
     @DisplayName("여행 루트 조회 시 저장된 여행 루트 데이터 없는 경우")
-    @WithMockUser(username = "member1")
+    @WithMockUser(username = "member1@email.com")
     void getTravelRoutesWithoutData() throws Exception {
         mockMvc.perform(get("/api/schedules/{scheduleId}/routes", schedule1.getScheduleId())
                         .param("page", "1"))
@@ -155,7 +154,7 @@ public class RouteControllerTest extends ScheduleTest {
 
     @Test
     @DisplayName("여행 루트 조회 시 일정 데이터 존재하지 않아 예외 발생")
-    @WithMockUser(username = "member1")
+    @WithMockUser(username = "member1@email.com")
     void getTravelRoutes_dataNotFoundException() throws Exception {
         mockMvc.perform(get("/api/schedules/{scheduleId}/routes", 0L)
                         .param("page", "1"))
@@ -166,7 +165,7 @@ public class RouteControllerTest extends ScheduleTest {
 
     @Test
     @DisplayName("여행 루트 조회 시 해당 일정에 접근 권한이 없어 예외 발생")
-    @WithMockUser(username = "member1")
+    @WithMockUser(username = "member1@email.com")
     void getTravelRoutes_forbiddenScheduleException() throws Exception {
         mockMvc.perform(get("/api/schedules/{scheduleId}/routes", schedule2.getScheduleId())
                         .param("page", "1"))
@@ -176,14 +175,14 @@ public class RouteControllerTest extends ScheduleTest {
 
     @Test
     @DisplayName("여행 루트의 마지막 여행지 추가")
-    @WithMockUser(username = "member1")
+    @WithMockUser(username = "member1@email.com")
     void createLastRoute() throws Exception{
         // given
         TravelRoute route1 = travelRouteRepository.save(createTravelRoute(schedule1, travelPlace1, 1));
         TravelRoute route2 = travelRouteRepository.save(createTravelRoute(schedule1, travelPlace1, 2));
         TravelRoute route3 = travelRouteRepository.save(createTravelRoute(schedule1, travelPlace2, 3));
 
-        schedule1.setTravelRouteList(new ArrayList<>(List.of(route1, route2, route3)));
+        schedule1.setTravelRouteList(List.of(route1, route2, route3));
         travelPlace1 = travelPlaceRepository.save(createTravelPlace(null, country, city, district, apiCategory, List.of(travelImage1, travelImage2)));
         travelPlace2 = travelPlaceRepository.save(createTravelPlace(null, country, city, district, apiCategory, List.of(travelImage3, travelImage4)));
 
@@ -199,7 +198,7 @@ public class RouteControllerTest extends ScheduleTest {
 
     @Test
     @DisplayName("여행 루트의 마지막 여행지 추가 시 저장된 여행 루트가 없는 경우")
-    @WithMockUser(username = "member1")
+    @WithMockUser(username = "member1@email.com")
     void createLastRoute_emptyRouteList() throws Exception{
         schedule1.setTravelRouteList(new ArrayList<>());
 
@@ -213,7 +212,7 @@ public class RouteControllerTest extends ScheduleTest {
 
     @Test
     @DisplayName("여행 루트의 마지막 여행지 추가 시 일정 데이터 존재하지 않아 예외 발생")
-    @WithMockUser(username = "member1")
+    @WithMockUser(username = "member1@email.com")
     void createLastRoute_scheduleNotFoundException() throws Exception {
         mockMvc.perform(post("/api/schedules/{scheduleId}/routes", 0L)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -226,7 +225,7 @@ public class RouteControllerTest extends ScheduleTest {
 
     @Test
     @DisplayName("여행 루트의 마지막 여행지 추가 시 참석자 데이터 존재하지 않아 예외 발생")
-    @WithMockUser(username = "member3")
+    @WithMockUser(username = "member3@email.com")
     void createLastRoute_attendeeNotFoundException() throws Exception {
         mockMvc.perform(post("/api/schedules/{scheduleId}/routes", schedule1.getScheduleId())
                         .contentType(MediaType.APPLICATION_JSON)
@@ -239,7 +238,7 @@ public class RouteControllerTest extends ScheduleTest {
 
     @Test
     @DisplayName("여행 루트의 마지막 여행지 추가 시 편집 권한이 없어서 예외 발생")
-    @WithMockUser(username = "member2")
+    @WithMockUser(username = "member2@email.com")
     void createLastRoute_forbiddenScheduleException() throws Exception{
         // given
         TravelRoute route1 = travelRouteRepository.save(createTravelRoute(schedule1, travelPlace1, 1));
@@ -262,7 +261,7 @@ public class RouteControllerTest extends ScheduleTest {
 
     @Test
     @DisplayName("여행 루트의 마지막 여행지 추가 시 여행지 데이터 존재하지 않아 예외 발생")
-    @WithMockUser(username = "member1")
+    @WithMockUser(username = "member1@email.com")
     void createLastRoute_placeNotFoundException() throws Exception {
         mockMvc.perform(post("/api/schedules/{scheduleId}/routes", schedule1.getScheduleId())
                         .contentType(MediaType.APPLICATION_JSON)

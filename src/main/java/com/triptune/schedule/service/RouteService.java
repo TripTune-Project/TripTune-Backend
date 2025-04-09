@@ -37,10 +37,10 @@ public class RouteService {
         return travelRoutes.map(RouteResponse::from);
     }
 
-    public void createLastRoute(Long scheduleId, String userId, RouteCreateRequest routeCreateRequest) {
+    public void createLastRoute(Long scheduleId, String email, RouteCreateRequest routeCreateRequest) {
         TravelSchedule schedule = findTravelScheduleByScheduleId(scheduleId);
 
-        validateEnableEdit(scheduleId, userId);
+        validateEnableEdit(scheduleId, email);
 
         TravelPlace place = findTravelPlaceByPlaceId(routeCreateRequest.getPlaceId());
         TravelRoute route = TravelRoute.of(schedule, place, schedule.getTravelRouteList().size() + 1);
@@ -53,8 +53,8 @@ public class RouteService {
                 .orElseThrow(() -> new DataNotFoundException(ErrorCode.SCHEDULE_NOT_FOUND));
     }
 
-    public void validateEnableEdit(Long scheduleId, String userId){
-        TravelAttendee attendee = travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_UserId(scheduleId, userId)
+    public void validateEnableEdit(Long scheduleId, String email){
+        TravelAttendee attendee = travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_Email(scheduleId, email)
                 .orElseThrow(() -> new DataNotFoundException(ErrorCode.ATTENDEE_NOT_FOUND));
 
         if (!attendee.getPermission().isEnableEdit()){

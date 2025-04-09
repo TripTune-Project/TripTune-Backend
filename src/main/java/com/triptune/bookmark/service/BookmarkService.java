@@ -26,12 +26,12 @@ public class BookmarkService {
     private final TravelPlaceRepository travelPlaceRepository;
     private final BookmarkRepository bookmarkRepository;
 
-    public void createBookmark(String userId, BookmarkRequest bookmarkRequest) {
-        if (isExistBookmark(userId, bookmarkRequest.getPlaceId())){
+    public void createBookmark(String email, BookmarkRequest bookmarkRequest) {
+        if (isExistBookmark(email, bookmarkRequest.getPlaceId())){
             throw new DataExistException(ErrorCode.ALREADY_EXISTED_BOOKMARK);
         }
 
-        Member member = findMemberByUserId(userId);
+        Member member = getMemberByEmail(email);
         TravelPlace travelPlace = findTravelPlaceByPlaceId(bookmarkRequest.getPlaceId());
 
         Bookmark bookmark = Bookmark.from(member, travelPlace);
@@ -41,8 +41,8 @@ public class BookmarkService {
     }
 
 
-    private Member findMemberByUserId(String userId){
-        return memberRepository.findByUserId(userId)
+    private Member getMemberByEmail(String email){
+        return memberRepository.findByEmail(email)
                 .orElseThrow(() -> new DataNotFoundException(ErrorCode.MEMBER_NOT_FOUND));
     }
 
@@ -51,22 +51,22 @@ public class BookmarkService {
                 .orElseThrow(() -> new DataNotFoundException(ErrorCode.PLACE_NOT_FOUND));
     }
 
-    public void deleteBookmark(String userId, Long placeId) {
-        if (!isExistBookmark(userId, placeId)){
+    public void deleteBookmark(String email, Long placeId) {
+        if (!isExistBookmark(email, placeId)){
             throw new DataNotFoundException(ErrorCode.BOOKMARK_NOT_FOUND);
         }
 
-        bookmarkRepository.deleteByMember_UserIdAndTravelPlace_PlaceId(userId, placeId);
+        bookmarkRepository.deleteByMember_EmailAndTravelPlace_PlaceId(email, placeId);
 
         TravelPlace travelPlace = findTravelPlaceByPlaceId(placeId);
         travelPlace.decreaseBookmarkCnt();
     }
 
-    private boolean isExistBookmark(String userId, Long placeId){
-        return bookmarkRepository.existsByMember_UserIdAndTravelPlace_PlaceId(userId, placeId);
+    private boolean isExistBookmark(String email, Long placeId){
+        return bookmarkRepository.existsByMember_EmailAndTravelPlace_PlaceId(email, placeId);
     }
 
-    public Page<TravelPlace> getBookmarkTravelPlaces(String userId, Pageable pageable, BookmarkSortType sortType) {
-        return bookmarkRepository.findBookmarksByUserId(userId, pageable, sortType);
+    public Page<TravelPlace> getBookmarkTravelPlaces(String email, Pageable pageable, BookmarkSortType sortType) {
+        return bookmarkRepository.findBookmarksByEmail(email, pageable, sortType);
     }
 }

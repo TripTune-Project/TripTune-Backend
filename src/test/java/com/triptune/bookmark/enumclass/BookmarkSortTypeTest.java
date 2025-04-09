@@ -1,6 +1,5 @@
 package com.triptune.bookmark.enumclass;
 
-import com.triptune.bookmark.enumclass.BookmarkSortType;
 import com.triptune.global.enumclass.ErrorCode;
 import com.triptune.global.exception.CustomIllegalArgumentException;
 import org.junit.jupiter.api.DisplayName;

@@ -12,10 +12,10 @@ import java.util.Optional;
 @Repository
 public interface TravelAttendeeRepository extends JpaRepository<TravelAttendee, Long>, TravelAttendeeRepositoryCustom {
     List<TravelAttendee> findAllByTravelSchedule_ScheduleId(@Param("scheduleId") Long scheduleId);
-    boolean existsByTravelSchedule_ScheduleIdAndMember_UserId(@Param("scheduleId") Long scheduleId, @Param("userId") String userId);
-    Optional<TravelAttendee> findByTravelSchedule_ScheduleIdAndMember_UserId(@Param("scheduleId") Long scheduleId, @Param("userId") String userId);
-    boolean existsByTravelSchedule_ScheduleIdAndMember_UserIdAndRole(@Param("scheduleId") Long scheduleId, @Param("userId") String userId, @Param("role") AttendeeRole role);
+    boolean existsByTravelSchedule_ScheduleIdAndMember_Email(@Param("scheduleId") Long scheduleId, @Param("email") String email);
+    Optional<TravelAttendee> findByTravelSchedule_ScheduleIdAndMember_Email(@Param("scheduleId") Long scheduleId, @Param("email") String email);
+    boolean existsByTravelSchedule_ScheduleIdAndMember_EmailAndRole(@Param("scheduleId") Long scheduleId, @Param("email") String email, @Param("role") AttendeeRole role);
     int countByTravelSchedule_ScheduleId(@Param("scheduleId") Long scheduleId);
     Optional<TravelAttendee> findByTravelSchedule_ScheduleIdAndAttendeeId(@Param("scheduleId") Long scheduleId, @Param("attendeeId") Long attendeeId);
-    List<TravelAttendee> findAllByMember_UserId(@Param("userId") String userId);
+    List<TravelAttendee> findAllByMember_Email(@Param("email") String email);
 }

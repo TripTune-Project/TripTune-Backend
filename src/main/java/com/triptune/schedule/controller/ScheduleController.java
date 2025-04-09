@@ -30,27 +30,27 @@ public class ScheduleController {
 
     @GetMapping
     @Operation(summary = "전체 일정 목록 조회", description = "작성한 전체 일정을 조회합니다.")
-    public ApiSchedulePageResponse<ScheduleInfoResponse> getAllSchedulesByUserId(@RequestParam(name = "page") int page){
-        String userId = SecurityUtils.getCurrentUserId();
-        SchedulePageResponse<ScheduleInfoResponse> response = scheduleService.getAllSchedulesByUserId(page, userId);
+    public ApiSchedulePageResponse<ScheduleInfoResponse> getAllSchedulesByEmail(@RequestParam(name = "page") int page){
+        String email = SecurityUtils.getCurrentEmail();
+        SchedulePageResponse<ScheduleInfoResponse> response = scheduleService.getAllSchedulesByEmail(page, email);
 
         return ApiSchedulePageResponse.dataResponse(response);
     }
 
     @GetMapping("/shared")
     @Operation(summary = "공유된 일정 목록 조회", description = "작성한 일정 중 공유된 일정을 조회합니다.")
-    public ApiSchedulePageResponse<ScheduleInfoResponse> getSharedSchedulesByUserId(@RequestParam(name = "page") int page){
-        String userId = SecurityUtils.getCurrentUserId();
-        SchedulePageResponse<ScheduleInfoResponse> response = scheduleService.getSharedSchedulesByUserId(page, userId);
+    public ApiSchedulePageResponse<ScheduleInfoResponse> getSharedSchedulesByEmail(@RequestParam(name = "page") int page){
+        String email = SecurityUtils.getCurrentEmail();
+        SchedulePageResponse<ScheduleInfoResponse> response = scheduleService.getSharedSchedulesByEmail(page, email);
 
         return ApiSchedulePageResponse.dataResponse(response);
     }
 
     @GetMapping("/edit")
     @Operation(summary = "수정 권한 있는 일정 목록 조회", description = "작성한 일정 중 수정 권한이 있는 일정을 필요 데이터로 구성해 조회합니다.")
-    public ApiPageResponse<OverviewScheduleResponse> getEnableEditScheduleByUserId(@RequestParam(name = "page") int page){
-        String userId = SecurityUtils.getCurrentUserId();
-        Page<OverviewScheduleResponse> response = scheduleService.getEnableEditScheduleByUserId(page, userId);
+    public ApiPageResponse<OverviewScheduleResponse> getEnableEditScheduleByEmail(@RequestParam(name = "page") int page){
+        String email = SecurityUtils.getCurrentEmail();
+        Page<OverviewScheduleResponse> response = scheduleService.getEnableEditScheduleByEmail(page, email);
 
         return ApiPageResponse.dataResponse(response);
     }
@@ -60,13 +60,13 @@ public class ScheduleController {
     public ApiSchedulePageResponse<ScheduleInfoResponse> searchSchedules(@RequestParam(name = "page") int page,
                                                                          @RequestParam(name = "keyword") String keyword,
                                                                          @RequestParam(name = "type") String type){
-        String userId = SecurityUtils.getCurrentUserId();
+        String email = SecurityUtils.getCurrentEmail();
         ScheduleSearchType searchType = ScheduleSearchType.from(type);
 
         SchedulePageResponse<ScheduleInfoResponse> response =
                 searchType.isAll()
-                ? scheduleService.searchAllSchedules(page, keyword, userId)
-                : scheduleService.searchSharedSchedules(page, keyword, userId);
+                ? scheduleService.searchAllSchedules(page, keyword, email)
+                : scheduleService.searchSharedSchedules(page, keyword, email);
 
         return ApiSchedulePageResponse.dataResponse(response);
     }
@@ -75,9 +75,9 @@ public class ScheduleController {
     @PostMapping
     @Operation(summary = "일정 생성", description = "여행 이름, 날짜를 선택해 일정을 생성합니다.")
     public ApiResponse<ScheduleCreateResponse> createSchedule(@Valid @RequestBody ScheduleCreateRequest scheduleCreateRequest){
-        String userId = SecurityUtils.getCurrentUserId();
+        String email = SecurityUtils.getCurrentEmail();
 
-        ScheduleCreateResponse response = scheduleService.createSchedule(scheduleCreateRequest, userId);
+        ScheduleCreateResponse response = scheduleService.createSchedule(scheduleCreateRequest, email);
         return ApiResponse.dataResponse(response);
     }
 
@@ -95,9 +95,9 @@ public class ScheduleController {
     @PatchMapping("/{scheduleId}")
     @Operation(summary = "일정 수정", description = "일정 상세 화면에서 저장 버튼을 누르면 해당 일정이 수정됩니다. 사용자는 저장 작업으로 보지만, 실제로는 일정 수정 작업입니다.")
     public ApiResponse<?> updateSchedule(@PathVariable(name = "scheduleId") Long scheduleId, @Valid @RequestBody ScheduleUpdateRequest scheduleUpdateRequest){
-        String userId = SecurityUtils.getCurrentUserId();
+        String email = SecurityUtils.getCurrentEmail();
 
-        scheduleService.updateSchedule(userId, scheduleId, scheduleUpdateRequest);
+        scheduleService.updateSchedule(email, scheduleId, scheduleUpdateRequest);
         return ApiResponse.okResponse();
     }
 
@@ -105,9 +105,9 @@ public class ScheduleController {
     @DeleteMapping("/{scheduleId}")
     @Operation(summary = "일정 삭제", description = "일정을 삭제합니다.")
     public ApiResponse<?> deleteSchedule(@PathVariable(name = "scheduleId") Long scheduleId){
-        String userId = SecurityUtils.getCurrentUserId();
+        String email = SecurityUtils.getCurrentEmail();
 
-        scheduleService.deleteSchedule(scheduleId, userId);
+        scheduleService.deleteSchedule(scheduleId, email);
         return ApiResponse.okResponse();
     }
 

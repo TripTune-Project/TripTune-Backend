@@ -1,7 +1,7 @@
 package com.triptune.member.controller;
 
 import com.triptune.bookmark.enumclass.BookmarkSortType;
-import com.triptune.email.dto.EmailRequest;
+import com.triptune.email.dto.request.EmailRequest;
 import com.triptune.global.enumclass.ErrorCode;
 import com.triptune.global.exception.CustomNotValidException;
 import com.triptune.global.response.ApiResponse;
@@ -9,7 +9,6 @@ import com.triptune.global.response.pagination.ApiPageResponse;
 import com.triptune.global.util.JwtUtils;
 import com.triptune.global.util.SecurityUtils;
 import com.triptune.member.dto.request.*;
-import com.triptune.member.dto.response.FindIdResponse;
 import com.triptune.member.dto.response.LoginResponse;
 import com.triptune.member.dto.response.MemberInfoResponse;
 import com.triptune.member.dto.response.RefreshTokenResponse;
@@ -25,7 +24,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 
@@ -75,12 +73,6 @@ public class MemberController {
         return ApiResponse.dataResponse(response);
     }
 
-    @PostMapping("/find-id")
-    @Operation(summary = "아이디 찾기", description = "아이디 찾기를 실행합니다.")
-    public ApiResponse<FindIdResponse> findId(@Valid @RequestBody FindIdRequest findIdRequest) {
-        FindIdResponse response = memberService.findId(findIdRequest);
-        return ApiResponse.dataResponse(response);
-    }
 
     @PostMapping("/find-password")
     @Operation(summary = "비밀번호 찾기", description = "비밀번호 찾기를 요청합니다. 비밀번호 변경 화면으로 연결되는 링크가 이메일을 통해서 제공됩니다.")
@@ -112,8 +104,8 @@ public class MemberController {
             throw new IncorrectPasswordException(ErrorCode.CORRECT_NOWPASSWORD_NEWPASSWORD);
         }
 
-        String userId = SecurityContextHolder.getContext().getAuthentication().getName();
-        memberService.changePassword(userId, passwordRequest);
+        String email = SecurityUtils.getCurrentEmail();
+        memberService.changePassword(email, passwordRequest);
 
         return ApiResponse.okResponse();
     }
@@ -121,17 +113,17 @@ public class MemberController {
     @GetMapping("/info")
     @Operation(summary = "사용자 정보 조회", description = "사용자 정보를 조회합니다.")
     public ApiResponse<MemberInfoResponse> getMemberInfo(){
-        String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+        String email = SecurityUtils.getCurrentEmail();
 
-        MemberInfoResponse response = memberService.getMemberInfo(userId);
+        MemberInfoResponse response = memberService.getMemberInfo(email);
         return ApiResponse.dataResponse(response);
     }
 
     @PatchMapping("/change-nickname")
     @Operation(summary = "사용자 닉네임 변경", description = "사용자 닉네임을 변경합니다.")
     public ApiResponse<?> changeNickname(@Valid @RequestBody ChangeNicknameRequest changeNicknameRequest){
-        String userId = SecurityContextHolder.getContext().getAuthentication().getName();
-        memberService.changeNickname(userId, changeNicknameRequest);
+        String email = SecurityUtils.getCurrentEmail();
+        memberService.changeNickname(email, changeNicknameRequest);
         return ApiResponse.okResponse();
 
     }
@@ -139,17 +131,17 @@ public class MemberController {
     @PatchMapping("/change-email")
     @Operation(summary = "사용자 이메일 변경", description = "사용자 이메일을 변경합니다.")
     public ApiResponse<?> changeEmail(@Valid @RequestBody EmailRequest emailRequest){
-        String userId = SecurityContextHolder.getContext().getAuthentication().getName();
-        memberService.changeEmail(userId, emailRequest);
+        String email = SecurityUtils.getCurrentEmail();
+        memberService.changeEmail(email, emailRequest);
         return ApiResponse.okResponse();
     }
 
     @GetMapping("/bookmark")
     @Operation(summary = "사용자 북마크 조회", description = "사용자가 등록한 북마크를 조회합니다.")
     public ApiPageResponse<PlaceBookmarkResponse> getMemberBookmarks(@RequestParam(name = "page") int page, @RequestParam(name = "sort") String sort){
-        String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+        String email = SecurityUtils.getCurrentEmail();
         BookmarkSortType sortType = BookmarkSortType.from(sort);
-        Page<PlaceBookmarkResponse> response = memberService.getMemberBookmarks(page, userId, sortType);
+        Page<PlaceBookmarkResponse> response = memberService.getMemberBookmarks(page, email, sortType);
 
         return ApiPageResponse.dataResponse(response);
     }
@@ -158,9 +150,9 @@ public class MemberController {
     @Operation(summary = "회원 탈퇴", description = "회원을 탈퇴합니다.")
     public ApiResponse<Void> deactivateMember(HttpServletRequest request, @Valid @RequestBody DeactivateRequest deactivateRequest){
         String accessToken = jwtUtils.resolveToken(request);
-        String userId = SecurityUtils.getCurrentUserId();
+        String email = SecurityUtils.getCurrentEmail();
 
-        memberService.deactivateMember(accessToken, userId, deactivateRequest);
+        memberService.deactivateMember(accessToken, email, deactivateRequest);
         return ApiResponse.okResponse();
     }
 }

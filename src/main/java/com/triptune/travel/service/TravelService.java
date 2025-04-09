@@ -13,7 +13,6 @@ import com.triptune.travel.dto.response.PlaceSimpleResponse;
 import com.triptune.travel.entity.TravelPlace;
 import com.triptune.travel.enumclass.CityType;
 import com.triptune.travel.enumclass.ThemeType;
-import com.triptune.travel.repository.TravelImageRepository;
 import com.triptune.travel.repository.TravelPlaceRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -33,53 +32,53 @@ public class TravelService {
     private final BookmarkRepository bookmarkRepository;
 
 
-    public Page<PlaceLocation> getNearByTravelPlaces(int page, String userId, PlaceLocationRequest placeLocationRequest) {
+    public Page<PlaceLocation> getNearByTravelPlaces(int page, String email, PlaceLocationRequest placeLocationRequest) {
         Pageable pageable = PageUtils.defaultPageable(page);
         Page<PlaceLocation> placeResponsePage = travelPlaceRepository.findNearByTravelPlaces(pageable, placeLocationRequest, RADIUS_SIZE);
 
-        markBookmarkedTravelPlaces(placeResponsePage.getContent(), userId);
+        markBookmarkedTravelPlaces(placeResponsePage.getContent(), email);
         return placeResponsePage;
     }
 
-    public Page<PlaceLocation> searchTravelPlacesWithLocation(int page, String userId, PlaceSearchRequest placeSearchRequest) {
+    public Page<PlaceLocation> searchTravelPlacesWithLocation(int page, String email, PlaceSearchRequest placeSearchRequest) {
         Pageable pageable = PageUtils.defaultPageable(page);
         Page<PlaceLocation> placeResponsePage = travelPlaceRepository.searchTravelPlacesWithLocation(pageable, placeSearchRequest);
 
-        markBookmarkedTravelPlaces(placeResponsePage.getContent(), userId);
+        markBookmarkedTravelPlaces(placeResponsePage.getContent(), email);
         return placeResponsePage;
     }
 
-    public Page<PlaceLocation> searchTravelPlacesWithoutLocation(int page, String userId, PlaceSearchRequest placeSearchRequest) {
+    public Page<PlaceLocation> searchTravelPlacesWithoutLocation(int page, String email, PlaceSearchRequest placeSearchRequest) {
         Pageable pageable = PageUtils.defaultPageable(page);
         Page<PlaceResponse> placeResponsePage = travelPlaceRepository.searchTravelPlaces(pageable, placeSearchRequest.getKeyword());
 
         Page<PlaceLocation> placeLocationPage = placeResponsePage.map(PlaceLocation::from);
-        markBookmarkedTravelPlaces(placeLocationPage.getContent(), userId);
+        markBookmarkedTravelPlaces(placeLocationPage.getContent(), email);
         return placeLocationPage;
     }
 
-    public void markBookmarkedTravelPlaces(List<PlaceLocation> placeResponses, String userId){
-        if (userId != null){
-            placeResponses.forEach(placeResponse -> updateBookmarkStatus(userId, placeResponse));
+    public void markBookmarkedTravelPlaces(List<PlaceLocation> placeResponses, String email){
+        if (email != null){
+            placeResponses.forEach(placeResponse -> updateBookmarkStatus(email, placeResponse));
         }
     }
 
-    public void updateBookmarkStatus(String userId, PlaceLocation placeResponse){
-        boolean isBookmark = bookmarkRepository.existsByMember_UserIdAndTravelPlace_PlaceId(userId, placeResponse.getPlaceId());
+    public void updateBookmarkStatus(String email, PlaceLocation placeResponse){
+        boolean isBookmark = bookmarkRepository.existsByMember_EmailAndTravelPlace_PlaceId(email, placeResponse.getPlaceId());
 
         if (isBookmark){
             placeResponse.updateBookmarkStatusTrue();
         }
     }
 
-    public PlaceDetailResponse getTravelPlaceDetails(Long placeId, String userId) {
+    public PlaceDetailResponse getTravelPlaceDetails(Long placeId, String email) {
         TravelPlace travelPlace = travelPlaceRepository.findById(placeId)
                 .orElseThrow(()-> new DataNotFoundException(ErrorCode.DATA_NOT_FOUND));
 
         boolean isBookmark = false;
 
-        if (userId != null){
-            isBookmark = bookmarkRepository.existsByMember_UserIdAndTravelPlace_PlaceId(userId, placeId);
+        if (email != null){
+            isBookmark = bookmarkRepository.existsByMember_EmailAndTravelPlace_PlaceId(email, placeId);
         }
 
         return PlaceDetailResponse.from(travelPlace, isBookmark);

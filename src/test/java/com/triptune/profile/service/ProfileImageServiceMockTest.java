@@ -30,20 +30,11 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 public class ProfileImageServiceMockTest extends ProfileImageTest {
 
-    @InjectMocks
-    private ProfileImageService profileImageService;
+    @InjectMocks private ProfileImageService profileImageService;
+    @Mock private S3Service s3Service;
+    @Mock private ProfileImageRepository profileImageRepository;
+    @Mock private DefaultProfileImageProperties imageProperties;
 
-    @Mock
-    private S3Service s3Service;
-
-    @Mock
-    private ProfileImageRepository profileImageRepository;
-
-    @Mock
-    private DefaultProfileImageProperties imageProperties;
-
-    @Mock
-    private MemberRepository memberRepository;
 
     @Test
     @DisplayName("프로필 이미지 수정")
@@ -55,7 +46,7 @@ public class ProfileImageServiceMockTest extends ProfileImageTest {
         Member member = createMember(1L, "member");
         ProfileImage profileImage = createProfileImage(1L, "savedImage", member);
 
-        when(profileImageRepository.findByUserId(any())).thenReturn(Optional.of(profileImage));
+        when(profileImageRepository.findByEmail(any())).thenReturn(Optional.of(profileImage));
         when(imageProperties.getS3FileKey()).thenReturn(profileImage.getS3FileKey());
 
         // when
@@ -92,7 +83,7 @@ public class ProfileImageServiceMockTest extends ProfileImageTest {
         byte[] content = createTestImage("png");
         MockMultipartFile mockMultipartFile = new MockMultipartFile("newFile", "newFileOriginalName.png", "image/png", content);
 
-        when(profileImageRepository.findByUserId(any())).thenReturn(Optional.empty());
+        when(profileImageRepository.findByEmail(any())).thenReturn(Optional.empty());
 
         // when
         DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> profileImageService.updateProfileImage("member", mockMultipartFile));

@@ -127,8 +127,8 @@ public class JwtUtils {
    }
 
 
-    public String createToken(String userId, long expirationTime){
-        Claims claims = Jwts.claims().setSubject(userId);
+    public String createToken(String email, long expirationTime){
+        Claims claims = Jwts.claims().setSubject(email);
         Date now = new Date();
         Date expireDate = new Date(now.getTime() + expirationTime);
 

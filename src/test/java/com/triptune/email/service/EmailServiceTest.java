@@ -1,8 +1,8 @@
 package com.triptune.email.service;
 
-import com.triptune.email.dto.VerifyAuthRequest;
+import com.triptune.email.EmailTest;
+import com.triptune.email.dto.request.VerifyAuthRequest;
 import com.triptune.member.repository.MemberRepository;
-import com.triptune.email.service.EmailService;
 import com.triptune.global.util.RedisUtils;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.RepeatedTest;
@@ -23,25 +23,18 @@ import static org.mockito.Mockito.when;
 
 
 @ExtendWith(MockitoExtension.class)
-public class EmailServiceTest {
+public class EmailServiceTest extends EmailTest {
 
-    @InjectMocks
-    private EmailService emailService;
-
-    @Mock
-    private RedisUtils redisUtils;
-
-    @Mock
-    private JavaMailSender javaMailSender;
-
-    @Mock
-    private MemberRepository memberRepository;
+    @InjectMocks private EmailService emailService;
+    @Mock private RedisUtils redisUtils;
+    @Mock private JavaMailSender javaMailSender;
+    @Mock private MemberRepository memberRepository;
 
     @Test
     @DisplayName("이메일 인증 코드 검사")
     void verifyAuthCodeTrue(){
         // given
-        VerifyAuthRequest request = new VerifyAuthRequest("test@email.com", "Abcd123");
+        VerifyAuthRequest request = createVerifyAuthRequest("member@email.com", "Abcd123");
 
         when(redisUtils.getEmailData(any(), anyString())).thenReturn("Abcd123");
 
@@ -56,7 +49,7 @@ public class EmailServiceTest {
     @DisplayName("이메일 인증 코드 검사 시 코드가 틀린 경우")
     void verifyAuthCodeFalse(){
         // given
-        VerifyAuthRequest request = new VerifyAuthRequest("test@email.com", "Abcd123");
+        VerifyAuthRequest request = createVerifyAuthRequest("member@email.com", "Abcd123");
 
         when(redisUtils.getEmailData(any(), anyString())).thenReturn("abcd123");
 
@@ -66,8 +59,6 @@ public class EmailServiceTest {
         // then
         assertThat(response).isFalse();
     }
-
-
 
 
     @RepeatedTest(10)

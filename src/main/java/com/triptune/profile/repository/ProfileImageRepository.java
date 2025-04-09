@@ -10,7 +10,7 @@ import java.util.Optional;
 
 @Repository
 public interface ProfileImageRepository extends JpaRepository<ProfileImage, Long> {
-    @Query("select p from ProfileImage p join fetch p.member where p.member.userId = :userId")
-    Optional<ProfileImage> findByUserId(@Param("userId") String userId);
+    @Query("select p from ProfileImage p join fetch p.member where p.member.email = :email")
+    Optional<ProfileImage> findByEmail(@Param("email") String email);
 }
 

@@ -1,5 +1,6 @@
 package com.triptune.profile.controller;
 
+import com.triptune.global.util.SecurityUtils;
 import com.triptune.profile.service.ProfileImageService;
 import com.triptune.global.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -23,9 +24,9 @@ public class ProfileImageController {
     @PatchMapping
     @Operation(summary = "프로필 이미지 변경", description = "프로필 이미지를 변경합니다.")
     public ApiResponse<?> updateProfileImage(@RequestParam(name = "profileImage") MultipartFile profileImageFile){
-        String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+        String email = SecurityUtils.getCurrentEmail();
 
-        profileImageService.updateProfileImage(userId, profileImageFile);
+        profileImageService.updateProfileImage(email, profileImageFile);
         return ApiResponse.okResponse();
     }
 }
