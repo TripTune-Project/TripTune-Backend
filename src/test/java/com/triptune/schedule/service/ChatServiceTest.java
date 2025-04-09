@@ -38,21 +38,11 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class ChatServiceTest extends ScheduleTest {
 
-    @InjectMocks
-    private ChatService chatService;
-
-    @Mock
-    private ChatMessageRepository chatMessageRepository;
-
-    @Mock
-    private MemberRepository memberRepository;
-
-    @Mock
-    private TravelAttendeeRepository travelAttendeeRepository;
-
-    @Mock
-    private TravelScheduleRepository travelScheduleRepository;
-
+    @InjectMocks private ChatService chatService;
+    @Mock private ChatMessageRepository chatMessageRepository;
+    @Mock private MemberRepository memberRepository;
+    @Mock private TravelAttendeeRepository travelAttendeeRepository;
+    @Mock private TravelScheduleRepository travelScheduleRepository;
 
     private TravelSchedule schedule;
     private Member member1;
@@ -327,7 +317,7 @@ class ChatServiceTest extends ScheduleTest {
 
         when(travelScheduleRepository.existsById(anyLong())).thenReturn(true);
         when(memberRepository.findByNickname(anyString())).thenReturn(Optional.of(member1));
-        when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_UserId(anyLong(), anyString())).thenReturn(Optional.of(attendee));
+        when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_Email(anyLong(), anyString())).thenReturn(Optional.of(attendee));
         when(chatMessageRepository.save(any())).thenReturn(createChatMessage("message1", request.getScheduleId(), member1, request.getMessage()));
 
 
@@ -349,7 +339,7 @@ class ChatServiceTest extends ScheduleTest {
 
         when(travelScheduleRepository.existsById(anyLong())).thenReturn(true);
         when(memberRepository.findByNickname(anyString())).thenReturn(Optional.of(member1));
-        when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_UserId(anyLong(), anyString()))
+        when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_Email(anyLong(), anyString()))
                 .thenReturn(Optional.of(attendee));
 
         // when
@@ -369,7 +359,7 @@ class ChatServiceTest extends ScheduleTest {
 
         when(travelScheduleRepository.existsById(anyLong())).thenReturn(true);
         when(memberRepository.findByNickname(anyString())).thenReturn(Optional.of(member1));
-        when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_UserId(anyLong(), anyString()))
+        when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_Email(anyLong(), anyString()))
                 .thenReturn(Optional.of(attendee));
 
 

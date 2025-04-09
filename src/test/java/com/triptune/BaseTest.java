@@ -31,40 +31,37 @@ public abstract class BaseTest {
     private final String refreshToken = "MemberRefreshToken";
 
 
-    protected Member createMember(Long memberId, String userId){
+    protected Member createMember(Long memberId, String email){
         return Member.builder()
                 .memberId(memberId)
-                .userId(userId)
-                .email(userId + "@email.com")
+                .email(email + "@email.com")
                 .password("test123@")
-                .nickname(userId)
+                .nickname(email)
                 .refreshToken(refreshToken)
                 .isSocialLogin(false)
                 .createdAt(LocalDateTime.now())
                 .build();
     }
 
-    protected Member createMember(Long memberId, String userId, ProfileImage profileImage){
+    protected Member createMember(Long memberId, String email, ProfileImage profileImage){
         return Member.builder()
                 .memberId(memberId)
                 .profileImage(profileImage)
-                .userId(userId)
-                .email(userId + "@email.com")
+                .email(email + "@email.com")
                 .password("test123@")
-                .nickname(userId)
+                .nickname(email)
                 .refreshToken(refreshToken)
                 .isSocialLogin(false)
                 .createdAt(LocalDateTime.now())
                 .build();
     }
 
-    protected Member createMember(Long memberId, String userId, String encodePassword){
+    protected Member createMember(Long memberId, String email, String encodePassword){
         return Member.builder()
                 .memberId(memberId)
-                .userId(userId)
-                .email(userId + "@email.com")
+                .email(email + "@email.com")
                 .password(encodePassword)
-                .nickname(userId)
+                .nickname(email)
                 .refreshToken(refreshToken)
                 .isSocialLogin(false)
                 .createdAt(LocalDateTime.now())
@@ -72,14 +69,13 @@ public abstract class BaseTest {
     }
 
 
-    protected Member createMember(Long memberId, String userId, String encodePassword, ProfileImage profileImage){
+    protected Member createMember(Long memberId, String email, String encodePassword, ProfileImage profileImage){
         return Member.builder()
                 .memberId(memberId)
                 .profileImage(profileImage)
-                .userId(userId)
-                .email(userId + "@email.com")
+                .email(email + "@email.com")
                 .password(encodePassword)
-                .nickname(userId)
+                .nickname(email)
                 .refreshToken(refreshToken)
                 .isSocialLogin(false)
                 .createdAt(LocalDateTime.now())

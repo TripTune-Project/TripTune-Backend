@@ -11,10 +11,10 @@ import java.time.LocalDate;
 import java.util.List;
 
 public abstract class ScheduleTest extends BaseTest {
-    protected ScheduleCreateRequest createScheduleRequest() {
+    protected ScheduleCreateRequest createScheduleRequest(LocalDate startDate) {
         return ScheduleCreateRequest.builder()
                 .scheduleName("테스트")
-                .startDate(LocalDate.now())
+                .startDate(startDate)
                 .endDate(LocalDate.now().plusDays(10))
                 .build();
     }

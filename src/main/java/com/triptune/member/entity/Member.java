@@ -4,6 +4,7 @@ import com.triptune.member.dto.request.JoinRequest;
 import com.triptune.member.enumclass.AnonymousValue;
 import com.triptune.profile.entity.ProfileImage;
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -24,17 +25,14 @@ public class Member {
     @JoinColumn(name = "profile_image_id")
     private ProfileImage profileImage;
 
-    @Column(name = "user_id", unique = true)
-    private String userId;
-
-    @Column(name = "nickname", unique = true)
-    private String nickname;
-
     @Column(name = "email", unique = true)
     private String email;
 
     @Column(name = "password")
     private String password;
+
+    @Column(name = "nickname", unique = true)
+    private String nickname;
 
     @Column(name = "refresh_token")
     private String refreshToken;
@@ -53,13 +51,12 @@ public class Member {
 
 
     @Builder
-    public Member(Long memberId, ProfileImage profileImage, String userId, String nickname, String email, String password, String refreshToken, boolean isSocialLogin, LocalDateTime createdAt, LocalDateTime updatedAt, boolean isActive) {
+    public Member(Long memberId, ProfileImage profileImage, String email, String password, String nickname, String refreshToken, boolean isSocialLogin, LocalDateTime createdAt, LocalDateTime updatedAt, boolean isActive) {
         this.memberId = memberId;
         this.profileImage = profileImage;
-        this.userId = userId;
-        this.nickname = nickname;
         this.email = email;
         this.password = password;
+        this.nickname = nickname;
         this.refreshToken = refreshToken;
         this.isSocialLogin = isSocialLogin;
         this.createdAt = createdAt;
@@ -70,10 +67,9 @@ public class Member {
     public static Member from(JoinRequest joinRequest, ProfileImage profileImage, String encodePassword){
         return Member.builder()
                 .profileImage(profileImage)
-                .userId(joinRequest.getUserId())
-                .nickname(joinRequest.getNickname())
                 .email(joinRequest.getEmail())
                 .password(encodePassword)
+                .nickname(joinRequest.getNickname())
                 .isSocialLogin(false)
                 .createdAt(LocalDateTime.now())
                 .isActive(true)
@@ -108,7 +104,6 @@ public class Member {
         //(닉네임, 아이디, 비밀번호, 리프레시 토큰, 이메일)
         String unknown = AnonymousValue.ANONYMOUS.getValue();
 
-        this.userId = unknown;
         this.nickname = unknown;
         this.email = unknown;
         this.password = unknown;

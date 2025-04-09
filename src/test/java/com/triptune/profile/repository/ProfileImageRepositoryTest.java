@@ -15,7 +15,6 @@ import org.springframework.test.context.ActiveProfiles;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 @Import({QueryDSLConfig.class})
@@ -27,13 +26,13 @@ class ProfileImageRepositoryTest extends ProfileImageTest {
 
     @Test
     @DisplayName("사용자 아이디 이용해 프로필 이미지 조회")
-    void findProfileImageByUserId() {
+    void findProfileImageByEmail() {
         // given
         ProfileImage profileImage = profileImageRepository.save(createProfileImage(null, "member1Image"));
         Member member1 = memberRepository.save(createMember(null, "member1", profileImage));
 
         // when
-        Optional<ProfileImage> response = profileImageRepository.findByUserId(member1.getUserId());
+        Optional<ProfileImage> response = profileImageRepository.findByEmail(member1.getEmail());
 
         // then
         assertThat(response.get().getProfileImageId()).isEqualTo(profileImage.getProfileImageId());

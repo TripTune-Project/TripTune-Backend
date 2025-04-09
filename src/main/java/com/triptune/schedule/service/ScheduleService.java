@@ -51,34 +51,34 @@ public class ScheduleService {
     private final TravelRouteRepository travelRouteRepository;
     private final ChatMessageRepository chatMessageRepository;
 
-    public SchedulePageResponse<ScheduleInfoResponse> getAllSchedulesByUserId(int page, String userId) {
+    public SchedulePageResponse<ScheduleInfoResponse> getAllSchedulesByEmail(int page, String email) {
         Pageable pageable = PageUtils.schedulePageable(page);
-        Page<TravelSchedule> schedulePage = travelScheduleRepository.findTravelSchedulesByUserId(pageable, userId);
+        Page<TravelSchedule> schedulePage = travelScheduleRepository.findTravelSchedulesByEmail(pageable, email);
 
-        List<ScheduleInfoResponse> scheduleInfoResponseList = createScheduleInfoResponse(schedulePage, userId);
-        int sharedScheduleCnt = travelScheduleRepository.countSharedTravelSchedulesByUserId(userId);
+        List<ScheduleInfoResponse> scheduleInfoResponseList = createScheduleInfoResponse(schedulePage, email);
+        int sharedScheduleCnt = travelScheduleRepository.countSharedTravelSchedulesByEmail(email);
 
         Page<ScheduleInfoResponse> scheduleInfoResponsePage = PageUtils.createPage(scheduleInfoResponseList, pageable, schedulePage.getTotalElements());
         return SchedulePageResponse.ofAll(scheduleInfoResponsePage, sharedScheduleCnt);
     }
 
 
-    public SchedulePageResponse<ScheduleInfoResponse> getSharedSchedulesByUserId(int page, String userId) {
+    public SchedulePageResponse<ScheduleInfoResponse> getSharedSchedulesByEmail(int page, String email) {
         Pageable pageable = PageUtils.schedulePageable(page);
-        Page<TravelSchedule> schedulePage = travelScheduleRepository.findSharedTravelSchedulesByUserId(pageable, userId);
+        Page<TravelSchedule> schedulePage = travelScheduleRepository.findSharedTravelSchedulesByEmail(pageable, email);
 
-        List<ScheduleInfoResponse> scheduleInfoResponseList = createScheduleInfoResponse(schedulePage, userId);
-        int totalElements = travelScheduleRepository.countTravelSchedulesByUserId(userId);
+        List<ScheduleInfoResponse> scheduleInfoResponseList = createScheduleInfoResponse(schedulePage, email);
+        int totalElements = travelScheduleRepository.countTravelSchedulesByEmail(email);
 
         Page<ScheduleInfoResponse> scheduleInfoResponsePage = PageUtils.createPage(scheduleInfoResponseList, pageable, schedulePage.getTotalElements());
         return SchedulePageResponse.ofShared(scheduleInfoResponsePage, totalElements);
     }
 
 
-    public Page<OverviewScheduleResponse> getEnableEditScheduleByUserId(int page, String userId) {
+    public Page<OverviewScheduleResponse> getEnableEditScheduleByEmail(int page, String email) {
         Pageable pageable = PageUtils.scheduleModalPageable(page);
 
-        return travelScheduleRepository.findEnableEditTravelSchedulesByUserId(pageable, userId)
+        return travelScheduleRepository.findEnableEditTravelSchedulesByEmail(pageable, email)
                 .map(schedule -> {
                     String author = findAuthorNicknameByScheduleId(schedule.getScheduleId());
                     return OverviewScheduleResponse.from(schedule, author);
@@ -89,12 +89,12 @@ public class ScheduleService {
         return travelAttendeeRepository.findAuthorNicknameByScheduleId(scheduleId);
     }
 
-    public SchedulePageResponse<ScheduleInfoResponse> searchAllSchedules(int page, String keyword, String userId) {
+    public SchedulePageResponse<ScheduleInfoResponse> searchAllSchedules(int page, String keyword, String email) {
         Pageable pageable = PageUtils.schedulePageable(page);
-        Page<TravelSchedule> schedulesPage = travelScheduleRepository.searchTravelSchedulesByUserIdAndKeyword(pageable, keyword, userId);
+        Page<TravelSchedule> schedulesPage = travelScheduleRepository.searchTravelSchedulesByEmailAndKeyword(pageable, keyword, email);
 
-        List<ScheduleInfoResponse> scheduleInfoResponseList = createScheduleInfoResponse(schedulesPage, userId);
-        int sharedElements = travelScheduleRepository.countSharedTravelSchedulesByUserIdAndKeyword(keyword, userId);
+        List<ScheduleInfoResponse> scheduleInfoResponseList = createScheduleInfoResponse(schedulesPage, email);
+        int sharedElements = travelScheduleRepository.countSharedTravelSchedulesByEmailAndKeyword(keyword, email);
 
         Page<ScheduleInfoResponse> scheduleInfoResponsePage = PageUtils.createPage(scheduleInfoResponseList, pageable, schedulesPage.getTotalElements());
         return SchedulePageResponse.ofAll(scheduleInfoResponsePage, sharedElements);
@@ -102,19 +102,19 @@ public class ScheduleService {
 
 
 
-    public SchedulePageResponse<ScheduleInfoResponse> searchSharedSchedules(int page, String keyword, String userId) {
+    public SchedulePageResponse<ScheduleInfoResponse> searchSharedSchedules(int page, String keyword, String email) {
         Pageable pageable = PageUtils.schedulePageable(page);
-        Page<TravelSchedule> schedulesPage = travelScheduleRepository.searchSharedTravelSchedulesByUserIdAndKeyword(pageable, keyword, userId);
+        Page<TravelSchedule> schedulesPage = travelScheduleRepository.searchSharedTravelSchedulesByEmailAndKeyword(pageable, keyword, email);
 
-        List<ScheduleInfoResponse> scheduleInfoResponseList = createScheduleInfoResponse(schedulesPage, userId);
-        int totalElements = travelScheduleRepository.countTravelSchedulesByUserIdAndKeyword(keyword, userId);
+        List<ScheduleInfoResponse> scheduleInfoResponseList = createScheduleInfoResponse(schedulesPage, email);
+        int totalElements = travelScheduleRepository.countTravelSchedulesByEmailAndKeyword(keyword, email);
 
         Page<ScheduleInfoResponse> scheduleInfoResponsePage = PageUtils.createPage(scheduleInfoResponseList, pageable, schedulesPage.getTotalElements());
         return SchedulePageResponse.ofShared(scheduleInfoResponsePage, totalElements);
     }
 
 
-    public List<ScheduleInfoResponse> createScheduleInfoResponse(Page<TravelSchedule> schedulePage, String userId){
+    public List<ScheduleInfoResponse> createScheduleInfoResponse(Page<TravelSchedule> schedulePage, String email){
         if (schedulePage.getContent().isEmpty()){
             return Collections.emptyList();
         }
@@ -122,7 +122,7 @@ public class ScheduleService {
         return schedulePage.stream()
                 .map(schedule -> {
                     String thumbnailUrl = getThumbnailUrl(schedule);
-                    TravelAttendee attendee = getAttendeeInfo(schedule, userId);
+                    TravelAttendee attendee = getAttendeeInfo(schedule, email);
                     AuthorDTO authorDTO = createAuthorDTO(schedule);
 
                     return ScheduleInfoResponse.from(schedule, attendee.getRole(), thumbnailUrl, authorDTO);
@@ -142,9 +142,9 @@ public class ScheduleService {
     }
 
 
-    public TravelAttendee getAttendeeInfo(TravelSchedule schedule, String userId){
+    public TravelAttendee getAttendeeInfo(TravelSchedule schedule, String email){
         return schedule.getTravelAttendeeList().stream()
-                .filter(attendee -> attendee.getMember().getUserId().equals(userId))
+                .filter(attendee -> attendee.getMember().getEmail().equals(email))
                 .findFirst()
                 .orElseThrow(() -> new ForbiddenScheduleException(ErrorCode.FORBIDDEN_ACCESS_SCHEDULE));
 
@@ -170,11 +170,11 @@ public class ScheduleService {
     }
 
 
-    public ScheduleCreateResponse createSchedule(ScheduleCreateRequest scheduleCreateRequest, String userId){
+    public ScheduleCreateResponse createSchedule(ScheduleCreateRequest scheduleCreateRequest, String email){
         TravelSchedule travelSchedule = TravelSchedule.from(scheduleCreateRequest);
         TravelSchedule savedTravelSchedule = travelScheduleRepository.save(travelSchedule);
 
-        Member member = getMemberByUserId(userId);
+        Member member = getMemberByEmail(email);
 
         TravelAttendee travelAttendee = TravelAttendee.of(savedTravelSchedule, member);
         travelAttendeeRepository.save(travelAttendee);
@@ -183,8 +183,8 @@ public class ScheduleService {
     }
 
 
-    public Member getMemberByUserId(String userId){
-        return memberRepository.findByUserId(userId)
+    private Member getMemberByEmail(String email){
+        return memberRepository.findByEmail(email)
                 .orElseThrow(() ->  new DataNotFoundException(ErrorCode.MEMBER_NOT_FOUND));
     }
 
@@ -200,9 +200,9 @@ public class ScheduleService {
     }
 
 
-    public void updateSchedule(String userId, Long scheduleId, ScheduleUpdateRequest scheduleUpdateRequest) {
+    public void updateSchedule(String email, Long scheduleId, ScheduleUpdateRequest scheduleUpdateRequest) {
         TravelSchedule schedule = getScheduleByScheduleId(scheduleId);
-        TravelAttendee attendee = getAttendeeInfo(schedule, userId);
+        TravelAttendee attendee = getAttendeeInfo(schedule, email);
         checkScheduleEditPermission(attendee);
 
         schedule.set(scheduleUpdateRequest);
@@ -242,14 +242,14 @@ public class ScheduleService {
     }
 
 
-    public TravelPlace getPlaceByPlaceId(Long placeId){
+    private TravelPlace getPlaceByPlaceId(Long placeId){
         return travelPlaceRepository.findById(placeId)
                 .orElseThrow(() ->  new DataNotFoundException(ErrorCode.PLACE_NOT_FOUND));
     }
 
 
-    public void deleteSchedule(Long scheduleId, String userId) {
-        TravelAttendee attendee = travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_UserId(scheduleId, userId)
+    public void deleteSchedule(Long scheduleId, String email) {
+        TravelAttendee attendee = travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_Email(scheduleId, email)
                 .orElseThrow(() -> new ForbiddenScheduleException(ErrorCode.FORBIDDEN_ACCESS_SCHEDULE));
 
         if (!attendee.getRole().isAuthor()){

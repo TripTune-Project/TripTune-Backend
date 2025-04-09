@@ -1,7 +1,7 @@
 package com.triptune.email.service;
 
-import com.triptune.email.dto.EmailTemplateRequest;
-import com.triptune.email.dto.VerifyAuthRequest;
+import com.triptune.email.dto.request.EmailTemplateRequest;
+import com.triptune.email.dto.request.VerifyAuthRequest;
 import com.triptune.member.dto.request.FindPasswordRequest;
 import com.triptune.global.enumclass.RedisKeyType;
 import com.triptune.global.util.JwtUtils;
@@ -101,7 +101,7 @@ public class EmailService {
     }
 
     public void sendResetPasswordEmail(FindPasswordRequest findPasswordRequest) throws MessagingException {
-        String passwordToken = jwtUtils.createToken(findPasswordRequest.getUserId(), passwordExpirationTime);
+        String passwordToken = jwtUtils.createToken(findPasswordRequest.getEmail(), passwordExpirationTime);
         String resetPasswordURL = passwordURL + passwordToken;
 
         EmailTemplateRequest templateRequest = new EmailTemplateRequest(

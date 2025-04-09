@@ -1,5 +1,6 @@
 package com.triptune.schedule.controller;
 
+import com.triptune.global.util.SecurityUtils;
 import com.triptune.schedule.dto.request.RouteCreateRequest;
 import com.triptune.schedule.dto.response.RouteResponse;
 import com.triptune.schedule.service.RouteService;
@@ -35,8 +36,8 @@ public class RouteController {
     @PostMapping("/routes")
     @Operation(summary = "여행 루트 마지막에 여행지 추가", description = "여행 루트의 마지막에 여행지를 추가한다.")
     public ApiResponse<?> createLastRoute(@PathVariable(name = "scheduleId") Long scheduleId, @Valid @RequestBody RouteCreateRequest routeCreateRequest){
-        String userId = SecurityContextHolder.getContext().getAuthentication().getName();
-        routeService.createLastRoute(scheduleId, userId, routeCreateRequest);
+        String email = SecurityUtils.getCurrentEmail();
+        routeService.createLastRoute(scheduleId, email, routeCreateRequest);
         return ApiResponse.okResponse();
     }
 

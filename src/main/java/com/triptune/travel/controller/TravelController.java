@@ -32,8 +32,8 @@ public class TravelController {
     @PostMapping
     @Operation(summary = "현재 위치와 가까운 여행지 목록 조회", description = "여행지 탐색 메뉴에서 사용자 현재 위치와 가까운 여행지 목록을 제공한다.")
     public ApiPageResponse<PlaceLocation> getNearByTravelPlaces(@RequestBody @Valid PlaceLocationRequest placeLocationRequest, @RequestParam int page){
-        String userId = authenticateUserId();
-        Page<PlaceLocation> response = travelService.getNearByTravelPlaces(page, userId, placeLocationRequest);
+        String email = getAuthenticateEmail();
+        Page<PlaceLocation> response = travelService.getNearByTravelPlaces(page, email, placeLocationRequest);
         return ApiPageResponse.dataResponse(response);
     }
 
@@ -41,13 +41,13 @@ public class TravelController {
     @PostMapping("/search")
     @Operation(summary = "여행지 검색", description = "여행지 탐색 메뉴에서 여행지를 검색한다.")
     public ApiPageResponse<PlaceLocation> searchTravelPlaces(@RequestBody @Valid PlaceSearchRequest placeSearchRequest, @RequestParam int page){
-        String userId = authenticateUserId();
+        String email = getAuthenticateEmail();
 
         boolean hasLocation = placeSearchRequest.getLongitude() != null && placeSearchRequest.getLatitude() != null;
 
         Page<PlaceLocation> response = hasLocation
-                ? travelService.searchTravelPlacesWithLocation(page, userId, placeSearchRequest)
-                : travelService.searchTravelPlacesWithoutLocation(page, userId, placeSearchRequest);
+                ? travelService.searchTravelPlacesWithLocation(page, email, placeSearchRequest)
+                : travelService.searchTravelPlacesWithoutLocation(page, email, placeSearchRequest);
 
         return ApiPageResponse.dataResponse(response);
     }
@@ -56,8 +56,8 @@ public class TravelController {
     @GetMapping("/{placeId}")
     @Operation(summary = "여행지 상세조회", description = "여행지에 대한 자세한 정보를 조회한다.")
     public ApiResponse<PlaceDetailResponse> getTravelPlaceDetails(@PathVariable("placeId") Long placeId){
-        String userId = authenticateUserId();
-        PlaceDetailResponse response = travelService.getTravelPlaceDetails(placeId, userId);
+        String email = getAuthenticateEmail();
+        PlaceDetailResponse response = travelService.getTravelPlaceDetails(placeId, email);
         return ApiResponse.dataResponse(response);
     }
 
@@ -77,7 +77,7 @@ public class TravelController {
         return ApiResponse.dataResponse(response);
     }
 
-    public String authenticateUserId(){
+    public String getAuthenticateEmail(){
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication != null && authentication.isAuthenticated()){
             return authentication.getName();

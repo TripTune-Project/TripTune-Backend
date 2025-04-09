@@ -42,17 +42,10 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 public class BookmarkServiceTest extends BookmarkTest {
 
-    @InjectMocks
-    private BookmarkService bookmarkService;
-
-    @Mock
-    private BookmarkRepository bookmarkRepository;
-
-    @Mock
-    private MemberRepository memberRepository;
-
-    @Mock
-    private TravelPlaceRepository travelPlaceRepository;
+    @InjectMocks private BookmarkService bookmarkService;
+    @Mock private BookmarkRepository bookmarkRepository;
+    @Mock private MemberRepository memberRepository;
+    @Mock private TravelPlaceRepository travelPlaceRepository;
 
     private Member member;
     private TravelPlace travelPlace1;
@@ -79,12 +72,12 @@ public class BookmarkServiceTest extends BookmarkTest {
         // given
         BookmarkRequest request = createBookmarkRequest(travelPlace1.getPlaceId());
 
-        when(bookmarkRepository.existsByMember_UserIdAndTravelPlace_PlaceId(anyString(), anyLong())).thenReturn(false);
-        when(memberRepository.findByUserId(anyString())).thenReturn(Optional.of(member));
+        when(bookmarkRepository.existsByMember_EmailAndTravelPlace_PlaceId(anyString(), anyLong())).thenReturn(false);
+        when(memberRepository.findByEmail(anyString())).thenReturn(Optional.of(member));
         when(travelPlaceRepository.findById(anyLong())).thenReturn(Optional.of(travelPlace1));
 
         // when
-        assertDoesNotThrow(() -> bookmarkService.createBookmark(member.getUserId(), request));
+        assertDoesNotThrow(() -> bookmarkService.createBookmark(member.getEmail(), request));
 
         // then
         assertThat(travelPlace1.getBookmarkCnt()).isEqualTo(1);
@@ -96,10 +89,11 @@ public class BookmarkServiceTest extends BookmarkTest {
         // given
         BookmarkRequest request = createBookmarkRequest(travelPlace1.getPlaceId());
 
-        when(bookmarkRepository.existsByMember_UserIdAndTravelPlace_PlaceId(anyString(), anyLong())).thenReturn(true);
+        when(bookmarkRepository.existsByMember_EmailAndTravelPlace_PlaceId(anyString(), anyLong())).thenReturn(true);
 
         // when
-        DataExistException fail = assertThrows(DataExistException.class, () -> bookmarkService.createBookmark(member.getUserId(), request));
+        DataExistException fail = assertThrows(DataExistException.class,
+                () -> bookmarkService.createBookmark(member.getEmail(), request));
 
         // then
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.ALREADY_EXISTED_BOOKMARK.getStatus());
@@ -112,11 +106,12 @@ public class BookmarkServiceTest extends BookmarkTest {
         // given
         BookmarkRequest request = createBookmarkRequest(travelPlace1.getPlaceId());
 
-        when(bookmarkRepository.existsByMember_UserIdAndTravelPlace_PlaceId(anyString(), anyLong())).thenReturn(false);
-        when(memberRepository.findByUserId(anyString())).thenReturn(Optional.empty());
+        when(bookmarkRepository.existsByMember_EmailAndTravelPlace_PlaceId(anyString(), anyLong())).thenReturn(false);
+        when(memberRepository.findByEmail(anyString())).thenReturn(Optional.empty());
 
         // when
-        DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> bookmarkService.createBookmark(member.getUserId(), request));
+        DataNotFoundException fail = assertThrows(DataNotFoundException.class,
+                () -> bookmarkService.createBookmark(member.getEmail(), request));
 
         // then
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.MEMBER_NOT_FOUND.getStatus());
@@ -129,12 +124,13 @@ public class BookmarkServiceTest extends BookmarkTest {
         // given
         BookmarkRequest request = createBookmarkRequest(travelPlace1.getPlaceId());
 
-        when(bookmarkRepository.existsByMember_UserIdAndTravelPlace_PlaceId(anyString(), anyLong())).thenReturn(false);
-        when(memberRepository.findByUserId(anyString())).thenReturn(Optional.of(member));
+        when(bookmarkRepository.existsByMember_EmailAndTravelPlace_PlaceId(anyString(), anyLong())).thenReturn(false);
+        when(memberRepository.findByEmail(anyString())).thenReturn(Optional.of(member));
         when(travelPlaceRepository.findById(anyLong())).thenReturn(Optional.empty());
 
         // when
-        DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> bookmarkService.createBookmark(member.getUserId(), request));
+        DataNotFoundException fail = assertThrows(DataNotFoundException.class,
+                () -> bookmarkService.createBookmark(member.getEmail(), request));
 
         // then
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.PLACE_NOT_FOUND.getStatus());
@@ -148,14 +144,14 @@ public class BookmarkServiceTest extends BookmarkTest {
         // given
         int beforeBookmarkCnt = travelPlace2.getBookmarkCnt();
 
-        when(bookmarkRepository.existsByMember_UserIdAndTravelPlace_PlaceId(anyString(), anyLong())).thenReturn(true);
+        when(bookmarkRepository.existsByMember_EmailAndTravelPlace_PlaceId(anyString(), anyLong())).thenReturn(true);
         when(travelPlaceRepository.findById(anyLong())).thenReturn(Optional.of(travelPlace2));
 
         // when
-        assertDoesNotThrow(() -> bookmarkService.deleteBookmark(member.getUserId(), travelPlace2.getPlaceId()));
+        assertDoesNotThrow(() -> bookmarkService.deleteBookmark(member.getEmail(), travelPlace2.getPlaceId()));
 
         // then
-        verify(bookmarkRepository, times(1)).deleteByMember_UserIdAndTravelPlace_PlaceId(anyString(), anyLong());
+        verify(bookmarkRepository, times(1)).deleteByMember_EmailAndTravelPlace_PlaceId(anyString(), anyLong());
         assertThat(travelPlace2.getBookmarkCnt()).isEqualTo(beforeBookmarkCnt-1);
     }
 
@@ -163,10 +159,11 @@ public class BookmarkServiceTest extends BookmarkTest {
     @DisplayName("북마크 삭제 시 북마크 데이터가 존재하지 않아 예외 발생")
     void deleteBookmark_bookmarkNotFoundException(){
         // given
-        when(bookmarkRepository.existsByMember_UserIdAndTravelPlace_PlaceId(anyString(), anyLong())).thenReturn(false);
+        when(bookmarkRepository.existsByMember_EmailAndTravelPlace_PlaceId(anyString(), anyLong())).thenReturn(false);
 
         // when
-        DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> bookmarkService.deleteBookmark(member.getUserId(), 1L));
+        DataNotFoundException fail = assertThrows(DataNotFoundException.class,
+                () -> bookmarkService.deleteBookmark(member.getEmail(), 1L));
 
         // then
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.BOOKMARK_NOT_FOUND.getStatus());
@@ -178,11 +175,12 @@ public class BookmarkServiceTest extends BookmarkTest {
     @DisplayName("북마크 삭제 시 여행지 데이터가 존재하지 않아 예외 발생")
     void deleteBookmark_travelPlaceNotFoundException(){
         // given
-        when(bookmarkRepository.existsByMember_UserIdAndTravelPlace_PlaceId(anyString(), anyLong())).thenReturn(true);
+        when(bookmarkRepository.existsByMember_EmailAndTravelPlace_PlaceId(anyString(), anyLong())).thenReturn(true);
         when(travelPlaceRepository.findById(anyLong())).thenReturn(Optional.empty());
 
         // when
-        DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> bookmarkService.deleteBookmark(member.getUserId(), 0L));
+        DataNotFoundException fail = assertThrows(DataNotFoundException.class,
+                () -> bookmarkService.deleteBookmark(member.getEmail(), 0L));
 
         // then
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.PLACE_NOT_FOUND.getStatus());
@@ -195,14 +193,14 @@ public class BookmarkServiceTest extends BookmarkTest {
     void getBookmarkTravelPlaces_sortNewest(){
         // given
         Pageable pageable = PageUtils.bookmarkPageable(1);
-        Bookmark bookmark1 = createBookmark(1L, member, travelPlace1, LocalDateTime.now().minusDays(2));
-        Bookmark bookmark2 = createBookmark(2L, member, travelPlace2, LocalDateTime.now().minusDays(1));
-        Bookmark bookmark3 = createBookmark(3L, member, travelPlace3, LocalDateTime.now());
+        createBookmark(1L, member, travelPlace1, LocalDateTime.now().minusDays(2));
+        createBookmark(2L, member, travelPlace2, LocalDateTime.now().minusDays(1));
+        createBookmark(3L, member, travelPlace3, LocalDateTime.now());
 
         List<TravelPlace> travelPlaceList = List.of(travelPlace1, travelPlace2, travelPlace3);
         Page<TravelPlace> travelPlacePage = PageUtils.createPage(travelPlaceList, pageable, travelPlaceList.size());
 
-        when(bookmarkRepository.findBookmarksByUserId(anyString(), any(), any()))
+        when(bookmarkRepository.findBookmarksByEmail(anyString(), any(), any()))
                 .thenReturn(travelPlacePage);
 
         // when
@@ -224,7 +222,7 @@ public class BookmarkServiceTest extends BookmarkTest {
         List<TravelPlace> travelPlaceList = List.of(travelPlace1, travelPlace2, travelPlace3);
         Page<TravelPlace> travelPlacePage = PageUtils.createPage(travelPlaceList, pageable, travelPlaceList.size());
 
-        when(bookmarkRepository.findBookmarksByUserId(anyString(), any(), any()))
+        when(bookmarkRepository.findBookmarksByEmail(anyString(), any(), any()))
                 .thenReturn(travelPlacePage);
 
         // when
@@ -245,7 +243,7 @@ public class BookmarkServiceTest extends BookmarkTest {
 
         Page<TravelPlace> travelPlacePage = PageUtils.createPage(new ArrayList<>(), pageable, 0);
 
-        when(bookmarkRepository.findBookmarksByUserId(anyString(), any(), any()))
+        when(bookmarkRepository.findBookmarksByEmail(anyString(), any(), any()))
                 .thenReturn(travelPlacePage);
 
         // when

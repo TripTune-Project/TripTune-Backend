@@ -46,20 +46,11 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 public class RouteServiceTest extends ScheduleTest {
 
-    @InjectMocks
-    private RouteService routeService;
-
-    @Mock
-    private TravelRouteRepository travelRouteRepository;
-
-    @Mock
-    private TravelScheduleRepository travelScheduleRepository;
-
-    @Mock
-    private TravelPlaceRepository travelPlaceRepository;
-
-    @Mock
-    private TravelAttendeeRepository travelAttendeeRepository;
+    @InjectMocks private RouteService routeService;
+    @Mock private TravelRouteRepository travelRouteRepository;
+    @Mock private TravelScheduleRepository travelScheduleRepository;
+    @Mock private TravelPlaceRepository travelPlaceRepository;
+    @Mock private TravelAttendeeRepository travelAttendeeRepository;
 
     private TravelSchedule schedule1;
     private TravelPlace travelPlace1;
@@ -93,11 +84,11 @@ public class RouteServiceTest extends ScheduleTest {
         TravelRoute route1 = createTravelRoute(schedule1, travelPlace1, 1);
         TravelRoute route2 = createTravelRoute(schedule1, travelPlace1, 2);
         TravelRoute route3 = createTravelRoute(schedule1, travelPlace2, 3);
-        schedule1.setTravelRouteList(new ArrayList<>(List.of(route1, route2, route3)));
+        schedule1.setTravelRouteList(List.of(route1, route2, route3));
 
         attendee1 = createTravelAttendee(1L, member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL);
         attendee2 = createTravelAttendee(2L, member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ);
-        schedule1.setTravelAttendeeList(new ArrayList<>(List.of(attendee1, attendee2)));
+        schedule1.setTravelAttendeeList(List.of(attendee1, attendee2));
     }
 
 
@@ -149,11 +140,11 @@ public class RouteServiceTest extends ScheduleTest {
         RouteCreateRequest request = createRouteCreateRequest(travelPlace3.getPlaceId());
 
         when(travelScheduleRepository.findById(anyLong())).thenReturn(Optional.of(schedule1));
-        when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_UserId(anyLong(), anyString())).thenReturn(Optional.of(attendee1));
+        when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_Email(anyLong(), anyString())).thenReturn(Optional.of(attendee1));
         when(travelPlaceRepository.findById(anyLong())).thenReturn(Optional.of(travelPlace3));
 
         // when
-        assertDoesNotThrow(() -> routeService.createLastRoute(schedule1.getScheduleId(), member1.getUserId(), request));
+        assertDoesNotThrow(() -> routeService.createLastRoute(schedule1.getScheduleId(), member1.getEmail(), request));
     }
 
     @Test
@@ -164,11 +155,11 @@ public class RouteServiceTest extends ScheduleTest {
         RouteCreateRequest request = createRouteCreateRequest(travelPlace3.getPlaceId());
 
         when(travelScheduleRepository.findById(anyLong())).thenReturn(Optional.of(schedule1));
-        when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_UserId(anyLong(), anyString())).thenReturn(Optional.of(attendee1));
+        when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_Email(anyLong(), anyString())).thenReturn(Optional.of(attendee1));
         when(travelPlaceRepository.findById(anyLong())).thenReturn(Optional.of(travelPlace3));
 
         // when
-        assertDoesNotThrow(() -> routeService.createLastRoute(schedule1.getScheduleId(), member1.getUserId(), request));
+        assertDoesNotThrow(() -> routeService.createLastRoute(schedule1.getScheduleId(), member1.getEmail(), request));
     }
 
 
@@ -181,7 +172,8 @@ public class RouteServiceTest extends ScheduleTest {
         when(travelScheduleRepository.findById(anyLong())).thenReturn(Optional.empty());
 
         // when
-        DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> routeService.createLastRoute(0L, member1.getUserId(), request));
+        DataNotFoundException fail = assertThrows(DataNotFoundException.class,
+                () -> routeService.createLastRoute(0L, member1.getEmail(), request));
 
         // then
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.SCHEDULE_NOT_FOUND.getStatus());
@@ -196,11 +188,12 @@ public class RouteServiceTest extends ScheduleTest {
         RouteCreateRequest request = createRouteCreateRequest(travelPlace3.getPlaceId());
 
         when(travelScheduleRepository.findById(anyLong())).thenReturn(Optional.of(schedule1));
-        when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_UserId(anyLong(), anyString())).thenReturn(Optional.empty());
+        when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_Email(anyLong(), anyString())).thenReturn(Optional.empty());
 
 
         // when
-        DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> routeService.createLastRoute(schedule1.getScheduleId(), "notMember", request));
+        DataNotFoundException fail = assertThrows(DataNotFoundException.class,
+                () -> routeService.createLastRoute(schedule1.getScheduleId(), "notMember", request));
 
         // then
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.ATTENDEE_NOT_FOUND.getStatus());
@@ -215,10 +208,11 @@ public class RouteServiceTest extends ScheduleTest {
         RouteCreateRequest request = createRouteCreateRequest(travelPlace3.getPlaceId());
 
         when(travelScheduleRepository.findById(anyLong())).thenReturn(Optional.of(schedule1));
-        when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_UserId(anyLong(), anyString())).thenReturn(Optional.of(attendee2));
+        when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_Email(anyLong(), anyString())).thenReturn(Optional.of(attendee2));
 
         // when
-        ForbiddenScheduleException fail = assertThrows(ForbiddenScheduleException.class, () -> routeService.createLastRoute(schedule1.getScheduleId(), member2.getUserId(), request));
+        ForbiddenScheduleException fail = assertThrows(ForbiddenScheduleException.class,
+                () -> routeService.createLastRoute(schedule1.getScheduleId(), member2.getEmail(), request));
 
         // then
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.FORBIDDEN_EDIT_SCHEDULE.getStatus());
@@ -234,11 +228,12 @@ public class RouteServiceTest extends ScheduleTest {
         RouteCreateRequest request = createRouteCreateRequest(travelPlace3.getPlaceId());
 
         when(travelScheduleRepository.findById(anyLong())).thenReturn(Optional.of(schedule1));
-        when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_UserId(anyLong(), anyString())).thenReturn(Optional.of(attendee1));
+        when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_Email(anyLong(), anyString())).thenReturn(Optional.of(attendee1));
         when(travelPlaceRepository.findById(anyLong())).thenReturn(Optional.empty());
 
         // when
-        DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> routeService.createLastRoute(schedule1.getScheduleId(), member1.getUserId(), request));
+        DataNotFoundException fail = assertThrows(DataNotFoundException.class,
+                () -> routeService.createLastRoute(schedule1.getScheduleId(), member1.getEmail(), request));
 
         // then
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.PLACE_NOT_FOUND.getStatus());

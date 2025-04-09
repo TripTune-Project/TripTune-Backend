@@ -45,15 +45,15 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("h2")
 class BookmarkControllerTest extends BookmarkTest {
 
-    private final WebApplicationContext wac;
-    private final JwtUtils jwtUtils;
-    private final BookmarkRepository bookmarkRepository;
-    private final MemberRepository memberRepository;
-    private final TravelPlaceRepository travelPlaceRepository;
-    private final CountryRepository countryRepository;
-    private final CityRepository cityRepository;
-    private final DistrictRepository districtRepository;
-    private final ApiCategoryRepository apiCategoryRepository;
+    @Autowired private WebApplicationContext wac;
+    @Autowired private JwtUtils jwtUtils;
+    @Autowired private BookmarkRepository bookmarkRepository;
+    @Autowired private MemberRepository memberRepository;
+    @Autowired private TravelPlaceRepository travelPlaceRepository;
+    @Autowired private CountryRepository countryRepository;
+    @Autowired private CityRepository cityRepository;
+    @Autowired private DistrictRepository districtRepository;
+    @Autowired private ApiCategoryRepository apiCategoryRepository;
 
     private MockMvc mockMvc;
 
@@ -61,19 +61,6 @@ class BookmarkControllerTest extends BookmarkTest {
     private City city;
     private District district;
     private ApiCategory apiCategory;
-
-    @Autowired
-    public BookmarkControllerTest(WebApplicationContext wac, JwtUtils jwtUtils, BookmarkRepository bookmarkRepository, MemberRepository memberRepository, TravelPlaceRepository travelPlaceRepository, CountryRepository countryRepository, CityRepository cityRepository, DistrictRepository districtRepository, ApiCategoryRepository apiCategoryRepository) {
-        this.wac = wac;
-        this.jwtUtils = jwtUtils;
-        this.bookmarkRepository = bookmarkRepository;
-        this.memberRepository = memberRepository;
-        this.travelPlaceRepository = travelPlaceRepository;
-        this.countryRepository = countryRepository;
-        this.cityRepository = cityRepository;
-        this.districtRepository = districtRepository;
-        this.apiCategoryRepository = apiCategoryRepository;
-    }
 
     @BeforeEach
     void setUp(){
@@ -92,7 +79,7 @@ class BookmarkControllerTest extends BookmarkTest {
 
     @Test
     @DisplayName("북마크 추가")
-    @WithMockUser("member")
+    @WithMockUser("member@email.com")
     void createBookmark() throws Exception{
         memberRepository.save(createMember(null, "member"));
         TravelPlace travelPlace = travelPlaceRepository.save(createTravelPlace(null, country, city, district, apiCategory));
@@ -110,7 +97,7 @@ class BookmarkControllerTest extends BookmarkTest {
 
     @Test
     @DisplayName("북마크 추가 시 이미 북마크로 등록되어 있어 예외 발생")
-    @WithMockUser("member")
+    @WithMockUser("member@email.com")
     void createBookmark_dataExistsException() throws Exception{
         Member member = memberRepository.save(createMember(null, "member"));
         TravelPlace travelPlace = travelPlaceRepository.save(createTravelPlace(null, country, city, district, apiCategory));
@@ -127,7 +114,7 @@ class BookmarkControllerTest extends BookmarkTest {
 
     @Test
     @DisplayName("북마크 추가 시 사용자 데이터 없어 예외 발생")
-    @WithMockUser("member")
+    @WithMockUser("member@email.com")
     void createBookmark_memberNotFoundException() throws Exception{
         TravelPlace travelPlace = travelPlaceRepository.save(createTravelPlace(null, country, city, district, apiCategory));
 
@@ -141,7 +128,7 @@ class BookmarkControllerTest extends BookmarkTest {
 
     @Test
     @DisplayName("북마크 추가 시 여행지 데이터 없어 예외 발생")
-    @WithMockUser("member")
+    @WithMockUser("member@email.com")
     void createBookmark_travelPlaceNotFoundException() throws Exception{
         memberRepository.save(createMember(null, "member"));
 
@@ -155,7 +142,7 @@ class BookmarkControllerTest extends BookmarkTest {
 
     @Test
     @DisplayName("북마크 삭제")
-    @WithMockUser("member")
+    @WithMockUser("member@email.com")
     void deleteBookmark() throws Exception{
         Member member = memberRepository.save(createMember(null, "member"));
         TravelPlace travelPlace = travelPlaceRepository.save(createTravelPlace(null, country, city, district, apiCategory, "여행지", 10));
@@ -166,14 +153,14 @@ class BookmarkControllerTest extends BookmarkTest {
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()));
 
-        assertThat(bookmarkRepository.existsByMember_UserIdAndTravelPlace_PlaceId(member.getUserId(), travelPlace.getPlaceId())).isFalse();
+        assertThat(bookmarkRepository.existsByMember_EmailAndTravelPlace_PlaceId(member.getEmail(), travelPlace.getPlaceId())).isFalse();
         assertThat(travelPlace.getBookmarkCnt()).isEqualTo(9);
     }
 
 
     @Test
     @DisplayName("북마크 삭제 시 북마크 데이터가 없는 경우")
-    @WithMockUser("member")
+    @WithMockUser("member@email.com")
     void deleteBookmark_bookmarkNotFoundException() throws Exception{
         memberRepository.save(createMember(null, "member"));
         TravelPlace travelPlace = travelPlaceRepository.save(createTravelPlace(null, country, city, district, apiCategory, "여행지", 0));
@@ -183,12 +170,6 @@ class BookmarkControllerTest extends BookmarkTest {
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value(ErrorCode.BOOKMARK_NOT_FOUND.getMessage()));
     }
-
-
-
-
-
-
 
 
 }

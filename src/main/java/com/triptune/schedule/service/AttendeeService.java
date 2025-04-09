@@ -39,20 +39,20 @@ public class AttendeeService {
                 .collect(Collectors.toList());
     }
 
-    public void createAttendee(Long scheduleId, String userId, AttendeeRequest attendeeRequest) {
+    public void createAttendee(Long scheduleId, String email, AttendeeRequest attendeeRequest) {
         TravelSchedule schedule = getScheduleByScheduleId(scheduleId);
-        validateAttendeeAddition(scheduleId, userId);
+        validateAttendeeAddition(scheduleId, email);
 
         Member guest = getMemberByEmail(attendeeRequest.getEmail());
-        validateAttendeeAlreadyExists(scheduleId, guest.getUserId());
+        validateAttendeeAlreadyExists(scheduleId, guest.getEmail());
 
         TravelAttendee travelAttendee = TravelAttendee.of(schedule, guest, attendeeRequest.getPermission());
         travelAttendeeRepository.save(travelAttendee);
     }
 
-    public void validateAttendeeAddition(Long scheduleId, String userId){
+    public void validateAttendeeAddition(Long scheduleId, String email){
         validateAttendeeCount(scheduleId);
-        validateAuthor(scheduleId, userId, ErrorCode.FORBIDDEN_SHARE_ATTENDEE);
+        validateAuthor(scheduleId, email, ErrorCode.FORBIDDEN_SHARE_ATTENDEE);
     }
 
     private TravelSchedule getScheduleByScheduleId(Long scheduleId){
@@ -68,9 +68,9 @@ public class AttendeeService {
         }
     }
 
-    public void validateAuthor(Long scheduleId, String userId, ErrorCode errorCode){
+    public void validateAuthor(Long scheduleId, String email, ErrorCode errorCode){
         boolean isAuthor =  travelAttendeeRepository
-                .existsByTravelSchedule_ScheduleIdAndMember_UserIdAndRole(scheduleId, userId, AttendeeRole.AUTHOR);
+                .existsByTravelSchedule_ScheduleIdAndMember_EmailAndRole(scheduleId, email, AttendeeRole.AUTHOR);
 
         if(!isAuthor){
             throw new ForbiddenAttendeeException(errorCode);
@@ -83,16 +83,16 @@ public class AttendeeService {
     }
 
 
-    public void validateAttendeeAlreadyExists(Long scheduleId, String userId){
-        boolean isExistedAttendee = travelAttendeeRepository.existsByTravelSchedule_ScheduleIdAndMember_UserId(scheduleId, userId);
+    public void validateAttendeeAlreadyExists(Long scheduleId, String email){
+        boolean isExistedAttendee = travelAttendeeRepository.existsByTravelSchedule_ScheduleIdAndMember_Email(scheduleId, email);
 
         if (isExistedAttendee){
             throw new ConflictAttendeeException(ErrorCode.ALREADY_ATTENDEE);
         }
     }
 
-    public void updateAttendeePermission(Long scheduleId, String userId, Long attendeeId, AttendeePermissionRequest attendeePermissionRequest) {
-        validateAuthor(scheduleId, userId, ErrorCode.FORBIDDEN_UPDATE_ATTENDEE_PERMISSION);
+    public void updateAttendeePermission(Long scheduleId, String email, Long attendeeId, AttendeePermissionRequest attendeePermissionRequest) {
+        validateAuthor(scheduleId, email, ErrorCode.FORBIDDEN_UPDATE_ATTENDEE_PERMISSION);
 
         TravelAttendee attendee = travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndAttendeeId(scheduleId, attendeeId)
                 .orElseThrow(() -> new DataNotFoundException(ErrorCode.ATTENDEE_NOT_FOUND));
@@ -105,8 +105,8 @@ public class AttendeeService {
     }
 
 
-    public void leaveAttendee(Long scheduleId, String userId) {
-        TravelAttendee attendee = travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_UserId(scheduleId, userId)
+    public void leaveAttendee(Long scheduleId, String email) {
+        TravelAttendee attendee = travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_Email(scheduleId, email)
                 .orElseThrow(() -> new ForbiddenAttendeeException(ErrorCode.FORBIDDEN_ACCESS_SCHEDULE));
 
         if (attendee.getRole().isAuthor()){
@@ -117,13 +117,13 @@ public class AttendeeService {
     }
 
 
-    public void removeAttendee(Long scheduleId, String userId, Long attendeeId) {
-        validateAuthor(scheduleId, userId, ErrorCode.FORBIDDEN_REMOVE_ATTENDEE);
+    public void removeAttendee(Long scheduleId, String email, Long attendeeId) {
+        validateAuthor(scheduleId, email, ErrorCode.FORBIDDEN_REMOVE_ATTENDEE);
 
         TravelAttendee attendee = travelAttendeeRepository.findById(attendeeId)
                 .orElseThrow(() -> new DataNotFoundException(ErrorCode.ATTENDEE_NOT_FOUND));
 
-        if (attendee.getMember().getUserId().equals(userId)){
+        if (attendee.getMember().getEmail().equals(email)){
             throw new ForbiddenAttendeeException(ErrorCode.FORBIDDEN_LEAVE_AUTHOR);
         }
 

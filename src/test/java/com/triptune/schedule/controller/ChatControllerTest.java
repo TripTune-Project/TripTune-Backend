@@ -39,12 +39,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureDataMongo
 @ActiveProfiles("mongo")
 public class ChatControllerTest extends ScheduleTest {
-    private final WebApplicationContext wac;
-    private final TravelScheduleRepository travelScheduleRepository;
-    private final MemberRepository memberRepository;
-    private final ProfileImageRepository profileImageRepository;
-    private final TravelAttendeeRepository travelAttendeeRepository;
-    private final ChatMessageRepository chatMessageRepository;
+    @Autowired private WebApplicationContext wac;
+    @Autowired private TravelScheduleRepository travelScheduleRepository;
+    @Autowired private MemberRepository memberRepository;
+    @Autowired private ProfileImageRepository profileImageRepository;
+    @Autowired private TravelAttendeeRepository travelAttendeeRepository;
+    @Autowired private ChatMessageRepository chatMessageRepository;
 
     private MockMvc mockMvc;
 
@@ -52,16 +52,6 @@ public class ChatControllerTest extends ScheduleTest {
     private Member member1;
     private Member member2;
     private Member member3;
-
-    @Autowired
-    public ChatControllerTest(WebApplicationContext wac, TravelScheduleRepository travelScheduleRepository, MemberRepository memberRepository, ProfileImageRepository profileImageRepository, TravelAttendeeRepository travelAttendeeRepository, ChatMessageRepository chatMessageRepository) {
-        this.wac = wac;
-        this.travelScheduleRepository = travelScheduleRepository;
-        this.memberRepository = memberRepository;
-        this.profileImageRepository = profileImageRepository;
-        this.travelAttendeeRepository = travelAttendeeRepository;
-        this.chatMessageRepository = chatMessageRepository;
-    }
 
     @BeforeEach
     void setUp(){
@@ -83,18 +73,17 @@ public class ChatControllerTest extends ScheduleTest {
 
         schedule = travelScheduleRepository.save(createTravelSchedule(null,"테스트1"));
 
-        TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(0L, member1, schedule, AttendeeRole.AUTHOR, AttendeePermission.ALL));
-        TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(0L, member2, schedule, AttendeeRole.GUEST, AttendeePermission.READ));
-        TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(0L, member3, schedule, AttendeeRole.GUEST, AttendeePermission.CHAT));
+        TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(null, member1, schedule, AttendeeRole.AUTHOR, AttendeePermission.ALL));
+        TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(null, member2, schedule, AttendeeRole.GUEST, AttendeePermission.READ));
+        TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(null, member3, schedule, AttendeeRole.GUEST, AttendeePermission.CHAT));
 
-        schedule.setTravelAttendeeList(new ArrayList<>(List.of(attendee1, attendee2, attendee3)));
+        schedule.setTravelAttendeeList(List.of(attendee1, attendee2, attendee3));
 
     }
 
-
     @Test
     @DisplayName("채팅 내용 조회")
-    @WithMockUser(username = "member1")
+    @WithMockUser(username = "member1@email.com")
     void getChatMessages() throws Exception {
         ChatMessage message1 = chatMessageRepository.save(createChatMessage("id1", schedule.getScheduleId(), member1, "hello1"));
         ChatMessage message2 = chatMessageRepository.save(createChatMessage("id2", schedule.getScheduleId(), member1, "hello2"));
@@ -123,7 +112,7 @@ public class ChatControllerTest extends ScheduleTest {
 
     @Test
     @DisplayName("채팅 내용 조회 시 데이터가 없는 경우")
-    @WithMockUser(username = "member1")
+    @WithMockUser(username = "member1@email.com")
     void getChatMessagesNoMessage() throws Exception {
         mockMvc.perform(get("/api/schedules/{scheduleId}/chats", schedule.getScheduleId())
                         .param("page", "1"))

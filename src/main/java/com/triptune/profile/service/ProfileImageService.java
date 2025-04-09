@@ -1,7 +1,6 @@
 package com.triptune.profile.service;
 
 import com.triptune.member.entity.Member;
-import com.triptune.member.repository.MemberRepository;
 import com.triptune.profile.entity.ProfileImage;
 import com.triptune.profile.repository.ProfileImageRepository;
 import com.triptune.global.enumclass.ErrorCode;
@@ -32,10 +31,10 @@ public class ProfileImageService {
         return profileImageRepository.save(profileImage);
     }
 
-    public void updateProfileImage(String userId, MultipartFile profileImageFile) {
+    public void updateProfileImage(String email, MultipartFile profileImageFile) {
         validateFileExtension(profileImageFile);
 
-        ProfileImage profileImage = getProfileImageByUserId(userId);
+        ProfileImage profileImage = getProfileImageByEmail(email);
         deleteS3File(profileImage);
 
         String extension = FileUtils.getExtension(profileImageFile.getOriginalFilename());
@@ -53,8 +52,8 @@ public class ProfileImageService {
         }
     }
 
-    private ProfileImage getProfileImageByUserId(String userId){
-        return profileImageRepository.findByUserId(userId)
+    private ProfileImage getProfileImageByEmail(String email){
+        return profileImageRepository.findByEmail(email)
                 .orElseThrow(() -> new DataNotFoundException(ErrorCode.PROFILE_IMAGE_NOT_FOUND));
     }
 

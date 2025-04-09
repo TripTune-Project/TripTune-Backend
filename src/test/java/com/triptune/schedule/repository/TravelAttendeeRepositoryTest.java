@@ -22,9 +22,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Import({QueryDSLConfig.class})
 @ActiveProfiles("h2")
 public class TravelAttendeeRepositoryTest extends ScheduleTest {
-    private final TravelScheduleRepository travelScheduleRepository;
-    private final TravelAttendeeRepository travelAttendeeRepository;
-    private final MemberRepository memberRepository;
+    @Autowired private TravelScheduleRepository travelScheduleRepository;
+    @Autowired private TravelAttendeeRepository travelAttendeeRepository;
+    @Autowired private MemberRepository memberRepository;
 
     private TravelSchedule schedule1;
     private TravelSchedule schedule2;
@@ -32,13 +32,6 @@ public class TravelAttendeeRepositoryTest extends ScheduleTest {
     private Member member1;
     private Member member2;
 
-
-    @Autowired
-    public TravelAttendeeRepositoryTest(TravelScheduleRepository travelScheduleRepository, TravelAttendeeRepository travelAttendeeRepository, MemberRepository memberRepository) {
-        this.travelScheduleRepository = travelScheduleRepository;
-        this.travelAttendeeRepository = travelAttendeeRepository;
-        this.memberRepository = memberRepository;
-    }
 
 
     @BeforeEach
@@ -53,18 +46,13 @@ public class TravelAttendeeRepositoryTest extends ScheduleTest {
         TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(0L, member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
         TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(0L, member1, schedule2, AttendeeRole.GUEST, AttendeePermission.READ));
         TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(0L, member2, schedule3, AttendeeRole.AUTHOR, AttendeePermission.ALL));
-
-//        schedule1.setTravelAttendeeList(new ArrayList<>(List.of(attendee1)));
-//        schedule2.setTravelAttendeeList(new ArrayList<>(List.of(attendee2)));
-//        schedule3.setTravelAttendeeList(new ArrayList<>(List.of(attendee3)));
-
     }
 
     @Test
     @DisplayName("일정 참가자인지 확인 true 반환")
     void existsAttendee_true(){
         // when
-        boolean response = travelAttendeeRepository.existsByTravelSchedule_ScheduleIdAndMember_UserId(schedule1.getScheduleId(), member1.getUserId());
+        boolean response = travelAttendeeRepository.existsByTravelSchedule_ScheduleIdAndMember_Email(schedule1.getScheduleId(), member1.getEmail());
 
         // then
         assertThat(response).isTrue();
@@ -74,7 +62,7 @@ public class TravelAttendeeRepositoryTest extends ScheduleTest {
     @DisplayName("일정 참가자인지 확인 false 반환")
     void existsAttendee_false(){
         // when
-        boolean response = travelAttendeeRepository.existsByTravelSchedule_ScheduleIdAndMember_UserId(schedule1.getScheduleId(), member2.getUserId());
+        boolean response = travelAttendeeRepository.existsByTravelSchedule_ScheduleIdAndMember_Email(schedule1.getScheduleId(), member2.getEmail());
 
         // then
         assertThat(response).isFalse();

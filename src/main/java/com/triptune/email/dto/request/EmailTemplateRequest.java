@@ -1,4 +1,4 @@
-package com.triptune.email.dto;
+package com.triptune.email.dto.request;
 
 import java.util.Map;
 

@@ -87,7 +87,7 @@ public class AttendeeControllerTest extends ScheduleTest {
 
     @Test
     @DisplayName("일정 참석자 조회")
-    @WithMockUser(username = "member1")
+    @WithMockUser(username = "member1@email.com")
     void getAttendees() throws Exception {
         mockMvc.perform(get("/api/schedules/{scheduleId}/attendees", schedule1.getScheduleId()))
                 .andExpect(status().isOk())
@@ -99,7 +99,7 @@ public class AttendeeControllerTest extends ScheduleTest {
 
     @Test
     @DisplayName("일정 참석자 조회 시 일정 데이터 존재하지 않아 예외 발생")
-    @WithMockUser(username = "member1")
+    @WithMockUser(username = "member1@email.com")
     void getAttendeesNoScheduleData_notFoundException() throws Exception {
         mockMvc.perform(get("/api/schedules/{scheduleId}/attendees", 0L))
                 .andExpect(status().isNotFound())
@@ -110,7 +110,7 @@ public class AttendeeControllerTest extends ScheduleTest {
 
     @Test
     @DisplayName("일정 참석자 조회 시 접근 권한이 없어 예외 발생")
-    @WithMockUser(username = "member1")
+    @WithMockUser(username = "member1@email.com")
     void getAttendeesNotAccess_forbiddenScheduleException() throws Exception {
         mockMvc.perform(get("/api/schedules/{scheduleId}/attendees", schedule2.getScheduleId()))
                 .andExpect(status().isForbidden())
@@ -121,7 +121,7 @@ public class AttendeeControllerTest extends ScheduleTest {
 
     @Test
     @DisplayName("일정 참석자 추가")
-    @WithMockUser(username = "member1")
+    @WithMockUser(username = "member1@email.com")
     void createAttendee() throws Exception {
         AttendeeRequest attendeeRequest = createAttendeeRequest(member3.getEmail(), AttendeePermission.CHAT);
         mockMvc.perform(post("/api/schedules/{scheduleId}/attendees", schedule1.getScheduleId())
@@ -134,7 +134,7 @@ public class AttendeeControllerTest extends ScheduleTest {
 
     @Test
     @DisplayName("일정 참석자 추가 시 일정 데이터 존재하지 않아 예외 발생")
-    @WithMockUser(username = "member1")
+    @WithMockUser(username = "member1@email.com")
     void createAttendeeNotFoundSchedule_dataNotFoundException() throws Exception{
         AttendeeRequest attendeeRequest = createAttendeeRequest(member3.getEmail(), AttendeePermission.CHAT);
         mockMvc.perform(post("/api/schedules/{scheduleId}/attendees", 0L)
@@ -147,7 +147,7 @@ public class AttendeeControllerTest extends ScheduleTest {
 
     @Test
     @DisplayName("일정 참석자 추가 시 일정 참석자 5명 넘어 예외 발생")
-    @WithMockUser(username = "member1")
+    @WithMockUser(username = "member1@email.com")
     void createAttendeeOver5_conflictAttendeeException() throws Exception {
         Member member4 = memberRepository.save(createMember(null, "member4"));
         Member member5 = memberRepository.save(createMember(null, "member5"));
@@ -167,7 +167,7 @@ public class AttendeeControllerTest extends ScheduleTest {
 
     @Test
     @DisplayName("일정 참석자 추가 시 요청자가 작성자가 아니여서 예외 발생")
-    @WithMockUser(username = "member2")
+    @WithMockUser(username = "member2@email.com")
     void createAttendeeNotAuthor_forbiddenScheduleException() throws Exception{
         AttendeeRequest attendeeRequest = createAttendeeRequest(member3.getEmail(), AttendeePermission.CHAT);
         mockMvc.perform(post("/api/schedules/{scheduleId}/attendees", schedule1.getScheduleId())
@@ -180,7 +180,7 @@ public class AttendeeControllerTest extends ScheduleTest {
 
     @Test
     @DisplayName("일정 참석자 추가 시 초대자 데이터 존재하지 않아 예외 발생")
-    @WithMockUser(username = "member1")
+    @WithMockUser(username = "member1@email.com")
     void createAttendeeNotMember_dataNotFoundException() throws Exception{
         AttendeeRequest attendeeRequest = createAttendeeRequest("notMember@email.com", AttendeePermission.CHAT);
         mockMvc.perform(post("/api/schedules/{scheduleId}/attendees", schedule1.getScheduleId())
@@ -193,7 +193,7 @@ public class AttendeeControllerTest extends ScheduleTest {
 
     @Test
     @DisplayName("일정 참석자 추가 시 초대자가 이미 참석자여서 예외 발생")
-    @WithMockUser(username = "member1")
+    @WithMockUser(username = "member1@email.com")
     void createAttendee_alreadyAttendeeException() throws Exception{
         AttendeeRequest attendeeRequest = createAttendeeRequest(member2.getEmail(), AttendeePermission.CHAT);
         mockMvc.perform(post("/api/schedules/{scheduleId}/attendees", schedule1.getScheduleId())
@@ -206,7 +206,7 @@ public class AttendeeControllerTest extends ScheduleTest {
 
     @Test
     @DisplayName("일정 참석자 접근 권한 수정")
-    @WithMockUser(username = "member1")
+    @WithMockUser(username = "member1@email.com")
     void updateAttendeePermission() throws Exception{
         AttendeePermissionRequest request = createAttendeePermissionRequest(AttendeePermission.CHAT);
         mockMvc.perform(patch("/api/schedules/{scheduleId}/attendees/{attendeeId}", schedule1.getScheduleId(), attendee2.getAttendeeId())
@@ -218,7 +218,7 @@ public class AttendeeControllerTest extends ScheduleTest {
 
     @Test
     @DisplayName("일정 참석자 접근 권한 수정 시 일정이 존재하지 않아 예외 발생")
-    @WithMockUser(username = "member1")
+    @WithMockUser(username = "member1@email.com")
     void updateAttendeePermission_scheduleDataNotFoundException() throws Exception{
         AttendeePermissionRequest request = createAttendeePermissionRequest(AttendeePermission.CHAT);
         mockMvc.perform(patch("/api/schedules/{scheduleId}/attendees/{attendeeId}", 0L, attendee2.getAttendeeId())
@@ -231,7 +231,7 @@ public class AttendeeControllerTest extends ScheduleTest {
 
     @Test
     @DisplayName("일정 참석자 접근 권한 수정 시 요청자가 작성자가 아니여서 예외 발생")
-    @WithMockUser(username = "member2")
+    @WithMockUser(username = "member2@email.com")
     void updateAttendeePermission_forbiddenScheduleException() throws Exception{
         AttendeePermissionRequest request = createAttendeePermissionRequest(AttendeePermission.CHAT);
         mockMvc.perform(patch("/api/schedules/{scheduleId}/attendees/{attendeeId}", schedule1.getScheduleId(), attendee2.getAttendeeId())
@@ -243,7 +243,7 @@ public class AttendeeControllerTest extends ScheduleTest {
 
     @Test
     @DisplayName("일정 참석자 접근 권한 수정 시 참석자 정보 존재하지 않아 예외 발생")
-    @WithMockUser(username = "member1")
+    @WithMockUser(username = "member1@email.com")
     void updateAttendeePermission_attendeeDataNotFoundException() throws Exception{
         AttendeePermissionRequest request = createAttendeePermissionRequest(AttendeePermission.CHAT);
         mockMvc.perform(patch("/api/schedules/{scheduleId}/attendees/{attendeeId}", schedule1.getScheduleId(), attendee3.getAttendeeId())
@@ -256,7 +256,7 @@ public class AttendeeControllerTest extends ScheduleTest {
 
     @Test
     @DisplayName("일정 참석자 접근 권한 수정 시 작성자 접근 권한 수정 시도로 예외 발생")
-    @WithMockUser(username = "member1")
+    @WithMockUser(username = "member1@email.com")
     void updateAttendeePermission_forbiddenUpdateAuthorPermissionException() throws Exception{
         AttendeePermissionRequest request = createAttendeePermissionRequest(AttendeePermission.CHAT);
         mockMvc.perform(patch("/api/schedules/{scheduleId}/attendees/{attendeeId}", schedule1.getScheduleId(), attendee1.getAttendeeId())
@@ -268,7 +268,7 @@ public class AttendeeControllerTest extends ScheduleTest {
 
     @Test
     @DisplayName("일정 나가기")
-    @WithMockUser(username = "member2")
+    @WithMockUser(username = "member2@email.com")
     void leaveAttendee() throws Exception {
         mockMvc.perform(delete("/api/schedules/{scheduleId}/attendees", schedule1.getScheduleId()))
                 .andExpect(status().isOk())
@@ -281,7 +281,7 @@ public class AttendeeControllerTest extends ScheduleTest {
 
     @Test
     @DisplayName("일정 나가기 요청 시 일정 데이터 존재하지 않아 예외 발생")
-    @WithMockUser(username = "member2")
+    @WithMockUser(username = "member2@email.com")
     void leaveAttendee_scheduleDataNotFoundException() throws Exception {
         mockMvc.perform(delete("/api/schedules/{scheduleId}/attendees", 0L))
                 .andExpect(status().isNotFound())
@@ -292,7 +292,7 @@ public class AttendeeControllerTest extends ScheduleTest {
 
     @Test
     @DisplayName("일정 나가기 요청 시 사용자가 작성자여서 예외 발생")
-    @WithMockUser(username = "member1")
+    @WithMockUser(username = "member1@email.com")
     void leaveAttendeeIsAuthor_forbiddenScheduleException() throws Exception {
         mockMvc.perform(delete("/api/schedules/{scheduleId}/attendees", schedule1.getScheduleId()))
                 .andExpect(status().isForbidden())
@@ -302,7 +302,7 @@ public class AttendeeControllerTest extends ScheduleTest {
 
     @Test
     @DisplayName("일정 나가기 요청 시 사용자가 일정에 접근 권한이 없어 예외 발생")
-    @WithMockUser(username = "member1")
+    @WithMockUser(username = "member1@email.com")
     void leaveAttendee_forbiddenScheduleException() throws Exception {
         mockMvc.perform(delete("/api/schedules/{scheduleId}/attendees", schedule2.getScheduleId()))
                 .andExpect(status().isForbidden())
@@ -312,7 +312,7 @@ public class AttendeeControllerTest extends ScheduleTest {
 
     @Test
     @DisplayName("일정 내보내기")
-    @WithMockUser(username = "member1")
+    @WithMockUser(username = "member1@email.com")
     void removeAttendee() throws Exception{
         mockMvc.perform(delete("/api/schedules/{scheduleId}/attendees/{attendeeId}", schedule1.getScheduleId(), attendee2.getAttendeeId()))
                 .andExpect(status().isOk())
@@ -325,7 +325,7 @@ public class AttendeeControllerTest extends ScheduleTest {
 
     @Test
     @DisplayName("일정 나가기 요청 시 일정 데이터 존재하지 않아 예외 발생")
-    @WithMockUser(username = "member1")
+    @WithMockUser(username = "member1@email.com")
     void removeAttendee_scheduleDataNotFoundException() throws Exception {
         mockMvc.perform(delete("/api/schedules/{scheduleId}/attendees/{attendeeId}", 0L, attendee2.getAttendeeId()))
                 .andExpect(status().isNotFound())
@@ -336,7 +336,7 @@ public class AttendeeControllerTest extends ScheduleTest {
 
     @Test
     @DisplayName("일정 내보내기 시 작성자 요청이 아니여서 예외 발생")
-    @WithMockUser(username = "member2")
+    @WithMockUser(username = "member2@email.com")
     void removeAttendee_forbiddenAttendeeException() throws Exception{
         mockMvc.perform(delete("/api/schedules/{scheduleId}/attendees/{attendeeId}", schedule1.getScheduleId(), attendee2.getAttendeeId()))
                 .andExpect(status().isForbidden())
@@ -346,7 +346,7 @@ public class AttendeeControllerTest extends ScheduleTest {
 
     @Test
     @DisplayName("일정 내보내기 시 참석자를 찾을 수 없어 예외 발생")
-    @WithMockUser(username = "member1")
+    @WithMockUser(username = "member1@email.com")
     void removeAttendee_DataNotFoundException() throws Exception{
         mockMvc.perform(delete("/api/schedules/{scheduleId}/attendees/{attendeeId}", schedule1.getScheduleId(), 0L))
                 .andExpect(status().isNotFound())
@@ -356,7 +356,7 @@ public class AttendeeControllerTest extends ScheduleTest {
 
     @Test
     @DisplayName("일정 내보내기 시 작성자 내보내기 시도로 예외 발생")
-    @WithMockUser(username = "member1")
+    @WithMockUser(username = "member1@email.com")
     void removeAttendee_ForbiddenRemoveAuthorException() throws Exception{
         mockMvc.perform(delete("/api/schedules/{scheduleId}/attendees/{attendeeId}", schedule1.getScheduleId(), attendee1.getAttendeeId()))
                 .andExpect(status().isForbidden())
