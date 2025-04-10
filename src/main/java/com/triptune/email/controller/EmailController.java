@@ -18,7 +18,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-@Slf4j
 @RestController
 @RequestMapping("/api/emails")
 @RequiredArgsConstructor
@@ -40,12 +39,7 @@ public class EmailController {
     @PostMapping("/verify")
     @Operation(summary = "이메일 인증 번호 검증", description = "발급된 이메일 인증 번호를 검증합니다.")
     public ApiResponse<?> verify(@Valid @RequestBody VerifyAuthRequest verifyAuthRequest) {
-        boolean isVerify = emailService.verifyAuthCode(verifyAuthRequest);
-
-        if (!isVerify){
-            throw new EmailVerifyException(ErrorCode.FAIL_VERIFIED_EMAIL);
-        }
-
+        emailService.verifyAuthCode(verifyAuthRequest);
         return ApiResponse.okResponse();
     }
 }
