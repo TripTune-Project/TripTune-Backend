@@ -32,7 +32,8 @@ public enum ErrorCode {
 
 
     // 이메일
-    FAIL_VERIFIED_EMAIL(HttpStatus.BAD_REQUEST, "이메일 인증에 실패했습니다."),
+    INCORRECT_VERIFIED_EMAIL(HttpStatus.BAD_REQUEST, "인증번호가 일치하지 않습니다. 다시 확인해 주세요."),
+    INVALID_VERIFIED_EMAIL(HttpStatus.BAD_REQUEST, "인증번호가 만료되었거나 요청되지 않았습니다. 새로 인증을 요청해 주세요."),
     NOT_VERIFIED_EMAIL(HttpStatus.BAD_REQUEST, "인증되지 않은 이메일입니다. 이메일 인증을 다시 진행해주세요."),
 
     // 토큰

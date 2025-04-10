@@ -2,6 +2,8 @@ package com.triptune.email.service;
 
 import com.triptune.email.EmailTest;
 import com.triptune.email.dto.request.VerifyAuthRequest;
+import com.triptune.email.exception.EmailVerifyException;
+import com.triptune.global.enumclass.ErrorCode;
 import com.triptune.member.repository.MemberRepository;
 import com.triptune.global.util.RedisUtils;
 import org.junit.jupiter.api.DisplayName;
@@ -32,32 +34,46 @@ public class EmailServiceTest extends EmailTest {
 
     @Test
     @DisplayName("이메일 인증 코드 검사")
-    void verifyAuthCodeTrue(){
+    void verifyAuthCode(){
         // given
         VerifyAuthRequest request = createVerifyAuthRequest("member@email.com", "Abcd123");
 
         when(redisUtils.getEmailData(any(), anyString())).thenReturn("Abcd123");
 
+        // when, then
+        assertDoesNotThrow(() -> emailService.verifyAuthCode(request));
+    }
+
+    @Test
+    @DisplayName("이메일 인증 코드 검사 시 인증 시간이 만료된 경우")
+    void verifyAuthCode_invalid(){
+        // given
+        VerifyAuthRequest request = createVerifyAuthRequest("member@email.com", "Abcd123");
+
+        when(redisUtils.getEmailData(any(), anyString())).thenReturn(null);
+
         // when
-        boolean response = emailService.verifyAuthCode(request);
+        EmailVerifyException fail = assertThrows(EmailVerifyException.class, () -> emailService.verifyAuthCode(request));
 
         // then
-        assertThat(response).isTrue();
+        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.INVALID_VERIFIED_EMAIL.getStatus());
+        assertThat(fail.getMessage()).isEqualTo(ErrorCode.INVALID_VERIFIED_EMAIL.getMessage());
     }
 
     @Test
     @DisplayName("이메일 인증 코드 검사 시 코드가 틀린 경우")
-    void verifyAuthCodeFalse(){
+    void verifyAuthCode_incorrect(){
         // given
         VerifyAuthRequest request = createVerifyAuthRequest("member@email.com", "Abcd123");
 
         when(redisUtils.getEmailData(any(), anyString())).thenReturn("abcd123");
 
         // when
-        boolean response = emailService.verifyAuthCode(request);
+        EmailVerifyException fail = assertThrows(EmailVerifyException.class, () -> emailService.verifyAuthCode(request));
 
         // then
-        assertThat(response).isFalse();
+        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.INCORRECT_VERIFIED_EMAIL.getStatus());
+        assertThat(fail.getMessage()).isEqualTo(ErrorCode.INCORRECT_VERIFIED_EMAIL.getMessage());
     }
 
 
@@ -68,7 +84,6 @@ public class EmailServiceTest extends EmailTest {
         String response = emailService.createAuthCode();
 
         // then
-        System.out.println(response);
         assertThat(response).isNotNull();
         assertThat(response.length()).isEqualTo(6);
     }

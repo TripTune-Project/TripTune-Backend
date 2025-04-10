@@ -2,6 +2,8 @@ package com.triptune.email.service;
 
 import com.triptune.email.dto.request.EmailTemplateRequest;
 import com.triptune.email.dto.request.VerifyAuthRequest;
+import com.triptune.email.exception.EmailVerifyException;
+import com.triptune.global.enumclass.ErrorCode;
 import com.triptune.member.dto.request.FindPasswordRequest;
 import com.triptune.global.enumclass.RedisKeyType;
 import com.triptune.global.util.JwtUtils;
@@ -62,16 +64,18 @@ public class EmailService {
     private long resetPasswordDuration;
 
 
-
-    public boolean verifyAuthCode(VerifyAuthRequest verifyAuthRequest){
+    public void verifyAuthCode(VerifyAuthRequest verifyAuthRequest){
         String savedCode = redisUtils.getEmailData(RedisKeyType.AUTH_CODE, verifyAuthRequest.getEmail());
 
-        if (savedCode != null && savedCode.equals(verifyAuthRequest.getAuthCode())){
-            redisUtils.saveEmailData(RedisKeyType.VERIFIED, verifyAuthRequest.getEmail(), "true", verificationDuration);
-            return true;
+        if(savedCode == null){
+            throw new EmailVerifyException(ErrorCode.INVALID_VERIFIED_EMAIL);
         }
 
-        return false;
+        if(!savedCode.equals(verifyAuthRequest.getAuthCode())){
+            throw new EmailVerifyException(ErrorCode.INCORRECT_VERIFIED_EMAIL);
+        }
+
+        redisUtils.saveEmailData(RedisKeyType.VERIFIED, verifyAuthRequest.getEmail(), "true", verificationDuration);
     }
 
     public void sendCertificationEmail(String email) throws MessagingException {
