@@ -13,7 +13,6 @@ public enum SocialType {
         return switch (registrationId){
             case "naver" -> NAVER;
             case "kakao" -> KAKAO;
-            // TODO: 수정
             default -> throw new CustomNotValidException(ErrorCode.ILLEGAL_REGISTRATION_ID);
         };
     }
