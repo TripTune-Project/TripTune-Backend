@@ -37,14 +37,14 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         // 2. registrationId 가져오기 (third-party id)
         String registrationId = userRequest.getClientRegistration().getRegistrationId();
 
-        // 4. 유저 정보 dto 생성
+        // 3. 유저 정보 dto 생성
         OAuth2UserInfo oAuth2UserInfo = switch (registrationId){
             case "naver" -> new NaverUserInfo(attributes);
             case "kakao" -> new KaKaoUserInfo(attributes);
             default -> throw new OAuth2Exception(ErrorCode.ILLEGAL_REGISTRATION_ID);
         };
 
-        // 5. 회원가입 및 로그인
+        // 4. 회원가입 및 로그인
         Member member = getOrCreateSocialMember(oAuth2UserInfo);
         member.updateRefreshToken(jwtUtils.createRefreshToken(member.getEmail()));
         return new CustomUserDetails(member, attributes);
