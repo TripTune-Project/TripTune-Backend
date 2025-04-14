@@ -3,6 +3,8 @@ package com.triptune.member.repository;
 import com.triptune.member.MemberTest;
 import com.triptune.member.dto.response.MemberProfileResponse;
 import com.triptune.member.entity.Member;
+import com.triptune.member.entity.SocialMember;
+import com.triptune.member.enumclass.SocialType;
 import com.triptune.profile.entity.ProfileImage;
 import com.triptune.profile.repository.ProfileImageRepository;
 import com.triptune.global.config.QueryDSLConfig;
@@ -13,10 +15,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 
-import javax.swing.text.html.Option;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -28,7 +28,7 @@ class MemberRepositoryTest extends MemberTest {
 
     @Autowired private MemberRepository memberRepository;
     @Autowired private ProfileImageRepository profileImageRepository;
-
+    @Autowired private SocialMemberRepository socialMemberRepository;
 
     @Test
     @DisplayName("채팅 사용자들 프로필 조회")
@@ -36,8 +36,8 @@ class MemberRepositoryTest extends MemberTest {
         // given
         ProfileImage profileImage1 = profileImageRepository.save(createProfileImage(null, "member1Image"));
         ProfileImage profileImage2 = profileImageRepository.save(createProfileImage(null, "member2Image"));
-        Member member1 = memberRepository.save(createMember(null, "member1", profileImage1));
-        Member member2 = memberRepository.save(createMember(null, "member2", profileImage2));
+        Member member1 = memberRepository.save(createMember(null, "member1@email.com", profileImage1));
+        Member member2 = memberRepository.save(createMember(null, "member2@email.com", profileImage2));
 
         Set<Long> request = new HashSet<>();
         request.add(member1.getMemberId());
@@ -56,6 +56,7 @@ class MemberRepositoryTest extends MemberTest {
         assertThat(response.get(1).getNickname()).isEqualTo(member2.getNickname());
         assertThat(response.get(1).getProfileUrl()).isEqualTo(profileImage2.getS3ObjectUrl());
     }
+
 
 }
 

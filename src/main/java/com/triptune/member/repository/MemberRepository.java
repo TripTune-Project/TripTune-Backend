@@ -1,7 +1,7 @@
 package com.triptune.member.repository;
 
 import com.triptune.member.entity.Member;
-import com.triptune.profile.entity.ProfileImage;
+import com.triptune.member.enumclass.SocialType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -18,6 +18,6 @@ public interface MemberRepository extends JpaRepository<Member, Long>, MemberRep
     Optional<Member> findByNickname(@Param("nickname") String nickname);
 
     @Modifying
-    @Query("UPDATE Member m SET m.refreshToken = NULL WHERE m.nickname = :nickname")
+    @Query("update Member m set m.refreshToken = NULL where m.nickname = :nickname")
     void deleteRefreshTokenByNickname(@Param("nickname") String nickname);
 }

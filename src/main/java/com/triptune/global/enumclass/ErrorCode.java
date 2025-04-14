@@ -75,7 +75,10 @@ public enum ErrorCode {
 
     // 파일
     PROFILE_IMAGE_NOT_FOUND(HttpStatus.NOT_FOUND, "프로필 이미지 데이터를 찾을 수 없습니다."),
-    INVALID_EXTENSION(HttpStatus.BAD_REQUEST, "허용되지 않은 파일 형식입니다.");
+    INVALID_EXTENSION(HttpStatus.BAD_REQUEST, "허용되지 않은 파일 형식입니다."),
+
+    // 소셜 로그인
+    ILLEGAL_REGISTRATION_ID(HttpStatus.BAD_REQUEST, "지원하지 않는 소셜 로그인입니다.");
 
 
     private final HttpStatus status;

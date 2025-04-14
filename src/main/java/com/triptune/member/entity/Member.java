@@ -1,5 +1,6 @@
 package com.triptune.member.entity;
 
+import com.triptune.global.service.OAuth2UserInfo;
 import com.triptune.member.dto.request.JoinRequest;
 import com.triptune.member.enumclass.AnonymousValue;
 import com.triptune.profile.entity.ProfileImage;
@@ -10,6 +11,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Getter
@@ -75,6 +77,18 @@ public class Member {
                 .isActive(true)
                 .build();
     }
+
+    public static Member from(ProfileImage profileImage, OAuth2UserInfo oAuth2UserInfo){
+        return Member.builder()
+                .profileImage(profileImage)
+                .email(oAuth2UserInfo.getEmail())
+                .nickname(oAuth2UserInfo.getNickname())
+                .isSocialLogin(true)
+                .createdAt(LocalDateTime.now())
+                .isActive(true)
+                .build();
+    }
+
 
 
     public boolean isMatchRefreshToken(String refreshToken){

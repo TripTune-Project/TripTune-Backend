@@ -1,4 +1,4 @@
-package com.triptune.global.properties;
+package com.triptune.profile.properties;
 
 import lombok.Getter;
 import lombok.Setter;

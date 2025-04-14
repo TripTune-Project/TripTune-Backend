@@ -61,11 +61,6 @@ public class MemberService {
     private final ChatMessageRepository chatMessageRepository;
     private final BookmarkRepository bookmarkRepository;
 
-    @Value("${spring.jwt.token.access-expiration-time}")
-    private long accessExpirationTime;
-
-    @Value("${spring.jwt.token.refresh-expiration-time}")
-    private long refreshExpirationTime;
 
 
     public void join(JoinRequest joinRequest) {
@@ -86,7 +81,7 @@ public class MemberService {
         }
     }
 
-    private void validateUniqueNickname(String nickname){
+    public void validateUniqueNickname(String nickname){
         if(isExistNickname(nickname)){
             throw new DataExistException(ErrorCode.ALREADY_EXISTED_NICKNAME);
         }
@@ -114,8 +109,8 @@ public class MemberService {
             throw new FailLoginException(ErrorCode.FAILED_LOGIN);
         }
 
-        String accessToken = jwtUtils.createToken(member.getEmail(), accessExpirationTime);
-        String refreshToken = jwtUtils.createToken(member.getEmail(), refreshExpirationTime);
+        String accessToken = jwtUtils.createAccessToken(member.getEmail());
+        String refreshToken = jwtUtils.createRefreshToken(member.getEmail());
 
         member.updateRefreshToken(refreshToken);
 
@@ -144,7 +139,7 @@ public class MemberService {
         Member member = getMemberByEmail(claims.getSubject());
         validateSavedRefreshToken(member, refreshToken);
 
-        String newAccessToken = jwtUtils.createToken(member.getEmail(), accessExpirationTime);
+        String newAccessToken = jwtUtils.createAccessToken(member.getEmail());
         return RefreshTokenResponse.of(newAccessToken);
     }
 

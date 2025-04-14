@@ -95,9 +95,9 @@ public class ScheduleControllerTest extends ScheduleTest {
         ProfileImage profileImage2 = profileImageRepository.save(createProfileImage(null, "member2Image"));
         ProfileImage profileImage3 = profileImageRepository.save(createProfileImage(null, "member3Image"));
 
-        member1 = memberRepository.save(createMember(null, "member1", profileImage1));
-        member2 = memberRepository.save(createMember(null, "member2", profileImage2));
-        member3 = memberRepository.save(createMember(null, "member3", profileImage3));
+        member1 = memberRepository.save(createMember(null, "member1@email.com", profileImage1));
+        member2 = memberRepository.save(createMember(null, "member2@email.com", profileImage2));
+        member3 = memberRepository.save(createMember(null, "member3@email.com", profileImage3));
 
         Country country = countryRepository.save(createCountry());
         City city = cityRepository.save(createCity(country));

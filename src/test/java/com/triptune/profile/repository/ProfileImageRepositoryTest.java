@@ -29,7 +29,7 @@ class ProfileImageRepositoryTest extends ProfileImageTest {
     void findProfileImageByEmail() {
         // given
         ProfileImage profileImage = profileImageRepository.save(createProfileImage(null, "member1Image"));
-        Member member1 = memberRepository.save(createMember(null, "member1", profileImage));
+        Member member1 = memberRepository.save(createMember(null, "member1@email.com", profileImage));
 
         // when
         Optional<ProfileImage> response = profileImageRepository.findByEmail(member1.getEmail());

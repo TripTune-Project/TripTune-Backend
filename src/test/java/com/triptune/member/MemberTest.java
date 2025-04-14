@@ -8,16 +8,16 @@ public class MemberTest extends BaseTest {
 
     protected JoinRequest createMemberRequest(String email, String password, String repassword){
         return JoinRequest.builder()
-                .email(email + "@email.com")
+                .email(email)
                 .password(password)
                 .rePassword(repassword)
-                .nickname(email)
+                .nickname(email.split("@")[0])
                 .build();
     }
 
     protected LoginRequest createLoginRequest(String email, String password){
         return LoginRequest.builder()
-                .email(email + "@email.com")
+                .email(email)
                 .password(password)
                 .build();
     }
@@ -45,7 +45,7 @@ public class MemberTest extends BaseTest {
 
     protected FindPasswordRequest createFindPasswordRequest(String email){
         return FindPasswordRequest.builder()
-                .email(email + "@email.com")
+                .email(email)
                 .build();
     }
 

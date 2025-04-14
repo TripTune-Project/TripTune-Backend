@@ -37,6 +37,12 @@ public class JwtUtils {
     private final CustomUserDetailsService userDetailsService;
     private final RedisUtils redisUtils;
 
+    @Value("${spring.jwt.token.access-expiration-time}")
+    private long accessExpirationTime;
+
+    @Value("${spring.jwt.token.refresh-expiration-time}")
+    private long refreshExpirationTime;
+
     public JwtUtils(@Value("${spring.jwt.secret}") String secretKey, CustomUserDetailsService userDetailsService, RedisUtils redisUtils){
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);
         this.key = Keys.hmacShaKeyFor(keyBytes);
@@ -126,31 +132,38 @@ public class JwtUtils {
                .getBody();
    }
 
+   public String createAccessToken(String email){
+        return createToken(email, accessExpirationTime);
+   }
 
-    public String createToken(String email, long expirationTime){
-        Claims claims = Jwts.claims().setSubject(email);
-        Date now = new Date();
-        Date expireDate = new Date(now.getTime() + expirationTime);
+   public String createRefreshToken(String email){
+        return createToken(email, refreshExpirationTime);
+   }
 
-        return Jwts.builder()
-                .setClaims(claims)
-                .setIssuedAt(now)
-                .setExpiration(expireDate)
-                .signWith(key, SignatureAlgorithm.HS256)
-                .compact();
-    }
+   public String createToken(String email, long expirationTime){
+       Claims claims = Jwts.claims().setSubject(email);
+       Date now = new Date();
+       Date expireDate = new Date(now.getTime() + expirationTime);
 
-    public static void writeJwtException(HttpServletRequest request, HttpServletResponse response, HttpStatus httpStatus, String message) throws IOException {
-        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-        response.setStatus(httpStatus.value());
-        response.setCharacterEncoding(Charset.defaultCharset().name());
+       return Jwts.builder()
+               .setClaims(claims)
+               .setIssuedAt(now)
+               .setExpiration(expireDate)
+               .signWith(key, SignatureAlgorithm.HS256)
+               .compact();
+   }
 
-        ErrorResponse errorResponse = ErrorResponse.of(httpStatus, request.getRequestURI() + " : " + message);
-        String result = new ObjectMapper().writeValueAsString(errorResponse);
+   public static void writeJwtException(HttpServletRequest request, HttpServletResponse response, HttpStatus httpStatus, String message) throws IOException {
+       response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+       response.setStatus(httpStatus.value());
+       response.setCharacterEncoding(Charset.defaultCharset().name());
 
-        response.getWriter().write(result);
-        response.getWriter().flush();
-    }
+       ErrorResponse errorResponse = ErrorResponse.of(httpStatus, request.getRequestURI() + " : " + message);
+       String result = new ObjectMapper().writeValueAsString(errorResponse);
+
+       response.getWriter().write(result);
+       response.getWriter().flush();
+   }
 
 
 }

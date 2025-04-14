@@ -91,8 +91,8 @@ public class ScheduleServiceTest extends ScheduleTest {
 
         ProfileImage profileImage1 = createProfileImage(1L, "member1Image", member1);
         ProfileImage profileImage2 = createProfileImage(2L, "member2Image", member2);
-        member1 = createMember(1L, "member1", profileImage1);
-        member2 = createMember(2L, "member2", profileImage2);
+        member1 = createMember(1L, "member1@email.com", profileImage1);
+        member2 = createMember(2L, "member2@email.com", profileImage2);
 
         schedule1 = createTravelSchedule(1L, "테스트1");
         schedule2 = createTravelSchedule(2L, "테스트2");

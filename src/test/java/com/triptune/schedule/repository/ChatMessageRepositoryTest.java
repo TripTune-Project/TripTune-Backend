@@ -44,8 +44,8 @@ public class ChatMessageRepositoryTest extends ScheduleTest {
     @DisplayName("일정 id를 통해 채팅 목록 조회")
     void findAllByScheduleId(){
         // given
-        Member member1 = memberRepository.save(createMember(null, "member1"));
-        Member member2 = memberRepository.save(createMember(null, "member2"));
+        Member member1 = memberRepository.save(createMember(null, "member1@email.com"));
+        Member member2 = memberRepository.save(createMember(null, "member2@email.com"));
         ChatMessage message1 = chatMessageRepository.save(createChatMessage("chat1", schedule.getScheduleId(), member1, "hello1"));
         ChatMessage message2 = chatMessageRepository.save(createChatMessage("chat2", schedule.getScheduleId(), member1, "hello2"));
         ChatMessage message3 = chatMessageRepository.save(createChatMessage("chat3", schedule.getScheduleId(), member2, "hello3"));
@@ -74,8 +74,8 @@ public class ChatMessageRepositoryTest extends ScheduleTest {
     @DisplayName("일정 id를 통해 채팅 삭제")
     void deleteAllByScheduleId(){
         // given
-        Member member1 = memberRepository.save(createMember(null, "member1"));
-        Member member2 = memberRepository.save(createMember(null, "member2"));
+        Member member1 = memberRepository.save(createMember(null, "member1@email.com"));
+        Member member2 = memberRepository.save(createMember(null, "member2@email.com"));
         chatMessageRepository.save(createChatMessage("chat1", schedule.getScheduleId(), member1, "hello1"));
         chatMessageRepository.save(createChatMessage("chat2", schedule.getScheduleId(), member1, "hello2"));
         chatMessageRepository.save(createChatMessage("chat3", schedule.getScheduleId(), member2, "hello3"));

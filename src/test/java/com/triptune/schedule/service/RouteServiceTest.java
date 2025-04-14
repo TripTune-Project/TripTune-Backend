@@ -76,8 +76,8 @@ public class RouteServiceTest extends ScheduleTest {
         travelPlace2 = createTravelPlace(2L, country, city, district, apiCategory, List.of(travelImage3, travelImage4));
         travelPlace3 = createTravelPlace(3L, country, city, district, apiCategory, new ArrayList<>());
 
-        member1 = createMember(1L, "member1");
-        member2 = createMember(2L, "member2");
+        member1 = createMember(1L, "member1@email.com");
+        member2 = createMember(2L, "member2@email.com");
 
         schedule1 = createTravelSchedule(1L, "테스트1");
 

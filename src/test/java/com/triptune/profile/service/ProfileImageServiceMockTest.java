@@ -1,14 +1,13 @@
 package com.triptune.profile.service;
 
 import com.triptune.member.entity.Member;
-import com.triptune.member.repository.MemberRepository;
 import com.triptune.profile.ProfileImageTest;
 import com.triptune.profile.entity.ProfileImage;
 import com.triptune.profile.repository.ProfileImageRepository;
 import com.triptune.global.enumclass.ErrorCode;
 import com.triptune.global.exception.DataNotFoundException;
 import com.triptune.global.exception.FileBadRequestException;
-import com.triptune.global.properties.DefaultProfileImageProperties;
+import com.triptune.profile.properties.DefaultProfileImageProperties;
 import com.triptune.global.service.S3Service;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -43,7 +42,7 @@ public class ProfileImageServiceMockTest extends ProfileImageTest {
         byte[] content = createTestImage("jpeg");
         MockMultipartFile mockMultipartFile = new MockMultipartFile("newFile", "newFileOriginalName.jpeg", "image/jpeg", content);
 
-        Member member = createMember(1L, "member");
+        Member member = createMember(1L, "member@email.com");
         ProfileImage profileImage = createProfileImage(1L, "savedImage", member);
 
         when(profileImageRepository.findByEmail(any())).thenReturn(Optional.of(profileImage));

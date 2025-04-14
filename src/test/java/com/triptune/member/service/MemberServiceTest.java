@@ -94,7 +94,7 @@ public class MemberServiceTest extends MemberTest {
         District district = createDistrict(city, "강남구");
         ApiCategory apiCategory = createApiCategory();
 
-        member = createMember(null, "member");
+        member = createMember(null, "member@email.com");
         TravelImage travelImage1 = createTravelImage(travelPlace1, "test", true);
         TravelImage travelImage2 = createTravelImage(travelPlace2, "test", true);
         TravelImage travelImage3 = createTravelImage(travelPlace3, "test", true);
@@ -108,7 +108,7 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("회원가입")
     void join(){
         // given
-        JoinRequest request = createMemberRequest("member", "password12!@", "password12!@");
+        JoinRequest request = createMemberRequest("member@email.com", "password12!@", "password12!@");
 
         when(memberRepository.existsByEmail(anyString())).thenReturn(false);
         when(memberRepository.existsByNickname(anyString())).thenReturn(false);
@@ -128,7 +128,7 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("회원가입 시 이미 가입한 이메일이 존재해 예외 발생")
     void join_emailExistException(){
         // given
-        JoinRequest request = createMemberRequest("member", "password12!@", "password12!@");
+        JoinRequest request = createMemberRequest("member@email.com", "password12!@", "password12!@");
 
         when(memberRepository.existsByEmail(anyString())).thenReturn(true);
 
@@ -145,7 +145,7 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("회원가입 시 이미 가입한 닉네임이 존재해 예외 발생")
     void join_nicknameExistException(){
         // given
-        JoinRequest request = createMemberRequest("member", "password12!@", "password12!@");
+        JoinRequest request = createMemberRequest("member@email.com", "password12!@", "password12!@");
 
         when(memberRepository.existsByEmail(anyString())).thenReturn(false);
         when(memberRepository.existsByNickname(anyString())).thenReturn(true);
@@ -165,7 +165,7 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("회원가입 시 인증된 이메일이 아니여서 예외 발생")
     void join_notVerifiedEmail(){
         // given
-        JoinRequest request = createMemberRequest("member", "password12!@", "password12!@");
+        JoinRequest request = createMemberRequest("member@email.com", "password12!@", "password12!@");
 
         when(memberRepository.existsByEmail(anyString())).thenReturn(false);
         when(memberRepository.existsByNickname(anyString())).thenReturn(false);
@@ -213,8 +213,8 @@ public class MemberServiceTest extends MemberTest {
 
         when(memberRepository.findByEmail(anyString())).thenReturn(Optional.of(member));
         when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
-        when(jwtUtils.createToken(anyString(), anyLong())).thenReturn(accessToken);
-        when(jwtUtils.createToken(anyString(), anyLong())).thenReturn(refreshToken);
+        when(jwtUtils.createAccessToken(anyString())).thenReturn(accessToken);
+        when(jwtUtils.createRefreshToken(anyString())).thenReturn(refreshToken);
 
         // when
         LoginResponse response = memberService.login(loginRequest);
@@ -303,7 +303,7 @@ public class MemberServiceTest extends MemberTest {
         when(jwtUtils.validateToken(anyString())).thenReturn(true);
         when(jwtUtils.parseClaims(anyString())).thenReturn(mockClaims);
         when(memberRepository.findByEmail(any())).thenReturn(Optional.of(member));
-        when(jwtUtils.createToken(anyString(), anyLong())).thenReturn(accessToken);
+        when(jwtUtils.createAccessToken(anyString())).thenReturn(accessToken);
 
         RefreshTokenRequest request = createRefreshTokenRequest(refreshToken);
 
@@ -312,7 +312,6 @@ public class MemberServiceTest extends MemberTest {
 
         // then
         assertThat(response.getAccessToken()).isNotNull();
-
     }
 
 
@@ -435,7 +434,7 @@ public class MemberServiceTest extends MemberTest {
     void changePassword(){
         // given
         ChangePasswordRequest request = createChangePasswordRequest("test123@", "test123!", "test123!");
-        Member member = createMember(1L, "member");
+        Member member = createMember(1L, "member@email.com");
 
         when(memberRepository.findByEmail(anyString())).thenReturn(Optional.of(member));
         when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
@@ -468,7 +467,7 @@ public class MemberServiceTest extends MemberTest {
     void changePasswordIncorrectSavedPassword(){
         // given
         ChangePasswordRequest request = createChangePasswordRequest("incorrect123@", "test123!", "test123!");
-        Member member = createMember(1L, "member");
+        Member member = createMember(1L, "member@email.com");
 
         when(memberRepository.findByEmail(anyString())).thenReturn(Optional.of(member));
         when(passwordEncoder.matches(anyString(), anyString())).thenReturn(false);
@@ -486,7 +485,7 @@ public class MemberServiceTest extends MemberTest {
     void getMemberInfo(){
         // given
         ProfileImage savedProfileImage = createProfileImage(1L, "memberImage");
-        Member savedMember = createMember(1L, "member", savedProfileImage);
+        Member savedMember = createMember(1L, "member@email.com", savedProfileImage);
 
         when(memberRepository.findByEmail(anyString())).thenReturn(Optional.of(savedMember));
 

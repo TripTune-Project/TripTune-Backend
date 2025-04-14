@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.triptune.bookmark.entity.Bookmark;
 import com.triptune.common.entity.*;
 import com.triptune.member.entity.Member;
+import com.triptune.member.entity.SocialMember;
+import com.triptune.member.enumclass.SocialType;
 import com.triptune.profile.entity.ProfileImage;
 import com.triptune.schedule.entity.ChatMessage;
 import com.triptune.schedule.entity.TravelAttendee;
@@ -17,6 +19,7 @@ import com.triptune.travel.entity.TravelPlace;
 import com.triptune.travel.enumclass.ThemeType;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -25,8 +28,7 @@ import java.util.List;
 @Transactional
 public abstract class BaseTest {
 
-    @Autowired
-    private ObjectMapper objectMapper;
+    @Autowired private ObjectMapper objectMapper;
 
     private final String refreshToken = "MemberRefreshToken";
 
@@ -34,9 +36,9 @@ public abstract class BaseTest {
     protected Member createMember(Long memberId, String email){
         return Member.builder()
                 .memberId(memberId)
-                .email(email + "@email.com")
+                .email(email)
                 .password("test123@")
-                .nickname(email)
+                .nickname(email.split("@")[0])
                 .refreshToken(refreshToken)
                 .isSocialLogin(false)
                 .createdAt(LocalDateTime.now())
@@ -47,9 +49,9 @@ public abstract class BaseTest {
         return Member.builder()
                 .memberId(memberId)
                 .profileImage(profileImage)
-                .email(email + "@email.com")
+                .email(email)
                 .password("test123@")
-                .nickname(email)
+                .nickname(email.split("@")[0])
                 .refreshToken(refreshToken)
                 .isSocialLogin(false)
                 .createdAt(LocalDateTime.now())
@@ -59,9 +61,9 @@ public abstract class BaseTest {
     protected Member createMember(Long memberId, String email, String encodePassword){
         return Member.builder()
                 .memberId(memberId)
-                .email(email + "@email.com")
+                .email(email)
                 .password(encodePassword)
-                .nickname(email)
+                .nickname(email.split("@")[0])
                 .refreshToken(refreshToken)
                 .isSocialLogin(false)
                 .createdAt(LocalDateTime.now())
@@ -73,11 +75,23 @@ public abstract class BaseTest {
         return Member.builder()
                 .memberId(memberId)
                 .profileImage(profileImage)
-                .email(email + "@email.com")
+                .email(email)
                 .password(encodePassword)
-                .nickname(email)
+                .nickname(email.split("@")[0])
                 .refreshToken(refreshToken)
                 .isSocialLogin(false)
+                .createdAt(LocalDateTime.now())
+                .build();
+    }
+
+    protected Member createMember(Long memberId, String email, boolean isSocialLogin, ProfileImage profileImage){
+        return Member.builder()
+                .memberId(memberId)
+                .profileImage(profileImage)
+                .email(email)
+                .nickname(email.split("@")[0])
+                .refreshToken(refreshToken)
+                .isSocialLogin(isSocialLogin)
                 .createdAt(LocalDateTime.now())
                 .build();
     }
@@ -479,6 +493,16 @@ public abstract class BaseTest {
                 .member(member)
                 .travelPlace(travelPlace)
                 .createdAt(localDateTime)
+                .build();
+    }
+
+    protected SocialMember createSocialMember(Long socialMemberId, Member member, String socialId, SocialType socialType){
+        return SocialMember.builder()
+                .socialMemberId(socialMemberId)
+                .member(member)
+                .socialId(socialId)
+                .socialType(socialType)
+                .createdAt(LocalDateTime.now())
                 .build();
     }
 
