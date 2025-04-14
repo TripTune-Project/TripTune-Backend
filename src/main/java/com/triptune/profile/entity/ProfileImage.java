@@ -1,7 +1,7 @@
 package com.triptune.profile.entity;
 
 import com.triptune.member.entity.Member;
-import com.triptune.global.properties.DefaultProfileImageProperties;
+import com.triptune.profile.properties.DefaultProfileImageProperties;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;

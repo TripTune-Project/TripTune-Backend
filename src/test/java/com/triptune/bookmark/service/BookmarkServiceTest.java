@@ -59,7 +59,7 @@ public class BookmarkServiceTest extends BookmarkTest {
         District district = createDistrict(city, "강남구");
         ApiCategory apiCategory = createApiCategory();
 
-        member = createMember(1L, "member");
+        member = createMember(1L, "member@email.com");
         travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, "가장소", 0);
         travelPlace2 = createTravelPlace(2L, country, city, district, apiCategory, "가장소",5);
         travelPlace3 = createTravelPlace(3L, country, city, district, apiCategory, "나장소",2);

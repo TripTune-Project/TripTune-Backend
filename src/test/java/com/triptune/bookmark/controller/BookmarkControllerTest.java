@@ -81,7 +81,7 @@ class BookmarkControllerTest extends BookmarkTest {
     @DisplayName("북마크 추가")
     @WithMockUser("member@email.com")
     void createBookmark() throws Exception{
-        memberRepository.save(createMember(null, "member"));
+        memberRepository.save(createMember(null, "member@email.com"));
         TravelPlace travelPlace = travelPlaceRepository.save(createTravelPlace(null, country, city, district, apiCategory));
 
         mockMvc.perform(post("/api/bookmarks")
@@ -99,7 +99,7 @@ class BookmarkControllerTest extends BookmarkTest {
     @DisplayName("북마크 추가 시 이미 북마크로 등록되어 있어 예외 발생")
     @WithMockUser("member@email.com")
     void createBookmark_dataExistsException() throws Exception{
-        Member member = memberRepository.save(createMember(null, "member"));
+        Member member = memberRepository.save(createMember(null, "member@email.com"));
         TravelPlace travelPlace = travelPlaceRepository.save(createTravelPlace(null, country, city, district, apiCategory));
         bookmarkRepository.save(createBookmark(null, member, travelPlace, LocalDateTime.now()));
 
@@ -130,7 +130,7 @@ class BookmarkControllerTest extends BookmarkTest {
     @DisplayName("북마크 추가 시 여행지 데이터 없어 예외 발생")
     @WithMockUser("member@email.com")
     void createBookmark_travelPlaceNotFoundException() throws Exception{
-        memberRepository.save(createMember(null, "member"));
+        memberRepository.save(createMember(null, "member@email.com"));
 
         mockMvc.perform(post("/api/bookmarks")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -144,7 +144,7 @@ class BookmarkControllerTest extends BookmarkTest {
     @DisplayName("북마크 삭제")
     @WithMockUser("member@email.com")
     void deleteBookmark() throws Exception{
-        Member member = memberRepository.save(createMember(null, "member"));
+        Member member = memberRepository.save(createMember(null, "member@email.com"));
         TravelPlace travelPlace = travelPlaceRepository.save(createTravelPlace(null, country, city, district, apiCategory, "여행지", 10));
         bookmarkRepository.save(createBookmark(null, member, travelPlace, LocalDateTime.now()));
 
@@ -162,7 +162,7 @@ class BookmarkControllerTest extends BookmarkTest {
     @DisplayName("북마크 삭제 시 북마크 데이터가 없는 경우")
     @WithMockUser("member@email.com")
     void deleteBookmark_bookmarkNotFoundException() throws Exception{
-        memberRepository.save(createMember(null, "member"));
+        memberRepository.save(createMember(null, "member@email.com"));
         TravelPlace travelPlace = travelPlaceRepository.save(createTravelPlace(null, country, city, district, apiCategory, "여행지", 0));
 
         mockMvc.perform(delete("/api/bookmarks/{placeId}", travelPlace.getPlaceId()))

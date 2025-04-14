@@ -1,13 +1,17 @@
 package com.triptune.email.service;
 
+import com.triptune.email.dto.request.EmailRequest;
 import com.triptune.email.dto.request.EmailTemplateRequest;
 import com.triptune.email.dto.request.VerifyAuthRequest;
 import com.triptune.email.exception.EmailVerifyException;
 import com.triptune.global.enumclass.ErrorCode;
+import com.triptune.global.exception.DataExistException;
 import com.triptune.member.dto.request.FindPasswordRequest;
 import com.triptune.global.enumclass.RedisKeyType;
 import com.triptune.global.util.JwtUtils;
 import com.triptune.global.util.RedisUtils;
+import com.triptune.member.repository.MemberRepository;
+import com.triptune.member.service.MemberService;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.transaction.Transactional;
@@ -43,6 +47,7 @@ public class EmailService {
     private final JavaMailSender javaMailSender;
     private final JwtUtils jwtUtils;
     private final TemplateEngine templateEngine;
+    private final MemberRepository memberRepository;
 
 
     @Value("${spring.mail.username}")
@@ -78,7 +83,10 @@ public class EmailService {
         redisUtils.saveEmailData(RedisKeyType.VERIFIED, verifyAuthRequest.getEmail(), "true", verificationDuration);
     }
 
-    public void sendCertificationEmail(String email) throws MessagingException {
+    public void sendCertificationEmail(EmailRequest emailRequest) throws MessagingException {
+        String email = emailRequest.getEmail();
+        validateUniqueEmail(email);
+
         deleteAuthCodeIfExists(email);
 
         String authCode = createAuthCode();
@@ -96,6 +104,12 @@ public class EmailService {
         redisUtils.saveEmailData(RedisKeyType.AUTH_CODE, email, authCode, certificationDuration);
 
         log.info("인증 이메일 전송 완료 : {}", email);
+    }
+
+    private void validateUniqueEmail(String email){
+        if(memberRepository.existsByEmail(email)){
+            throw new DataExistException(ErrorCode.ALREADY_EXISTED_EMAIL);
+        }
     }
 
     private void deleteAuthCodeIfExists(String email){

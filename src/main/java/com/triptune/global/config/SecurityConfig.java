@@ -3,7 +3,10 @@ package com.triptune.global.config;
 import com.triptune.global.exception.CustomAccessDeniedHandler;
 import com.triptune.global.exception.CustomAuthenticationEntryPoint;
 import com.triptune.global.filter.JwtAuthFilter;
+import com.triptune.global.handler.OAuth2SuccessHandler;
+import com.triptune.global.service.CustomOAuth2UserService;
 import com.triptune.global.util.JwtUtils;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -29,6 +32,8 @@ public class SecurityConfig {
     private final CustomAccessDeniedHandler customAccessDeniedHandler;
     private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
     private final CorsConfigurationSource corsConfigurationSource;
+    private final CustomOAuth2UserService customOAuth2UserService;
+    private final OAuth2SuccessHandler oAuth2SuccessHandler;
 
 
     @Bean
@@ -48,6 +53,17 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(AUTH_WHITELIST).permitAll()
                         .anyRequest().authenticated()
+                )
+                .oauth2Login(oauth2 -> oauth2
+                        // 로그인 성공 이후 사용자 정보를 가져올 때의 설정을 담당
+                        .userInfoEndpoint(c -> c.userService(customOAuth2UserService))
+                        // 로그인 성공 시 핸들러
+                        .successHandler(oAuth2SuccessHandler)
+                        .failureHandler((request, response, exception) -> {
+                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                            response.setContentType("application/json;charset=UTF-8");
+                            response.getWriter().write("{\"error\": \"소셜 로그인 실패: " + exception.getMessage() + "\"}");
+                        })
                 )
                 .addFilterBefore(new JwtAuthFilter(jwtUtils), UsernamePasswordAuthenticationFilter.class)
                 .exceptionHandling((exceptionHandling) -> exceptionHandling

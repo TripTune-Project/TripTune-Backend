@@ -85,8 +85,8 @@ public class ScheduleTravelControllerTest extends BaseTest {
         travelImageRepository.save(createTravelImage(travelPlace2, "test1", true));
         travelImageRepository.save(createTravelImage(travelPlace2, "test2", false));
 
-        Member member1 = memberRepository.save(createMember(null, "member1"));
-        Member member2 = memberRepository.save(createMember(null, "member2"));
+        Member member1 = memberRepository.save(createMember(null, "member1@email.com"));
+        Member member2 = memberRepository.save(createMember(null, "member2@email.com"));
 
         schedule1 = travelScheduleRepository.save(createTravelSchedule(null,"테스트1"));
         schedule2 = travelScheduleRepository.save(createTravelSchedule(null,"테스트2"));

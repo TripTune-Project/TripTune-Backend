@@ -57,9 +57,9 @@ class ChatServiceTest extends ScheduleTest {
         ProfileImage profileImage2 = createProfileImage(2L, "member2Image", member2);
         ProfileImage profileImage3 = createProfileImage(3L, "member3Image", member3);
 
-        member1 = createMember(1L, "member1", profileImage1);
-        member2 = createMember(2L, "member2", profileImage2);
-        member3 = createMember(3L, "member3", profileImage3);
+        member1 = createMember(1L, "member1@email.com", profileImage1);
+        member2 = createMember(2L, "member2@email.com", profileImage2);
+        member3 = createMember(3L, "member3@email.com", profileImage3);
     }
 
     @Test

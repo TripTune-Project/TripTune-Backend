@@ -6,7 +6,7 @@ import com.triptune.profile.repository.ProfileImageRepository;
 import com.triptune.global.enumclass.ErrorCode;
 import com.triptune.global.exception.DataNotFoundException;
 import com.triptune.global.exception.FileBadRequestException;
-import com.triptune.global.properties.DefaultProfileImageProperties;
+import com.triptune.profile.properties.DefaultProfileImageProperties;
 import com.triptune.global.service.S3Service;
 import com.triptune.global.util.FileUtils;
 import jakarta.transaction.Transactional;

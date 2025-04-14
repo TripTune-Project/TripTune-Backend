@@ -36,8 +36,8 @@ public class TravelAttendeeRepositoryTest extends ScheduleTest {
 
     @BeforeEach
     void setUp(){
-        member1 = memberRepository.save(createMember(null, "member1"));
-        member2 = memberRepository.save(createMember(null, "member2"));
+        member1 = memberRepository.save(createMember(null, "member1@email.com"));
+        member2 = memberRepository.save(createMember(null, "member2@email.com"));
 
         schedule1 = travelScheduleRepository.save(createTravelSchedule(null,"테스트1"));
         schedule2 = travelScheduleRepository.save(createTravelSchedule(null,"테스트2"));

@@ -72,9 +72,9 @@ public class AttendeeControllerTest extends ScheduleTest {
         ProfileImage profileImage2 = profileImageRepository.save(createProfileImage(null, "member2Image"));
         ProfileImage profileImage3 = profileImageRepository.save(createProfileImage(null, "member3Image"));
 
-        member1 = memberRepository.save(createMember(null, "member1", profileImage1));
-        member2 = memberRepository.save(createMember(null, "member2", profileImage2));
-        member3 = memberRepository.save(createMember(null, "member3", profileImage3));
+        member1 = memberRepository.save(createMember(null, "member1@email.com", profileImage1));
+        member2 = memberRepository.save(createMember(null, "member2@email.com", profileImage2));
+        member3 = memberRepository.save(createMember(null, "member3@email.com", profileImage3));
 
         schedule1 = travelScheduleRepository.save(createTravelSchedule(null,"테스트1"));
         schedule2 = travelScheduleRepository.save(createTravelSchedule(null,"테스트2"));
@@ -149,8 +149,8 @@ public class AttendeeControllerTest extends ScheduleTest {
     @DisplayName("일정 참석자 추가 시 일정 참석자 5명 넘어 예외 발생")
     @WithMockUser(username = "member1@email.com")
     void createAttendeeOver5_conflictAttendeeException() throws Exception {
-        Member member4 = memberRepository.save(createMember(null, "member4"));
-        Member member5 = memberRepository.save(createMember(null, "member5"));
+        Member member4 = memberRepository.save(createMember(null, "member4@email.com"));
+        Member member5 = memberRepository.save(createMember(null, "member5@email.com"));
         travelAttendeeRepository.save(createTravelAttendee(0L, member3, schedule1, AttendeeRole.GUEST, AttendeePermission.ALL));
         travelAttendeeRepository.save(createTravelAttendee(0L, member4, schedule1, AttendeeRole.GUEST, AttendeePermission.ALL));
         travelAttendeeRepository.save(createTravelAttendee(0L, member5, schedule1, AttendeeRole.GUEST, AttendeePermission.ALL));

@@ -94,7 +94,7 @@ public class TravelControllerTest extends TravelTest {
         travelImage1 = travelImageRepository.save(createTravelImage(travelPlace1, "test1", true));
         travelImage2 = travelImageRepository.save(createTravelImage(travelPlace1, "test2", false));
 
-        member = memberRepository.save(createMember(null, "member"));
+        member = memberRepository.save(createMember(null, "member@email.com"));
     }
 
     @Test

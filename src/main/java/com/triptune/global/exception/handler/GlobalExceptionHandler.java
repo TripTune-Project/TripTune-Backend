@@ -88,4 +88,11 @@ public class GlobalExceptionHandler {
         return ErrorResponse.of(ex.getHttpStatus(), ex.getMessage());
     }
 
+    @ExceptionHandler(OAuth2Exception.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleOAuth2Exception(OAuth2Exception ex, HttpServletRequest request){
+        log.error("OAuth2Exception at {}: {}", request.getRequestURI(), ex.getMessage());
+        return ErrorResponse.of(ex.getHttpStatus(), ex.getMessage());
+    }
+
 }

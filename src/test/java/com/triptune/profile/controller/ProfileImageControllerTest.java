@@ -60,7 +60,7 @@ class ProfileImageControllerTest extends ProfileImageTest {
         byte[] content = createTestImage("jpg");
         MockMultipartFile mockMultipartFile = new MockMultipartFile("profileImage", "newFileOriginalName.jpg", "image/jpg", content);
 
-        Member member = memberRepository.save(createMember(null, "member"));
+        Member member = memberRepository.save(createMember(null, "member@email.com"));
         ProfileImage profileImage = profileImageRepository.save(createProfileImage(null, "beforeImage", member));
 
         member.updateProfileImage(profileImage);
@@ -78,7 +78,7 @@ class ProfileImageControllerTest extends ProfileImageTest {
         byte[] content = createTestImage("gif");
         MockMultipartFile mockMultipartFile = new MockMultipartFile("profileImage", "newFileOriginalName.gif", "image/gif", content);
 
-        Member member = memberRepository.save(createMember(null, "member"));
+        Member member = memberRepository.save(createMember(null, "member@email.com"));
         profileImageRepository.save(createProfileImage(null, "beforeImage", member));
 
         mockMvc.perform(multipart(HttpMethod.PATCH,"/api/profiles")
