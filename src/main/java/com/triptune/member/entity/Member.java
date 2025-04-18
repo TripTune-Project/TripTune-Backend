@@ -9,6 +9,7 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -133,4 +134,5 @@ public class Member {
     public void updateProfileImage(ProfileImage profileImage) {
         this.profileImage = profileImage;
     }
+
 }

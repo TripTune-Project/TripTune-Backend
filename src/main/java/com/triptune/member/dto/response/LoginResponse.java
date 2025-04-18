@@ -9,20 +9,17 @@ import lombok.NoArgsConstructor;
 public class LoginResponse {
 
     private String accessToken;
-    private String refreshToken;
     private String nickname;
 
     @Builder
-    public LoginResponse(String accessToken, String refreshToken, String nickname) {
+    public LoginResponse(String accessToken, String nickname) {
         this.accessToken = accessToken;
-        this.refreshToken = refreshToken;
         this.nickname = nickname;
     }
 
-    public static LoginResponse of(String accessToken, String refreshToken, String nickname){
+    public static LoginResponse of(String accessToken, String nickname){
         return LoginResponse.builder()
                 .accessToken(accessToken)
-                .refreshToken(refreshToken)
                 .nickname(nickname)
                 .build();
     }
