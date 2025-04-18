@@ -41,6 +41,8 @@ import com.triptune.global.util.RedisUtils;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import jakarta.mail.MessagingException;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -50,6 +52,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.ArrayList;
@@ -209,6 +213,7 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("로그인")
     void login(){
         // given
+        MockHttpServletResponse mockHttpServletResponse = new MockHttpServletResponse();
         LoginRequest loginRequest = createLoginRequest(member.getEmail(), passwordToken);
 
         when(memberRepository.findByEmail(anyString())).thenReturn(Optional.of(member));
@@ -217,24 +222,31 @@ public class MemberServiceTest extends MemberTest {
         when(jwtUtils.createRefreshToken(anyString())).thenReturn(refreshToken);
 
         // when
-        LoginResponse response = memberService.login(loginRequest);
+        LoginResponse response = memberService.login(loginRequest, mockHttpServletResponse);
 
         // then
         assertThat(response.getNickname()).isEqualTo(member.getNickname());
         assertThat(response.getAccessToken()).isNotNull();
-        assertThat(response.getRefreshToken()).isNotNull();
+
+        Cookie[] cookies = mockHttpServletResponse.getCookies();
+        assertThat(cookies).isNotNull();
+        assertThat(cookies.length).isEqualTo(1);
+        assertThat(cookies[0].getName()).isEqualTo("refreshToken");
+        assertThat(cookies[0].getValue()).isEqualTo(refreshToken);
     }
 
     @Test
     @DisplayName("로그인 시 사용자 데이터 없어 예외 발생")
     void loginNotFoundUser_failLoginException(){
         // given
+        MockHttpServletResponse mockHttpServletResponse = new MockHttpServletResponse();
         LoginRequest loginRequest = createLoginRequest(member.getEmail(), passwordToken);
 
         when(memberRepository.findByEmail(anyString())).thenReturn(Optional.empty());
 
         // when
-        FailLoginException fail = assertThrows(FailLoginException.class, () -> memberService.login(loginRequest));
+        FailLoginException fail = assertThrows(FailLoginException.class,
+                () -> memberService.login(loginRequest, mockHttpServletResponse));
 
         // then
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.FAILED_LOGIN.getStatus());
@@ -245,20 +257,20 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("로그인 시 비밀번호 맞지 않아 예외 발생")
     void loginMismatchPassword_failLoginException(){
         // given
+        MockHttpServletResponse mockHttpServletResponse = new MockHttpServletResponse();
         LoginRequest loginRequest = createLoginRequest(member.getEmail(), passwordToken);
 
         when(memberRepository.findByEmail(anyString())).thenReturn(Optional.of(member));
         when(passwordEncoder.matches(anyString(), anyString())).thenReturn(false);
 
         // when
-        FailLoginException fail = assertThrows(FailLoginException.class, () -> memberService.login(loginRequest));
+        FailLoginException fail = assertThrows(FailLoginException.class,
+                () -> memberService.login(loginRequest, mockHttpServletResponse));
 
         // then
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.FAILED_LOGIN.getStatus());
         assertThat(fail.getMessage()).isEqualTo(ErrorCode.FAILED_LOGIN.getMessage());
     }
-
-
 
     @Test
     @DisplayName("로그아웃")
@@ -305,10 +317,8 @@ public class MemberServiceTest extends MemberTest {
         when(memberRepository.findByEmail(any())).thenReturn(Optional.of(member));
         when(jwtUtils.createAccessToken(anyString())).thenReturn(accessToken);
 
-        RefreshTokenRequest request = createRefreshTokenRequest(refreshToken);
-
         // when
-        RefreshTokenResponse response = memberService.refreshToken(request);
+        RefreshTokenResponse response = memberService.refreshToken(refreshToken);
 
         // then
         assertThat(response.getAccessToken()).isNotNull();
@@ -322,14 +332,13 @@ public class MemberServiceTest extends MemberTest {
         String notEqualRefreshToken = "NotEqualRefreshToken";
         Claims mockClaims = Jwts.claims().setSubject("test");
 
-        RefreshTokenRequest request = createRefreshTokenRequest(notEqualRefreshToken);
-
         when(jwtUtils.validateToken(anyString())).thenReturn(true);
         when(jwtUtils.parseClaims(anyString())).thenReturn(mockClaims);
         when(memberRepository.findByEmail(any())).thenReturn(Optional.of(member));
 
         // when
-        CustomJwtUnAuthorizedException fail = assertThrows(CustomJwtUnAuthorizedException.class, () -> memberService.refreshToken(request));
+        CustomJwtUnAuthorizedException fail = assertThrows(CustomJwtUnAuthorizedException.class,
+                () -> memberService.refreshToken(notEqualRefreshToken));
 
         // then
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.MISMATCH_REFRESH_TOKEN.getStatus());

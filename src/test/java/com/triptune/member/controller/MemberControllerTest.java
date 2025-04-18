@@ -33,6 +33,8 @@ import com.triptune.global.enumclass.ErrorCode;
 import com.triptune.global.enumclass.SuccessCode;
 import com.triptune.global.util.JwtUtils;
 import com.triptune.global.util.RedisUtils;
+import jakarta.persistence.GeneratedValue;
+import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -44,6 +46,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.filter.CharacterEncodingFilter;
@@ -51,6 +54,7 @@ import org.springframework.web.filter.CharacterEncodingFilter;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
@@ -182,6 +186,57 @@ public class MemberControllerTest extends MemberTest {
                 .andExpect(jsonPath("$.message").value(ErrorCode.NOT_VERIFIED_EMAIL.getMessage()));;
     }
 
+
+    @Test
+    @DisplayName("로그인")
+    void login() throws Exception {
+        String encodePassword = passwordEncoder.encode("password12!@");
+        Member member = memberRepository.save(createMember(null, "member@email.com", encodePassword));
+
+        MvcResult result = mockMvc.perform(post("/api/members/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJsonString(createLoginRequest("member@email.com", "password12!@"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()))
+                .andExpect(jsonPath("$.data.accessToken").isNotEmpty())
+                .andExpect(jsonPath("$.data.nickname").value(member.getNickname()))
+                .andReturn();
+
+        Cookie[] cookies = result.getResponse().getCookies();
+
+        assertThat(cookies).isNotNull();
+        assertThat(cookies.length).isEqualTo(1);
+        assertThat(cookies[0].getName()).isEqualTo("refreshToken");
+        assertThat(cookies[0].getValue()).isNotNull();
+    }
+
+
+
+    @Test
+    @DisplayName("로그인 시 이메일 맞지 않아 예외 발생")
+    void login_incorrectEmail() throws Exception{
+        mockMvc.perform(post("/api/members/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJsonString(createLoginRequest("fail@email.com", "password12!@"))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value(ErrorCode.FAILED_LOGIN.getMessage()));
+    }
+
+    @Test
+    @DisplayName("로그인 시 비밀번호 맞지 않아 예외 발생")
+    void login_incorrectPassword() throws Exception{
+        memberRepository.save(createMember(null, "member@email.com"));
+
+        mockMvc.perform(post("/api/members/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJsonString(createLoginRequest("member@email.com", "fail!@"))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value(ErrorCode.FAILED_LOGIN.getMessage()));
+    }
+
     @Test
     @DisplayName("로그아웃")
     void logout() throws Exception{
@@ -219,22 +274,45 @@ public class MemberControllerTest extends MemberTest {
         String refreshToken = jwtUtils.createToken(member.getEmail(), 10000000);
         member.updateRefreshToken(refreshToken);
 
+        Cookie cookie = createRefreshTokenCookie(refreshToken);
+
         mockMvc.perform(post("/api/members/refresh")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(createRefreshTokenRequest(member.getRefreshToken()))))
+                                .cookie(cookie))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()));
     }
 
     @Test
+    @DisplayName("토큰 갱신 시 쿠키 존재하지 않아 예외 발생")
+    void refreshToken_noCookie() throws Exception{
+        mockMvc.perform(post("/api/members/refresh"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value("/api/members/refresh : " + ErrorCode.MISMATCH_REFRESH_TOKEN.getMessage()));
+    }
+
+    @Test
+    @DisplayName("토큰 갱신 시 쿠키에 refreshToken 정보 없어서 예외 발생")
+    void refreshToken_notRefreshTokenCookie() throws Exception{
+        Cookie cookie = new Cookie("error", "error");
+
+        mockMvc.perform(post("/api/members/refresh")
+                        .cookie(cookie))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value("/api/members/refresh : " + ErrorCode.MISMATCH_REFRESH_TOKEN.getMessage()));
+    }
+
+
+    @Test
     @DisplayName("토큰 갱신 시 refresh token 만료로 예외 발생")
     void refreshToken_unauthorizedExpiredException() throws Exception {
         String refreshToken = jwtUtils.createToken("member", -604800000);
+        Cookie cookie = createRefreshTokenCookie(refreshToken);
 
         mockMvc.perform(post("/api/members/refresh")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(createRefreshTokenRequest(refreshToken))))
+                        .cookie(cookie))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value("/api/members/refresh : " + ErrorCode.EXPIRED_JWT_TOKEN.getMessage()));
@@ -244,10 +322,10 @@ public class MemberControllerTest extends MemberTest {
     @DisplayName("토큰 갱신 시 사용자 데이터 존재하지 않아 예외 발생")
     void refreshToken_memberNotFoundException() throws Exception {
         String refreshToken = jwtUtils.createToken("member", 100000000);
+        Cookie cookie = createRefreshTokenCookie(refreshToken);
 
         mockMvc.perform(post("/api/members/refresh")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(createRefreshTokenRequest(refreshToken))))
+                        .cookie(cookie))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value(ErrorCode.MEMBER_NOT_FOUND.getMessage()));
@@ -259,10 +337,10 @@ public class MemberControllerTest extends MemberTest {
     void refreshToken_NotEqualsRefreshToken() throws Exception {
         Member member = memberRepository.save(createMember(null, "member@email.com"));
         String refreshToken = jwtUtils.createToken(member.getEmail(), 10000000);
+        Cookie cookie = createRefreshTokenCookie(refreshToken);
 
         mockMvc.perform(post("/api/members/refresh")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(createRefreshTokenRequest(refreshToken))))
+                        .cookie(cookie))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value("/api/members/refresh : " + ErrorCode.MISMATCH_REFRESH_TOKEN.getMessage()));
@@ -272,7 +350,7 @@ public class MemberControllerTest extends MemberTest {
     @Test
     @DisplayName("비밀번호 찾기")
     void findPassword() throws Exception{
-        Member member = memberRepository.save(createMember(null, "member@email.com"));
+        memberRepository.save(createMember(null, "member@email.com"));
 
         mockMvc.perform(post("/api/members/find-password")
                         .contentType(MediaType.APPLICATION_JSON)

@@ -33,6 +33,8 @@ import com.triptune.travel.entity.TravelPlace;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.mail.MessagingException;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -101,7 +103,7 @@ public class MemberService {
     }
 
 
-    public LoginResponse login(LoginRequest loginRequest) {
+    public LoginResponse login(LoginRequest loginRequest, HttpServletResponse response) {
         Member member = memberRepository.findByEmail(loginRequest.getEmail())
                 .orElseThrow(() -> new FailLoginException(ErrorCode.FAILED_LOGIN));
 
@@ -114,11 +116,25 @@ public class MemberService {
 
         member.updateRefreshToken(refreshToken);
 
-        return LoginResponse.of(accessToken, refreshToken, member.getNickname());
+        Cookie refreshTokenCookie = createRefreshTokenCookie(refreshToken);
+        response.addCookie(refreshTokenCookie);
+
+        return LoginResponse.of(accessToken, member.getNickname());
     }
 
     private boolean isPasswordMatch(String requestPassword, String savedPassword){
         return passwordEncoder.matches(requestPassword, savedPassword);
+    }
+
+
+    private Cookie createRefreshTokenCookie(String refreshToken) {
+        Cookie cookie = new Cookie("refreshToken", refreshToken);
+        cookie.setHttpOnly(true);
+        cookie.setSecure(true);
+        cookie.setPath("/");
+        cookie.setMaxAge(7 * 24 * 60 * 60);
+
+        return cookie;
     }
 
     public void logout(LogoutRequest logoutRequest, String accessToken) {
@@ -130,8 +146,7 @@ public class MemberService {
         redisUtils.saveExpiredData(accessToken, "logout", LOGOUT_DURATION);
     }
 
-    public RefreshTokenResponse refreshToken(RefreshTokenRequest refreshTokenRequest) throws ExpiredJwtException {
-        String refreshToken = refreshTokenRequest.getRefreshToken();
+    public RefreshTokenResponse refreshToken(String refreshToken) throws ExpiredJwtException {
         jwtUtils.validateToken(refreshToken);
 
         Claims claims = jwtUtils.parseClaims(refreshToken);

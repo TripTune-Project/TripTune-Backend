@@ -3,6 +3,7 @@ package com.triptune.member;
 import com.triptune.BaseTest;
 import com.triptune.email.dto.request.EmailRequest;
 import com.triptune.member.dto.request.*;
+import jakarta.servlet.http.Cookie;
 
 public class MemberTest extends BaseTest {
 
@@ -22,11 +23,6 @@ public class MemberTest extends BaseTest {
                 .build();
     }
 
-    protected RefreshTokenRequest createRefreshTokenRequest(String refreshToken){
-        return RefreshTokenRequest.builder()
-                .refreshToken(refreshToken)
-                .build();
-    }
 
     protected ResetPasswordRequest createResetPasswordRequest(String passwordToken, String newPassword1, String newPassword2){
         return ResetPasswordRequest.builder()
@@ -73,5 +69,12 @@ public class MemberTest extends BaseTest {
         return DeactivateRequest.builder()
                 .password(password)
                 .build();
+    }
+
+    protected Cookie createRefreshTokenCookie(String refreshToken){
+        Cookie cookie = new Cookie("refreshToken", refreshToken);
+        cookie.setHttpOnly(true);
+        cookie.setSecure(true);
+        return cookie;
     }
 }

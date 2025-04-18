@@ -5,6 +5,7 @@ import com.triptune.global.service.CustomUserDetails;
 import com.triptune.global.util.JwtUtils;
 import com.triptune.member.repository.MemberRepository;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +25,6 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
 
     private final JwtUtils jwtUtils;
     private final ObjectMapper objectMapper;
-    private final MemberRepository memberRepository;
 
     @Value("${app.frontend.main.url}")
     private String redirectURL;
@@ -34,15 +34,28 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
 
         String accessToken = jwtUtils.createAccessToken(userDetails.getUsername());
-        String refreshToken = userDetails.getRefreshToken();
 
         Map<String, String> body = Map.of(
-                "access_token", accessToken,
-                "refresh_token", refreshToken
+                "access_token", accessToken
         );
 
+        Cookie refreshTokenCookie = createRefreshTokenCookie(userDetails);
+
         response.sendRedirect(redirectURL);
+        response.addCookie(refreshTokenCookie);
         response.setContentType("application/json");
         response.getWriter().write(objectMapper.writeValueAsString(body));
+    }
+
+    private Cookie createRefreshTokenCookie(CustomUserDetails userDetails){
+        String refreshToken = userDetails.getRefreshToken();
+
+        Cookie cookie = new Cookie("refreshToken", refreshToken);
+        cookie.setHttpOnly(true);
+        cookie.setSecure(true);
+        cookie.setPath("/");
+        cookie.setMaxAge(7 * 24 * 60 * 60);
+
+        return cookie;
     }
 }
