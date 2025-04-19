@@ -3,6 +3,7 @@ package com.triptune.global.config;
 import com.triptune.global.exception.CustomAccessDeniedHandler;
 import com.triptune.global.exception.CustomAuthenticationEntryPoint;
 import com.triptune.global.filter.JwtAuthFilter;
+import com.triptune.global.handler.OAuth2FailHandler;
 import com.triptune.global.handler.OAuth2SuccessHandler;
 import com.triptune.global.service.CustomOAuth2UserService;
 import com.triptune.global.util.JwtUtils;
@@ -34,6 +35,7 @@ public class SecurityConfig {
     private final CorsConfigurationSource corsConfigurationSource;
     private final CustomOAuth2UserService customOAuth2UserService;
     private final OAuth2SuccessHandler oAuth2SuccessHandler;
+    private final OAuth2FailHandler oAuth2FailHandler;
 
 
     @Bean
@@ -59,11 +61,7 @@ public class SecurityConfig {
                         .userInfoEndpoint(c -> c.userService(customOAuth2UserService))
                         // 로그인 성공 시 핸들러
                         .successHandler(oAuth2SuccessHandler)
-                        .failureHandler((request, response, exception) -> {
-                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                            response.setContentType("application/json;charset=UTF-8");
-                            response.getWriter().write("{\"error\": \"소셜 로그인 실패: " + exception.getMessage() + "\"}");
-                        })
+                        .failureHandler(oAuth2FailHandler)
                 )
                 .addFilterBefore(new JwtAuthFilter(jwtUtils), UsernamePasswordAuthenticationFilter.class)
                 .exceptionHandling((exceptionHandling) -> exceptionHandling
