@@ -25,13 +25,13 @@ public class OAuth2FailHandler implements AuthenticationFailureHandler {
     public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response, AuthenticationException exception) throws IOException, ServletException {
         log.error("OAuth2 로그인 실패", exception);
 
-        String message = "Error Message: " + exception.getLocalizedMessage();
-
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         response.setCharacterEncoding(Charset.defaultCharset().name());
 
-        ErrorResponse errorResponse = ErrorResponse.of(HttpStatus.UNAUTHORIZED, request.getRequestURI() + " : " + message);
+        ErrorResponse errorResponse = ErrorResponse.of(
+                HttpStatus.UNAUTHORIZED,
+                request.getRequestURI() + " : " + exception.getLocalizedMessage());
         String result = new ObjectMapper().writeValueAsString(errorResponse);
 
         response.getWriter().write(result);
