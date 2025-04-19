@@ -9,6 +9,7 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.OAuth2User;
@@ -20,6 +21,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Component
+@Slf4j
 @RequiredArgsConstructor
 public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
 
@@ -31,6 +33,8 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
+        log.info("로그인 성공 후 SuccessHandler 진입");
+
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
 
         String accessToken = jwtUtils.createAccessToken(userDetails.getUsername());
@@ -41,10 +45,14 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
 
         Cookie refreshTokenCookie = createRefreshTokenCookie(userDetails);
 
-        response.sendRedirect(redirectURL);
         response.addCookie(refreshTokenCookie);
+        log.info("RefreshToken 쿠키 생성 완료: name={}, maxAge={}, path={}",
+                refreshTokenCookie.getName(), refreshTokenCookie.getMaxAge(), refreshTokenCookie.getPath());
+
+        response.sendRedirect(redirectURL);
         response.setContentType("application/json");
         response.getWriter().write(objectMapper.writeValueAsString(body));
+        log.info("프론트엔드로 리다이렉트: {}", redirectURL);
     }
 
     private Cookie createRefreshTokenCookie(CustomUserDetails userDetails){

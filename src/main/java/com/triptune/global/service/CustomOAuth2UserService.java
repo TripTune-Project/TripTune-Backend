@@ -11,6 +11,7 @@ import com.triptune.member.repository.SocialMemberRepository;
 import com.triptune.profile.entity.ProfileImage;
 import com.triptune.profile.service.ProfileImageService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
@@ -21,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Map;
 
 @Service
+@Slf4j
 @Transactional
 @RequiredArgsConstructor
 public class CustomOAuth2UserService extends DefaultOAuth2UserService {
@@ -31,11 +33,15 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
+        log.info("OAuth2 로그인 시도");
+
         // 1. 유저 정보 가져오기
         Map<String, Object> attributes = super.loadUser(userRequest).getAttributes();
+        log.debug("소셜 로그인 응답 attribute keys: {}", attributes.keySet());
 
         // 2. registrationId 가져오기 (third-party id)
         String registrationId = userRequest.getClientRegistration().getRegistrationId();
+        log.info("OAuth2 제공자: {}", registrationId);
 
         // 3. 유저 정보 dto 생성
         OAuth2UserInfo oAuth2UserInfo = switch (registrationId){
@@ -53,6 +59,8 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     public Member getOrCreateSocialMember(OAuth2UserInfo oAuth2UserInfo){
         // 1. 이미 가입되어 잇는 소셜 회원인지 확인(socialMember 의 id, socialType 체크)
         // 2. 가입되어 있으면 return Social Member
+        log.info("소셜 회원 존재 여부 확인: socialType={}", oAuth2UserInfo.getSocialType());
+
         return socialMemberRepository.findBySocialIdAndSocialType(oAuth2UserInfo.getSocialId(), oAuth2UserInfo.getSocialType())
                 .orElseGet(() -> createSocialMember(oAuth2UserInfo));
     }
@@ -69,6 +77,8 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         // 4. SocialMember 객체 생성해서 Member 연결 후 save, return
         SocialMember socialMember = SocialMember.from(savedMember, oAuth2UserInfo);
         socialMemberRepository.save(socialMember);
+
+        log.info("신규 회원 생성 등록 완료");
 
         return savedMember;
     }
