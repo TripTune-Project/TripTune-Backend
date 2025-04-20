@@ -3,6 +3,7 @@ package com.triptune.global.handler;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.triptune.global.service.CustomUserDetails;
 import com.triptune.global.util.JwtUtils;
+import com.triptune.member.dto.response.LoginResponse;
 import com.triptune.member.repository.MemberRepository;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
@@ -38,10 +39,7 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
 
         String accessToken = jwtUtils.createAccessToken(userDetails.getUsername());
-
-        Map<String, String> body = Map.of(
-                "access_token", accessToken
-        );
+        LoginResponse loginResponse = LoginResponse.of(accessToken, userDetails.getName());
 
         Cookie refreshTokenCookie = createRefreshTokenCookie(userDetails);
 
@@ -51,7 +49,7 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
 
         response.sendRedirect(redirectURL);
         response.setContentType("application/json");
-        response.getWriter().write(objectMapper.writeValueAsString(body));
+        response.getWriter().write(objectMapper.writeValueAsString(loginResponse));
         log.info("프론트엔드로 리다이렉트: {}", redirectURL);
     }
 
