@@ -58,19 +58,6 @@ public abstract class BaseTest {
                 .build();
     }
 
-    protected Member createMember(Long memberId, String email, String encodePassword){
-        return Member.builder()
-                .memberId(memberId)
-                .email(email)
-                .password(encodePassword)
-                .nickname(email.split("@")[0])
-                .refreshToken(refreshToken)
-                .isSocialLogin(false)
-                .createdAt(LocalDateTime.now())
-                .build();
-    }
-
-
     protected Member createMember(Long memberId, String email, String encodePassword, ProfileImage profileImage){
         return Member.builder()
                 .memberId(memberId)
