@@ -15,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
+import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,25 +36,33 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
         log.info("OAuth2 로그인 시도");
 
-        // 1. 유저 정보 가져오기
-        Map<String, Object> attributes = super.loadUser(userRequest).getAttributes();
-        log.debug("소셜 로그인 응답 attribute keys: {}", attributes.keySet());
+        try {
+            // 1. 유저 정보 가져오기
+            Map<String, Object> attributes = super.loadUser(userRequest).getAttributes();
+            log.debug("소셜 로그인 응답 attribute keys: {}", attributes.keySet());
 
-        // 2. registrationId 가져오기 (third-party id)
-        String registrationId = userRequest.getClientRegistration().getRegistrationId();
-        log.info("OAuth2 제공자: {}", registrationId);
+            // 2. registrationId 가져오기 (third-party id)
+            String registrationId = userRequest.getClientRegistration().getRegistrationId();
+            log.info("OAuth2 제공자: {}", registrationId);
 
-        // 3. 유저 정보 dto 생성
-        OAuth2UserInfo oAuth2UserInfo = switch (registrationId){
-            case "naver" -> new NaverUserInfo(attributes);
-            case "kakao" -> new KaKaoUserInfo(attributes);
-            default -> throw new OAuth2Exception(ErrorCode.ILLEGAL_REGISTRATION_ID);
-        };
+            // 3. 유저 정보 dto 생성
+            OAuth2UserInfo oAuth2UserInfo = switch (registrationId){
+                case "naver" -> new NaverUserInfo(attributes);
+                case "kakao" -> new KaKaoUserInfo(attributes);
+                default -> throw new OAuth2Exception(ErrorCode.ILLEGAL_REGISTRATION_ID);
+            };
 
-        // 4. 회원가입 및 로그인
-        Member member = getOrCreateSocialMember(oAuth2UserInfo);
-        member.updateRefreshToken(jwtUtils.createRefreshToken(member.getEmail()));
-        return new CustomUserDetails(member, attributes);
+            // 4. 회원가입 및 로그인
+            Member member = getOrCreateSocialMember(oAuth2UserInfo);
+            member.updateRefreshToken(jwtUtils.createRefreshToken(member.getEmail()));
+            return new CustomUserDetails(member, attributes);
+
+        } catch (DataExistException ex){
+            throw new OAuth2AuthenticationException(
+                    new OAuth2Error(ex.getMessage()), ex.getMessage()
+            );
+        }
+
     }
 
     public Member getOrCreateSocialMember(OAuth2UserInfo oAuth2UserInfo){
