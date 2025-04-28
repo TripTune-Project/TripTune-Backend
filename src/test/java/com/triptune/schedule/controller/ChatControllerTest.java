@@ -83,7 +83,6 @@ public class ChatControllerTest extends ScheduleTest {
 
     @Test
     @DisplayName("채팅 내용 조회")
-    @WithMockUser(username = "member1@email.com")
     void getChatMessages() throws Exception {
         ChatMessage message1 = chatMessageRepository.save(createChatMessage("id1", schedule.getScheduleId(), member1, "hello1"));
         ChatMessage message2 = chatMessageRepository.save(createChatMessage("id2", schedule.getScheduleId(), member1, "hello2"));
@@ -91,6 +90,8 @@ public class ChatControllerTest extends ScheduleTest {
         ChatMessage message4 = chatMessageRepository.save(createChatMessage("id4", schedule.getScheduleId(), member2, "hello4"));
         ChatMessage message5 = chatMessageRepository.save(createChatMessage("id5", schedule.getScheduleId(), member3, "hello5"));
         ChatMessage message6 = chatMessageRepository.save(createChatMessage("id6", schedule.getScheduleId(), member1, "hello6"));
+
+        mockAuthentication(member1);
 
         mockMvc.perform(get("/api/schedules/{scheduleId}/chats", schedule.getScheduleId())
                         .param("page", "1"))
@@ -112,8 +113,8 @@ public class ChatControllerTest extends ScheduleTest {
 
     @Test
     @DisplayName("채팅 내용 조회 시 데이터가 없는 경우")
-    @WithMockUser(username = "member1@email.com")
     void getChatMessagesNoMessage() throws Exception {
+        mockAuthentication(member1);
         mockMvc.perform(get("/api/schedules/{scheduleId}/chats", schedule.getScheduleId())
                         .param("page", "1"))
                 .andExpect(status().isOk())

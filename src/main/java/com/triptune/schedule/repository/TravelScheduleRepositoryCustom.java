@@ -5,14 +5,14 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 public interface TravelScheduleRepositoryCustom {
-    Page<TravelSchedule> findTravelSchedulesByEmail(Pageable pageable, String email);
-    Page<TravelSchedule> findSharedTravelSchedulesByEmail(Pageable pageable, String email);
-    Integer countTravelSchedulesByEmail(String email);
-    Integer countSharedTravelSchedulesByEmail(String email);
-    Page<TravelSchedule> searchTravelSchedulesByEmailAndKeyword(Pageable pageable, String keyword, String email);
-    Integer countTravelSchedulesByEmailAndKeyword(String keyword, String email);
-    Page<TravelSchedule> searchSharedTravelSchedulesByEmailAndKeyword(Pageable pageable, String keyword, String email);
-    Integer countSharedTravelSchedulesByEmailAndKeyword(String keyword, String email);
-    Page<TravelSchedule> findEnableEditTravelSchedulesByEmail(Pageable pageable, String email);
-    Integer countEnableEditTravelSchedulesByEmail(String email);
+    Page<TravelSchedule> findTravelSchedulesByMemberId(Pageable pageable, Long memberId);
+    Page<TravelSchedule> findSharedTravelSchedulesByMemberId(Pageable pageable, Long memberId);
+    Integer countTravelSchedulesByMemberId(Long memberId);
+    Integer countSharedTravelSchedulesByMemberId(Long memberId);
+    Page<TravelSchedule> searchTravelSchedulesByMemberIdAndKeyword(Pageable pageable, String keyword, Long memberId);
+    Integer countTravelSchedulesByMemberIdAndKeyword(String keyword, Long memberId);
+    Page<TravelSchedule> searchSharedTravelSchedulesByMemberIdAndKeyword(Pageable pageable, String keyword, Long memberId);
+    Integer countSharedTravelSchedulesByMemberIdAndKeyword(String keyword, Long memberId);
+    Page<TravelSchedule> findEnableEditTravelSchedulesByMemberId(Pageable pageable, Long memberId);
+    Integer countEnableEditTravelSchedulesByMemberId(Long memberId);
 }

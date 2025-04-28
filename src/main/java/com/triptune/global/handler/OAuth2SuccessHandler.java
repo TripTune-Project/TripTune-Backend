@@ -38,7 +38,7 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
 
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
 
-        String accessToken = jwtUtils.createAccessToken(userDetails.getUsername());
+        String accessToken = jwtUtils.createAccessToken(userDetails.getMemberId());
         LoginResponse loginResponse = LoginResponse.of(accessToken, userDetails.getName());
 
         Cookie refreshTokenCookie = createRefreshTokenCookie(userDetails);

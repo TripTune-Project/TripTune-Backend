@@ -1,12 +1,12 @@
 package com.triptune.profile.controller;
 
-import com.triptune.global.util.SecurityUtils;
+import com.triptune.global.service.CustomUserDetails;
 import com.triptune.profile.service.ProfileImageService;
 import com.triptune.global.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -23,10 +23,9 @@ public class ProfileImageController {
 
     @PatchMapping
     @Operation(summary = "프로필 이미지 변경", description = "프로필 이미지를 변경합니다.")
-    public ApiResponse<?> updateProfileImage(@RequestParam(name = "profileImage") MultipartFile profileImageFile){
-        String email = SecurityUtils.getCurrentEmail();
-
-        profileImageService.updateProfileImage(email, profileImageFile);
+    public ApiResponse<?> updateProfileImage(@AuthenticationPrincipal(expression = "memberId") Long memberId,
+                                             @RequestParam(name = "profileImage") MultipartFile profileImageFile){
+        profileImageService.updateProfileImage(memberId, profileImageFile);
         return ApiResponse.okResponse();
     }
 }

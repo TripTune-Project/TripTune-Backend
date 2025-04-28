@@ -52,7 +52,7 @@ public class TravelAttendeeRepositoryTest extends ScheduleTest {
     @DisplayName("일정 참가자인지 확인 true 반환")
     void existsAttendee_true(){
         // when
-        boolean response = travelAttendeeRepository.existsByTravelSchedule_ScheduleIdAndMember_Email(schedule1.getScheduleId(), member1.getEmail());
+        boolean response = travelAttendeeRepository.existsByTravelSchedule_ScheduleIdAndMember_MemberId(schedule1.getScheduleId(), member1.getMemberId());
 
         // then
         assertThat(response).isTrue();
@@ -62,7 +62,7 @@ public class TravelAttendeeRepositoryTest extends ScheduleTest {
     @DisplayName("일정 참가자인지 확인 false 반환")
     void existsAttendee_false(){
         // when
-        boolean response = travelAttendeeRepository.existsByTravelSchedule_ScheduleIdAndMember_Email(schedule1.getScheduleId(), member2.getEmail());
+        boolean response = travelAttendeeRepository.existsByTravelSchedule_ScheduleIdAndMember_MemberId(schedule1.getScheduleId(), member2.getMemberId());
 
         // then
         assertThat(response).isFalse();

@@ -56,9 +56,6 @@ public class EmailService {
     @Value("${app.frontend.change-password.url}")
     private String passwordURL;
 
-    @Value("${spring.jwt.token.password-expiration-time}")
-    private long passwordExpirationTime;
-
     @Value("${app.backend.email.certification-duration}")
     private long certificationDuration;
 
@@ -119,7 +116,7 @@ public class EmailService {
     }
 
     public void sendResetPasswordEmail(FindPasswordRequest findPasswordRequest) throws MessagingException {
-        String passwordToken = jwtUtils.createToken(findPasswordRequest.getEmail(), passwordExpirationTime);
+        String passwordToken = jwtUtils.createPasswordToken(findPasswordRequest.getEmail());
         String resetPasswordURL = passwordURL + passwordToken;
 
         EmailTemplateRequest templateRequest = new EmailTemplateRequest(

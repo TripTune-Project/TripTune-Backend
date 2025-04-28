@@ -9,7 +9,6 @@ import com.triptune.common.repository.ApiCategoryRepository;
 import com.triptune.common.repository.CityRepository;
 import com.triptune.common.repository.CountryRepository;
 import com.triptune.common.repository.DistrictRepository;
-import com.triptune.member.entity.SocialMember;
 import com.triptune.member.enumclass.SocialType;
 import com.triptune.member.repository.SocialMemberRepository;
 import com.triptune.schedule.entity.TravelSchedule;
@@ -36,7 +35,6 @@ import com.triptune.global.enumclass.ErrorCode;
 import com.triptune.global.enumclass.SuccessCode;
 import com.triptune.global.util.JwtUtils;
 import com.triptune.global.util.RedisUtils;
-import jakarta.persistence.GeneratedValue;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -287,7 +285,7 @@ public class MemberControllerTest extends MemberTest {
     @DisplayName("로그아웃")
     void logout() throws Exception{
         Member member = memberRepository.save(createMember(null, "member@email.com"));
-        String accessToken = jwtUtils.createToken(member.getEmail(), 3600);
+        String accessToken = jwtUtils.createAccessToken(member.getMemberId());
 
         mockMvc.perform(patch("/api/members/logout")
                         .header("Authorization", "Bearer " + accessToken)
@@ -302,7 +300,7 @@ public class MemberControllerTest extends MemberTest {
     @DisplayName("로그아웃 시 존재하지 않는 사용자 요청으로 인해 예외 발생")
     void logout_dataNotFoundException() throws Exception{
         Member member = memberRepository.save(createMember(null, "member@email.com"));
-        String accessToken = jwtUtils.createToken(member.getEmail(), 3600);
+        String accessToken = jwtUtils.createAccessToken(member.getMemberId());
 
         mockMvc.perform(patch("/api/members/logout")
                         .header("Authorization", "Bearer " + accessToken)
@@ -317,7 +315,7 @@ public class MemberControllerTest extends MemberTest {
     @DisplayName("토큰 갱신")
     void refreshToken() throws Exception{
         Member member = memberRepository.save(createMember(null, "member@email.com"));
-        String refreshToken = jwtUtils.createToken(member.getEmail(), 10000000);
+        String refreshToken = jwtUtils.createRefreshToken(member.getMemberId());
         member.updateRefreshToken(refreshToken);
 
         Cookie cookie = createRefreshTokenCookie(refreshToken);
@@ -354,7 +352,7 @@ public class MemberControllerTest extends MemberTest {
     @Test
     @DisplayName("토큰 갱신 시 refresh token 만료로 예외 발생")
     void refreshToken_unauthorizedExpiredException() throws Exception {
-        String refreshToken = jwtUtils.createToken("member", -604800000);
+        String refreshToken = jwtUtils.createToken("ExpiredRefreshToken", -604800000);
         Cookie cookie = createRefreshTokenCookie(refreshToken);
 
         mockMvc.perform(post("/api/members/refresh")
@@ -367,7 +365,7 @@ public class MemberControllerTest extends MemberTest {
     @Test
     @DisplayName("토큰 갱신 시 사용자 데이터 존재하지 않아 예외 발생")
     void refreshToken_memberNotFoundException() throws Exception {
-        String refreshToken = jwtUtils.createToken("member", 100000000);
+        String refreshToken = jwtUtils.createRefreshToken(0L);
         Cookie cookie = createRefreshTokenCookie(refreshToken);
 
         mockMvc.perform(post("/api/members/refresh")
@@ -382,7 +380,7 @@ public class MemberControllerTest extends MemberTest {
     @DisplayName("토큰 갱신 시 사용자가 요청과 저장된 refresh token 값이 달라 예외 발생")
     void refreshToken_NotEqualsRefreshToken() throws Exception {
         Member member = memberRepository.save(createMember(null, "member@email.com"));
-        String refreshToken = jwtUtils.createToken(member.getEmail(), 10000000);
+        String refreshToken = jwtUtils.createRefreshToken(member.getMemberId());
         Cookie cookie = createRefreshTokenCookie(refreshToken);
 
         mockMvc.perform(post("/api/members/refresh")
@@ -484,7 +482,7 @@ public class MemberControllerTest extends MemberTest {
 
     @Test
     @DisplayName("비밀번호 초기화 시 저장된 비밀번호 변경 토큰이 존재하지 않아 예외 발생")
-    void changePassword_PasswordTokenNotFoundException() throws Exception{
+    void resetPassword_PasswordTokenNotFoundException() throws Exception{
         memberRepository.save(createMember(null, "member@email.com"));
 
         mockMvc.perform(patch("/api/members/reset-password")
@@ -511,14 +509,15 @@ public class MemberControllerTest extends MemberTest {
     }
 
     @Test
-    @WithMockUser("member@email.com")
     @DisplayName("비밀번호 변경")
     void changePassword() throws Exception {
         String encodePassword = passwordEncoder.encode("test123@");
         ProfileImage profileImage = profileImageRepository.save(createProfileImage(null, "member"));
-        memberRepository.save(createMember(null, "member@email.com", encodePassword, profileImage));
+        Member member = memberRepository.save(createMember(null, "member@email.com", encodePassword, profileImage));
 
         ChangePasswordRequest request = createChangePasswordRequest("test123@", "test123!", "test123!");
+
+        mockAuthentication(member);
 
         mockMvc.perform(patch("/api/members/change-password")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -528,11 +527,12 @@ public class MemberControllerTest extends MemberTest {
     }
 
     @Test
-    @WithMockUser("member@email.com")
     @DisplayName("비밀번호 변경 시 입력값 조건 틀려 예외 발생")
     void changePassword_MethodArgumentNotValidException() throws Exception{
-        memberRepository.save(createMember(null, "member@email.com"));
+        Member member = memberRepository.save(createMember(null, "member@email.com"));
         ChangePasswordRequest request = createChangePasswordRequest("틀린값1", "test123!", "test123!");
+
+        mockAuthentication(member);
 
         mockMvc.perform(patch("/api/members/change-password")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -543,11 +543,12 @@ public class MemberControllerTest extends MemberTest {
 
 
     @Test
-    @WithMockUser("member@email.com")
     @DisplayName("비밀번호 변경 시 변경 비밀번호와 재입력 비밀번호가 일치하지 않아 예외 발생")
     void changePassword_inCorrectNewPassword() throws Exception{
-        memberRepository.save(createMember(null, "member@email.com"));
+        Member member = memberRepository.save(createMember(null, "member@email.com"));
         ChangePasswordRequest request = createChangePasswordRequest("test123@", "test123!", "test456!");
+
+        mockAuthentication(member);
 
         mockMvc.perform(patch("/api/members/change-password")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -558,11 +559,12 @@ public class MemberControllerTest extends MemberTest {
     }
 
     @Test
-    @WithMockUser("member@email.com")
     @DisplayName("비밀번호 변경 시 현재 비밀번호와 변경 비밀번호가 같아 예외 발생")
     void changePassword_correctNowPassword() throws Exception{
-        memberRepository.save(createMember(null, "member@email.com"));
+        Member member = memberRepository.save(createMember(null, "member@email.com"));
         ChangePasswordRequest request = createChangePasswordRequest("test123@", "test123@", "test123@");
+
+        mockAuthentication(member);
 
         mockMvc.perform(patch("/api/members/change-password")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -572,10 +574,12 @@ public class MemberControllerTest extends MemberTest {
     }
 
     @Test
-    @WithMockUser("notMember@email.com")
     @DisplayName("비밀번호 변경 시 사용자 정보를 찾을 수 없어 예외 발생")
     void changePassword_memberNotFoundException() throws Exception{
         ChangePasswordRequest request = createChangePasswordRequest("test123@", "test123!", "test123!");
+
+        Member member = createMember(0L, "notMember@email.com");
+        mockAuthentication(member);
 
         mockMvc.perform(patch("/api/members/change-password")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -585,14 +589,15 @@ public class MemberControllerTest extends MemberTest {
     }
 
     @Test
-    @WithMockUser("member@email.com")
     @DisplayName("비밀번호 변경 시 저장된 비밀번호와 현재 비밀번호가 일치하지 않아 예외 발생")
     void changePassword_incorrectSavedPassword() throws Exception{
         String encodePassword = passwordEncoder.encode("test123@");
         ProfileImage profileImage = profileImageRepository.save(createProfileImage(null, "member"));
-        memberRepository.save(createMember(null, "member@email.com", encodePassword, profileImage));
+        Member member = memberRepository.save(createMember(null, "member@email.com", encodePassword, profileImage));
 
         ChangePasswordRequest request = createChangePasswordRequest("test123!", "test123!!", "test123!!");
+
+        mockAuthentication(member);
 
         mockMvc.perform(patch("/api/members/change-password")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -602,11 +607,12 @@ public class MemberControllerTest extends MemberTest {
     }
 
     @Test
-    @WithMockUser("member@email.com")
     @DisplayName("사용자 정보 조회")
     void getMemberInfo() throws Exception{
         ProfileImage profileImage = profileImageRepository.save(createProfileImage(null, "profileImage"));
         Member member = memberRepository.save(createMember(null, "member@email.com", profileImage));
+
+        mockAuthentication(member);
 
         mockMvc.perform(get("/api/members/info"))
                 .andExpect(status().isOk())
@@ -616,9 +622,11 @@ public class MemberControllerTest extends MemberTest {
     }
 
     @Test
-    @WithMockUser("notMember@email.com")
     @DisplayName("사용자 정보 조회 시 사용자 데이터 없어 예외 발생")
     void getMemberInfo_memberNotFoundException() throws Exception{
+        Member member = createMember(0L, "notMember@email.com");
+        mockAuthentication(member);
+
         mockMvc.perform(get("/api/members/info"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.success").value(false))
@@ -627,11 +635,12 @@ public class MemberControllerTest extends MemberTest {
 
 
     @Test
-    @WithMockUser("member@email.com")
     @DisplayName("사용자 닉네임 변경")
     void changeNickname() throws Exception{
-        memberRepository.save(createMember(null, "member@email.com"));
+        Member member = memberRepository.save(createMember(null, "member@email.com"));
         ChangeNicknameRequest request = createChangeNicknameRequest("newNickname");
+
+        mockAuthentication(member);
 
         mockMvc.perform(patch("/api/members/change-nickname")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -643,11 +652,12 @@ public class MemberControllerTest extends MemberTest {
     }
 
     @Test
-    @WithMockUser("member@email.com")
     @DisplayName("사용자 닉네임 변경 시 입력 조건이 맞지 않아 예외 발생")
     void changeNickname_methodInvalidArgumentException() throws Exception{
-        memberRepository.save(createMember(null, "member@email.com"));
+        Member member = memberRepository.save(createMember(null, "member@email.com"));
         ChangeNicknameRequest request = createChangeNicknameRequest("no");
+
+        mockAuthentication(member);
 
         mockMvc.perform(patch("/api/members/change-nickname")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -659,10 +669,12 @@ public class MemberControllerTest extends MemberTest {
     }
 
     @Test
-    @WithMockUser("notMember@email.com")
     @DisplayName("사용자 닉네임 변경 시 사용자 데이터 없어 예외 발생")
     void changeNickname_memberNotFoundException() throws Exception{
         ChangeNicknameRequest request = createChangeNicknameRequest("newNickname");
+
+        Member member = createMember(0L, "notMember@email.com");
+        mockAuthentication(member);
 
         mockMvc.perform(patch("/api/members/change-nickname")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -673,11 +685,12 @@ public class MemberControllerTest extends MemberTest {
     }
 
     @Test
-    @WithMockUser("member@email.com")
     @DisplayName("사용자 닉네임 변경 시 이미 존재하는 닉네임으로 예외 발생")
     void changeNickname_dataExistException() throws Exception{
         Member member = memberRepository.save(createMember(null, "member@email.com"));
         ChangeNicknameRequest request = createChangeNicknameRequest(member.getNickname());
+
+        mockAuthentication(member);
 
         mockMvc.perform(patch("/api/members/change-nickname")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -688,11 +701,12 @@ public class MemberControllerTest extends MemberTest {
     }
 
     @Test
-    @WithMockUser("member@email.com")
     @DisplayName("이메일 변경")
     void changeEmail() throws Exception {
-        memberRepository.save(createMember(null, "member@email.com"));
+        Member member = memberRepository.save(createMember(null, "member@email.com"));
         when(redisUtils.getEmailData(any(), anyString())).thenReturn("true");
+
+        mockAuthentication(member);
 
         mockMvc.perform(patch("/api/members/change-email")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -703,10 +717,10 @@ public class MemberControllerTest extends MemberTest {
     }
 
     @Test
-    @WithMockUser("member@email.com")
     @DisplayName("이메일 변경 시 이미 존재하는 이메일로 예외 발생")
     void changeEmail_duplicateEmail() throws Exception {
-        memberRepository.save(createMember(null, "member@email.com"));
+        Member member = memberRepository.save(createMember(null, "member@email.com"));
+        mockAuthentication(member);
 
         mockMvc.perform(patch("/api/members/change-email")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -717,10 +731,11 @@ public class MemberControllerTest extends MemberTest {
     }
 
     @Test
-    @WithMockUser("member@email.com")
     @DisplayName("이메일 변경 시 인증되지 않은 이메일로 예외 발생")
     void changeEmail_notVerifiedEmail() throws Exception {
-        memberRepository.save(createMember(null, "member"));
+        Member member = memberRepository.save(createMember(null, "member"));
+        mockAuthentication(member);
+
         when(redisUtils.getEmailData(any(), anyString())).thenReturn(null);
 
         mockMvc.perform(patch("/api/members/change-email")
@@ -732,10 +747,12 @@ public class MemberControllerTest extends MemberTest {
     }
 
     @Test
-    @WithMockUser("member@email.com")
     @DisplayName("이메일 변경 시 존재하지 않는 사용자로 예외 발생")
     void changeEmail_memberNotFoundException() throws Exception {
         when(redisUtils.getEmailData(any(), anyString())).thenReturn("true");
+
+        Member member = createMember(0L, "notMember@email.com");
+        mockAuthentication(member);
 
         mockMvc.perform(patch("/api/members/change-email")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -746,13 +763,14 @@ public class MemberControllerTest extends MemberTest {
     }
 
     @Test
-    @WithMockUser("member@email.com")
     @DisplayName("사용자 북마크 조회 - 최신순")
     void getMemberBookmarks_sortNewest() throws Exception{
         Member member = memberRepository.save(createMember(null, "member@email.com"));
         bookmarkRepository.save(createBookmark(null, member, travelPlace1, LocalDateTime.now()));
         bookmarkRepository.save(createBookmark(null, member, travelPlace2, LocalDateTime.now().minusDays(1)));
         bookmarkRepository.save(createBookmark(null, member, travelPlace3, LocalDateTime.now().minusDays(2)));
+
+        mockAuthentication(member);
 
         mockMvc.perform(get("/api/members/bookmark")
                 .param("page", "1")
@@ -768,13 +786,14 @@ public class MemberControllerTest extends MemberTest {
     }
 
     @Test
-    @WithMockUser("member@email.com")
     @DisplayName("사용자 북마크 조회 - 오래된 순")
     void getMemberBookmarks_sortOldest() throws Exception{
         Member member = memberRepository.save(createMember(null, "member@email.com"));
         bookmarkRepository.save(createBookmark(null, member, travelPlace1, LocalDateTime.now()));
         bookmarkRepository.save(createBookmark(null, member, travelPlace2, LocalDateTime.now().minusDays(1)));
         bookmarkRepository.save(createBookmark(null, member, travelPlace3, LocalDateTime.now().minusDays(2)));
+
+        mockAuthentication(member);
 
         mockMvc.perform(get("/api/members/bookmark")
                         .param("page", "1")
@@ -790,13 +809,14 @@ public class MemberControllerTest extends MemberTest {
     }
 
     @Test
-    @WithMockUser("member@email.com")
     @DisplayName("사용자 북마크 조회 - 이름순")
     void getMemberBookmarks_sortName() throws Exception{
         Member member = memberRepository.save(createMember(null, "member@email.com"));
         bookmarkRepository.save(createBookmark(null, member, travelPlace1, LocalDateTime.now()));
         bookmarkRepository.save(createBookmark(null, member, travelPlace2, LocalDateTime.now().minusDays(1)));
         bookmarkRepository.save(createBookmark(null, member, travelPlace3, LocalDateTime.now().minusDays(2)));
+
+        mockAuthentication(member);
 
         mockMvc.perform(get("/api/members/bookmark")
                         .param("page", "1")
@@ -812,10 +832,11 @@ public class MemberControllerTest extends MemberTest {
     }
 
     @Test
-    @WithMockUser("member@email.com")
     @DisplayName("사용자 북마크 조회 시 데이터 없는 경우")
     void getMemberBookmarks_emptyData() throws Exception{
-        memberRepository.save(createMember(null, "member"));
+        Member member = memberRepository.save(createMember(null, "member"));
+
+        mockAuthentication(member);
 
         mockMvc.perform(get("/api/members/bookmark")
                         .param("page", "1")
@@ -826,10 +847,10 @@ public class MemberControllerTest extends MemberTest {
     }
 
     @Test
-    @WithMockUser("member@email.com")
     @DisplayName("사용자 북마크 조회 시 정렬 잘못된 값이 들어와 예외 발생")
     void getMemberBookmarks_IllegalException() throws Exception{
-        memberRepository.save(createMember(null, "member"));
+        Member member = memberRepository.save(createMember(null, "member"));
+        mockAuthentication(member);
 
         mockMvc.perform(get("/api/members/bookmark")
                         .param("page", "1")
@@ -840,7 +861,6 @@ public class MemberControllerTest extends MemberTest {
     }
 
     @Test
-    @WithMockUser("member@email.com")
     @DisplayName("사용자 탈퇴 - 작성자, 참석자 존재하는 경우")
     void deactivateMember1() throws Exception{
         String encodePassword = passwordEncoder.encode("test123@");
@@ -860,6 +880,8 @@ public class MemberControllerTest extends MemberTest {
         bookmarkRepository.save(createBookmark(null, member, travelPlace1, LocalDateTime.now()));
         bookmarkRepository.save(createBookmark(null, member, travelPlace1, LocalDateTime.now()));
 
+        mockAuthentication(member);
+
         mockMvc.perform(patch("/api/members/deactivate")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(toJsonString(createDeactivateRequest("test123@"))))
@@ -869,7 +891,6 @@ public class MemberControllerTest extends MemberTest {
     }
 
     @Test
-    @WithMockUser("member@email.com")
     @DisplayName("사용자 탈퇴 - 작성자만 존재하는 경우")
     void deactivateMember2() throws Exception{
         String encodePassword = passwordEncoder.encode("test123@");
@@ -889,6 +910,8 @@ public class MemberControllerTest extends MemberTest {
         bookmarkRepository.save(createBookmark(null, member, travelPlace1, LocalDateTime.now()));
         bookmarkRepository.save(createBookmark(null, member, travelPlace1, LocalDateTime.now()));
 
+        mockAuthentication(member);
+
         mockMvc.perform(patch("/api/members/deactivate")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(toJsonString(createDeactivateRequest("test123@"))))
@@ -898,7 +921,6 @@ public class MemberControllerTest extends MemberTest {
     }
 
     @Test
-    @WithMockUser("member@email.com")
     @DisplayName("사용자 탈퇴 - 참석자만 존재하는 경우")
     void deactivateMember3() throws Exception{
         String encodePassword = passwordEncoder.encode("test123@");
@@ -916,6 +938,8 @@ public class MemberControllerTest extends MemberTest {
         bookmarkRepository.save(createBookmark(null, member, travelPlace1, LocalDateTime.now()));
         bookmarkRepository.save(createBookmark(null, member, travelPlace1, LocalDateTime.now()));
 
+        mockAuthentication(member);
+
         mockMvc.perform(patch("/api/members/deactivate")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(toJsonString(createDeactivateRequest("test123@"))))
@@ -925,7 +949,6 @@ public class MemberControllerTest extends MemberTest {
     }
 
     @Test
-    @WithMockUser("member@email.com")
     @DisplayName("사용자 탈퇴 - 일정 데이터 없는 경우")
     void deactivateMember4() throws Exception{
         String encodePassword = passwordEncoder.encode("test123@");
@@ -936,6 +959,8 @@ public class MemberControllerTest extends MemberTest {
         bookmarkRepository.save(createBookmark(null, member, travelPlace1, LocalDateTime.now()));
         bookmarkRepository.save(createBookmark(null, member, travelPlace1, LocalDateTime.now()));
 
+        mockAuthentication(member);
+
         mockMvc.perform(patch("/api/members/deactivate")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(toJsonString(createDeactivateRequest("test123@"))))
@@ -945,9 +970,11 @@ public class MemberControllerTest extends MemberTest {
     }
 
     @Test
-    @WithMockUser("notMember@email.com")
     @DisplayName("사용자 탈퇴 시 사용자 데이터를 찾을 수 없는 경우")
     void deactivateMember_memberNotFoundException() throws Exception{
+        Member member = createMember(0L, "notMember@email.com");
+        mockAuthentication(member);
+
         mockMvc.perform(patch("/api/members/deactivate")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(toJsonString(createDeactivateRequest("test123@"))))
@@ -957,13 +984,14 @@ public class MemberControllerTest extends MemberTest {
     }
 
     @Test
-    @WithMockUser("member@email.com")
     @DisplayName("사용자 탈퇴 시 비밀번호가 맞지 않아 예외 발생")
     void deactivateMember_incorrectPassword() throws Exception{
         String encodePassword = passwordEncoder.encode("incorrect12@");
 
         ProfileImage profileImage = profileImageRepository.save(createProfileImage(null, "test"));
-        memberRepository.save(createMember(null, "member@email.com", encodePassword, profileImage));
+        Member member = memberRepository.save(createMember(null, "member@email.com", encodePassword, profileImage));
+
+        mockAuthentication(member);
 
         mockMvc.perform(patch("/api/members/deactivate")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -972,9 +1000,5 @@ public class MemberControllerTest extends MemberTest {
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value(ErrorCode.INCORRECT_PASSWORD.getMessage()));
     }
-
-
-
-
 
 }

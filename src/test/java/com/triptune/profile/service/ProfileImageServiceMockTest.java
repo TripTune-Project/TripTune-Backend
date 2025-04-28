@@ -45,11 +45,11 @@ public class ProfileImageServiceMockTest extends ProfileImageTest {
         Member member = createMember(1L, "member@email.com");
         ProfileImage profileImage = createProfileImage(1L, "savedImage", member);
 
-        when(profileImageRepository.findByEmail(any())).thenReturn(Optional.of(profileImage));
+        when(profileImageRepository.findByMemberId(any())).thenReturn(Optional.of(profileImage));
         when(imageProperties.getS3FileKey()).thenReturn(profileImage.getS3FileKey());
 
         // when
-        assertDoesNotThrow(() -> profileImageService.updateProfileImage("member", mockMultipartFile));
+        assertDoesNotThrow(() -> profileImageService.updateProfileImage(member.getMemberId(), mockMultipartFile));
 
         // then
         assertThat(profileImage.getFileName()).isNotEqualTo(mockMultipartFile.getName());
@@ -68,7 +68,8 @@ public class ProfileImageServiceMockTest extends ProfileImageTest {
         MockMultipartFile mockMultipartFile = new MockMultipartFile("newFile", "newFileOriginalName.gif", "image/gif", content);
 
         // when
-        FileBadRequestException fail = assertThrows(FileBadRequestException.class, () -> profileImageService.updateProfileImage("member", mockMultipartFile));
+        FileBadRequestException fail = assertThrows(FileBadRequestException.class,
+                () -> profileImageService.updateProfileImage(1L, mockMultipartFile));
 
         // then
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.INVALID_EXTENSION.getStatus());
@@ -82,10 +83,11 @@ public class ProfileImageServiceMockTest extends ProfileImageTest {
         byte[] content = createTestImage("png");
         MockMultipartFile mockMultipartFile = new MockMultipartFile("newFile", "newFileOriginalName.png", "image/png", content);
 
-        when(profileImageRepository.findByEmail(any())).thenReturn(Optional.empty());
+        when(profileImageRepository.findByMemberId(any())).thenReturn(Optional.empty());
 
         // when
-        DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> profileImageService.updateProfileImage("member", mockMultipartFile));
+        DataNotFoundException fail = assertThrows(DataNotFoundException.class,
+                () -> profileImageService.updateProfileImage(1L, mockMultipartFile));
 
         // then
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.PROFILE_IMAGE_NOT_FOUND.getStatus());

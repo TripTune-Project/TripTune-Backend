@@ -7,7 +7,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface BookmarkRepository extends JpaRepository<Bookmark, Long>, BookmarkRepositoryCustom {
-    boolean existsByMember_EmailAndTravelPlace_PlaceId(@Param("email") String email, @Param("placeId") Long placeId);
-    void deleteByMember_EmailAndTravelPlace_PlaceId(@Param("email") String email, @Param("placeId") Long placeId);
-    void deleteAllByMember_Email(@Param("email") String email);
+    boolean existsByMember_MemberIdAndTravelPlace_PlaceId(@Param("memberId") Long memberId, @Param("placeId") Long placeId);
+    void deleteByMember_MemberIdAndTravelPlace_PlaceId(@Param("memberId") Long memberId, @Param("placeId") Long placeId);
+    void deleteAllByMember_MemberId(@Param("memberId") Long memberId);
 }

@@ -7,8 +7,8 @@ import com.triptune.global.exception.CustomJwtUnAuthorizedException;
 import com.triptune.global.exception.CustomNotValidException;
 import com.triptune.global.response.ApiResponse;
 import com.triptune.global.response.pagination.ApiPageResponse;
+import com.triptune.global.service.CustomUserDetails;
 import com.triptune.global.util.JwtUtils;
-import com.triptune.global.util.SecurityUtils;
 import com.triptune.member.dto.request.*;
 import com.triptune.member.dto.response.LoginResponse;
 import com.triptune.member.dto.response.MemberInfoResponse;
@@ -27,6 +27,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 
@@ -105,7 +107,8 @@ public class MemberController {
 
     @PatchMapping("/change-password")
     @Operation(summary = "비밀번호 변경", description = "비밀번호를 변경합니다.")
-    public ApiResponse<Void> changePassword(@Valid @RequestBody ChangePasswordRequest passwordRequest){
+    public ApiResponse<Void> changePassword(@AuthenticationPrincipal(expression = "memberId") Long memberId,
+                                            @Valid @RequestBody ChangePasswordRequest passwordRequest){
         if(!passwordRequest.isMatchNewPassword()){
             throw new IncorrectPasswordException(ErrorCode.INCORRECT_PASSWORD_REPASSWORD);
         }
@@ -113,56 +116,52 @@ public class MemberController {
         if(passwordRequest.isMatchNowPassword()){
             throw new IncorrectPasswordException(ErrorCode.CORRECT_NOWPASSWORD_NEWPASSWORD);
         }
-
-        String email = SecurityUtils.getCurrentEmail();
-        memberService.changePassword(email, passwordRequest);
+        memberService.changePassword(memberId, passwordRequest);
 
         return ApiResponse.okResponse();
     }
 
     @GetMapping("/info")
     @Operation(summary = "사용자 정보 조회", description = "사용자 정보를 조회합니다.")
-    public ApiResponse<MemberInfoResponse> getMemberInfo(){
-        String email = SecurityUtils.getCurrentEmail();
-
-        MemberInfoResponse memberInfoResponse = memberService.getMemberInfo(email);
+    public ApiResponse<MemberInfoResponse> getMemberInfo(@AuthenticationPrincipal(expression = "memberId") Long memberId){
+        MemberInfoResponse memberInfoResponse = memberService.getMemberInfo(memberId);
         return ApiResponse.dataResponse(memberInfoResponse);
     }
 
     @PatchMapping("/change-nickname")
     @Operation(summary = "사용자 닉네임 변경", description = "사용자 닉네임을 변경합니다.")
-    public ApiResponse<Void> changeNickname(@Valid @RequestBody ChangeNicknameRequest changeNicknameRequest){
-        String email = SecurityUtils.getCurrentEmail();
-        memberService.changeNickname(email, changeNicknameRequest);
+    public ApiResponse<Void> changeNickname(@AuthenticationPrincipal(expression = "memberId") Long memberId,
+                                            @Valid @RequestBody ChangeNicknameRequest changeNicknameRequest){
+        memberService.changeNickname(memberId, changeNicknameRequest);
         return ApiResponse.okResponse();
 
     }
 
     @PatchMapping("/change-email")
     @Operation(summary = "사용자 이메일 변경", description = "사용자 이메일을 변경합니다.")
-    public ApiResponse<Void> changeEmail(@Valid @RequestBody EmailRequest emailRequest){
-        String email = SecurityUtils.getCurrentEmail();
-        memberService.changeEmail(email, emailRequest);
+    public ApiResponse<Void> changeEmail(@AuthenticationPrincipal(expression = "memberId") Long memberId,
+                                         @Valid @RequestBody EmailRequest emailRequest){
+        memberService.changeEmail(memberId, emailRequest);
         return ApiResponse.okResponse();
     }
 
     @GetMapping("/bookmark")
     @Operation(summary = "사용자 북마크 조회", description = "사용자가 등록한 북마크를 조회합니다.")
-    public ApiPageResponse<PlaceBookmarkResponse> getMemberBookmarks(@RequestParam(name = "page") int page, @RequestParam(name = "sort") String sort){
-        String email = SecurityUtils.getCurrentEmail();
+    public ApiPageResponse<PlaceBookmarkResponse> getMemberBookmarks(@AuthenticationPrincipal(expression = "memberId") Long memberId,
+                                                                     @RequestParam(name = "page") int page, @RequestParam(name = "sort") String sort){
         BookmarkSortType sortType = BookmarkSortType.from(sort);
-        Page<PlaceBookmarkResponse> PlaceBookmarkResponses = memberService.getMemberBookmarks(page, email, sortType);
+        Page<PlaceBookmarkResponse> PlaceBookmarkResponses = memberService.getMemberBookmarks(page, memberId, sortType);
 
         return ApiPageResponse.dataResponse(PlaceBookmarkResponses);
     }
 
     @PatchMapping("/deactivate")
     @Operation(summary = "회원 탈퇴", description = "회원을 탈퇴합니다.")
-    public ApiResponse<Void> deactivateMember(HttpServletRequest request, @Valid @RequestBody DeactivateRequest deactivateRequest){
+    public ApiResponse<Void> deactivateMember(HttpServletRequest request,
+                                              @AuthenticationPrincipal(expression = "memberId") Long memberId,
+                                              @Valid @RequestBody DeactivateRequest deactivateRequest){
         String accessToken = jwtUtils.resolveToken(request);
-        String email = SecurityUtils.getCurrentEmail();
-
-        memberService.deactivateMember(accessToken, email, deactivateRequest);
+        memberService.deactivateMember(accessToken, memberId, deactivateRequest);
         return ApiResponse.okResponse();
     }
 

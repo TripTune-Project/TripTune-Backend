@@ -54,7 +54,6 @@ class ProfileImageControllerTest extends ProfileImageTest {
     }
 
     @Test
-    @WithMockUser("member@email.com")
     @DisplayName("프로필 이미지 수정")
     void updateProfileImage() throws Exception{
         byte[] content = createTestImage("jpg");
@@ -64,6 +63,7 @@ class ProfileImageControllerTest extends ProfileImageTest {
         ProfileImage profileImage = profileImageRepository.save(createProfileImage(null, "beforeImage", member));
 
         member.updateProfileImage(profileImage);
+        mockAuthentication(member);
 
         mockMvc.perform(multipart(HttpMethod.PATCH,"/api/profiles")
                         .file(mockMultipartFile))
@@ -72,7 +72,6 @@ class ProfileImageControllerTest extends ProfileImageTest {
     }
 
     @Test
-    @WithMockUser("member@email.com")
     @DisplayName("프로필 이미지 수정 시 이미지 확장자 예외 발생")
     void updateProfileImage_invalidExtensionException() throws Exception{
         byte[] content = createTestImage("gif");
@@ -80,6 +79,8 @@ class ProfileImageControllerTest extends ProfileImageTest {
 
         Member member = memberRepository.save(createMember(null, "member@email.com"));
         profileImageRepository.save(createProfileImage(null, "beforeImage", member));
+
+        mockAuthentication(member);
 
         mockMvc.perform(multipart(HttpMethod.PATCH,"/api/profiles")
                         .file(mockMultipartFile))
@@ -89,12 +90,13 @@ class ProfileImageControllerTest extends ProfileImageTest {
     }
 
     @Test
-    @WithMockUser("member@email.com")
     @DisplayName("프로필 이미지 수정 시 이미지 데이터 존재하지 않아 예외 발생")
     void updateProfileImage_profileImageNotFoundException() throws Exception{
         byte[] content = createTestImage("png");
         MockMultipartFile mockMultipartFile = new MockMultipartFile("profileImage", "newFileOriginalName.png", "image/png", content);
 
+        Member member = memberRepository.save(createMember(null, "member@email.com"));
+        mockAuthentication(member);
 
         mockMvc.perform(multipart(HttpMethod.PATCH,"/api/profiles")
                         .file(mockMultipartFile))

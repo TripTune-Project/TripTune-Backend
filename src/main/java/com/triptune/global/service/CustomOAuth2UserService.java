@@ -54,7 +54,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
             // 4. 회원가입 및 로그인
             Member member = getOrCreateSocialMember(oAuth2UserInfo);
-            member.updateRefreshToken(jwtUtils.createRefreshToken(member.getEmail()));
+            member.updateRefreshToken(jwtUtils.createRefreshToken(member.getMemberId()));
             return new CustomUserDetails(member, attributes);
 
         } catch (DataExistException ex){

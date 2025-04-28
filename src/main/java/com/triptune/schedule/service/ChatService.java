@@ -71,7 +71,7 @@ public class ChatService {
         validateSchedule(chatMessageRequest.getScheduleId());
 
         Member member = getMemberByNickname(chatMessageRequest.getNickname());
-        TravelAttendee attendee = getTravelAttendee(chatMessageRequest.getScheduleId(), member.getEmail());
+        TravelAttendee attendee = getTravelAttendee(chatMessageRequest.getScheduleId(), member.getMemberId());
 
         if (!attendee.getPermission().isEnableChat()){
             throw new ForbiddenChatException(ErrorCode.FORBIDDEN_CHAT_ATTENDEE);
@@ -96,8 +96,8 @@ public class ChatService {
 
     }
 
-    private TravelAttendee getTravelAttendee(Long scheduleId, String email){
-        return travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_Email(scheduleId, email)
+    private TravelAttendee getTravelAttendee(Long scheduleId, Long memberId){
+        return travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_MemberId(scheduleId, memberId)
                 .orElseThrow(() -> new ForbiddenChatException(ErrorCode.FORBIDDEN_ACCESS_SCHEDULE));
     }
 
