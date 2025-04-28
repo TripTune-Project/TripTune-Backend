@@ -27,7 +27,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.ActiveProfiles;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -93,7 +92,7 @@ public class TravelScheduleRepositoryTest extends ScheduleTest {
         schedule3.setTravelAttendeeList(List.of(attendee3));
 
         // when
-        Page<TravelSchedule> response = travelScheduleRepository.findTravelSchedulesByEmail(pageable, member1.getEmail());
+        Page<TravelSchedule> response = travelScheduleRepository.findTravelSchedulesByMemberId(pageable, member1.getMemberId());
 
         // then
         List<TravelSchedule> content = response.getContent();
@@ -110,7 +109,7 @@ public class TravelScheduleRepositoryTest extends ScheduleTest {
         Pageable pageable = PageUtils.schedulePageable(1);
 
         // when
-        Page<TravelSchedule> response = travelScheduleRepository.findTravelSchedulesByEmail(pageable, member1.getEmail());
+        Page<TravelSchedule> response = travelScheduleRepository.findTravelSchedulesByMemberId(pageable, member1.getMemberId());
 
         // then
         assertThat(response.getTotalElements()).isEqualTo(0);
@@ -134,7 +133,7 @@ public class TravelScheduleRepositoryTest extends ScheduleTest {
         schedule3.setTravelAttendeeList(List.of(attendee4));
 
         // when
-        Page<TravelSchedule> response = travelScheduleRepository.findSharedTravelSchedulesByEmail(pageable, member1.getEmail());
+        Page<TravelSchedule> response = travelScheduleRepository.findSharedTravelSchedulesByMemberId(pageable, member1.getMemberId());
 
         // then
         List<TravelSchedule> content = response.getContent();
@@ -151,7 +150,7 @@ public class TravelScheduleRepositoryTest extends ScheduleTest {
         Pageable pageable = PageUtils.schedulePageable(1);
 
         // when
-        Page<TravelSchedule> response = travelScheduleRepository.findTravelSchedulesByEmail(pageable, member1.getEmail());
+        Page<TravelSchedule> response = travelScheduleRepository.findTravelSchedulesByMemberId(pageable, member1.getMemberId());
 
         // then
         assertThat(response.getTotalElements()).isEqualTo(0);
@@ -172,7 +171,7 @@ public class TravelScheduleRepositoryTest extends ScheduleTest {
         schedule3.setTravelAttendeeList(List.of(attendee3));
 
         // when
-        Integer response = travelScheduleRepository.countTravelSchedulesByEmail(member1.getEmail());
+        Integer response = travelScheduleRepository.countTravelSchedulesByMemberId(member1.getMemberId());
 
         // then
         assertThat(response).isEqualTo(2);
@@ -182,7 +181,7 @@ public class TravelScheduleRepositoryTest extends ScheduleTest {
     @DisplayName("일정 갯수 조회 시 데이터가 없는 경우")
     void countTravelSchedulesByEmailWithoutData(){
         // given, when
-        Integer response = travelScheduleRepository.countTravelSchedulesByEmail(member1.getEmail());
+        Integer response = travelScheduleRepository.countTravelSchedulesByMemberId(member1.getMemberId());
 
         // then
         assertThat(response).isEqualTo(0);
@@ -202,7 +201,7 @@ public class TravelScheduleRepositoryTest extends ScheduleTest {
         schedule3.setTravelAttendeeList(List.of(attendee4));
 
         // when
-        Integer response = travelScheduleRepository.countSharedTravelSchedulesByEmail(member1.getEmail());
+        Integer response = travelScheduleRepository.countSharedTravelSchedulesByMemberId(member1.getMemberId());
 
         // then
         assertThat(response).isEqualTo(1);
@@ -212,7 +211,7 @@ public class TravelScheduleRepositoryTest extends ScheduleTest {
     @DisplayName("공유된 일정 갯수 조회 시 데이터가 없는 경우")
     void countSharedTravelSchedulesByEmailWithoutData(){
         // given, when
-        Integer response = travelScheduleRepository.countSharedTravelSchedulesByEmail(member1.getEmail());
+        Integer response = travelScheduleRepository.countSharedTravelSchedulesByMemberId(member1.getMemberId());
 
         // then
         assertThat(response).isEqualTo(0);
@@ -235,7 +234,7 @@ public class TravelScheduleRepositoryTest extends ScheduleTest {
         Pageable pageable = PageUtils.schedulePageable(1);
 
         // when
-        Page<TravelSchedule> response = travelScheduleRepository.searchTravelSchedulesByEmailAndKeyword(pageable, "2", member1.getEmail());
+        Page<TravelSchedule> response = travelScheduleRepository.searchTravelSchedulesByMemberIdAndKeyword(pageable, "2", member1.getMemberId());
 
         // then
         List<TravelSchedule> content = response.getContent();
@@ -252,7 +251,7 @@ public class TravelScheduleRepositoryTest extends ScheduleTest {
         Pageable pageable = PageUtils.schedulePageable(1);
 
         // when
-        Page<TravelSchedule> response = travelScheduleRepository.searchTravelSchedulesByEmailAndKeyword(pageable, "ㅁㄴㅇㄹ", member1.getEmail());
+        Page<TravelSchedule> response = travelScheduleRepository.searchTravelSchedulesByMemberIdAndKeyword(pageable, "ㅁㄴㅇㄹ", member1.getMemberId());
 
         // then
         assertThat(response.getTotalElements()).isEqualTo(0);
@@ -277,7 +276,7 @@ public class TravelScheduleRepositoryTest extends ScheduleTest {
         Pageable pageable = PageUtils.schedulePageable(1);
 
         // when
-        Page<TravelSchedule> response = travelScheduleRepository.searchSharedTravelSchedulesByEmailAndKeyword(pageable, "2", member1.getEmail());
+        Page<TravelSchedule> response = travelScheduleRepository.searchSharedTravelSchedulesByMemberIdAndKeyword(pageable, "2", member1.getMemberId());
 
         // then
         List<TravelSchedule> content = response.getContent();
@@ -294,7 +293,7 @@ public class TravelScheduleRepositoryTest extends ScheduleTest {
         Pageable pageable = PageUtils.schedulePageable(1);
 
         // when
-        Page<TravelSchedule> response = travelScheduleRepository.searchSharedTravelSchedulesByEmailAndKeyword(pageable, "ㅁㄴㅇㄹ", member1.getEmail());
+        Page<TravelSchedule> response = travelScheduleRepository.searchSharedTravelSchedulesByMemberIdAndKeyword(pageable, "ㅁㄴㅇㄹ", member1.getMemberId());
 
         // then
         assertThat(response.getTotalElements()).isEqualTo(0);
@@ -315,7 +314,7 @@ public class TravelScheduleRepositoryTest extends ScheduleTest {
         schedule3.setTravelAttendeeList(List.of(attendee3));
 
         // when
-        Integer response = travelScheduleRepository.countTravelSchedulesByEmailAndKeyword("2", member1.getEmail());
+        Integer response = travelScheduleRepository.countTravelSchedulesByMemberIdAndKeyword("2", member1.getMemberId());
 
         // then
         assertThat(response).isEqualTo(1);
@@ -326,7 +325,7 @@ public class TravelScheduleRepositoryTest extends ScheduleTest {
     void countTravelSchedulesByEmailAndKeywordWithoutData(){
         // given
         // when
-        Integer response = travelScheduleRepository.countTravelSchedulesByEmailAndKeyword("ㅁㄴㅇㄹ", member1.getEmail());
+        Integer response = travelScheduleRepository.countTravelSchedulesByMemberIdAndKeyword("ㅁㄴㅇㄹ", member1.getMemberId());
 
         // then
         assertThat(response).isEqualTo(0);
@@ -346,7 +345,7 @@ public class TravelScheduleRepositoryTest extends ScheduleTest {
         schedule3.setTravelAttendeeList(List.of(attendee4));
 
         // when
-        Integer response = travelScheduleRepository.countSharedTravelSchedulesByEmailAndKeyword("2", member1.getEmail());
+        Integer response = travelScheduleRepository.countSharedTravelSchedulesByMemberIdAndKeyword("2", member1.getMemberId());
 
         // then
         assertThat(response).isEqualTo(1);
@@ -356,7 +355,7 @@ public class TravelScheduleRepositoryTest extends ScheduleTest {
     @DisplayName("공유된 일정 키워드 검색 갯수 조회 시 데이터가 없는 경우")
     void countSharedTravelSchedulesByEmailAndKeywordWithoutData(){
         // given, when
-        Integer response = travelScheduleRepository.countSharedTravelSchedulesByEmailAndKeyword("ㅁㄴㅇㄹ", member1.getEmail());
+        Integer response = travelScheduleRepository.countSharedTravelSchedulesByMemberIdAndKeyword("ㅁㄴㅇㄹ", member1.getMemberId());
 
         // then
         assertThat(response).isEqualTo(0);

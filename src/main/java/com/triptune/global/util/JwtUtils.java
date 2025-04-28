@@ -43,6 +43,9 @@ public class JwtUtils {
     @Value("${spring.jwt.token.refresh-expiration-time}")
     private long refreshExpirationTime;
 
+    @Value("${spring.jwt.token.password-expiration-time}")
+    private long passwordExpirationTime;
+
     public JwtUtils(@Value("${spring.jwt.secret}") String secretKey, CustomUserDetailsService userDetailsService, RedisUtils redisUtils){
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);
         this.key = Keys.hmacShaKeyFor(keyBytes);
@@ -123,25 +126,33 @@ public class JwtUtils {
         return new UsernamePasswordAuthenticationToken(userDetails, "", userDetails.getAuthorities());
     }
 
+    public Long getMemberIdByToken(String token){
+        String subject = parseClaims(token).getSubject();
+        return subject != null ? Long.parseLong(subject) : null;
+    }
 
-   public Claims parseClaims(String token){
-       return Jwts.parserBuilder()
+    private Claims parseClaims(String token){
+        return Jwts.parserBuilder()
                .setSigningKey(key)
                .build()
                .parseClaimsJws(token)
                .getBody();
    }
 
-   public String createAccessToken(String email){
-        return createToken(email, accessExpirationTime);
+   public String createAccessToken(Long memberId){
+        return createToken(memberId.toString(), accessExpirationTime);
    }
 
-   public String createRefreshToken(String email){
-        return createToken(email, refreshExpirationTime);
+   public String createRefreshToken(Long memberId){
+        return createToken(memberId.toString(), refreshExpirationTime);
    }
 
-   public String createToken(String email, long expirationTime){
-       Claims claims = Jwts.claims().setSubject(email);
+   public String createPasswordToken(String email){
+        return createToken(email, passwordExpirationTime);
+    }
+
+   public String createToken(String subject, long expirationTime){
+       Claims claims = Jwts.claims().setSubject(subject);
        Date now = new Date();
        Date expireDate = new Date(now.getTime() + expirationTime);
 
@@ -152,6 +163,7 @@ public class JwtUtils {
                .signWith(key, SignatureAlgorithm.HS256)
                .compact();
    }
+
 
    public static void writeJwtException(HttpServletRequest request, HttpServletResponse response, HttpStatus httpStatus, String message) throws IOException {
        response.setContentType(MediaType.APPLICATION_JSON_VALUE);

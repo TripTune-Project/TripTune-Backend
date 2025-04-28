@@ -1,6 +1,5 @@
 package com.triptune.global.aop;
 
-import com.triptune.global.util.SecurityUtils;
 import com.triptune.schedule.exception.ForbiddenScheduleException;
 import com.triptune.schedule.repository.TravelAttendeeRepository;
 import com.triptune.schedule.repository.TravelScheduleRepository;
@@ -25,14 +24,14 @@ public class AttendeeCheckAspect {
 
     @Around("@annotation(AttendeeCheck)")
     public Object attendeeCheck(ProceedingJoinPoint joinPoint) throws Throwable {
-        String email = SecurityUtils.getCurrentEmail();
+        Long memberId = Long.parseLong(SecurityContextHolder.getContext().getAuthentication().getName());
         Long scheduleId = extractScheduleIdFromPath(httpServletRequest.getRequestURI());
 
         if (!isExistSchedule(scheduleId)){
             throw new DataNotFoundException(ErrorCode.SCHEDULE_NOT_FOUND);
         }
 
-        if (!isAttendee(scheduleId, email)){
+        if (!isAttendee(scheduleId, memberId)){
             throw new ForbiddenScheduleException(ErrorCode.FORBIDDEN_ACCESS_SCHEDULE);
         }
 
@@ -48,7 +47,7 @@ public class AttendeeCheckAspect {
         return travelScheduleRepository.existsById(scheduleId);
     }
 
-    private boolean isAttendee(Long scheduleId, String email){
-        return travelAttendeeRepository.existsByTravelSchedule_ScheduleIdAndMember_Email(scheduleId, email);
+    private boolean isAttendee(Long scheduleId, Long memberId){
+        return travelAttendeeRepository.existsByTravelSchedule_ScheduleIdAndMember_MemberId(scheduleId, memberId);
     }
 }

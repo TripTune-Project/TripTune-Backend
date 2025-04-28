@@ -29,8 +29,8 @@ public class BookmarkRepositoryCustomImpl implements BookmarkRepositoryCustom {
     }
 
     @Override
-    public Page<TravelPlace> findBookmarksByEmail(String email, Pageable pageable, BookmarkSortType sortType) {
-        BooleanExpression expression = bookmark.member.email.eq(email);
+    public Page<TravelPlace> findSortedMemberBookmarks(Long memberId, Pageable pageable, BookmarkSortType sortType) {
+        BooleanExpression expression = bookmark.member.memberId.eq(memberId);
         OrderSpecifier<?> orderBySortType = getOrderBySortType(sortType);
 
         List<TravelPlace> content = jpaQueryFactory

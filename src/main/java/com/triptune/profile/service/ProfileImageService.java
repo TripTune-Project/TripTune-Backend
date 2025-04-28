@@ -31,10 +31,10 @@ public class ProfileImageService {
         return profileImageRepository.save(profileImage);
     }
 
-    public void updateProfileImage(String email, MultipartFile profileImageFile) {
+    public void updateProfileImage(Long memberId, MultipartFile profileImageFile) {
         validateFileExtension(profileImageFile);
 
-        ProfileImage profileImage = getProfileImageByEmail(email);
+        ProfileImage profileImage = getProfileImageByMemberId(memberId);
         deleteS3File(profileImage);
 
         String extension = FileUtils.getExtension(profileImageFile.getOriginalFilename());
@@ -52,8 +52,8 @@ public class ProfileImageService {
         }
     }
 
-    private ProfileImage getProfileImageByEmail(String email){
-        return profileImageRepository.findByEmail(email)
+    private ProfileImage getProfileImageByMemberId(Long memberId){
+        return profileImageRepository.findByMemberId(memberId)
                 .orElseThrow(() -> new DataNotFoundException(ErrorCode.PROFILE_IMAGE_NOT_FOUND));
     }
 

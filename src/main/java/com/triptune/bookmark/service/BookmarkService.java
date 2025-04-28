@@ -2,7 +2,6 @@ package com.triptune.bookmark.service;
 
 import com.triptune.bookmark.dto.request.BookmarkRequest;
 import com.triptune.bookmark.entity.Bookmark;
-import com.triptune.bookmark.enumclass.BookmarkSortType;
 import com.triptune.bookmark.repository.BookmarkRepository;
 import com.triptune.member.entity.Member;
 import com.triptune.member.repository.MemberRepository;
@@ -13,8 +12,6 @@ import com.triptune.global.exception.DataExistException;
 import com.triptune.global.exception.DataNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -26,12 +23,12 @@ public class BookmarkService {
     private final TravelPlaceRepository travelPlaceRepository;
     private final BookmarkRepository bookmarkRepository;
 
-    public void createBookmark(String email, BookmarkRequest bookmarkRequest) {
-        if (isExistBookmark(email, bookmarkRequest.getPlaceId())){
+    public void createBookmark(Long memberId, BookmarkRequest bookmarkRequest) {
+        if (isExistBookmark(memberId, bookmarkRequest.getPlaceId())){
             throw new DataExistException(ErrorCode.ALREADY_EXISTED_BOOKMARK);
         }
 
-        Member member = getMemberByEmail(email);
+        Member member = getMemberByMemberId(memberId);
         TravelPlace travelPlace = findTravelPlaceByPlaceId(bookmarkRequest.getPlaceId());
 
         Bookmark bookmark = Bookmark.from(member, travelPlace);
@@ -41,8 +38,8 @@ public class BookmarkService {
     }
 
 
-    private Member getMemberByEmail(String email){
-        return memberRepository.findByEmail(email)
+    private Member getMemberByMemberId(Long memberId){
+        return memberRepository.findById(memberId)
                 .orElseThrow(() -> new DataNotFoundException(ErrorCode.MEMBER_NOT_FOUND));
     }
 
@@ -51,22 +48,19 @@ public class BookmarkService {
                 .orElseThrow(() -> new DataNotFoundException(ErrorCode.PLACE_NOT_FOUND));
     }
 
-    public void deleteBookmark(String email, Long placeId) {
-        if (!isExistBookmark(email, placeId)){
+    public void deleteBookmark(Long memberId, Long placeId) {
+        if (!isExistBookmark(memberId, placeId)){
             throw new DataNotFoundException(ErrorCode.BOOKMARK_NOT_FOUND);
         }
 
-        bookmarkRepository.deleteByMember_EmailAndTravelPlace_PlaceId(email, placeId);
+        bookmarkRepository.deleteByMember_MemberIdAndTravelPlace_PlaceId(memberId, placeId);
 
         TravelPlace travelPlace = findTravelPlaceByPlaceId(placeId);
         travelPlace.decreaseBookmarkCnt();
     }
 
-    private boolean isExistBookmark(String email, Long placeId){
-        return bookmarkRepository.existsByMember_EmailAndTravelPlace_PlaceId(email, placeId);
+    private boolean isExistBookmark(Long memberId, Long placeId){
+        return bookmarkRepository.existsByMember_MemberIdAndTravelPlace_PlaceId(memberId, placeId);
     }
 
-    public Page<TravelPlace> getBookmarkTravelPlaces(String email, Pageable pageable, BookmarkSortType sortType) {
-        return bookmarkRepository.findBookmarksByEmail(email, pageable, sortType);
-    }
 }

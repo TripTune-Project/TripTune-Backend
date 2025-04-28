@@ -2,7 +2,6 @@ package com.triptune.member.service;
 
 import com.triptune.bookmark.enumclass.BookmarkSortType;
 import com.triptune.bookmark.repository.BookmarkRepository;
-import com.triptune.bookmark.service.BookmarkService;
 import com.triptune.email.dto.request.EmailRequest;
 import com.triptune.email.exception.EmailVerifyException;
 import com.triptune.email.service.EmailService;
@@ -37,7 +36,6 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -57,7 +55,6 @@ public class MemberService {
     private final JwtUtils jwtUtils;
     private final RedisUtils redisUtils;
     private final ProfileImageService profileImageService;
-    private final BookmarkService bookmarkService;
     private final TravelAttendeeRepository travelAttendeeRepository;
     private final TravelScheduleRepository travelScheduleRepository;
     private final ChatMessageRepository chatMessageRepository;
@@ -111,8 +108,8 @@ public class MemberService {
             throw new FailLoginException(ErrorCode.FAILED_LOGIN);
         }
 
-        String accessToken = jwtUtils.createAccessToken(member.getEmail());
-        String refreshToken = jwtUtils.createRefreshToken(member.getEmail());
+        String accessToken = jwtUtils.createAccessToken(member.getMemberId());
+        String refreshToken = jwtUtils.createRefreshToken(member.getMemberId());
 
         member.updateRefreshToken(refreshToken);
 
@@ -148,13 +145,12 @@ public class MemberService {
 
     public RefreshTokenResponse refreshToken(String refreshToken) throws ExpiredJwtException {
         jwtUtils.validateToken(refreshToken);
+        Long memberId = jwtUtils.getMemberIdByToken(refreshToken);
 
-        Claims claims = jwtUtils.parseClaims(refreshToken);
-
-        Member member = getMemberByEmail(claims.getSubject());
+        Member member = getMemberById(memberId);
         validateSavedRefreshToken(member, refreshToken);
 
-        String newAccessToken = jwtUtils.createAccessToken(member.getEmail());
+        String newAccessToken = jwtUtils.createAccessToken(member.getMemberId());
         return RefreshTokenResponse.of(newAccessToken);
     }
 
@@ -191,8 +187,8 @@ public class MemberService {
     }
 
 
-    public void changePassword(String email, ChangePasswordRequest passwordRequest){
-        Member member = getMemberByEmail(email);
+    public void changePassword(Long memberId, ChangePasswordRequest passwordRequest){
+        Member member = getMemberById(memberId);
 
         if(!isPasswordMatch(passwordRequest.getNowPassword(), member.getPassword())){
             throw new IncorrectPasswordException(ErrorCode.INCORRECT_PASSWORD);
@@ -202,37 +198,42 @@ public class MemberService {
     }
 
 
-    public MemberInfoResponse getMemberInfo(String email) {
-        Member member = getMemberByEmail(email);
+    public MemberInfoResponse getMemberInfo(Long memberId) {
+        Member member = getMemberById(memberId);
         return MemberInfoResponse.from(member);
     }
 
-    public void changeNickname(String email, ChangeNicknameRequest changeNicknameRequest) {
+    private Member getMemberById(Long memberId){
+        return memberRepository.findById(memberId)
+                .orElseThrow(() -> new DataNotFoundException(ErrorCode.MEMBER_NOT_FOUND));
+    }
+
+    public void changeNickname(Long memberId, ChangeNicknameRequest changeNicknameRequest) {
         validateUniqueNickname(changeNicknameRequest.getNickname());
 
-        Member member = getMemberByEmail(email);
+        Member member = getMemberById(memberId);
         member.updateNickname(changeNicknameRequest.getNickname());
     }
 
-    public void changeEmail(String email, EmailRequest emailRequest) {
+    public void changeEmail(Long memberId, EmailRequest emailRequest) {
         validateUniqueEmail(emailRequest.getEmail());
         validateVerifiedEmail(emailRequest.getEmail());
 
-        Member member = getMemberByEmail(email);
+        Member member = getMemberById(memberId);
         member.updateEmail(emailRequest.getEmail());
     }
 
-    public Page<PlaceBookmarkResponse> getMemberBookmarks(int page, String email, BookmarkSortType sortType) {
+    public Page<PlaceBookmarkResponse> getMemberBookmarks(int page, Long memberId, BookmarkSortType sortType) {
         Pageable pageable = PageUtils.bookmarkPageable(page);
-        Page<TravelPlace> travelPlaces = bookmarkService.getBookmarkTravelPlaces(email, pageable, sortType);
+        Page<TravelPlace> travelPlaces = bookmarkRepository.findSortedMemberBookmarks(memberId, pageable, sortType);
 
         return travelPlaces.map(PlaceBookmarkResponse::from);
     }
 
 
-    public void deactivateMember(String accessToken, String email, DeactivateRequest deactivateRequest) {
+    public void deactivateMember(String accessToken, Long memberId, DeactivateRequest deactivateRequest) {
         // 1. 사용자 비밀번호 확인
-        Member member = getMemberByEmail(email);
+        Member member = getMemberById(memberId);
 
         if(!isPasswordMatch(deactivateRequest.getPassword(), member.getPassword())){
             throw new IncorrectPasswordException(ErrorCode.INCORRECT_PASSWORD);
@@ -243,7 +244,7 @@ public class MemberService {
 
         // 3-1. 작성자인 경우 참석자, 일정, 채팅방 삭제
         // 3-2. 참석자인 경우 참석자 삭제
-        List<TravelAttendee> attendees = travelAttendeeRepository.findAllByMember_Email(email);
+        List<TravelAttendee> attendees = travelAttendeeRepository.findAllByMember_MemberId(memberId);
 
         for (TravelAttendee attendee : attendees) {
             if (attendee.getRole().isAuthor()) {
@@ -257,7 +258,7 @@ public class MemberService {
         }
 
         // 4. 북마크 삭제
-        bookmarkRepository.deleteAllByMember_Email(email);
+        bookmarkRepository.deleteAllByMember_MemberId(memberId);
 
         // 5. 익명 데이터로 변경 (닉네임, 아이디, 비밀번호, 리프레시 토큰, 이메일)
         member.updateDeactivate();

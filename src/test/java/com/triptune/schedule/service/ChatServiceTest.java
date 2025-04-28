@@ -317,7 +317,7 @@ class ChatServiceTest extends ScheduleTest {
 
         when(travelScheduleRepository.existsById(anyLong())).thenReturn(true);
         when(memberRepository.findByNickname(anyString())).thenReturn(Optional.of(member1));
-        when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_Email(anyLong(), anyString())).thenReturn(Optional.of(attendee));
+        when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_MemberId(anyLong(), anyLong())).thenReturn(Optional.of(attendee));
         when(chatMessageRepository.save(any())).thenReturn(createChatMessage("message1", request.getScheduleId(), member1, request.getMessage()));
 
 
@@ -339,7 +339,7 @@ class ChatServiceTest extends ScheduleTest {
 
         when(travelScheduleRepository.existsById(anyLong())).thenReturn(true);
         when(memberRepository.findByNickname(anyString())).thenReturn(Optional.of(member1));
-        when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_Email(anyLong(), anyString()))
+        when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_MemberId(anyLong(), anyLong()))
                 .thenReturn(Optional.of(attendee));
 
         // when
@@ -359,7 +359,7 @@ class ChatServiceTest extends ScheduleTest {
 
         when(travelScheduleRepository.existsById(anyLong())).thenReturn(true);
         when(memberRepository.findByNickname(anyString())).thenReturn(Optional.of(member1));
-        when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_Email(anyLong(), anyString()))
+        when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_MemberId(anyLong(), anyLong()))
                 .thenReturn(Optional.of(attendee));
 
 

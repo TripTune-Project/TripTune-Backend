@@ -99,9 +99,9 @@ public class TravelControllerTest extends TravelTest {
 
     @Test
     @DisplayName("로그인한 사용자의 현재 위치에 따른 여행지 목록을 제공하며 데이터가 존재하는 경우")
-    @WithMockUser("member@email.com")
     void getNearByTravelPlaces_loginAndExitsData() throws Exception {
         bookmarkRepository.save(createBookmark(null, member, travelPlace1, LocalDateTime.now()));
+        mockAuthentication(member);
 
         mockMvc.perform(post("/api/travels")
                         .param("page", "1")
@@ -140,8 +140,8 @@ public class TravelControllerTest extends TravelTest {
 
     @Test
     @DisplayName("로그인한 사용자의 현재 위치에 따른 여행지 목록을 제공하며 데이터가 존재하지 않는 경우")
-    @WithMockUser("member@email.com")
     void getNearByTravelPlaces_loginAndNoData() throws Exception {
+        mockAuthentication(member);
         mockMvc.perform(post("/api/travels")
                         .param("page", "1")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -166,9 +166,9 @@ public class TravelControllerTest extends TravelTest {
 
     @Test
     @DisplayName("로그인한 사용자의 여행지를 검색 시 검색 결과가 존재하는 경우 - 위치 데이터 존재")
-    @WithMockUser("member@email.com")
     void searchTravelPlacesWithLocation_loginAndExistsData() throws Exception {
         bookmarkRepository.save(createBookmark(null, member, travelPlace1, LocalDateTime.now()));
+        mockAuthentication(member);
 
         mockMvc.perform(post("/api/travels/search")
                         .param("page", "1")
@@ -189,7 +189,6 @@ public class TravelControllerTest extends TravelTest {
     @DisplayName("익명 사용자의 여행지를 검색 시 검색 결과가 존재하는 경우 - 위치 데이터 존재")
     void searchTravelPlacesWithLocation_anonymousAndExistsData() throws Exception {
         bookmarkRepository.save(createBookmark(null, member, travelPlace1, LocalDateTime.now()));
-
         mockMvc.perform(post("/api/travels/search")
                         .param("page", "1")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -207,8 +206,8 @@ public class TravelControllerTest extends TravelTest {
 
     @Test
     @DisplayName("로그인한 사용자의 여행지를 검색 시 검색 결과가 존재하지 않는 경우 - 위치 데이터 존재")
-    @WithMockUser("member@email.com")
     void searchTravelPlacesWithLocation_loginAndNoData() throws Exception {
+        mockAuthentication(member);
         mockMvc.perform(post("/api/travels/search")
                         .param("page", "1")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -233,9 +232,9 @@ public class TravelControllerTest extends TravelTest {
 
     @Test
     @DisplayName("로그인한 사용자의 여행지를 검색 시 검색 결과가 존재하는 경우 - 위치 데이터 존재하지 않는 경우")
-    @WithMockUser("member@email.com")
     void searchTravelPlacesWithoutLocation_loginAndExistsData() throws Exception {
         bookmarkRepository.save(createBookmark(null, member, travelPlace1, LocalDateTime.now()));
+        mockAuthentication(member);
 
         mockMvc.perform(post("/api/travels/search")
                         .param("page", "1")
@@ -274,8 +273,8 @@ public class TravelControllerTest extends TravelTest {
 
     @Test
     @DisplayName("로그인한 사용자의 여행지를 검색 시 검색 결과가 존재하지 않는 경우 - 위치 데이터 존재하지 않는 경우")
-    @WithMockUser("member@email.com")
     void searchTravelPlacesWithoutLocation_loginAndNoData() throws Exception {
+        mockAuthentication(member);
         mockMvc.perform(post("/api/travels/search")
                         .param("page", "1")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -310,12 +309,12 @@ public class TravelControllerTest extends TravelTest {
 
     @Test
     @DisplayName("로그인한 사용자의 여행지 상세정보 조회")
-    @WithMockUser("member@email.com")
     void getTravelDetails_login() throws Exception {
         ApiContentType apiContentType = apiContentTypeRepository.save(createApiContentType(ThemeType.ATTRACTIONS));
         travelPlace1 = travelPlaceRepository.save(createTravelPlace(null, country, city, district1, apiCategory, apiContentType, List.of(travelImage1, travelImage2)));
 
         bookmarkRepository.save(createBookmark(null, member, travelPlace1, LocalDateTime.now()));
+        mockAuthentication(member);
 
         mockMvc.perform(get("/api/travels/{placeId}", travelPlace1.getPlaceId()))
                 .andExpect(status().isOk())

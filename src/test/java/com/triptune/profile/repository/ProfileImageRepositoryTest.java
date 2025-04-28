@@ -26,13 +26,13 @@ class ProfileImageRepositoryTest extends ProfileImageTest {
 
     @Test
     @DisplayName("사용자 아이디 이용해 프로필 이미지 조회")
-    void findProfileImageByEmail() {
+    void findByMemberId() {
         // given
         ProfileImage profileImage = profileImageRepository.save(createProfileImage(null, "member1Image"));
-        Member member1 = memberRepository.save(createMember(null, "member1@email.com", profileImage));
+        Member member = memberRepository.save(createMember(null, "member1@email.com", profileImage));
 
         // when
-        Optional<ProfileImage> response = profileImageRepository.findByEmail(member1.getEmail());
+        Optional<ProfileImage> response = profileImageRepository.findByMemberId(member.getMemberId());
 
         // then
         assertThat(response.get().getProfileImageId()).isEqualTo(profileImage.getProfileImageId());

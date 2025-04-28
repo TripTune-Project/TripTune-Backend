@@ -112,7 +112,7 @@ public class ScheduleServiceTest extends ScheduleTest {
 
     @Test
     @DisplayName("내 일정 목록 조회")
-    void getAllSchedulesByEmail(){
+    void getAllSchedules(){
         // given
         Pageable pageable = PageUtils.schedulePageable(1);
 
@@ -133,11 +133,11 @@ public class ScheduleServiceTest extends ScheduleTest {
         List<TravelSchedule> schedules = List.of(schedule1, schedule2, schedule3);
         Page<TravelSchedule> schedulePage = PageUtils.createPage(schedules, pageable, schedules.size());
 
-        when(travelScheduleRepository.findTravelSchedulesByEmail(pageable, member1.getEmail())).thenReturn(schedulePage);
-        when(travelScheduleRepository.countSharedTravelSchedulesByEmail(anyString())).thenReturn(2);
+        when(travelScheduleRepository.findTravelSchedulesByMemberId(pageable, member1.getMemberId())).thenReturn(schedulePage);
+        when(travelScheduleRepository.countSharedTravelSchedulesByMemberId(anyLong())).thenReturn(2);
 
         // when
-        SchedulePageResponse<ScheduleInfoResponse> response = scheduleService.getAllSchedulesByEmail(1, member1.getEmail());
+        SchedulePageResponse<ScheduleInfoResponse> response = scheduleService.getAllSchedules(1, member1.getMemberId());
 
         // then
         List<ScheduleInfoResponse> content = response.getContent();
@@ -152,18 +152,18 @@ public class ScheduleServiceTest extends ScheduleTest {
 
     @Test
     @DisplayName("내 일정 목록 조회 시 공유된 일정이 없는 경우")
-    void getAllSchedulesByEmailNotShared(){
+    void getAllSchedulesNotShared(){
         // given
         Pageable pageable = PageUtils.schedulePageable(1);
 
         List<TravelSchedule> schedules = List.of(schedule3);
         Page<TravelSchedule> schedulePage = PageUtils.createPage(schedules, pageable, schedules.size());
 
-        when(travelScheduleRepository.findTravelSchedulesByEmail(pageable, member1.getEmail())).thenReturn(schedulePage);
-        when(travelScheduleRepository.countSharedTravelSchedulesByEmail(anyString())).thenReturn(0);
+        when(travelScheduleRepository.findTravelSchedulesByMemberId(pageable, member1.getMemberId())).thenReturn(schedulePage);
+        when(travelScheduleRepository.countSharedTravelSchedulesByMemberId(anyLong())).thenReturn(0);
 
         // when
-        SchedulePageResponse<ScheduleInfoResponse> response = scheduleService.getAllSchedulesByEmail(1, member1.getEmail());
+        SchedulePageResponse<ScheduleInfoResponse> response = scheduleService.getAllSchedules(1, member1.getMemberId());
 
         // then
         List<ScheduleInfoResponse> content = response.getContent();
@@ -176,16 +176,16 @@ public class ScheduleServiceTest extends ScheduleTest {
 
     @Test
     @DisplayName("내 일정 목록 조회 시 일정 데이터 없는 경우")
-    void getAllSchedulesByEmailNoScheduleData(){
+    void getAllSchedulesNoScheduleData(){
         // given
         Pageable pageable = PageUtils.schedulePageable(1);
         Page<TravelSchedule> emptySchedulePage = PageUtils.createPage(new ArrayList<>(), pageable, 0);
 
-        when(travelScheduleRepository.findTravelSchedulesByEmail(pageable, member1.getEmail())).thenReturn(emptySchedulePage);
-        when(travelScheduleRepository.countSharedTravelSchedulesByEmail(anyString())).thenReturn(2);
+        when(travelScheduleRepository.findTravelSchedulesByMemberId(pageable, member1.getMemberId())).thenReturn(emptySchedulePage);
+        when(travelScheduleRepository.countSharedTravelSchedulesByMemberId(anyLong())).thenReturn(2);
 
         // when
-        SchedulePageResponse<ScheduleInfoResponse> response = scheduleService.getAllSchedulesByEmail(1, member1.getEmail());
+        SchedulePageResponse<ScheduleInfoResponse> response = scheduleService.getAllSchedules(1, member1.getMemberId());
 
         // then
         assertThat(response.getTotalElements()).isEqualTo(0);
@@ -196,7 +196,7 @@ public class ScheduleServiceTest extends ScheduleTest {
 
     @Test
     @DisplayName("내 일정 목록 조회 시 이미지 썸네일 데이터 없는 경우")
-    void getAllSchedulesByEmailNoImageThumbnail(){
+    void getAllSchedulesNoImageThumbnail(){
         // given
         Pageable pageable = PageUtils.schedulePageable(1);
 
@@ -206,11 +206,11 @@ public class ScheduleServiceTest extends ScheduleTest {
         List<TravelSchedule> schedules = List.of(schedule1, schedule2);
         Page<TravelSchedule> schedulePage = PageUtils.createPage(schedules, pageable, schedules.size());
 
-        when(travelScheduleRepository.findTravelSchedulesByEmail(pageable, member1.getEmail())).thenReturn(schedulePage);
-        when(travelScheduleRepository.countSharedTravelSchedulesByEmail(anyString())).thenReturn(1);
+        when(travelScheduleRepository.findTravelSchedulesByMemberId(pageable, member1.getMemberId())).thenReturn(schedulePage);
+        when(travelScheduleRepository.countSharedTravelSchedulesByMemberId(anyLong())).thenReturn(1);
 
         // when
-        SchedulePageResponse<ScheduleInfoResponse> response = scheduleService.getAllSchedulesByEmail(1, member1.getEmail());
+        SchedulePageResponse<ScheduleInfoResponse> response = scheduleService.getAllSchedules(1, member1.getMemberId());
 
         // then
         List<ScheduleInfoResponse> content = response.getContent();
@@ -225,7 +225,7 @@ public class ScheduleServiceTest extends ScheduleTest {
 
     @Test
     @DisplayName("내 일정 목록 조회 시 이미지 데이터 없는 경우")
-    void getAllSchedulesByEmailNoImageData(){
+    void getAllSchedulesNoImageData(){
         // given
         Pageable pageable = PageUtils.schedulePageable(1);
         travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, new ArrayList<>());
@@ -233,11 +233,11 @@ public class ScheduleServiceTest extends ScheduleTest {
         List<TravelSchedule> schedules = List.of(schedule1);
         Page<TravelSchedule> schedulePage = PageUtils.createPage(schedules, pageable, schedules.size());
 
-        when(travelScheduleRepository.findTravelSchedulesByEmail(pageable, member1.getEmail())).thenReturn(schedulePage);
-        when(travelScheduleRepository.countSharedTravelSchedulesByEmail(anyString())).thenReturn(1);
+        when(travelScheduleRepository.findTravelSchedulesByMemberId(pageable, member1.getMemberId())).thenReturn(schedulePage);
+        when(travelScheduleRepository.countSharedTravelSchedulesByMemberId(anyLong())).thenReturn(1);
 
         // when
-        SchedulePageResponse<ScheduleInfoResponse> response = scheduleService.getAllSchedulesByEmail(1, member1.getEmail());
+        SchedulePageResponse<ScheduleInfoResponse> response = scheduleService.getAllSchedules(1, member1.getMemberId());
 
         // then
         List<ScheduleInfoResponse> content = response.getContent();
@@ -251,7 +251,7 @@ public class ScheduleServiceTest extends ScheduleTest {
 
     @Test
     @DisplayName("공유된 일정 목록 조회")
-    void getSharedSchedulesByEmail(){
+    void getSharedSchedules(){
         // given
         Pageable pageable = PageUtils.schedulePageable(1);
 
@@ -272,11 +272,11 @@ public class ScheduleServiceTest extends ScheduleTest {
         List<TravelSchedule> schedules = List.of(schedule1, schedule2);
         Page<TravelSchedule> schedulePage = PageUtils.createPage(schedules, pageable, schedules.size());
 
-        when(travelScheduleRepository.findSharedTravelSchedulesByEmail(pageable, member1.getEmail())).thenReturn(schedulePage);
-        when(travelScheduleRepository.countTravelSchedulesByEmail(anyString())).thenReturn(3);
+        when(travelScheduleRepository.findSharedTravelSchedulesByMemberId(pageable, member1.getMemberId())).thenReturn(schedulePage);
+        when(travelScheduleRepository.countTravelSchedulesByMemberId(anyLong())).thenReturn(3);
 
         // when
-        SchedulePageResponse<ScheduleInfoResponse> response = scheduleService.getSharedSchedulesByEmail(1, member1.getEmail());
+        SchedulePageResponse<ScheduleInfoResponse> response = scheduleService.getSharedSchedules(1, member1.getMemberId());
 
         // then
         List<ScheduleInfoResponse> content = response.getContent();
@@ -292,16 +292,16 @@ public class ScheduleServiceTest extends ScheduleTest {
 
     @Test
     @DisplayName("공유된 일정 목록 조회 시 일정 데이터 없는 경우")
-    void getSharedSchedulesByEmailNoScheduleData(){
+    void getSharedSchedulesNoScheduleData(){
         // given
         Pageable pageable = PageUtils.schedulePageable(1);
         Page<TravelSchedule> emptySchedulePage = PageUtils.createPage(new ArrayList<>(), pageable, 0);
 
-        when(travelScheduleRepository.findSharedTravelSchedulesByEmail(pageable, member1.getEmail())).thenReturn(emptySchedulePage);
-        when(travelScheduleRepository.countTravelSchedulesByEmail(anyString())).thenReturn(2);
+        when(travelScheduleRepository.findSharedTravelSchedulesByMemberId(pageable, member1.getMemberId())).thenReturn(emptySchedulePage);
+        when(travelScheduleRepository.countTravelSchedulesByMemberId(anyLong())).thenReturn(2);
 
         // when
-        SchedulePageResponse<ScheduleInfoResponse> response = scheduleService.getSharedSchedulesByEmail(1, member1.getEmail());
+        SchedulePageResponse<ScheduleInfoResponse> response = scheduleService.getSharedSchedules(1, member1.getMemberId());
 
         // then
         assertThat(response.getTotalElements()).isEqualTo(2);
@@ -311,7 +311,7 @@ public class ScheduleServiceTest extends ScheduleTest {
 
     @Test
     @DisplayName("공유된 일정 목록 조회 시 이미지 썸네일 데이터 없는 경우")
-    void getSharedSchedulesByEmailNoImageThumbnail(){
+    void getSharedSchedulesNoImageThumbnail(){
         // given
         Pageable pageable = PageUtils.schedulePageable(1);
 
@@ -327,11 +327,11 @@ public class ScheduleServiceTest extends ScheduleTest {
         List<TravelSchedule> schedules = List.of(schedule1, schedule2);
         Page<TravelSchedule> schedulePage = PageUtils.createPage(schedules, pageable, schedules.size());
 
-        when(travelScheduleRepository.findSharedTravelSchedulesByEmail(pageable, member1.getEmail())).thenReturn(schedulePage);
-        when(travelScheduleRepository.countTravelSchedulesByEmail(anyString())).thenReturn(3);
+        when(travelScheduleRepository.findSharedTravelSchedulesByMemberId(pageable, member1.getMemberId())).thenReturn(schedulePage);
+        when(travelScheduleRepository.countTravelSchedulesByMemberId(anyLong())).thenReturn(3);
 
         // when
-        SchedulePageResponse<ScheduleInfoResponse> response = scheduleService.getSharedSchedulesByEmail(1, member1.getEmail());
+        SchedulePageResponse<ScheduleInfoResponse> response = scheduleService.getSharedSchedules(1, member1.getMemberId());
 
         // then
         List<ScheduleInfoResponse> content = response.getContent();
@@ -346,7 +346,7 @@ public class ScheduleServiceTest extends ScheduleTest {
 
     @Test
     @DisplayName("내 일정 목록 조회 시 이미지 데이터 없는 경우")
-    void getSharedSchedulesByEmailNoImageData(){
+    void getSharedSchedulesNoImageData(){
         // given
         Pageable pageable = PageUtils.schedulePageable(1);
         travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, new ArrayList<>());
@@ -354,11 +354,11 @@ public class ScheduleServiceTest extends ScheduleTest {
         List<TravelSchedule> schedules = List.of(schedule1);
         Page<TravelSchedule> schedulePage = PageUtils.createPage(schedules, pageable, schedules.size());
 
-        when(travelScheduleRepository.findSharedTravelSchedulesByEmail(pageable, member1.getEmail())).thenReturn(schedulePage);
-        when(travelScheduleRepository.countTravelSchedulesByEmail(anyString())).thenReturn(1);
+        when(travelScheduleRepository.findSharedTravelSchedulesByMemberId(pageable, member1.getMemberId())).thenReturn(schedulePage);
+        when(travelScheduleRepository.countTravelSchedulesByMemberId(anyLong())).thenReturn(1);
 
         // when
-        SchedulePageResponse<ScheduleInfoResponse> response = scheduleService.getSharedSchedulesByEmail(1, member1.getEmail());
+        SchedulePageResponse<ScheduleInfoResponse> response = scheduleService.getSharedSchedules(1, member1.getMemberId());
 
         // then
         List<ScheduleInfoResponse> content = response.getContent();
@@ -372,18 +372,18 @@ public class ScheduleServiceTest extends ScheduleTest {
 
     @Test
     @DisplayName("수정 권한 있는 내 일정 목록 조회")
-    void getEnableEditScheduleByEmail(){
+    void getEnableEditSchedule(){
         // given
         Pageable pageable = PageUtils.scheduleModalPageable(1);
 
         List<TravelSchedule> schedules = List.of(schedule1);
         Page<TravelSchedule> schedulePage = PageUtils.createPage(schedules, pageable, schedules.size());
 
-        when(travelScheduleRepository.findEnableEditTravelSchedulesByEmail(any(), anyString())).thenReturn(schedulePage);
+        when(travelScheduleRepository.findEnableEditTravelSchedulesByMemberId(any(), anyLong())).thenReturn(schedulePage);
         when(travelAttendeeRepository.findAuthorNicknameByScheduleId(anyLong())).thenReturn(member1.getNickname());
 
         // when
-        Page<OverviewScheduleResponse> response = scheduleService.getEnableEditScheduleByEmail(1, member1.getEmail());
+        Page<OverviewScheduleResponse> response = scheduleService.getEnableEditSchedule(1, member1.getMemberId());
 
         // then
         assertThat(response.getTotalElements()).isNotZero();
@@ -394,16 +394,16 @@ public class ScheduleServiceTest extends ScheduleTest {
 
     @Test
     @DisplayName("수정 권한 있는 내 일정 목록 조회 시 일정 데이터 존재하지 않는 경우")
-    void getEnableEditScheduleByEmail_emptySchedules(){
+    void getEnableEditSchedule_emptySchedules(){
         // given
         Pageable pageable = PageUtils.scheduleModalPageable(1);
 
         Page<TravelSchedule> schedulePage = PageUtils.createPage(new ArrayList<>(), pageable, 0);
 
-        when(travelScheduleRepository.findEnableEditTravelSchedulesByEmail(any(), anyString())).thenReturn(schedulePage);
+        when(travelScheduleRepository.findEnableEditTravelSchedulesByMemberId(any(), anyLong())).thenReturn(schedulePage);
 
         // when
-        Page<OverviewScheduleResponse> response = scheduleService.getEnableEditScheduleByEmail(1, member1.getEmail());
+        Page<OverviewScheduleResponse> response = scheduleService.getEnableEditSchedule(1, member1.getMemberId());
 
         // then
         assertThat(response.getTotalElements()).isZero();
@@ -420,11 +420,11 @@ public class ScheduleServiceTest extends ScheduleTest {
         List<TravelSchedule> schedules = List.of(schedule1, schedule2, schedule3);
         Page<TravelSchedule> schedulePage = PageUtils.createPage(schedules, pageable, schedules.size());
 
-        when(travelScheduleRepository.searchTravelSchedulesByEmailAndKeyword(pageable, keyword, member1.getEmail())).thenReturn(schedulePage);
-        when(travelScheduleRepository.countSharedTravelSchedulesByEmailAndKeyword(keyword, member1.getEmail())).thenReturn(1);
+        when(travelScheduleRepository.searchTravelSchedulesByMemberIdAndKeyword(pageable, keyword, member1.getMemberId())).thenReturn(schedulePage);
+        when(travelScheduleRepository.countSharedTravelSchedulesByMemberIdAndKeyword(keyword, member1.getMemberId())).thenReturn(1);
 
         // when
-        SchedulePageResponse<ScheduleInfoResponse> response = scheduleService.searchAllSchedules(1, keyword, member1.getEmail());
+        SchedulePageResponse<ScheduleInfoResponse> response = scheduleService.searchAllSchedules(1, keyword, member1.getMemberId());
 
         // then
         List<ScheduleInfoResponse> content = response.getContent();
@@ -446,11 +446,11 @@ public class ScheduleServiceTest extends ScheduleTest {
         List<TravelSchedule> schedules = List.of(schedule3);
         Page<TravelSchedule> schedulePage = PageUtils.createPage(schedules, pageable, schedules.size());
 
-        when(travelScheduleRepository.searchTravelSchedulesByEmailAndKeyword(pageable, keyword, member1.getEmail())).thenReturn(schedulePage);
-        when(travelScheduleRepository.countSharedTravelSchedulesByEmailAndKeyword(keyword, member1.getEmail())).thenReturn(0);
+        when(travelScheduleRepository.searchTravelSchedulesByMemberIdAndKeyword(pageable, keyword, member1.getMemberId())).thenReturn(schedulePage);
+        when(travelScheduleRepository.countSharedTravelSchedulesByMemberIdAndKeyword(keyword, member1.getMemberId())).thenReturn(0);
 
         // when
-        SchedulePageResponse<ScheduleInfoResponse> response = scheduleService.searchAllSchedules(1, "3", member1.getEmail());
+        SchedulePageResponse<ScheduleInfoResponse> response = scheduleService.searchAllSchedules(1, "3", member1.getMemberId());
 
         // then
         List<ScheduleInfoResponse> content = response.getContent();
@@ -469,11 +469,11 @@ public class ScheduleServiceTest extends ScheduleTest {
         Pageable pageable = PageUtils.schedulePageable(1);
         Page<TravelSchedule> emptySchedulePage = PageUtils.createPage(new ArrayList<>(), pageable, 0);
 
-        when(travelScheduleRepository.searchTravelSchedulesByEmailAndKeyword(pageable, keyword, member1.getEmail())).thenReturn(emptySchedulePage);
-        when(travelScheduleRepository.countSharedTravelSchedulesByEmailAndKeyword(keyword, member1.getEmail())).thenReturn(2);
+        when(travelScheduleRepository.searchTravelSchedulesByMemberIdAndKeyword(pageable, keyword, member1.getMemberId())).thenReturn(emptySchedulePage);
+        when(travelScheduleRepository.countSharedTravelSchedulesByMemberIdAndKeyword(keyword, member1.getMemberId())).thenReturn(2);
 
         // when
-        SchedulePageResponse<ScheduleInfoResponse> response = scheduleService.searchAllSchedules(1, keyword, member1.getEmail());
+        SchedulePageResponse<ScheduleInfoResponse> response = scheduleService.searchAllSchedules(1, keyword, member1.getMemberId());
 
         // then
         assertThat(response.getTotalElements()).isEqualTo(0);
@@ -495,11 +495,11 @@ public class ScheduleServiceTest extends ScheduleTest {
         List<TravelSchedule> schedules = List.of(schedule1, schedule2);
         Page<TravelSchedule> schedulePage = PageUtils.createPage(schedules, pageable, schedules.size());
 
-        when(travelScheduleRepository.searchTravelSchedulesByEmailAndKeyword(pageable, keyword, member1.getEmail())).thenReturn(schedulePage);
-        when(travelScheduleRepository.countSharedTravelSchedulesByEmailAndKeyword(keyword, member1.getEmail())).thenReturn(1);
+        when(travelScheduleRepository.searchTravelSchedulesByMemberIdAndKeyword(pageable, keyword, member1.getMemberId())).thenReturn(schedulePage);
+        when(travelScheduleRepository.countSharedTravelSchedulesByMemberIdAndKeyword(keyword, member1.getMemberId())).thenReturn(1);
 
         // when
-        SchedulePageResponse<ScheduleInfoResponse> response = scheduleService.searchAllSchedules(1, keyword, member1.getEmail());
+        SchedulePageResponse<ScheduleInfoResponse> response = scheduleService.searchAllSchedules(1, keyword, member1.getMemberId());
 
         // then
         List<ScheduleInfoResponse> content = response.getContent();
@@ -523,11 +523,11 @@ public class ScheduleServiceTest extends ScheduleTest {
         List<TravelSchedule> schedules = List.of(schedule1);
         Page<TravelSchedule> schedulePage = PageUtils.createPage(schedules, pageable, schedules.size());
 
-        when(travelScheduleRepository.searchTravelSchedulesByEmailAndKeyword(pageable, keyword, member1.getEmail())).thenReturn(schedulePage);
-        when(travelScheduleRepository.countSharedTravelSchedulesByEmailAndKeyword(keyword, member1.getEmail())).thenReturn(1);
+        when(travelScheduleRepository.searchTravelSchedulesByMemberIdAndKeyword(pageable, keyword, member1.getMemberId())).thenReturn(schedulePage);
+        when(travelScheduleRepository.countSharedTravelSchedulesByMemberIdAndKeyword(keyword, member1.getMemberId())).thenReturn(1);
 
         // when
-        SchedulePageResponse<ScheduleInfoResponse> response = scheduleService.searchAllSchedules(1, keyword, member1.getEmail());
+        SchedulePageResponse<ScheduleInfoResponse> response = scheduleService.searchAllSchedules(1, keyword, member1.getMemberId());
 
         // then
         List<ScheduleInfoResponse> content = response.getContent();
@@ -564,11 +564,11 @@ public class ScheduleServiceTest extends ScheduleTest {
         List<TravelSchedule> schedules = List.of(schedule1, schedule2, schedule3);
         Page<TravelSchedule> schedulePage = PageUtils.createPage(schedules, pageable, schedules.size());
 
-        when(travelScheduleRepository.searchSharedTravelSchedulesByEmailAndKeyword(pageable, keyword, member1.getEmail())).thenReturn(schedulePage);
-        when(travelScheduleRepository.countTravelSchedulesByEmailAndKeyword(keyword, member1.getEmail())).thenReturn(5);
+        when(travelScheduleRepository.searchSharedTravelSchedulesByMemberIdAndKeyword(pageable, keyword, member1.getMemberId())).thenReturn(schedulePage);
+        when(travelScheduleRepository.countTravelSchedulesByMemberIdAndKeyword(keyword, member1.getMemberId())).thenReturn(5);
 
         // when
-        SchedulePageResponse<ScheduleInfoResponse> response = scheduleService.searchSharedSchedules(1, keyword, member1.getEmail());
+        SchedulePageResponse<ScheduleInfoResponse> response = scheduleService.searchSharedSchedules(1, keyword, member1.getMemberId());
 
         // then
         List<ScheduleInfoResponse> content = response.getContent();
@@ -590,11 +590,11 @@ public class ScheduleServiceTest extends ScheduleTest {
         Pageable pageable = PageUtils.schedulePageable(1);
         Page<TravelSchedule> emptySchedulePage = PageUtils.createPage(new ArrayList<>(), pageable, 0);
 
-        when(travelScheduleRepository.searchSharedTravelSchedulesByEmailAndKeyword(pageable, keyword, member1.getEmail())).thenReturn(emptySchedulePage);
-        when(travelScheduleRepository.countTravelSchedulesByEmailAndKeyword(keyword, member1.getEmail())).thenReturn(2);
+        when(travelScheduleRepository.searchSharedTravelSchedulesByMemberIdAndKeyword(pageable, keyword, member1.getMemberId())).thenReturn(emptySchedulePage);
+        when(travelScheduleRepository.countTravelSchedulesByMemberIdAndKeyword(keyword, member1.getMemberId())).thenReturn(2);
 
         // when
-        SchedulePageResponse<ScheduleInfoResponse> response = scheduleService.searchSharedSchedules(1, keyword, member1.getEmail());
+        SchedulePageResponse<ScheduleInfoResponse> response = scheduleService.searchSharedSchedules(1, keyword, member1.getMemberId());
 
         // then
         assertThat(response.getTotalElements()).isEqualTo(2);
@@ -621,11 +621,11 @@ public class ScheduleServiceTest extends ScheduleTest {
         List<TravelSchedule> schedules = List.of(schedule1, schedule2);
         Page<TravelSchedule> schedulePage = PageUtils.createPage(schedules, pageable, schedules.size());
 
-        when(travelScheduleRepository.searchSharedTravelSchedulesByEmailAndKeyword(pageable, keyword, member1.getEmail())).thenReturn(schedulePage);
-        when(travelScheduleRepository.countTravelSchedulesByEmailAndKeyword(keyword, member1.getEmail())).thenReturn(3);
+        when(travelScheduleRepository.searchSharedTravelSchedulesByMemberIdAndKeyword(pageable, keyword, member1.getMemberId())).thenReturn(schedulePage);
+        when(travelScheduleRepository.countTravelSchedulesByMemberIdAndKeyword(keyword, member1.getMemberId())).thenReturn(3);
 
         // when
-        SchedulePageResponse<ScheduleInfoResponse> response = scheduleService.searchSharedSchedules(1, keyword, member1.getEmail());
+        SchedulePageResponse<ScheduleInfoResponse> response = scheduleService.searchSharedSchedules(1, keyword, member1.getMemberId());
 
         // then
         List<ScheduleInfoResponse> content = response.getContent();
@@ -649,11 +649,11 @@ public class ScheduleServiceTest extends ScheduleTest {
         List<TravelSchedule> schedules = List.of(schedule1, schedule2);
         Page<TravelSchedule> schedulePage = PageUtils.createPage(schedules, pageable, schedules.size());
 
-        when(travelScheduleRepository.searchSharedTravelSchedulesByEmailAndKeyword(pageable, keyword, member1.getEmail())).thenReturn(schedulePage);
-        when(travelScheduleRepository.countTravelSchedulesByEmailAndKeyword(keyword, member1.getEmail())).thenReturn(1);
+        when(travelScheduleRepository.searchSharedTravelSchedulesByMemberIdAndKeyword(pageable, keyword, member1.getMemberId())).thenReturn(schedulePage);
+        when(travelScheduleRepository.countTravelSchedulesByMemberIdAndKeyword(keyword, member1.getMemberId())).thenReturn(1);
 
         // when
-        SchedulePageResponse<ScheduleInfoResponse> response = scheduleService.searchSharedSchedules(1, keyword, member1.getEmail());
+        SchedulePageResponse<ScheduleInfoResponse> response = scheduleService.searchSharedSchedules(1, keyword, member1.getMemberId());
 
         // then
         List<ScheduleInfoResponse> content = response.getContent();
@@ -686,7 +686,7 @@ public class ScheduleServiceTest extends ScheduleTest {
         List<TravelSchedule> travelScheduleList = List.of(schedule1);
         Page<TravelSchedule> schedulePage = PageUtils.createPage(travelScheduleList, PageUtils.schedulePageable(1), travelScheduleList.size());
         // when
-        List<ScheduleInfoResponse> response = scheduleService.createScheduleInfoResponse(schedulePage, member1.getEmail());
+        List<ScheduleInfoResponse> response = scheduleService.createScheduleInfoResponse(schedulePage, member1.getMemberId());
 
         // then
         assertThat(response.size()).isEqualTo(1);
@@ -708,7 +708,7 @@ public class ScheduleServiceTest extends ScheduleTest {
 
 
         // when
-        List<ScheduleInfoResponse> response = scheduleService.createScheduleInfoResponse(schedulePage, member1.getEmail());
+        List<ScheduleInfoResponse> response = scheduleService.createScheduleInfoResponse(schedulePage, member1.getMemberId());
 
         // then
         assertThat(response.get(0).getScheduleName()).isEqualTo(schedule1.getScheduleName());
@@ -728,7 +728,8 @@ public class ScheduleServiceTest extends ScheduleTest {
         }
 
         // when
-        DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> scheduleService.createScheduleInfoResponse(schedulePage, member1.getEmail()));
+        DataNotFoundException fail = assertThrows(DataNotFoundException.class,
+                () -> scheduleService.createScheduleInfoResponse(schedulePage, member1.getMemberId()));
 
         // then
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.AUTHOR_NOT_FOUND.getStatus());
@@ -744,7 +745,8 @@ public class ScheduleServiceTest extends ScheduleTest {
         Page<TravelSchedule> schedulePage = PageUtils.createPage(travelScheduleList, PageUtils.schedulePageable(1), travelScheduleList.size());
 
         // when
-        ForbiddenScheduleException fail = assertThrows(ForbiddenScheduleException.class, () -> scheduleService.createScheduleInfoResponse(schedulePage, member2.getEmail()));
+        ForbiddenScheduleException fail = assertThrows(ForbiddenScheduleException.class,
+                () -> scheduleService.createScheduleInfoResponse(schedulePage, member2.getMemberId()));
 
         // then
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.FORBIDDEN_ACCESS_SCHEDULE.getStatus());
@@ -788,14 +790,13 @@ public class ScheduleServiceTest extends ScheduleTest {
     @DisplayName("일정 생성")
     void createSchedule(){
         // given
-        String email = "test";
         ScheduleCreateRequest request = createScheduleRequest(LocalDate.now());
 
         when(travelScheduleRepository.save(any())).thenReturn(schedule1);
-        when(memberRepository.findByEmail(any())).thenReturn(Optional.of(member1));
+        when(memberRepository.findById(anyLong())).thenReturn(Optional.of(member1));
 
         // when
-        ScheduleCreateResponse response = scheduleService.createSchedule(request, email);
+        ScheduleCreateResponse response = scheduleService.createSchedule(request, member1.getMemberId());
 
         // then
         verify(travelAttendeeRepository, times(1)).save(any(TravelAttendee.class));
@@ -810,10 +811,10 @@ public class ScheduleServiceTest extends ScheduleTest {
         ScheduleCreateRequest request = createScheduleRequest(LocalDate.now());
 
         when(travelScheduleRepository.save(any())).thenReturn(schedule1);
-        when(memberRepository.findByEmail(any())).thenReturn(Optional.empty());
+        when(memberRepository.findById(anyLong())).thenReturn(Optional.empty());
 
         // when
-        DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> scheduleService.createSchedule(request, "test"));
+        DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> scheduleService.createSchedule(request, 0L));
 
         // then
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.MEMBER_NOT_FOUND.getStatus());
@@ -888,7 +889,6 @@ public class ScheduleServiceTest extends ScheduleTest {
     @Test
     @DisplayName("일정 수정")
     void updateSchedule(){
-        String email = member1.getEmail();
         Long scheduleId = schedule1.getScheduleId();
 
         TravelImage travelImage1 = createTravelImage(travelPlace1, "test1", true);
@@ -909,7 +909,7 @@ public class ScheduleServiceTest extends ScheduleTest {
         when(travelPlaceRepository.findById(travelPlace2.getPlaceId())).thenReturn(Optional.of(travelPlace2));
 
         // when
-        assertDoesNotThrow(() -> scheduleService.updateSchedule(email, scheduleId, scheduleUpdateRequest));
+        assertDoesNotThrow(() -> scheduleService.updateSchedule(member1.getMemberId(), scheduleId, scheduleUpdateRequest));
 
         // then
         assertThat(schedule1.getTravelRouteList().size()).isEqualTo(2);
@@ -922,7 +922,6 @@ public class ScheduleServiceTest extends ScheduleTest {
     @DisplayName("일정 수정 중 여행 루트 삭제에서 기존에 저장된 여행 루트가 없을 경우")
     void updateScheduleNoSavedTravelRouteList(){
         // given
-        String email = member1.getEmail();
         Long scheduleId = schedule2.getScheduleId();
 
 
@@ -943,7 +942,7 @@ public class ScheduleServiceTest extends ScheduleTest {
         when(travelPlaceRepository.findById(travelPlace2.getPlaceId())).thenReturn(Optional.of(travelPlace2));
 
         // when
-        assertDoesNotThrow(() -> scheduleService.updateSchedule(email, scheduleId, scheduleUpdateRequest));
+        assertDoesNotThrow(() -> scheduleService.updateSchedule(member1.getMemberId(), scheduleId, scheduleUpdateRequest));
 
         // then
         assertThat(schedule2.getTravelRouteList().size()).isEqualTo(2);
@@ -989,7 +988,6 @@ public class ScheduleServiceTest extends ScheduleTest {
     @DisplayName("일정 수정 시 일정 데이터 없어 예외 발생")
     void updateScheduleNoSchedule_dataNotFoundException(){
         // given
-        String email = member1.getEmail();
         Long scheduleId = schedule1.getScheduleId();
 
         TravelImage travelImage1 = createTravelImage(travelPlace1, "test1", true);
@@ -1007,7 +1005,8 @@ public class ScheduleServiceTest extends ScheduleTest {
         when(travelScheduleRepository.findById(scheduleId)).thenReturn(Optional.empty());
 
         // when
-        DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> scheduleService.updateSchedule(email, scheduleId, scheduleUpdateRequest));
+        DataNotFoundException fail = assertThrows(DataNotFoundException.class,
+                () -> scheduleService.updateSchedule(member1.getMemberId(), scheduleId, scheduleUpdateRequest));
 
         // then
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.SCHEDULE_NOT_FOUND.getStatus());
@@ -1019,7 +1018,6 @@ public class ScheduleServiceTest extends ScheduleTest {
     @DisplayName("일정 수정 시 요청 사용자에게 접근 권한이 없어 예외 발생")
     void updateScheduleForbiddenAccess_forbiddenScheduleException(){
         // given
-        String email = member2.getEmail();
         Long scheduleId = schedule3.getScheduleId();
 
         TravelImage travelImage1 = createTravelImage(travelPlace1, "test1", true);
@@ -1043,7 +1041,8 @@ public class ScheduleServiceTest extends ScheduleTest {
         when(travelScheduleRepository.findById(scheduleId)).thenReturn(Optional.of(schedule3));
 
         // when
-        ForbiddenScheduleException fail = assertThrows(ForbiddenScheduleException.class, () -> scheduleService.updateSchedule(email, scheduleId, scheduleUpdateRequest));
+        ForbiddenScheduleException fail = assertThrows(ForbiddenScheduleException.class,
+                () -> scheduleService.updateSchedule(member2.getMemberId(), scheduleId, scheduleUpdateRequest));
 
         // then
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.FORBIDDEN_ACCESS_SCHEDULE.getStatus());
@@ -1055,7 +1054,6 @@ public class ScheduleServiceTest extends ScheduleTest {
     @DisplayName("일정 수정 시 요청 사용자에게 수정 권한이 없어 예외 발생")
     void updateScheduleForbiddenEdit_forbiddenScheduleException(){
         // given
-        String email = member2.getEmail();
         Long scheduleId = schedule1.getScheduleId();
 
         TravelImage travelImage1 = createTravelImage(travelPlace1, "test1", true);
@@ -1074,7 +1072,8 @@ public class ScheduleServiceTest extends ScheduleTest {
         when(travelScheduleRepository.findById(scheduleId)).thenReturn(Optional.of(schedule1));
 
         // when
-        ForbiddenScheduleException fail = assertThrows(ForbiddenScheduleException.class, () -> scheduleService.updateSchedule(email, scheduleId, scheduleUpdateRequest));
+        ForbiddenScheduleException fail = assertThrows(ForbiddenScheduleException.class,
+                () -> scheduleService.updateSchedule(member2.getMemberId(), scheduleId, scheduleUpdateRequest));
 
         // then
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.FORBIDDEN_EDIT_SCHEDULE.getStatus());
@@ -1086,7 +1085,6 @@ public class ScheduleServiceTest extends ScheduleTest {
     @DisplayName("일정 수정 시 여행 루트에 저장된 여행지가 없어 예외 발생")
     void updateScheduleNoTravelPlace_dataNotFoundException(){
         // given
-        String email = member1.getEmail();
         Long scheduleId = schedule1.getScheduleId();
 
 
@@ -1107,7 +1105,8 @@ public class ScheduleServiceTest extends ScheduleTest {
         when(travelPlaceRepository.findById(anyLong())).thenReturn(Optional.empty());
 
         // when
-        DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> scheduleService.updateSchedule(email, scheduleId, scheduleUpdateRequest));
+        DataNotFoundException fail = assertThrows(DataNotFoundException.class,
+                () -> scheduleService.updateSchedule(member1.getMemberId(), scheduleId, scheduleUpdateRequest));
 
         // then
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.PLACE_NOT_FOUND.getStatus());
@@ -1119,7 +1118,7 @@ public class ScheduleServiceTest extends ScheduleTest {
     void getAttendeeInfo_containsAttendees(){
         // given
         // when
-        TravelAttendee response = scheduleService.getAttendeeInfo(schedule1, member1.getEmail());
+        TravelAttendee response = scheduleService.getAttendeeInfo(schedule1, member1.getMemberId());
 
         // then
         assertThat(response.getMember().getEmail()).isEqualTo(member1.getEmail());
@@ -1131,7 +1130,8 @@ public class ScheduleServiceTest extends ScheduleTest {
     void getAttendeeInfo_notContainsAttendees(){
         // given
         // when
-        ForbiddenScheduleException fail = assertThrows(ForbiddenScheduleException.class, () -> scheduleService.getAttendeeInfo(schedule3, member2.getEmail()));
+        ForbiddenScheduleException fail = assertThrows(ForbiddenScheduleException.class,
+                () -> scheduleService.getAttendeeInfo(schedule3, member2.getMemberId()));
 
         // then
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.FORBIDDEN_ACCESS_SCHEDULE.getStatus());
@@ -1167,7 +1167,8 @@ public class ScheduleServiceTest extends ScheduleTest {
         attendee1.updatePermission(AttendeePermission.CHAT);
 
         // when
-        ForbiddenScheduleException fail = assertThrows(ForbiddenScheduleException.class, () -> scheduleService.checkScheduleEditPermission(attendee1));
+        ForbiddenScheduleException fail = assertThrows(ForbiddenScheduleException.class,
+                () -> scheduleService.checkScheduleEditPermission(attendee1));
 
         // then
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.FORBIDDEN_EDIT_SCHEDULE.getStatus());
@@ -1181,7 +1182,8 @@ public class ScheduleServiceTest extends ScheduleTest {
         attendee1.updatePermission(AttendeePermission.READ);
 
         // when
-        ForbiddenScheduleException fail = assertThrows(ForbiddenScheduleException.class, () -> scheduleService.checkScheduleEditPermission(attendee1));
+        ForbiddenScheduleException fail = assertThrows(ForbiddenScheduleException.class,
+                () -> scheduleService.checkScheduleEditPermission(attendee1));
 
         // then
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.FORBIDDEN_EDIT_SCHEDULE.getStatus());
@@ -1197,11 +1199,12 @@ public class ScheduleServiceTest extends ScheduleTest {
         ChatMessage message3 = createChatMessage("chat3", schedule1.getScheduleId(), member2, "hello3");
         List<ChatMessage> chatMessages = List.of(message1, message2, message3);
 
-        when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_Email(anyLong(), anyString())).thenReturn(Optional.of(attendee1));
+        when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_MemberId(anyLong(), anyLong()))
+                .thenReturn(Optional.of(attendee1));
         when(chatMessageRepository.findAllByScheduleId(anyLong())).thenReturn(chatMessages);
 
         // when
-        assertDoesNotThrow(() -> scheduleService.deleteSchedule(schedule1.getScheduleId(), member1.getEmail()));
+        assertDoesNotThrow(() -> scheduleService.deleteSchedule(schedule1.getScheduleId(), member1.getMemberId()));
 
         // then
         verify(chatMessageRepository, times(1)).deleteAllByScheduleId(schedule1.getScheduleId());
@@ -1211,11 +1214,12 @@ public class ScheduleServiceTest extends ScheduleTest {
     @DisplayName("일정 삭제 시 채팅 메시지 없는 경우")
     void deleteScheduleNoChatMessageData(){
         // given
-        when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_Email(anyLong(), anyString())).thenReturn(Optional.of(attendee1));
+        when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_MemberId(anyLong(), anyLong()))
+                .thenReturn(Optional.of(attendee1));
         when(chatMessageRepository.findAllByScheduleId(anyLong())).thenReturn(new ArrayList<>());
 
         // when
-        assertDoesNotThrow(() -> scheduleService.deleteSchedule(schedule1.getScheduleId(), member1.getEmail()));
+        assertDoesNotThrow(() -> scheduleService.deleteSchedule(schedule1.getScheduleId(), member1.getMemberId()));
 
         // then
         verify(chatMessageRepository, times(0)).deleteAllByScheduleId(schedule1.getScheduleId());
@@ -1225,10 +1229,12 @@ public class ScheduleServiceTest extends ScheduleTest {
     @DisplayName("일정 삭제 시 작성자가 아닌 사용자가 삭제 요청으로 인해 예외 발생")
     void deleteScheduleNotAuthor_forbiddenScheduleException(){
         // given
-        when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_Email(anyLong(), anyString())).thenReturn(Optional.of(attendee2));
+        when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_MemberId(anyLong(), anyLong()))
+                .thenReturn(Optional.of(attendee2));
 
         // when
-        ForbiddenScheduleException fail = assertThrows(ForbiddenScheduleException.class, () -> scheduleService.deleteSchedule(schedule1.getScheduleId(), member2.getEmail()));
+        ForbiddenScheduleException fail = assertThrows(ForbiddenScheduleException.class,
+                () -> scheduleService.deleteSchedule(schedule1.getScheduleId(), member2.getMemberId()));
 
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.FORBIDDEN_DELETE_SCHEDULE.getStatus());
         assertThat(fail.getMessage()).isEqualTo(ErrorCode.FORBIDDEN_DELETE_SCHEDULE.getMessage());

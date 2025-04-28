@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.triptune.bookmark.entity.Bookmark;
 import com.triptune.common.entity.*;
+import com.triptune.global.service.CustomUserDetails;
 import com.triptune.member.entity.Member;
 import com.triptune.member.entity.SocialMember;
 import com.triptune.member.enumclass.SocialType;
@@ -17,12 +18,24 @@ import com.triptune.schedule.enumclass.AttendeeRole;
 import com.triptune.travel.entity.TravelImage;
 import com.triptune.travel.entity.TravelPlace;
 import com.triptune.travel.enumclass.ThemeType;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.io.Decoders;
+import io.jsonwebtoken.security.Keys;
 import jakarta.transaction.Transactional;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.AuthorityUtils;
+import org.springframework.security.core.context.SecurityContextHolder;
 
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.List;
 
 @Transactional
@@ -493,6 +506,12 @@ public abstract class BaseTest {
                 .build();
     }
 
+    protected void mockAuthentication(Member member){
+        CustomUserDetails userDetails = new CustomUserDetails(member);
+        UsernamePasswordAuthenticationToken auth =
+                new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+        SecurityContextHolder.getContext().setAuthentication(auth);
+    }
 
     protected String toJsonString(Object obj) throws JsonProcessingException {
         return objectMapper.writeValueAsString(obj);

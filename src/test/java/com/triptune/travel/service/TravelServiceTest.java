@@ -5,6 +5,7 @@ import com.triptune.common.entity.*;
 import com.triptune.global.enumclass.ErrorCode;
 import com.triptune.global.exception.DataNotFoundException;
 import com.triptune.global.util.PageUtils;
+import com.triptune.member.entity.Member;
 import com.triptune.travel.TravelTest;
 import com.triptune.travel.dto.PlaceLocation;
 import com.triptune.travel.dto.request.PlaceLocationRequest;
@@ -58,6 +59,7 @@ public class TravelServiceTest extends TravelTest {
 
     private ApiContentType attractionContentType;
 
+    private Member member;
 
     @BeforeEach
     void setUp(){
@@ -72,9 +74,11 @@ public class TravelServiceTest extends TravelTest {
         travelImage1 = createTravelImage(travelPlace1, "test1", true);
         travelImage2 = createTravelImage(travelPlace1, "test2", false);
 
-
         ApiContentType sportsContentType = createApiContentType(ThemeType.SPORTS);
         travelPlace2 = createTravelPlace(2L, country, city, district, apiCategory, sportsContentType, 12.333, 160.3333);
+
+        member = createMember(1L, "member");
+
     }
 
 
@@ -92,11 +96,11 @@ public class TravelServiceTest extends TravelTest {
         Page<PlaceLocation> mockResponse = PageUtils.createPage(locationList, pageable, locationList.size());
 
         when(travelPlaceRepository.findNearByTravelPlaces(pageable, request, 5)).thenReturn(mockResponse);
-        when(bookmarkRepository.existsByMember_EmailAndTravelPlace_PlaceId("member", travelPlace1.getPlaceId())).thenReturn(true);
-        when(bookmarkRepository.existsByMember_EmailAndTravelPlace_PlaceId("member", travelPlace2.getPlaceId())).thenReturn(false);
+        when(bookmarkRepository.existsByMember_MemberIdAndTravelPlace_PlaceId(member.getMemberId(), travelPlace1.getPlaceId())).thenReturn(true);
+        when(bookmarkRepository.existsByMember_MemberIdAndTravelPlace_PlaceId(member.getMemberId(), travelPlace2.getPlaceId())).thenReturn(false);
 
         // when
-        Page<PlaceLocation> response = travelService.getNearByTravelPlaces(1, "member", request);
+        Page<PlaceLocation> response = travelService.getNearByTravelPlaces(1, member.getMemberId(), request);
 
         // then
         List<PlaceLocation> content = response.getContent();
@@ -155,7 +159,7 @@ public class TravelServiceTest extends TravelTest {
         when(travelPlaceRepository.findNearByTravelPlaces(pageable, request, 5)).thenReturn(mockResponse);
 
         // when
-        Page<PlaceLocation> response = travelService.getNearByTravelPlaces(1, "member", request);
+        Page<PlaceLocation> response = travelService.getNearByTravelPlaces(1, member.getMemberId(), request);
 
         // then
         assertThat(response.getTotalElements()).isEqualTo(0);
@@ -194,11 +198,11 @@ public class TravelServiceTest extends TravelTest {
         Page<PlaceLocation> mockResponse = PageUtils.createPage(locationList, pageable, locationList.size());
 
         when(travelPlaceRepository.searchTravelPlacesWithLocation(pageable, request)).thenReturn(mockResponse);
-        when(bookmarkRepository.existsByMember_EmailAndTravelPlace_PlaceId("member", travelPlace1.getPlaceId())).thenReturn(true);
-        when(bookmarkRepository.existsByMember_EmailAndTravelPlace_PlaceId("member", travelPlace2.getPlaceId())).thenReturn(false);
+        when(bookmarkRepository.existsByMember_MemberIdAndTravelPlace_PlaceId(member.getMemberId(), travelPlace1.getPlaceId())).thenReturn(true);
+        when(bookmarkRepository.existsByMember_MemberIdAndTravelPlace_PlaceId(member.getMemberId(), travelPlace2.getPlaceId())).thenReturn(false);
 
         // when
-        Page<PlaceLocation> response = travelService.searchTravelPlacesWithLocation(1, "member", request);
+        Page<PlaceLocation> response = travelService.searchTravelPlacesWithLocation(1, member.getMemberId(), request);
 
         // then
         List<PlaceLocation> content = response.getContent();
@@ -257,7 +261,7 @@ public class TravelServiceTest extends TravelTest {
         when(travelPlaceRepository.searchTravelPlacesWithLocation(pageable, request)).thenReturn(mockResponse);
 
         // when
-        Page<PlaceLocation> response = travelService.searchTravelPlacesWithLocation(1, "member", request);
+        Page<PlaceLocation> response = travelService.searchTravelPlacesWithLocation(1, member.getMemberId(), request);
 
         // then
         assertThat(response.getTotalElements()).isEqualTo(0);
@@ -298,11 +302,11 @@ public class TravelServiceTest extends TravelTest {
         Page<PlaceResponse> mockResponse = PageUtils.createPage(locationList, pageable, locationList.size());
 
         when(travelPlaceRepository.searchTravelPlaces(pageable, request.getKeyword())).thenReturn(mockResponse);
-        when(bookmarkRepository.existsByMember_EmailAndTravelPlace_PlaceId("member", travelPlace1.getPlaceId())).thenReturn(true);
-        when(bookmarkRepository.existsByMember_EmailAndTravelPlace_PlaceId("member", travelPlace2.getPlaceId())).thenReturn(false);
+        when(bookmarkRepository.existsByMember_MemberIdAndTravelPlace_PlaceId(member.getMemberId(), travelPlace1.getPlaceId())).thenReturn(true);
+        when(bookmarkRepository.existsByMember_MemberIdAndTravelPlace_PlaceId(member.getMemberId(), travelPlace2.getPlaceId())).thenReturn(false);
 
         // when
-        Page<PlaceLocation> response = travelService.searchTravelPlacesWithoutLocation(1, "member", request);
+        Page<PlaceLocation> response = travelService.searchTravelPlacesWithoutLocation(1, member.getMemberId(), request);
 
         // then
         List<PlaceLocation> content = response.getContent();
@@ -357,7 +361,7 @@ public class TravelServiceTest extends TravelTest {
         when(travelPlaceRepository.searchTravelPlaces(pageable, request.getKeyword())).thenReturn(mockResponse);
 
         // when
-        Page<PlaceLocation> response = travelService.searchTravelPlacesWithoutLocation(1, "member", request);
+        Page<PlaceLocation> response = travelService.searchTravelPlacesWithoutLocation(1, member.getMemberId(), request);
 
         // then
         assertThat(response.getTotalElements()).isEqualTo(0);
@@ -390,10 +394,10 @@ public class TravelServiceTest extends TravelTest {
         travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, apiContentType, "상시", List.of(travelImage1, travelImage2));
 
         when(travelPlaceRepository.findById(anyLong())).thenReturn(Optional.of(travelPlace1));
-        when(bookmarkRepository.existsByMember_EmailAndTravelPlace_PlaceId(anyString(), anyLong())).thenReturn(true);
+        when(bookmarkRepository.existsByMember_MemberIdAndTravelPlace_PlaceId(anyLong(), anyLong())).thenReturn(true);
 
         // when
-        PlaceDetailResponse response = travelService.getTravelPlaceDetails(travelPlace1.getPlaceId(), "member");
+        PlaceDetailResponse response = travelService.getTravelPlaceDetails(travelPlace1.getPlaceId(), member.getMemberId());
 
         // then
         assertThat(response.getPlaceId()).isEqualTo(travelPlace1.getPlaceId());
@@ -440,11 +444,11 @@ public class TravelServiceTest extends TravelTest {
         travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, apiContentType, "13:00", "11:00", List.of(travelImage1, travelImage2));
 
         when(travelPlaceRepository.findById(anyLong())).thenReturn(Optional.of(travelPlace1));
-        when(bookmarkRepository.existsByMember_EmailAndTravelPlace_PlaceId(anyString(), anyLong())).thenReturn(true);
+        when(bookmarkRepository.existsByMember_MemberIdAndTravelPlace_PlaceId(anyLong(), anyLong())).thenReturn(true);
 
 
         // when
-        PlaceDetailResponse response = travelService.getTravelPlaceDetails(travelPlace1.getPlaceId(), "member");
+        PlaceDetailResponse response = travelService.getTravelPlaceDetails(travelPlace1.getPlaceId(), member.getMemberId());
 
         // then
         assertThat(response.getPlaceId()).isEqualTo(travelPlace1.getPlaceId());
@@ -471,7 +475,7 @@ public class TravelServiceTest extends TravelTest {
 
 
         // when
-        PlaceDetailResponse response = travelService.getTravelPlaceDetails(travelPlace1.getPlaceId(), "member");
+        PlaceDetailResponse response = travelService.getTravelPlaceDetails(travelPlace1.getPlaceId(), member.getMemberId());
 
         // then
         assertThat(response.getPlaceId()).isEqualTo(travelPlace1.getPlaceId());
@@ -494,7 +498,8 @@ public class TravelServiceTest extends TravelTest {
         when(travelPlaceRepository.findById(anyLong())).thenReturn(Optional.empty());
 
         // when
-        DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> travelService.getTravelPlaceDetails(1L, "member"));
+        DataNotFoundException fail = assertThrows(DataNotFoundException.class,
+                () -> travelService.getTravelPlaceDetails(1L, member.getMemberId()));
 
         // then
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.DATA_NOT_FOUND.getStatus());

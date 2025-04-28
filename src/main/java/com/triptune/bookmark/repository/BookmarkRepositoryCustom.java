@@ -7,6 +7,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 public interface BookmarkRepositoryCustom {
-    Page<TravelPlace> findBookmarksByEmail(String email, Pageable pageable, BookmarkSortType sortType);
+    Page<TravelPlace> findSortedMemberBookmarks(Long memberId, Pageable pageable, BookmarkSortType sortType);
     Integer countTotalElements(BooleanExpression expression);
 }

@@ -21,7 +21,8 @@ public class ScheduleTravelController {
     @AttendeeCheck
     @GetMapping("/travels")
     @Operation(summary = "여행지 조회", description = "일정 상세보기 여행지 탭에서 여행지를 제공합니다.")
-    public ApiPageResponse<PlaceResponse> getTravelPlaces(@PathVariable(name = "scheduleId") Long scheduleId, @RequestParam int page){
+    public ApiPageResponse<PlaceResponse> getTravelPlaces(@PathVariable(name = "scheduleId") Long scheduleId,
+                                                          @RequestParam int page){
         Page<PlaceResponse> response = travelService.getTravelPlacesByJungGu(page);
 
         return ApiPageResponse.dataResponse(response);
