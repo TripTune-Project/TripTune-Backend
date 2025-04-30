@@ -287,13 +287,21 @@ public class MemberControllerTest extends MemberTest {
         Member member = memberRepository.save(createMember(null, "member@email.com"));
         String accessToken = jwtUtils.createAccessToken(member.getMemberId());
 
-        mockMvc.perform(patch("/api/members/logout")
+        MvcResult result = mockMvc.perform(patch("/api/members/logout")
                         .header("Authorization", "Bearer " + accessToken)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(toJsonString(createLogoutRequest(member.getNickname()))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()));
+                .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()))
+                .andReturn();
+
+        Cookie[] cookies = result.getResponse().getCookies();
+
+        assertThat(cookies).isNotNull();
+        assertThat(cookies.length).isEqualTo(1);
+        assertThat(cookies[0].getName()).isEqualTo("refreshToken");
+        assertThat(cookies[0].getValue()).isNull();
     }
 
     @Test
@@ -882,12 +890,20 @@ public class MemberControllerTest extends MemberTest {
 
         mockAuthentication(member);
 
-        mockMvc.perform(patch("/api/members/deactivate")
+        MvcResult result = mockMvc.perform(patch("/api/members/deactivate")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(toJsonString(createDeactivateRequest("test123@"))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()));
+                .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()))
+                .andReturn();
+
+        Cookie[] cookies = result.getResponse().getCookies();
+
+        assertThat(cookies).isNotNull();
+        assertThat(cookies.length).isEqualTo(1);
+        assertThat(cookies[0].getName()).isEqualTo("refreshToken");
+        assertThat(cookies[0].getValue()).isNull();
     }
 
     @Test
@@ -912,12 +928,20 @@ public class MemberControllerTest extends MemberTest {
 
         mockAuthentication(member);
 
-        mockMvc.perform(patch("/api/members/deactivate")
+        MvcResult result = mockMvc.perform(patch("/api/members/deactivate")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(toJsonString(createDeactivateRequest("test123@"))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()));
+                .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()))
+                .andReturn();
+
+        Cookie[] cookies = result.getResponse().getCookies();
+
+        assertThat(cookies).isNotNull();
+        assertThat(cookies.length).isEqualTo(1);
+        assertThat(cookies[0].getName()).isEqualTo("refreshToken");
+        assertThat(cookies[0].getValue()).isNull();
     }
 
     @Test
@@ -940,12 +964,20 @@ public class MemberControllerTest extends MemberTest {
 
         mockAuthentication(member);
 
-        mockMvc.perform(patch("/api/members/deactivate")
+        MvcResult result = mockMvc.perform(patch("/api/members/deactivate")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(toJsonString(createDeactivateRequest("test123@"))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()));
+                .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()))
+                .andReturn();
+
+        Cookie[] cookies = result.getResponse().getCookies();
+
+        assertThat(cookies).isNotNull();
+        assertThat(cookies.length).isEqualTo(1);
+        assertThat(cookies[0].getName()).isEqualTo("refreshToken");
+        assertThat(cookies[0].getValue()).isNull();
     }
 
     @Test

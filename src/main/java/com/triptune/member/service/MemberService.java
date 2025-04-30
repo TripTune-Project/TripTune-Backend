@@ -29,13 +29,14 @@ import com.triptune.schedule.repository.TravelAttendeeRepository;
 import com.triptune.schedule.repository.TravelScheduleRepository;
 import com.triptune.travel.dto.response.PlaceBookmarkResponse;
 import com.triptune.travel.entity.TravelPlace;
-import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.mail.MessagingException;
 import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -60,6 +61,9 @@ public class MemberService {
     private final ChatMessageRepository chatMessageRepository;
     private final BookmarkRepository bookmarkRepository;
 
+
+    @Value("${spring.jwt.token.refresh-expiration-time}")
+    private int refreshExpirationTime;
 
 
     public void join(JoinRequest joinRequest) {
@@ -113,7 +117,7 @@ public class MemberService {
 
         member.updateRefreshToken(refreshToken);
 
-        Cookie refreshTokenCookie = createRefreshTokenCookie(refreshToken);
+        Cookie refreshTokenCookie = createRefreshTokenCookie(refreshToken, refreshExpirationTime);
         response.addCookie(refreshTokenCookie);
 
         return LoginResponse.of(accessToken, member.getNickname());
@@ -124,23 +128,27 @@ public class MemberService {
     }
 
 
-    private Cookie createRefreshTokenCookie(String refreshToken) {
-        Cookie cookie = new Cookie("refreshToken", refreshToken);
-        cookie.setHttpOnly(true);
-        cookie.setSecure(true);
-        cookie.setPath("/");
-        cookie.setMaxAge(7 * 24 * 60 * 60);
-
-        return cookie;
-    }
-
-    public void logout(LogoutRequest logoutRequest, String accessToken) {
+    public void logout(HttpServletResponse response, LogoutRequest logoutRequest, String accessToken) {
         if (!isExistNickname(logoutRequest.getNickname())){
             throw new DataNotFoundException(ErrorCode.MEMBER_NOT_FOUND);
         }
 
         memberRepository.deleteRefreshTokenByNickname(logoutRequest.getNickname());
         redisUtils.saveExpiredData(accessToken, "logout", LOGOUT_DURATION);
+
+        Cookie refreshTokenCookie = createRefreshTokenCookie(null, 0);
+        response.addCookie(refreshTokenCookie);
+    }
+
+
+    private Cookie createRefreshTokenCookie(String refreshToken, int maxAgeMillis) {
+        Cookie cookie = new Cookie("refreshToken", refreshToken);
+        cookie.setHttpOnly(true);
+        cookie.setSecure(true);
+        cookie.setPath("/");
+        cookie.setMaxAge(maxAgeMillis / 1000);
+
+        return cookie;
     }
 
     public RefreshTokenResponse refreshToken(String refreshToken) throws ExpiredJwtException {
@@ -231,7 +239,7 @@ public class MemberService {
     }
 
 
-    public void deactivateMember(String accessToken, Long memberId, DeactivateRequest deactivateRequest) {
+    public void deactivateMember(HttpServletResponse response, String accessToken, Long memberId, DeactivateRequest deactivateRequest) {
         // 1. 사용자 비밀번호 확인
         Member member = getMemberById(memberId);
 
@@ -264,7 +272,11 @@ public class MemberService {
         member.updateDeactivate();
 
         // 6. 로그아웃
+        member.updateRefreshToken(null);
         redisUtils.saveExpiredData(accessToken, "logout", LOGOUT_DURATION);
+
+        Cookie refreshTokenCookie = createRefreshTokenCookie(null, 0);
+        response.addCookie(refreshTokenCookie);
     }
 
 

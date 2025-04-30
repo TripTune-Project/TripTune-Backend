@@ -274,13 +274,20 @@ public class MemberServiceTest extends MemberTest {
     void logout(){
         // given
         LogoutRequest request = createLogoutRequest(member.getNickname());
+        MockHttpServletResponse mockHttpServletResponse = new MockHttpServletResponse();
 
         when(memberRepository.existsByNickname(anyString())).thenReturn(true);
 
         // when
-        memberService.logout(request, accessToken);
+        memberService.logout(mockHttpServletResponse, request, accessToken);
 
         // then
+        Cookie[] cookies = mockHttpServletResponse.getCookies();
+        assertThat(cookies).isNotNull();
+        assertThat(cookies.length).isEqualTo(1);
+        assertThat(cookies[0].getName()).isEqualTo("refreshToken");
+        assertThat(cookies[0].getValue()).isNull();
+
         verify(memberRepository, times(1)).deleteRefreshTokenByNickname(request.getNickname());
         verify(redisUtils, times(1)).saveExpiredData(accessToken, "logout", 3600);
     }
@@ -290,11 +297,14 @@ public class MemberServiceTest extends MemberTest {
     void logout_dataNotFoundException(){
         // given
         LogoutRequest request = createLogoutRequest("notMember");
+        MockHttpServletResponse mockHttpServletResponse = new MockHttpServletResponse();
 
         when(memberRepository.existsByNickname(anyString())).thenReturn(false);
 
         // when
-        DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> memberService.logout(request, accessToken));
+        DataNotFoundException fail = assertThrows(DataNotFoundException.class,
+                () -> memberService.logout(mockHttpServletResponse, request, accessToken));
+
 
         // then
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.MEMBER_NOT_FOUND.getStatus());
@@ -713,6 +723,7 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("회원 탈퇴")
     void deactivateMember1(){
         // given
+        MockHttpServletResponse mockHttpServletResponse = new MockHttpServletResponse();
         DeactivateRequest request = createDeactivateRequest(member.getPassword());
 
         TravelSchedule schedule1 = createTravelSchedule(1L, "테스트1");
@@ -728,10 +739,15 @@ public class MemberServiceTest extends MemberTest {
         when(travelAttendeeRepository.findAllByMember_MemberId(anyLong())).thenReturn(attendees);
 
         // when
-        assertDoesNotThrow(() -> memberService.deactivateMember(accessToken, member.getMemberId(), request));
+        assertDoesNotThrow(() -> memberService.deactivateMember(mockHttpServletResponse, accessToken, member.getMemberId(), request));
 
 
         // then
+        Cookie[] cookies = mockHttpServletResponse.getCookies();
+        assertThat(cookies).isNotNull();
+        assertThat(cookies.length).isEqualTo(1);
+        assertThat(cookies[0].getName()).isEqualTo("refreshToken");
+        assertThat(cookies[0].getValue()).isNull();
         assertThat(member.getEmail()).isEqualTo("알 수 없음");
         assertThat(member.getPassword()).isEqualTo("알 수 없음");
     }
@@ -741,6 +757,7 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("회원 탈퇴 시 일정 데이터가 존재하지 않는 경우")
     void deactivateMember_emptySchedule(){
         // given
+        MockHttpServletResponse mockHttpServletResponse = new MockHttpServletResponse();
         DeactivateRequest request = createDeactivateRequest(member.getPassword());
 
         when(memberRepository.findById(anyLong())).thenReturn(Optional.of(member));
@@ -748,7 +765,7 @@ public class MemberServiceTest extends MemberTest {
         when(travelAttendeeRepository.findAllByMember_MemberId(anyLong())).thenReturn(new ArrayList<>());
 
         // when
-        assertDoesNotThrow(() -> memberService.deactivateMember(accessToken, member.getMemberId(), request));
+        assertDoesNotThrow(() -> memberService.deactivateMember(mockHttpServletResponse, accessToken, member.getMemberId(), request));
 
 
         // then
@@ -760,13 +777,14 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("회원 탈퇴 시 사용자 데이터가 존재하지 않아 예외 발생")
     void deactivateMember_MemberDataNotFoundException(){
         // given
+        MockHttpServletResponse mockHttpServletResponse = new MockHttpServletResponse();
         DeactivateRequest request = createDeactivateRequest(member.getPassword());
 
         when(memberRepository.findById(anyLong())).thenReturn(Optional.empty());
 
         // when
         DataNotFoundException fail = assertThrows(DataNotFoundException.class,
-                () -> memberService.deactivateMember(accessToken, member.getMemberId(), request));
+                () -> memberService.deactivateMember(mockHttpServletResponse, accessToken, member.getMemberId(), request));
 
         // then
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.MEMBER_NOT_FOUND.getStatus());
@@ -778,6 +796,7 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("회원 탈퇴 요청 시 비밀번호가 맞지 않아 예외 발생")
     void deactivateMember_incorrectPasswordException(){
         // given
+        MockHttpServletResponse mockHttpServletResponse = new MockHttpServletResponse();
         DeactivateRequest request = createDeactivateRequest("incorrect_password");
 
         when(memberRepository.findById(anyLong())).thenReturn(Optional.of(member));
@@ -785,7 +804,7 @@ public class MemberServiceTest extends MemberTest {
 
         // when
         IncorrectPasswordException fail = assertThrows(IncorrectPasswordException.class,
-                () -> memberService.deactivateMember(accessToken, member.getMemberId(), request));
+                () -> memberService.deactivateMember(mockHttpServletResponse, accessToken, member.getMemberId(), request));
 
         // then
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.INCORRECT_PASSWORD.getStatus());

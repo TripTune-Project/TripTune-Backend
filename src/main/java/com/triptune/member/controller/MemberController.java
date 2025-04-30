@@ -57,7 +57,8 @@ public class MemberController {
 
     @PostMapping("/login")
     @Operation(summary = "로그인", description = "로그인을 실행합니다.")
-    public ApiResponse<LoginResponse> login(@Valid @RequestBody LoginRequest loginRequest, HttpServletResponse response){
+    public ApiResponse<LoginResponse> login(@Valid @RequestBody LoginRequest loginRequest,
+                                            HttpServletResponse response){
         LoginResponse loginResponse = memberService.login(loginRequest, response);
         return ApiResponse.dataResponse(loginResponse);
     }
@@ -65,10 +66,12 @@ public class MemberController {
 
     @PatchMapping("/logout")
     @Operation(summary = "로그아웃", description = "로그아웃을 실행합니다.")
-    public ApiResponse<Void> logout(HttpServletRequest request, @Valid @RequestBody LogoutRequest logoutRequest){
+    public ApiResponse<Void> logout(HttpServletRequest request,
+                                    HttpServletResponse response,
+                                    @Valid @RequestBody LogoutRequest logoutRequest){
         String accessToken = jwtUtils.resolveToken(request);
 
-        memberService.logout(logoutRequest, accessToken);
+        memberService.logout(response, logoutRequest, accessToken);
         return ApiResponse.okResponse();
     }
 
@@ -148,7 +151,8 @@ public class MemberController {
     @GetMapping("/bookmark")
     @Operation(summary = "사용자 북마크 조회", description = "사용자가 등록한 북마크를 조회합니다.")
     public ApiPageResponse<PlaceBookmarkResponse> getMemberBookmarks(@AuthenticationPrincipal(expression = "memberId") Long memberId,
-                                                                     @RequestParam(name = "page") int page, @RequestParam(name = "sort") String sort){
+                                                                     @RequestParam(name = "page") int page,
+                                                                     @RequestParam(name = "sort") String sort){
         BookmarkSortType sortType = BookmarkSortType.from(sort);
         Page<PlaceBookmarkResponse> PlaceBookmarkResponses = memberService.getMemberBookmarks(page, memberId, sortType);
 
@@ -158,10 +162,11 @@ public class MemberController {
     @PatchMapping("/deactivate")
     @Operation(summary = "회원 탈퇴", description = "회원을 탈퇴합니다.")
     public ApiResponse<Void> deactivateMember(HttpServletRequest request,
+                                              HttpServletResponse response,
                                               @AuthenticationPrincipal(expression = "memberId") Long memberId,
                                               @Valid @RequestBody DeactivateRequest deactivateRequest){
         String accessToken = jwtUtils.resolveToken(request);
-        memberService.deactivateMember(accessToken, memberId, deactivateRequest);
+        memberService.deactivateMember(response, accessToken, memberId, deactivateRequest);
         return ApiResponse.okResponse();
     }
 
