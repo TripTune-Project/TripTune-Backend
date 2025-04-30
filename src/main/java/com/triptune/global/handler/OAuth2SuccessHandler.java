@@ -14,6 +14,8 @@ import org.springframework.security.web.authentication.AuthenticationSuccessHand
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
 @Component
 @Slf4j
@@ -42,7 +44,8 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
         Cookie accessTokenCookie = createCookie("accessToken", accessToken, false, accessExpirationTime);
         response.addCookie(accessTokenCookie);
 
-        Cookie nicknameCookie = createCookie("nickname", userDetails.getName(), false, accessExpirationTime);
+        String encodeNickname = URLEncoder.encode(userDetails.getName(), StandardCharsets.UTF_8);
+        Cookie nicknameCookie = createCookie("nickname", encodeNickname, false, accessExpirationTime);
         response.addCookie(nicknameCookie);
 
         Cookie refreshTokenCookie = createCookie("refreshToken", userDetails.getRefreshToken(), true, refreshExpirationTime);
