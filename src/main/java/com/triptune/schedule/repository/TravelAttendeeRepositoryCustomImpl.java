@@ -3,7 +3,7 @@ package com.triptune.schedule.repository;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.triptune.member.entity.QMember;
 import com.triptune.schedule.entity.QTravelAttendee;
-import com.triptune.schedule.enumclass.AttendeeRole;
+import com.triptune.schedule.enums.AttendeeRole;
 import org.springframework.stereotype.Repository;
 
 @Repository

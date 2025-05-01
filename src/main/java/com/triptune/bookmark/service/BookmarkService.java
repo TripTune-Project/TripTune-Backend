@@ -7,7 +7,7 @@ import com.triptune.member.entity.Member;
 import com.triptune.member.repository.MemberRepository;
 import com.triptune.travel.entity.TravelPlace;
 import com.triptune.travel.repository.TravelPlaceRepository;
-import com.triptune.global.enumclass.ErrorCode;
+import com.triptune.global.response.enums.ErrorCode;
 import com.triptune.global.exception.DataExistException;
 import com.triptune.global.exception.DataNotFoundException;
 import jakarta.transaction.Transactional;

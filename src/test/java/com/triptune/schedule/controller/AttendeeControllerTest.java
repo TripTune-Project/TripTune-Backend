@@ -1,7 +1,7 @@
 package com.triptune.schedule.controller;
 
-import com.triptune.global.enumclass.ErrorCode;
-import com.triptune.global.enumclass.SuccessCode;
+import com.triptune.global.response.enums.ErrorCode;
+import com.triptune.global.response.enums.SuccessCode;
 import com.triptune.member.entity.Member;
 import com.triptune.member.repository.MemberRepository;
 import com.triptune.profile.entity.ProfileImage;
@@ -11,8 +11,8 @@ import com.triptune.schedule.dto.request.AttendeePermissionRequest;
 import com.triptune.schedule.dto.request.AttendeeRequest;
 import com.triptune.schedule.entity.TravelAttendee;
 import com.triptune.schedule.entity.TravelSchedule;
-import com.triptune.schedule.enumclass.AttendeePermission;
-import com.triptune.schedule.enumclass.AttendeeRole;
+import com.triptune.schedule.enums.AttendeePermission;
+import com.triptune.schedule.enums.AttendeeRole;
 import com.triptune.schedule.repository.TravelAttendeeRepository;
 import com.triptune.schedule.repository.TravelScheduleRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -21,7 +21,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;

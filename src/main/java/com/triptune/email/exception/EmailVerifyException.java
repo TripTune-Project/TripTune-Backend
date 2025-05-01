@@ -1,6 +1,6 @@
 package com.triptune.email.exception;
 
-import com.triptune.global.enumclass.ErrorCode;
+import com.triptune.global.response.enums.ErrorCode;
 import lombok.Getter;
 import org.springframework.http.HttpStatus;
 

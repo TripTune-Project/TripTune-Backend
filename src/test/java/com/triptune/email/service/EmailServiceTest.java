@@ -3,9 +3,9 @@ package com.triptune.email.service;
 import com.triptune.email.EmailTest;
 import com.triptune.email.dto.request.VerifyAuthRequest;
 import com.triptune.email.exception.EmailVerifyException;
-import com.triptune.global.enumclass.ErrorCode;
+import com.triptune.global.response.enums.ErrorCode;
 import com.triptune.member.repository.MemberRepository;
-import com.triptune.global.util.RedisUtils;
+import com.triptune.global.redis.RedisService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
@@ -28,7 +28,7 @@ import static org.mockito.Mockito.when;
 public class EmailServiceTest extends EmailTest {
 
     @InjectMocks private EmailService emailService;
-    @Mock private RedisUtils redisUtils;
+    @Mock private RedisService redisService;
     @Mock private JavaMailSender javaMailSender;
     @Mock private MemberRepository memberRepository;
 
@@ -38,7 +38,7 @@ public class EmailServiceTest extends EmailTest {
         // given
         VerifyAuthRequest request = createVerifyAuthRequest("member@email.com", "Abcd123");
 
-        when(redisUtils.getEmailData(any(), anyString())).thenReturn("Abcd123");
+        when(redisService.getEmailData(any(), anyString())).thenReturn("Abcd123");
 
         // when, then
         assertDoesNotThrow(() -> emailService.verifyAuthCode(request));
@@ -50,7 +50,7 @@ public class EmailServiceTest extends EmailTest {
         // given
         VerifyAuthRequest request = createVerifyAuthRequest("member@email.com", "Abcd123");
 
-        when(redisUtils.getEmailData(any(), anyString())).thenReturn(null);
+        when(redisService.getEmailData(any(), anyString())).thenReturn(null);
 
         // when
         EmailVerifyException fail = assertThrows(EmailVerifyException.class, () -> emailService.verifyAuthCode(request));
@@ -66,7 +66,7 @@ public class EmailServiceTest extends EmailTest {
         // given
         VerifyAuthRequest request = createVerifyAuthRequest("member@email.com", "Abcd123");
 
-        when(redisUtils.getEmailData(any(), anyString())).thenReturn("abcd123");
+        when(redisService.getEmailData(any(), anyString())).thenReturn("abcd123");
 
         // when
         EmailVerifyException fail = assertThrows(EmailVerifyException.class, () -> emailService.verifyAuthCode(request));

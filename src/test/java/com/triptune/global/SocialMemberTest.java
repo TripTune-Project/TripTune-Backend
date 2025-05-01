@@ -1,7 +1,7 @@
 package com.triptune.global;
 
 import com.triptune.BaseTest;
-import com.triptune.global.service.NaverUserInfo;
+import com.triptune.global.security.oauth.userinfo.NaverUserInfo;
 
 import java.util.HashMap;
 import java.util.Map;

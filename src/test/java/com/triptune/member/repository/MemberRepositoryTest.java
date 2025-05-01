@@ -3,8 +3,6 @@ package com.triptune.member.repository;
 import com.triptune.member.MemberTest;
 import com.triptune.member.dto.response.MemberProfileResponse;
 import com.triptune.member.entity.Member;
-import com.triptune.member.entity.SocialMember;
-import com.triptune.member.enumclass.SocialType;
 import com.triptune.profile.entity.ProfileImage;
 import com.triptune.profile.repository.ProfileImageRepository;
 import com.triptune.global.config.QueryDSLConfig;

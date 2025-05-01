@@ -12,7 +12,7 @@ import com.triptune.schedule.exception.ForbiddenChatException;
 import com.triptune.schedule.repository.ChatMessageRepository;
 import com.triptune.schedule.repository.TravelAttendeeRepository;
 import com.triptune.schedule.repository.TravelScheduleRepository;
-import com.triptune.global.enumclass.ErrorCode;
+import com.triptune.global.response.enums.ErrorCode;
 import com.triptune.global.util.PageUtils;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;

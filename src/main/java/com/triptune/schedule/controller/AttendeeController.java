@@ -1,6 +1,5 @@
 package com.triptune.schedule.controller;
 
-import com.triptune.global.service.CustomUserDetails;
 import com.triptune.schedule.dto.request.AttendeePermissionRequest;
 import com.triptune.schedule.dto.response.AttendeeResponse;
 import com.triptune.schedule.dto.request.AttendeeRequest;

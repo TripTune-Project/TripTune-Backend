@@ -2,7 +2,7 @@ package com.triptune.schedule.dto.response;
 
 import com.triptune.schedule.dto.AuthorDTO;
 import com.triptune.schedule.entity.TravelSchedule;
-import com.triptune.schedule.enumclass.AttendeeRole;
+import com.triptune.schedule.enums.AttendeeRole;
 import com.triptune.global.util.TimeUtils;
 import lombok.Builder;
 import lombok.Getter;

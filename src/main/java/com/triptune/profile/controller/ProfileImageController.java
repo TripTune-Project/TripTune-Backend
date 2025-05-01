@@ -1,6 +1,5 @@
 package com.triptune.profile.controller;
 
-import com.triptune.global.service.CustomUserDetails;
 import com.triptune.profile.service.ProfileImageService;
 import com.triptune.global.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;

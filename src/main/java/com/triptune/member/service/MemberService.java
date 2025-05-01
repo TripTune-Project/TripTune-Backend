@@ -1,18 +1,18 @@
 package com.triptune.member.service;
 
-import com.triptune.bookmark.enumclass.BookmarkSortType;
+import com.triptune.bookmark.enums.BookmarkSortType;
 import com.triptune.bookmark.repository.BookmarkRepository;
 import com.triptune.email.dto.request.EmailRequest;
 import com.triptune.email.exception.EmailVerifyException;
 import com.triptune.email.service.EmailService;
-import com.triptune.global.enumclass.ErrorCode;
-import com.triptune.global.enumclass.RedisKeyType;
-import com.triptune.global.exception.CustomJwtUnAuthorizedException;
+import com.triptune.global.response.enums.ErrorCode;
+import com.triptune.global.redis.eums.RedisKeyType;
+import com.triptune.global.security.exception.CustomJwtUnAuthorizedException;
 import com.triptune.global.exception.DataExistException;
 import com.triptune.global.exception.DataNotFoundException;
-import com.triptune.global.util.JwtUtils;
+import com.triptune.global.security.jwt.JwtUtils;
 import com.triptune.global.util.PageUtils;
-import com.triptune.global.util.RedisUtils;
+import com.triptune.global.redis.RedisService;
 import com.triptune.member.dto.request.*;
 import com.triptune.member.dto.response.LoginResponse;
 import com.triptune.member.dto.response.MemberInfoResponse;
@@ -32,7 +32,6 @@ import com.triptune.travel.entity.TravelPlace;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.mail.MessagingException;
 import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -54,7 +53,7 @@ public class MemberService {
     private final EmailService emailService;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtils jwtUtils;
-    private final RedisUtils redisUtils;
+    private final RedisService redisService;
     private final ProfileImageService profileImageService;
     private final TravelAttendeeRepository travelAttendeeRepository;
     private final TravelScheduleRepository travelScheduleRepository;
@@ -96,7 +95,7 @@ public class MemberService {
 
 
     public void validateVerifiedEmail(String email){
-        String isVerified = redisUtils.getEmailData(RedisKeyType.VERIFIED, email);
+        String isVerified = redisService.getEmailData(RedisKeyType.VERIFIED, email);
 
         if(isVerified == null || !isVerified.equals("true")){
             throw new EmailVerifyException(ErrorCode.NOT_VERIFIED_EMAIL);
@@ -134,7 +133,7 @@ public class MemberService {
         }
 
         memberRepository.deleteRefreshTokenByNickname(logoutRequest.getNickname());
-        redisUtils.saveExpiredData(accessToken, "logout", LOGOUT_DURATION);
+        redisService.saveExpiredData(accessToken, "logout", LOGOUT_DURATION);
 
         Cookie refreshTokenCookie = createRefreshTokenCookie(null, 0);
         response.addCookie(refreshTokenCookie);
@@ -184,7 +183,7 @@ public class MemberService {
 
 
     public void resetPassword(ResetPasswordRequest resetPasswordRequest) {
-        String email = redisUtils.getData(resetPasswordRequest.getPasswordToken());
+        String email = redisService.getData(resetPasswordRequest.getPasswordToken());
 
         if (email == null) {
             throw new IncorrectPasswordException(ErrorCode.INVALID_CHANGE_PASSWORD);
@@ -273,7 +272,7 @@ public class MemberService {
 
         // 6. 로그아웃
         member.updateRefreshToken(null);
-        redisUtils.saveExpiredData(accessToken, "logout", LOGOUT_DURATION);
+        redisService.saveExpiredData(accessToken, "logout", LOGOUT_DURATION);
 
         Cookie refreshTokenCookie = createRefreshTokenCookie(null, 0);
         response.addCookie(refreshTokenCookie);

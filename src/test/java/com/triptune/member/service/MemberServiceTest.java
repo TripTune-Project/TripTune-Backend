@@ -1,8 +1,7 @@
 package com.triptune.member.service;
 
-import com.triptune.bookmark.enumclass.BookmarkSortType;
+import com.triptune.bookmark.enums.BookmarkSortType;
 import com.triptune.bookmark.repository.BookmarkRepository;
-import com.triptune.bookmark.service.BookmarkService;
 import com.triptune.common.entity.ApiCategory;
 import com.triptune.common.entity.City;
 import com.triptune.common.entity.Country;
@@ -23,23 +22,21 @@ import com.triptune.profile.entity.ProfileImage;
 import com.triptune.profile.service.ProfileImageService;
 import com.triptune.schedule.entity.TravelAttendee;
 import com.triptune.schedule.entity.TravelSchedule;
-import com.triptune.schedule.enumclass.AttendeePermission;
-import com.triptune.schedule.enumclass.AttendeeRole;
+import com.triptune.schedule.enums.AttendeePermission;
+import com.triptune.schedule.enums.AttendeeRole;
 import com.triptune.schedule.repository.ChatMessageRepository;
 import com.triptune.schedule.repository.TravelAttendeeRepository;
 import com.triptune.schedule.repository.TravelScheduleRepository;
 import com.triptune.travel.dto.response.PlaceBookmarkResponse;
 import com.triptune.travel.entity.TravelImage;
 import com.triptune.travel.entity.TravelPlace;
-import com.triptune.global.enumclass.ErrorCode;
-import com.triptune.global.exception.CustomJwtUnAuthorizedException;
+import com.triptune.global.response.enums.ErrorCode;
+import com.triptune.global.security.exception.CustomJwtUnAuthorizedException;
 import com.triptune.global.exception.DataExistException;
 import com.triptune.global.exception.DataNotFoundException;
-import com.triptune.global.util.JwtUtils;
+import com.triptune.global.security.jwt.JwtUtils;
 import com.triptune.global.util.PageUtils;
-import com.triptune.global.util.RedisUtils;
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
+import com.triptune.global.redis.RedisService;
 import jakarta.mail.MessagingException;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.BeforeEach;
@@ -70,7 +67,7 @@ public class MemberServiceTest extends MemberTest {
     @InjectMocks private MemberService memberService;
     @Mock private MemberRepository memberRepository;
     @Mock private JwtUtils jwtUtils;
-    @Mock private RedisUtils redisUtils;
+    @Mock private RedisService redisService;
     @Mock private EmailService emailService;
     @Mock private PasswordEncoder passwordEncoder;
     @Mock private ProfileImageService profileImageService;
@@ -114,7 +111,7 @@ public class MemberServiceTest extends MemberTest {
         when(memberRepository.existsByEmail(anyString())).thenReturn(false);
         when(memberRepository.existsByNickname(anyString())).thenReturn(false);
         when(memberRepository.existsByEmail(anyString())).thenReturn(false);
-        when(redisUtils.getEmailData(any(), anyString())).thenReturn("true");
+        when(redisService.getEmailData(any(), anyString())).thenReturn("true");
         when(profileImageService.saveDefaultProfileImage()).thenReturn(createProfileImage(1L, "test.jpg"));
 
         // when
@@ -170,7 +167,7 @@ public class MemberServiceTest extends MemberTest {
 
         when(memberRepository.existsByEmail(anyString())).thenReturn(false);
         when(memberRepository.existsByNickname(anyString())).thenReturn(false);
-        when(redisUtils.getEmailData(any(), anyString())).thenReturn(null);
+        when(redisService.getEmailData(any(), anyString())).thenReturn(null);
 
         // when
         EmailVerifyException fail = assertThrows(EmailVerifyException.class, () -> memberService.join(request));
@@ -185,7 +182,7 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("인증된 이메일인지 검증")
     void validateVerifiedEmail(){
         // given
-        when(redisUtils.getEmailData(any(), anyString())).thenReturn("true");
+        when(redisService.getEmailData(any(), anyString())).thenReturn("true");
 
         // when
         assertDoesNotThrow(() -> memberService.validateVerifiedEmail("member@email.com"));
@@ -195,7 +192,7 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("인증된 이메일이 아니여서 예외 발생")
     void validateVerifiedEmail_notVerifiedEmail (){
         // given
-        when(redisUtils.getEmailData(any(), anyString())).thenReturn(null);
+        when(redisService.getEmailData(any(), anyString())).thenReturn(null);
 
         // when
         EmailVerifyException fail = assertThrows(EmailVerifyException.class, () -> memberService.validateVerifiedEmail("member@email.com"));
@@ -289,7 +286,7 @@ public class MemberServiceTest extends MemberTest {
         assertThat(cookies[0].getValue()).isNull();
 
         verify(memberRepository, times(1)).deleteRefreshTokenByNickname(request.getNickname());
-        verify(redisUtils, times(1)).saveExpiredData(accessToken, "logout", 3600);
+        verify(redisService, times(1)).saveExpiredData(accessToken, "logout", 3600);
     }
 
     @Test
@@ -389,7 +386,7 @@ public class MemberServiceTest extends MemberTest {
         String newPassword = "newPassword";
         String encodedPassword = "encodedPassword";
 
-        when(redisUtils.getData(anyString())).thenReturn(member.getEmail());
+        when(redisService.getData(anyString())).thenReturn(member.getEmail());
         when(memberRepository.findByEmail(anyString())).thenReturn(Optional.of(member));
         when(passwordEncoder.encode(newPassword)).thenReturn(encodedPassword);
 
@@ -398,7 +395,7 @@ public class MemberServiceTest extends MemberTest {
         memberService.resetPassword(createResetPasswordRequest(passwordToken, newPassword, newPassword));
 
         // then
-        verify(redisUtils, times(1)).getData(passwordToken);
+        verify(redisService, times(1)).getData(passwordToken);
         verify(memberRepository, times(1)).findByEmail(member.getEmail());
         verify(passwordEncoder, times(1)).encode(newPassword);
         assertThat(encodedPassword).isEqualTo(member.getPassword());
@@ -409,7 +406,7 @@ public class MemberServiceTest extends MemberTest {
     void changePassword_resetPasswordException(){
         // given
         String newPassword = "newPassword";
-        when(redisUtils.getData(anyString())).thenReturn(null);
+        when(redisService.getData(anyString())).thenReturn(null);
 
         // when
         IncorrectPasswordException fail = assertThrows(IncorrectPasswordException.class,
@@ -426,7 +423,7 @@ public class MemberServiceTest extends MemberTest {
         // given
         String newPassword = "newPassword";
 
-        when(redisUtils.getData(anyString())).thenReturn(member.getEmail());
+        when(redisService.getData(anyString())).thenReturn(member.getEmail());
         when(memberRepository.findByEmail(anyString())).thenReturn(Optional.empty());
 
         // when
@@ -584,7 +581,7 @@ public class MemberServiceTest extends MemberTest {
 
         when(memberRepository.findById(anyLong())).thenReturn(Optional.of(member));
         when(memberRepository.existsByEmail(anyString())).thenReturn(false);
-        when(redisUtils.getEmailData(any(), anyString())).thenReturn("true");
+        when(redisService.getEmailData(any(), anyString())).thenReturn("true");
 
         // when
         assertThatCode(() -> memberService.changeEmail(member.getMemberId(), emailRequest))
@@ -616,7 +613,7 @@ public class MemberServiceTest extends MemberTest {
         EmailRequest emailRequest = createEmailRequest("changeMember@email.com");
 
         when(memberRepository.existsByEmail(anyString())).thenReturn(false);
-        when(redisUtils.getEmailData(any(), anyString())).thenReturn(null);
+        when(redisService.getEmailData(any(), anyString())).thenReturn(null);
 
         // when
         EmailVerifyException fail = assertThrows(EmailVerifyException.class,
@@ -634,7 +631,7 @@ public class MemberServiceTest extends MemberTest {
         EmailRequest emailRequest = createEmailRequest("changeMember@email.com");
 
         when(memberRepository.existsByEmail(anyString())).thenReturn(false);
-        when(redisUtils.getEmailData(any(), anyString())).thenReturn("true");
+        when(redisService.getEmailData(any(), anyString())).thenReturn("true");
         when(memberRepository.findById(anyLong())).thenReturn(Optional.empty());
 
 

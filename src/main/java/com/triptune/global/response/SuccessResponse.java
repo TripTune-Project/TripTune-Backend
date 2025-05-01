@@ -1,7 +1,7 @@
 package com.triptune.global.response;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.triptune.global.enumclass.SuccessCode;
+import com.triptune.global.response.enums.SuccessCode;
 import lombok.*;
 
 @Getter

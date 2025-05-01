@@ -9,11 +9,11 @@ import com.triptune.common.repository.ApiCategoryRepository;
 import com.triptune.common.repository.CityRepository;
 import com.triptune.common.repository.CountryRepository;
 import com.triptune.common.repository.DistrictRepository;
-import com.triptune.member.enumclass.SocialType;
+import com.triptune.member.enums.SocialType;
 import com.triptune.member.repository.SocialMemberRepository;
 import com.triptune.schedule.entity.TravelSchedule;
-import com.triptune.schedule.enumclass.AttendeePermission;
-import com.triptune.schedule.enumclass.AttendeeRole;
+import com.triptune.schedule.enums.AttendeePermission;
+import com.triptune.schedule.enums.AttendeeRole;
 import com.triptune.schedule.repository.ChatMessageRepository;
 import com.triptune.schedule.repository.TravelAttendeeRepository;
 import com.triptune.schedule.repository.TravelScheduleRepository;
@@ -21,7 +21,7 @@ import com.triptune.travel.entity.TravelImage;
 import com.triptune.travel.entity.TravelPlace;
 import com.triptune.travel.repository.TravelImageRepository;
 import com.triptune.travel.repository.TravelPlaceRepository;
-import com.triptune.global.service.S3Service;
+import com.triptune.global.s3.S3Service;
 import com.triptune.email.service.EmailService;
 import com.triptune.member.MemberTest;
 import com.triptune.member.dto.request.ChangeNicknameRequest;
@@ -31,10 +31,10 @@ import com.triptune.member.entity.Member;
 import com.triptune.profile.entity.ProfileImage;
 import com.triptune.member.repository.MemberRepository;
 import com.triptune.profile.repository.ProfileImageRepository;
-import com.triptune.global.enumclass.ErrorCode;
-import com.triptune.global.enumclass.SuccessCode;
-import com.triptune.global.util.JwtUtils;
-import com.triptune.global.util.RedisUtils;
+import com.triptune.global.response.enums.ErrorCode;
+import com.triptune.global.response.enums.SuccessCode;
+import com.triptune.global.security.jwt.JwtUtils;
+import com.triptune.global.redis.RedisService;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -44,7 +44,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -86,7 +85,7 @@ public class MemberControllerTest extends MemberTest {
     @Autowired private ChatMessageRepository chatMessageRepository;
     @Autowired private SocialMemberRepository socialMemberRepository;
 
-    @MockBean private RedisUtils redisUtils;
+    @MockBean private RedisService redisService;
     @MockBean private EmailService emailService;
     @MockBean private S3Service s3Service;
 
@@ -127,7 +126,7 @@ public class MemberControllerTest extends MemberTest {
     @Test
     @DisplayName("회원가입")
     void join() throws Exception {
-        when(redisUtils.getEmailData(any(), anyString())).thenReturn("true");
+        when(redisService.getEmailData(any(), anyString())).thenReturn("true");
 
         mockMvc.perform(post("/api/members/join")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -444,7 +443,7 @@ public class MemberControllerTest extends MemberTest {
     @DisplayName("비밀번호 초기화")
     void resetPassword() throws Exception{
         Member member = memberRepository.save(createMember(null, "member@email.com"));
-        when(redisUtils.getData(anyString())).thenReturn(member.getEmail());
+        when(redisService.getData(anyString())).thenReturn(member.getEmail());
 
         mockMvc.perform(patch("/api/members/reset-password")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -463,7 +462,7 @@ public class MemberControllerTest extends MemberTest {
         Member member = memberRepository.save(createMember(null, "member@email.com", true, profileImage));
         socialMemberRepository.save(createSocialMember(null, member, "member", SocialType.NAVER));
 
-        when(redisUtils.getData(anyString())).thenReturn(member.getEmail());
+        when(redisService.getData(anyString())).thenReturn(member.getEmail());
 
         mockMvc.perform(patch("/api/members/reset-password")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -505,7 +504,7 @@ public class MemberControllerTest extends MemberTest {
     @Test
     @DisplayName("비밀번호 초기화 시 사용자 데이터 존재하지 않아 예외 발생")
     void resetPassword_memberNotFoundException() throws Exception{
-        when(redisUtils.getData(anyString())).thenReturn("noMember@email.com");
+        when(redisService.getData(anyString())).thenReturn("noMember@email.com");
 
         mockMvc.perform(patch("/api/members/reset-password")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -712,7 +711,7 @@ public class MemberControllerTest extends MemberTest {
     @DisplayName("이메일 변경")
     void changeEmail() throws Exception {
         Member member = memberRepository.save(createMember(null, "member@email.com"));
-        when(redisUtils.getEmailData(any(), anyString())).thenReturn("true");
+        when(redisService.getEmailData(any(), anyString())).thenReturn("true");
 
         mockAuthentication(member);
 
@@ -744,7 +743,7 @@ public class MemberControllerTest extends MemberTest {
         Member member = memberRepository.save(createMember(null, "member"));
         mockAuthentication(member);
 
-        when(redisUtils.getEmailData(any(), anyString())).thenReturn(null);
+        when(redisService.getEmailData(any(), anyString())).thenReturn(null);
 
         mockMvc.perform(patch("/api/members/change-email")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -757,7 +756,7 @@ public class MemberControllerTest extends MemberTest {
     @Test
     @DisplayName("이메일 변경 시 존재하지 않는 사용자로 예외 발생")
     void changeEmail_memberNotFoundException() throws Exception {
-        when(redisUtils.getEmailData(any(), anyString())).thenReturn("true");
+        when(redisService.getEmailData(any(), anyString())).thenReturn("true");
 
         Member member = createMember(0L, "notMember@email.com");
         mockAuthentication(member);

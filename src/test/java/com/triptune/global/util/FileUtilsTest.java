@@ -1,7 +1,7 @@
 package com.triptune.global.util;
 
 import com.amazonaws.services.s3.model.ObjectMetadata;
-import com.triptune.global.enumclass.ErrorCode;
+import com.triptune.global.response.enums.ErrorCode;
 import com.triptune.global.exception.FileBadRequestException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;

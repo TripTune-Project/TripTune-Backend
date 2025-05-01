@@ -1,7 +1,7 @@
 package com.triptune.member.entity;
 
-import com.triptune.global.service.OAuth2UserInfo;
-import com.triptune.member.enumclass.SocialType;
+import com.triptune.global.security.oauth.userinfo.OAuth2UserInfo;
+import com.triptune.member.enums.SocialType;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;

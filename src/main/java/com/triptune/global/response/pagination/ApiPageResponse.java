@@ -1,6 +1,6 @@
 package com.triptune.global.response.pagination;
 
-import com.triptune.global.enumclass.SuccessCode;
+import com.triptune.global.response.enums.SuccessCode;
 import com.triptune.global.response.SuccessResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatusCode;

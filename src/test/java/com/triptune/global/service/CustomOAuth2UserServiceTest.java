@@ -1,11 +1,13 @@
 package com.triptune.global.service;
 
 import com.triptune.global.SocialMemberTest;
-import com.triptune.global.enumclass.ErrorCode;
+import com.triptune.global.response.enums.ErrorCode;
 import com.triptune.global.exception.DataExistException;
+import com.triptune.global.security.oauth.CustomOAuth2UserService;
+import com.triptune.global.security.oauth.userinfo.OAuth2UserInfo;
 import com.triptune.member.entity.Member;
 import com.triptune.member.entity.SocialMember;
-import com.triptune.member.enumclass.SocialType;
+import com.triptune.member.enums.SocialType;
 import com.triptune.member.repository.MemberRepository;
 import com.triptune.member.repository.SocialMemberRepository;
 import com.triptune.profile.entity.ProfileImage;

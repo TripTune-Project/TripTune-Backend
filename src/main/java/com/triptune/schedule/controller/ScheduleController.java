@@ -6,7 +6,7 @@ import com.triptune.schedule.dto.response.OverviewScheduleResponse;
 import com.triptune.schedule.dto.response.ScheduleCreateResponse;
 import com.triptune.schedule.dto.response.ScheduleDetailResponse;
 import com.triptune.schedule.dto.response.ScheduleInfoResponse;
-import com.triptune.schedule.enumclass.ScheduleSearchType;
+import com.triptune.schedule.enums.ScheduleSearchType;
 import com.triptune.schedule.service.ScheduleService;
 import com.triptune.global.aop.AttendeeCheck;
 import com.triptune.global.response.ApiResponse;

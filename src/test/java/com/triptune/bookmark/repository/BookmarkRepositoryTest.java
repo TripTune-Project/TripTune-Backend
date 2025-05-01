@@ -1,7 +1,7 @@
 package com.triptune.bookmark.repository;
 
 import com.triptune.bookmark.BookmarkTest;
-import com.triptune.bookmark.enumclass.BookmarkSortType;
+import com.triptune.bookmark.enums.BookmarkSortType;
 import com.triptune.common.entity.ApiCategory;
 import com.triptune.common.entity.City;
 import com.triptune.common.entity.Country;
@@ -24,14 +24,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
 
 @SpringBootTest
 @Import({QueryDSLConfig.class})

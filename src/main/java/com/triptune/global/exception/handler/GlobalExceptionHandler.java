@@ -2,6 +2,8 @@ package com.triptune.global.exception.handler;
 
 import com.triptune.global.exception.*;
 import com.triptune.global.response.ErrorResponse;
+import com.triptune.global.security.exception.CustomJwtUnAuthorizedException;
+import com.triptune.global.security.oauth.exception.OAuth2Exception;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
