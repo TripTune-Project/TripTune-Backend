@@ -3,6 +3,7 @@ package com.triptune.member.entity;
 import com.triptune.global.security.oauth.userinfo.OAuth2UserInfo;
 import com.triptune.member.dto.request.JoinRequest;
 import com.triptune.member.enums.AnonymousValue;
+import com.triptune.member.enums.JoinType;
 import com.triptune.profile.entity.ProfileImage;
 import jakarta.persistence.*;
 import lombok.Builder;
@@ -37,8 +38,9 @@ public class Member {
     @Column(name = "refresh_token")
     private String refreshToken;
 
-    @Column(name = "is_social_login")
-    private boolean isSocialLogin;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "join_type")
+    private JoinType joinType;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
@@ -51,14 +53,14 @@ public class Member {
 
 
     @Builder
-    public Member(Long memberId, ProfileImage profileImage, String email, String password, String nickname, String refreshToken, boolean isSocialLogin, LocalDateTime createdAt, LocalDateTime updatedAt, boolean isActive) {
+    public Member(Long memberId, ProfileImage profileImage, String email, String password, String nickname, String refreshToken, JoinType joinType, LocalDateTime createdAt, LocalDateTime updatedAt, boolean isActive) {
         this.memberId = memberId;
         this.profileImage = profileImage;
         this.email = email;
         this.password = password;
         this.nickname = nickname;
         this.refreshToken = refreshToken;
-        this.isSocialLogin = isSocialLogin;
+        this.joinType = joinType;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
         this.isActive = isActive;
@@ -70,7 +72,7 @@ public class Member {
                 .email(joinRequest.getEmail())
                 .password(encodePassword)
                 .nickname(joinRequest.getNickname())
-                .isSocialLogin(false)
+                .joinType(JoinType.NATIVE)
                 .createdAt(LocalDateTime.now())
                 .isActive(true)
                 .build();
@@ -81,7 +83,7 @@ public class Member {
                 .profileImage(profileImage)
                 .email(oAuth2UserInfo.getEmail())
                 .nickname(oAuth2UserInfo.getNickname())
-                .isSocialLogin(true)
+                .joinType(JoinType.SOCIAL)
                 .createdAt(LocalDateTime.now())
                 .isActive(true)
                 .build();

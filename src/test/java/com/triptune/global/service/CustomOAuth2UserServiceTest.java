@@ -7,6 +7,7 @@ import com.triptune.global.security.oauth.CustomOAuth2UserService;
 import com.triptune.global.security.oauth.userinfo.OAuth2UserInfo;
 import com.triptune.member.entity.Member;
 import com.triptune.member.entity.SocialMember;
+import com.triptune.member.enums.JoinType;
 import com.triptune.member.enums.SocialType;
 import com.triptune.member.repository.MemberRepository;
 import com.triptune.member.repository.SocialMemberRepository;
@@ -43,7 +44,7 @@ class CustomOAuth2UserServiceTest extends SocialMemberTest {
         OAuth2UserInfo oAuth2UserInfo = createNaverUserInfo("member@email.com", "member");
 
         ProfileImage profileImage = createProfileImage(1L, "image");
-        Member member = createMember(1L, "member@email.com", true, profileImage);
+        Member member = createMember(1L, "member@email.com", JoinType.SOCIAL, profileImage);
         SocialMember socialMember = createSocialMember(1L, member, oAuth2UserInfo.getSocialId(), SocialType.NAVER);
 
         when(socialMemberRepository.findBySocialIdAndSocialType(anyString(), any())).thenReturn(Optional.of(member));
@@ -56,7 +57,7 @@ class CustomOAuth2UserServiceTest extends SocialMemberTest {
         assertThat(response.getPassword()).isNull();
         assertThat(response.getNickname()).isEqualTo(oAuth2UserInfo.getNickname());
         assertThat(response.getProfileImage().getS3ObjectUrl()).isEqualTo(profileImage.getS3ObjectUrl());
-        assertThat(response.isSocialLogin()).isTrue();
+        assertThat(response.getJoinType()).isEqualTo(JoinType.SOCIAL);
     }
 
     @Test
@@ -66,7 +67,7 @@ class CustomOAuth2UserServiceTest extends SocialMemberTest {
         OAuth2UserInfo oAuth2UserInfo = createNaverUserInfo("member@email.com", "member");
 
         ProfileImage profileImage = createProfileImage(1L, "image");
-        Member member = createMember(1L, "member@email.com", true, profileImage);
+        Member member = createMember(1L, "member@email.com", JoinType.SOCIAL, profileImage);
         SocialMember socialMember = createSocialMember(1L, member, oAuth2UserInfo.getSocialId(), SocialType.NAVER);
 
         when(socialMemberRepository.findBySocialIdAndSocialType(anyString(), any())).thenReturn(Optional.empty());
@@ -83,33 +84,7 @@ class CustomOAuth2UserServiceTest extends SocialMemberTest {
         assertThat(response.getPassword()).isNull();
         assertThat(response.getNickname()).isEqualTo(oAuth2UserInfo.getNickname());
         assertThat(response.getProfileImage().getS3ObjectUrl()).isEqualTo(profileImage.getS3ObjectUrl());
-        assertThat(response.isSocialLogin()).isTrue();
-    }
-
-    @Test
-    @DisplayName("소셜 사용자 추가 - 네이버")
-    void createSocialMember_naver() {
-        // given
-        OAuth2UserInfo oAuth2UserInfo = createNaverUserInfo("member@email.com", "member");
-
-        ProfileImage profileImage = createProfileImage(1L, "image");
-        Member member = createMember(1L, "member@email.com", true, profileImage);
-        SocialMember socialMember = createSocialMember(1L, member, oAuth2UserInfo.getSocialId(), SocialType.NAVER);
-
-        when(memberRepository.existsByEmail(anyString())).thenReturn(false);
-        when(memberRepository.existsByNickname(anyString())).thenReturn(false);
-        when(profileImageService.saveDefaultProfileImage()).thenReturn(profileImage);
-        when(memberRepository.save(any())).thenReturn(member);
-
-        // when
-        Member response = customOAuth2UserService.createSocialMember(oAuth2UserInfo);
-
-        // then
-        assertThat(response.getEmail()).isEqualTo(oAuth2UserInfo.getEmail());
-        assertThat(response.getPassword()).isNull();
-        assertThat(response.getNickname()).isEqualTo(oAuth2UserInfo.getNickname());
-        assertThat(response.getProfileImage().getS3ObjectUrl()).isEqualTo(profileImage.getS3ObjectUrl());
-        assertThat(response.isSocialLogin()).isTrue();
+        assertThat(response.getJoinType()).isEqualTo(JoinType.SOCIAL);
     }
 
     @Test
@@ -121,7 +96,8 @@ class CustomOAuth2UserServiceTest extends SocialMemberTest {
         when(memberRepository.existsByEmail(anyString())).thenReturn(true);
 
         // when
-        DataExistException fail = assertThrows(DataExistException.class, () -> customOAuth2UserService.createSocialMember(oAuth2UserInfo));
+        DataExistException fail = assertThrows(DataExistException.class,
+                () -> customOAuth2UserService.createSocialMember(oAuth2UserInfo));
 
         // then
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.ALREADY_EXISTED_EMAIL.getStatus());
@@ -138,7 +114,8 @@ class CustomOAuth2UserServiceTest extends SocialMemberTest {
         when(memberRepository.existsByNickname(anyString())).thenReturn(true);
 
         // when
-        DataExistException fail = assertThrows(DataExistException.class, () -> customOAuth2UserService.createSocialMember(oAuth2UserInfo));
+        DataExistException fail = assertThrows(DataExistException.class,
+                () -> customOAuth2UserService.createSocialMember(oAuth2UserInfo));
 
         // then
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.ALREADY_EXISTED_NICKNAME.getStatus());
