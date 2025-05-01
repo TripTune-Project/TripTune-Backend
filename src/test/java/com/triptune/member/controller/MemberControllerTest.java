@@ -269,7 +269,7 @@ public class MemberControllerTest extends MemberTest {
     @DisplayName("소셜 로그인 정보만 있는 사용자가 자체 로그인 시도해 예외 발생")
     void login_socialMember() throws Exception{
         ProfileImage profileImage = profileImageRepository.save(createProfileImage(null, "member"));
-        Member member = memberRepository.save(createMember(null, "member@email.com", JoinType.SOCIAL, profileImage));
+        Member member = memberRepository.save(createMember(null, "member@email.com", null, JoinType.SOCIAL, profileImage));
         socialMemberRepository.save(createSocialMember(null, member, "member", SocialType.NAVER));
 
         mockMvc.perform(post("/api/members/login")
@@ -416,7 +416,7 @@ public class MemberControllerTest extends MemberTest {
     @DisplayName("소셜 사용자 비밀번호 찾기")
     void findPassword_socialMember() throws Exception{
         ProfileImage profileImage = profileImageRepository.save(createProfileImage(null, "member"));
-        Member member = memberRepository.save(createMember(null, "member@email.com", JoinType.SOCIAL, profileImage));
+        Member member = memberRepository.save(createMember(null, "member@email.com", null, JoinType.SOCIAL, profileImage));
         socialMemberRepository.save(createSocialMember(null, member, "member", SocialType.NAVER));
 
         mockMvc.perform(post("/api/members/find-password")
@@ -460,7 +460,7 @@ public class MemberControllerTest extends MemberTest {
     @DisplayName("소셜 사용자 비밀번호 초기화")
     void resetPassword_socialMember() throws Exception{
         ProfileImage profileImage = profileImageRepository.save(createProfileImage(null, "member"));
-        Member member = memberRepository.save(createMember(null, "member@email.com", JoinType.SOCIAL, profileImage));
+        Member member = memberRepository.save(createMember(null, "member@email.com", null, JoinType.SOCIAL, profileImage));
         socialMemberRepository.save(createSocialMember(null, member, "member", SocialType.NAVER));
 
         when(redisService.getData(anyString())).thenReturn(member.getEmail());
@@ -618,7 +618,7 @@ public class MemberControllerTest extends MemberTest {
     @DisplayName("사용자 정보 조회")
     void getMemberInfo() throws Exception{
         ProfileImage profileImage = profileImageRepository.save(createProfileImage(null, "profileImage"));
-        Member member = memberRepository.save(createMember(null, "member@email.com", profileImage));
+        Member member = memberRepository.save(createMember(null, "member@email.com", passwordEncoder.encode("password12!@"), profileImage));
 
         mockAuthentication(member);
 

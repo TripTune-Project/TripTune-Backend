@@ -47,19 +47,18 @@ public abstract class BaseTest {
                 .createdAt(LocalDateTime.now())
                 .build();
     }
-
     protected Member createMember(Long memberId, String email, ProfileImage profileImage){
         return Member.builder()
                 .memberId(memberId)
                 .profileImage(profileImage)
                 .email(email)
-                .password("test123@")
                 .nickname(email.split("@")[0])
                 .refreshToken(refreshToken)
                 .joinType(JoinType.NATIVE)
                 .createdAt(LocalDateTime.now())
                 .build();
     }
+
 
     protected Member createMember(Long memberId, String email, String encodePassword, ProfileImage profileImage){
         return Member.builder()
@@ -74,11 +73,12 @@ public abstract class BaseTest {
                 .build();
     }
 
-    protected Member createMember(Long memberId, String email, JoinType joinType, ProfileImage profileImage){
+    protected Member createMember(Long memberId, String email, String encodePassword, JoinType joinType, ProfileImage profileImage){
         return Member.builder()
                 .memberId(memberId)
                 .profileImage(profileImage)
                 .email(email)
+                .password(encodePassword)
                 .nickname(email.split("@")[0])
                 .refreshToken(refreshToken)
                 .joinType(joinType)

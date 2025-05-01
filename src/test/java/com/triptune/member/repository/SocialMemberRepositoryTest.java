@@ -32,7 +32,7 @@ class SocialMemberRepositoryTest extends MemberTest {
     void findBySocialInfo() {
         // given
         ProfileImage profileImage = profileImageRepository.save(createProfileImage(null, "image"));
-        Member member = memberRepository.save(createMember(null, "member@email.com", JoinType.SOCIAL, profileImage));
+        Member member = memberRepository.save(createMember(null, "member@email.com", null, JoinType.SOCIAL, profileImage));
         SocialMember socialMember = socialMemberRepository.save(createSocialMember(null, member, "socialMember", SocialType.NAVER));
 
         // when

@@ -6,15 +6,18 @@ import com.triptune.member.enums.AnonymousValue;
 import com.triptune.member.enums.JoinType;
 import com.triptune.profile.entity.ProfileImage;
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Member {
 
     @Id
@@ -101,17 +104,17 @@ public class Member {
 
     public void updatePassword(String password) {
         this.password = password;
-        this.updatedAt = LocalDateTime.now();
+        updateUpdatedAt();
     }
 
     public void updateNickname(String nickname) {
         this.nickname = nickname;
-        this.updatedAt = LocalDateTime.now();
+        updateUpdatedAt();
     }
 
     public void updateEmail(String email) {
         this.email = email;
-        this.updatedAt = LocalDateTime.now();
+        updateUpdatedAt();
     }
 
     public void updateDeactivate() {
@@ -122,16 +125,22 @@ public class Member {
         this.email = unknown;
         this.password = unknown;
         this.refreshToken = null;
-        this.updatedAt = LocalDateTime.now();
         this.isActive = false;
-    }
-
-    public void updateUpdatedAt() {
-        this.updatedAt = LocalDateTime.now();
+        updateUpdatedAt();
     }
 
     public void updateProfileImage(ProfileImage profileImage) {
         this.profileImage = profileImage;
+        updateUpdatedAt();
+    }
+
+    public void updateJoinType(JoinType joinType){
+        this.joinType = joinType;
+        updateUpdatedAt();
+    }
+
+    public void updateUpdatedAt() {
+        this.updatedAt = LocalDateTime.now();
     }
 
 }
