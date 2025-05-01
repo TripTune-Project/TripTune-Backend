@@ -4,6 +4,7 @@ import com.triptune.global.config.QueryDSLConfig;
 import com.triptune.member.MemberTest;
 import com.triptune.member.entity.Member;
 import com.triptune.member.entity.SocialMember;
+import com.triptune.member.enums.JoinType;
 import com.triptune.member.enums.SocialType;
 import com.triptune.profile.entity.ProfileImage;
 import com.triptune.profile.repository.ProfileImageRepository;
@@ -31,7 +32,7 @@ class SocialMemberRepositoryTest extends MemberTest {
     void findBySocialInfo() {
         // given
         ProfileImage profileImage = profileImageRepository.save(createProfileImage(null, "image"));
-        Member member = memberRepository.save(createMember(null, "member@email.com", true, profileImage));
+        Member member = memberRepository.save(createMember(null, "member@email.com", null, JoinType.SOCIAL, profileImage));
         SocialMember socialMember = socialMemberRepository.save(createSocialMember(null, member, "socialMember", SocialType.NAVER));
 
         // when

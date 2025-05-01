@@ -7,12 +7,11 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class SocialMemberTest extends BaseTest {
-    protected NaverUserInfo createNaverUserInfo(String email, String nickname){
+    protected NaverUserInfo createNaverUserInfo(String email){
         Map<String, Object> attributes = new HashMap<>();
         attributes.put("response", Map.of(
                 "id", "naverMember",
-                "email", email,
-                "nickname", nickname
+                "email", email
         ));
         return new NaverUserInfo(attributes);
     }

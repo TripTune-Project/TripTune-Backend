@@ -8,8 +8,10 @@ import com.triptune.global.security.oauth.userinfo.KaKaoUserInfo;
 import com.triptune.global.security.oauth.userinfo.NaverUserInfo;
 import com.triptune.global.security.oauth.userinfo.OAuth2UserInfo;
 import com.triptune.global.security.jwt.JwtUtils;
+import com.triptune.global.util.NicknameGenerator;
 import com.triptune.member.entity.Member;
 import com.triptune.member.entity.SocialMember;
+import com.triptune.member.enums.JoinType;
 import com.triptune.member.repository.MemberRepository;
 import com.triptune.member.repository.SocialMemberRepository;
 import com.triptune.profile.entity.ProfileImage;
@@ -35,6 +37,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     private final ProfileImageService profileImageService;
     private final SocialMemberRepository socialMemberRepository;
     private final JwtUtils jwtUtils;
+    private final NicknameGenerator nicknameGenerator;
 
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
@@ -57,7 +60,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             };
 
             // 4. 회원가입 및 로그인
-            Member member = getOrCreateSocialMember(oAuth2UserInfo);
+            Member member = joinOrLogin(oAuth2UserInfo);
             member.updateRefreshToken(jwtUtils.createRefreshToken(member.getMemberId()));
             return new CustomUserDetails(member, attributes);
 
@@ -69,42 +72,48 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
     }
 
-    public Member getOrCreateSocialMember(OAuth2UserInfo oAuth2UserInfo){
+    public Member joinOrLogin(OAuth2UserInfo oAuth2UserInfo){
         // 1. 이미 가입되어 잇는 소셜 회원인지 확인(socialMember 의 id, socialType 체크)
-        // 2. 가입되어 있으면 return Social Member
+        // 2. 가입되어 있으면 return Member
         log.info("소셜 회원 존재 여부 확인: socialType={}", oAuth2UserInfo.getSocialType());
 
         return socialMemberRepository.findBySocialIdAndSocialType(oAuth2UserInfo.getSocialId(), oAuth2UserInfo.getSocialType())
-                .orElseGet(() -> createSocialMember(oAuth2UserInfo));
+                .orElseGet(() -> processSocialLogin(oAuth2UserInfo));
     }
 
-    public Member createSocialMember(OAuth2UserInfo oAuth2UserInfo){
-        // 3. Member 생성해서 save
-        validateUniqueEmail(oAuth2UserInfo.getEmail());
-        validateUniqueNickname(oAuth2UserInfo.getNickname());
+    public Member processSocialLogin(OAuth2UserInfo oAuth2UserInfo){
+        // 3. 기존 회원 정보 존재하는지 확인
+        // 4. 기존 회원 정보 존재하면 회원통합, 아니면 신규 회원 생성
+        return memberRepository.findNativeMemberByEmail(oAuth2UserInfo.getEmail())
+                .map(savedMember -> integrateMember(savedMember, oAuth2UserInfo))
+                .orElseGet(() -> createMember(oAuth2UserInfo));
+    }
 
-        ProfileImage profileImage = profileImageService.saveDefaultProfileImage();
-        Member member = Member.from(profileImage, oAuth2UserInfo);
-        Member savedMember = memberRepository.save(member);
+    public Member integrateMember(Member savedMember, OAuth2UserInfo oAuth2UserInfo){
+        createSocialMember(savedMember, oAuth2UserInfo);
+        savedMember.updateJoinType(JoinType.BOTH);
 
-        // 4. SocialMember 객체 생성해서 Member 연결 후 save, return
-        SocialMember socialMember = SocialMember.from(savedMember, oAuth2UserInfo);
-        socialMemberRepository.save(socialMember);
-
-        log.info("신규 회원 생성 등록 완료");
-
+        log.info("기존 회원과 소셜 계정 통합 완료");
         return savedMember;
     }
 
-    public void validateUniqueEmail(String email){
-        if(memberRepository.existsByEmail(email)){
-            throw new DataExistException(ErrorCode.ALREADY_EXISTED_EMAIL);
-        }
+    public Member createMember(OAuth2UserInfo oAuth2UserInfo){
+        String nickname = nicknameGenerator.createNickname();
+
+        ProfileImage profileImage = profileImageService.saveDefaultProfileImage();
+        Member member = Member.from(profileImage, oAuth2UserInfo, nickname);
+        Member newMember = memberRepository.save(member);
+
+        createSocialMember(newMember, oAuth2UserInfo);
+
+        log.info("신규 회원 생성 등록 완료");
+
+        return newMember;
     }
 
-    public void validateUniqueNickname(String nickname){
-        if(memberRepository.existsByNickname(nickname)){
-            throw new DataExistException(ErrorCode.ALREADY_EXISTED_NICKNAME);
-        }
+    private void createSocialMember(Member member, OAuth2UserInfo oAuth2UserInfo){
+        SocialMember socialMember = SocialMember.from(member, oAuth2UserInfo);
+        socialMemberRepository.save(socialMember);
     }
+
 }

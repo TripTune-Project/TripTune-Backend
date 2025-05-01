@@ -54,4 +54,5 @@ public class SocialMember {
                 .createdAt(LocalDateTime.now())
                 .build();
     }
+
 }

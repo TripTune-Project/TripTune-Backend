@@ -7,6 +7,7 @@ import com.triptune.common.entity.*;
 import com.triptune.global.security.CustomUserDetails;
 import com.triptune.member.entity.Member;
 import com.triptune.member.entity.SocialMember;
+import com.triptune.member.enums.JoinType;
 import com.triptune.member.enums.SocialType;
 import com.triptune.profile.entity.ProfileImage;
 import com.triptune.schedule.entity.ChatMessage;
@@ -42,23 +43,22 @@ public abstract class BaseTest {
                 .password("test123@")
                 .nickname(email.split("@")[0])
                 .refreshToken(refreshToken)
-                .isSocialLogin(false)
+                .joinType(JoinType.NATIVE)
                 .createdAt(LocalDateTime.now())
                 .build();
     }
-
     protected Member createMember(Long memberId, String email, ProfileImage profileImage){
         return Member.builder()
                 .memberId(memberId)
                 .profileImage(profileImage)
                 .email(email)
-                .password("test123@")
                 .nickname(email.split("@")[0])
                 .refreshToken(refreshToken)
-                .isSocialLogin(false)
+                .joinType(JoinType.NATIVE)
                 .createdAt(LocalDateTime.now())
                 .build();
     }
+
 
     protected Member createMember(Long memberId, String email, String encodePassword, ProfileImage profileImage){
         return Member.builder()
@@ -68,19 +68,20 @@ public abstract class BaseTest {
                 .password(encodePassword)
                 .nickname(email.split("@")[0])
                 .refreshToken(refreshToken)
-                .isSocialLogin(false)
+                .joinType(JoinType.NATIVE)
                 .createdAt(LocalDateTime.now())
                 .build();
     }
 
-    protected Member createMember(Long memberId, String email, boolean isSocialLogin, ProfileImage profileImage){
+    protected Member createMember(Long memberId, String email, String encodePassword, JoinType joinType, ProfileImage profileImage){
         return Member.builder()
                 .memberId(memberId)
                 .profileImage(profileImage)
                 .email(email)
+                .password(encodePassword)
                 .nickname(email.split("@")[0])
                 .refreshToken(refreshToken)
-                .isSocialLogin(isSocialLogin)
+                .joinType(joinType)
                 .createdAt(LocalDateTime.now())
                 .build();
     }
