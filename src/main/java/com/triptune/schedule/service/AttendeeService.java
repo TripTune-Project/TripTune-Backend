@@ -1,6 +1,6 @@
 package com.triptune.schedule.service;
 
-import com.triptune.global.enumclass.ErrorCode;
+import com.triptune.global.response.enums.ErrorCode;
 import com.triptune.global.exception.DataNotFoundException;
 import com.triptune.member.entity.Member;
 import com.triptune.member.repository.MemberRepository;
@@ -9,7 +9,7 @@ import com.triptune.schedule.dto.request.AttendeeRequest;
 import com.triptune.schedule.dto.response.AttendeeResponse;
 import com.triptune.schedule.entity.TravelAttendee;
 import com.triptune.schedule.entity.TravelSchedule;
-import com.triptune.schedule.enumclass.AttendeeRole;
+import com.triptune.schedule.enums.AttendeeRole;
 import com.triptune.schedule.exception.ConflictAttendeeException;
 import com.triptune.schedule.exception.ForbiddenAttendeeException;
 import com.triptune.schedule.repository.TravelAttendeeRepository;

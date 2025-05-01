@@ -5,8 +5,8 @@ import com.triptune.travel.dto.response.PlaceDetailResponse;
 import com.triptune.travel.dto.request.PlaceLocationRequest;
 import com.triptune.travel.dto.request.PlaceSearchRequest;
 import com.triptune.travel.dto.response.PlaceSimpleResponse;
-import com.triptune.travel.enumclass.CityType;
-import com.triptune.travel.enumclass.ThemeType;
+import com.triptune.travel.enums.CityType;
+import com.triptune.travel.enums.ThemeType;
 import com.triptune.travel.service.TravelService;
 import com.triptune.global.response.pagination.ApiPageResponse;
 import com.triptune.global.response.ApiResponse;
@@ -17,7 +17,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 

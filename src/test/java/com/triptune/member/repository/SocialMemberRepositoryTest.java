@@ -4,7 +4,7 @@ import com.triptune.global.config.QueryDSLConfig;
 import com.triptune.member.MemberTest;
 import com.triptune.member.entity.Member;
 import com.triptune.member.entity.SocialMember;
-import com.triptune.member.enumclass.SocialType;
+import com.triptune.member.enums.SocialType;
 import com.triptune.profile.entity.ProfileImage;
 import com.triptune.profile.repository.ProfileImageRepository;
 import org.junit.jupiter.api.DisplayName;

@@ -1,5 +1,6 @@
 package com.triptune.global.service;
 
+import com.triptune.global.s3.S3Service;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

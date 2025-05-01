@@ -3,9 +3,7 @@ package com.triptune.schedule;
 import com.triptune.BaseTest;
 import com.triptune.member.dto.response.MemberProfileResponse;
 import com.triptune.schedule.dto.request.*;
-import com.triptune.schedule.enumclass.AttendeePermission;
-import com.triptune.travel.dto.response.PlaceResponse;
-import com.triptune.travel.entity.TravelPlace;
+import com.triptune.schedule.enums.AttendeePermission;
 
 import java.time.LocalDate;
 import java.util.List;

@@ -1,6 +1,5 @@
 package com.triptune.schedule.controller;
 
-import com.triptune.global.service.CustomUserDetails;
 import com.triptune.schedule.dto.request.RouteCreateRequest;
 import com.triptune.schedule.dto.response.RouteResponse;
 import com.triptune.schedule.service.RouteService;

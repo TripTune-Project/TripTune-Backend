@@ -2,7 +2,7 @@ package com.triptune.member.repository;
 
 import com.triptune.member.entity.Member;
 import com.triptune.member.entity.SocialMember;
-import com.triptune.member.enumclass.SocialType;
+import com.triptune.member.enums.SocialType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

@@ -1,6 +1,6 @@
 package com.triptune.global.response;
 
-import com.triptune.global.enumclass.ErrorCode;
+import com.triptune.global.response.enums.ErrorCode;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;

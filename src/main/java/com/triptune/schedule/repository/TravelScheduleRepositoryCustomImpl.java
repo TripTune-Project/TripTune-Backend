@@ -8,7 +8,7 @@ import com.triptune.global.util.PageUtils;
 import com.triptune.schedule.entity.QTravelAttendee;
 import com.triptune.schedule.entity.QTravelSchedule;
 import com.triptune.schedule.entity.TravelSchedule;
-import com.triptune.schedule.enumclass.AttendeePermission;
+import com.triptune.schedule.enums.AttendeePermission;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;

@@ -1,14 +1,13 @@
 package com.triptune.member.controller;
 
-import com.triptune.bookmark.enumclass.BookmarkSortType;
+import com.triptune.bookmark.enums.BookmarkSortType;
 import com.triptune.email.dto.request.EmailRequest;
-import com.triptune.global.enumclass.ErrorCode;
-import com.triptune.global.exception.CustomJwtUnAuthorizedException;
+import com.triptune.global.response.enums.ErrorCode;
+import com.triptune.global.security.exception.CustomJwtUnAuthorizedException;
 import com.triptune.global.exception.CustomNotValidException;
 import com.triptune.global.response.ApiResponse;
 import com.triptune.global.response.pagination.ApiPageResponse;
-import com.triptune.global.service.CustomUserDetails;
-import com.triptune.global.util.JwtUtils;
+import com.triptune.global.security.jwt.JwtUtils;
 import com.triptune.member.dto.request.*;
 import com.triptune.member.dto.response.LoginResponse;
 import com.triptune.member.dto.response.MemberInfoResponse;
@@ -28,7 +27,6 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 

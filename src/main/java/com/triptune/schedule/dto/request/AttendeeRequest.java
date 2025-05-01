@@ -1,13 +1,12 @@
 package com.triptune.schedule.dto.request;
 
-import com.triptune.schedule.enumclass.AttendeePermission;
+import com.triptune.schedule.enums.AttendeePermission;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 @Getter
 @NoArgsConstructor

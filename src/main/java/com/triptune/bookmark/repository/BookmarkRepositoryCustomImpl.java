@@ -4,7 +4,7 @@ import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.triptune.bookmark.entity.QBookmark;
-import com.triptune.bookmark.enumclass.BookmarkSortType;
+import com.triptune.bookmark.enums.BookmarkSortType;
 import com.triptune.travel.entity.QTravelPlace;
 import com.triptune.travel.entity.TravelPlace;
 import com.triptune.global.util.PageUtils;

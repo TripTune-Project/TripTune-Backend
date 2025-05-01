@@ -1,8 +1,8 @@
 package com.triptune.schedule.entity;
 
 import com.triptune.member.entity.Member;
-import com.triptune.schedule.enumclass.AttendeePermission;
-import com.triptune.schedule.enumclass.AttendeeRole;
+import com.triptune.schedule.enums.AttendeePermission;
+import com.triptune.schedule.enums.AttendeeRole;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;

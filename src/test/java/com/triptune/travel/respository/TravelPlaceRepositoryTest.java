@@ -10,8 +10,8 @@ import com.triptune.travel.dto.response.PlaceResponse;
 import com.triptune.travel.dto.response.PlaceSimpleResponse;
 import com.triptune.travel.entity.TravelImage;
 import com.triptune.travel.entity.TravelPlace;
-import com.triptune.travel.enumclass.CityType;
-import com.triptune.travel.enumclass.ThemeType;
+import com.triptune.travel.enums.CityType;
+import com.triptune.travel.enums.ThemeType;
 import com.triptune.travel.repository.TravelImageRepository;
 import com.triptune.travel.repository.TravelPlaceRepository;
 import com.triptune.global.config.QueryDSLConfig;
@@ -26,12 +26,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.ActiveProfiles;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.byLessThan;
-import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 @Import({QueryDSLConfig.class})

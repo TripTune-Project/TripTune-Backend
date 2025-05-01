@@ -1,18 +1,15 @@
 package com.triptune.member.entity;
 
-import com.triptune.global.service.OAuth2UserInfo;
+import com.triptune.global.security.oauth.userinfo.OAuth2UserInfo;
 import com.triptune.member.dto.request.JoinRequest;
-import com.triptune.member.enumclass.AnonymousValue;
+import com.triptune.member.enums.AnonymousValue;
 import com.triptune.profile.entity.ProfileImage;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Entity
 @Getter

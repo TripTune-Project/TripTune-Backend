@@ -11,7 +11,7 @@ import com.triptune.schedule.repository.TravelRouteRepository;
 import com.triptune.schedule.repository.TravelScheduleRepository;
 import com.triptune.travel.entity.TravelPlace;
 import com.triptune.travel.repository.TravelPlaceRepository;
-import com.triptune.global.enumclass.ErrorCode;
+import com.triptune.global.response.enums.ErrorCode;
 import com.triptune.global.exception.DataNotFoundException;
 import com.triptune.global.util.PageUtils;
 import jakarta.transaction.Transactional;

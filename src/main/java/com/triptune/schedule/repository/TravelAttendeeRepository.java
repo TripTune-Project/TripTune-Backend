@@ -1,7 +1,7 @@
 package com.triptune.schedule.repository;
 
 import com.triptune.schedule.entity.TravelAttendee;
-import com.triptune.schedule.enumclass.AttendeeRole;
+import com.triptune.schedule.enums.AttendeeRole;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;

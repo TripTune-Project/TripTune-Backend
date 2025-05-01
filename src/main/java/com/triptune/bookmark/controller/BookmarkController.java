@@ -3,7 +3,6 @@ package com.triptune.bookmark.controller;
 import com.triptune.bookmark.dto.request.BookmarkRequest;
 import com.triptune.bookmark.service.BookmarkService;
 import com.triptune.global.response.ApiResponse;
-import com.triptune.global.service.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;

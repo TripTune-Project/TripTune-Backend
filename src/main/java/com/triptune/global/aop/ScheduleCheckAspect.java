@@ -1,6 +1,6 @@
 package com.triptune.global.aop;
 
-import com.triptune.global.enumclass.ErrorCode;
+import com.triptune.global.response.enums.ErrorCode;
 import com.triptune.global.exception.DataNotFoundException;
 import com.triptune.schedule.repository.TravelScheduleRepository;
 import jakarta.servlet.http.HttpServletRequest;
