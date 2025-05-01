@@ -26,8 +26,4 @@ public class KaKaoUserInfo implements OAuth2UserInfo{
         return "";
     }
 
-    @Override
-    public String getNickname() {
-        return "";
-    }
 }

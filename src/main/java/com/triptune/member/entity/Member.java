@@ -81,11 +81,11 @@ public class Member {
                 .build();
     }
 
-    public static Member from(ProfileImage profileImage, OAuth2UserInfo oAuth2UserInfo){
+    public static Member from(ProfileImage profileImage, OAuth2UserInfo oAuth2UserInfo, String nickname){
         return Member.builder()
                 .profileImage(profileImage)
                 .email(oAuth2UserInfo.getEmail())
-                .nickname(oAuth2UserInfo.getNickname())
+                .nickname(nickname)
                 .joinType(JoinType.SOCIAL)
                 .createdAt(LocalDateTime.now())
                 .isActive(true)

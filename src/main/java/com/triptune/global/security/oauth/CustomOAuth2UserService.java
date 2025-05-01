@@ -8,6 +8,7 @@ import com.triptune.global.security.oauth.userinfo.KaKaoUserInfo;
 import com.triptune.global.security.oauth.userinfo.NaverUserInfo;
 import com.triptune.global.security.oauth.userinfo.OAuth2UserInfo;
 import com.triptune.global.security.jwt.JwtUtils;
+import com.triptune.global.util.NicknameGenerator;
 import com.triptune.member.entity.Member;
 import com.triptune.member.entity.SocialMember;
 import com.triptune.member.enums.JoinType;
@@ -36,6 +37,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     private final ProfileImageService profileImageService;
     private final SocialMemberRepository socialMemberRepository;
     private final JwtUtils jwtUtils;
+    private final NicknameGenerator nicknameGenerator;
 
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
@@ -96,10 +98,10 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     }
 
     public Member createMember(OAuth2UserInfo oAuth2UserInfo){
-        validateUniqueNickname(oAuth2UserInfo.getNickname());
+        String nickname = nicknameGenerator.createNickname();
 
         ProfileImage profileImage = profileImageService.saveDefaultProfileImage();
-        Member member = Member.from(profileImage, oAuth2UserInfo);
+        Member member = Member.from(profileImage, oAuth2UserInfo, nickname);
         Member newMember = memberRepository.save(member);
 
         createSocialMember(newMember, oAuth2UserInfo);
@@ -114,9 +116,4 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         socialMemberRepository.save(socialMember);
     }
 
-    public void validateUniqueNickname(String nickname){
-        if(memberRepository.existsByNickname(nickname)){
-            throw new DataExistException(ErrorCode.ALREADY_EXISTED_NICKNAME);
-        }
-    }
 }

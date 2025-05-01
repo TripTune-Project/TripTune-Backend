@@ -6,6 +6,5 @@ public interface OAuth2UserInfo {
     String getSocialId();
     SocialType getSocialType();
     String getEmail();
-    String getNickname();
 
 }

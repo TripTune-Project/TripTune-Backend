@@ -5,6 +5,7 @@ import com.triptune.global.response.enums.ErrorCode;
 import com.triptune.global.exception.DataExistException;
 import com.triptune.global.security.oauth.CustomOAuth2UserService;
 import com.triptune.global.security.oauth.userinfo.OAuth2UserInfo;
+import com.triptune.global.util.NicknameGenerator;
 import com.triptune.member.entity.Member;
 import com.triptune.member.entity.SocialMember;
 import com.triptune.member.enums.JoinType;
@@ -39,12 +40,13 @@ class CustomOAuth2UserServiceTest extends SocialMemberTest {
     @Mock private MemberRepository memberRepository;
     @Mock private ProfileImageService profileImageService;
     @Mock private PasswordEncoder passwordEncoder;
+    @Mock private NicknameGenerator nicknameGenerator;
 
     @Test
     @DisplayName("소셜 회원 로그인 - 네이버")
     void joinOrLogin_socialLogin_naver() {
         // given
-        OAuth2UserInfo oAuth2UserInfo = createNaverUserInfo("member@email.com", "member");
+        OAuth2UserInfo oAuth2UserInfo = createNaverUserInfo("member@email.com");
 
         ProfileImage profileImage = createProfileImage(1L, "image");
         Member member = createMember(
@@ -64,7 +66,7 @@ class CustomOAuth2UserServiceTest extends SocialMemberTest {
         // then
         assertThat(response.getEmail()).isEqualTo(oAuth2UserInfo.getEmail());
         assertThat(response.getPassword()).isNull();
-        assertThat(response.getNickname()).isEqualTo(oAuth2UserInfo.getNickname());
+        assertThat(response.getNickname()).isEqualTo(member.getNickname());
         assertThat(response.getProfileImage().getS3ObjectUrl()).isEqualTo(profileImage.getS3ObjectUrl());
         assertThat(response.getJoinType()).isEqualTo(JoinType.SOCIAL);
     }
@@ -73,7 +75,7 @@ class CustomOAuth2UserServiceTest extends SocialMemberTest {
     @DisplayName("통합 회원 로그인 - 네이버")
     void joinOrLogin_integrateLogin_naver() {
         // given
-        OAuth2UserInfo oAuth2UserInfo = createNaverUserInfo("member@email.com", "member");
+        OAuth2UserInfo oAuth2UserInfo = createNaverUserInfo("member@email.com");
 
         ProfileImage profileImage = createProfileImage(1L, "image");
         Member member = createMember(
@@ -103,7 +105,7 @@ class CustomOAuth2UserServiceTest extends SocialMemberTest {
     @DisplayName("회원가입 시 회원 통합 - 네이버")
     void joinOrLogin_integrate_naver() {
         // given
-        OAuth2UserInfo oAuth2UserInfo = createNaverUserInfo("member@email.com", "member");
+        OAuth2UserInfo oAuth2UserInfo = createNaverUserInfo("member@email.com");
 
         ProfileImage profileImage = createProfileImage(1L, "image");
         Member member = createMember(
@@ -135,7 +137,7 @@ class CustomOAuth2UserServiceTest extends SocialMemberTest {
     @DisplayName("회원가입 시 신규 회원 생성 - 네이버")
     void joinOrLogin_create_naver() {
         // given
-        OAuth2UserInfo oAuth2UserInfo = createNaverUserInfo("member@email.com", "member");
+        OAuth2UserInfo oAuth2UserInfo = createNaverUserInfo("member@email.com");
 
         ProfileImage profileImage = createProfileImage(1L, "image");
         Member member = createMember(
@@ -147,7 +149,6 @@ class CustomOAuth2UserServiceTest extends SocialMemberTest {
         );
 
         when(socialMemberRepository.findBySocialIdAndSocialType(anyString(), any())).thenReturn(Optional.empty());
-        when(memberRepository.existsByNickname(anyString())).thenReturn(false);
         when(profileImageService.saveDefaultProfileImage()).thenReturn(profileImage);
         when(memberRepository.save(any())).thenReturn(member);
 
@@ -157,7 +158,7 @@ class CustomOAuth2UserServiceTest extends SocialMemberTest {
         // then
         assertThat(response.getEmail()).isEqualTo(oAuth2UserInfo.getEmail());
         assertThat(response.getPassword()).isNull();
-        assertThat(response.getNickname()).isEqualTo(oAuth2UserInfo.getNickname());
+        assertThat(response.getNickname()).isNotNull();
         assertThat(response.getProfileImage().getS3ObjectUrl()).isEqualTo(profileImage.getS3ObjectUrl());
         assertThat(response.getJoinType()).isEqualTo(JoinType.SOCIAL);
 
@@ -168,7 +169,7 @@ class CustomOAuth2UserServiceTest extends SocialMemberTest {
     @DisplayName("기존 회원인지 체크 후 기존 회원 통합 - 네이버")
     void processSocialLogin_integrate_naver() {
         // given
-        OAuth2UserInfo oAuth2UserInfo = createNaverUserInfo("member@email.com", "member");
+        OAuth2UserInfo oAuth2UserInfo = createNaverUserInfo("member@email.com");
 
         ProfileImage profileImage = createProfileImage(1L, "image");
         Member member = createMember(
@@ -197,7 +198,7 @@ class CustomOAuth2UserServiceTest extends SocialMemberTest {
     @DisplayName("기존 회원인지 체크 후 신규 생성 - 네이버")
     void processSocialLogin_create_naver() {
         // given
-        OAuth2UserInfo oAuth2UserInfo = createNaverUserInfo("member@email.com", "member");
+        OAuth2UserInfo oAuth2UserInfo = createNaverUserInfo("member@email.com");
 
         ProfileImage profileImage = createProfileImage(1L, "image");
         Member member = createMember(
@@ -210,7 +211,6 @@ class CustomOAuth2UserServiceTest extends SocialMemberTest {
         createSocialMember(1L, member, oAuth2UserInfo.getSocialId(), SocialType.NAVER);
 
         when(memberRepository.findNativeMemberByEmail(anyString())).thenReturn(Optional.empty());
-        when(memberRepository.existsByNickname(anyString())).thenReturn(false);
         when(profileImageService.saveDefaultProfileImage()).thenReturn(profileImage);
         when(memberRepository.save(any())).thenReturn(member);
 
@@ -220,7 +220,7 @@ class CustomOAuth2UserServiceTest extends SocialMemberTest {
         // then
         assertThat(response.getEmail()).isEqualTo(oAuth2UserInfo.getEmail());
         assertThat(response.getPassword()).isNull();
-        assertThat(response.getNickname()).isEqualTo(oAuth2UserInfo.getNickname());
+        assertThat(response.getNickname()).isNotNull();
         assertThat(response.getProfileImage().getS3ObjectUrl()).isEqualTo(profileImage.getS3ObjectUrl());
         assertThat(response.getJoinType()).isEqualTo(JoinType.SOCIAL);
 
@@ -231,7 +231,7 @@ class CustomOAuth2UserServiceTest extends SocialMemberTest {
     @DisplayName("회원 통합 - 네이버")
     void integrateMember_naver() {
         // given
-        OAuth2UserInfo oAuth2UserInfo = createNaverUserInfo("member@email.com", "member");
+        OAuth2UserInfo oAuth2UserInfo = createNaverUserInfo("member@email.com");
 
         ProfileImage profileImage = createProfileImage(1L, "image");
         Member member = createMember(
@@ -260,7 +260,7 @@ class CustomOAuth2UserServiceTest extends SocialMemberTest {
     @DisplayName("신규 소셜 회원 생성 - 네이버")
     void createMember_naver() {
         // given
-        OAuth2UserInfo oAuth2UserInfo = createNaverUserInfo("member@email.com", "member");
+        OAuth2UserInfo oAuth2UserInfo = createNaverUserInfo("member@email.com");
 
         ProfileImage profileImage = createProfileImage(1L, "image");
         Member member = createMember(
@@ -273,7 +273,6 @@ class CustomOAuth2UserServiceTest extends SocialMemberTest {
 
         createSocialMember(1L, member, oAuth2UserInfo.getSocialId(), SocialType.NAVER);
 
-        when(memberRepository.existsByNickname(anyString())).thenReturn(false);
         when(profileImageService.saveDefaultProfileImage()).thenReturn(profileImage);
         when(memberRepository.save(any())).thenReturn(member);
 
@@ -283,7 +282,7 @@ class CustomOAuth2UserServiceTest extends SocialMemberTest {
         // then
         assertThat(response.getEmail()).isEqualTo(oAuth2UserInfo.getEmail());
         assertThat(response.getPassword()).isNull();
-        assertThat(response.getNickname()).isEqualTo(oAuth2UserInfo.getNickname());
+        assertThat(response.getNickname()).isNotNull();
         assertThat(response.getProfileImage().getS3ObjectUrl()).isEqualTo(profileImage.getS3ObjectUrl());
         assertThat(response.getJoinType()).isEqualTo(JoinType.SOCIAL);
         assertThat(response.getCreatedAt()).isNotNull();
@@ -294,21 +293,5 @@ class CustomOAuth2UserServiceTest extends SocialMemberTest {
 
 
 
-    @Test
-    @DisplayName("소셜 사용자 추가 시 닉네임 중복으로 예외 발생")
-    void createMember_duplicateNickname() {
-        // given
-        OAuth2UserInfo oAuth2UserInfo = createNaverUserInfo("member@email.com", "member");
-
-        when(memberRepository.existsByNickname(anyString())).thenReturn(true);
-
-        // when
-        DataExistException fail = assertThrows(DataExistException.class,
-                () -> customOAuth2UserService.createMember(oAuth2UserInfo));
-
-        // then
-        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.ALREADY_EXISTED_NICKNAME.getStatus());
-        assertThat(fail.getMessage()).isEqualTo(ErrorCode.ALREADY_EXISTED_NICKNAME.getMessage());
-    }
 
 }
