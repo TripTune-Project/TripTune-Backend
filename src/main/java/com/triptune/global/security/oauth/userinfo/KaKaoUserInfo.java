@@ -13,17 +13,18 @@ public class KaKaoUserInfo implements OAuth2UserInfo{
 
     @Override
     public String getSocialId() {
-        return "";
+        return attributes.get("id").toString();
     }
 
     @Override
     public SocialType getSocialType() {
-        return null;
+        return SocialType.KAKAO;
     }
 
     @Override
     public String getEmail() {
-        return "";
+        Map<String, Object> kakaoAccount = (Map<String, Object>) attributes.get("kakao_account");
+        return kakaoAccount.get("email").toString();
     }
 
 }
