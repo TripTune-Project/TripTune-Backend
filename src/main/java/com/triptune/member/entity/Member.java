@@ -12,8 +12,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 @Entity
 @Getter
@@ -134,8 +132,10 @@ public class Member {
         updateUpdatedAt();
     }
 
-    public void updateJoinType(JoinType joinType){
-        this.joinType = joinType;
+    public void updateOAuth2JoinType(){
+        if (this.joinType.equals(JoinType.NATIVE)){
+            this.joinType = JoinType.BOTH;
+        }
         updateUpdatedAt();
     }
 

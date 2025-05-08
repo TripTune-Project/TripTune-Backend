@@ -11,7 +11,6 @@ import com.triptune.global.security.jwt.JwtUtils;
 import com.triptune.global.util.NicknameGenerator;
 import com.triptune.member.entity.Member;
 import com.triptune.member.entity.SocialMember;
-import com.triptune.member.enums.JoinType;
 import com.triptune.member.repository.MemberRepository;
 import com.triptune.member.repository.SocialMemberRepository;
 import com.triptune.profile.entity.ProfileImage;
@@ -84,14 +83,14 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     public Member processSocialLogin(OAuth2UserInfo oAuth2UserInfo){
         // 3. 기존 회원 정보 존재하는지 확인
         // 4. 기존 회원 정보 존재하면 회원통합, 아니면 신규 회원 생성
-        return memberRepository.findNativeMemberByEmail(oAuth2UserInfo.getEmail())
+        return memberRepository.findByEmail(oAuth2UserInfo.getEmail())
                 .map(savedMember -> integrateMember(savedMember, oAuth2UserInfo))
                 .orElseGet(() -> createMember(oAuth2UserInfo));
     }
 
     public Member integrateMember(Member savedMember, OAuth2UserInfo oAuth2UserInfo){
         createSocialMember(savedMember, oAuth2UserInfo);
-        savedMember.updateJoinType(JoinType.BOTH);
+        savedMember.updateOAuth2JoinType();
 
         log.info("기존 회원과 소셜 계정 통합 완료");
         return savedMember;

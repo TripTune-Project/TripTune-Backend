@@ -20,6 +20,4 @@ public interface MemberRepository extends JpaRepository<Member, Long>, MemberRep
     @Query("update Member m set m.refreshToken = NULL where m.nickname = :nickname")
     void deleteRefreshTokenByNickname(@Param("nickname") String nickname);
 
-    @Query("select m from Member m where m.email = :email and m.joinType = 'NATIVE'")
-    Optional<Member> findNativeMemberByEmail(@Param("email") String email);
 }

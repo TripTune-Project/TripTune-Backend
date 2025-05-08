@@ -56,6 +56,12 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 )
                 .oauth2Login(oauth2 -> oauth2
+                        .authorizationEndpoint(authorization -> authorization
+                                .baseUri("/oauth2/authorization")
+                        )
+                        .redirectionEndpoint(redirection -> redirection
+                                .baseUri("/login/oauth2/code/*")
+                        )
                         // 로그인 성공 이후 사용자 정보를 가져올 때의 설정을 담당
                         .userInfoEndpoint(c -> c.userService(customOAuth2UserService))
                         // 로그인 성공 시 핸들러
