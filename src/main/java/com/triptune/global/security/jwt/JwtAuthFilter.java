@@ -23,16 +23,18 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        if(SecurityConstants.isWhitelisted(request.getRequestURI())){
-            filterChain.doFilter(request, response);
-            return;
-        }
+        String uri = request.getRequestURI();
 
-        String token = jwtUtils.resolveToken(request);
         try{
-            if (token != null && jwtUtils.validateToken(token)){
-                Authentication auth = jwtUtils.getAuthentication(token);
-                SecurityContextHolder.getContext().setAuthentication(auth);
+            if(SecurityConstants.isWhitelisted(uri)){
+                filterChain.doFilter(request, response);
+                return;
+            }
+
+            String token = jwtUtils.resolveToken(request);
+
+            if (isValidateTravelEndpointToken(uri, token) || isValidateToken(token)){
+                setAuthentication(token);
             }
 
             filterChain.doFilter(request, response);
@@ -41,6 +43,22 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             JwtUtils.writeJwtException(request, response, ex.getHttpStatus(), ex.getMessage());
         }
 
+    }
+
+    private boolean isValidateTravelEndpointToken(String uri, String token){
+        if (SecurityConstants.isTargetedTravelEndpoint(uri) && token != null) {
+            return jwtUtils.validateToken(token);
+        }
+        return false;
+    }
+
+    private boolean isValidateToken(String token){
+        return token != null && jwtUtils.validateToken(token);
+    }
+
+    private void setAuthentication(String token){
+        Authentication auth = jwtUtils.getAuthentication(token);
+        SecurityContextHolder.getContext().setAuthentication(auth);
     }
 
 
