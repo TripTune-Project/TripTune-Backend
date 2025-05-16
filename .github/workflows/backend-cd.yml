@@ -76,7 +76,7 @@ jobs:
           port: ${{ secrets.EC2_SSH_PORT }}
 
           script: |
-            cd triptune
+            cd /home/ubuntu/triptune
             sudo docker-compose stop ${{ secrets.SPRING_CONTAINER_NAME }}
             sudo docker-compose rm -f
             sudo docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
