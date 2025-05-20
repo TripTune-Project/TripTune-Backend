@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 
 @Getter
@@ -23,10 +24,10 @@ public class ChatMessage {
     private Long scheduleId;
     private Long memberId;
     private String message;
-    private LocalDateTime timestamp;
+    private Instant timestamp;
 
     @Builder
-    public ChatMessage(String messageId, Long scheduleId, Long memberId, String message, LocalDateTime timestamp) {
+    public ChatMessage(String messageId, Long scheduleId, Long memberId, String message, Instant timestamp) {
         this.messageId = messageId;
         this.scheduleId = scheduleId;
         this.memberId = memberId;
@@ -39,7 +40,7 @@ public class ChatMessage {
                 .scheduleId(chatMessageRequest.getScheduleId())
                 .memberId(member.getMemberId())
                 .message(chatMessageRequest.getMessage())
-                .timestamp(LocalDateTime.now())
+                .timestamp(Instant.now())
                 .build();
     }
 }

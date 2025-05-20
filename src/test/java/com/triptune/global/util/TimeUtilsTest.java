@@ -3,6 +3,7 @@ package com.triptune.global.util;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -269,13 +270,13 @@ public class TimeUtilsTest {
     @DisplayName("한국 시간으로 변경")
     void convertToKST(){
         // given
-        LocalDateTime testTime = LocalDateTime.now().minusHours(9);
+        Instant utcTime = Instant.parse("2025-05-20T15:00:00Z");
 
         // when
-        LocalDateTime response = TimeUtils.convertToKST(testTime);
+        LocalDateTime response = TimeUtils.convertToKST(utcTime);
 
         // then
-        assertThat(response).isEqualTo(testTime.plusHours(9));
+        assertThat(response).isEqualTo(LocalDateTime.of(2025, 5, 21, 0, 0, 0));
     }
 
 }

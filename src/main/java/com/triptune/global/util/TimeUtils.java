@@ -1,6 +1,7 @@
 package com.triptune.global.util;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -10,7 +11,6 @@ public class TimeUtils {
     private static final int HOURS_IN_A_DAY = 24;
     private static final int MINUTES_IN_AN_HOUR = 60;
     private static final String DATE_PATTERN = "yyyy년 M월 d일";
-    private static final ZoneId TIMEZONE_UTC = ZoneId.of("UTC");
     private static final ZoneId TIMEZONE_KST = ZoneId.of("Asia/Seoul");
 
     public static String timeDuration(LocalDateTime updateTime){
@@ -51,13 +51,11 @@ public class TimeUtils {
     }
 
 
-    public static LocalDateTime convertToKST(LocalDateTime source){
+    public static LocalDateTime convertToKST(Instant source){
         if(source == null){
             return null;
         }
 
-        return source.atZone(TIMEZONE_UTC)
-                .withZoneSameInstant(TIMEZONE_KST)
-                .toLocalDateTime();
+        return LocalDateTime.ofInstant(source, TIMEZONE_KST);
     }
 }
