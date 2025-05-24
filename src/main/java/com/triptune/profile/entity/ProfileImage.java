@@ -26,8 +26,8 @@ public class ProfileImage {
     @Column(name = "s3_object_url")
     private String s3ObjectUrl;
 
-    @Column(name = "s3_file_key")
-    private String s3FileKey;
+    @Column(name = "s3_object_key")
+    private String s3ObjectKey;
 
     @Column(name = "original_name")
     private String originalName;
@@ -49,11 +49,11 @@ public class ProfileImage {
 
 
     @Builder
-    public ProfileImage(Long profileImageId, Member member, String s3ObjectUrl, String s3FileKey, String originalName, String fileName, String fileType, double fileSize, LocalDateTime createdAt, LocalDateTime updatedAt) {
+    public ProfileImage(Long profileImageId, Member member, String s3ObjectUrl, String s3ObjectKey, String originalName, String fileName, String fileType, double fileSize, LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.profileImageId = profileImageId;
         this.member = member;
         this.s3ObjectUrl = s3ObjectUrl;
-        this.s3FileKey = s3FileKey;
+        this.s3ObjectKey = s3ObjectKey;
         this.originalName = originalName;
         this.fileName = fileName;
         this.fileType = fileType;
@@ -65,7 +65,7 @@ public class ProfileImage {
     public static ProfileImage from(DefaultProfileImageProperties imageProperties){
         return ProfileImage.builder()
                 .s3ObjectUrl(imageProperties.getS3ObjectUrl())
-                .s3FileKey(imageProperties.getS3FileKey())
+                .s3ObjectKey(imageProperties.getS3ObjectKey())
                 .originalName(imageProperties.getOriginalName())
                 .fileName(imageProperties.getFileName())
                 .fileType(imageProperties.getExtension())
@@ -76,7 +76,7 @@ public class ProfileImage {
 
     public void updateProfileImage(MultipartFile profileImageFile, String s3ObjectUrl, String s3FileKey, String savedFileName, String extension){
         this.s3ObjectUrl = s3ObjectUrl;
-        this.s3FileKey = s3FileKey;
+        this.s3ObjectKey = s3FileKey;
         this.originalName = profileImageFile.getOriginalFilename();
         this.fileName = savedFileName;
         this.fileType = extension;
@@ -86,7 +86,7 @@ public class ProfileImage {
 
     public void updateDefaultProfileImage(DefaultProfileImageProperties imageProperties) {
         this.s3ObjectUrl = imageProperties.getS3ObjectUrl();
-        this.s3FileKey = imageProperties.getS3FileKey();
+        this.s3ObjectKey = imageProperties.getS3ObjectKey();
         this.originalName = imageProperties.getOriginalName();
         this.fileName = imageProperties.getFileName();
         this.fileType = imageProperties.getExtension();
