@@ -65,8 +65,8 @@ public class ProfileImageService {
     }
 
     public void deleteS3File(ProfileImage profileImage){
-        if(!profileImage.getS3FileKey().equals(profileImageProperties.getS3FileKey())){
-            s3Service.deleteS3File(profileImage.getS3FileKey());
+        if(!profileImage.getS3ObjectKey().equals(profileImageProperties.getS3ObjectKey())){
+            s3Service.deleteS3File(profileImage.getS3ObjectKey());
         }
     }
 }

@@ -46,7 +46,7 @@ public class ProfileImageServiceMockTest extends ProfileImageTest {
         ProfileImage profileImage = createProfileImage(1L, "savedImage", member);
 
         when(profileImageRepository.findByMemberId(any())).thenReturn(Optional.of(profileImage));
-        when(imageProperties.getS3FileKey()).thenReturn(profileImage.getS3FileKey());
+        when(imageProperties.getS3ObjectKey()).thenReturn(profileImage.getS3ObjectKey());
 
         // when
         assertDoesNotThrow(() -> profileImageService.updateProfileImage(member.getMemberId(), mockMultipartFile));
