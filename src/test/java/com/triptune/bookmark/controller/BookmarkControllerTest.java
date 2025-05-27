@@ -10,17 +10,19 @@ import com.triptune.common.repository.ApiCategoryRepository;
 import com.triptune.common.repository.CityRepository;
 import com.triptune.common.repository.CountryRepository;
 import com.triptune.common.repository.DistrictRepository;
-import com.triptune.member.entity.Member;
-import com.triptune.member.repository.MemberRepository;
-import com.triptune.travel.entity.TravelPlace;
-import com.triptune.travel.repository.TravelPlaceRepository;
 import com.triptune.global.response.enums.ErrorCode;
 import com.triptune.global.response.enums.SuccessCode;
 import com.triptune.global.security.jwt.JwtAuthFilter;
 import com.triptune.global.security.jwt.JwtUtils;
+import com.triptune.member.entity.Member;
+import com.triptune.member.repository.MemberRepository;
+import com.triptune.travel.entity.TravelPlace;
+import com.triptune.travel.repository.TravelPlaceRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
@@ -94,6 +96,42 @@ class BookmarkControllerTest extends BookmarkTest {
         assertThat(travelPlace.getBookmarkCnt()).isEqualTo(1);
     }
 
+    @ParameterizedTest
+    @DisplayName("북마크 생성 시 1보다 작은 값 입력으로 에러 발생")
+    @ValueSource(longs = {0L, -1L, Long.MIN_VALUE})
+    void createBookmark_invalidMinPlaceId(Long input) throws Exception {
+        // given
+        Member member = memberRepository.save(createMember(null, "member@email.com"));
+        mockAuthentication(member);
+
+        // when
+        // then
+        mockMvc.perform(post("/api/bookmarks")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJsonString(createBookmarkRequest(input))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value("여행지 ID는 1 이상의 값이어야 합니다."));
+    }
+
+    @Test
+    @DisplayName("북마크 생성 시 placeId 값이 null 로 에러 발생")
+    void createBookmark_invalidNullPlaceId() throws Exception{
+        // given
+        Member member = memberRepository.save(createMember(null, "member@email.com"));
+        mockAuthentication(member);
+
+        // when
+        // then
+        mockMvc.perform(post("/api/bookmarks")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJsonString(createBookmarkRequest(null))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value("여행지 ID는 필수 입력 값입니다."));
+
+    }
+
 
     @Test
     @DisplayName("북마크 추가 시 이미 북마크로 등록되어 있어 예외 발생")
@@ -137,7 +175,7 @@ class BookmarkControllerTest extends BookmarkTest {
 
         mockMvc.perform(post("/api/bookmarks")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(createBookmarkRequest(0L))))
+                        .content(toJsonString(createBookmarkRequest(1000L))))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value(ErrorCode.PLACE_NOT_FOUND.getMessage()));

@@ -1,0 +1,153 @@
+package com.triptune.email.controller;
+
+import com.triptune.email.EmailTest;
+import com.triptune.global.security.jwt.JwtAuthFilter;
+import com.triptune.global.security.jwt.JwtUtils;
+import com.triptune.member.repository.MemberRepository;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
+import org.springframework.web.filter.CharacterEncodingFilter;
+
+import static org.hamcrest.Matchers.containsString;
+import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+@SpringBootTest
+@ActiveProfiles("h2")
+class EmailControllerTest extends EmailTest {
+
+    @Autowired private WebApplicationContext wac;
+    @Autowired private JwtUtils jwtUtils;
+
+    private MockMvc mockMvc;
+
+    @BeforeEach
+    void setUp(){
+        mockMvc = MockMvcBuilders.webAppContextSetup(wac)
+                .addFilter(new JwtAuthFilter(jwtUtils))
+                .addFilter(new CharacterEncodingFilter("UTF-8", true))
+                .apply(springSecurity())
+                .alwaysDo(print())
+                .build();
+    }
+
+    @ParameterizedTest
+    @DisplayName("이메일 인증 요청 시 값이 들어오지 않아 예외 발생")
+    @ValueSource(strings = {"", " "})
+    void verifyRequest_invalidNotBlank(String input) throws Exception{
+        mockMvc.perform(post("/api/emails/verify-request")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJsonString(createEmailRequest(input))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value(containsString("이메일은 필수 입력 값입니다.")));
+
+    }
+
+
+    @Test
+    @DisplayName("이메일 인증 요청 시 null 값이 들어와 예외 발생")
+    void verifyRequest_invalidNull() throws Exception{
+        mockMvc.perform(post("/api/emails/verify-request")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJsonString(createEmailRequest(null))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value(containsString("이메일은 필수 입력 값입니다.")));
+
+    }
+
+    @ParameterizedTest
+    @DisplayName("이메일 인증 요청 시 이메일 형식에 맞지 않아 예외 발생")
+    @ValueSource(strings = {"test", "test@", "test$email.com"})
+    void verifyRequest_invalidEmail(String input) throws Exception{
+        mockMvc.perform(post("/api/emails/verify-request")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJsonString(createEmailRequest(input))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value(containsString("이메일 형식에 맞지 않습니다.")));
+
+    }
+
+
+    @ParameterizedTest
+    @DisplayName("이메일 인증 시 이메일에 값이 들어오지 않아 예외 발생")
+    @ValueSource(strings = {"", " "})
+    void verify_invalidNotBlankEmail(String input) throws Exception{
+        mockMvc.perform(post("/api/emails/verify")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJsonString(createVerifyAuthRequest(input, "authCode"))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value(containsString("이메일은 필수 입력 값입니다.")));
+
+    }
+
+
+    @Test
+    @DisplayName("이메일 인증 시 이메일에 null 값이 들어와 예외 발생")
+    void verify_invalidNullEmail() throws Exception{
+        mockMvc.perform(post("/api/emails/verify")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJsonString(createVerifyAuthRequest(null, "authCode"))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value(containsString("이메일은 필수 입력 값입니다.")));
+
+    }
+
+    @ParameterizedTest
+    @DisplayName("이메일 인증 시 이메일 형식에 맞지 않아 예외 발생")
+    @ValueSource(strings = {"test", "test@", "test$email.com"})
+    void verify_invalidEmail(String input) throws Exception{
+        mockMvc.perform(post("/api/emails/verify")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJsonString(createVerifyAuthRequest(input, "authCode"))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value(containsString("이메일 형식에 맞지 않습니다.")));
+
+    }
+
+
+    @ParameterizedTest
+    @DisplayName("이메일 인증 시 인증번호 값이 들어오지 않아 예외 발생")
+    @ValueSource(strings = {"", " "})
+    void verify_invalidNotBlankAuthCode(String input) throws Exception{
+        mockMvc.perform(post("/api/emails/verify")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJsonString(createVerifyAuthRequest("member@email.com", input))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value(containsString("인증번호는 필수 입력 값입니다.")));
+
+    }
+
+
+    @Test
+    @DisplayName("이메일 인증 시 인증번호에 null 값이 들어와 예외 발생")
+    void verify_invalidNullAuthCode() throws Exception{
+        mockMvc.perform(post("/api/emails/verify")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJsonString(createVerifyAuthRequest("member@email.com", null))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value(containsString("인증번호는 필수 입력 값입니다.")));
+
+    }
+
+}
