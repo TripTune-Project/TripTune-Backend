@@ -63,6 +63,7 @@ public class MemberService {
     private final TravelScheduleRepository travelScheduleRepository;
     private final ChatMessageRepository chatMessageRepository;
     private final BookmarkRepository bookmarkRepository;
+    private final CookieUtils cookieUtils;
 
 
     public void join(JoinRequest joinRequest) {
@@ -116,7 +117,7 @@ public class MemberService {
 
         member.updateRefreshToken(refreshToken);
 
-        response.addHeader("Set-Cookie", CookieUtils.createCookie(CookieType.REFRESH_TOKEN, refreshToken));
+        response.addHeader("Set-Cookie", cookieUtils.createCookie(CookieType.REFRESH_TOKEN, refreshToken));
 
         return LoginResponse.of(accessToken, member.getNickname());
     }
@@ -269,7 +270,7 @@ public class MemberService {
 
     public void deleteCookies(HttpServletResponse response){
         Stream.of(CookieType.ACCESS_TOKEN, CookieType.REFRESH_TOKEN, CookieType.NICKNAME)
-                .forEach(type -> response.addHeader("Set-Cookie", CookieUtils.deleteCookie(type)));
+                .forEach(type -> response.addHeader("Set-Cookie", cookieUtils.deleteCookie(type)));
     }
 
 

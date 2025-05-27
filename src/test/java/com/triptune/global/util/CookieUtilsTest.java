@@ -1,19 +1,27 @@
 package com.triptune.global.util;
 
 import com.triptune.CookieType;
+import com.triptune.travel.service.TravelService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@ExtendWith(MockitoExtension.class)
 class CookieUtilsTest {
+
+    @InjectMocks private CookieUtils cookieUtils;
 
     @Test
     @DisplayName("accessToken 쿠키 생성")
     void createAccessTokenCookie() {
         // given
         // when
-        String response = CookieUtils.createCookie(CookieType.ACCESS_TOKEN, "accessTokenValue");
+        String response = cookieUtils.createCookie(CookieType.ACCESS_TOKEN, "accessTokenValue");
 
         // then
         assertThat(response).contains(CookieType.ACCESS_TOKEN.getKey() + "=accessTokenValue");
@@ -30,7 +38,7 @@ class CookieUtilsTest {
     void createNicknameCookie() {
         // given
         // when
-        String response = CookieUtils.createCookie(CookieType.NICKNAME, "nicknameValue");
+        String response = cookieUtils.createCookie(CookieType.NICKNAME, "nicknameValue");
 
         // then
         assertThat(response).contains(CookieType.NICKNAME.getKey() + "=nicknameValue");
@@ -64,7 +72,7 @@ class CookieUtilsTest {
     void deleteAccessTokenCookie() {
         // given
         // when
-        String response = CookieUtils.deleteCookie(CookieType.ACCESS_TOKEN);
+        String response = cookieUtils.deleteCookie(CookieType.ACCESS_TOKEN);
 
         // then
         assertThat(response).contains(CookieType.ACCESS_TOKEN.getKey() + "=");
@@ -81,7 +89,7 @@ class CookieUtilsTest {
     void deleteNicknameCookie() {
         // given
         // when
-        String response = CookieUtils.deleteCookie(CookieType.NICKNAME);
+        String response = cookieUtils.deleteCookie(CookieType.NICKNAME);
 
         // then
         assertThat(response).contains(CookieType.NICKNAME.getKey() + "=");
@@ -98,7 +106,7 @@ class CookieUtilsTest {
     void deleteRefreshTokenCookie() {
         // given
         // when
-        String response = CookieUtils.deleteCookie(CookieType.REFRESH_TOKEN);
+        String response = cookieUtils.deleteCookie(CookieType.REFRESH_TOKEN);
 
         // then
         assertThat(response).contains(CookieType.REFRESH_TOKEN.getKey() + "=");

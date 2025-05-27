@@ -25,6 +25,7 @@ import java.nio.charset.StandardCharsets;
 public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
 
     private final JwtUtils jwtUtils;
+    private final CookieUtils cookieUtils;
 
     @Value("${app.frontend.main.url}")
     private String redirectURL;
@@ -36,12 +37,12 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
 
         String accessToken = jwtUtils.createAccessToken(userDetails.getMemberId());
-        response.addHeader("Set-Cookie", CookieUtils.createCookie(CookieType.ACCESS_TOKEN, accessToken));
+        response.addHeader("Set-Cookie", cookieUtils.createCookie(CookieType.ACCESS_TOKEN, accessToken));
 
         String encodeNickname = URLEncoder.encode(userDetails.getName(), StandardCharsets.UTF_8);
-        response.addHeader("Set-Cookie", CookieUtils.createCookie(CookieType.NICKNAME, encodeNickname));
+        response.addHeader("Set-Cookie", cookieUtils.createCookie(CookieType.NICKNAME, encodeNickname));
 
-        response.addHeader("Set-Cookie", CookieUtils.createCookie(CookieType.REFRESH_TOKEN, userDetails.getRefreshToken()));
+        response.addHeader("Set-Cookie", cookieUtils.createCookie(CookieType.REFRESH_TOKEN, userDetails.getRefreshToken()));
 
         log.info("[Set-Cookie] accessToken   | maxAge={}s | HttpOnly={}",
                 CookieType.ACCESS_TOKEN.getMaxAgeSeconds(), CookieType.ACCESS_TOKEN.isHttpOnly());

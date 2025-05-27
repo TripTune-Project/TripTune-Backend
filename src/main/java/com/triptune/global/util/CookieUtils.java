@@ -3,15 +3,17 @@ package com.triptune.global.util;
 import com.triptune.CookieType;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseCookie;
+import org.springframework.stereotype.Component;
 
 import java.time.Duration;
 
+@Component
 public class CookieUtils {
 
     @Value("${app.domain}")
-    private static String domainPath;
+    private String domainPath;
 
-    public static String createCookie(CookieType cookieType, String value){
+    public String createCookie(CookieType cookieType, String value){
         return ResponseCookie.from(cookieType.getKey(), value)
 //                .httpOnly(cookieType.isHttpOnly())
                 .httpOnly(false)
@@ -24,7 +26,7 @@ public class CookieUtils {
                 .toString();
     }
 
-    public static String deleteCookie(CookieType cookieType){
+    public String deleteCookie(CookieType cookieType){
         return ResponseCookie.from(cookieType.getKey(), "")
                 .httpOnly(true)
                 .maxAge(0)
