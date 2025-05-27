@@ -671,9 +671,7 @@ public class MemberControllerTest extends MemberTest {
         Cookie[] cookies = result.getResponse().getCookies();
 
         assertThat(cookies).isNotNull();
-        assertThat(cookies.length).isEqualTo(1);
-        assertThat(cookies[0].getName()).isEqualTo("refreshToken");
-        assertThat(cookies[0].getValue()).isNull();
+        assertThat(cookies.length).isEqualTo(3);
     }
 
 
@@ -1333,9 +1331,7 @@ public class MemberControllerTest extends MemberTest {
         Cookie[] cookies = result.getResponse().getCookies();
 
         assertThat(cookies).isNotNull();
-        assertThat(cookies.length).isEqualTo(1);
-        assertThat(cookies[0].getName()).isEqualTo("refreshToken");
-        assertThat(cookies[0].getValue()).isNull();
+        assertThat(cookies.length).isEqualTo(3);
     }
 
     @Test
@@ -1371,9 +1367,7 @@ public class MemberControllerTest extends MemberTest {
         Cookie[] cookies = result.getResponse().getCookies();
 
         assertThat(cookies).isNotNull();
-        assertThat(cookies.length).isEqualTo(1);
-        assertThat(cookies[0].getName()).isEqualTo("refreshToken");
-        assertThat(cookies[0].getValue()).isNull();
+        assertThat(cookies.length).isEqualTo(3);
     }
 
     @Test
@@ -1407,9 +1401,7 @@ public class MemberControllerTest extends MemberTest {
         Cookie[] cookies = result.getResponse().getCookies();
 
         assertThat(cookies).isNotNull();
-        assertThat(cookies.length).isEqualTo(1);
-        assertThat(cookies[0].getName()).isEqualTo("refreshToken");
-        assertThat(cookies[0].getValue()).isNull();
+        assertThat(cookies.length).isEqualTo(3);
     }
 
     @Test

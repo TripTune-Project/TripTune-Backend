@@ -1,5 +1,6 @@
 package com.triptune.member.service;
 
+import com.triptune.CookieType;
 import com.triptune.bookmark.enums.BookmarkSortType;
 import com.triptune.bookmark.repository.BookmarkRepository;
 import com.triptune.email.dto.request.EmailRequest;
@@ -11,6 +12,7 @@ import com.triptune.global.security.exception.CustomJwtUnAuthorizedException;
 import com.triptune.global.exception.DataExistException;
 import com.triptune.global.exception.DataNotFoundException;
 import com.triptune.global.security.jwt.JwtUtils;
+import com.triptune.global.util.CookieUtils;
 import com.triptune.global.util.PageUtils;
 import com.triptune.global.redis.RedisService;
 import com.triptune.member.dto.request.*;
@@ -31,7 +33,6 @@ import com.triptune.travel.dto.response.PlaceBookmarkResponse;
 import com.triptune.travel.entity.TravelPlace;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.mail.MessagingException;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -42,6 +43,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.stream.Stream;
 
 @Service
 @Transactional
@@ -59,10 +61,6 @@ public class MemberService {
     private final TravelScheduleRepository travelScheduleRepository;
     private final ChatMessageRepository chatMessageRepository;
     private final BookmarkRepository bookmarkRepository;
-
-
-    @Value("${spring.jwt.token.refresh-expiration-time}")
-    private int refreshExpirationTime;
 
 
     public void join(JoinRequest joinRequest) {
@@ -116,8 +114,7 @@ public class MemberService {
 
         member.updateRefreshToken(refreshToken);
 
-        Cookie refreshTokenCookie = createRefreshTokenCookie(refreshToken, refreshExpirationTime);
-        response.addCookie(refreshTokenCookie);
+        response.addHeader("Set-Cookie", CookieUtils.createCookie(CookieType.REFRESH_TOKEN, refreshToken));
 
         return LoginResponse.of(accessToken, member.getNickname());
     }
@@ -135,20 +132,9 @@ public class MemberService {
         memberRepository.deleteRefreshTokenByNickname(logoutRequest.getNickname());
         redisService.saveExpiredData(accessToken, "logout", LOGOUT_DURATION);
 
-        Cookie refreshTokenCookie = createRefreshTokenCookie(null, 0);
-        response.addCookie(refreshTokenCookie);
+        deleteCookies(response);
     }
 
-
-    private Cookie createRefreshTokenCookie(String refreshToken, int maxAgeMillis) {
-        Cookie cookie = new Cookie("refreshToken", refreshToken);
-        cookie.setHttpOnly(true);
-        cookie.setSecure(true);
-        cookie.setPath("/");
-        cookie.setMaxAge(maxAgeMillis / 1000);
-
-        return cookie;
-    }
 
     public RefreshTokenResponse refreshToken(String refreshToken) throws ExpiredJwtException {
         jwtUtils.validateToken(refreshToken);
@@ -274,8 +260,13 @@ public class MemberService {
         member.updateRefreshToken(null);
         redisService.saveExpiredData(accessToken, "logout", LOGOUT_DURATION);
 
-        Cookie refreshTokenCookie = createRefreshTokenCookie(null, 0);
-        response.addCookie(refreshTokenCookie);
+        deleteCookies(response);
+    }
+
+
+    public void deleteCookies(HttpServletResponse response){
+        Stream.of(CookieType.ACCESS_TOKEN, CookieType.REFRESH_TOKEN, CookieType.NICKNAME)
+                .forEach(type -> response.addHeader("Set-Cookie", CookieUtils.deleteCookie(type)));
     }
 
 
