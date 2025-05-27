@@ -9,9 +9,10 @@ public class CookieUtils {
 
     public static String createCookie(CookieType cookieType, String value){
         return ResponseCookie.from(cookieType.getKey(), value)
-                .httpOnly(true)
+//                .httpOnly(cookieType.isHttpOnly())
+                .httpOnly(false)
                 .maxAge(cookieType.getMaxAgeSeconds())
-                .secure(cookieType.isHttpOnly())
+                .secure(true)
                 .path("/")
                 .sameSite("None")
                 .build()
@@ -22,7 +23,7 @@ public class CookieUtils {
         return ResponseCookie.from(cookieType.getKey(), "")
                 .httpOnly(true)
                 .maxAge(0)
-                .secure(cookieType.isHttpOnly())
+                .secure(true)
                 .path("/")
                 .sameSite("None")
                 .build()
