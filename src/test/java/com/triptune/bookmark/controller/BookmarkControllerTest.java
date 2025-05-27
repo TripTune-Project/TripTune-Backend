@@ -175,7 +175,7 @@ class BookmarkControllerTest extends BookmarkTest {
 
         mockMvc.perform(post("/api/bookmarks")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(createBookmarkRequest(0L))))
+                        .content(toJsonString(createBookmarkRequest(1000L))))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value(ErrorCode.PLACE_NOT_FOUND.getMessage()));
