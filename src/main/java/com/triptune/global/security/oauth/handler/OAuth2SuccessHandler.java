@@ -1,7 +1,9 @@
 package com.triptune.global.security.oauth.handler;
 
+import com.triptune.CookieType;
 import com.triptune.global.security.CustomUserDetails;
 import com.triptune.global.security.jwt.JwtUtils;
+import com.triptune.global.util.CookieUtils;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -27,13 +29,6 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
     @Value("${app.frontend.main.url}")
     private String redirectURL;
 
-    @Value("${spring.jwt.token.access-expiration-time}")
-    private int accessExpirationTime;
-
-    @Value("${spring.jwt.token.refresh-expiration-time}")
-    private int refreshExpirationTime;
-
-
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
         log.info("로그인 성공 후 SuccessHandler 진입");
@@ -41,22 +36,19 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
 
         String accessToken = jwtUtils.createAccessToken(userDetails.getMemberId());
-        Cookie accessTokenCookie = createCookie("accessToken", accessToken, false, accessExpirationTime);
-        response.addCookie(accessTokenCookie);
+        response.addHeader("Set-Cookie", CookieUtils.createCookie(CookieType.ACCESS_TOKEN, accessToken));
 
         String encodeNickname = URLEncoder.encode(userDetails.getName(), StandardCharsets.UTF_8);
-        Cookie nicknameCookie = createCookie("nickname", encodeNickname, false, accessExpirationTime);
-        response.addCookie(nicknameCookie);
+        response.addHeader("Set-Cookie", CookieUtils.createCookie(CookieType.NICKNAME, encodeNickname));
 
-        Cookie refreshTokenCookie = createCookie("refreshToken", userDetails.getRefreshToken(), true, refreshExpirationTime);
-        response.addCookie(refreshTokenCookie);
+        response.addHeader("Set-Cookie", CookieUtils.createCookie(CookieType.REFRESH_TOKEN, userDetails.getRefreshToken()));
 
         log.info("[Set-Cookie] accessToken   | maxAge={}s | HttpOnly={}",
-                accessExpirationTime / 1000, accessTokenCookie.isHttpOnly());
+                CookieType.ACCESS_TOKEN.getMaxAgeSeconds(), CookieType.ACCESS_TOKEN.isHttpOnly());
         log.info("[Set-Cookie] nickname      | maxAge={}s | HttpOnly={}",
-                accessExpirationTime / 1000, nicknameCookie.isHttpOnly());
+                CookieType.NICKNAME.getMaxAgeSeconds(), CookieType.NICKNAME.isHttpOnly());
         log.info("[Set-Cookie] refreshToken | maxAge={}s | HttpOnly={}",
-                refreshExpirationTime / 1000, refreshTokenCookie.isHttpOnly());
+                CookieType.REFRESH_TOKEN.getMaxAgeSeconds(), CookieType.REFRESH_TOKEN.isHttpOnly());
 
         log.info("Redirect To Frontend → {}", redirectURL);
 
@@ -64,13 +56,4 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
         log.info("소셜 로그인 성공");
     }
 
-    private Cookie createCookie(String key, String value, boolean httpOnly, int maxAgeMillis){
-        Cookie cookie = new Cookie(key, value);
-        cookie.setHttpOnly(httpOnly);
-        cookie.setSecure(true);
-        cookie.setPath("/");
-        cookie.setMaxAge(maxAgeMillis / 1000);
-
-        return cookie;
-    }
 }

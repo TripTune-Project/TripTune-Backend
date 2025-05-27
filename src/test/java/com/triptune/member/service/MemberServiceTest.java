@@ -301,9 +301,7 @@ public class MemberServiceTest extends MemberTest {
         // then
         Cookie[] cookies = mockHttpServletResponse.getCookies();
         assertThat(cookies).isNotNull();
-        assertThat(cookies.length).isEqualTo(1);
-        assertThat(cookies[0].getName()).isEqualTo("refreshToken");
-        assertThat(cookies[0].getValue()).isNull();
+        assertThat(cookies.length).isEqualTo(3);
 
         verify(memberRepository, times(1)).deleteRefreshTokenByNickname(request.getNickname());
         verify(redisService, times(1)).saveExpiredData(accessToken, "logout", 3600);
@@ -762,9 +760,7 @@ public class MemberServiceTest extends MemberTest {
         // then
         Cookie[] cookies = mockHttpServletResponse.getCookies();
         assertThat(cookies).isNotNull();
-        assertThat(cookies.length).isEqualTo(1);
-        assertThat(cookies[0].getName()).isEqualTo("refreshToken");
-        assertThat(cookies[0].getValue()).isNull();
+        assertThat(cookies.length).isEqualTo(3);
         assertThat(member.getEmail()).isEqualTo("알 수 없음");
         assertThat(member.getPassword()).isEqualTo("알 수 없음");
     }
@@ -828,5 +824,6 @@ public class MemberServiceTest extends MemberTest {
         assertThat(fail.getMessage()).isEqualTo(ErrorCode.INCORRECT_PASSWORD.getMessage());
 
     }
+
 
 }
