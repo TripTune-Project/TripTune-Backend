@@ -763,7 +763,8 @@ public class MemberControllerTest extends MemberTest {
                                 .cookie(cookie))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()));
+                .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()))
+                .andExpect(jsonPath("$.data.accessToken").isNotEmpty());
     }
 
     @Test

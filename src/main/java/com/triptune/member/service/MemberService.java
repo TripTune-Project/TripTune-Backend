@@ -36,6 +36,7 @@ import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -45,6 +46,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.stream.Stream;
 
+@Slf4j
 @Service
 @Transactional
 @RequiredArgsConstructor
@@ -144,6 +146,7 @@ public class MemberService {
         validateSavedRefreshToken(member, refreshToken);
 
         String newAccessToken = jwtUtils.createAccessToken(member.getMemberId());
+        log.info("Access Token 재발급 완료 - memberId: {}", member.getMemberId());
         return RefreshTokenResponse.of(newAccessToken);
     }
 
