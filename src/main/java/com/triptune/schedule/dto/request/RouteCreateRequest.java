@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class RouteCreateRequest {
 
-    @NotNull(message = "여행지 아이디는 필수 입력 값입니다.")
+    @NotNull(message = "여행지 ID는 필수 입력 값입니다.")
     private Long placeId;
 
     @Builder

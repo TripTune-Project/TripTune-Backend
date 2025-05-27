@@ -16,7 +16,7 @@ public class AttendeeRequest {
     @NotBlank(message = "공유할 사용자 이메일은 필수 입력 값입니다.")
     private String email;
 
-    @NotNull(message = "허용 권한은 필수 입력 값입니다.")
+    @NotNull(message = "참석자 권한은 필수 입력 값입니다.")
     private AttendeePermission permission;
 
     @Builder

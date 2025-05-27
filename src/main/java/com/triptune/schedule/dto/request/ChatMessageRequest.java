@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class ChatMessageRequest {
 
-    @NotNull(message = "일정 인덱스는 필수 입력 값입니다.")
+    @NotNull(message = "일정 ID는 필수 입력 값입니다.")
     private Long scheduleId;
 
     @NotBlank(message = "닉네임은 필수 입력 값입니다.")

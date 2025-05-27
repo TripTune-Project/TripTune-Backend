@@ -106,7 +106,12 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("회원가입")
     void join(){
         // given
-        JoinRequest request = createMemberRequest("member@email.com", "password12!@", "password12!@");
+        JoinRequest request = createMemberRequest(
+                "member@email.com",
+                "password12!@",
+                "password12!@",
+                "nickname"
+        );
 
         when(memberRepository.existsByEmail(anyString())).thenReturn(false);
         when(memberRepository.existsByNickname(anyString())).thenReturn(false);
@@ -126,7 +131,12 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("회원가입 시 이미 가입한 이메일이 존재해 예외 발생")
     void join_emailExistException(){
         // given
-        JoinRequest request = createMemberRequest("member@email.com", "password12!@", "password12!@");
+        JoinRequest request = createMemberRequest(
+                "member@email.com",
+                "password12!@",
+                "password12!@",
+                "nickname"
+        );
 
         when(memberRepository.existsByEmail(anyString())).thenReturn(true);
 
@@ -143,7 +153,12 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("회원가입 시 이미 가입한 닉네임이 존재해 예외 발생")
     void join_nicknameExistException(){
         // given
-        JoinRequest request = createMemberRequest("member@email.com", "password12!@", "password12!@");
+        JoinRequest request = createMemberRequest(
+                "member@email.com",
+                "password12!@",
+                "password12!@",
+                "nickname"
+        );
 
         when(memberRepository.existsByEmail(anyString())).thenReturn(false);
         when(memberRepository.existsByNickname(anyString())).thenReturn(true);
@@ -163,7 +178,12 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("회원가입 시 인증된 이메일이 아니여서 예외 발생")
     void join_notVerifiedEmail(){
         // given
-        JoinRequest request = createMemberRequest("member@email.com", "password12!@", "password12!@");
+        JoinRequest request = createMemberRequest(
+                "member@email.com",
+                "password12!@",
+                "password12!@",
+                "nickname"
+        );
 
         when(memberRepository.existsByEmail(anyString())).thenReturn(false);
         when(memberRepository.existsByNickname(anyString())).thenReturn(false);

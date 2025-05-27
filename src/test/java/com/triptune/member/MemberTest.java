@@ -7,12 +7,12 @@ import jakarta.servlet.http.Cookie;
 
 public class MemberTest extends BaseTest {
 
-    protected JoinRequest createMemberRequest(String email, String password, String repassword){
+    protected JoinRequest createMemberRequest(String email, String password, String repassword, String nickname){
         return JoinRequest.builder()
                 .email(email)
                 .password(password)
                 .rePassword(repassword)
-                .nickname(email.split("@")[0])
+                .nickname(nickname)
                 .build();
     }
 

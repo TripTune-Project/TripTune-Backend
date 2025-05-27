@@ -9,6 +9,7 @@ import com.triptune.common.repository.ApiCategoryRepository;
 import com.triptune.common.repository.CityRepository;
 import com.triptune.common.repository.CountryRepository;
 import com.triptune.common.repository.DistrictRepository;
+import com.triptune.member.dto.request.*;
 import com.triptune.member.enums.JoinType;
 import com.triptune.member.enums.SocialType;
 import com.triptune.member.repository.SocialMemberRepository;
@@ -25,9 +26,6 @@ import com.triptune.travel.repository.TravelPlaceRepository;
 import com.triptune.global.s3.S3Service;
 import com.triptune.email.service.EmailService;
 import com.triptune.member.MemberTest;
-import com.triptune.member.dto.request.ChangeNicknameRequest;
-import com.triptune.member.dto.request.ChangePasswordRequest;
-import com.triptune.member.dto.request.JoinRequest;
 import com.triptune.member.entity.Member;
 import com.triptune.profile.entity.ProfileImage;
 import com.triptune.member.repository.MemberRepository;
@@ -40,6 +38,8 @@ import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -56,6 +56,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
@@ -127,34 +128,290 @@ public class MemberControllerTest extends MemberTest {
     @Test
     @DisplayName("회원가입")
     void join() throws Exception {
+        // given
         when(redisService.getEmailData(any(), anyString())).thenReturn("true");
 
+        JoinRequest request = createMemberRequest(
+                "member@email.com",
+                "password12!@",
+                "password12!@",
+                "nickname"
+        );
+
+        // when, then
         mockMvc.perform(post("/api/members/join")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(toJsonString(createMemberRequest("member@email.com", "password12!@", "password12!@"))))
+                .content(toJsonString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()));
     }
 
-    @Test
-    @DisplayName("회원 가입 시 비밀번호 유효성 검사로 예외 발생")
-    void joinInvalidPassword_methodArgumentNotValidException() throws Exception {
-        JoinRequest request = createMemberRequest("member@email.com", "password", "password");
 
+    @ParameterizedTest
+    @DisplayName("회원가입 시 이메일 빈 값으로 예외 발생")
+    @ValueSource(strings = {"", " "})
+    void join_invalidNotBlankEmail(String input) throws Exception{
+        // given
+        JoinRequest request = createMemberRequest(
+                input,
+                "password12!@",
+                "password12!@",
+                "nickname"
+        );
+
+        // when, then
         mockMvc.perform(post("/api/members/join")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(toJsonString(request)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.success").value(false))
-                .andExpect(jsonPath("$.message").isNotEmpty());
+                .andExpect(jsonPath("$.message").value(containsString("이메일은 필수 입력 값입니다.")));
     }
 
     @Test
-    @DisplayName("회원 가입 시 비밀번호, 비밀번호 재입력 불일치로 인한 예외 발생")
-    void join_CustomNotValidException() throws Exception {
-        JoinRequest request = createMemberRequest("member@email.com", "password123@", "repassword123@");
+    @DisplayName("회원가입 시 이메일 null 값이 들어와 예외 발생")
+    void join_invalidNullEmail() throws Exception{
+        // given
+        JoinRequest request = createMemberRequest(
+                null,
+                "password12!@",
+                "password12!@",
+                "nickname"
+        );
 
+
+        // when, then
+        mockMvc.perform(post("/api/members/join")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJsonString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value(containsString("이메일은 필수 입력 값입니다.")));
+
+    }
+
+    @ParameterizedTest
+    @DisplayName("회원가입 시 이메일 형식에 맞지 않아 예외 발생")
+    @ValueSource(strings = {"test", "test@", "test$email.com"})
+    void join_invalidEmail(String input) throws Exception{
+        // given
+        JoinRequest request = createMemberRequest(
+                input,
+                "password12!@",
+                "password12!@",
+                "nickname"
+        );
+
+        // when, then
+        mockMvc.perform(post("/api/members/join")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJsonString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value(containsString("이메일 형식에 맞지 않습니다.")));
+    }
+
+
+    @ParameterizedTest
+    @DisplayName("회원가입 시 비밀번호 빈 값으로 예외 발생")
+    @ValueSource(strings = {"", " "})
+    void join_invalidNotBlankPassword(String input) throws Exception{
+        // given
+        JoinRequest request = createMemberRequest(
+                "member@email.com",
+                input,
+                "password12!@",
+                "nickname"
+        );
+
+        // when, then
+        mockMvc.perform(post("/api/members/join")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJsonString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value(containsString("비밀번호는 필수 입력 값입니다.")));
+    }
+
+    @Test
+    @DisplayName("회원가입 시 비밀번호 null 값이 들어와 예외 발생")
+    void join_invalidNullPassword() throws Exception{
+        // given
+        JoinRequest request = createMemberRequest(
+                "member@email.com",
+                null,
+                "password12!@",
+                "nickname"
+        );
+
+        // when, then
+        mockMvc.perform(post("/api/members/join")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJsonString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value(containsString("비밀번호는 필수 입력 값입니다.")));
+    }
+
+    @ParameterizedTest
+    @DisplayName("회원가입 시 비밀번호 유효성 검사로 예외 발생")
+    @ValueSource(strings = {"p", "p1@", "password", "1@", "passworddddddddd", "passworddddddddd!@", "password!@"})
+    void join_invalidPassword(String input) throws Exception {
+        // given
+        JoinRequest request = createMemberRequest(
+                "member@email.com",
+                input,
+                "password12!@",
+                "nickname"
+        );
+
+        // when, then
+        mockMvc.perform(post("/api/members/join")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJsonString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value("비밀번호는 8자 이상 15자 이하의 영문, 숫자, 특수문자 조합이어야 합니다."));
+    }
+
+    @ParameterizedTest
+    @DisplayName("회원가입 시 비밀번호 재입력 빈 값으로 예외 발생")
+    @ValueSource(strings = {"", " "})
+    void join_invalidNotBlankRePassword(String input) throws Exception{
+        // given
+        JoinRequest request = createMemberRequest(
+                "member@email.com",
+                "password12!@",
+                input,
+                "nickname"
+        );
+
+        // when, then
+        mockMvc.perform(post("/api/members/join")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJsonString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value(containsString("비밀번호 재입력은 필수 입력 값입니다.")));
+    }
+
+    @Test
+    @DisplayName("회원가입 시 비밀번호 재입력 null 값이 들어와 예외 발생")
+    void join_invalidNullRePassword() throws Exception{
+        // given
+        JoinRequest request = createMemberRequest(
+                "member@email.com",
+                "password12!@",
+                null,
+                "nickname"
+        );
+
+        // when, then
+        mockMvc.perform(post("/api/members/join")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJsonString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value(containsString("비밀번호 재입력은 필수 입력 값입니다.")));
+    }
+
+    @ParameterizedTest
+    @DisplayName("회원가입 시 비밀번호 재입력 유효성 검사로 예외 발생")
+    @ValueSource(strings = {"p", "p1@", "password", "1@", "passworddddddddd", "passworddddddddd!@", "password!@"})
+    void join_invalidRePassword(String input) throws Exception {
+        // given
+        JoinRequest request = createMemberRequest(
+                "member@email.com",
+                "password12!@",
+                input,
+                "nickname"
+        );
+
+        // when, then
+        mockMvc.perform(post("/api/members/join")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJsonString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value("비밀번호는 8자 이상 15자 이하의 영문, 숫자, 특수문자 조합이어야 합니다."));
+    }
+
+
+    @ParameterizedTest
+    @DisplayName("회원가입 시 닉네임 빈 값으로 예외 발생")
+    @ValueSource(strings = {"", " "})
+    void join_invalidNotBlankNickname(String input) throws Exception{
+        // given
+        JoinRequest request = createMemberRequest(
+                "member@email.com",
+                "password12!@",
+                "password12!@",
+                input
+        );
+
+        // when, then
+        mockMvc.perform(post("/api/members/join")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJsonString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value(containsString("닉네임은 필수 입력 값입니다.")));
+    }
+
+    @Test
+    @DisplayName("회원가입 시 닉네임 null 값이 들어와 예외 발생")
+    void join_invalidNullNickname() throws Exception{
+        // given
+        JoinRequest request = createMemberRequest(
+                "member@email.com",
+                "password12!@",
+                "password12!@",
+                null
+        );
+
+        // when, then
+        mockMvc.perform(post("/api/members/join")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJsonString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value(containsString("닉네임은 필수 입력 값입니다.")));
+    }
+
+    @ParameterizedTest
+    @DisplayName("회원가입 시 닉네임 입력값 검사로 예외 발생")
+    @ValueSource(strings = {"n", "닉", "1", "1@", "닉네임임임임임임임임임임임임임", "@@@@@@@@@@@@@@@"})
+    void join_invalidNickname(String input) throws Exception {
+        // given
+        JoinRequest request = createMemberRequest(
+                "member@email.com",
+                "password12!@",
+                "password12!@",
+                input
+        );
+
+        // when, then
+        mockMvc.perform(post("/api/members/join")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJsonString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value("닉네임은 4자 이상 15자 이하의 영문 대/소문자, 한글, 숫자만 사용 가능합니다."));
+    }
+
+    @Test
+    @DisplayName("회원가입 시 비밀번호, 비밀번호 재입력 불일치로 인한 예외 발생")
+    void join_incorrectPasswordAndRePassword() throws Exception {
+        // given
+        JoinRequest request = createMemberRequest(
+                "member@email.com",
+                "password12!@",
+                "repassword12!@",
+                "nickname"
+        );
+
+        // when, then
         mockMvc.perform(post("/api/members/join")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(toJsonString(request)))
@@ -164,11 +421,19 @@ public class MemberControllerTest extends MemberTest {
     }
 
     @Test
-    @DisplayName("회원 가입 시 이미 존재하는 이메일로 인해 예외 발생")
-    void joinExistedEmail_dataExistException() throws Exception {
-        JoinRequest request = createMemberRequest("member@email.com", "password12!@", "password12!@");
+    @DisplayName("회원가입 시 이미 존재하는 이메일로 인해 예외 발생")
+    void join_existedEmail() throws Exception {
+        // given
+        JoinRequest request = createMemberRequest(
+                "member@email.com",
+                "password12!@",
+                "password12!@",
+                "nickname"
+        );
+
         memberRepository.save(createMember(null, "member@email.com"));
 
+        // when, then
         mockMvc.perform(post("/api/members/join")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(toJsonString(request)))
@@ -180,9 +445,18 @@ public class MemberControllerTest extends MemberTest {
     @Test
     @DisplayName("회원가입 시 인증되지 않은 이메일로 예외 발생")
     void join_notVerifiedEmail() throws Exception {
+        // given
+        JoinRequest request = createMemberRequest(
+                "member@email.com",
+                "password12!@",
+                "password12!@",
+                "nickname"
+        );
+
+        // then, then
         mockMvc.perform(post("/api/members/join")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(createMemberRequest("member@email.com", "password12!@", "password12!@"))))
+                        .content(toJsonString(request)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value(ErrorCode.NOT_VERIFIED_EMAIL.getMessage()));;
@@ -239,6 +513,104 @@ public class MemberControllerTest extends MemberTest {
         assertThat(cookies[0].getName()).isEqualTo("refreshToken");
         assertThat(cookies[0].getValue()).isNotNull();
     }
+
+
+    @ParameterizedTest
+    @DisplayName("로그인 시 이메일 빈 값으로 예외 발생")
+    @ValueSource(strings = {"", " "})
+    void login_invalidNotBlankEmail(String input) throws Exception{
+        // given
+        LoginRequest request = createLoginRequest(
+                input,
+                "password12!@"
+        );
+
+        // when, then
+        mockMvc.perform(post("/api/members/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJsonString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value(containsString("이메일은 필수 입력 값입니다.")));
+    }
+
+    @Test
+    @DisplayName("로그인 시 이메일 null 값이 들어와 예외 발생")
+    void login_invalidNullEmail() throws Exception{
+        // given
+        LoginRequest request = createLoginRequest(
+                null,
+                "password12!@"
+        );
+
+
+        // when, then
+        mockMvc.perform(post("/api/members/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJsonString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value(containsString("이메일은 필수 입력 값입니다.")));
+
+    }
+
+    @ParameterizedTest
+    @DisplayName("로그인 시 비밀번호 빈 값으로 예외 발생")
+    @ValueSource(strings = {"", " "})
+    void login_invalidNotBlankPassword(String input) throws Exception{
+        // given
+        LoginRequest request = createLoginRequest(
+                "member@email.com",
+                input
+        );
+
+        // when, then
+        mockMvc.perform(post("/api/members/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJsonString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value(containsString("비밀번호는 필수 입력 값입니다.")));
+    }
+
+    @Test
+    @DisplayName("로그인 시 비밀번호 null 값이 들어와 예외 발생")
+    void login_invalidNullPassword() throws Exception{
+        // given
+        LoginRequest request = createLoginRequest(
+                "member@email.com",
+                null
+        );
+
+        // when, then
+        mockMvc.perform(post("/api/members/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJsonString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value(containsString("비밀번호는 필수 입력 값입니다.")));
+    }
+
+
+    @ParameterizedTest
+    @DisplayName("로그인 시 이메일 형식에 맞지 않아 예외 발생")
+    @ValueSource(strings = {"test", "test@", "test$email.com"})
+    void login_invalidEmail(String input) throws Exception{
+        // given
+        LoginRequest request = createLoginRequest(
+                input,
+                "password12!@"
+        );
+
+        // when, then
+        mockMvc.perform(post("/api/members/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJsonString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value(containsString("이메일 형식에 맞지 않습니다.")));
+    }
+
 
 
     @Test
@@ -304,9 +676,70 @@ public class MemberControllerTest extends MemberTest {
         assertThat(cookies[0].getValue()).isNull();
     }
 
+
+    @ParameterizedTest
+    @DisplayName("로그아웃 시 닉네임 빈 값으로 예외 발생")
+    @ValueSource(strings = {"", " "})
+    void logout_invalidNotBlankNickname(String input) throws Exception{
+        // given
+        Member member = memberRepository.save(createMember(null, "member@email.com"));
+        String accessToken = jwtUtils.createAccessToken(member.getMemberId());
+
+        LogoutRequest request = createLogoutRequest(input);
+
+        // when, then
+        mockMvc.perform(patch("/api/members/logout")
+                        .header("Authorization", "Bearer " + accessToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJsonString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value(containsString("닉네임은 필수 입력 값입니다.")));
+
+    }
+
+    @Test
+    @DisplayName("로그아웃 시 닉네임 null 값이 들어와 예외 발생")
+    void logout_invalidNullNickname() throws Exception{
+        // given
+        Member member = memberRepository.save(createMember(null, "member@email.com"));
+        String accessToken = jwtUtils.createAccessToken(member.getMemberId());
+
+        LogoutRequest request = createLogoutRequest(null);
+
+        // when, then
+        mockMvc.perform(patch("/api/members/logout")
+                        .header("Authorization", "Bearer " + accessToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJsonString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value(containsString("닉네임은 필수 입력 값입니다.")));
+    }
+
+    @ParameterizedTest
+    @DisplayName("로그아웃 시 닉네임 입력값 검사로 예외 발생")
+    @ValueSource(strings = {"n", "닉", "1", "1@", "닉네임임임임임임임임임임임임임", "@@@@@@@@@@@@@@@"})
+    void logout_invalidNickname(String input) throws Exception {
+        Member member = memberRepository.save(createMember(null, "member@email.com"));
+        String accessToken = jwtUtils.createAccessToken(member.getMemberId());
+
+        LogoutRequest request = createLogoutRequest(input);
+
+        // when, then
+        mockMvc.perform(patch("/api/members/logout")
+                        .header("Authorization", "Bearer " + accessToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJsonString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value("닉네임은 4자 이상 15자 이하의 영문 대/소문자, 한글, 숫자만 사용 가능합니다."));
+    }
+
+
     @Test
     @DisplayName("로그아웃 시 존재하지 않는 사용자 요청으로 인해 예외 발생")
-    void logout_dataNotFoundException() throws Exception{
+    void logout_memberNotFound() throws Exception{
         Member member = memberRepository.save(createMember(null, "member@email.com"));
         String accessToken = jwtUtils.createAccessToken(member.getMemberId());
 
@@ -399,6 +832,7 @@ public class MemberControllerTest extends MemberTest {
 
     }
 
+
     @Test
     @DisplayName("비밀번호 찾기")
     void findPassword() throws Exception{
@@ -430,11 +864,9 @@ public class MemberControllerTest extends MemberTest {
     @Test
     @DisplayName("비밀번호 찾기 시 사용자 데이터 존재하지 않아 예외 발생")
     void findPassword_memberNotFoundException() throws Exception{
-        memberRepository.save(createMember(null, "member@email.com"));
-
         mockMvc.perform(post("/api/members/find-password")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(createFindPasswordRequest("notMember"))))
+                        .content(toJsonString(createFindPasswordRequest("notMember@email.com"))))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value(ErrorCode.MEMBER_NOT_FOUND.getMessage()));
