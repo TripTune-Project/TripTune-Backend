@@ -25,11 +25,12 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/members")
@@ -79,6 +80,7 @@ public class MemberController {
         String refreshToken = getRefreshTokenFromCookie(request);
 
         if(refreshToken == null){
+            log.error("Cookie 에 Refresh Token 존재하지 않아 갱신 실패");
             throw new CustomJwtUnAuthorizedException(ErrorCode.MISMATCH_REFRESH_TOKEN);
         }
 
