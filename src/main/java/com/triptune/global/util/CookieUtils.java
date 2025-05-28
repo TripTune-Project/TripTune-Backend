@@ -30,6 +30,7 @@ public class CookieUtils {
         return ResponseCookie.from(cookieType.getKey(), "")
                 .httpOnly(true)
                 .maxAge(0)
+                .domain("." + domainPath)
                 .secure(true)
                 .path("/")
                 .sameSite("None")
