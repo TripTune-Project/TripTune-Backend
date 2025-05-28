@@ -543,7 +543,6 @@ public class MemberControllerTest extends MemberTest {
                 "password12!@"
         );
 
-
         // when, then
         mockMvc.perform(post("/api/members/login")
                         .contentType(MediaType.APPLICATION_JSON)
