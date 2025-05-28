@@ -381,7 +381,7 @@ public class MemberControllerTest extends MemberTest {
 
     @ParameterizedTest
     @DisplayName("회원가입 시 닉네임 입력값 검사로 예외 발생")
-    @ValueSource(strings = {"n", "닉", "1", "1@", "닉네임임임임임임임임임임임임임", "@@@@@@@@@@@@@@@"})
+    @ValueSource(strings = {"n", "닉", "1", "1@", "닉네임임임임임임임임임임임임임임", "@@@@@@@@@@@@@@@"})
     void join_invalidNickname(String input) throws Exception {
         // given
         JoinRequest request = createMemberRequest(
@@ -397,7 +397,7 @@ public class MemberControllerTest extends MemberTest {
                         .content(toJsonString(request)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.success").value(false))
-                .andExpect(jsonPath("$.message").value("닉네임은 4자 이상 15자 이하의 영문 대/소문자, 한글, 숫자만 사용 가능합니다."));
+                .andExpect(jsonPath("$.message").value("닉네임은 4자 이상 15자 이하이며, 한글 또는 영문자가 반드시 포함되어야 합니다."));
     }
 
     @Test
@@ -717,7 +717,7 @@ public class MemberControllerTest extends MemberTest {
 
     @ParameterizedTest
     @DisplayName("로그아웃 시 닉네임 입력값 검사로 예외 발생")
-    @ValueSource(strings = {"n", "닉", "1", "1@", "닉네임임임임임임임임임임임임임", "@@@@@@@@@@@@@@@"})
+    @ValueSource(strings = {"n", "닉", "1", "1@", "닉네임임임임임임임임임임임임임임", "@@@@@@@@@@@@@@@", "12345", "행복1"})
     void logout_invalidNickname(String input) throws Exception {
         Member member = memberRepository.save(createMember(null, "member@email.com"));
         String accessToken = jwtUtils.createAccessToken(member.getMemberId());
@@ -731,7 +731,7 @@ public class MemberControllerTest extends MemberTest {
                         .content(toJsonString(request)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.success").value(false))
-                .andExpect(jsonPath("$.message").value("닉네임은 4자 이상 15자 이하의 영문 대/소문자, 한글, 숫자만 사용 가능합니다."));
+                .andExpect(jsonPath("$.message").value("닉네임은 4자 이상 15자 이하이며, 한글 또는 영문자가 반드시 포함되어야 합니다."));
     }
 
 
@@ -1103,7 +1103,7 @@ public class MemberControllerTest extends MemberTest {
                         .content(toJsonString(request)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.success").value(false))
-                .andExpect(jsonPath("$.message").value("닉네임은 4자 이상 15자 이하의 영문 대/소문자, 한글, 숫자만 사용 가능합니다."));
+                .andExpect(jsonPath("$.message").value("닉네임은 4자 이상 15자 이하이며, 한글 또는 영문자가 반드시 포함되어야 합니다."));
 
     }
 
