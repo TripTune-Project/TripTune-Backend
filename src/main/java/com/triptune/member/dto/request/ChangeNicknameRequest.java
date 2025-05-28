@@ -11,7 +11,8 @@ import lombok.NoArgsConstructor;
 public class ChangeNicknameRequest {
 
     @NotBlank(message = "닉네임은 필수 입력 값입니다.")
-    @Pattern(regexp = "^(?=.*[a-zA-Z])[A-Za-z\\d]{4,15}$", message = "닉네임은 4자 이상 15자 이하의 영문 대/소문자, 한글, 숫자만 사용 가능합니다.")
+    @Pattern(regexp = "^(?=.*[a-zA-Z가-힣])[a-zA-Z가-힣\\d]{4,15}$",
+            message = "닉네임은 4자 이상 15자 이하이며, 한글 또는 영문자가 반드시 포함되어야 합니다.")
     private String nickname;
 
     @Builder
