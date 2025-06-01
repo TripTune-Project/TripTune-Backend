@@ -33,10 +33,6 @@ public class CorsConfig {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(allowedOrigins);
 
-        for (String allowedOrigin : allowedOrigins) {
-            log.info("[allowedOrigin] : " + allowedOrigin);
-        }
-
         configuration.setAllowedMethods(List.of("GET", "POST", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("Content-Type", "Authorization"));
         configuration.setAllowCredentials(true);
