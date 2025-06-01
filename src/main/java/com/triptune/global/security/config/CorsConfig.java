@@ -1,5 +1,6 @@
 package com.triptune.global.security.config;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -9,6 +10,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.List;
 
+@Slf4j
 @Configuration
 @ConfigurationProperties(prefix = "app.backend.cors")
 public class CorsConfig {
@@ -25,8 +27,14 @@ public class CorsConfig {
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource(){
+        log.info("[cors 설정 시작]");
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(allowedOrigins);
+
+        for (String allowedOrigin : allowedOrigins) {
+            log.info("[allowedOrigin] : " + allowedOrigin);
+        }
+
         configuration.setAllowedMethods(List.of("GET", "POST", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("Content-Type", "Authorization"));
         configuration.setAllowCredentials(true);
