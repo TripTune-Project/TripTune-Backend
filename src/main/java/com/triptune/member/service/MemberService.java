@@ -6,6 +6,7 @@ import com.triptune.bookmark.repository.BookmarkRepository;
 import com.triptune.email.dto.request.EmailRequest;
 import com.triptune.email.exception.EmailVerifyException;
 import com.triptune.email.service.EmailService;
+import com.triptune.global.exception.CustomIllegalArgumentException;
 import com.triptune.global.response.enums.ErrorCode;
 import com.triptune.global.redis.eums.RedisKeyType;
 import com.triptune.global.security.exception.CustomJwtUnAuthorizedException;
@@ -20,8 +21,10 @@ import com.triptune.member.dto.response.LoginResponse;
 import com.triptune.member.dto.response.MemberInfoResponse;
 import com.triptune.member.dto.response.RefreshTokenResponse;
 import com.triptune.member.entity.Member;
+import com.triptune.member.enums.JoinType;
 import com.triptune.member.exception.FailLoginException;
 import com.triptune.member.exception.IncorrectPasswordException;
+import com.triptune.member.exception.UnsupportedSocialMemberException;
 import com.triptune.member.repository.MemberRepository;
 import com.triptune.profile.entity.ProfileImage;
 import com.triptune.profile.service.ProfileImageService;
@@ -180,18 +183,27 @@ public class MemberService {
         }
 
         Member member = getMemberByEmail(email);
-        member.updatePassword(passwordEncoder.encode(resetPasswordRequest.getPassword()));
+        String encodedPassword = passwordEncoder.encode(resetPasswordRequest.getPassword());
+        member.resetPassword(encodedPassword);
     }
 
 
     public void changePassword(Long memberId, ChangePasswordRequest passwordRequest){
         Member member = getMemberById(memberId);
 
+        if (member.isSocialMember()){
+            throw new UnsupportedSocialMemberException(ErrorCode.SOCIAL_MEMBER_PASSWORD_CHANGE_NOT_ALLOWED);
+        }
+
         if(!isPasswordMatch(passwordRequest.getNowPassword(), member.getPassword())){
             throw new IncorrectPasswordException(ErrorCode.INCORRECT_PASSWORD);
         }
 
         member.updatePassword(passwordEncoder.encode(passwordRequest.getNewPassword()));
+    }
+
+    public void validateSocialMember(Member member){
+
     }
 
 

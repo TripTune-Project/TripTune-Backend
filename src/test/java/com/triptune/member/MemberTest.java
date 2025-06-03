@@ -27,11 +27,11 @@ public class MemberTest extends BaseTest {
     }
 
 
-    protected ResetPasswordRequest createResetPasswordRequest(String passwordToken, String newPassword1, String newPassword2){
+    protected ResetPasswordRequest createResetPasswordRequest(String passwordToken, String password, String rePassword){
         return ResetPasswordRequest.builder()
                 .passwordToken(passwordToken)
-                .password(newPassword1)
-                .rePassword(newPassword2)
+                .password(password)
+                .rePassword(rePassword)
                 .build();
     }
 

@@ -11,6 +11,7 @@ import com.triptune.global.security.jwt.JwtUtils;
 import com.triptune.global.util.NicknameGenerator;
 import com.triptune.member.entity.Member;
 import com.triptune.member.entity.SocialMember;
+import com.triptune.member.enums.JoinType;
 import com.triptune.member.repository.MemberRepository;
 import com.triptune.member.repository.SocialMemberRepository;
 import com.triptune.profile.entity.ProfileImage;
@@ -90,7 +91,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
     public Member integrateMember(Member savedMember, OAuth2UserInfo oAuth2UserInfo){
         createSocialMember(savedMember, oAuth2UserInfo);
-        savedMember.updateOAuth2JoinType();
+        savedMember.linkSocialAccount();
 
         log.info("기존 회원과 소셜 계정 통합 완료");
         return savedMember;
@@ -100,8 +101,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         String nickname = nicknameGenerator.createNickname();
 
         ProfileImage profileImage = profileImageService.saveDefaultProfileImage();
-        Member member = Member.from(profileImage, oAuth2UserInfo, nickname);
-        Member newMember = memberRepository.save(member);
+        Member newMember = memberRepository.save(Member.from(profileImage, oAuth2UserInfo, nickname));
 
         createSocialMember(newMember, oAuth2UserInfo);
 

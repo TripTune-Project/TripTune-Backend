@@ -60,7 +60,6 @@ public abstract class BaseTest {
                 .build();
     }
 
-
     protected Member createMember(Long memberId, String email, String encodePassword, ProfileImage profileImage){
         return Member.builder()
                 .memberId(memberId)
@@ -86,6 +85,62 @@ public abstract class BaseTest {
                 .createdAt(LocalDateTime.now())
                 .build();
     }
+
+    protected Member createMember(Long memberId, String email, String encodePassword, JoinType joinType){
+        return Member.builder()
+                .memberId(memberId)
+                .email(email)
+                .password(encodePassword)
+                .nickname(email.split("@")[0])
+                .refreshToken(refreshToken)
+                .joinType(joinType)
+                .createdAt(LocalDateTime.now())
+                .build();
+    }
+
+    protected Member createNativeTypeMember(Long memberId, String email, String encodePassword, ProfileImage profileImage){
+        return Member.builder()
+                .memberId(memberId)
+                .profileImage(profileImage)
+                .email(email)
+                .password(encodePassword)
+                .nickname(email.split("@")[0])
+                .refreshToken(refreshToken)
+                .joinType(JoinType.NATIVE)
+                .createdAt(LocalDateTime.now())
+                .isActive(true)
+                .build();
+    }
+
+    protected Member createSocialTypeMember(Long memberId, String email, ProfileImage profileImage){
+        return Member.builder()
+                .memberId(memberId)
+                .profileImage(profileImage)
+                .email(email)
+                .password(null)
+                .nickname(email.split("@")[0])
+                .refreshToken(refreshToken)
+                .joinType(JoinType.SOCIAL)
+                .createdAt(LocalDateTime.now())
+                .isActive(true)
+                .build();
+    }
+
+    protected Member createBothTypeMember(Long memberId, String email, String encodedPassword, ProfileImage profileImage){
+        return Member.builder()
+                .memberId(memberId)
+                .profileImage(profileImage)
+                .email(email)
+                .password(encodedPassword)
+                .nickname(email.split("@")[0])
+                .refreshToken(refreshToken)
+                .joinType(JoinType.BOTH)
+                .createdAt(LocalDateTime.now())
+                .isActive(true)
+                .build();
+    }
+
+
 
     protected ProfileImage createProfileImage(Long profileImageId, String fileName){
         return ProfileImage.builder()

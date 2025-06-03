@@ -25,10 +25,14 @@ public enum ErrorCode {
     ILLEGAL_CITY_TYPE(HttpStatus.BAD_REQUEST, "잘못된 지역 요청입니다."),
     ILLEGAL_THEME_TYPE(HttpStatus.BAD_REQUEST, "잘못된 테마 요청입니다."),
 
-    // 사용자
+    // 회원
     MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "사용자 정보를 찾을 수 없습니다."),
     FAILED_LOGIN(HttpStatus.BAD_REQUEST, "이메일 또는 비밀번호가 일치하지 않습니다."),
     INVALID_CHANGE_PASSWORD(HttpStatus.BAD_REQUEST, "잘못된 요청입니다. 비밀번호 찾기를 다시 진행해주세요."),
+
+    // 소셜 사용자
+    SOCIAL_MEMBER_PASSWORD_CHANGE_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "소셜 회원은 비밀번호를 변경할 수 없습니다."),
+    SOCIAL_MEMBER_WITHDRAWAL_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "소셜 회원은 비밀번호 등록 후 탈퇴가 가능합니다."),
 
 
     // 이메일
