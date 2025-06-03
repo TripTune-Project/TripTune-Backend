@@ -92,7 +92,7 @@ public class BookmarkServiceTest extends BookmarkTest {
     }
 
     @Test
-    @DisplayName("북마크 추가 시 사용자 데이터 없어 예외 발생")
+    @DisplayName("북마크 추가 시 회원 데이터 없어 예외 발생")
     void createBookmark_memberDataNotFoundException(){
         // given
         BookmarkRequest request = createBookmarkRequest(travelPlace1.getPlaceId());

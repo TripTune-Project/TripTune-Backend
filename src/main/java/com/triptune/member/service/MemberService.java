@@ -241,7 +241,7 @@ public class MemberService {
 
 
     public void deactivateMember(HttpServletResponse response, String accessToken, Long memberId, DeactivateRequest deactivateRequest) {
-        // 1. 사용자 비밀번호 확인
+        // 1. 회원 비밀번호 확인
         Member member = getMemberById(memberId);
 
         if(!isPasswordMatch(deactivateRequest.getPassword(), member.getPassword())){

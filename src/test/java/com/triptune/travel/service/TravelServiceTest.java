@@ -83,8 +83,8 @@ public class TravelServiceTest extends TravelTest {
 
 
     @Test
-    @DisplayName("로그인한 사용자의 현재 위치에 따른 여행지 목록 조회 시 데이터 존재하는 경우")
-    void getNearByTravelPlaces_loginAndExistsData(){
+    @DisplayName("회원의 위치를 기반으로 여행지 목록을 조회")
+    void getNearByTravelPlaces_member(){
         // given
         PlaceLocationRequest request = createTravelLocationRequest(37.4970465429, 127.0281573537);
 
@@ -115,41 +115,9 @@ public class TravelServiceTest extends TravelTest {
         assertThat(content.get(1).getDistance()).isNotNull();
     }
 
-
     @Test
-    @DisplayName("익명 사용자의 현재 위치에 따른 여행지 목록 조회 시 데이터 존재하는 경우")
-    void getNearByTravelPlaces_anonymousAndExistsData(){
-        // given
-        PlaceLocationRequest request = createTravelLocationRequest(37.4970465429, 127.0281573537);
-
-        Pageable pageable = PageUtils.defaultPageable(1);
-        List<PlaceLocation> locationList = List.of(
-                createPlaceLocation(travelPlace1, travelImage1.getS3ObjectUrl()),
-                createPlaceLocation(travelPlace2, null)
-        );
-        Page<PlaceLocation> mockResponse = PageUtils.createPage(locationList, pageable, locationList.size());
-
-        when(travelPlaceRepository.findNearByTravelPlaces(pageable, request, 5)).thenReturn(mockResponse);
-
-        // when
-        Page<PlaceLocation> response = travelService.getNearByTravelPlaces(1, null, request);
-
-        // then
-        List<PlaceLocation> content = response.getContent();
-        assertThat(response.getTotalElements()).isEqualTo(2);
-        assertThat(content.get(0).getCity()).isEqualTo(travelPlace1.getCity().getCityName());
-        assertThat(content.get(0).getPlaceName()).isEqualTo(travelPlace1.getPlaceName());
-        assertThat(content.get(0).getThumbnailUrl()).isEqualTo(travelImage1.getS3ObjectUrl());
-        assertThat(content.get(0).isBookmarkStatus()).isFalse();
-        assertThat(content.get(0).getDistance()).isNotNull();
-        assertThat(content.get(1).getThumbnailUrl()).isNull();
-        assertThat(content.get(1).isBookmarkStatus()).isFalse();
-        assertThat(content.get(1).getDistance()).isNotNull();
-    }
-
-    @Test
-    @DisplayName("로그인한 사용자의 현재 위치에 따른 여행지 목록 조회 시 데이터 없는 경우")
-    void getNearByTravelPlaces_loginAndNoData(){
+    @DisplayName("회원의 위치를 기반으로 여행지 목록을 조회할 때, 데이터가 없는 경우")
+    void getNearByTravelPlaces_memberAndNoData(){
         // given
         PlaceLocationRequest request = createTravelLocationRequest(0.0, 0.0);
 
@@ -166,8 +134,41 @@ public class TravelServiceTest extends TravelTest {
     }
 
     @Test
-    @DisplayName("익명 사용자의 현재 위치에 따른 여행지 목록 조회 시 데이터 없는 경우")
-    void getNearByTravelPlaces_anonymousAndNoData(){
+    @DisplayName("비회원의 위치를 기반으로 여행지 목록을 조회")
+    void getNearByTravelPlaces_nonMember(){
+        // given
+        PlaceLocationRequest request = createTravelLocationRequest(37.4970465429, 127.0281573537);
+
+        Pageable pageable = PageUtils.defaultPageable(1);
+        List<PlaceLocation> locationList = List.of(
+                createPlaceLocation(travelPlace1, travelImage1.getS3ObjectUrl()),
+                createPlaceLocation(travelPlace2, null)
+        );
+        Page<PlaceLocation> mockResponse = PageUtils.createPage(locationList, pageable, locationList.size());
+
+        when(travelPlaceRepository.findNearByTravelPlaces(pageable, request, 5)).thenReturn(mockResponse);
+
+        // when
+        Page<PlaceLocation> response = travelService.getNearByTravelPlaces(1, null, request);
+
+        // then
+        List<PlaceLocation> content = response.getContent();
+        assertThat(response.getTotalElements()).isEqualTo(2);
+        assertThat(content.get(0).getCity()).isEqualTo(travelPlace1.getCity().getCityName());
+        assertThat(content.get(0).getPlaceName()).isEqualTo(travelPlace1.getPlaceName());
+        assertThat(content.get(0).getThumbnailUrl()).isEqualTo(travelImage1.getS3ObjectUrl());
+        assertThat(content.get(0).isBookmarkStatus()).isFalse();
+        assertThat(content.get(0).getDistance()).isNotNull();
+        assertThat(content.get(1).getThumbnailUrl()).isNull();
+        assertThat(content.get(1).isBookmarkStatus()).isFalse();
+        assertThat(content.get(1).getDistance()).isNotNull();
+    }
+
+
+
+    @Test
+    @DisplayName("비회원의 위치를 기반으로 여행지 목록을 조회할 때, 데이터가 없는 경우")
+    void getNearByTravelPlaces_nonMemberAndNoData(){
         // given
         PlaceLocationRequest request = createTravelLocationRequest(0.0, 0.0);
 
@@ -185,8 +186,8 @@ public class TravelServiceTest extends TravelTest {
 
 
     @Test
-    @DisplayName("로그인한 사용자의 여행지 검색 시 데이터 존재하는 경우 - 위치 데이터 존재")
-    void searchTravelPlacesWithLocation_loginAndExistsData(){
+    @DisplayName("회원의 위치를 기반으로 여행지 검색할 때, 검색 결과가 존재하는 경우")
+    void searchTravelPlacesWithLocation_member(){
         // given
         PlaceSearchRequest request = createTravelSearchRequest(37.49, 127.0, "테스트");
 
@@ -218,8 +219,27 @@ public class TravelServiceTest extends TravelTest {
     }
 
     @Test
-    @DisplayName("익명 사용자의 여행지 검색 시 데이터 존재하는 경우 - 위치 데이터 존재")
-    void searchTravelPlacesWithLocation_anonymousAndExistsData(){
+    @DisplayName("회원의 위치를 기반으로 여행지 검색할 때, 검색 결과가 존재하지 않는 경우")
+    void searchTravelPlacesWithLocation_memberAndNoData(){
+        // given
+        PlaceSearchRequest request = createTravelSearchRequest(37.49, 127.0, "ㅁㄴㅇㄹ");
+
+        Pageable pageable = PageUtils.defaultPageable(1);
+        Page<PlaceLocation> mockResponse = PageUtils.createPage(Collections.emptyList(), pageable, 0);
+
+        when(travelPlaceRepository.searchTravelPlacesWithLocation(pageable, request)).thenReturn(mockResponse);
+
+        // when
+        Page<PlaceLocation> response = travelService.searchTravelPlacesWithLocation(1, member.getMemberId(), request);
+
+        // then
+        assertThat(response.getTotalElements()).isEqualTo(0);
+
+    }
+
+    @Test
+    @DisplayName("비회원의 위치를 기반으로 여행지를 검색할 때, 검색 결과가 존재하는 경우")
+    void searchTravelPlacesWithLocation_nonMember(){
         // given
         PlaceSearchRequest request = createTravelSearchRequest(37.49, 127.0, "테스트");
 
@@ -250,27 +270,8 @@ public class TravelServiceTest extends TravelTest {
 
 
     @Test
-    @DisplayName("로그인한 사용자의 여행지 검색 시 데이터 없는 경우 - 위치 데이터 존재")
-    void searchTravelPlacesWithLocation_loginAndNoData(){
-        // given
-        PlaceSearchRequest request = createTravelSearchRequest(37.49, 127.0, "ㅁㄴㅇㄹ");
-
-        Pageable pageable = PageUtils.defaultPageable(1);
-        Page<PlaceLocation> mockResponse = PageUtils.createPage(Collections.emptyList(), pageable, 0);
-
-        when(travelPlaceRepository.searchTravelPlacesWithLocation(pageable, request)).thenReturn(mockResponse);
-
-        // when
-        Page<PlaceLocation> response = travelService.searchTravelPlacesWithLocation(1, member.getMemberId(), request);
-
-        // then
-        assertThat(response.getTotalElements()).isEqualTo(0);
-
-    }
-
-    @Test
-    @DisplayName("익명 사용자의 여행지 검색 시 데이터 없는 경우 - 위치 데이터 존재")
-    void searchTravelPlacesWithLocation_anonymousAndNoData(){
+    @DisplayName("비회원의 위치를 기반으로 여행지를 검색할 때, 검색 결과가 존재하지 않는 경우")
+    void searchTravelPlacesWithLocation_nonMemberAndNoData(){
         // given
         PlaceSearchRequest request = createTravelSearchRequest(37.49, 127.0, "ㅁㄴㅇㄹ");
 
@@ -289,8 +290,8 @@ public class TravelServiceTest extends TravelTest {
 
 
     @Test
-    @DisplayName("로그인한 사용자의 여행지 검색 시 데이터 존재하는 경우 - 위치 데이터 없는 경우")
-    void searchTravelPlacesWithoutLocation_loginAndExistsData(){
+    @DisplayName("회원의 위치를 기반하지 않고 여행지를 검색할 때, 검색 결과가 존재하는 경우")
+    void searchTravelPlacesWithoutLocation_member(){
         // given
         PlaceSearchRequest request = createTravelSearchRequest("테스트");
 
@@ -320,8 +321,27 @@ public class TravelServiceTest extends TravelTest {
     }
 
     @Test
-    @DisplayName("익명 사용자의 여행지 검색 시 데이터 존재하는 경우 - 위치 데이터 없는 경우")
-    void searchTravelPlacesWithoutLocation_anonymousAndExistsData(){
+    @DisplayName("회원의 위치를 기반하지 않고 검색할 때, 검색 결과가 존재하지 않는 경우")
+    void searchTravelPlacesWithoutLocation_memberAndNoData(){
+        // given
+        PlaceSearchRequest request = createTravelSearchRequest("ㅁㄴㅇㄹ");
+
+        Pageable pageable = PageUtils.defaultPageable(1);
+        Page<PlaceResponse> mockResponse = PageUtils.createPage(Collections.emptyList(), pageable, 0);
+
+        when(travelPlaceRepository.searchTravelPlaces(pageable, request.getKeyword())).thenReturn(mockResponse);
+
+        // when
+        Page<PlaceLocation> response = travelService.searchTravelPlacesWithoutLocation(1, member.getMemberId(), request);
+
+        // then
+        assertThat(response.getTotalElements()).isEqualTo(0);
+
+    }
+
+    @Test
+    @DisplayName("비회원의 위치를 기반하지 않고 여행지를 검색할 때, 검색 결과가 존재하는 경우")
+    void searchTravelPlacesWithoutLocation_nonMember(){
         // given
         PlaceSearchRequest request = createTravelSearchRequest("테스트");
 
@@ -348,29 +368,9 @@ public class TravelServiceTest extends TravelTest {
         assertThat(content.get(0).isBookmarkStatus()).isFalse();
     }
 
-
     @Test
-    @DisplayName("로그인한 사용자의 여행지 검색 시 데이터 없는 경우 - 위치 데이터 없는 경우")
-    void searchTravelPlacesWithoutLocation_loginAndNoData(){
-        // given
-        PlaceSearchRequest request = createTravelSearchRequest("ㅁㄴㅇㄹ");
-
-        Pageable pageable = PageUtils.defaultPageable(1);
-        Page<PlaceResponse> mockResponse = PageUtils.createPage(Collections.emptyList(), pageable, 0);
-
-        when(travelPlaceRepository.searchTravelPlaces(pageable, request.getKeyword())).thenReturn(mockResponse);
-
-        // when
-        Page<PlaceLocation> response = travelService.searchTravelPlacesWithoutLocation(1, member.getMemberId(), request);
-
-        // then
-        assertThat(response.getTotalElements()).isEqualTo(0);
-
-    }
-
-    @Test
-    @DisplayName("익명 사용자의 여행지 검색 시 데이터 없는 경우 - 위치 데이터 없는 경우")
-    void searchTravelPlacesWithoutLocation_anonymousAndNoData(){
+    @DisplayName("비회원의 위치를 기반하지 않고 여행지를 검색할 때, 검색 결과가 존재하지 않는 경우")
+    void searchTravelPlacesWithoutLocation_nonMemberAndNoData(){
         // given
         PlaceSearchRequest request = createTravelSearchRequest("ㅁㄴㅇㄹ");
 
@@ -387,8 +387,8 @@ public class TravelServiceTest extends TravelTest {
     }
 
     @Test
-    @DisplayName("로그인한 사용자의 숙박을 제외한 여행지 상세 조회")
-    void getTravelDetails_loginAndExceptLodging(){
+    @DisplayName("회원의 숙박을 제외한 여행지 상세 조회")
+    void getTravelDetails_memberAndExceptLodging(){
         // given
         ApiContentType apiContentType = createApiContentType(ThemeType.ATTRACTIONS);
         travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, apiContentType, "상시", List.of(travelImage1, travelImage2));
@@ -412,8 +412,8 @@ public class TravelServiceTest extends TravelTest {
     }
 
     @Test
-    @DisplayName("익명의 사용자의 숙박을 제외한 여행지 상세 조회")
-    void getTravelDetails_anonymousAndExceptLodging(){
+    @DisplayName("비회원의 숙박을 제외한 여행지 상세 조회")
+    void getTravelDetails_nonMemberAndExceptLodging(){
         // given
         ApiContentType apiContentType = createApiContentType(ThemeType.ATTRACTIONS);
         travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, apiContentType, "상시", List.of(travelImage1, travelImage2));
@@ -437,8 +437,8 @@ public class TravelServiceTest extends TravelTest {
     }
 
     @Test
-    @DisplayName("로그인한 사용자의 숙박 여행지 상세 조회")
-    void getTravelDetails_loginAndLodging(){
+    @DisplayName("회원의 숙박 여행지 상세 조회")
+    void getTravelDetails_memberAndLodging(){
         // given
         ApiContentType apiContentType = createApiContentType(ThemeType.LODGING);
         travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, apiContentType, "13:00", "11:00", List.of(travelImage1, travelImage2));
@@ -465,8 +465,8 @@ public class TravelServiceTest extends TravelTest {
     }
 
     @Test
-    @DisplayName("익명의 사용자의 숙박 여행지 상세 조회")
-    void getTravelDetails_anonymousAndLodging(){
+    @DisplayName("비회원의 숙박 여행지 상세 조회")
+    void getTravelDetails_nonMemberAndLodging(){
         // given
         ApiContentType apiContentType = createApiContentType(ThemeType.ATTRACTIONS);
         travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, apiContentType, "13:00", "11:00", List.of(travelImage1, travelImage2));
@@ -493,7 +493,7 @@ public class TravelServiceTest extends TravelTest {
 
     @Test
     @DisplayName("여행지 상세 조회 시 데이터가 존재하지 않아 예외 발생")
-    void getTravelDetails_DataNotFoundException(){
+    void getTravelDetails_placeNotFound(){
         // given
         when(travelPlaceRepository.findById(anyLong())).thenReturn(Optional.empty());
 

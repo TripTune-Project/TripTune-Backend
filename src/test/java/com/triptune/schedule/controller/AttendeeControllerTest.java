@@ -306,7 +306,7 @@ public class AttendeeControllerTest extends ScheduleTest {
 
 
     @Test
-    @DisplayName("일정 나가기 요청 시 사용자가 작성자여서 예외 발생")
+    @DisplayName("일정 나가기 요청 시 요청자가 작성자여서 예외 발생")
     void leaveAttendeeIsAuthor_forbiddenScheduleException() throws Exception {
         mockAuthentication(member1);
 
@@ -317,7 +317,7 @@ public class AttendeeControllerTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("일정 나가기 요청 시 사용자가 일정에 접근 권한이 없어 예외 발생")
+    @DisplayName("일정 나가기 요청 시 일정에 접근 권한이 없어 예외 발생")
     void leaveAttendee_forbiddenScheduleException() throws Exception {
         mockAuthentication(member1);
 

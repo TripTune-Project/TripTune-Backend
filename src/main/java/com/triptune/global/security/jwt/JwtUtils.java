@@ -74,7 +74,7 @@ public class JwtUtils {
             Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
 
             if(redisService.existData(token)){
-                log.error("이미 로그아웃 된 사용자의 토큰 유효성 검증 시도");
+                log.error("이미 로그아웃 된 회원의 토큰 유효성 검증 시도");
                 throw new CustomJwtUnAuthorizedException(ErrorCode.BLACKLIST_TOKEN);
             }
 
@@ -99,7 +99,7 @@ public class JwtUtils {
             Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
 
             if(redisService.existData(token)){
-                log.error("채팅 중 이미 로그아웃 된 사용자의 토큰 유효성 검증 시도");
+                log.error("채팅 중 이미 로그아웃 된 회원의 토큰 유효성 검증 시도");
                 throw new CustomJwtUnAuthorizedChatException(ErrorCode.BLACKLIST_TOKEN);
             }
 

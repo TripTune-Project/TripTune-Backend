@@ -29,7 +29,7 @@ class MemberRepositoryTest extends MemberTest {
     @Autowired private SocialMemberRepository socialMemberRepository;
 
     @Test
-    @DisplayName("채팅 사용자들 프로필 조회")
+    @DisplayName("채팅 회원들 프로필 조회")
     void findMembersProfileByMemberId() {
         // given
         ProfileImage profileImage1 = profileImageRepository.save(createProfileImage(null, "member1Image"));

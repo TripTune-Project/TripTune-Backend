@@ -489,11 +489,11 @@ public class MemberControllerTest extends MemberTest {
     }
 
     @Test
-    @DisplayName("소셜, 자체 로그인 사용자 로그인")
-    void login_socialMemberAndMember() throws Exception {
+    @DisplayName("통합 회원 로그인")
+    void login_bothMember() throws Exception {
         String encodePassword = passwordEncoder.encode("password12!@");
         ProfileImage profileImage = profileImageRepository.save(createProfileImage(null, "member"));
-        Member member = memberRepository.save(createMember(null, "member@email.com", encodePassword, JoinType.BOTH, profileImage));
+        Member member = memberRepository.save(createBothTypeMember(null, "member@email.com", encodePassword, profileImage));
         socialMemberRepository.save(createSocialMember(null, member, "member", SocialType.NAVER));
 
         MvcResult result = mockMvc.perform(post("/api/members/login")
@@ -637,10 +637,10 @@ public class MemberControllerTest extends MemberTest {
     }
 
     @Test
-    @DisplayName("소셜 로그인 정보만 있는 사용자가 자체 로그인 시도해 예외 발생")
+    @DisplayName("소셜 회원이 자체 로그인 시도해 예외 발생")
     void login_socialMember() throws Exception{
         ProfileImage profileImage = profileImageRepository.save(createProfileImage(null, "member"));
-        Member member = memberRepository.save(createMember(null, "member@email.com", null, JoinType.SOCIAL, profileImage));
+        Member member = memberRepository.save(createSocialTypeMember(null, "member@email.com", profileImage));
         socialMemberRepository.save(createSocialMember(null, member, "member", SocialType.NAVER));
 
         mockMvc.perform(post("/api/members/login")
@@ -735,7 +735,7 @@ public class MemberControllerTest extends MemberTest {
 
 
     @Test
-    @DisplayName("로그아웃 시 존재하지 않는 사용자 요청으로 인해 예외 발생")
+    @DisplayName("로그아웃 시 회원 데이터 없어 예외 발생")
     void logout_memberNotFound() throws Exception{
         Member member = memberRepository.save(createMember(null, "member@email.com"));
         String accessToken = jwtUtils.createAccessToken(member.getMemberId());
@@ -802,7 +802,7 @@ public class MemberControllerTest extends MemberTest {
     }
 
     @Test
-    @DisplayName("토큰 갱신 시 사용자 데이터 존재하지 않아 예외 발생")
+    @DisplayName("토큰 갱신 시 회원 데이터 존재하지 않아 예외 발생")
     void refreshToken_memberNotFound() throws Exception {
         String refreshToken = jwtUtils.createRefreshToken(0L);
         Cookie cookie = createRefreshTokenCookie(refreshToken);
@@ -816,7 +816,7 @@ public class MemberControllerTest extends MemberTest {
     }
 
     @Test
-    @DisplayName("토큰 갱신 시 사용자가 요청과 저장된 refresh token 값이 달라 예외 발생")
+    @DisplayName("토큰 갱신 시 요청 refreshToken 과 저장된 refresh token 값이 달라 예외 발생")
     void refreshToken_NotEqualsRefreshToken() throws Exception {
         Member member = memberRepository.save(createMember(null, "member@email.com"));
         String refreshToken = jwtUtils.createRefreshToken(member.getMemberId());
@@ -878,7 +878,7 @@ public class MemberControllerTest extends MemberTest {
     }
 
     @Test
-    @DisplayName("비밀번호 찾기 시 사용자 데이터 존재하지 않아 예외 발생")
+    @DisplayName("비밀번호 찾기 시 회원 데이터 존재하지 않아 예외 발생")
     void findPassword_memberNotFound() throws Exception{
         mockMvc.perform(post("/api/members/find-password")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -994,8 +994,8 @@ public class MemberControllerTest extends MemberTest {
     }
 
     @Test
-    @DisplayName("비밀번호 초기화 시 사용자 데이터 존재하지 않아 예외 발생")
-    void resetPassword_memberNotFoundException() throws Exception{
+    @DisplayName("비밀번호 초기화 시 회원 데이터 존재하지 않아 예외 발생")
+    void resetPassword_memberNotFound() throws Exception{
         when(redisService.getData(anyString())).thenReturn("noMember@email.com");
 
         mockMvc.perform(patch("/api/members/reset-password")
@@ -1096,8 +1096,8 @@ public class MemberControllerTest extends MemberTest {
     }
 
     @Test
-    @DisplayName("비밀번호 변경 시 사용자 정보를 찾을 수 없어 예외 발생")
-    void changePassword_memberNotFoundException() throws Exception{
+    @DisplayName("비밀번호 변경 시 회원 정보를 찾을 수 없어 예외 발생")
+    void changePassword_memberNotFound() throws Exception{
         ChangePasswordRequest request = createChangePasswordRequest("test123@", "test123!", "test123!");
 
         Member member = createMember(1000L, "notMember@email.com");
@@ -1149,7 +1149,7 @@ public class MemberControllerTest extends MemberTest {
     }
 
     @Test
-    @DisplayName("사용자 정보 조회")
+    @DisplayName("회원 정보 조회")
     void getMemberInfo() throws Exception{
         ProfileImage profileImage = profileImageRepository.save(createProfileImage(null, "profileImage"));
         String encodePassword = passwordEncoder.encode("password12!@");
@@ -1165,7 +1165,7 @@ public class MemberControllerTest extends MemberTest {
     }
 
     @Test
-    @DisplayName("사용자 정보 조회 시 사용자 데이터 없어 예외 발생")
+    @DisplayName("회원 정보 조회 시 회원 데이터 없어 예외 발생")
     void getMemberInfo_memberNotFound() throws Exception{
         Member member = createMember(0L, "notMember@email.com");
         mockAuthentication(member);
@@ -1178,7 +1178,7 @@ public class MemberControllerTest extends MemberTest {
 
 
     @Test
-    @DisplayName("사용자 닉네임 변경")
+    @DisplayName("회원 닉네임 변경")
     void changeNickname() throws Exception{
         Member member = memberRepository.save(createMember(null, "member@email.com"));
         ChangeNicknameRequest request = createChangeNicknameRequest("newNickname");
@@ -1195,7 +1195,7 @@ public class MemberControllerTest extends MemberTest {
     }
 
     @Test
-    @DisplayName("사용자 닉네임 변경 시 입력 조건이 맞지 않아 예외 발생")
+    @DisplayName("회원 닉네임 변경 시 입력 조건이 맞지 않아 예외 발생")
     void changeNickname_invalidNickname() throws Exception{
         Member member = memberRepository.save(createMember(null, "member@email.com"));
         ChangeNicknameRequest request = createChangeNicknameRequest("no");
@@ -1212,7 +1212,7 @@ public class MemberControllerTest extends MemberTest {
     }
 
     @Test
-    @DisplayName("사용자 닉네임 변경 시 사용자 데이터 없어 예외 발생")
+    @DisplayName("회원 닉네임 변경 시 회원 데이터 없어 예외 발생")
     void changeNickname_memberNotFound() throws Exception{
         ChangeNicknameRequest request = createChangeNicknameRequest("newNickname");
 
@@ -1228,7 +1228,7 @@ public class MemberControllerTest extends MemberTest {
     }
 
     @Test
-    @DisplayName("사용자 닉네임 변경 시 이미 존재하는 닉네임으로 예외 발생")
+    @DisplayName("회원 닉네임 변경 시 이미 존재하는 닉네임으로 예외 발생")
     void changeNickname_dataExist() throws Exception{
         Member member = memberRepository.save(createMember(null, "member@email.com"));
         ChangeNicknameRequest request = createChangeNicknameRequest(member.getNickname());
@@ -1290,7 +1290,7 @@ public class MemberControllerTest extends MemberTest {
     }
 
     @Test
-    @DisplayName("이메일 변경 시 존재하지 않는 사용자로 예외 발생")
+    @DisplayName("이메일 변경 시 회원 데이터 없어 예외 발생")
     void changeEmail_memberNotFound() throws Exception {
         when(redisService.getEmailData(any(), anyString())).thenReturn("true");
 
@@ -1306,7 +1306,7 @@ public class MemberControllerTest extends MemberTest {
     }
 
     @Test
-    @DisplayName("사용자 북마크 조회 - 최신순")
+    @DisplayName("회원 북마크 조회 - 최신순")
     void getMemberBookmarks_sortNewest() throws Exception{
         Member member = memberRepository.save(createMember(null, "member@email.com"));
         bookmarkRepository.save(createBookmark(null, member, travelPlace1, LocalDateTime.now()));
@@ -1329,7 +1329,7 @@ public class MemberControllerTest extends MemberTest {
     }
 
     @Test
-    @DisplayName("사용자 북마크 조회 - 오래된 순")
+    @DisplayName("회원 북마크 조회 - 오래된 순")
     void getMemberBookmarks_sortOldest() throws Exception{
         Member member = memberRepository.save(createMember(null, "member@email.com"));
         bookmarkRepository.save(createBookmark(null, member, travelPlace1, LocalDateTime.now()));
@@ -1352,7 +1352,7 @@ public class MemberControllerTest extends MemberTest {
     }
 
     @Test
-    @DisplayName("사용자 북마크 조회 - 이름순")
+    @DisplayName("회원 북마크 조회 - 이름순")
     void getMemberBookmarks_sortName() throws Exception{
         Member member = memberRepository.save(createMember(null, "member@email.com"));
         bookmarkRepository.save(createBookmark(null, member, travelPlace1, LocalDateTime.now()));
@@ -1375,7 +1375,7 @@ public class MemberControllerTest extends MemberTest {
     }
 
     @Test
-    @DisplayName("사용자 북마크 조회 시 데이터 없는 경우")
+    @DisplayName("회원 북마크 조회 시 데이터 없는 경우")
     void getMemberBookmarks_emptyData() throws Exception{
         Member member = memberRepository.save(createMember(null, "member"));
 
@@ -1390,7 +1390,7 @@ public class MemberControllerTest extends MemberTest {
     }
 
     @Test
-    @DisplayName("사용자 북마크 조회 시 정렬 잘못된 값이 들어와 예외 발생")
+    @DisplayName("회원 북마크 조회 시 정렬 잘못된 값이 들어와 예외 발생")
     void getMemberBookmarks_IllegalSortType() throws Exception{
         Member member = memberRepository.save(createMember(null, "member"));
         mockAuthentication(member);
@@ -1440,7 +1440,7 @@ public class MemberControllerTest extends MemberTest {
     }
 
     @Test
-    @DisplayName("사용자 탈퇴 - 작성자만 존재하는 경우")
+    @DisplayName("회원 탈퇴 - 작성자만 존재하는 경우")
     void deactivateMember2() throws Exception{
         String encodePassword = passwordEncoder.encode("test123@");
 
@@ -1476,7 +1476,7 @@ public class MemberControllerTest extends MemberTest {
     }
 
     @Test
-    @DisplayName("사용자 탈퇴 - 참석자만 존재하는 경우")
+    @DisplayName("회원 탈퇴 - 참석자만 존재하는 경우")
     void deactivateMember3() throws Exception{
         String encodePassword = passwordEncoder.encode("test123@");
 
@@ -1510,7 +1510,7 @@ public class MemberControllerTest extends MemberTest {
     }
 
     @Test
-    @DisplayName("사용자 탈퇴 - 일정 데이터 없는 경우")
+    @DisplayName("회원 탈퇴 - 일정 데이터 없는 경우")
     void deactivateMember4() throws Exception{
         String encodePassword = passwordEncoder.encode("test123@");
 
@@ -1531,7 +1531,7 @@ public class MemberControllerTest extends MemberTest {
     }
 
     @Test
-    @DisplayName("사용자 탈퇴 시 사용자 데이터를 찾을 수 없는 경우")
+    @DisplayName("회원 탈퇴 시 회원 데이터를 찾을 수 없는 경우")
     void deactivateMember_memberNotFound() throws Exception{
         Member member = createMember(0L, "notMember@email.com");
         mockAuthentication(member);
@@ -1545,7 +1545,7 @@ public class MemberControllerTest extends MemberTest {
     }
 
     @Test
-    @DisplayName("사용자 탈퇴 시 비밀번호가 맞지 않아 예외 발생")
+    @DisplayName("회원 탈퇴 시 비밀번호가 맞지 않아 예외 발생")
     void deactivateMember_incorrectPassword() throws Exception{
         String encodePassword = passwordEncoder.encode("incorrect12@");
 

@@ -111,7 +111,7 @@ class ChatServiceTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("채팅 메시지 조회 시 한 사용자가 연속적인 채팅을 보낸 경우")
+    @DisplayName("채팅 메시지 조회 시 한 회원이 연속적인 채팅을 보낸 경우")
     void getChatMessagesOneMember(){
         // given
         Pageable pageable = PageUtils.chatPageable(1);
@@ -203,7 +203,7 @@ class ChatServiceTest extends ScheduleTest {
 
 
     @Test
-    @DisplayName("채팅 메시지에서 사용자 인덱스 추출")
+    @DisplayName("채팅 메시지에서 회원 인덱스 추출")
     void extractMemberId(){
         // given
         ChatMessage message1 = createChatMessage("id1", schedule.getScheduleId(), member1, "hello1");
@@ -222,7 +222,7 @@ class ChatServiceTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("채팅 메시지에서 사용자 인덱스 추출 시 채팅 메시지가 없는 경우")
+    @DisplayName("채팅 메시지에서 회원 인덱스 추출 시 채팅 메시지가 없는 경우")
     void extractMemberId_emptyMessage(){
         // given
         List<ChatMessage> messageList = new ArrayList<>();
@@ -236,7 +236,7 @@ class ChatServiceTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("사용자 프로필 조회")
+    @DisplayName("회원 프로필 조회")
     void getMemberProfiles(){
         // given
         Set<Long> request = new HashSet<>();
@@ -263,7 +263,7 @@ class ChatServiceTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("사용자 프로필 조회 시 데이터 없는 경우")
+    @DisplayName("회원 프로필 조회 시 데이터 없는 경우")
     void getMemberProfiles_emptyData(){
         // given
         Set<Long> request = new HashSet<>();

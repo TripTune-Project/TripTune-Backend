@@ -11,7 +11,7 @@ public enum ErrorCode {
     // 공통
     DATA_NOT_FOUND(HttpStatus.NOT_FOUND, "데이터가 존재하지 않습니다."),
     FORBIDDEN_ACCESS(HttpStatus.FORBIDDEN, "접근 권한이 없습니다."),
-    UNAUTHORIZED_ACCESS(HttpStatus.UNAUTHORIZED, "인증되지 않은 사용자입니다. 로그인 후 다시 시도하세요."),
+    UNAUTHORIZED_ACCESS(HttpStatus.UNAUTHORIZED, "인증되지 않은 회원입니다. 로그인 후 다시 시도하세요."),
     PAGE_NOT_FOUND(HttpStatus.NOT_FOUND, "페이지를 찾을 수 없습니다."),
 
     // 입력 검증
@@ -26,11 +26,11 @@ public enum ErrorCode {
     ILLEGAL_THEME_TYPE(HttpStatus.BAD_REQUEST, "잘못된 테마 요청입니다."),
 
     // 회원
-    MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "사용자 정보를 찾을 수 없습니다."),
+    MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "회원 정보를 찾을 수 없습니다."),
     FAILED_LOGIN(HttpStatus.BAD_REQUEST, "이메일 또는 비밀번호가 일치하지 않습니다."),
     INVALID_CHANGE_PASSWORD(HttpStatus.BAD_REQUEST, "잘못된 요청입니다. 비밀번호 찾기를 다시 진행해주세요."),
 
-    // 소셜 사용자
+    // 소셜 회원
     SOCIAL_MEMBER_PASSWORD_CHANGE_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "소셜 회원은 비밀번호를 변경할 수 없습니다."),
     SOCIAL_MEMBER_WITHDRAWAL_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "소셜 회원은 비밀번호 등록 후 탈퇴가 가능합니다."),
 
@@ -46,7 +46,7 @@ public enum ErrorCode {
     EMPTY_JWT_CLAIMS(HttpStatus.UNAUTHORIZED, "JWT 클레임이 존재하지 않습니다."),
     EXPIRED_JWT_TOKEN(HttpStatus.UNAUTHORIZED, "JWT 토큰이 만료되었습니다."),
     MISMATCH_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "토큰 갱신이 불가능합니다. 다시 로그인 후 이용해주세요."),
-    BLACKLIST_TOKEN(HttpStatus.UNAUTHORIZED, "로그아웃 된 사용자입니다. 로그인 후 이용해주세요."),
+    BLACKLIST_TOKEN(HttpStatus.UNAUTHORIZED, "로그아웃 된 회원입니다. 로그인 후 이용해주세요."),
 
     // 여행지
     PLACE_NOT_FOUND(HttpStatus.NOT_FOUND, "여행지 정보를 찾을 수 없습니다."),
@@ -54,13 +54,13 @@ public enum ErrorCode {
     // 일정
     SCHEDULE_NOT_FOUND(HttpStatus.NOT_FOUND, "일정 정보를 찾을 수 없습니다."),
     AUTHOR_NOT_FOUND(HttpStatus.NOT_FOUND, "작성자 정보를 찾을 수 없습니다."),
-    FORBIDDEN_ACCESS_SCHEDULE(HttpStatus.FORBIDDEN, "해당 일정에 접근 권한이 없는 사용자 입니다."),
-    FORBIDDEN_EDIT_SCHEDULE(HttpStatus.FORBIDDEN, "해당 일정에 편집 권한이 없는 사용자 입니다."),
-    FORBIDDEN_DELETE_SCHEDULE(HttpStatus.FORBIDDEN, "해당 일정에 삭제 권한이 없는 사용자 입니다."),
+    FORBIDDEN_ACCESS_SCHEDULE(HttpStatus.FORBIDDEN, "해당 일정에 접근 권한이 없는 회원 입니다."),
+    FORBIDDEN_EDIT_SCHEDULE(HttpStatus.FORBIDDEN, "해당 일정에 편집 권한이 없는 회원 입니다."),
+    FORBIDDEN_DELETE_SCHEDULE(HttpStatus.FORBIDDEN, "해당 일정에 삭제 권한이 없는 회원 입니다."),
 
     // 일정 참석
     ATTENDEE_NOT_FOUND(HttpStatus.NOT_FOUND, "참석자 정보를 찾을 수 없습니다."),
-    ALREADY_ATTENDEE(HttpStatus.CONFLICT, "이미 공유되어 있는 사용자입니다."),
+    ALREADY_ATTENDEE(HttpStatus.CONFLICT, "이미 공유되어 있는 회원입니다."),
     OVER_ATTENDEE_NUMBER(HttpStatus.CONFLICT, "일정은 최대 5명까지 공유할 수 있습니다."),
     FORBIDDEN_SHARE_ATTENDEE(HttpStatus.FORBIDDEN, "일정 공유는 작성자만 가능합니다."),
     FORBIDDEN_LEAVE_AUTHOR(HttpStatus.FORBIDDEN, "작성자는 일정에서 나갈 수 없습니다."),
@@ -70,7 +70,7 @@ public enum ErrorCode {
 
 
     // 채팅
-    FORBIDDEN_CHAT_ATTENDEE(HttpStatus.FORBIDDEN, "채팅 권한이 없는 사용자 입니다."),
+    FORBIDDEN_CHAT_ATTENDEE(HttpStatus.FORBIDDEN, "채팅 권한이 없는 회원 입니다."),
     CHAT_MESSAGE_TOO_LONG(HttpStatus.BAD_REQUEST, "채팅 메시지는 1000자 이하여야 합니다."),
 
     // 북마크

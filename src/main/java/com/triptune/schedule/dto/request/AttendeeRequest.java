@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 public class AttendeeRequest {
 
     @Email
-    @NotBlank(message = "공유할 사용자 이메일은 필수 입력 값입니다.")
+    @NotBlank(message = "공유할 회원의 이메일은 필수 입력 값입니다.")
     private String email;
 
     @NotNull(message = "참석자 권한은 필수 입력 값입니다.")
