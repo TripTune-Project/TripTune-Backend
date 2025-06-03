@@ -132,15 +132,34 @@ public class Member {
         updateUpdatedAt();
     }
 
-    public void updateOAuth2JoinType(){
-        if (this.joinType.equals(JoinType.NATIVE)){
+    public void updateUpdatedAt() {
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    public void resetPassword(String password) {
+        if (isSocialMember()){
             this.joinType = JoinType.BOTH;
         }
+
+        this.password = password;
         updateUpdatedAt();
     }
 
-    public void updateUpdatedAt() {
-        this.updatedAt = LocalDateTime.now();
+    public boolean isSocialMember() {
+        return this.isActive && this.joinType.equals(JoinType.SOCIAL) && this.password == null;
+    }
+
+
+    public void linkSocialAccount() {
+        if (isNativeMember()){
+            this.joinType = JoinType.BOTH;
+        }
+
+        updateUpdatedAt();
+    }
+
+    public boolean isNativeMember(){
+        return this.isActive && joinType.equals(JoinType.NATIVE);
     }
 
 }

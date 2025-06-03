@@ -1,6 +1,5 @@
 package com.triptune.member.service;
 
-import com.triptune.CookieType;
 import com.triptune.bookmark.enums.BookmarkSortType;
 import com.triptune.bookmark.repository.BookmarkRepository;
 import com.triptune.common.entity.ApiCategory;
@@ -17,8 +16,10 @@ import com.triptune.member.dto.response.LoginResponse;
 import com.triptune.member.dto.response.MemberInfoResponse;
 import com.triptune.member.dto.response.RefreshTokenResponse;
 import com.triptune.member.entity.Member;
+import com.triptune.member.enums.JoinType;
 import com.triptune.member.exception.IncorrectPasswordException;
 import com.triptune.member.exception.FailLoginException;
+import com.triptune.member.exception.UnsupportedSocialMemberException;
 import com.triptune.member.repository.MemberRepository;
 import com.triptune.profile.entity.ProfileImage;
 import com.triptune.profile.service.ProfileImageService;
@@ -49,7 +50,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -134,7 +134,7 @@ public class MemberServiceTest extends MemberTest {
 
     @Test
     @DisplayName("회원가입 시 이미 가입한 이메일이 존재해 예외 발생")
-    void join_emailExistException(){
+    void join_duplicatedEmail(){
         // given
         JoinRequest request = createMemberRequest(
                 "member@email.com",
@@ -156,7 +156,7 @@ public class MemberServiceTest extends MemberTest {
 
     @Test
     @DisplayName("회원가입 시 이미 가입한 닉네임이 존재해 예외 발생")
-    void join_nicknameExistException(){
+    void join_duplicatedNickname(){
         // given
         JoinRequest request = createMemberRequest(
                 "member@email.com",
@@ -215,7 +215,7 @@ public class MemberServiceTest extends MemberTest {
 
     @Test
     @DisplayName("인증된 이메일이 아니여서 예외 발생")
-    void validateVerifiedEmail_notVerifiedEmail (){
+    void validateVerifiedEmail_notVerifiedEmail(){
         // given
         when(redisService.getEmailData(any(), anyString())).thenReturn(null);
 
@@ -239,7 +239,6 @@ public class MemberServiceTest extends MemberTest {
         when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
         when(jwtUtils.createAccessToken(anyLong())).thenReturn(accessToken);
         when(jwtUtils.createRefreshToken(anyLong())).thenReturn(refreshToken);
-//        when(cookieUtils.createCookie(any(), anyString())).thenReturn("쿠키 문자열");
 
         // when
         LoginResponse response = memberService.login(loginRequest, mockHttpServletResponse);
@@ -255,7 +254,7 @@ public class MemberServiceTest extends MemberTest {
 
     @Test
     @DisplayName("로그인 시 사용자 데이터 없어 예외 발생")
-    void loginNotFoundUser_failLoginException(){
+    void login_memberNotFound(){
         // given
         MockHttpServletResponse mockHttpServletResponse = new MockHttpServletResponse();
         LoginRequest loginRequest = createLoginRequest(member.getEmail(), passwordToken);
@@ -273,7 +272,7 @@ public class MemberServiceTest extends MemberTest {
 
     @Test
     @DisplayName("로그인 시 비밀번호 맞지 않아 예외 발생")
-    void loginMismatchPassword_failLoginException(){
+    void login_mismatchPassword(){
         // given
         MockHttpServletResponse mockHttpServletResponse = new MockHttpServletResponse();
         LoginRequest loginRequest = createLoginRequest(member.getEmail(), passwordToken);
@@ -313,7 +312,7 @@ public class MemberServiceTest extends MemberTest {
 
     @Test
     @DisplayName("로그아웃 요청 시 사용자 데이터 없어 예외 발생")
-    void logout_dataNotFoundException(){
+    void logout_memberNotFound(){
         // given
         LogoutRequest request = createLogoutRequest("notMember");
         MockHttpServletResponse mockHttpServletResponse = new MockHttpServletResponse();
@@ -351,7 +350,7 @@ public class MemberServiceTest extends MemberTest {
 
     @Test
     @DisplayName("토큰 갱신 시 저장된 refresh token 과 요청 refresh token 이 불일치해 예외 발생")
-    void misMatchRefreshToken_customJwtBadRequestException() {
+    void refreshToken_misMatchRefreshToken() {
         // given
         String notEqualRefreshToken = "NotEqualRefreshToken";
 
@@ -385,7 +384,7 @@ public class MemberServiceTest extends MemberTest {
 
     @Test
     @DisplayName("비밀번호 찾기 시 사용자 정보 존재하지 않아 예외 발생")
-    void findPassword_DataNotFoundException() throws MessagingException {
+    void findPassword_memberNotFound() throws MessagingException {
         // given
         FindPasswordRequest findPasswordRequest = createFindPasswordRequest("fail");
 
@@ -402,37 +401,91 @@ public class MemberServiceTest extends MemberTest {
 
 
     @Test
-    @DisplayName("비밀번호 초기화")
-    void resetPassword(){
+    @DisplayName("일반 회원 비밀번호 초기화")
+    void resetPassword_nativeMember(){
         // given
-        String newPassword = "newPassword";
-        String encodedPassword = "encodedPassword";
+        ResetPasswordRequest request = createResetPasswordRequest(passwordToken, "password12!@", "password12!@");
+
+        String savedPassword = "savedPassword12!@";
+        ProfileImage profileImage = createProfileImage(1L, "profileImage");
+        Member member = createNativeTypeMember(1L, "member@email.com", savedPassword, profileImage);
 
         when(redisService.getData(anyString())).thenReturn(member.getEmail());
         when(memberRepository.findByEmail(anyString())).thenReturn(Optional.of(member));
-        when(passwordEncoder.encode(newPassword)).thenReturn(encodedPassword);
-
+        when(passwordEncoder.encode(anyString())).thenReturn(request.getPassword());
 
         // when
-        memberService.resetPassword(createResetPasswordRequest(passwordToken, newPassword, newPassword));
+        memberService.resetPassword(request);
 
         // then
         verify(redisService, times(1)).getData(passwordToken);
         verify(memberRepository, times(1)).findByEmail(member.getEmail());
-        verify(passwordEncoder, times(1)).encode(newPassword);
-        assertThat(encodedPassword).isEqualTo(member.getPassword());
+        assertThat(member.getPassword()).isEqualTo(request.getPassword());
+        assertThat(member.getJoinType()).isEqualTo(JoinType.NATIVE);
+        assertThat(member.getUpdatedAt()).isNotNull();
+    }
+
+    @Test
+    @DisplayName("소셜 회원 비밀번호 초기화")
+    void resetPassword_socialMember(){
+        // given
+        ResetPasswordRequest request = createResetPasswordRequest(passwordToken, "password12!@", "password12!@");
+
+        ProfileImage profileImage = createProfileImage(1L, "profileImage");
+        Member member = createSocialTypeMember(1L, "member@email.com", profileImage);
+
+        when(redisService.getData(anyString())).thenReturn(member.getEmail());
+        when(memberRepository.findByEmail(anyString())).thenReturn(Optional.of(member));
+        when(passwordEncoder.encode(anyString())).thenReturn(request.getPassword());
+
+        // when
+        memberService.resetPassword(request);
+
+        // then
+        verify(redisService, times(1)).getData(passwordToken);
+        verify(memberRepository, times(1)).findByEmail(member.getEmail());
+        assertThat(member.getPassword()).isEqualTo(request.getPassword());
+        assertThat(member.getJoinType()).isEqualTo(JoinType.BOTH);
+        assertThat(member.getUpdatedAt()).isNotNull();
+    }
+
+    @Test
+    @DisplayName("통합 회원 비밀번호 초기화")
+    void resetPassword_bothMember(){
+        // given
+        ResetPasswordRequest request = createResetPasswordRequest(passwordToken, "password12!@", "password12!@");
+
+        String savedPassword = "savedPassword12!@";
+        ProfileImage profileImage = createProfileImage(1L, "profileImage");
+        Member member = createBothTypeMember(1L, "member@email.com", savedPassword, profileImage);
+
+        when(redisService.getData(anyString())).thenReturn(member.getEmail());
+        when(memberRepository.findByEmail(anyString())).thenReturn(Optional.of(member));
+        when(passwordEncoder.encode(anyString())).thenReturn(request.getPassword());
+
+        // when
+        memberService.resetPassword(request);
+
+        // then
+        verify(redisService, times(1)).getData(passwordToken);
+        verify(memberRepository, times(1)).findByEmail(member.getEmail());
+        assertThat(member.getPassword()).isEqualTo(request.getPassword());
+        assertThat(member.getJoinType()).isEqualTo(JoinType.BOTH);
+        assertThat(member.getUpdatedAt()).isNotNull();
     }
 
     @Test
     @DisplayName("비밀번호 초기화 시 비밀번호 토큰 유효 시간이 만료되어 예외 발생")
-    void changePassword_resetPasswordException(){
+    void resetPassword_expiredResetPasswordToken(){
         // given
-        String newPassword = "newPassword";
+        ResetPasswordRequest request = createResetPasswordRequest(passwordToken, "password12!@", "password12!@");
+
         when(redisService.getData(anyString())).thenReturn(null);
+
 
         // when
         IncorrectPasswordException fail = assertThrows(IncorrectPasswordException.class,
-                () -> memberService.resetPassword(createResetPasswordRequest(accessToken, newPassword, newPassword)));
+                () -> memberService.resetPassword(request));
 
         // then
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.INVALID_CHANGE_PASSWORD.getStatus());
@@ -440,17 +493,17 @@ public class MemberServiceTest extends MemberTest {
     }
 
     @Test
-    @DisplayName("비밀번호 초기화 시 사용자 정보를 찾을 수 없어 얘외 발생")
-    void resetPassword_dataNotFoundException(){
+    @DisplayName("비밀번호 초기화 시 회원 정보를 찾을 수 없어 예외 발생")
+    void resetPassword_memberNotFound(){
         // given
-        String newPassword = "newPassword";
+        ResetPasswordRequest request = createResetPasswordRequest(passwordToken, "password12!@", "password12!@");
 
         when(redisService.getData(anyString())).thenReturn(member.getEmail());
         when(memberRepository.findByEmail(anyString())).thenReturn(Optional.empty());
 
         // when
         DataNotFoundException fail = assertThrows(DataNotFoundException.class,
-                () -> memberService.resetPassword(createResetPasswordRequest(accessToken, newPassword, newPassword)));
+                () -> memberService.resetPassword(request));
 
         // then
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.MEMBER_NOT_FOUND.getStatus());
@@ -463,20 +516,27 @@ public class MemberServiceTest extends MemberTest {
     void changePassword(){
         // given
         ChangePasswordRequest request = createChangePasswordRequest("test123@", "test123!", "test123!");
-        Member member = createMember(1L, "member@email.com");
+
+        ProfileImage profileImage = createProfileImage(1L, "profileImage");
+        Member member = createNativeTypeMember(1L, "member@email.com", request.getNowPassword(), profileImage);
+
+        String newPassword = "newEncodingPassword";
 
         when(memberRepository.findById(anyLong())).thenReturn(Optional.of(member));
         when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
-        when(passwordEncoder.encode(anyString())).thenReturn("encodingPassword");
+        when(passwordEncoder.encode(anyString())).thenReturn(newPassword);
 
         // when, then
         assertDoesNotThrow(() -> memberService.changePassword(member.getMemberId(), request));
+
+        assertThat(member.getPassword()).isEqualTo(newPassword);
+        assertThat(member.getUpdatedAt()).isNotNull();
 
     }
 
     @Test
     @DisplayName("비밀번호 변경 시 사용자 정보 찾을 수 없어 예외 발생")
-    void changePasswordMemberNotFoundException(){
+    void changePassword_memberNotFound(){
         // given
         ChangePasswordRequest request = createChangePasswordRequest("test123@", "test123!", "test123!");
 
@@ -491,13 +551,31 @@ public class MemberServiceTest extends MemberTest {
         assertThat(fail.getMessage()).isEqualTo(ErrorCode.MEMBER_NOT_FOUND.getMessage());
     }
 
+    @Test
+    @DisplayName("비밀번호 변경 시 소셜 회원으로 예외 발생")
+    void changePassword_socialMember(){
+        // given
+        ChangePasswordRequest request = createChangePasswordRequest("test123@", "test123!", "test123!");
+        ProfileImage profileImage = createProfileImage(1L, "profileImage");
+        Member member = createSocialTypeMember(1L, "member@email.com", profileImage);
+
+        when(memberRepository.findById(anyLong())).thenReturn(Optional.of(member));
+
+        // when, then
+        assertThrows(UnsupportedSocialMemberException.class,
+                () -> memberService.changePassword(member.getMemberId(), request));
+
+    }
 
     @Test
     @DisplayName("비밀번호 변경 시 저장된 비밀번호와 일치하지 않아 예외 발생")
-    void changePasswordIncorrectSavedPassword(){
+    void changePassword_incorrectSavedPassword(){
         // given
         ChangePasswordRequest request = createChangePasswordRequest("incorrect123@", "test123!", "test123!");
-        Member member = createMember(1L, "member@email.com");
+
+        String encodePassword = request.getNowPassword();
+        ProfileImage profileImage = createProfileImage(1L, "profileImage");
+        Member member = createNativeTypeMember(1L, "member@email.com", encodePassword, profileImage);
 
         when(memberRepository.findById(anyLong())).thenReturn(Optional.of(member));
         when(passwordEncoder.matches(anyString(), anyString())).thenReturn(false);
@@ -512,7 +590,7 @@ public class MemberServiceTest extends MemberTest {
     }
 
     @Test
-    @DisplayName("사용자 정보 조회")
+    @DisplayName("회원 정보 조회")
     void getMemberInfo(){
         // given
         ProfileImage savedProfileImage = createProfileImage(1L, "memberImage");
@@ -531,7 +609,7 @@ public class MemberServiceTest extends MemberTest {
 
     @Test
     @DisplayName("사용자 정보 조회 시 사용자 데이터가 없어 예외 발생")
-    void getMemberInfo_memberNotFoundException(){
+    void getMemberInfo_memberNotFound(){
         // given
         when(memberRepository.findById(anyLong())).thenReturn(Optional.empty());
 
@@ -560,7 +638,7 @@ public class MemberServiceTest extends MemberTest {
 
     @Test
     @DisplayName("사용자 닉네임 변경 시 이미 존재하는 닉네임으로 예외 발생")
-    void changeNickname_dataExistException(){
+    void changeNickname_duplicatedNickname(){
         // given
         ChangeNicknameRequest request = createChangeNicknameRequest("newNickname");
 
@@ -577,7 +655,7 @@ public class MemberServiceTest extends MemberTest {
 
     @Test
     @DisplayName("사용자 닉네임 변경 시 사용자 데이터가 없어 예외 발생")
-    void changeNickname_memberNotFoundException(){
+    void changeNickname_memberNotFound(){
         // given
         ChangeNicknameRequest request = createChangeNicknameRequest("newNickname");
 
@@ -615,7 +693,7 @@ public class MemberServiceTest extends MemberTest {
 
     @Test
     @DisplayName("이메일 변경 시 이미 존재하는 이메일로 예외 발생")
-    void changeEmail_duplicateEmailException(){
+    void changeEmail_duplicatedEmail(){
         // given
         EmailRequest emailRequest = createEmailRequest("changeMember@email.com");
 
@@ -630,7 +708,7 @@ public class MemberServiceTest extends MemberTest {
 
     @Test
     @DisplayName("이메일 변경 시 인증된 이메일이 아니여서 예외 발생")
-    void changeEmail_notVerifiedEmailException(){
+    void changeEmail_notVerifiedEmail(){
         // given
         EmailRequest emailRequest = createEmailRequest("changeMember@email.com");
 
@@ -648,7 +726,7 @@ public class MemberServiceTest extends MemberTest {
 
     @Test
     @DisplayName("이메일 변경 시 사용자 데이터 존재하지 않아 예외 발생")
-    void changeEmail_memberNotFoundException(){
+    void changeEmail_memberNotFound(){
         // given
         EmailRequest emailRequest = createEmailRequest("changeMember@email.com");
 
@@ -793,7 +871,7 @@ public class MemberServiceTest extends MemberTest {
 
     @Test
     @DisplayName("회원 탈퇴 시 사용자 데이터가 존재하지 않아 예외 발생")
-    void deactivateMember_MemberDataNotFoundException(){
+    void deactivateMember_memberNotFound(){
         // given
         MockHttpServletResponse mockHttpServletResponse = new MockHttpServletResponse();
         DeactivateRequest request = createDeactivateRequest(member.getPassword());
@@ -812,7 +890,7 @@ public class MemberServiceTest extends MemberTest {
 
     @Test
     @DisplayName("회원 탈퇴 요청 시 비밀번호가 맞지 않아 예외 발생")
-    void deactivateMember_incorrectPasswordException(){
+    void deactivateMember_incorrectPassword(){
         // given
         MockHttpServletResponse mockHttpServletResponse = new MockHttpServletResponse();
         DeactivateRequest request = createDeactivateRequest("incorrect_password");

@@ -193,11 +193,10 @@ class CustomOAuth2UserServiceTest extends SocialMemberTest {
         OAuth2UserInfo oAuth2UserInfo = createNaverUserInfo("member@email.com");
 
         ProfileImage profileImage = createProfileImage(1L, "image");
-        Member nativeMember = createMember(
+        Member nativeMember = createNativeTypeMember(
                 1L,
                 "member@email.com",
                 passwordEncoder.encode("password12!@"),
-                JoinType.NATIVE,
                 profileImage
         );
 
@@ -225,11 +224,10 @@ class CustomOAuth2UserServiceTest extends SocialMemberTest {
         OAuth2UserInfo oAuth2UserInfo = createKaKaoUserInfo("member@email.com");
 
         ProfileImage profileImage = createProfileImage(1L, "image");
-        Member nativeMember = createMember(
+        Member nativeMember = createNativeTypeMember(
                 1L,
                 "member@email.com",
                 passwordEncoder.encode("password12!@"),
-                JoinType.NATIVE,
                 profileImage
         );
 
@@ -257,11 +255,9 @@ class CustomOAuth2UserServiceTest extends SocialMemberTest {
         OAuth2UserInfo oAuth2UserInfo = createKaKaoUserInfo("member@email.com");
 
         ProfileImage profileImage = createProfileImage(1L, "image");
-        Member naverMember = createMember(
+        Member naverMember = createSocialTypeMember(
                 1L,
                 "member@email.com",
-                null,
-                JoinType.SOCIAL,
                 profileImage
         );
 
@@ -289,11 +285,10 @@ class CustomOAuth2UserServiceTest extends SocialMemberTest {
         OAuth2UserInfo oAuth2UserInfo = createKaKaoUserInfo("member@email.com");
 
         ProfileImage profileImage = createProfileImage(1L, "image");
-        Member bothMember = createMember(
+        Member bothMember = createBothTypeMember(
                 1L,
                 "member@email.com",
                 passwordEncoder.encode("password12!@"),
-                JoinType.BOTH,
                 profileImage
         );
 
@@ -323,11 +318,9 @@ class CustomOAuth2UserServiceTest extends SocialMemberTest {
         OAuth2UserInfo oAuth2UserInfo = createNaverUserInfo("naverMember@email.com");
 
         ProfileImage profileImage = createProfileImage(1L, "image");
-        Member member = createMember(
+        Member member = createSocialTypeMember(
                 1L,
                 oAuth2UserInfo.getEmail(),
-                null,
-                JoinType.SOCIAL,
                 profileImage
         );
 
@@ -355,11 +348,9 @@ class CustomOAuth2UserServiceTest extends SocialMemberTest {
         OAuth2UserInfo oAuth2UserInfo = createKaKaoUserInfo("kakaoMember@email.com");
 
         ProfileImage profileImage = createProfileImage(1L, "image");
-        Member member = createMember(
+        Member member = createSocialTypeMember(
                 1L,
                 oAuth2UserInfo.getEmail(),
-                null,
-                JoinType.SOCIAL,
                 profileImage
         );
 
@@ -387,11 +378,10 @@ class CustomOAuth2UserServiceTest extends SocialMemberTest {
         OAuth2UserInfo oAuth2UserInfo = createNaverUserInfo("member@email.com");
 
         ProfileImage profileImage = createProfileImage(1L, "image");
-        Member nativeMember = createMember(
+        Member nativeMember = createNativeTypeMember(
                 1L,
                 "member@email.com",
                 passwordEncoder.encode("password12!@"),
-                JoinType.NATIVE,
                 profileImage
         );
 
@@ -416,11 +406,10 @@ class CustomOAuth2UserServiceTest extends SocialMemberTest {
         OAuth2UserInfo oAuth2UserInfo = createKaKaoUserInfo("member@email.com");
 
         ProfileImage profileImage = createProfileImage(1L, "image");
-        Member nativeMember = createMember(
+        Member nativeMember = createNativeTypeMember(
                 1L,
                 "member@email.com",
                 passwordEncoder.encode("password12!@"),
-                JoinType.NATIVE,
                 profileImage
         );
 
@@ -444,11 +433,9 @@ class CustomOAuth2UserServiceTest extends SocialMemberTest {
         OAuth2UserInfo oAuth2UserInfo = createKaKaoUserInfo("member@email.com");
 
         ProfileImage profileImage = createProfileImage(1L, "image");
-        Member naverMember = createMember(
+        Member naverMember = createSocialTypeMember(
                 1L,
                 "member@email.com",
-                null,
-                JoinType.SOCIAL,
                 profileImage
         );
 
@@ -473,11 +460,10 @@ class CustomOAuth2UserServiceTest extends SocialMemberTest {
         OAuth2UserInfo oAuth2UserInfo = createKaKaoUserInfo("member@email.com");
 
         ProfileImage profileImage = createProfileImage(1L, "image");
-        Member bothMember = createMember(
+        Member bothMember = createBothTypeMember(
                 1L,
                 "member@email.com",
                 passwordEncoder.encode("password12!@"),
-                JoinType.BOTH,
                 profileImage
         );
 
@@ -502,11 +488,9 @@ class CustomOAuth2UserServiceTest extends SocialMemberTest {
         OAuth2UserInfo oAuth2UserInfo = createNaverUserInfo("naverMember@email.com");
 
         ProfileImage profileImage = createProfileImage(1L, "image");
-        Member member = createMember(
+        Member member = createSocialTypeMember(
                 1L,
                 oAuth2UserInfo.getEmail(),
-                null,
-                JoinType.SOCIAL,
                 profileImage
         );
         createSocialMember(1L, member, oAuth2UserInfo.getSocialId(), SocialType.NAVER);
@@ -535,11 +519,9 @@ class CustomOAuth2UserServiceTest extends SocialMemberTest {
         OAuth2UserInfo oAuth2UserInfo = createKaKaoUserInfo("kakaoMember@email.com");
 
         ProfileImage profileImage = createProfileImage(1L, "image");
-        Member member = createMember(
+        Member member = createSocialTypeMember(
                 1L,
                 oAuth2UserInfo.getEmail(),
-                null,
-                JoinType.SOCIAL,
                 profileImage
         );
         createSocialMember(1L, member, oAuth2UserInfo.getSocialId(), SocialType.KAKAO);
@@ -568,11 +550,10 @@ class CustomOAuth2UserServiceTest extends SocialMemberTest {
         OAuth2UserInfo oAuth2UserInfo = createNaverUserInfo("member@email.com");
 
         ProfileImage profileImage = createProfileImage(1L, "image");
-        Member nativeMember = createMember(
+        Member nativeMember = createNativeTypeMember(
                 1L,
                 "member@email.com",
                 passwordEncoder.encode("password12!@"),
-                JoinType.NATIVE,
                 profileImage
         );
 
@@ -597,11 +578,10 @@ class CustomOAuth2UserServiceTest extends SocialMemberTest {
         OAuth2UserInfo oAuth2UserInfo = createKaKaoUserInfo("member@email.com");
 
         ProfileImage profileImage = createProfileImage(1L, "image");
-        Member nativeMember = createMember(
+        Member nativeMember = createNativeTypeMember(
                 1L,
                 "member@email.com",
                 passwordEncoder.encode("password12!@"),
-                JoinType.NATIVE,
                 profileImage
         );
 
@@ -626,11 +606,9 @@ class CustomOAuth2UserServiceTest extends SocialMemberTest {
         OAuth2UserInfo oAuth2UserInfo = createKaKaoUserInfo("member@email.com");
 
         ProfileImage profileImage = createProfileImage(1L, "image");
-        Member naverMember = createMember(
+        Member naverMember = createSocialTypeMember(
                 1L,
                 "member@email.com",
-                null,
-                JoinType.SOCIAL,
                 profileImage
         );
 
@@ -655,11 +633,10 @@ class CustomOAuth2UserServiceTest extends SocialMemberTest {
         OAuth2UserInfo oAuth2UserInfo = createKaKaoUserInfo("member@email.com");
 
         ProfileImage profileImage = createProfileImage(1L, "image");
-        Member bothMember = createMember(
+        Member bothMember = createBothTypeMember(
                 1L,
                 "member@email.com",
                 passwordEncoder.encode("password12!@"),
-                JoinType.BOTH,
                 profileImage
         );
 
@@ -685,11 +662,9 @@ class CustomOAuth2UserServiceTest extends SocialMemberTest {
         OAuth2UserInfo oAuth2UserInfo = createNaverUserInfo("naverMember@email.com");
 
         ProfileImage profileImage = createProfileImage(1L, "image");
-        Member member = createMember(
+        Member member = createSocialTypeMember(
                 1L,
                 oAuth2UserInfo.getEmail(),
-                null,
-                JoinType.SOCIAL,
                 profileImage
         );
 
@@ -721,11 +696,9 @@ class CustomOAuth2UserServiceTest extends SocialMemberTest {
         OAuth2UserInfo oAuth2UserInfo = createKaKaoUserInfo("kakaoMember@email.com");
 
         ProfileImage profileImage = createProfileImage(1L, "image");
-        Member member = createMember(
+        Member member = createSocialTypeMember(
                 1L,
                 oAuth2UserInfo.getEmail(),
-                null,
-                JoinType.SOCIAL,
                 profileImage
         );
 
