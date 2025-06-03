@@ -253,7 +253,7 @@ public class MemberServiceTest extends MemberTest {
     }
 
     @Test
-    @DisplayName("로그인 시 사용자 데이터 없어 예외 발생")
+    @DisplayName("로그인 시 회원 데이터 없어 예외 발생")
     void login_memberNotFound(){
         // given
         MockHttpServletResponse mockHttpServletResponse = new MockHttpServletResponse();
@@ -311,7 +311,7 @@ public class MemberServiceTest extends MemberTest {
     }
 
     @Test
-    @DisplayName("로그아웃 요청 시 사용자 데이터 없어 예외 발생")
+    @DisplayName("로그아웃 요청 시 회원 데이터 없어 예외 발생")
     void logout_memberNotFound(){
         // given
         LogoutRequest request = createLogoutRequest("notMember");
@@ -383,7 +383,7 @@ public class MemberServiceTest extends MemberTest {
     }
 
     @Test
-    @DisplayName("비밀번호 찾기 시 사용자 정보 존재하지 않아 예외 발생")
+    @DisplayName("비밀번호 찾기 시 회원 정보 존재하지 않아 예외 발생")
     void findPassword_memberNotFound() throws MessagingException {
         // given
         FindPasswordRequest findPasswordRequest = createFindPasswordRequest("fail");
@@ -535,7 +535,7 @@ public class MemberServiceTest extends MemberTest {
     }
 
     @Test
-    @DisplayName("비밀번호 변경 시 사용자 정보 찾을 수 없어 예외 발생")
+    @DisplayName("비밀번호 변경 시 회원 정보 찾을 수 없어 예외 발생")
     void changePassword_memberNotFound(){
         // given
         ChangePasswordRequest request = createChangePasswordRequest("test123@", "test123!", "test123!");
@@ -608,7 +608,7 @@ public class MemberServiceTest extends MemberTest {
     }
 
     @Test
-    @DisplayName("사용자 정보 조회 시 사용자 데이터가 없어 예외 발생")
+    @DisplayName("회원 정보 조회 시 회원 데이터가 없어 예외 발생")
     void getMemberInfo_memberNotFound(){
         // given
         when(memberRepository.findById(anyLong())).thenReturn(Optional.empty());
@@ -623,7 +623,7 @@ public class MemberServiceTest extends MemberTest {
     }
 
     @Test
-    @DisplayName("사용자 닉네임 변경")
+    @DisplayName("회원 닉네임 변경")
     void changeNickname(){
         // given
         ChangeNicknameRequest request = createChangeNicknameRequest("newNickname");
@@ -637,7 +637,7 @@ public class MemberServiceTest extends MemberTest {
     }
 
     @Test
-    @DisplayName("사용자 닉네임 변경 시 이미 존재하는 닉네임으로 예외 발생")
+    @DisplayName("회원 닉네임 변경 시 이미 존재하는 닉네임으로 예외 발생")
     void changeNickname_duplicatedNickname(){
         // given
         ChangeNicknameRequest request = createChangeNicknameRequest("newNickname");
@@ -654,7 +654,7 @@ public class MemberServiceTest extends MemberTest {
     }
 
     @Test
-    @DisplayName("사용자 닉네임 변경 시 사용자 데이터가 없어 예외 발생")
+    @DisplayName("회원 닉네임 변경 시 회원 데이터가 없어 예외 발생")
     void changeNickname_memberNotFound(){
         // given
         ChangeNicknameRequest request = createChangeNicknameRequest("newNickname");
@@ -725,7 +725,7 @@ public class MemberServiceTest extends MemberTest {
     }
 
     @Test
-    @DisplayName("이메일 변경 시 사용자 데이터 존재하지 않아 예외 발생")
+    @DisplayName("이메일 변경 시 회원 데이터 존재하지 않아 예외 발생")
     void changeEmail_memberNotFound(){
         // given
         EmailRequest emailRequest = createEmailRequest("changeMember@email.com");
@@ -870,7 +870,7 @@ public class MemberServiceTest extends MemberTest {
     }
 
     @Test
-    @DisplayName("회원 탈퇴 시 사용자 데이터가 존재하지 않아 예외 발생")
+    @DisplayName("회원 탈퇴 시 회원 데이터가 존재하지 않아 예외 발생")
     void deactivateMember_memberNotFound(){
         // given
         MockHttpServletResponse mockHttpServletResponse = new MockHttpServletResponse();

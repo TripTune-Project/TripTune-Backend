@@ -64,7 +64,7 @@ public class SecurityConfig {
                         .redirectionEndpoint(redirection -> redirection
                                 .baseUri("/login/oauth2/code/*")
                         )
-                        // 로그인 성공 이후 사용자 정보를 가져올 때의 설정을 담당
+                        // 로그인 성공 이후 회원 정보를 가져올 때의 설정을 담당
                         .userInfoEndpoint(c -> c.userService(customOAuth2UserService))
                         // 로그인 성공 시 핸들러
                         .successHandler(oAuth2SuccessHandler)
@@ -74,7 +74,7 @@ public class SecurityConfig {
                 .exceptionHandling((exceptionHandling) -> exceptionHandling
                         // 인증이 완료되었으나 해당 엔드포인트에 접근할 권한이 없을 경우 발생
                         .accessDeniedHandler(customAccessDeniedHandler)
-                        // 인증이 안된 익명의 사용자가 인증이 필요한 엔드포인트로 접근한 경우 발생
+                        // 인증이 안된 익명의 회원이 인증이 필요한 엔드포인트로 접근한 경우 발생
                         .authenticationEntryPoint(customAuthenticationEntryPoint)
                 )
                 .build();

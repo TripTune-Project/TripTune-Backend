@@ -16,7 +16,10 @@ import com.triptune.travel.repository.TravelPlaceRepository;
 import com.triptune.global.response.enums.ErrorCode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
@@ -94,8 +97,8 @@ public class TravelControllerTest extends TravelTest {
     }
 
     @Test
-    @DisplayName("로그인한 사용자의 현재 위치에 따른 여행지 목록을 제공하며 데이터가 존재하는 경우")
-    void getNearByTravelPlaces_loginAndExitsData() throws Exception {
+    @DisplayName("회원의 위치를 기반으로 여행지 목록을 조회")
+    void getNearByTravelPlaces_member() throws Exception {
         bookmarkRepository.save(createBookmark(null, member, travelPlace1, LocalDateTime.now()));
         mockAuthentication(member);
 
@@ -114,9 +117,23 @@ public class TravelControllerTest extends TravelTest {
                 .andExpect(jsonPath("$.data.content[1].bookmarkStatus").value(false));
     }
 
+
     @Test
-    @DisplayName("익명의 사용자의 현재 위치에 따른 여행지 목록을 제공하며 데이터가 존재하는 경우")
-    void getNearByTravelPlaces_anonymousAndExistsData() throws Exception {
+    @DisplayName("회원의 위치를 기반으로 여행지 목록을 조회할 때, 데이터가 없는 경우")
+    void getNearByTravelPlaces_memberAndNoData() throws Exception {
+        mockAuthentication(member);
+        mockMvc.perform(post("/api/travels")
+                        .param("page", "1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJsonString(createTravelLocationRequest(9999.9999, 9999.9999))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.totalElements").value(0))
+                .andExpect(jsonPath("$.data.content").isEmpty());
+    }
+
+    @Test
+    @DisplayName("비회원의 위치를 기반으로 여행지 목록을 조회")
+    void getNearByTravelPlaces_nonMember() throws Exception {
         bookmarkRepository.save(createBookmark(null, member, travelPlace1, LocalDateTime.now()));
 
         mockMvc.perform(post("/api/travels")
@@ -134,22 +151,10 @@ public class TravelControllerTest extends TravelTest {
                 .andExpect(jsonPath("$.data.content[1].bookmarkStatus").value(false));
     }
 
-    @Test
-    @DisplayName("로그인한 사용자의 현재 위치에 따른 여행지 목록을 제공하며 데이터가 존재하지 않는 경우")
-    void getNearByTravelPlaces_loginAndNoData() throws Exception {
-        mockAuthentication(member);
-        mockMvc.perform(post("/api/travels")
-                        .param("page", "1")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(createTravelLocationRequest(9999.9999, 9999.9999))))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.totalElements").value(0))
-                .andExpect(jsonPath("$.data.content").isEmpty());
-    }
 
     @Test
-    @DisplayName("익명의 사용자의 현재 위치에 따른 여행지 목록을 제공하며 데이터가 존재하지 않는 경우")
-    void getNearByTravelPlaces_anonymousAndNoData() throws Exception {
+    @DisplayName("비회원의 위치를 기반으로 여행지 목록을 조회할 때, 데이터가 없는 경우")
+    void getNearByTravelPlaces_nonMemberAndNoData() throws Exception {
         mockMvc.perform(post("/api/travels")
                         .param("page", "1")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -161,8 +166,8 @@ public class TravelControllerTest extends TravelTest {
 
 
     @Test
-    @DisplayName("로그인한 사용자의 여행지를 검색 시 검색 결과가 존재하는 경우 - 위치 데이터 존재")
-    void searchTravelPlacesWithLocation_loginAndExistsData() throws Exception {
+    @DisplayName("회원의 위치를 기반으로 여행지 검색할 때, 검색 결과가 존재하는 경우")
+    void searchTravelPlacesWithLocation_member() throws Exception {
         bookmarkRepository.save(createBookmark(null, member, travelPlace1, LocalDateTime.now()));
         mockAuthentication(member);
 
@@ -182,8 +187,21 @@ public class TravelControllerTest extends TravelTest {
     }
 
     @Test
-    @DisplayName("익명 사용자의 여행지를 검색 시 검색 결과가 존재하는 경우 - 위치 데이터 존재")
-    void searchTravelPlacesWithLocation_anonymousAndExistsData() throws Exception {
+    @DisplayName("회원의 위치를 기반으로 여행지 검색할 때, 검색 결과가 존재하지 않는 경우")
+    void searchTravelPlacesWithLocation_memberAndNoData() throws Exception {
+        mockAuthentication(member);
+        mockMvc.perform(post("/api/travels/search")
+                        .param("page", "1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJsonString(createTravelSearchRequest(9999.9999, 9999.9999, "ㅁㄴㅇㄹ"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.totalElements").value(0))
+                .andExpect(jsonPath("$.data.content").isEmpty());
+    }
+
+    @Test
+    @DisplayName("비회원의 위치를 기반으로 여행지를 검색할 때, 검색 결과가 존재하는 경우")
+    void searchTravelPlacesWithLocation_nonMember() throws Exception {
         bookmarkRepository.save(createBookmark(null, member, travelPlace1, LocalDateTime.now()));
         mockMvc.perform(post("/api/travels/search")
                         .param("page", "1")
@@ -201,21 +219,8 @@ public class TravelControllerTest extends TravelTest {
     }
 
     @Test
-    @DisplayName("로그인한 사용자의 여행지를 검색 시 검색 결과가 존재하지 않는 경우 - 위치 데이터 존재")
-    void searchTravelPlacesWithLocation_loginAndNoData() throws Exception {
-        mockAuthentication(member);
-        mockMvc.perform(post("/api/travels/search")
-                        .param("page", "1")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(createTravelSearchRequest(9999.9999, 9999.9999, "ㅁㄴㅇㄹ"))))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.totalElements").value(0))
-                .andExpect(jsonPath("$.data.content").isEmpty());
-    }
-
-    @Test
-    @DisplayName("익명 사용자의 여행지를 검색 시 검색 결과가 존재하지 않는 경우 - 위치 데이터 존재")
-    void searchTravelPlacesWithLocation_anonymousAndNoData() throws Exception {
+    @DisplayName("비회원의 위치를 기반으로 여행지를 검색할 때, 검색 결과가 존재하지 않는 경우")
+    void searchTravelPlacesWithLocation_nonMemberAndNoData() throws Exception {
         mockMvc.perform(post("/api/travels/search")
                         .param("page", "1")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -227,8 +232,8 @@ public class TravelControllerTest extends TravelTest {
 
 
     @Test
-    @DisplayName("로그인한 사용자의 여행지를 검색 시 검색 결과가 존재하는 경우 - 위치 데이터 존재하지 않는 경우")
-    void searchTravelPlacesWithoutLocation_loginAndExistsData() throws Exception {
+    @DisplayName("회원의 위치를 기반하지 않고 여행지를 검색할 때, 검색 결과가 존재하는 경우")
+    void searchTravelPlacesWithoutLocation_member() throws Exception {
         bookmarkRepository.save(createBookmark(null, member, travelPlace1, LocalDateTime.now()));
         mockAuthentication(member);
 
@@ -248,8 +253,21 @@ public class TravelControllerTest extends TravelTest {
     }
 
     @Test
-    @DisplayName("익명 사용자의 여행지를 검색 시 검색 결과가 존재하는 경우 - 위치 데이터 존재하지 않는 경우")
-    void searchTravelPlacesWithoutLocation_anonymousAndExistsData() throws Exception {
+    @DisplayName("회원의 위치를 기반하지 않고 검색할 때, 검색 결과가 존재하지 않는 경우")
+    void searchTravelPlacesWithoutLocation_memberAndNoData() throws Exception {
+        mockAuthentication(member);
+        mockMvc.perform(post("/api/travels/search")
+                        .param("page", "1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJsonString(createTravelSearchRequest("ㅁㄴㅇㄹ"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.totalElements").value(0))
+                .andExpect(jsonPath("$.data.content").isEmpty());
+    }
+
+    @Test
+    @DisplayName("비회원의 위치를 기반하지 않고 여행지를 검색할 때, 검색 결과가 존재하는 경우")
+    void searchTravelPlacesWithoutLocation_nonMember() throws Exception {
         bookmarkRepository.save(createBookmark(null, member, travelPlace1, LocalDateTime.now()));
 
         mockMvc.perform(post("/api/travels/search")
@@ -268,9 +286,8 @@ public class TravelControllerTest extends TravelTest {
     }
 
     @Test
-    @DisplayName("로그인한 사용자의 여행지를 검색 시 검색 결과가 존재하지 않는 경우 - 위치 데이터 존재하지 않는 경우")
-    void searchTravelPlacesWithoutLocation_loginAndNoData() throws Exception {
-        mockAuthentication(member);
+    @DisplayName("비회원의 위치를 기반하지 않고 여행지를 검색할 때, 검색 결과가 존재하지 않는 경우")
+    void searchTravelPlacesWithoutLocation_nonMemberAndNoData() throws Exception {
         mockMvc.perform(post("/api/travels/search")
                         .param("page", "1")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -280,32 +297,21 @@ public class TravelControllerTest extends TravelTest {
                 .andExpect(jsonPath("$.data.content").isEmpty());
     }
 
-    @Test
-    @DisplayName("익명 사용자의 여행지를 검색 시 검색 결과가 존재하지 않는 경우 - 위치 데이터 존재하지 않는 경우")
-    void searchTravelPlacesWithoutLocation_anonymousAndNoData() throws Exception {
-        mockMvc.perform(post("/api/travels/search")
-                        .param("page", "1")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(createTravelSearchRequest("ㅁㄴㅇㄹ"))))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.totalElements").value(0))
-                .andExpect(jsonPath("$.data.content").isEmpty());
-    }
-
-    @Test
+    @ParameterizedTest
     @DisplayName("여행지 검색 시 키워드에 특수문자가 존재하는 경우")
-    void searchTravelPlaces_BadRequestException() throws Exception {
+    @ValueSource(strings = {"@강남", "#", "SELECT *"})
+    void searchTravelPlaces_invalidKeyword(String keyword) throws Exception {
         mockMvc.perform(post("/api/travels/search")
                         .param("page", "1")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(createTravelSearchRequest(37.4970465429, 127.0281573537, "@강남"))))
+                        .content(toJsonString(createTravelSearchRequest(37.4970465429, 127.0281573537, keyword))))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").value("검색어에 특수문자는 사용 불가합니다."));
     }
 
     @Test
-    @DisplayName("로그인한 사용자의 여행지 상세정보 조회")
-    void getTravelDetails_login() throws Exception {
+    @DisplayName("회원의 여행지 상세정보 조회")
+    void getTravelDetails_member() throws Exception {
         ApiContentType apiContentType = apiContentTypeRepository.save(createApiContentType(ThemeType.ATTRACTIONS));
         travelPlace1 = travelPlaceRepository.save(createTravelPlace(null, country, city, district1, apiCategory, apiContentType, List.of(travelImage1, travelImage2)));
 
@@ -321,8 +327,8 @@ public class TravelControllerTest extends TravelTest {
     }
 
     @Test
-    @DisplayName("익명 사용자의 여행지 상세정보 조회")
-    void getTravelDetails_anonymous() throws Exception {
+    @DisplayName("비회원의 여행지 상세정보 조회")
+    void getTravelDetails_nonMember() throws Exception {
         ApiContentType apiContentType = apiContentTypeRepository.save(createApiContentType(ThemeType.ATTRACTIONS));
         travelPlace1 = travelPlaceRepository.save(createTravelPlace(null, country, city, district1, apiCategory, apiContentType, List.of(travelImage1, travelImage2)));
 
@@ -337,8 +343,8 @@ public class TravelControllerTest extends TravelTest {
     }
 
     @Test
-    @DisplayName("여행지 상세정보 조회 시 데이터 존재하지 않아 404 에러 발생")
-    void getTravelDetails_NotFoundException() throws Exception {
+    @DisplayName("여행지 상세정보 조회 시 데이터 존재하지 않아 예외 발생")
+    void getTravelDetails_placeNotFound() throws Exception {
         mockMvc.perform(get("/api/travels/{placeId}", 0L))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.success").value(false))

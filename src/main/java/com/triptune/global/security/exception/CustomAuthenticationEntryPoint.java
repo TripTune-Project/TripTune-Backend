@@ -17,7 +17,7 @@ import java.io.IOException;
 @RequiredArgsConstructor
 @Slf4j
 public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint {
-    // 인증이 안된 익명의 사용자가 인증이 필요한 엔드포인트로 접근한 경우 발생
+    // 인증이 안된 익명의 회원이 인증이 필요한 엔드포인트로 접근한 경우 발생
 
     private final HttpRequestEndpointChecker endpointChecker;
 

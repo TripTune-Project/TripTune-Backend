@@ -777,7 +777,7 @@ public class ScheduleControllerTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("일정 삭제 시 삭제 권한이 없는 사용자 요청으로 예외 발생")
+    @DisplayName("일정 삭제 시 삭제 권한이 없는 회원 요청으로 예외 발생")
     void deleteSchedule_forbiddenScheduleException() throws Exception {
         // given
         TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(null, member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));

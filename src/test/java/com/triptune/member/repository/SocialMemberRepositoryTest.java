@@ -28,7 +28,7 @@ class SocialMemberRepositoryTest extends MemberTest {
 
 
     @Test
-    @DisplayName("소셜 정보로 사용자 조회")
+    @DisplayName("소셜 정보로 회원 조회")
     void findBySocialInfo() {
         // given
         ProfileImage profileImage = profileImageRepository.save(createProfileImage(null, "image"));

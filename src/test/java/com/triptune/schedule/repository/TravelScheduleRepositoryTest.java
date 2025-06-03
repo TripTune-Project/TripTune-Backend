@@ -381,7 +381,7 @@ public class TravelScheduleRepositoryTest extends ScheduleTest {
         assertThat(routes.getTotalElements()).isEqualTo(0);
         assertThat(routes.getContent()).isEmpty();
 
-        // 사용자 정보 삭제 안됐는지 확인
+        // 회원 정보 삭제 안됐는지 확인
         Optional<Member> member = memberRepository.findByEmail(member1.getEmail());
         assertThat(member).isNotEmpty();
     }

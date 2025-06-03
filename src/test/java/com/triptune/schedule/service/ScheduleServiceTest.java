@@ -152,7 +152,7 @@ public class ScheduleServiceTest extends ScheduleTest {
 
     @Test
     @DisplayName("내 일정 목록 조회 시 공유된 일정이 없는 경우")
-    void getAllSchedulesNotShared(){
+    void getAllSchedules_noSharedScheduleData(){
         // given
         Pageable pageable = PageUtils.schedulePageable(1);
 
@@ -176,7 +176,7 @@ public class ScheduleServiceTest extends ScheduleTest {
 
     @Test
     @DisplayName("내 일정 목록 조회 시 일정 데이터 없는 경우")
-    void getAllSchedulesNoScheduleData(){
+    void getAllSchedules_noScheduleData(){
         // given
         Pageable pageable = PageUtils.schedulePageable(1);
         Page<TravelSchedule> emptySchedulePage = PageUtils.createPage(new ArrayList<>(), pageable, 0);
@@ -196,7 +196,7 @@ public class ScheduleServiceTest extends ScheduleTest {
 
     @Test
     @DisplayName("내 일정 목록 조회 시 이미지 썸네일 데이터 없는 경우")
-    void getAllSchedulesNoImageThumbnail(){
+    void getAllSchedules_noImageThumbnail(){
         // given
         Pageable pageable = PageUtils.schedulePageable(1);
 
@@ -225,7 +225,7 @@ public class ScheduleServiceTest extends ScheduleTest {
 
     @Test
     @DisplayName("내 일정 목록 조회 시 이미지 데이터 없는 경우")
-    void getAllSchedulesNoImageData(){
+    void getAllSchedules_noImageData(){
         // given
         Pageable pageable = PageUtils.schedulePageable(1);
         travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, new ArrayList<>());
@@ -292,7 +292,7 @@ public class ScheduleServiceTest extends ScheduleTest {
 
     @Test
     @DisplayName("공유된 일정 목록 조회 시 일정 데이터 없는 경우")
-    void getSharedSchedulesNoScheduleData(){
+    void getSharedSchedules_noScheduleData(){
         // given
         Pageable pageable = PageUtils.schedulePageable(1);
         Page<TravelSchedule> emptySchedulePage = PageUtils.createPage(new ArrayList<>(), pageable, 0);
@@ -311,7 +311,7 @@ public class ScheduleServiceTest extends ScheduleTest {
 
     @Test
     @DisplayName("공유된 일정 목록 조회 시 이미지 썸네일 데이터 없는 경우")
-    void getSharedSchedulesNoImageThumbnail(){
+    void getSharedSchedules_noImageThumbnail(){
         // given
         Pageable pageable = PageUtils.schedulePageable(1);
 
@@ -346,7 +346,7 @@ public class ScheduleServiceTest extends ScheduleTest {
 
     @Test
     @DisplayName("내 일정 목록 조회 시 이미지 데이터 없는 경우")
-    void getSharedSchedulesNoImageData(){
+    void getSharedSchedules_noImageData(){
         // given
         Pageable pageable = PageUtils.schedulePageable(1);
         travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, new ArrayList<>());
@@ -394,7 +394,7 @@ public class ScheduleServiceTest extends ScheduleTest {
 
     @Test
     @DisplayName("수정 권한 있는 내 일정 목록 조회 시 일정 데이터 존재하지 않는 경우")
-    void getEnableEditSchedule_emptySchedules(){
+    void getEnableEditSchedule_noScheduleData(){
         // given
         Pageable pageable = PageUtils.scheduleModalPageable(1);
 
@@ -438,7 +438,7 @@ public class ScheduleServiceTest extends ScheduleTest {
 
     @Test
     @DisplayName("내 일정 검색 시 공유된 일정이 없는 경우")
-    void searchAllSchedulesNotShared(){
+    void searchAllSchedules_noSharedSchedule(){
         // given
         String keyword = "3";
         Pageable pageable = PageUtils.schedulePageable(1);
@@ -463,7 +463,7 @@ public class ScheduleServiceTest extends ScheduleTest {
 
     @Test
     @DisplayName("내 일정 검색 시 검색 결과가 없는 경우")
-    void searchAllSchedulesNoData(){
+    void searchAllSchedules_noData(){
         // given
         String keyword = "ㅁㄴㅇㄹ";
         Pageable pageable = PageUtils.schedulePageable(1);
@@ -483,7 +483,7 @@ public class ScheduleServiceTest extends ScheduleTest {
 
     @Test
     @DisplayName("내 일정 검색 시 이미지 썸네일 데이터 없는 경우")
-    void searchAllSchedulesNoImageThumbnail(){
+    void searchAllSchedules_noImageThumbnail(){
         // given
         String keyword = "테스트";
         Pageable pageable = PageUtils.schedulePageable(1);
@@ -514,7 +514,7 @@ public class ScheduleServiceTest extends ScheduleTest {
 
     @Test
     @DisplayName("내 일정 목록 조회 시 이미지 데이터 없는 경우")
-    void searchAllSchedulesNoImageData(){
+    void searchAllSchedules_noImageData(){
         // given
         String keyword = "1";
         Pageable pageable = PageUtils.schedulePageable(1);
@@ -584,7 +584,7 @@ public class ScheduleServiceTest extends ScheduleTest {
 
     @Test
     @DisplayName("공유된 일정 목록 조회 시 일정 데이터 없는 경우")
-    void searchSharedSchedulesNoData(){
+    void searchSharedSchedules_noScheduleData(){
         // given
         String keyword = "테스트";
         Pageable pageable = PageUtils.schedulePageable(1);
@@ -604,7 +604,7 @@ public class ScheduleServiceTest extends ScheduleTest {
 
     @Test
     @DisplayName("공유된 일정 목록 조회 시 이미지 썸네일 데이터 없는 경우")
-    void searchSharedSchedulesNoImageThumbnail(){
+    void searchSharedSchedules_noImageThumbnail(){
         // given
         String keyword = "테스트";
         Pageable pageable = PageUtils.schedulePageable(1);
@@ -640,7 +640,7 @@ public class ScheduleServiceTest extends ScheduleTest {
 
     @Test
     @DisplayName("공유된 일정 검색 시 이미지 데이터 없는 경우")
-    void searchSharedSchedulesNoImageData(){
+    void searchSharedSchedules_noImageData(){
         // given
         String keyword = "테스트";
         Pageable pageable = PageUtils.schedulePageable(1);
@@ -698,7 +698,7 @@ public class ScheduleServiceTest extends ScheduleTest {
 
     @Test
     @DisplayName("TravelSchedule 를 ScheduleInfoResponse 로 변경 시 썸네일 없는 경우")
-    void createScheduleInfoResponseWithoutThumbnail(){
+    void createScheduleInfoResponse_noImageThumbnail(){
         // given
         travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, new ArrayList<>());
         travelPlace2 = createTravelPlace(2L, country, city, district, apiCategory, new ArrayList<>());
@@ -719,7 +719,7 @@ public class ScheduleServiceTest extends ScheduleTest {
 
     @Test
     @DisplayName("TravelSchedule 를 ScheduleInfoResponse 로 변경 시 작성자가 없어 예외 발생")
-    void createScheduleInfoResponse_notFoundException(){
+    void createScheduleInfoResponse_authorNotFound(){
         // given
         List<TravelSchedule> travelScheduleList = List.of(schedule1);
         Page<TravelSchedule> schedulePage = PageUtils.createPage(travelScheduleList, PageUtils.schedulePageable(1), travelScheduleList.size());
@@ -739,7 +739,7 @@ public class ScheduleServiceTest extends ScheduleTest {
 
     @Test
     @DisplayName("TravelSchedule 를 ScheduleInfoResponse 로 변경 시 접근 권한이 없어 예외 발생")
-    void createScheduleInfoResponse_forbiddenScheduleException(){
+    void createScheduleInfoResponse_forbiddenSchedule(){
         // given
         List<TravelSchedule> travelScheduleList = List.of(schedule3);
         Page<TravelSchedule> schedulePage = PageUtils.createPage(travelScheduleList, PageUtils.schedulePageable(1), travelScheduleList.size());
@@ -769,7 +769,7 @@ public class ScheduleServiceTest extends ScheduleTest {
 
     @Test
     @DisplayName("작성자 조회해서 MemberProfileDTO 생성 시 작성자가 없어 예외 발생")
-    void createAuthorDTO_notFoundException(){
+    void createAuthorDTO_authorNotFound(){
         // given
         for(TravelAttendee attendee : schedule1.getTravelAttendeeList()){
             attendee.updateRole(AttendeeRole.GUEST);
@@ -805,8 +805,8 @@ public class ScheduleServiceTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("일정 생성 시 저장된 사용자 정보 없어 DataNotFoundException 발생")
-    void createSchedule_CustomUsernameDataNotFoundException(){
+    @DisplayName("일정 생성 시 저장된 회원 정보 없어 예외 발생")
+    void createSchedule_memberNotFound(){
         // given
         ScheduleCreateRequest request = createScheduleRequest(LocalDate.now());
 
@@ -854,7 +854,7 @@ public class ScheduleServiceTest extends ScheduleTest {
 
     @Test
     @DisplayName("일정 상세 조회 시 여행지 데이터 없는 경우")
-    void getScheduleDetailWithoutData(){
+    void getScheduleDetail_noData(){
         // given
         Pageable pageable = PageUtils.defaultPageable(1);
 
@@ -873,8 +873,8 @@ public class ScheduleServiceTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("일정 상세 조회 시 일정을 찾을 수 없어 DataNotFoundException 발생")
-    void getScheduleDetail_dataNotFoundException(){
+    @DisplayName("일정 상세 조회 시 일정을 찾을 수 없어 예외 발생")
+    void getScheduleDetail_scheduleNotFound(){
         // given
         when(travelScheduleRepository.findById(any())).thenReturn(Optional.empty());
 
@@ -920,10 +920,9 @@ public class ScheduleServiceTest extends ScheduleTest {
 
     @Test
     @DisplayName("일정 수정 중 여행 루트 삭제에서 기존에 저장된 여행 루트가 없을 경우")
-    void updateScheduleNoSavedTravelRouteList(){
+    void updateSchedule_noSavedTravelRouteList(){
         // given
         Long scheduleId = schedule2.getScheduleId();
-
 
         TravelImage travelImage1 = createTravelImage(travelPlace1, "test1", true);
         TravelImage travelImage2 = createTravelImage(travelPlace1, "test2", false);
@@ -953,7 +952,7 @@ public class ScheduleServiceTest extends ScheduleTest {
 
     @Test
     @DisplayName("일정의 여행 루트 수정 시 기존에 저장된 여행 루트가 존재하는 경우")
-    void updateTravelRouteInSchedule(){
+    void updateTravelRoute_existedTravelRoute(){
         TravelImage travelImage1 = createTravelImage(travelPlace1, "test1", true);
         TravelImage travelImage2 = createTravelImage(travelPlace1, "test2", false);
         travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, List.of(travelImage1, travelImage2));
@@ -986,7 +985,7 @@ public class ScheduleServiceTest extends ScheduleTest {
 
     @Test
     @DisplayName("일정 수정 시 일정 데이터 없어 예외 발생")
-    void updateScheduleNoSchedule_dataNotFoundException(){
+    void updateSchedule_scheduleNotFound(){
         // given
         Long scheduleId = schedule1.getScheduleId();
 
@@ -1015,8 +1014,8 @@ public class ScheduleServiceTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("일정 수정 시 요청 사용자에게 접근 권한이 없어 예외 발생")
-    void updateScheduleForbiddenAccess_forbiddenScheduleException(){
+    @DisplayName("일정 수정 시 요청 회원에게 접근 권한이 없어 예외 발생")
+    void updateSchedule_forbiddenSchedule(){
         // given
         Long scheduleId = schedule3.getScheduleId();
 
@@ -1051,8 +1050,8 @@ public class ScheduleServiceTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("일정 수정 시 요청 사용자에게 수정 권한이 없어 예외 발생")
-    void updateScheduleForbiddenEdit_forbiddenScheduleException(){
+    @DisplayName("일정 수정 시 요청 회원에게 수정 권한이 없어 예외 발생")
+    void updateSchedule_forbiddenEdit(){
         // given
         Long scheduleId = schedule1.getScheduleId();
 
@@ -1083,7 +1082,7 @@ public class ScheduleServiceTest extends ScheduleTest {
 
     @Test
     @DisplayName("일정 수정 시 여행 루트에 저장된 여행지가 없어 예외 발생")
-    void updateScheduleNoTravelPlace_dataNotFoundException(){
+    void updateSchedule_placeNotFoundInTravelRoute(){
         // given
         Long scheduleId = schedule1.getScheduleId();
 
@@ -1115,7 +1114,7 @@ public class ScheduleServiceTest extends ScheduleTest {
 
     @Test
     @DisplayName("참가자 정보 조회")
-    void getAttendeeInfo_containsAttendees(){
+    void getAttendeeInfo(){
         // given
         // when
         TravelAttendee response = scheduleService.getAttendeeInfo(schedule1, member1.getMemberId());
@@ -1127,7 +1126,7 @@ public class ScheduleServiceTest extends ScheduleTest {
 
     @Test
     @DisplayName("참가자 정보 조회 시 데이터 존재하지 않는 경우")
-    void getAttendeeInfo_notContainsAttendees(){
+    void getAttendeeInfo_noData(){
         // given
         // when
         ForbiddenScheduleException fail = assertThrows(ForbiddenScheduleException.class,
@@ -1140,8 +1139,8 @@ public class ScheduleServiceTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("일정 수정 사용자 권한 체크 ALL")
-    void checkScheduleEditPermissionALL(){
+    @DisplayName("일정 수정 회원 권한 체크 ALL")
+    void checkSchedule_editPermissionALL(){
         // given
         attendee1.updatePermission(AttendeePermission.ALL);
 
@@ -1150,8 +1149,8 @@ public class ScheduleServiceTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("일정 수정 사용자 권한 체크 EDIT")
-    void checkScheduleEditPermissionEdit(){
+    @DisplayName("일정 수정 회원 권한 체크 EDIT")
+    void checkSchedule_editPermissionEdit(){
         // given
         attendee1.updatePermission(AttendeePermission.EDIT);
 
@@ -1161,8 +1160,8 @@ public class ScheduleServiceTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("일정 수정 사용자 권한 체크 중 CHAT 권한으로 예외 발생")
-    void checkScheduleEditPermissionCHAT_forbiddenScheduleException(){
+    @DisplayName("일정 수정 회원 권한 체크 중 CHAT 권한으로 예외 발생")
+    void checkSchedule_editPermissionCHAT_forbiddenSchedule(){
         // given
         attendee1.updatePermission(AttendeePermission.CHAT);
 
@@ -1176,8 +1175,8 @@ public class ScheduleServiceTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("일정 수정 사용자 권한 체크 시 READ 권한으로 예외 발생")
-    void checkScheduleEditPermissionREAD_forbiddenScheduleException(){
+    @DisplayName("일정 수정 회원 권한 체크 시 READ 권한으로 예외 발생")
+    void checkSchedule_editPermissionREAD_forbiddenSchedule(){
         // given
         attendee1.updatePermission(AttendeePermission.READ);
 
@@ -1212,7 +1211,7 @@ public class ScheduleServiceTest extends ScheduleTest {
 
     @Test
     @DisplayName("일정 삭제 시 채팅 메시지 없는 경우")
-    void deleteScheduleNoChatMessageData(){
+    void deleteSchedule_noChatMessageData(){
         // given
         when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_MemberId(anyLong(), anyLong()))
                 .thenReturn(Optional.of(attendee1));
@@ -1226,8 +1225,8 @@ public class ScheduleServiceTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("일정 삭제 시 작성자가 아닌 사용자가 삭제 요청으로 인해 예외 발생")
-    void deleteScheduleNotAuthor_forbiddenScheduleException(){
+    @DisplayName("일정 삭제 시 작성자가 아닌 회원의 삭제 요청으로 인해 예외 발생")
+    void deleteSchedule_notAuthor_forbiddenSchedule(){
         // given
         when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_MemberId(anyLong(), anyLong()))
                 .thenReturn(Optional.of(attendee2));

@@ -93,7 +93,7 @@ public class ScheduleController {
 
     @AttendeeCheck
     @PatchMapping("/{scheduleId}")
-    @Operation(summary = "일정 수정", description = "일정 상세 화면에서 저장 버튼을 누르면 해당 일정이 수정됩니다. 사용자는 저장 작업으로 보지만, 실제로는 일정 수정 작업입니다.")
+    @Operation(summary = "일정 수정", description = "일정 상세 화면에서 저장 버튼을 누르면 해당 일정이 수정됩니다. 회원은 저장 작업으로 보지만, 실제로는 일정 수정 작업입니다.")
     public ApiResponse<?> updateSchedule(@AuthenticationPrincipal(expression = "memberId") Long memberId,
                                          @PathVariable(name = "scheduleId") Long scheduleId,
                                          @Valid @RequestBody ScheduleUpdateRequest scheduleUpdateRequest){

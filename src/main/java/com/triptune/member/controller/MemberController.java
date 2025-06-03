@@ -125,14 +125,14 @@ public class MemberController {
     }
 
     @GetMapping("/info")
-    @Operation(summary = "사용자 정보 조회", description = "사용자 정보를 조회합니다.")
+    @Operation(summary = "회원 정보 조회", description = "회원 정보를 조회합니다.")
     public ApiResponse<MemberInfoResponse> getMemberInfo(@AuthenticationPrincipal(expression = "memberId") Long memberId){
         MemberInfoResponse memberInfoResponse = memberService.getMemberInfo(memberId);
         return ApiResponse.dataResponse(memberInfoResponse);
     }
 
     @PatchMapping("/change-nickname")
-    @Operation(summary = "사용자 닉네임 변경", description = "사용자 닉네임을 변경합니다.")
+    @Operation(summary = "회원 닉네임 변경", description = "회원 닉네임을 변경합니다.")
     public ApiResponse<Void> changeNickname(@AuthenticationPrincipal(expression = "memberId") Long memberId,
                                             @Valid @RequestBody ChangeNicknameRequest changeNicknameRequest){
         memberService.changeNickname(memberId, changeNicknameRequest);
@@ -141,7 +141,7 @@ public class MemberController {
     }
 
     @PatchMapping("/change-email")
-    @Operation(summary = "사용자 이메일 변경", description = "사용자 이메일을 변경합니다.")
+    @Operation(summary = "회원 이메일 변경", description = "회원 이메일을 변경합니다.")
     public ApiResponse<Void> changeEmail(@AuthenticationPrincipal(expression = "memberId") Long memberId,
                                          @Valid @RequestBody EmailRequest emailRequest){
         memberService.changeEmail(memberId, emailRequest);
@@ -149,7 +149,7 @@ public class MemberController {
     }
 
     @GetMapping("/bookmark")
-    @Operation(summary = "사용자 북마크 조회", description = "사용자가 등록한 북마크를 조회합니다.")
+    @Operation(summary = "회원 북마크 조회", description = "회원이 등록한 북마크를 조회합니다.")
     public ApiPageResponse<PlaceBookmarkResponse> getMemberBookmarks(@AuthenticationPrincipal(expression = "memberId") Long memberId,
                                                                      @RequestParam(name = "page") int page,
                                                                      @RequestParam(name = "sort") String sort){
