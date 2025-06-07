@@ -16,7 +16,7 @@ public class Country {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "country_id")
-    private Long CountryId;
+    private Long countryId;
 
     @Column(name = "country_name")
     private String countryName;
@@ -24,7 +24,7 @@ public class Country {
 
     @Builder
     public Country(Long countryId, String countryName) {
-        CountryId = countryId;
+        this.countryId = countryId;
         this.countryName = countryName;
     }
 }

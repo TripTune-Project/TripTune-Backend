@@ -99,7 +99,7 @@ public class MemberController {
     @PatchMapping("/reset-password")
     @Operation(summary = "비밀번호 초기화", description = "이메일 인증 후 비밀번호를 초기화합니다.")
     public ApiResponse<Void> resetPassword(@Valid @RequestBody ResetPasswordRequest resetPasswordRequest){
-        if(!resetPasswordRequest.isMatchPassword()){
+        if(!resetPasswordRequest.matchPassword()){
             throw new FailLoginException(ErrorCode.INCORRECT_PASSWORD_REPASSWORD);
         }
 
@@ -112,11 +112,11 @@ public class MemberController {
     @Operation(summary = "비밀번호 변경", description = "비밀번호를 변경합니다.")
     public ApiResponse<Void> changePassword(@AuthenticationPrincipal(expression = "memberId") Long memberId,
                                             @Valid @RequestBody ChangePasswordRequest passwordRequest){
-        if(!passwordRequest.isMatchNewPassword()){
+        if(!passwordRequest.matchNewPassword()){
             throw new IncorrectPasswordException(ErrorCode.INCORRECT_PASSWORD_REPASSWORD);
         }
 
-        if(passwordRequest.isMatchNowPassword()){
+        if(passwordRequest.matchNowPassword()){
             throw new IncorrectPasswordException(ErrorCode.CORRECT_NOWPASSWORD_NEWPASSWORD);
         }
         memberService.changePassword(memberId, passwordRequest);

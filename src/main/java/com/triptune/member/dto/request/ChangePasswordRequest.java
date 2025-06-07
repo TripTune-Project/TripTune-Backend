@@ -29,11 +29,11 @@ public class ChangePasswordRequest {
         this.rePassword = rePassword;
     }
 
-    public boolean isMatchNewPassword() {
+    public boolean matchNewPassword() {
         return this.newPassword.equals(this.rePassword);
     }
 
-    public boolean isMatchNowPassword(){
+    public boolean matchNowPassword(){
         return this.nowPassword.equals(this.newPassword);
     }
 }

@@ -5,7 +5,7 @@ import jakarta.validation.constraints.Pattern;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
+import net.minidev.json.annotate.JsonIgnore;
 
 @Getter
 @NoArgsConstructor
@@ -29,7 +29,7 @@ public class ResetPasswordRequest {
         this.rePassword = rePassword;
     }
 
-    public boolean isMatchPassword() {
-        return this.password.equals(this.rePassword);
+    public boolean matchPassword() {
+        return this.password != null && this.password.equals(this.rePassword);
     }
 }
