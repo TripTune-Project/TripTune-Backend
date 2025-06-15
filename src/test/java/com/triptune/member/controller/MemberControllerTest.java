@@ -70,45 +70,27 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @ActiveProfiles("mongo")
 public class MemberControllerTest extends MemberTest {
-    @Autowired
-    private WebApplicationContext wac;
-    @Autowired
-    private JwtUtils jwtUtils;
-    @Autowired
-    private MemberRepository memberRepository;
-    @Autowired
-    private ProfileImageRepository profileImageRepository;
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-    @Autowired
-    private TravelPlaceRepository travelPlaceRepository;
-    @Autowired
-    private CountryRepository countryRepository;
-    @Autowired
-    private CityRepository cityRepository;
-    @Autowired
-    private DistrictRepository districtRepository;
-    @Autowired
-    private TravelImageRepository travelImageRepository;
-    @Autowired
-    private ApiCategoryRepository apiCategoryRepository;
-    @Autowired
-    private BookmarkRepository bookmarkRepository;
-    @Autowired
-    private TravelAttendeeRepository travelAttendeeRepository;
-    @Autowired
-    private TravelScheduleRepository travelScheduleRepository;
-    @Autowired
-    private ChatMessageRepository chatMessageRepository;
-    @Autowired
-    private SocialMemberRepository socialMemberRepository;
 
-    @MockBean
-    private RedisService redisService;
-    @MockBean
-    private EmailService emailService;
-    @MockBean
-    private S3Service s3Service;
+    @Autowired private WebApplicationContext wac;
+    @Autowired private JwtUtils jwtUtils;
+    @Autowired private MemberRepository memberRepository;
+    @Autowired private ProfileImageRepository profileImageRepository;
+    @Autowired private PasswordEncoder passwordEncoder;
+    @Autowired private TravelPlaceRepository travelPlaceRepository;
+    @Autowired private CountryRepository countryRepository;
+    @Autowired private CityRepository cityRepository;
+    @Autowired private DistrictRepository districtRepository;
+    @Autowired private TravelImageRepository travelImageRepository;
+    @Autowired private ApiCategoryRepository apiCategoryRepository;
+    @Autowired private BookmarkRepository bookmarkRepository;
+    @Autowired private TravelAttendeeRepository travelAttendeeRepository;
+    @Autowired private TravelScheduleRepository travelScheduleRepository;
+    @Autowired private ChatMessageRepository chatMessageRepository;
+    @Autowired private SocialMemberRepository socialMemberRepository;
+
+    @MockBean private RedisService redisService;
+    @MockBean private EmailService emailService;
+    @MockBean private S3Service s3Service;
 
     private MockMvc mockMvc;
     private TravelPlace travelPlace1;
@@ -141,7 +123,6 @@ public class MemberControllerTest extends MemberTest {
         travelPlace1 = travelPlaceRepository.save(createTravelPlace(null, country, city, district, apiCategory, "가장소", List.of(travelImage1)));
         travelPlace2 = travelPlaceRepository.save(createTravelPlace(null, country, city, district, apiCategory, "나장소", List.of(travelImage2)));
         travelPlace3 = travelPlaceRepository.save(createTravelPlace(null, country, city, district, apiCategory, "다장소", List.of(travelImage3)));
-
     }
 
     @Test
@@ -486,9 +467,17 @@ public class MemberControllerTest extends MemberTest {
     @Test
     @DisplayName("자체 로그인")
     void login() throws Exception {
-        String encodePassword = passwordEncoder.encode("password12!@");
         ProfileImage profileImage = profileImageRepository.save(createProfileImage(null, "member"));
-        Member member = memberRepository.save(createNativeTypeMember(null, "member@email.com", encodePassword, profileImage));
+
+        String encodePassword = passwordEncoder.encode("password12!@");
+        Member member = memberRepository.save(
+                createNativeTypeMember(
+                        null,
+                        "member@email.com",
+                        encodePassword,
+                        profileImage
+                )
+        );
 
         MvcResult result = mockMvc.perform(post("/api/members/login")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -793,6 +782,7 @@ public class MemberControllerTest extends MemberTest {
     @Test
     @DisplayName("토큰 갱신 시 쿠키 존재하지 않아 예외 발생")
     void refreshToken_noCookie() throws Exception {
+        // given
         mockMvc.perform(post("/api/members/refresh"))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.success").value(false))
@@ -802,6 +792,7 @@ public class MemberControllerTest extends MemberTest {
     @Test
     @DisplayName("토큰 갱신 시 쿠키에 refreshToken 정보 없어서 예외 발생")
     void refreshToken_notRefreshTokenCookie() throws Exception {
+        // given
         Cookie cookie = new Cookie("error", "error");
 
         mockMvc.perform(post("/api/members/refresh")
@@ -815,6 +806,7 @@ public class MemberControllerTest extends MemberTest {
     @Test
     @DisplayName("토큰 갱신 시 refresh token 만료로 예외 발생")
     void refreshToken_unauthorizedExpiredException() throws Exception {
+        // given
         String refreshToken = jwtUtils.createToken("ExpiredRefreshToken", -604800000);
         Cookie cookie = createRefreshTokenCookie(refreshToken);
 
@@ -828,6 +820,7 @@ public class MemberControllerTest extends MemberTest {
     @Test
     @DisplayName("토큰 갱신 시 회원 데이터 존재하지 않아 예외 발생")
     void refreshToken_memberNotFound() throws Exception {
+        // given
         String refreshToken = jwtUtils.createRefreshToken(0L);
         Cookie cookie = createRefreshTokenCookie(refreshToken);
 
@@ -842,10 +835,12 @@ public class MemberControllerTest extends MemberTest {
     @Test
     @DisplayName("토큰 갱신 시 요청 refreshToken 과 저장된 refresh token 값이 달라 예외 발생")
     void refreshToken_NotEqualsRefreshToken() throws Exception {
+        // given
         Member member = memberRepository.save(createMember(null, "member@email.com"));
         String refreshToken = jwtUtils.createRefreshToken(member.getMemberId());
         Cookie cookie = createRefreshTokenCookie(refreshToken);
 
+        // when, then
         mockMvc.perform(post("/api/members/refresh")
                         .cookie(cookie))
                 .andExpect(status().isUnauthorized())
@@ -857,10 +852,20 @@ public class MemberControllerTest extends MemberTest {
     @Test
     @DisplayName("일반 회원 비밀번호 찾기")
     void findPassword_nativeMember() throws Exception {
+        // given
         ProfileImage profileImage = profileImageRepository.save(createProfileImage(null, "member"));
-        String encodedPassword = passwordEncoder.encode("password12!@");
-        Member member = memberRepository.save(createNativeTypeMember(null, "member@email.com", encodedPassword, profileImage));
 
+        String encodedPassword = passwordEncoder.encode("password12!@");
+        Member member = memberRepository.save(
+                createNativeTypeMember(
+                        null,
+                        "member@email.com",
+                        encodedPassword,
+                        profileImage
+                )
+        );
+
+        // when, then
         mockMvc.perform(post("/api/members/find-password")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(toJsonString(createFindPasswordRequest(member.getEmail()))))
@@ -872,10 +877,13 @@ public class MemberControllerTest extends MemberTest {
     @Test
     @DisplayName("소셜 회원 비밀번호 찾기")
     void findPassword_socialMember() throws Exception {
+        // given
         ProfileImage profileImage = profileImageRepository.save(createProfileImage(null, "member"));
+
         Member member = memberRepository.save(createSocialTypeMember(null, "member@email.com", profileImage));
         socialMemberRepository.save(createSocialMember(null, member, "member", SocialType.NAVER));
 
+        // when, then
         mockMvc.perform(post("/api/members/find-password")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(toJsonString(createFindPasswordRequest(member.getEmail()))))
@@ -887,11 +895,21 @@ public class MemberControllerTest extends MemberTest {
     @Test
     @DisplayName("통합 회원 비밀번호 찾기")
     void findPassword_bothMember() throws Exception {
+        // given
         ProfileImage profileImage = profileImageRepository.save(createProfileImage(null, "member"));
+
         String encodedPassword = passwordEncoder.encode("password12!@");
-        Member member = memberRepository.save(createBothTypeMember(null, "member@email.com", encodedPassword, profileImage));
+        Member member = memberRepository.save(
+                createBothTypeMember(
+                        null,
+                        "member@email.com",
+                        encodedPassword,
+                        profileImage
+                )
+        );
         socialMemberRepository.save(createSocialMember(null, member, "member", SocialType.NAVER));
 
+        // when, then
         mockMvc.perform(post("/api/members/find-password")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(toJsonString(createFindPasswordRequest(member.getEmail()))))
@@ -1473,7 +1491,11 @@ public class MemberControllerTest extends MemberTest {
                 createSocialTypeMember(null, "member@email.com", profileImage)
         );
 
-        ChangePasswordRequest request = createChangePasswordRequest("password12!", "password12!@", "password12!@");
+        ChangePasswordRequest request = createChangePasswordRequest(
+                "password12!",
+                "password12!@",
+                "password12!@"
+        );
 
         mockAuthentication(member);
 
@@ -1495,7 +1517,6 @@ public class MemberControllerTest extends MemberTest {
         );
 
         String encodePassword = passwordEncoder.encode("test123@");
-
         Member member = memberRepository.save(
                 createNativeTypeMember(
                         null,
@@ -1505,7 +1526,9 @@ public class MemberControllerTest extends MemberTest {
                 )
         );
 
-        ChangePasswordRequest request = createChangePasswordRequest("password12!", "password12!@", "password12!@");
+        ChangePasswordRequest request = createChangePasswordRequest(
+                "password12!", "password12!@", "password12!@"
+        );
 
         mockAuthentication(member);
 
@@ -1519,7 +1542,6 @@ public class MemberControllerTest extends MemberTest {
     }
 
 
-    // TODO: validation 테스트 추가
     @Test
     @DisplayName("일반 회원 정보 조회")
     void getMemberInfo_nativeMember() throws Exception {
@@ -1553,9 +1575,19 @@ public class MemberControllerTest extends MemberTest {
     @DisplayName("소셜 회원 정보 조회")
     void getMemberInfo_socialMember() throws Exception {
         // given
-        ProfileImage profileImage = profileImageRepository.save(createProfileImage(null, "profileImage"));
+        ProfileImage profileImage = profileImageRepository.save(
+                createProfileImage(null, "profileImage")
+        );
+
         String encodePassword = passwordEncoder.encode("password12!@");
-        Member member = memberRepository.save(createNativeTypeMember(null, "socailMember@email.com", encodePassword, profileImage));
+        Member member = memberRepository.save(
+                createNativeTypeMember(
+                        null,
+                        "socailMember@email.com",
+                        encodePassword,
+                        profileImage
+                )
+        );
 
         mockAuthentication(member);
 
@@ -1572,9 +1604,19 @@ public class MemberControllerTest extends MemberTest {
     @DisplayName("통합 회원 정보 조회")
     void getMemberInfo_bothMember() throws Exception {
         // given
-        ProfileImage profileImage = profileImageRepository.save(createProfileImage(null, "profileImage"));
+        ProfileImage profileImage = profileImageRepository.save(
+                createProfileImage(null, "profileImage")
+        );
+
         String encodePassword = passwordEncoder.encode("password12!@");
-        Member member = memberRepository.save(createBothTypeMember(null, "member@email.com", encodePassword, profileImage));
+        Member member = memberRepository.save(
+                createBothTypeMember(
+                        null,
+                        "member@email.com",
+                        encodePassword,
+                        profileImage
+                )
+        );
 
         mockAuthentication(member);
 
@@ -1599,6 +1641,7 @@ public class MemberControllerTest extends MemberTest {
     }
 
 
+    // TODO: validation 테스트 추가
     @Test
     @DisplayName("회원 닉네임 변경")
     void changeNickname() throws Exception {

@@ -1,5 +1,6 @@
 package com.triptune.schedule.repository;
 
+import com.triptune.global.config.QueryDSLConfig;
 import com.triptune.member.entity.Member;
 import com.triptune.member.repository.MemberRepository;
 import com.triptune.schedule.ScheduleTest;
@@ -10,6 +11,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.util.List;
@@ -17,21 +19,15 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
+@Import({QueryDSLConfig.class})
 @ActiveProfiles("mongo")
 public class ChatMessageRepositoryTest extends ScheduleTest {
 
-    private final ChatMessageRepository chatMessageRepository;
-    private final MemberRepository memberRepository;
-    private final TravelScheduleRepository travelScheduleRepository;
+    @Autowired private ChatMessageRepository chatMessageRepository;
+    @Autowired private MemberRepository memberRepository;
+    @Autowired private TravelScheduleRepository travelScheduleRepository;
 
     private TravelSchedule schedule;
-
-    @Autowired
-    public ChatMessageRepositoryTest(ChatMessageRepository chatMessageRepository, MemberRepository memberRepository, TravelScheduleRepository travelScheduleRepository) {
-        this.chatMessageRepository = chatMessageRepository;
-        this.memberRepository = memberRepository;
-        this.travelScheduleRepository = travelScheduleRepository;
-    }
 
     @BeforeEach
     void setUp(){
