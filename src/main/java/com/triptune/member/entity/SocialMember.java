@@ -1,6 +1,7 @@
 package com.triptune.member.entity;
 
 import com.triptune.global.security.oauth.userinfo.OAuth2UserInfo;
+import com.triptune.member.enums.DeactivateValue;
 import com.triptune.member.enums.SocialType;
 import jakarta.persistence.*;
 import lombok.Builder;
@@ -47,12 +48,19 @@ public class SocialMember {
     }
 
     public static SocialMember from(Member member, OAuth2UserInfo oAuth2UserInfo){
-        return SocialMember.builder()
+        SocialMember socialMember = SocialMember.builder()
                 .member(member)
                 .socialType(oAuth2UserInfo.getSocialType())
                 .socialId(oAuth2UserInfo.getSocialId())
                 .createdAt(LocalDateTime.now())
                 .build();
+
+        member.addSocialMember(socialMember);
+        return socialMember;
     }
 
+    public void deactivate() {
+        this.socialId = DeactivateValue.DEACTIVATE.name();
+        this.updatedAt = LocalDateTime.now();
+    }
 }

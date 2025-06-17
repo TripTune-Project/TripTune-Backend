@@ -32,7 +32,7 @@ public enum ErrorCode {
 
     // 소셜 회원
     SOCIAL_MEMBER_PASSWORD_CHANGE_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "소셜 회원은 비밀번호를 변경할 수 없습니다."),
-    SOCIAL_MEMBER_WITHDRAWAL_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "소셜 회원은 비밀번호 등록 후 탈퇴가 가능합니다."),
+    SOCIAL_MEMBER_DEACTIVATE_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "소셜 회원은 비밀번호 등록 후 탈퇴가 가능합니다."),
 
 
     // 이메일

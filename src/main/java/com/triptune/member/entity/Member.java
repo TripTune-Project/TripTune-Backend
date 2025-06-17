@@ -2,7 +2,7 @@ package com.triptune.member.entity;
 
 import com.triptune.global.security.oauth.userinfo.OAuth2UserInfo;
 import com.triptune.member.dto.request.JoinRequest;
-import com.triptune.member.enums.AnonymousValue;
+import com.triptune.member.enums.DeactivateValue;
 import com.triptune.member.enums.JoinType;
 import com.triptune.profile.entity.ProfileImage;
 import jakarta.persistence.*;
@@ -12,6 +12,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
@@ -52,9 +54,11 @@ public class Member {
     @Column(name = "is_active")
     private boolean isActive;
 
+    @OneToMany(mappedBy = "member", fetch = FetchType.LAZY)
+    private List<SocialMember> socialMembers = new ArrayList<>();
 
     @Builder
-    public Member(Long memberId, ProfileImage profileImage, String email, String password, String nickname, String refreshToken, JoinType joinType, LocalDateTime createdAt, LocalDateTime updatedAt, boolean isActive) {
+    public Member(Long memberId, ProfileImage profileImage, String email, String password, String nickname, String refreshToken, JoinType joinType, LocalDateTime createdAt, LocalDateTime updatedAt, boolean isActive, List<SocialMember> socialMembers) {
         this.memberId = memberId;
         this.profileImage = profileImage;
         this.email = email;
@@ -65,6 +69,7 @@ public class Member {
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
         this.isActive = isActive;
+        this.socialMembers = socialMembers;
     }
 
     public static Member from(JoinRequest joinRequest, ProfileImage profileImage, String encodePassword){
@@ -115,16 +120,20 @@ public class Member {
         updateUpdatedAt();
     }
 
-    public void updateDeactivate() {
-        //(닉네임, 아이디, 비밀번호, 리프레시 토큰, 이메일)
-        String unknown = AnonymousValue.ANONYMOUS.getValue();
+    public void deactivate() {
+        //(이메일, 닉네임, 비밀번호, 리프레시 토큰)
+        String deactivation = DeactivateValue.DEACTIVATE.name();
 
-        this.nickname = unknown;
-        this.email = unknown;
-        this.password = unknown;
+        this.nickname = deactivation;
+        this.email = deactivation;
+        this.password = deactivation;
         this.refreshToken = null;
         this.isActive = false;
         updateUpdatedAt();
+
+        for (SocialMember socialMember : socialMembers) {
+            socialMember.deactivate();
+        }
     }
 
     public void updateProfileImage(ProfileImage profileImage) {
@@ -160,6 +169,10 @@ public class Member {
 
     public boolean isNativeMember(){
         return this.isActive && joinType.equals(JoinType.NATIVE);
+    }
+
+    public void addSocialMember(SocialMember socialMember){
+        this.socialMembers.add(socialMember);
     }
 
 }

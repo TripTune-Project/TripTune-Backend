@@ -20,4 +20,6 @@ public interface MemberRepository extends JpaRepository<Member, Long>, MemberRep
     @Query("update Member m set m.refreshToken = NULL where m.nickname = :nickname")
     void deleteRefreshTokenByNickname(@Param("nickname") String nickname);
 
+    @Query("select m from Member m left join fetch m.socialMembers where m.id = :memberId")
+    Optional<Member> findByIdWithSocialMembers(@Param("memberId") Long memberId);
 }

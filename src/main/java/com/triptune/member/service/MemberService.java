@@ -6,7 +6,6 @@ import com.triptune.bookmark.repository.BookmarkRepository;
 import com.triptune.email.dto.request.EmailRequest;
 import com.triptune.email.exception.EmailVerifyException;
 import com.triptune.email.service.EmailService;
-import com.triptune.global.exception.CustomIllegalArgumentException;
 import com.triptune.global.response.enums.ErrorCode;
 import com.triptune.global.redis.eums.RedisKeyType;
 import com.triptune.global.security.exception.CustomJwtUnAuthorizedException;
@@ -21,7 +20,6 @@ import com.triptune.member.dto.response.LoginResponse;
 import com.triptune.member.dto.response.MemberInfoResponse;
 import com.triptune.member.dto.response.RefreshTokenResponse;
 import com.triptune.member.entity.Member;
-import com.triptune.member.enums.JoinType;
 import com.triptune.member.exception.FailLoginException;
 import com.triptune.member.exception.IncorrectPasswordException;
 import com.triptune.member.exception.UnsupportedSocialMemberException;
@@ -40,7 +38,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -202,11 +199,6 @@ public class MemberService {
         member.updatePassword(passwordEncoder.encode(passwordRequest.getNewPassword()));
     }
 
-    public void validateSocialMember(Member member){
-
-    }
-
-
     public MemberInfoResponse getMemberInfo(Long memberId) {
         Member member = getMemberById(memberId);
         return MemberInfoResponse.from(member);
@@ -242,17 +234,22 @@ public class MemberService {
 
     public void deactivateMember(HttpServletResponse response, String accessToken, Long memberId, DeactivateRequest deactivateRequest) {
         // 1. 회원 비밀번호 확인
-        Member member = getMemberById(memberId);
+        Member member = getMemberAndSocailMember(memberId);
+
+        // 2. 소셜 회원인지 먼저 확인
+        if (member.isSocialMember()){
+            throw new UnsupportedSocialMemberException(ErrorCode.SOCIAL_MEMBER_DEACTIVATE_NOT_ALLOWED);
+        }
 
         if(!isPasswordMatch(deactivateRequest.getPassword(), member.getPassword())){
             throw new IncorrectPasswordException(ErrorCode.INCORRECT_PASSWORD);
         }
 
-        // 2. 프로필 이미지 기본으로 변경
+        // 3. 프로필 이미지 기본으로 변경
         profileImageService.updateDefaultProfileImage(member);
 
-        // 3-1. 작성자인 경우 참석자, 일정, 채팅방 삭제
-        // 3-2. 참석자인 경우 참석자 삭제
+        // 4-1. 작성자인 경우 참석자, 일정, 채팅방 삭제
+        // 4-2. 참석자인 경우 참석자 삭제
         List<TravelAttendee> attendees = travelAttendeeRepository.findAllByMember_MemberId(memberId);
 
         for (TravelAttendee attendee : attendees) {
@@ -266,17 +263,22 @@ public class MemberService {
             }
         }
 
-        // 4. 북마크 삭제
+        // 5. 북마크 삭제
         bookmarkRepository.deleteAllByMember_MemberId(memberId);
 
-        // 5. 익명 데이터로 변경 (닉네임, 아이디, 비밀번호, 리프레시 토큰, 이메일)
-        member.updateDeactivate();
+        // 6. 익명 데이터로 변경 (닉네임, 아이디, 비밀번호, 리프레시 토큰, 이메일)
+        member.deactivate();
 
-        // 6. 로그아웃
+        // 7. 로그아웃  // TODO: 이거 로그아웃 함수랑 같이 사용하게 리팩 시도
         member.updateRefreshToken(null);
         redisService.saveExpiredData(accessToken, "logout", LOGOUT_DURATION);
 
         deleteCookies(response);
+    }
+
+    public Member getMemberAndSocailMember(Long memberId){
+        return memberRepository.findByIdWithSocialMembers(memberId)
+                .orElseThrow(() -> new DataNotFoundException(ErrorCode.MEMBER_NOT_FOUND));
     }
 
 

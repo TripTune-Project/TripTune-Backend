@@ -1873,59 +1873,36 @@ public class MemberControllerTest extends MemberTest {
 
     @Test
     @DisplayName("일반 회원 탈퇴 - 작성자, 참석자 존재하는 경우")
-    void deactivateMember1() throws Exception {
+    void deactivateMember_nativeMember1() throws Exception {
         String encodePassword = passwordEncoder.encode("test123@");
 
         ProfileImage profileImage = profileImageRepository.save(createProfileImage(null, "test"));
-        Member member = memberRepository.save(createNativeTypeMember(null, "member@email.com", encodePassword, profileImage));
+        Member member = memberRepository.save(
+                createNativeTypeMember(
+                        null,
+                        "member@email.com",
+                        encodePassword,
+                        profileImage
+                )
+        );
 
         TravelSchedule schedule1 = travelScheduleRepository.save(createTravelSchedule(null, "테스트1"));
         TravelSchedule schedule2 = travelScheduleRepository.save(createTravelSchedule(null, "테스트2"));
 
-        travelAttendeeRepository.save(createTravelAttendee(null, member, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
-        travelAttendeeRepository.save(createTravelAttendee(null, member, schedule2, AttendeeRole.GUEST, AttendeePermission.READ));
+        travelAttendeeRepository.saveAll(List.of(
+                createTravelAttendee(null, member, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL),
+                createTravelAttendee(null, member, schedule2, AttendeeRole.GUEST, AttendeePermission.READ)
+        ));
 
-        chatMessageRepository.save(createChatMessage(null, schedule1.getScheduleId(), member, "테스트1"));
-        chatMessageRepository.save(createChatMessage(null, schedule1.getScheduleId(), member, "테스트2"));
+        chatMessageRepository.saveAll(List.of(
+                createChatMessage(null, schedule1.getScheduleId(), member, "테스트1"),
+                createChatMessage(null, schedule1.getScheduleId(), member, "테스트2")
+        ));
 
-        bookmarkRepository.save(createBookmark(null, member, travelPlace1, LocalDateTime.now()));
-        bookmarkRepository.save(createBookmark(null, member, travelPlace1, LocalDateTime.now()));
-
-        mockAuthentication(member);
-
-        MvcResult result = mockMvc.perform(patch("/api/members/deactivate")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(createDeactivateRequest("test123@"))))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()))
-                .andReturn();
-
-        Cookie[] cookies = result.getResponse().getCookies();
-
-        assertThat(cookies).isNotNull();
-        assertThat(cookies.length).isEqualTo(3);
-    }
-
-    @Test
-    @DisplayName("회원 탈퇴 - 작성자만 존재하는 경우")
-    void deactivateMember2() throws Exception {
-        String encodePassword = passwordEncoder.encode("test123@");
-
-        ProfileImage profileImage = profileImageRepository.save(createProfileImage(null, "test"));
-        Member member = memberRepository.save(createNativeTypeMember(null, "member@email.com", encodePassword, profileImage));
-        Member otherMember = memberRepository.save(createMember(null, "otherMember"));
-
-        TravelSchedule schedule1 = travelScheduleRepository.save(createTravelSchedule(null, "테스트1"));
-
-        travelAttendeeRepository.save(createTravelAttendee(null, member, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
-        travelAttendeeRepository.save(createTravelAttendee(null, otherMember, schedule1, AttendeeRole.GUEST, AttendeePermission.READ));
-
-        chatMessageRepository.save(createChatMessage(null, schedule1.getScheduleId(), member, "테스트1"));
-        chatMessageRepository.save(createChatMessage(null, schedule1.getScheduleId(), member, "테스트2"));
-
-        bookmarkRepository.save(createBookmark(null, member, travelPlace1, LocalDateTime.now()));
-        bookmarkRepository.save(createBookmark(null, member, travelPlace1, LocalDateTime.now()));
+        bookmarkRepository.saveAll(List.of(
+                createBookmark(null, member, travelPlace1, LocalDateTime.now()),
+                createBookmark(null, member, travelPlace1, LocalDateTime.now())
+        ));
 
         mockAuthentication(member);
 
@@ -1944,22 +1921,35 @@ public class MemberControllerTest extends MemberTest {
     }
 
     @Test
-    @DisplayName("회원 탈퇴 - 참석자만 존재하는 경우")
-    void deactivateMember3() throws Exception {
+    @DisplayName("일반 회원 탈퇴 - 작성자만 존재하는 경우")
+    void deactivateMember_nativeMember2() throws Exception {
         String encodePassword = passwordEncoder.encode("test123@");
 
         ProfileImage profileImage = profileImageRepository.save(createProfileImage(null, "test"));
-        Member member = memberRepository.save(createNativeTypeMember(null, "member@email.com", encodePassword, profileImage));
+        Member member = memberRepository.save(
+                createNativeTypeMember(
+                        null,
+                        "member@email.com",
+                        encodePassword,
+                        profileImage
+                )
+        );
 
         TravelSchedule schedule1 = travelScheduleRepository.save(createTravelSchedule(null, "테스트1"));
 
-        travelAttendeeRepository.save(createTravelAttendee(null, member, schedule1, AttendeeRole.GUEST, AttendeePermission.READ));
+        travelAttendeeRepository.save(
+                createTravelAttendee(null, member, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL)
+        );
 
-        chatMessageRepository.save(createChatMessage(null, schedule1.getScheduleId(), member, "테스트1"));
-        chatMessageRepository.save(createChatMessage(null, schedule1.getScheduleId(), member, "테스트2"));
+        chatMessageRepository.saveAll(List.of(
+                createChatMessage(null, schedule1.getScheduleId(), member, "테스트1"),
+                createChatMessage(null, schedule1.getScheduleId(), member, "테스트2")
+        ));
 
-        bookmarkRepository.save(createBookmark(null, member, travelPlace1, LocalDateTime.now()));
-        bookmarkRepository.save(createBookmark(null, member, travelPlace1, LocalDateTime.now()));
+        bookmarkRepository.saveAll(List.of(
+                createBookmark(null, member, travelPlace1, LocalDateTime.now()),
+                createBookmark(null, member, travelPlace1, LocalDateTime.now())
+        ));
 
         mockAuthentication(member);
 
@@ -1976,17 +1966,129 @@ public class MemberControllerTest extends MemberTest {
         assertThat(cookies).isNotNull();
         assertThat(cookies.length).isEqualTo(3);
     }
+
+    @Test
+    @DisplayName("일반 회원 탈퇴 - 참석자만 존재하는 경우")
+    void deactivateMember_nativeMember3() throws Exception {
+        String encodePassword = passwordEncoder.encode("test123@");
+
+        ProfileImage profileImage = profileImageRepository.save(createProfileImage(null, "test"));
+        Member member = memberRepository.save(
+                createNativeTypeMember(
+                        null,
+                        "member@email.com",
+                        encodePassword,
+                        profileImage
+                )
+        );
+
+        TravelSchedule schedule1 = travelScheduleRepository.save(createTravelSchedule(null, "테스트1"));
+
+        travelAttendeeRepository.save(
+                createTravelAttendee(null, member, schedule1, AttendeeRole.GUEST, AttendeePermission.READ)
+        );
+
+        chatMessageRepository.saveAll(List.of(
+                createChatMessage(null, schedule1.getScheduleId(), member, "테스트1"),
+                createChatMessage(null, schedule1.getScheduleId(), member, "테스트2")
+        ));
+
+        bookmarkRepository.saveAll(List.of(
+                createBookmark(null, member, travelPlace1, LocalDateTime.now()),
+                createBookmark(null, member, travelPlace1, LocalDateTime.now())
+        ));
+
+        mockAuthentication(member);
+
+        MvcResult result = mockMvc.perform(patch("/api/members/deactivate")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJsonString(createDeactivateRequest("test123@"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()))
+                .andReturn();
+
+        Cookie[] cookies = result.getResponse().getCookies();
+
+        assertThat(cookies).isNotNull();
+        assertThat(cookies.length).isEqualTo(3);
+    }
+
+
+    @Test
+    @DisplayName("통합 회원 탈퇴")
+    void deactivateMember_bothMember() throws Exception {
+        String encodePassword = passwordEncoder.encode("test123@");
+
+        ProfileImage profileImage = profileImageRepository.save(createProfileImage(null, "test"));
+        Member member = memberRepository.save(
+                createBothTypeMember(
+                        null,
+                        "member@email.com",
+                        encodePassword,
+                        profileImage
+                )
+        );
+
+        socialMemberRepository.saveAll(List.of(
+                createSocialMember(null, member, "kakao", SocialType.KAKAO),
+                createSocialMember(null, member, "naver", SocialType.NAVER)
+        ));
+
+        TravelSchedule schedule1 = travelScheduleRepository.save(createTravelSchedule(null, "테스트1"));
+        TravelSchedule schedule2 = travelScheduleRepository.save(createTravelSchedule(null, "테스트2"));
+
+        travelAttendeeRepository.saveAll(List.of(
+                createTravelAttendee(null, member, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL),
+                createTravelAttendee(null, member, schedule2, AttendeeRole.GUEST, AttendeePermission.READ)
+        ));
+
+        chatMessageRepository.saveAll(List.of(
+                createChatMessage(null, schedule1.getScheduleId(), member, "테스트1"),
+                createChatMessage(null, schedule1.getScheduleId(), member, "테스트2")
+        ));
+
+        bookmarkRepository.saveAll(List.of(
+                createBookmark(null, member, travelPlace1, LocalDateTime.now()),
+                createBookmark(null, member, travelPlace1, LocalDateTime.now())
+        ));
+
+        mockAuthentication(member);
+
+        MvcResult result = mockMvc.perform(patch("/api/members/deactivate")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJsonString(createDeactivateRequest("test123@"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()))
+                .andReturn();
+
+        Cookie[] cookies = result.getResponse().getCookies();
+
+        assertThat(cookies).isNotNull();
+        assertThat(cookies.length).isEqualTo(3);
+    }
+
 
     @Test
     @DisplayName("회원 탈퇴 - 일정 데이터 없는 경우")
-    void deactivateMember4() throws Exception {
+    void deactivateMember_emptySchedule() throws Exception {
         String encodePassword = passwordEncoder.encode("test123@");
 
         ProfileImage profileImage = profileImageRepository.save(createProfileImage(null, "test"));
-        Member member = memberRepository.save(createNativeTypeMember(null, "member@email.com", encodePassword, profileImage));
+        Member member = memberRepository.save(
+                createNativeTypeMember(
+                        null,
+                        "member@email.com",
+                        encodePassword,
+                        profileImage
+                )
+        );
 
-        bookmarkRepository.save(createBookmark(null, member, travelPlace1, LocalDateTime.now()));
-        bookmarkRepository.save(createBookmark(null, member, travelPlace1, LocalDateTime.now()));
+        bookmarkRepository.saveAll(List.of(
+                createBookmark(null, member, travelPlace1, LocalDateTime.now()),
+                createBookmark(null, member, travelPlace1, LocalDateTime.now())
+        ));
 
         mockAuthentication(member);
 
@@ -2012,13 +2114,51 @@ public class MemberControllerTest extends MemberTest {
                 .andExpect(jsonPath("$.message").value(ErrorCode.MEMBER_NOT_FOUND.getMessage()));
     }
 
+
+    @Test
+    @DisplayName("소셜 회원 탈퇴 요청으로 예외 발생")
+    void deactivateMember_socialMember() throws Exception {
+        ProfileImage profileImage = profileImageRepository.save(createProfileImage(null, "test"));
+        Member member = memberRepository.save(
+                createSocialTypeMember(
+                        null,
+                        "member@email.com",
+                        profileImage
+                )
+        );
+
+        socialMemberRepository.saveAll(List.of(
+                createSocialMember(null, member, "kakao", SocialType.KAKAO),
+                createSocialMember(null, member, "naver", SocialType.NAVER)
+        ));
+
+        mockAuthentication(member);
+
+        mockMvc.perform(patch("/api/members/deactivate")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJsonString(createDeactivateRequest("test123@"))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value(ErrorCode.SOCIAL_MEMBER_DEACTIVATE_NOT_ALLOWED.getMessage()))
+                .andReturn();
+    }
+
+
+
     @Test
     @DisplayName("회원 탈퇴 시 비밀번호가 맞지 않아 예외 발생")
     void deactivateMember_incorrectPassword() throws Exception {
         String encodePassword = passwordEncoder.encode("incorrect12@");
 
         ProfileImage profileImage = profileImageRepository.save(createProfileImage(null, "test"));
-        Member member = memberRepository.save(createNativeTypeMember(null, "member@email.com", encodePassword, profileImage));
+        Member member = memberRepository.save(
+                createNativeTypeMember(
+                    null,
+                    "member@email.com",
+                    encodePassword,
+                    profileImage
+                )
+        );
 
         mockAuthentication(member);
 

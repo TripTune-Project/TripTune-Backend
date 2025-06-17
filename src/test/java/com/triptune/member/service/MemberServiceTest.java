@@ -16,7 +16,9 @@ import com.triptune.member.dto.response.LoginResponse;
 import com.triptune.member.dto.response.MemberInfoResponse;
 import com.triptune.member.dto.response.RefreshTokenResponse;
 import com.triptune.member.entity.Member;
+import com.triptune.member.enums.DeactivateValue;
 import com.triptune.member.enums.JoinType;
+import com.triptune.member.enums.SocialType;
 import com.triptune.member.exception.IncorrectPasswordException;
 import com.triptune.member.exception.FailLoginException;
 import com.triptune.member.exception.UnsupportedSocialMemberException;
@@ -85,7 +87,6 @@ public class MemberServiceTest extends MemberTest {
     private final String refreshToken = "MemberRefreshToken";
     private final String passwordToken = "MemberPasswordToken";
 
-    private Member member;
     private TravelPlace travelPlace1;
     private TravelPlace travelPlace2;
     private TravelPlace travelPlace3;
@@ -97,7 +98,6 @@ public class MemberServiceTest extends MemberTest {
         District district = createDistrict(city, "강남구");
         ApiCategory apiCategory = createApiCategory();
 
-        member = createMember(1L, "member@email.com");
         TravelImage travelImage1 = createTravelImage(travelPlace1, "test", true);
         TravelImage travelImage2 = createTravelImage(travelPlace2, "test", true);
         TravelImage travelImage3 = createTravelImage(travelPlace3, "test", true);
@@ -229,10 +229,12 @@ public class MemberServiceTest extends MemberTest {
 
 
     @Test
-    @DisplayName("로그인")
-    void login(){
+    @DisplayName("일반 회원 로그인")
+    void login_nativeMember(){
         // given
         MockHttpServletResponse mockHttpServletResponse = new MockHttpServletResponse();
+        Member member = createNativeTypeMember(1L, "member@email.com");
+
         LoginRequest loginRequest = createLoginRequest(member.getEmail(), passwordToken);
 
         when(memberRepository.findByEmail(anyString())).thenReturn(Optional.of(member));
@@ -244,12 +246,36 @@ public class MemberServiceTest extends MemberTest {
         LoginResponse response = memberService.login(loginRequest, mockHttpServletResponse);
 
         // then
-        assertThat(response.getNickname()).isEqualTo(member.getNickname());
-        assertThat(response.getAccessToken()).isNotNull();
-
         Cookie[] cookies = mockHttpServletResponse.getCookies();
         assertThat(cookies).isNotNull();
         assertThat(cookies.length).isEqualTo(1);
+        assertThat(response.getNickname()).isEqualTo(member.getNickname());
+        assertThat(response.getAccessToken()).isNotNull();
+    }
+
+    @Test
+    @DisplayName("통합 회원 로그인")
+    void login_bothMember(){
+        // given
+        MockHttpServletResponse mockHttpServletResponse = new MockHttpServletResponse();
+        Member member = createBothTypeMember(1L, "member@email.com");
+
+        LoginRequest loginRequest = createLoginRequest(member.getEmail(), passwordToken);
+
+        when(memberRepository.findByEmail(anyString())).thenReturn(Optional.of(member));
+        when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
+        when(jwtUtils.createAccessToken(anyLong())).thenReturn(accessToken);
+        when(jwtUtils.createRefreshToken(anyLong())).thenReturn(refreshToken);
+
+        // when
+        LoginResponse response = memberService.login(loginRequest, mockHttpServletResponse);
+
+        // then
+        Cookie[] cookies = mockHttpServletResponse.getCookies();
+        assertThat(cookies).isNotNull();
+        assertThat(cookies.length).isEqualTo(1);
+        assertThat(response.getNickname()).isEqualTo(member.getNickname());
+        assertThat(response.getAccessToken()).isNotNull();
     }
 
     @Test
@@ -257,7 +283,7 @@ public class MemberServiceTest extends MemberTest {
     void login_memberNotFound(){
         // given
         MockHttpServletResponse mockHttpServletResponse = new MockHttpServletResponse();
-        LoginRequest loginRequest = createLoginRequest(member.getEmail(), passwordToken);
+        LoginRequest loginRequest = createLoginRequest("notMember@email.com", passwordToken);
 
         when(memberRepository.findByEmail(anyString())).thenReturn(Optional.empty());
 
@@ -275,6 +301,8 @@ public class MemberServiceTest extends MemberTest {
     void login_mismatchPassword(){
         // given
         MockHttpServletResponse mockHttpServletResponse = new MockHttpServletResponse();
+        Member member = createNativeTypeMember(1L, "member@email.com");
+
         LoginRequest loginRequest = createLoginRequest(member.getEmail(), passwordToken);
 
         when(memberRepository.findByEmail(anyString())).thenReturn(Optional.of(member));
@@ -290,9 +318,32 @@ public class MemberServiceTest extends MemberTest {
     }
 
     @Test
-    @DisplayName("로그아웃")
-    void logout(){
+    @DisplayName("일반 회원 로그아웃")
+    void logout_nativeMember(){
         // given
+        Member member = createNativeTypeMember(1L, "member@email.com");
+        LogoutRequest request = createLogoutRequest(member.getNickname());
+        MockHttpServletResponse mockHttpServletResponse = new MockHttpServletResponse();
+
+        when(memberRepository.existsByNickname(anyString())).thenReturn(true);
+
+        // when
+        memberService.logout(mockHttpServletResponse, request, accessToken);
+
+        // then
+        Cookie[] cookies = mockHttpServletResponse.getCookies();
+        assertThat(cookies).isNotNull();
+        assertThat(cookies.length).isEqualTo(3);
+
+        verify(memberRepository, times(1)).deleteRefreshTokenByNickname(request.getNickname());
+        verify(redisService, times(1)).saveExpiredData(accessToken, "logout", 3600);
+    }
+
+    @Test
+    @DisplayName("통합 회원 로그아웃")
+    void logout_bothMember(){
+        // given
+        Member member = createBothTypeMember(1L, "member@email.com");
         LogoutRequest request = createLogoutRequest(member.getNickname());
         MockHttpServletResponse mockHttpServletResponse = new MockHttpServletResponse();
 
@@ -330,11 +381,48 @@ public class MemberServiceTest extends MemberTest {
 
     }
 
+    @Test
+    @DisplayName("일반 회원 refresh token 갱신")
+    void refreshToken_nativeMember(){
+        // given
+        Member member = createNativeTypeMember(1L, "member@email.com");
+
+        when(jwtUtils.validateToken(anyString())).thenReturn(true);
+        when(jwtUtils.getMemberIdByToken(anyString())).thenReturn(member.getMemberId());
+        when(memberRepository.findById(any())).thenReturn(Optional.of(member));
+        when(jwtUtils.createAccessToken(anyLong())).thenReturn(accessToken);
+
+        // when
+        RefreshTokenResponse response = memberService.refreshToken(refreshToken);
+
+        // then
+        assertThat(response.getAccessToken()).isNotNull();
+    }
 
     @Test
-    @DisplayName("refresh token 갱신")
-    void refreshToken(){
+    @DisplayName("소셜 회원 refresh token 갱신")
+    void refreshToken_socialMember(){
         // given
+        Member member = createSocialTypeMember(1L, "member@email.com");
+
+        when(jwtUtils.validateToken(anyString())).thenReturn(true);
+        when(jwtUtils.getMemberIdByToken(anyString())).thenReturn(member.getMemberId());
+        when(memberRepository.findById(any())).thenReturn(Optional.of(member));
+        when(jwtUtils.createAccessToken(anyLong())).thenReturn(accessToken);
+
+        // when
+        RefreshTokenResponse response = memberService.refreshToken(refreshToken);
+
+        // then
+        assertThat(response.getAccessToken()).isNotNull();
+    }
+
+    @Test
+    @DisplayName("통합 회원 refresh token 갱신")
+    void refreshToken_bothMember(){
+        // given
+        Member member = createBothTypeMember(1L, "member@email.com");
+
         when(jwtUtils.validateToken(anyString())).thenReturn(true);
         when(jwtUtils.getMemberIdByToken(anyString())).thenReturn(member.getMemberId());
         when(memberRepository.findById(any())).thenReturn(Optional.of(member));
@@ -354,6 +442,8 @@ public class MemberServiceTest extends MemberTest {
         // given
         String notEqualRefreshToken = "NotEqualRefreshToken";
 
+        Member member = createNativeTypeMember(1L, "member@email.com");
+
         when(jwtUtils.validateToken(anyString())).thenReturn(true);
         when(jwtUtils.getMemberIdByToken(anyString())).thenReturn(member.getMemberId());
         when(memberRepository.findById(any())).thenReturn(Optional.of(member));
@@ -371,7 +461,7 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("비밀번호 찾기 성공")
     void findPassword() throws MessagingException {
         // given
-        FindPasswordRequest findPasswordRequest = createFindPasswordRequest("test");
+        FindPasswordRequest findPasswordRequest = createFindPasswordRequest("member@email.com");
 
         when(memberRepository.existsByEmail(anyString())).thenReturn(true);
 
@@ -386,7 +476,7 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("비밀번호 찾기 시 회원 정보 존재하지 않아 예외 발생")
     void findPassword_memberNotFound() throws MessagingException {
         // given
-        FindPasswordRequest findPasswordRequest = createFindPasswordRequest("fail");
+        FindPasswordRequest findPasswordRequest = createFindPasswordRequest("fail@email.com");
 
         when(memberRepository.existsByEmail(anyString())).thenReturn(false);
 
@@ -404,11 +494,9 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("일반 회원 비밀번호 초기화")
     void resetPassword_nativeMember(){
         // given
-        ResetPasswordRequest request = createResetPasswordRequest(passwordToken, "password12!@", "password12!@");
+        Member member = createNativeTypeMember(1L, "member@email.com");
 
-        String savedPassword = "savedPassword12!@";
-        ProfileImage profileImage = createProfileImage(1L, "profileImage");
-        Member member = createNativeTypeMember(1L, "member@email.com", savedPassword, profileImage);
+        ResetPasswordRequest request = createResetPasswordRequest(passwordToken, "password12!@", "password12!@");
 
         when(redisService.getData(anyString())).thenReturn(member.getEmail());
         when(memberRepository.findByEmail(anyString())).thenReturn(Optional.of(member));
@@ -429,10 +517,9 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("소셜 회원 비밀번호 초기화")
     void resetPassword_socialMember(){
         // given
-        ResetPasswordRequest request = createResetPasswordRequest(passwordToken, "password12!@", "password12!@");
+        Member member = createSocialTypeMember(1L, "member@email.com");
 
-        ProfileImage profileImage = createProfileImage(1L, "profileImage");
-        Member member = createSocialTypeMember(1L, "member@email.com", profileImage);
+        ResetPasswordRequest request = createResetPasswordRequest(passwordToken, "password12!@", "password12!@");
 
         when(redisService.getData(anyString())).thenReturn(member.getEmail());
         when(memberRepository.findByEmail(anyString())).thenReturn(Optional.of(member));
@@ -453,11 +540,9 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("통합 회원 비밀번호 초기화")
     void resetPassword_bothMember(){
         // given
-        ResetPasswordRequest request = createResetPasswordRequest(passwordToken, "password12!@", "password12!@");
+        Member member = createBothTypeMember(1L, "member@email.com");
 
-        String savedPassword = "savedPassword12!@";
-        ProfileImage profileImage = createProfileImage(1L, "profileImage");
-        Member member = createBothTypeMember(1L, "member@email.com", savedPassword, profileImage);
+        ResetPasswordRequest request = createResetPasswordRequest(passwordToken, "password12!@", "password12!@");
 
         when(redisService.getData(anyString())).thenReturn(member.getEmail());
         when(memberRepository.findByEmail(anyString())).thenReturn(Optional.of(member));
@@ -482,7 +567,6 @@ public class MemberServiceTest extends MemberTest {
 
         when(redisService.getData(anyString())).thenReturn(null);
 
-
         // when
         IncorrectPasswordException fail = assertThrows(IncorrectPasswordException.class,
                 () -> memberService.resetPassword(request));
@@ -498,7 +582,7 @@ public class MemberServiceTest extends MemberTest {
         // given
         ResetPasswordRequest request = createResetPasswordRequest(passwordToken, "password12!@", "password12!@");
 
-        when(redisService.getData(anyString())).thenReturn(member.getEmail());
+        when(redisService.getData(anyString())).thenReturn("notMember@email.com");
         when(memberRepository.findByEmail(anyString())).thenReturn(Optional.empty());
 
         // when
@@ -512,15 +596,15 @@ public class MemberServiceTest extends MemberTest {
 
 
     @Test
-    @DisplayName("비밀번호 변경")
-    void changePassword(){
+    @DisplayName("일반 회원 비밀번호 변경")
+    void changePassword_nativeMember(){
         // given
         ChangePasswordRequest request = createChangePasswordRequest("test123@", "test123!", "test123!");
 
         ProfileImage profileImage = createProfileImage(1L, "profileImage");
         Member member = createNativeTypeMember(1L, "member@email.com", request.getNowPassword(), profileImage);
 
-        String newPassword = "newEncodingPassword";
+        String newPassword = "newPassword";
 
         when(memberRepository.findById(anyLong())).thenReturn(Optional.of(member));
         when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
@@ -530,9 +614,36 @@ public class MemberServiceTest extends MemberTest {
         assertDoesNotThrow(() -> memberService.changePassword(member.getMemberId(), request));
 
         assertThat(member.getPassword()).isEqualTo(newPassword);
+        assertThat(member.getJoinType()).isEqualTo(JoinType.NATIVE);
         assertThat(member.getUpdatedAt()).isNotNull();
 
     }
+
+
+    @Test
+    @DisplayName("통합 회원 비밀번호 변경")
+    void changePassword_bothMember(){
+        // given
+        ChangePasswordRequest request = createChangePasswordRequest("test123@", "test123!", "test123!");
+
+        ProfileImage profileImage = createProfileImage(1L, "profileImage");
+        Member member = createBothTypeMember(1L, "member@email.com", request.getNowPassword(), profileImage);
+
+        String newPassword = "newPassword";
+
+        when(memberRepository.findById(anyLong())).thenReturn(Optional.of(member));
+        when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
+        when(passwordEncoder.encode(anyString())).thenReturn(newPassword);
+
+        // when, then
+        assertDoesNotThrow(() -> memberService.changePassword(member.getMemberId(), request));
+
+        assertThat(member.getPassword()).isEqualTo(newPassword);
+        assertThat(member.getJoinType()).isEqualTo(JoinType.BOTH);
+        assertThat(member.getUpdatedAt()).isNotNull();
+
+    }
+
 
     @Test
     @DisplayName("비밀번호 변경 시 회원 정보 찾을 수 없어 예외 발생")
@@ -544,7 +655,7 @@ public class MemberServiceTest extends MemberTest {
 
         // when
         DataNotFoundException fail = assertThrows(DataNotFoundException.class,
-                () -> memberService.changePassword(member.getMemberId(), request));
+                () -> memberService.changePassword(1000L, request));
 
         // then
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.MEMBER_NOT_FOUND.getStatus());
@@ -555,15 +666,20 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("비밀번호 변경 시 소셜 회원으로 예외 발생")
     void changePassword_socialMember(){
         // given
-        ChangePasswordRequest request = createChangePasswordRequest("test123@", "test123!", "test123!");
         ProfileImage profileImage = createProfileImage(1L, "profileImage");
         Member member = createSocialTypeMember(1L, "member@email.com", profileImage);
 
+        ChangePasswordRequest request = createChangePasswordRequest("test123@", "test123!", "test123!");
+
         when(memberRepository.findById(anyLong())).thenReturn(Optional.of(member));
 
-        // when, then
-        assertThrows(UnsupportedSocialMemberException.class,
+        // when
+        UnsupportedSocialMemberException fail = assertThrows(UnsupportedSocialMemberException.class,
                 () -> memberService.changePassword(member.getMemberId(), request));
+
+        // then
+        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.SOCIAL_MEMBER_PASSWORD_CHANGE_NOT_ALLOWED.getStatus());
+        assertThat(fail.getMessage()).isEqualTo(ErrorCode.SOCIAL_MEMBER_PASSWORD_CHANGE_NOT_ALLOWED.getMessage());
 
     }
 
@@ -573,9 +689,13 @@ public class MemberServiceTest extends MemberTest {
         // given
         ChangePasswordRequest request = createChangePasswordRequest("incorrect123@", "test123!", "test123!");
 
-        String encodePassword = request.getNowPassword();
         ProfileImage profileImage = createProfileImage(1L, "profileImage");
-        Member member = createNativeTypeMember(1L, "member@email.com", encodePassword, profileImage);
+        Member member = createNativeTypeMember(
+                1L,
+                "member@email.com",
+                request.getNowPassword(),
+                profileImage
+        );
 
         when(memberRepository.findById(anyLong())).thenReturn(Optional.of(member));
         when(passwordEncoder.matches(anyString(), anyString())).thenReturn(false);
@@ -590,20 +710,67 @@ public class MemberServiceTest extends MemberTest {
     }
 
     @Test
-    @DisplayName("회원 정보 조회")
-    void getMemberInfo(){
+    @DisplayName("일반 회원 정보 조회")
+    void getMemberInfo_nativeMember(){
         // given
         ProfileImage savedProfileImage = createProfileImage(1L, "memberImage");
-        Member savedMember = createMember(1L, "member@email.com", savedProfileImage);
+        Member member = createNativeTypeMember(
+                1L,
+                "member@email.com",
+                "password12!@",
+                savedProfileImage
+        );
 
-        when(memberRepository.findById(anyLong())).thenReturn(Optional.of(savedMember));
+        when(memberRepository.findById(anyLong())).thenReturn(Optional.of(member));
 
         // when
         MemberInfoResponse response = memberService.getMemberInfo(member.getMemberId());
 
         // then
-        assertThat(response.getEmail()).isEqualTo(savedMember.getEmail());
-        assertThat(response.getNickname()).isEqualTo(savedMember.getNickname());
+        assertThat(response.getEmail()).isEqualTo(member.getEmail());
+        assertThat(response.getNickname()).isEqualTo(member.getNickname());
+        assertThat(response.getProfileImage()).isEqualTo(savedProfileImage.getS3ObjectUrl());
+    }
+
+    @Test
+    @DisplayName("소셜 회원 정보 조회")
+    void getMemberInfo_socialMember(){
+        // given
+        ProfileImage savedProfileImage = createProfileImage(1L, "memberImage");
+        Member member = createSocialTypeMember(1L, "member@email.com", savedProfileImage);
+
+        when(memberRepository.findById(anyLong())).thenReturn(Optional.of(member));
+
+        // when
+        MemberInfoResponse response = memberService.getMemberInfo(member.getMemberId());
+
+        // then
+        assertThat(response.getEmail()).isEqualTo(member.getEmail());
+        assertThat(response.getNickname()).isEqualTo(member.getNickname());
+        assertThat(response.getProfileImage()).isEqualTo(savedProfileImage.getS3ObjectUrl());
+    }
+
+
+    @Test
+    @DisplayName("통합 회원 정보 조회")
+    void getMemberInfo_bothMember(){
+        // given
+        ProfileImage savedProfileImage = createProfileImage(1L, "memberImage");
+        Member member = createBothTypeMember(
+                1L,
+                "member@email.com",
+                "password12!@",
+                savedProfileImage
+        );
+
+        when(memberRepository.findById(anyLong())).thenReturn(Optional.of(member));
+
+        // when
+        MemberInfoResponse response = memberService.getMemberInfo(member.getMemberId());
+
+        // then
+        assertThat(response.getEmail()).isEqualTo(member.getEmail());
+        assertThat(response.getNickname()).isEqualTo(member.getNickname());
         assertThat(response.getProfileImage()).isEqualTo(savedProfileImage.getS3ObjectUrl());
     }
 
@@ -615,7 +782,7 @@ public class MemberServiceTest extends MemberTest {
 
         // when
         DataNotFoundException fail = assertThrows(DataNotFoundException.class,
-                () -> memberService.getMemberInfo(member.getMemberId()));
+                () -> memberService.getMemberInfo(1000L));
 
         // then
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.MEMBER_NOT_FOUND.getStatus());
@@ -623,16 +790,56 @@ public class MemberServiceTest extends MemberTest {
     }
 
     @Test
-    @DisplayName("회원 닉네임 변경")
-    void changeNickname(){
+    @DisplayName("일반 회원 닉네임 변경")
+    void changeNickname_nativeMember(){
         // given
+        Member member = createNativeTypeMember(1L, "member@email.com");
         ChangeNicknameRequest request = createChangeNicknameRequest("newNickname");
 
         when(memberRepository.existsByNickname(request.getNickname())).thenReturn(false);
         when(memberRepository.findById(anyLong())).thenReturn(Optional.of(member));
 
-        // when, then
+        // when
         assertDoesNotThrow(() -> memberService.changeNickname(member.getMemberId(), request));
+
+        // then
+        assertThat(member.getJoinType()).isEqualTo(JoinType.NATIVE);
+        assertThat(member.getNickname()).isEqualTo(request.getNickname());
+    }
+
+    @Test
+    @DisplayName("소셜 회원 닉네임 변경")
+    void changeNickname_socialMember(){
+        // given
+        Member member = createSocialTypeMember(1L, "member@email.com");
+        ChangeNicknameRequest request = createChangeNicknameRequest("newNickname");
+
+        when(memberRepository.existsByNickname(request.getNickname())).thenReturn(false);
+        when(memberRepository.findById(anyLong())).thenReturn(Optional.of(member));
+
+        // when
+        assertDoesNotThrow(() -> memberService.changeNickname(member.getMemberId(), request));
+
+        // then
+        assertThat(member.getJoinType()).isEqualTo(JoinType.SOCIAL);
+        assertThat(member.getNickname()).isEqualTo(request.getNickname());
+    }
+
+    @Test
+    @DisplayName("통합 회원 닉네임 변경")
+    void changeNickname_bothMember(){
+        // given
+        Member member = createBothTypeMember(1L, "member@email.com");
+        ChangeNicknameRequest request = createChangeNicknameRequest("newNickname");
+
+        when(memberRepository.existsByNickname(request.getNickname())).thenReturn(false);
+        when(memberRepository.findById(anyLong())).thenReturn(Optional.of(member));
+
+        // when
+        assertDoesNotThrow(() -> memberService.changeNickname(member.getMemberId(), request));
+
+        // then
+        assertThat(member.getJoinType()).isEqualTo(JoinType.BOTH);
         assertThat(member.getNickname()).isEqualTo(request.getNickname());
     }
 
@@ -640,6 +847,7 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("회원 닉네임 변경 시 이미 존재하는 닉네임으로 예외 발생")
     void changeNickname_duplicatedNickname(){
         // given
+        Member member = createNativeTypeMember(1L, "member@email.com");
         ChangeNicknameRequest request = createChangeNicknameRequest("newNickname");
 
         when(memberRepository.existsByNickname(anyString())).thenReturn(true);
@@ -664,7 +872,7 @@ public class MemberServiceTest extends MemberTest {
 
         // when
         DataNotFoundException fail = assertThrows(DataNotFoundException.class,
-                () -> memberService.changeNickname(member.getMemberId(), request));
+                () -> memberService.changeNickname(1000L, request));
 
         // then
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.MEMBER_NOT_FOUND.getStatus());
@@ -672,11 +880,11 @@ public class MemberServiceTest extends MemberTest {
     }
 
 
-
     @Test
-    @DisplayName("이메일 변경")
-    void changeEmail(){
+    @DisplayName("일반 회원 이메일 변경")
+    void changeEmail_nativeMember(){
         // given
+        Member member = createNativeTypeMember(1L, "member@email.com");
         EmailRequest emailRequest = createEmailRequest("changeMember@email.com");
 
         when(memberRepository.findById(anyLong())).thenReturn(Optional.of(member));
@@ -688,6 +896,47 @@ public class MemberServiceTest extends MemberTest {
                 .doesNotThrowAnyException();
 
         // then
+        assertThat(member.getJoinType()).isEqualTo(JoinType.NATIVE);
+        assertThat(member.getEmail()).isEqualTo(emailRequest.getEmail());
+    }
+
+    @Test
+    @DisplayName("소셜 회원 이메일 변경")
+    void changeEmail_socialMember(){
+        // given
+        Member member = createSocialTypeMember(1L, "member@email.com");
+        EmailRequest emailRequest = createEmailRequest("changeMember@email.com");
+
+        when(memberRepository.findById(anyLong())).thenReturn(Optional.of(member));
+        when(memberRepository.existsByEmail(anyString())).thenReturn(false);
+        when(redisService.getEmailData(any(), anyString())).thenReturn("true");
+
+        // when
+        assertThatCode(() -> memberService.changeEmail(member.getMemberId(), emailRequest))
+                .doesNotThrowAnyException();
+
+        // then
+        assertThat(member.getJoinType()).isEqualTo(JoinType.SOCIAL);
+        assertThat(member.getEmail()).isEqualTo(emailRequest.getEmail());
+    }
+
+    @Test
+    @DisplayName("통합 회원 이메일 변경")
+    void changeEmail_bothMember(){
+        // given
+        Member member = createBothTypeMember(1L, "member@email.com");
+        EmailRequest emailRequest = createEmailRequest("changeMember@email.com");
+
+        when(memberRepository.findById(anyLong())).thenReturn(Optional.of(member));
+        when(memberRepository.existsByEmail(anyString())).thenReturn(false);
+        when(redisService.getEmailData(any(), anyString())).thenReturn("true");
+
+        // when
+        assertThatCode(() -> memberService.changeEmail(member.getMemberId(), emailRequest))
+                .doesNotThrowAnyException();
+
+        // then
+        assertThat(member.getJoinType()).isEqualTo(JoinType.BOTH);
         assertThat(member.getEmail()).isEqualTo(emailRequest.getEmail());
     }
 
@@ -695,14 +944,18 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("이메일 변경 시 이미 존재하는 이메일로 예외 발생")
     void changeEmail_duplicatedEmail(){
         // given
+        Member member = createNativeTypeMember(1L, "member@email.com");
         EmailRequest emailRequest = createEmailRequest("changeMember@email.com");
 
         when(memberRepository.existsByEmail(anyString())).thenReturn(true);
 
         // when
-        assertThatThrownBy(() -> memberService.changeEmail(member.getMemberId(), emailRequest))
-                .isInstanceOf(DataExistException.class)
-                .hasMessage(ErrorCode.ALREADY_EXISTED_EMAIL.getMessage());
+        DataExistException fail = assertThrows(DataExistException.class,
+                () -> memberService.changeEmail(member.getMemberId(), emailRequest));
+
+        // then
+        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.ALREADY_EXISTED_EMAIL.getStatus());
+        assertThat(fail.getMessage()).isEqualTo(ErrorCode.ALREADY_EXISTED_EMAIL.getMessage());
 
     }
 
@@ -710,6 +963,7 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("이메일 변경 시 인증된 이메일이 아니여서 예외 발생")
     void changeEmail_notVerifiedEmail(){
         // given
+        Member member = createNativeTypeMember(1L, "member@email.com");
         EmailRequest emailRequest = createEmailRequest("changeMember@email.com");
 
         when(memberRepository.existsByEmail(anyString())).thenReturn(false);
@@ -737,7 +991,7 @@ public class MemberServiceTest extends MemberTest {
 
         // when
         DataNotFoundException fail = assertThrows(DataNotFoundException.class,
-                () -> memberService.changeEmail(member.getMemberId(), emailRequest));
+                () -> memberService.changeEmail(1000L, emailRequest));
 
         // then
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.MEMBER_NOT_FOUND.getStatus());
@@ -749,6 +1003,8 @@ public class MemberServiceTest extends MemberTest {
     void getMemberBookmarks_sortNewest(){
         // given
         Pageable pageable = PageUtils.bookmarkPageable(1);
+
+        Member member = createNativeTypeMember(1L, "member@email.com");
 
         List<TravelPlace> travelPlaceList = List.of(travelPlace1, travelPlace2, travelPlace3);
         Page<TravelPlace> travelPlacePage = PageUtils.createPage(travelPlaceList, pageable, travelPlaceList.size());
@@ -772,10 +1028,12 @@ public class MemberServiceTest extends MemberTest {
 
 
     @Test
-    @DisplayName("북마크로 등록된 여행지 데이터 조회 - 이름 순")
+    @DisplayName("북마크로 등록된 여행지 데이터 조회 - 이름순")
     void getMemberBookmarks_sortName(){
         // given
         Pageable pageable = PageUtils.bookmarkPageable(1);
+
+        Member member = createNativeTypeMember(1L, "member@email.com");
 
         List<TravelPlace> travelPlaceList = List.of(travelPlace1, travelPlace2, travelPlace3);
         Page<TravelPlace> travelPlacePage = PageUtils.createPage(travelPlaceList, pageable, travelPlaceList.size());
@@ -803,6 +1061,8 @@ public class MemberServiceTest extends MemberTest {
         // given
         Pageable pageable = PageUtils.bookmarkPageable(1);
 
+        Member member = createNativeTypeMember(1L, "member@email.com");
+
         Page<TravelPlace> travelPlacePage = PageUtils.createPage(new ArrayList<>(), pageable, 0);
 
         when(bookmarkRepository.findSortedMemberBookmarks(anyLong(), any(), any()))
@@ -818,35 +1078,196 @@ public class MemberServiceTest extends MemberTest {
 
 
     @Test
-    @DisplayName("회원 탈퇴")
-    void deactivateMember1(){
+    @DisplayName("일반 회원 탈퇴 - 작성자, 참석자 존재하는 경우")
+    void deactivateMember_nativeMember1(){
         // given
         MockHttpServletResponse mockHttpServletResponse = new MockHttpServletResponse();
-        DeactivateRequest request = createDeactivateRequest(member.getPassword());
 
         TravelSchedule schedule1 = createTravelSchedule(1L, "테스트1");
         TravelSchedule schedule2 = createTravelSchedule(2L, "테스트2");
+
+        ProfileImage profileImage = createProfileImage(1L, "profileImage");
+        Member member = createNativeTypeMember(
+                1L,
+                "member@email.com",
+                "password12!@",
+                profileImage
+        );
 
         List<TravelAttendee> attendees = List.of(
                 createTravelAttendee(1L, member, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL),
                 createTravelAttendee(2L, member, schedule2, AttendeeRole.GUEST, AttendeePermission.READ)
         );
 
-        when(memberRepository.findById(anyLong())).thenReturn(Optional.of(member));
+        DeactivateRequest request = createDeactivateRequest(member.getPassword());
+
+        when(memberRepository.findByIdWithSocialMembers(anyLong())).thenReturn(Optional.of(member));
         when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
         when(travelAttendeeRepository.findAllByMember_MemberId(anyLong())).thenReturn(attendees);
 
         // when
-        assertDoesNotThrow(() -> memberService.deactivateMember(mockHttpServletResponse, accessToken, member.getMemberId(), request));
+        assertDoesNotThrow(
+                () -> memberService.deactivateMember(mockHttpServletResponse, accessToken, member.getMemberId(), request));
+
+
+        // then
+        Cookie[] cookies = mockHttpServletResponse.getCookies();
+
+        assertThat(cookies).isNotNull();
+        assertThat(cookies.length).isEqualTo(3);
+        assertThat(member.getEmail()).isEqualTo(DeactivateValue.DEACTIVATE.name());
+        assertThat(member.getPassword()).isEqualTo(DeactivateValue.DEACTIVATE.name());
+        assertThat(member.getNickname()).isEqualTo(DeactivateValue.DEACTIVATE.name());
+        assertThat(member.getJoinType()).isEqualTo(JoinType.NATIVE);
+        assertThat(member.getUpdatedAt()).isNotNull();
+        assertThat(member.isActive()).isFalse();
+    }
+
+
+    @Test
+    @DisplayName("일반 회원 탈퇴 - 작성자만 존재하는 경우")
+    void deactivateMember_nativeMember2(){
+        // given
+        MockHttpServletResponse mockHttpServletResponse = new MockHttpServletResponse();
+
+        TravelSchedule schedule1 = createTravelSchedule(1L, "테스트1");
+        TravelSchedule schedule2 = createTravelSchedule(2L, "테스트2");
+
+        ProfileImage profileImage = createProfileImage(1L, "profileImage");
+        Member member = createNativeTypeMember(
+                1L,
+                "member@email.com",
+                "password12!@",
+                profileImage
+        );
+
+        List<TravelAttendee> attendees = List.of(
+                createTravelAttendee(1L, member, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL),
+                createTravelAttendee(2L, member, schedule2, AttendeeRole.AUTHOR, AttendeePermission.READ)
+        );
+
+        DeactivateRequest request = createDeactivateRequest(member.getPassword());
+
+        when(memberRepository.findByIdWithSocialMembers(anyLong())).thenReturn(Optional.of(member));
+        when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
+        when(travelAttendeeRepository.findAllByMember_MemberId(anyLong())).thenReturn(attendees);
+
+        // when
+        assertDoesNotThrow(
+                () -> memberService.deactivateMember(mockHttpServletResponse, accessToken, member.getMemberId(), request));
+
+
+        // then
+        Cookie[] cookies = mockHttpServletResponse.getCookies();
+
+        assertThat(cookies).isNotNull();
+        assertThat(cookies.length).isEqualTo(3);
+        assertThat(member.getEmail()).isEqualTo(DeactivateValue.DEACTIVATE.name());
+        assertThat(member.getPassword()).isEqualTo(DeactivateValue.DEACTIVATE.name());
+        assertThat(member.getNickname()).isEqualTo(DeactivateValue.DEACTIVATE.name());
+        assertThat(member.getJoinType()).isEqualTo(JoinType.NATIVE);
+        assertThat(member.getUpdatedAt()).isNotNull();
+        assertThat(member.isActive()).isFalse();
+    }
+
+
+
+    @Test
+    @DisplayName("일반 회원 탈퇴 - 참석자만 존재하는 경우")
+    void deactivateMember_nativeMember3(){
+        // given
+        MockHttpServletResponse mockHttpServletResponse = new MockHttpServletResponse();
+
+        TravelSchedule schedule1 = createTravelSchedule(1L, "테스트1");
+        TravelSchedule schedule2 = createTravelSchedule(2L, "테스트2");
+
+        ProfileImage profileImage = createProfileImage(1L, "profileImage");
+        Member member = createNativeTypeMember(
+                1L,
+                "member@email.com",
+                "password12!@",
+                profileImage
+        );
+
+        List<TravelAttendee> attendees = List.of(
+                createTravelAttendee(1L, member, schedule1, AttendeeRole.GUEST, AttendeePermission.ALL),
+                createTravelAttendee(2L, member, schedule2, AttendeeRole.GUEST, AttendeePermission.READ)
+        );
+
+        DeactivateRequest request = createDeactivateRequest(member.getPassword());
+
+        when(memberRepository.findByIdWithSocialMembers(anyLong())).thenReturn(Optional.of(member));
+        when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
+        when(travelAttendeeRepository.findAllByMember_MemberId(anyLong())).thenReturn(attendees);
+
+        // when
+        assertDoesNotThrow(
+                () -> memberService.deactivateMember(mockHttpServletResponse, accessToken, member.getMemberId(), request));
+
+
+        // then
+        Cookie[] cookies = mockHttpServletResponse.getCookies();
+
+        assertThat(cookies).isNotNull();
+        assertThat(cookies.length).isEqualTo(3);
+        assertThat(member.getEmail()).isEqualTo(DeactivateValue.DEACTIVATE.name());
+        assertThat(member.getPassword()).isEqualTo(DeactivateValue.DEACTIVATE.name());
+        assertThat(member.getNickname()).isEqualTo(DeactivateValue.DEACTIVATE.name());
+        assertThat(member.getJoinType()).isEqualTo(JoinType.NATIVE);
+        assertThat(member.getUpdatedAt()).isNotNull();
+        assertThat(member.isActive()).isFalse();
+    }
+
+    @Test
+    @DisplayName("통합 회원 탈퇴")
+    void deactivateMember_bothMember(){
+        // given
+        MockHttpServletResponse mockHttpServletResponse = new MockHttpServletResponse();
+
+        TravelSchedule schedule1 = createTravelSchedule(1L, "테스트1");
+        TravelSchedule schedule2 = createTravelSchedule(2L, "테스트2");
+
+        ProfileImage profileImage = createProfileImage(1L, "profileImage");
+        Member member = createBothTypeMember(
+                1L,
+                "member@email.com",
+                "password12!@",
+                profileImage
+        );
+        createSocialMember(1L, member, "kakao", SocialType.KAKAO);
+        createSocialMember(2L, member, "naver", SocialType.NAVER);
+
+        List<TravelAttendee> attendees = List.of(
+                createTravelAttendee(1L, member, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL),
+                createTravelAttendee(2L, member, schedule2, AttendeeRole.GUEST, AttendeePermission.READ)
+        );
+
+        DeactivateRequest request = createDeactivateRequest(member.getPassword());
+
+        when(memberRepository.findByIdWithSocialMembers(anyLong())).thenReturn(Optional.of(member));
+        when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
+        when(travelAttendeeRepository.findAllByMember_MemberId(anyLong())).thenReturn(attendees);
+
+        // when
+        assertDoesNotThrow(
+                () -> memberService.deactivateMember(mockHttpServletResponse, accessToken, member.getMemberId(), request));
 
 
         // then
         Cookie[] cookies = mockHttpServletResponse.getCookies();
         assertThat(cookies).isNotNull();
-        assertThat(cookies.length).isEqualTo(3);
-        assertThat(member.getEmail()).isEqualTo("알 수 없음");
-        assertThat(member.getPassword()).isEqualTo("알 수 없음");
+        assertThat(member.getEmail()).isEqualTo(DeactivateValue.DEACTIVATE.name());
+        assertThat(member.getPassword()).isEqualTo(DeactivateValue.DEACTIVATE.name());
+        assertThat(member.getNickname()).isEqualTo(DeactivateValue.DEACTIVATE.name());
+        assertThat(member.getJoinType()).isEqualTo(JoinType.BOTH);
+        assertThat(member.getUpdatedAt()).isNotNull();
+        assertThat(member.isActive()).isFalse();
+        assertThat(member.getSocialMembers().get(0).getSocialId()).isEqualTo(DeactivateValue.DEACTIVATE.name());
+        assertThat(member.getSocialMembers().get(0).getUpdatedAt()).isNotNull();
     }
+
+
+
 
 
     @Test
@@ -854,19 +1275,35 @@ public class MemberServiceTest extends MemberTest {
     void deactivateMember_emptySchedule(){
         // given
         MockHttpServletResponse mockHttpServletResponse = new MockHttpServletResponse();
+
+        ProfileImage profileImage = createProfileImage(1L, "profileImage");
+        Member member = createNativeTypeMember(
+                1L,
+                "member@email.com",
+                "password12!@",
+                profileImage
+        );
+
         DeactivateRequest request = createDeactivateRequest(member.getPassword());
 
-        when(memberRepository.findById(anyLong())).thenReturn(Optional.of(member));
+        when(memberRepository.findByIdWithSocialMembers(anyLong())).thenReturn(Optional.of(member));
         when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
         when(travelAttendeeRepository.findAllByMember_MemberId(anyLong())).thenReturn(new ArrayList<>());
 
         // when
-        assertDoesNotThrow(() -> memberService.deactivateMember(mockHttpServletResponse, accessToken, member.getMemberId(), request));
+        assertDoesNotThrow(
+                () -> memberService.deactivateMember(mockHttpServletResponse, accessToken, member.getMemberId(), request));
 
 
         // then
-        assertThat(member.getEmail()).isEqualTo("알 수 없음");
-        assertThat(member.getPassword()).isEqualTo("알 수 없음");
+        Cookie[] cookies = mockHttpServletResponse.getCookies();
+        assertThat(cookies).isNotNull();
+        assertThat(member.getEmail()).isEqualTo(DeactivateValue.DEACTIVATE.name());
+        assertThat(member.getPassword()).isEqualTo(DeactivateValue.DEACTIVATE.name());
+        assertThat(member.getNickname()).isEqualTo(DeactivateValue.DEACTIVATE.name());
+        assertThat(member.getJoinType()).isEqualTo(JoinType.NATIVE);
+        assertThat(member.getUpdatedAt()).isNotNull();
+        assertThat(member.isActive()).isFalse();
     }
 
     @Test
@@ -874,13 +1311,14 @@ public class MemberServiceTest extends MemberTest {
     void deactivateMember_memberNotFound(){
         // given
         MockHttpServletResponse mockHttpServletResponse = new MockHttpServletResponse();
-        DeactivateRequest request = createDeactivateRequest(member.getPassword());
 
-        when(memberRepository.findById(anyLong())).thenReturn(Optional.empty());
+        DeactivateRequest request = createDeactivateRequest("notMember12!@");
+
+        when(memberRepository.findByIdWithSocialMembers(anyLong())).thenReturn(Optional.empty());
 
         // when
         DataNotFoundException fail = assertThrows(DataNotFoundException.class,
-                () -> memberService.deactivateMember(mockHttpServletResponse, accessToken, member.getMemberId(), request));
+                () -> memberService.deactivateMember(mockHttpServletResponse, accessToken, 1000L, request));
 
         // then
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.MEMBER_NOT_FOUND.getStatus());
@@ -889,13 +1327,40 @@ public class MemberServiceTest extends MemberTest {
     }
 
     @Test
+    @DisplayName("소셜 회원 탈퇴 요청으로 예외 발생")
+    void deactivateSocialMember(){
+        // given
+        MockHttpServletResponse mockHttpServletResponse = new MockHttpServletResponse();
+
+        Member member = createSocialTypeMember(1L, "member@email.com");
+        createSocialMember(1L, member, "kakao", SocialType.KAKAO);
+        createSocialMember(2L, member, "naver", SocialType.NAVER);
+
+        DeactivateRequest request = createDeactivateRequest("incorrect_password");
+
+        when(memberRepository.findByIdWithSocialMembers(anyLong())).thenReturn(Optional.of(member));
+
+        // when
+        UnsupportedSocialMemberException fail = assertThrows(UnsupportedSocialMemberException.class,
+                () -> memberService.deactivateMember(mockHttpServletResponse, accessToken, member.getMemberId(), request));
+
+        // then
+        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.SOCIAL_MEMBER_DEACTIVATE_NOT_ALLOWED.getStatus());
+        assertThat(fail.getMessage()).isEqualTo(ErrorCode.SOCIAL_MEMBER_DEACTIVATE_NOT_ALLOWED.getMessage());
+
+    }
+
+
+    @Test
     @DisplayName("회원 탈퇴 요청 시 비밀번호가 맞지 않아 예외 발생")
     void deactivateMember_incorrectPassword(){
         // given
         MockHttpServletResponse mockHttpServletResponse = new MockHttpServletResponse();
+        Member member = createNativeTypeMember(1L, "member@email.com");
+
         DeactivateRequest request = createDeactivateRequest("incorrect_password");
 
-        when(memberRepository.findById(anyLong())).thenReturn(Optional.of(member));
+        when(memberRepository.findByIdWithSocialMembers(anyLong())).thenReturn(Optional.of(member));
         when(passwordEncoder.matches(anyString(), anyString())).thenReturn(false);
 
         // when
