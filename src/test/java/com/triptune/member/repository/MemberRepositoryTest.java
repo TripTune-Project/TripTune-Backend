@@ -3,6 +3,9 @@ package com.triptune.member.repository;
 import com.triptune.member.MemberTest;
 import com.triptune.member.dto.response.MemberProfileResponse;
 import com.triptune.member.entity.Member;
+import com.triptune.member.entity.SocialMember;
+import com.triptune.member.enums.JoinType;
+import com.triptune.member.enums.SocialType;
 import com.triptune.profile.entity.ProfileImage;
 import com.triptune.profile.repository.ProfileImageRepository;
 import com.triptune.global.config.QueryDSLConfig;
@@ -11,10 +14,12 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -53,6 +58,68 @@ class MemberRepositoryTest extends MemberTest {
         assertThat(response.get(1).getMemberId()).isEqualTo(member2.getMemberId());
         assertThat(response.get(1).getNickname()).isEqualTo(member2.getNickname());
         assertThat(response.get(1).getProfileUrl()).isEqualTo(profileImage2.getS3ObjectUrl());
+    }
+
+    @Test
+    @DisplayName("회원의 일반 정보와 소셜 정보 조회 - 소셜 회원")
+    void findByIdWithSocialMembers_socialMember() {
+        // given
+        Member member = memberRepository.save(createSocialTypeMember(null, "member@email.com"));
+        SocialMember socialMember1 = socialMemberRepository.save(
+                createSocialMember(null, member, "kakao", SocialType.KAKAO)
+        );
+        SocialMember socialMember2 = socialMemberRepository.save(
+                createSocialMember(null, member, "naver", SocialType.NAVER)
+        );
+
+        // when
+        Member response = memberRepository.findByIdWithSocialMembers(member.getMemberId()).get();
+
+        // then
+        assertThat(response.getEmail()).isEqualTo(member.getEmail());
+        assertThat(response.getJoinType()).isEqualTo(JoinType.SOCIAL);
+        assertThat(response.getSocialMembers().size()).isEqualTo(2);
+        assertThat(response.getSocialMembers().get(0).getSocialId()).isEqualTo(socialMember1.getSocialId());
+        assertThat(response.getSocialMembers().get(1).getSocialType()).isEqualTo(SocialType.NAVER);
+    }
+
+    @Test
+    @DisplayName("회원의 일반 정보와 소셜 정보 조회 - 일반 회원")
+    void findByIdWithSocialMembers_nativeMember() {
+        // given
+        Member member = memberRepository.save(createNativeTypeMember(null, "member@email.com"));
+
+        // when
+        Member response = memberRepository.findByIdWithSocialMembers(member.getMemberId()).get();
+
+        // then
+        assertThat(response.getEmail()).isEqualTo(member.getEmail());
+        assertThat(response.getJoinType()).isEqualTo(JoinType.NATIVE);
+        assertThat(response.getSocialMembers().size()).isEqualTo(0);
+    }
+
+
+    @Test
+    @DisplayName("회원의 일반 정보와 소셜 정보 조회 - 통합 회원")
+    void findByIdWithSocialMembers_bothMember() {
+        // given
+        Member member = memberRepository.save(createBothTypeMember(null, "member@email.com"));
+        SocialMember socialMember1 = socialMemberRepository.save(
+                createSocialMember(null, member, "kakao", SocialType.KAKAO)
+        );
+        SocialMember socialMember2 = socialMemberRepository.save(
+                createSocialMember(null, member, "naver", SocialType.NAVER)
+        );
+
+        // when
+        Member response = memberRepository.findByIdWithSocialMembers(member.getMemberId()).get();
+
+        // then
+        assertThat(response.getEmail()).isEqualTo(member.getEmail());
+        assertThat(response.getJoinType()).isEqualTo(JoinType.BOTH);
+        assertThat(response.getSocialMembers().size()).isEqualTo(2);
+        assertThat(response.getSocialMembers().get(0).getSocialId()).isEqualTo(socialMember1.getSocialId());
+        assertThat(response.getSocialMembers().get(1).getSocialType()).isEqualTo(SocialType.NAVER);
     }
 
 

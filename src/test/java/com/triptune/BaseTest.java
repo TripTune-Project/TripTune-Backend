@@ -27,6 +27,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Transactional
@@ -108,6 +109,36 @@ public abstract class BaseTest {
                 .refreshToken(refreshToken)
                 .joinType(JoinType.NATIVE)
                 .createdAt(LocalDateTime.now())
+                .socialMembers(new ArrayList<>())
+                .isActive(true)
+                .build();
+    }
+
+
+    protected Member createNativeTypeMember(Long memberId, String email){
+        return Member.builder()
+                .memberId(memberId)
+                .email(email)
+                .password("password12!@")
+                .nickname(email.split("@")[0])
+                .refreshToken(refreshToken)
+                .joinType(JoinType.NATIVE)
+                .createdAt(LocalDateTime.now())
+                .socialMembers(new ArrayList<>())
+                .isActive(true)
+                .build();
+    }
+
+    protected Member createSocialTypeMember(Long memberId, String email){
+        return Member.builder()
+                .memberId(memberId)
+                .email(email)
+                .password(null)
+                .nickname(email.split("@")[0])
+                .refreshToken(refreshToken)
+                .joinType(JoinType.SOCIAL)
+                .createdAt(LocalDateTime.now())
+                .socialMembers(new ArrayList<>())
                 .isActive(true)
                 .build();
     }
@@ -122,6 +153,7 @@ public abstract class BaseTest {
                 .refreshToken(refreshToken)
                 .joinType(JoinType.SOCIAL)
                 .createdAt(LocalDateTime.now())
+                .socialMembers(new ArrayList<>())
                 .isActive(true)
                 .build();
     }
@@ -136,6 +168,22 @@ public abstract class BaseTest {
                 .refreshToken(refreshToken)
                 .joinType(JoinType.BOTH)
                 .createdAt(LocalDateTime.now())
+                .socialMembers(new ArrayList<>())
+                .isActive(true)
+                .build();
+    }
+
+
+    protected Member createBothTypeMember(Long memberId, String email){
+        return Member.builder()
+                .memberId(memberId)
+                .email(email)
+                .password("password12!@")
+                .nickname(email.split("@")[0])
+                .refreshToken(refreshToken)
+                .joinType(JoinType.BOTH)
+                .createdAt(LocalDateTime.now())
+                .socialMembers(new ArrayList<>())
                 .isActive(true)
                 .build();
     }
@@ -543,13 +591,16 @@ public abstract class BaseTest {
     }
 
     protected SocialMember createSocialMember(Long socialMemberId, Member member, String socialId, SocialType socialType){
-        return SocialMember.builder()
+        SocialMember socialMember = SocialMember.builder()
                 .socialMemberId(socialMemberId)
                 .member(member)
                 .socialId(socialId)
                 .socialType(socialType)
                 .createdAt(LocalDateTime.now())
                 .build();
+
+        member.addSocialMember(socialMember);
+        return socialMember;
     }
 
     protected void mockAuthentication(Member member){
