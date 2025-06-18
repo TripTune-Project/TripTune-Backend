@@ -128,14 +128,16 @@ public class MemberService {
 
 
     public void logout(HttpServletResponse response, LogoutRequest logoutRequest, String accessToken) {
-        if (!isExistNickname(logoutRequest.getNickname())){
-            throw new DataNotFoundException(ErrorCode.MEMBER_NOT_FOUND);
-        }
+        Member member = getMemberByNickname(logoutRequest.getNickname());
+        member.logout();
 
-        memberRepository.deleteRefreshTokenByNickname(logoutRequest.getNickname());
         redisService.saveExpiredData(accessToken, "logout", LOGOUT_DURATION);
-
         deleteCookies(response);
+    }
+
+    private Member getMemberByNickname(String nickname){
+        return memberRepository.findByNickname(nickname)
+                .orElseThrow(() ->  new DataNotFoundException(ErrorCode.MEMBER_NOT_FOUND));
     }
 
 
@@ -269,8 +271,8 @@ public class MemberService {
         // 6. 익명 데이터로 변경 (닉네임, 아이디, 비밀번호, 리프레시 토큰, 이메일)
         member.deactivate();
 
-        // 7. 로그아웃  // TODO: 이거 로그아웃 함수랑 같이 사용하게 리팩 시도
-        member.updateRefreshToken(null);
+        // 7. 로그아웃
+        member.logout();
         redisService.saveExpiredData(accessToken, "logout", LOGOUT_DURATION);
 
         deleteCookies(response);

@@ -175,4 +175,7 @@ public class Member {
         this.socialMembers.add(socialMember);
     }
 
+    public void logout() {
+        this.refreshToken = null;
+    }
 }
