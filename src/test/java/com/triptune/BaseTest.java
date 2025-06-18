@@ -109,7 +109,6 @@ public abstract class BaseTest {
                 .refreshToken(refreshToken)
                 .joinType(JoinType.NATIVE)
                 .createdAt(LocalDateTime.now())
-                .socialMembers(new ArrayList<>())
                 .isActive(true)
                 .build();
     }
@@ -124,7 +123,6 @@ public abstract class BaseTest {
                 .refreshToken(refreshToken)
                 .joinType(JoinType.NATIVE)
                 .createdAt(LocalDateTime.now())
-                .socialMembers(new ArrayList<>())
                 .isActive(true)
                 .build();
     }
@@ -138,7 +136,6 @@ public abstract class BaseTest {
                 .refreshToken(refreshToken)
                 .joinType(JoinType.SOCIAL)
                 .createdAt(LocalDateTime.now())
-                .socialMembers(new ArrayList<>())
                 .isActive(true)
                 .build();
     }
@@ -153,7 +150,6 @@ public abstract class BaseTest {
                 .refreshToken(refreshToken)
                 .joinType(JoinType.SOCIAL)
                 .createdAt(LocalDateTime.now())
-                .socialMembers(new ArrayList<>())
                 .isActive(true)
                 .build();
     }
@@ -168,7 +164,6 @@ public abstract class BaseTest {
                 .refreshToken(refreshToken)
                 .joinType(JoinType.BOTH)
                 .createdAt(LocalDateTime.now())
-                .socialMembers(new ArrayList<>())
                 .isActive(true)
                 .build();
     }
@@ -183,7 +178,6 @@ public abstract class BaseTest {
                 .refreshToken(refreshToken)
                 .joinType(JoinType.BOTH)
                 .createdAt(LocalDateTime.now())
-                .socialMembers(new ArrayList<>())
                 .isActive(true)
                 .build();
     }

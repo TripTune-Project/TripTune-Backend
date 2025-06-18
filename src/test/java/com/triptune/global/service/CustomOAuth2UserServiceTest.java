@@ -668,8 +668,6 @@ class CustomOAuth2UserServiceTest extends SocialMemberTest {
                 profileImage
         );
 
-        createSocialMember(1L, member, oAuth2UserInfo.getSocialId(), SocialType.NAVER);
-
         when(profileImageService.saveDefaultProfileImage()).thenReturn(profileImage);
         when(memberRepository.save(any())).thenReturn(member);
 
@@ -701,8 +699,6 @@ class CustomOAuth2UserServiceTest extends SocialMemberTest {
                 oAuth2UserInfo.getEmail(),
                 profileImage
         );
-
-        createSocialMember(1L, member, oAuth2UserInfo.getSocialId(), SocialType.KAKAO);
 
         when(profileImageService.saveDefaultProfileImage()).thenReturn(profileImage);
         when(memberRepository.save(any())).thenReturn(member);
