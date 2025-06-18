@@ -69,7 +69,7 @@ public class Member {
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
         this.isActive = isActive;
-        this.socialMembers = socialMembers;
+        this.socialMembers = (socialMembers != null) ? socialMembers : new ArrayList<>();
     }
 
     public static Member from(JoinRequest joinRequest, ProfileImage profileImage, String encodePassword){

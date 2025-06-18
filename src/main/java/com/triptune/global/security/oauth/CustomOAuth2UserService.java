@@ -110,7 +110,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         return newMember;
     }
 
-    private void createSocialMember(Member member, OAuth2UserInfo oAuth2UserInfo){
+    public void createSocialMember(Member member, OAuth2UserInfo oAuth2UserInfo){
         SocialMember socialMember = SocialMember.from(member, oAuth2UserInfo);
         socialMemberRepository.save(socialMember);
     }
