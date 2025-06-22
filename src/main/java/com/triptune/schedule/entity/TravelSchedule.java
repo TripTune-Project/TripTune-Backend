@@ -40,21 +40,21 @@ public class TravelSchedule {
     private LocalDateTime updatedAt;
 
     @OneToMany(mappedBy = "travelSchedule", fetch = FetchType.LAZY, cascade = CascadeType.PERSIST, orphanRemoval = true)
-    private List<TravelAttendee> travelAttendeeList = new ArrayList<>();
+    private List<TravelAttendee> travelAttendees = new ArrayList<>();
 
     @OneToMany(mappedBy = "travelSchedule", fetch = FetchType.LAZY, cascade = CascadeType.PERSIST, orphanRemoval = true)
-    private List<TravelRoute> travelRouteList = new ArrayList<>();
+    private List<TravelRoute> travelRoutes = new ArrayList<>();
 
     @Builder
-    public TravelSchedule(Long scheduleId, String scheduleName, LocalDate startDate, LocalDate endDate, LocalDateTime createdAt, LocalDateTime updatedAt, List<TravelAttendee> travelAttendeeList, List<TravelRoute> travelRouteList) {
+    public TravelSchedule(Long scheduleId, String scheduleName, LocalDate startDate, LocalDate endDate, LocalDateTime createdAt, LocalDateTime updatedAt, List<TravelAttendee> travelAttendees, List<TravelRoute> travelRoutes) {
         this.scheduleId = scheduleId;
         this.scheduleName = scheduleName;
         this.startDate = startDate;
         this.endDate = endDate;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
-        this.travelAttendeeList = travelAttendeeList;
-        this.travelRouteList = travelRouteList;
+        this.travelAttendees = (travelAttendees != null) ? travelAttendees : new ArrayList<>();
+        this.travelRoutes = (travelRoutes != null) ? travelRoutes : new ArrayList<>();
     }
 
     public static TravelSchedule from(ScheduleCreateRequest request){
@@ -74,6 +74,6 @@ public class TravelSchedule {
     }
 
     public void updateTravelRouteList(List<TravelRoute> travelRouteList){
-        this.travelRouteList = travelRouteList;
+        this.travelRoutes = travelRouteList;
     }
 }

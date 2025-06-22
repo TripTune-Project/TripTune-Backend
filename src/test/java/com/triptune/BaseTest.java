@@ -127,6 +127,20 @@ public abstract class BaseTest {
                 .build();
     }
 
+
+    protected Member createNativeTypeMember(Long memberId, String email, String encodedPassword){
+        return Member.builder()
+                .memberId(memberId)
+                .email(email)
+                .password(encodedPassword)
+                .nickname(email.split("@")[0])
+                .refreshToken(refreshToken)
+                .joinType(JoinType.NATIVE)
+                .createdAt(LocalDateTime.now())
+                .isActive(true)
+                .build();
+    }
+
     protected Member createSocialTypeMember(Long memberId, String email){
         return Member.builder()
                 .memberId(memberId)
@@ -182,6 +196,18 @@ public abstract class BaseTest {
                 .build();
     }
 
+    protected Member createBothTypeMember(Long memberId, String email, String encodedPassword){
+        return Member.builder()
+                .memberId(memberId)
+                .email(email)
+                .password(encodedPassword)
+                .nickname(email.split("@")[0])
+                .refreshToken(refreshToken)
+                .joinType(JoinType.BOTH)
+                .createdAt(LocalDateTime.now())
+                .isActive(true)
+                .build();
+    }
 
 
     protected ProfileImage createProfileImage(Long profileImageId, String fileName){

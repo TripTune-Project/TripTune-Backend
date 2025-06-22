@@ -1,4 +1,4 @@
-package com.triptune;
+package com.triptune.global.security;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

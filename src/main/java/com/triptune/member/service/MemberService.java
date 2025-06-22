@@ -1,6 +1,6 @@
 package com.triptune.member.service;
 
-import com.triptune.CookieType;
+import com.triptune.global.security.CookieType;
 import com.triptune.bookmark.enums.BookmarkSortType;
 import com.triptune.bookmark.repository.BookmarkRepository;
 import com.triptune.email.dto.request.EmailRequest;

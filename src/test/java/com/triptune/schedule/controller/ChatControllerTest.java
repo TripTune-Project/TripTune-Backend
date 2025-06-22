@@ -75,13 +75,14 @@ public class ChatControllerTest extends ScheduleTest {
         TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(null, member2, schedule, AttendeeRole.GUEST, AttendeePermission.READ));
         TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(null, member3, schedule, AttendeeRole.GUEST, AttendeePermission.CHAT));
 
-        schedule.setTravelAttendeeList(List.of(attendee1, attendee2, attendee3));
+        schedule.setTravelAttendees(List.of(attendee1, attendee2, attendee3));
 
     }
 
     @Test
     @DisplayName("채팅 내용 조회")
     void getChatMessages() throws Exception {
+        // given
         ChatMessage message1 = chatMessageRepository.save(createChatMessage("id1", schedule.getScheduleId(), member1, "hello1"));
         ChatMessage message2 = chatMessageRepository.save(createChatMessage("id2", schedule.getScheduleId(), member1, "hello2"));
         ChatMessage message3 = chatMessageRepository.save(createChatMessage("id3", schedule.getScheduleId(), member1, "hello3"));
@@ -91,9 +92,11 @@ public class ChatControllerTest extends ScheduleTest {
 
         mockAuthentication(member1);
 
+        // when, then
         mockMvc.perform(get("/api/schedules/{scheduleId}/chats", schedule.getScheduleId())
                         .param("page", "1"))
                 .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.totalElements").value(6))
                 .andExpect(jsonPath("$.data.content[0].nickname").value(member1.getNickname()))
                 .andExpect(jsonPath("$.data.content[0].message").value(message1.getMessage()))
@@ -112,10 +115,14 @@ public class ChatControllerTest extends ScheduleTest {
     @Test
     @DisplayName("채팅 내용 조회 시 데이터가 없는 경우")
     void getChatMessagesNoMessage() throws Exception {
+        // given
         mockAuthentication(member1);
+
+        // when, then
         mockMvc.perform(get("/api/schedules/{scheduleId}/chats", schedule.getScheduleId())
                         .param("page", "1"))
                 .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.totalElements").value(0))
                 .andExpect(jsonPath("$.data.content").isEmpty());
     }

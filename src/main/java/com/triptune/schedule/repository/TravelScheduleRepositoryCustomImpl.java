@@ -34,7 +34,7 @@ public class TravelScheduleRepositoryCustomImpl implements TravelScheduleReposit
     public Page<TravelSchedule> findTravelSchedulesByMemberId(Pageable pageable, Long memberId) {
         List<TravelSchedule> travelSchedules = jpaQueryFactory
                 .selectFrom(travelSchedule)
-                .join(travelSchedule.travelAttendeeList, travelAttendee)
+                .join(travelSchedule.travelAttendees, travelAttendee)
                 .where(travelAttendee.member.memberId.eq(memberId))
                 .orderBy(orderByTravelScheduleDateDESC())
                 .offset(pageable.getOffset())
@@ -51,9 +51,9 @@ public class TravelScheduleRepositoryCustomImpl implements TravelScheduleReposit
     public Page<TravelSchedule> findSharedTravelSchedulesByMemberId(Pageable pageable, Long memberId) {
         List<TravelSchedule> travelSchedules = jpaQueryFactory
                 .selectFrom(travelSchedule)
-                .join(travelSchedule.travelAttendeeList, travelAttendee)
+                .join(travelSchedule.travelAttendees, travelAttendee)
                 .where(travelAttendee.member.memberId.eq(memberId)
-                        .and(travelSchedule.travelAttendeeList.size().gt(1)))
+                        .and(travelSchedule.travelAttendees.size().gt(1)))
                 .orderBy(orderByTravelScheduleDateDESC())
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
@@ -70,7 +70,7 @@ public class TravelScheduleRepositoryCustomImpl implements TravelScheduleReposit
         Long totalElements = jpaQueryFactory
                 .select(travelSchedule.count())
                 .from(travelSchedule)
-                .leftJoin(travelSchedule.travelAttendeeList, travelAttendee)
+                .leftJoin(travelSchedule.travelAttendees, travelAttendee)
                 .where(travelAttendee.member.memberId.eq(memberId))
                 .fetchOne();
 
@@ -85,9 +85,9 @@ public class TravelScheduleRepositoryCustomImpl implements TravelScheduleReposit
         Long totalElements = jpaQueryFactory
                 .select(travelSchedule.count())
                 .from(travelSchedule)
-                .leftJoin(travelSchedule.travelAttendeeList, travelAttendee)
+                .leftJoin(travelSchedule.travelAttendees, travelAttendee)
                 .where(travelAttendee.member.memberId.eq(memberId)
-                        .and(travelSchedule.travelAttendeeList.size().gt(1)))
+                        .and(travelSchedule.travelAttendees.size().gt(1)))
                 .fetchOne();
 
 
@@ -102,7 +102,7 @@ public class TravelScheduleRepositoryCustomImpl implements TravelScheduleReposit
 
         List<TravelSchedule> content = jpaQueryFactory
                 .selectFrom(travelSchedule)
-                .leftJoin(travelSchedule.travelAttendeeList, travelAttendee)
+                .leftJoin(travelSchedule.travelAttendees, travelAttendee)
                 .where(travelAttendee.member.memberId.eq(memberId)
                         .and(travelSchedule.scheduleName.contains(keyword)))
                 .orderBy(Expressions.stringTemplate(
@@ -124,7 +124,7 @@ public class TravelScheduleRepositoryCustomImpl implements TravelScheduleReposit
         Long totalElements = jpaQueryFactory
                 .select(travelSchedule.count())
                 .from(travelSchedule)
-                .leftJoin(travelSchedule.travelAttendeeList, travelAttendee)
+                .leftJoin(travelSchedule.travelAttendees, travelAttendee)
                 .where(travelAttendee.member.memberId.eq(memberId)
                         .and(travelSchedule.scheduleName.contains(keyword)))
                 .fetchOne();
@@ -140,9 +140,9 @@ public class TravelScheduleRepositoryCustomImpl implements TravelScheduleReposit
 
         List<TravelSchedule> content = jpaQueryFactory
                 .selectFrom(travelSchedule)
-                .leftJoin(travelSchedule.travelAttendeeList, travelAttendee)
+                .leftJoin(travelSchedule.travelAttendees, travelAttendee)
                 .where(travelAttendee.member.memberId.eq(memberId)
-                        .and(travelSchedule.travelAttendeeList.size().gt(1))
+                        .and(travelSchedule.travelAttendees.size().gt(1))
                         .and(travelSchedule.scheduleName.contains(keyword)))
                 .orderBy(Expressions.stringTemplate(
                                 orderCaseString,
@@ -163,9 +163,9 @@ public class TravelScheduleRepositoryCustomImpl implements TravelScheduleReposit
         Long totalElements = jpaQueryFactory
                 .select(travelSchedule.count())
                 .from(travelSchedule)
-                .leftJoin(travelSchedule.travelAttendeeList, travelAttendee)
+                .leftJoin(travelSchedule.travelAttendees, travelAttendee)
                 .where(travelAttendee.member.memberId.eq(memberId)
-                        .and(travelSchedule.travelAttendeeList.size().gt(1))
+                        .and(travelSchedule.travelAttendees.size().gt(1))
                         .and(travelSchedule.scheduleName.contains(keyword)))
                 .fetchOne();
 
@@ -178,7 +178,7 @@ public class TravelScheduleRepositoryCustomImpl implements TravelScheduleReposit
     public Page<TravelSchedule> findEnableEditTravelSchedulesByMemberId(Pageable pageable, Long memberId) {
         List<TravelSchedule> travelSchedules = jpaQueryFactory
                 .selectFrom(travelSchedule)
-                .leftJoin(travelSchedule.travelAttendeeList, travelAttendee)
+                .leftJoin(travelSchedule.travelAttendees, travelAttendee)
                 .where(travelAttendee.member.memberId.eq(memberId)
                         .and(travelAttendee.permission.eq(AttendeePermission.ALL)
                                 .or(travelAttendee.permission.eq(AttendeePermission.EDIT))))
@@ -198,7 +198,7 @@ public class TravelScheduleRepositoryCustomImpl implements TravelScheduleReposit
         Long totalElements = jpaQueryFactory
                 .select(travelSchedule.count())
                 .from(travelSchedule)
-                .leftJoin(travelSchedule.travelAttendeeList, travelAttendee)
+                .leftJoin(travelSchedule.travelAttendees, travelAttendee)
                 .where(travelAttendee.member.memberId.eq(memberId)
                         .and(travelAttendee.permission.eq(AttendeePermission.ALL)
                                 .or(travelAttendee.permission.eq(AttendeePermission.EDIT))))

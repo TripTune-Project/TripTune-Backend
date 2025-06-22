@@ -5,6 +5,8 @@ import com.triptune.common.repository.*;
 import com.triptune.member.entity.Member;
 import com.triptune.member.repository.MemberRepository;
 import com.triptune.schedule.ScheduleTest;
+import com.triptune.schedule.dto.request.AttendeeRequest;
+import com.triptune.schedule.dto.request.RouteCreateRequest;
 import com.triptune.schedule.entity.TravelAttendee;
 import com.triptune.schedule.entity.TravelRoute;
 import com.triptune.schedule.entity.TravelSchedule;
@@ -22,6 +24,8 @@ import com.triptune.global.response.enums.SuccessCode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
@@ -34,6 +38,7 @@ import org.springframework.web.filter.CharacterEncodingFilter;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -107,8 +112,8 @@ public class RouteControllerTest extends ScheduleTest {
         TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(0L, member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ));
         TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(0L, member2, schedule2, AttendeeRole.AUTHOR, AttendeePermission.ALL));
 
-        schedule1.setTravelAttendeeList(List.of(attendee1, attendee2));
-        schedule2.setTravelAttendeeList(List.of(attendee3));
+        schedule1.setTravelAttendees(List.of(attendee1, attendee2));
+        schedule2.setTravelAttendees(List.of(attendee3));
 
         travelPlace3 = travelPlaceRepository.save(createTravelPlace(null, country, city, district, apiCategory, List.of(travelImage3)));
     }
@@ -125,7 +130,7 @@ public class RouteControllerTest extends ScheduleTest {
         TravelRoute route2 = travelRouteRepository.save(createTravelRoute(schedule1, travelPlace1, 2));
         TravelRoute route3 = travelRouteRepository.save(createTravelRoute(schedule1, travelPlace2, 3));
 
-        schedule1.setTravelRouteList(List.of(route1, route2, route3));
+        schedule1.setTravelRoutes(List.of(route1, route2, route3));
 
         mockAuthentication(member1);
 
@@ -133,6 +138,7 @@ public class RouteControllerTest extends ScheduleTest {
         mockMvc.perform(get("/api/schedules/{scheduleId}/routes", schedule1.getScheduleId())
                         .param("page", "1"))
                 .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.totalElements").value(3))
                 .andExpect(jsonPath("$.data.content[0].routeOrder").value(route1.getRouteOrder()))
                 .andExpect(jsonPath("$.data.content[0].placeId").value(travelPlace1.getPlaceId()))
@@ -145,18 +151,25 @@ public class RouteControllerTest extends ScheduleTest {
     @Test
     @DisplayName("여행 루트 조회 시 저장된 여행 루트 데이터 없는 경우")
     void getTravelRoutesWithoutData() throws Exception {
+        // given
         mockAuthentication(member1);
+
+        // when, then
         mockMvc.perform(get("/api/schedules/{scheduleId}/routes", schedule1.getScheduleId())
                         .param("page", "1"))
                 .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.totalElements").value(0))
                 .andExpect(jsonPath("$.data.content").isEmpty());
     }
 
     @Test
     @DisplayName("여행 루트 조회 시 일정 데이터 존재하지 않아 예외 발생")
-    void getTravelRoutes_dataNotFoundException() throws Exception {
+    void getTravelRoutes_scheduleNotFound() throws Exception {
+        // given
         mockAuthentication(member1);
+
+        // when, then
         mockMvc.perform(get("/api/schedules/{scheduleId}/routes", 0L)
                         .param("page", "1"))
                 .andExpect(status().isNotFound())
@@ -166,11 +179,15 @@ public class RouteControllerTest extends ScheduleTest {
 
     @Test
     @DisplayName("여행 루트 조회 시 해당 일정에 접근 권한이 없어 예외 발생")
-    void getTravelRoutes_forbiddenScheduleException() throws Exception {
+    void getTravelRoutes_forbiddenScheduleAccess() throws Exception {
+        // given
         mockAuthentication(member1);
+
+        // when, then
         mockMvc.perform(get("/api/schedules/{scheduleId}/routes", schedule2.getScheduleId())
                         .param("page", "1"))
                 .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value(ErrorCode.FORBIDDEN_ACCESS_SCHEDULE.getMessage()));
     }
 
@@ -178,46 +195,91 @@ public class RouteControllerTest extends ScheduleTest {
     @DisplayName("여행 루트의 마지막 여행지 추가")
     void createLastRoute() throws Exception{
         // given
-        TravelRoute route1 = travelRouteRepository.save(createTravelRoute(schedule1, travelPlace1, 1));
-        TravelRoute route2 = travelRouteRepository.save(createTravelRoute(schedule1, travelPlace1, 2));
-        TravelRoute route3 = travelRouteRepository.save(createTravelRoute(schedule1, travelPlace2, 3));
-
-        schedule1.setTravelRouteList(List.of(route1, route2, route3));
         travelPlace1 = travelPlaceRepository.save(createTravelPlace(null, country, city, district, apiCategory, List.of(travelImage1, travelImage2)));
         travelPlace2 = travelPlaceRepository.save(createTravelPlace(null, country, city, district, apiCategory, List.of(travelImage3, travelImage4)));
 
+        List<TravelRoute> routes = travelRouteRepository.saveAll(List.of(
+                createTravelRoute(schedule1, travelPlace1, 1),
+                createTravelRoute(schedule1, travelPlace1, 2),
+                createTravelRoute(schedule1, travelPlace2, 3)
+        ));
+        schedule1.setTravelRoutes(routes);
         mockAuthentication(member1);
+
+        RouteCreateRequest request = createRouteCreateRequest(travelPlace3.getPlaceId());
 
         // when, then
         mockMvc.perform(post("/api/schedules/{scheduleId}/routes", schedule1.getScheduleId())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(createRouteCreateRequest(travelPlace3.getPlaceId()))))
+                        .content(toJsonString(request)))
                 .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()));
+    }
 
+
+    @Test
+    @DisplayName("여행 루트의 마지막 여행지 추가 시 여행지 ID null 값이 들어와 예외 발생")
+    void createLastRoute_invalidNullPlaceId() throws Exception {
+        // given
+        mockAuthentication(member1);
+        RouteCreateRequest request = createRouteCreateRequest(null);
+
+        // when, then
+        mockMvc.perform(post("/api/schedules/{scheduleId}/routes", schedule1.getScheduleId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJsonString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value(containsString("여행지 ID는 필수 입력 값입니다.")));
+    }
+
+
+    @ParameterizedTest
+    @DisplayName("여행 루트의 마지막 여행지 추가 시 여행지 ID에 1 미만 값이 들어와 예외 발생")
+    @ValueSource(longs = {0L, -1L})
+    void createLastRoute_invalidMinPlaceId(Long input) throws Exception {
+        // given
+        mockAuthentication(member1);
+        RouteCreateRequest request = createRouteCreateRequest(input);
+
+        // when, then
+        mockMvc.perform(post("/api/schedules/{scheduleId}/routes", schedule1.getScheduleId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJsonString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value(containsString("여행지 ID는 1 이상의 값이어야 합니다.")));
     }
 
     @Test
     @DisplayName("여행 루트의 마지막 여행지 추가 시 저장된 여행 루트가 없는 경우")
     void createLastRoute_emptyRouteList() throws Exception{
+        // given
         mockAuthentication(member1);
-        schedule1.setTravelRouteList(new ArrayList<>());
+        RouteCreateRequest request = createRouteCreateRequest(travelPlace3.getPlaceId());
 
+        // when, then
         mockMvc.perform(post("/api/schedules/{scheduleId}/routes", schedule1.getScheduleId())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(createRouteCreateRequest(travelPlace3.getPlaceId()))))
+                        .content(toJsonString(request)))
                 .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()));
 
     }
 
     @Test
     @DisplayName("여행 루트의 마지막 여행지 추가 시 일정 데이터 존재하지 않아 예외 발생")
-    void createLastRoute_scheduleNotFoundException() throws Exception {
+    void createLastRoute_scheduleNotFound() throws Exception {
+        // given
         mockAuthentication(member1);
+        RouteCreateRequest request = createRouteCreateRequest(travelPlace3.getPlaceId());
+
+        // when, then
         mockMvc.perform(post("/api/schedules/{scheduleId}/routes", 0L)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(createRouteCreateRequest(travelPlace3.getPlaceId()))))
+                        .content(toJsonString(request)))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value(ErrorCode.SCHEDULE_NOT_FOUND.getMessage()));
@@ -226,13 +288,17 @@ public class RouteControllerTest extends ScheduleTest {
 
     @Test
     @DisplayName("여행 루트의 마지막 여행지 추가 시 참석자 데이터 존재하지 않아 예외 발생")
-    void createLastRoute_attendeeNotFoundException() throws Exception {
+    void createLastRoute_attendeeNotFound() throws Exception {
+        // given
         Member member = createMember(0L, "notMember@email.com");
         mockAuthentication(member);
 
+        RouteCreateRequest request = createRouteCreateRequest(travelPlace3.getPlaceId());
+
+        // when, then
         mockMvc.perform(post("/api/schedules/{scheduleId}/routes", schedule1.getScheduleId())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(createRouteCreateRequest(travelPlace3.getPlaceId()))))
+                        .content(toJsonString(request)))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value(ErrorCode.ATTENDEE_NOT_FOUND.getMessage()));
@@ -241,40 +307,45 @@ public class RouteControllerTest extends ScheduleTest {
 
     @Test
     @DisplayName("여행 루트의 마지막 여행지 추가 시 편집 권한이 없어서 예외 발생")
-    void createLastRoute_forbiddenScheduleException() throws Exception{
+    void createLastRoute_forbiddenEdit() throws Exception{
         // given
+        travelPlace1 = travelPlaceRepository.save(createTravelPlace(null, country, city, district, apiCategory, List.of(travelImage1, travelImage2)));
+        travelPlace2 = travelPlaceRepository.save(createTravelPlace(null, country, city, district, apiCategory, List.of(travelImage3, travelImage4)));
+
         TravelRoute route1 = travelRouteRepository.save(createTravelRoute(schedule1, travelPlace1, 1));
         TravelRoute route2 = travelRouteRepository.save(createTravelRoute(schedule1, travelPlace1, 2));
         TravelRoute route3 = travelRouteRepository.save(createTravelRoute(schedule1, travelPlace2, 3));
 
-        schedule1.setTravelRouteList(List.of(route1, route2, route3));
-        travelPlace1 = travelPlaceRepository.save(createTravelPlace(null, country, city, district, apiCategory, List.of(travelImage1, travelImage2)));
-        travelPlace2 = travelPlaceRepository.save(createTravelPlace(null, country, city, district, apiCategory, List.of(travelImage3, travelImage4)));
-
+        schedule1.setTravelRoutes(List.of(route1, route2, route3));
         mockAuthentication(member2);
+
+        RouteCreateRequest request = createRouteCreateRequest(travelPlace3.getPlaceId());
 
         // when, then
         mockMvc.perform(post("/api/schedules/{scheduleId}/routes", schedule1.getScheduleId())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(createRouteCreateRequest(travelPlace3.getPlaceId()))))
+                        .content(toJsonString(request)))
                 .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value(ErrorCode.FORBIDDEN_EDIT_SCHEDULE.getMessage()));
 
     }
 
     @Test
     @DisplayName("여행 루트의 마지막 여행지 추가 시 여행지 데이터 존재하지 않아 예외 발생")
-    void createLastRoute_placeNotFoundException() throws Exception {
+    void createLastRoute_placeNotFound() throws Exception {
+        // given
         mockAuthentication(member1);
+        RouteCreateRequest request = createRouteCreateRequest(1000L);
+
+        // when, then
         mockMvc.perform(post("/api/schedules/{scheduleId}/routes", schedule1.getScheduleId())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(createRouteCreateRequest(0L))))
+                        .content(toJsonString(request)))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value(ErrorCode.PLACE_NOT_FOUND.getMessage()));
     }
-
-
 
 
 }

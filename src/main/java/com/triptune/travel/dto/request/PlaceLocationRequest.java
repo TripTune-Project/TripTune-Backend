@@ -11,13 +11,13 @@ import lombok.Setter;
 public class PlaceLocationRequest {
 
     @NotNull(message = "경도는 필수 입력 값입니다.")
-    private double longitude;   // 경도
+    private Double longitude;   // 경도
 
     @NotNull(message = "위도는 필수 입력 값입니다.")
-    private double latitude;    // 위도
+    private Double latitude;    // 위도
 
     @Builder
-    public PlaceLocationRequest(double longitude, double latitude){
+    public PlaceLocationRequest(Double longitude, Double latitude){
         this.longitude = longitude;
         this.latitude = latitude;
     }

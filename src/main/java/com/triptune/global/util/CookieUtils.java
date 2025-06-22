@@ -1,11 +1,9 @@
 package com.triptune.global.util;
 
-import com.triptune.CookieType;
+import com.triptune.global.security.CookieType;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Component;
-
-import java.time.Duration;
 
 @Component
 public class CookieUtils {
