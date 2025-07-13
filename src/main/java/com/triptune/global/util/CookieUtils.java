@@ -13,8 +13,7 @@ public class CookieUtils {
 
     public String createCookie(CookieType cookieType, String value){
         return ResponseCookie.from(cookieType.getKey(), value)
-//                .httpOnly(cookieType.isHttpOnly())
-                .httpOnly(false)
+                .httpOnly(cookieType.isHttpOnly())
                 .maxAge(cookieType.getMaxAgeSeconds())
                 .secure(true)
                 .domain("." + domainPath)
