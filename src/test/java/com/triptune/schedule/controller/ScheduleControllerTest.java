@@ -1244,7 +1244,7 @@ public class ScheduleControllerTest extends ScheduleTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(toJsonString(request)))
                 .andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value(ErrorCode.FORBIDDEN_ACCESS_SCHEDULE.getMessage()));
     }
 
@@ -1268,7 +1268,7 @@ public class ScheduleControllerTest extends ScheduleTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(toJsonString(request)))
                 .andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value(ErrorCode.FORBIDDEN_EDIT_SCHEDULE.getMessage()));
     }
 
