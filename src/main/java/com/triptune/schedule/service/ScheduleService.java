@@ -132,7 +132,7 @@ public class ScheduleService {
 
 
     public AuthorDTO createAuthorDTO(TravelSchedule schedule){
-        Member author = schedule.getTravelAttendeeList().stream()
+        Member author = schedule.getTravelAttendees().stream()
                 .filter(attendee -> attendee.getRole().equals(AttendeeRole.AUTHOR))
                 .map(TravelAttendee::getMember)
                 .findFirst()
@@ -143,7 +143,7 @@ public class ScheduleService {
 
 
     public TravelAttendee getAttendeeInfo(TravelSchedule schedule, Long memberId){
-        return schedule.getTravelAttendeeList().stream()
+        return schedule.getTravelAttendees().stream()
                 .filter(attendee -> attendee.getMember().getMemberId().equals(memberId))
                 .findFirst()
                 .orElseThrow(() -> new ForbiddenScheduleException(ErrorCode.FORBIDDEN_ACCESS_SCHEDULE));
@@ -153,10 +153,10 @@ public class ScheduleService {
 
     public String getThumbnailUrl(TravelSchedule schedule){
         String thumbnailUrl = null;
-        List<TravelRoute> travelRouteList = schedule.getTravelRouteList();
+        List<TravelRoute> travelRouteList = schedule.getTravelRoutes();
 
         if (travelRouteList != null && !travelRouteList.isEmpty()){
-            TravelRoute route = schedule.getTravelRouteList().stream()
+            TravelRoute route = schedule.getTravelRoutes().stream()
                     .filter(travelRoute -> travelRoute.getRouteOrder() == 1)
                     .findFirst()
                     .orElse(null);
@@ -206,7 +206,7 @@ public class ScheduleService {
         checkScheduleEditPermission(attendee);
 
         schedule.set(scheduleUpdateRequest);
-        updateTravelRouteInSchedule(schedule, scheduleUpdateRequest.getTravelRoute());
+        updateTravelRouteInSchedule(schedule, scheduleUpdateRequest.getTravelRoutes());
     }
 
 
@@ -225,17 +225,17 @@ public class ScheduleService {
     public void updateTravelRouteInSchedule(TravelSchedule schedule, List<RouteRequest> routeRequestList){
         travelRouteRepository.deleteAllByTravelSchedule_ScheduleId(schedule.getScheduleId());
 
-        if (schedule.getTravelRouteList() == null){
+        if (schedule.getTravelRoutes() == null){
             schedule.updateTravelRouteList(new ArrayList<>());
         } else{
-            schedule.getTravelRouteList().clear();
+            schedule.getTravelRoutes().clear();
         }
 
         if (routeRequestList != null && !routeRequestList.isEmpty()){
             for(RouteRequest routeRequest : routeRequestList){
                 TravelPlace place = getPlaceByPlaceId(routeRequest.getPlaceId());
                 TravelRoute route = TravelRoute.of(schedule, place, routeRequest.getRouteOrder());
-                schedule.getTravelRouteList().add(route);
+                schedule.getTravelRoutes().add(route);
                 travelRouteRepository.save(route);
             }
         }

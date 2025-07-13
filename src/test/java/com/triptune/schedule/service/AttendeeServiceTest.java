@@ -63,15 +63,15 @@ public class AttendeeServiceTest extends ScheduleTest {
         attendee1 = createTravelAttendee(1L, member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL);
         attendee2 = createTravelAttendee(2L, member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ);
         TravelAttendee attendee3 = createTravelAttendee(3L, member3, schedule2, AttendeeRole.AUTHOR, AttendeePermission.ALL);
-        schedule1.setTravelAttendeeList(List.of(attendee1, attendee2));
-        schedule2.setTravelAttendeeList(List.of(attendee3));
+        schedule1.setTravelAttendees(List.of(attendee1, attendee2));
+        schedule2.setTravelAttendees(List.of(attendee3));
     }
 
     @Test
     @DisplayName("일정 참석자 조회")
     void getAttendeesByScheduleId(){
         // given
-        List<TravelAttendee> travelAttendeeList = schedule1.getTravelAttendeeList();
+        List<TravelAttendee> travelAttendeeList = schedule1.getTravelAttendees();
 
         when(travelAttendeeRepository.findAllByTravelSchedule_ScheduleId(schedule1.getScheduleId()))
                 .thenReturn(travelAttendeeList);
@@ -124,7 +124,7 @@ public class AttendeeServiceTest extends ScheduleTest {
 
     @Test
     @DisplayName("일정 참석자 추가 시 일정 찾을 수 없어 예외 발생")
-    void createAttendeeNotFoundSchedule_dataNotFoundException(){
+    void createAttendee_scheduleNotFound(){
         // given
         AttendeeRequest attendeeRequest = createAttendeeRequest(member3.getEmail(), AttendeePermission.CHAT);
 
@@ -141,7 +141,7 @@ public class AttendeeServiceTest extends ScheduleTest {
 
     @Test
     @DisplayName("일정 참석자 추가 시 참석자 5명 넘어 예외 발생")
-    void createAttendeeOver5_conflictAttendeeException(){
+    void createAttendee_overFiveAttendee() {
         // given
         AttendeeRequest attendeeRequest = createAttendeeRequest(member3.getEmail(), AttendeePermission.CHAT);
 
@@ -159,7 +159,7 @@ public class AttendeeServiceTest extends ScheduleTest {
 
     @Test
     @DisplayName("일정 참석자 추가 시 작성자가 아닌 사람의 요청으로 예외 발생")
-    void createAttendeeNotAuthor_forbiddenAttendeeException(){
+    void createAttendee_forbiddenNotAuthor(){
         // given
         AttendeeRequest attendeeRequest = createAttendeeRequest(member3.getEmail(), AttendeePermission.CHAT);
 
@@ -179,7 +179,7 @@ public class AttendeeServiceTest extends ScheduleTest {
 
     @Test
     @DisplayName("일정 참석자 추가 시 참석자 정보를 찾을 수 없어 예외 발생")
-    void createAttendeeNotMember_forbiddenScheduleException(){
+    void createAttendee_forbiddenNotAttendee(){
         // given
         AttendeeRequest attendeeRequest = createAttendeeRequest(member3.getEmail(), AttendeePermission.CHAT);
 
@@ -200,7 +200,7 @@ public class AttendeeServiceTest extends ScheduleTest {
 
     @Test
     @DisplayName("일정 참석자 추가 시 이미 참석자로 존재해 예외 발생")
-    void createAttendee_alreadyAttendeeException(){
+    void createAttendee_alreadyAttendee(){
         // given
         AttendeeRequest attendeeRequest = createAttendeeRequest(member3.getEmail(), AttendeePermission.CHAT);
 
@@ -233,7 +233,7 @@ public class AttendeeServiceTest extends ScheduleTest {
 
     @Test
     @DisplayName("일정 참석자 5명 넘어 예외 발생")
-    void validateAttendeeCount_conflictAttendeeException(){
+    void validateAttendeeCount_overFiveAttendee(){
         // given
         when(travelAttendeeRepository.countByTravelSchedule_ScheduleId(anyLong())).thenReturn(5);
 
@@ -258,7 +258,7 @@ public class AttendeeServiceTest extends ScheduleTest {
 
     @Test
     @DisplayName("작성자인지 검증 시 예외 발생")
-    void validateAuthor_forbiddenAttendeeException(){
+    void validateAuthor_forbiddenAttendee(){
         // given
         when(travelAttendeeRepository.existsByTravelSchedule_ScheduleIdAndMember_MemberIdAndRole(anyLong(), anyLong(), any())).thenReturn(false);
 
@@ -283,7 +283,7 @@ public class AttendeeServiceTest extends ScheduleTest {
 
     @Test
     @DisplayName("기존 참석자인지 검증 시 예외 발생")
-    void validateAttendeeAlreadyExists_conflictAttendeeException(){
+    void validateAttendee_alreadyAttendee(){
         // given
         when(travelAttendeeRepository.existsByTravelSchedule_ScheduleIdAndMember_MemberId(anyLong(), anyLong())).thenReturn(true);
 
@@ -315,7 +315,7 @@ public class AttendeeServiceTest extends ScheduleTest {
 
     @Test
     @DisplayName("일정 참석자 허용 권한 수정 시 요청자가 작성자가 아니여서 예외 발생")
-    void updateAttendeePermission_forbiddenAttendeeException(){
+    void updateAttendeePermission_forbiddenNotAuthor(){
         // given
         AttendeePermissionRequest request = createAttendeePermissionRequest(AttendeePermission.READ);
 
@@ -332,7 +332,7 @@ public class AttendeeServiceTest extends ScheduleTest {
 
     @Test
     @DisplayName("일정 참석자 접근 권한 수정 시 참석자가 정보가 없어 예외 발생")
-    void updateAttendeePermission_attendeeDataNotFoundException(){
+    void updateAttendeePermission_attendeeNotFound(){
         // given
         AttendeePermissionRequest request = createAttendeePermissionRequest(AttendeePermission.READ);
 
@@ -352,7 +352,7 @@ public class AttendeeServiceTest extends ScheduleTest {
 
     @Test
     @DisplayName("일정 참석자 허용 권한 수정 시 작성자의 접근 권한 수정 시도로 예외 발생")
-    void updateAttendeePermission_forbiddenUpdateAuthorPermissionException(){
+    void updateAttendeePermission_forbiddenUpdateAuthorPermission(){
         // given
         AttendeePermissionRequest request = createAttendeePermissionRequest(AttendeePermission.READ);
 
@@ -385,7 +385,7 @@ public class AttendeeServiceTest extends ScheduleTest {
 
     @Test
     @DisplayName("일정 나가기 요청 시 참가자 정보가 없어 예외 발생")
-    void leaveAttendee_forbiddenAttendeeException(){
+    void leaveAttendee_forbiddenAttendee(){
         // given
         when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_MemberId(anyLong(), anyLong())).thenReturn(Optional.empty());
 
@@ -400,7 +400,7 @@ public class AttendeeServiceTest extends ScheduleTest {
 
     @Test
     @DisplayName("일정 나가기 요청 시 요청자가 작성자여서 예외 발생")
-    void leaveAttendeeValidateAuthor_forbiddenAttendeeException(){
+    void leaveAttendee_forbiddenAuthor(){
         // given
         when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_MemberId(anyLong(), anyLong())).thenReturn(Optional.of(attendee1));
 
@@ -428,7 +428,7 @@ public class AttendeeServiceTest extends ScheduleTest {
 
     @Test
     @DisplayName("일정 내보내기 시 작성자 요청이 아니여서 예외 발생")
-    void removeAttendee_forbiddenAttendeeException(){
+    void removeAttendee_forbiddenNotAuthor(){
         // given
         when(travelAttendeeRepository.existsByTravelSchedule_ScheduleIdAndMember_MemberIdAndRole(anyLong(), anyLong(), any()))
                 .thenReturn(false);
@@ -444,7 +444,7 @@ public class AttendeeServiceTest extends ScheduleTest {
 
     @Test
     @DisplayName("일정 내보내기 시 참석자를 찾을 수 없어 예외 발생")
-    void removeAttendee_DataNotFoundException(){
+    void removeAttendee_attendeeNotFound(){
         // given
         when(travelAttendeeRepository.existsByTravelSchedule_ScheduleIdAndMember_MemberIdAndRole(anyLong(), anyLong(), any()))
                 .thenReturn(true);
@@ -461,7 +461,7 @@ public class AttendeeServiceTest extends ScheduleTest {
 
     @Test
     @DisplayName("일정 내보내기 시 작성자 내보내기 시도로 예외 발생")
-    void removeAttendee_ForbiddenRemoveAuthorException(){
+    void removeAttendee_forbiddenRemoveAuthor(){
         // given
         when(travelAttendeeRepository.existsByTravelSchedule_ScheduleIdAndMember_MemberIdAndRole(anyLong(), anyLong(), any()))
                 .thenReturn(true);

@@ -103,9 +103,9 @@ public class ScheduleServiceTest extends ScheduleTest {
         TravelAttendee attendee3 = createTravelAttendee(3L, member1, schedule2, AttendeeRole.AUTHOR, AttendeePermission.ALL);
         TravelAttendee attendee4 = createTravelAttendee(4L, member2, schedule2, AttendeeRole.GUEST, AttendeePermission.CHAT);
         TravelAttendee attendee5 = createTravelAttendee(5L, member1, schedule3, AttendeeRole.AUTHOR, AttendeePermission.ALL);
-        schedule1.setTravelAttendeeList(List.of(attendee1, attendee2));
-        schedule2.setTravelAttendeeList(List.of(attendee3, attendee4));
-        schedule3.setTravelAttendeeList(List.of(attendee5));
+        schedule1.setTravelAttendees(List.of(attendee1, attendee2));
+        schedule2.setTravelAttendees(List.of(attendee3, attendee4));
+        schedule3.setTravelAttendees(List.of(attendee5));
 
     }
 
@@ -127,8 +127,8 @@ public class ScheduleServiceTest extends ScheduleTest {
         TravelRoute route1 = createTravelRoute(schedule1, travelPlace1, 1);
         TravelRoute route2 = createTravelRoute(schedule1, travelPlace1, 2);
         TravelRoute route3 = createTravelRoute(schedule1, travelPlace2, 3);
-        schedule1.setTravelRouteList(List.of(route1, route2, route3));
-        schedule2.setTravelRouteList(new ArrayList<>());
+        schedule1.setTravelRoutes(List.of(route1, route2, route3));
+        schedule2.setTravelRoutes(new ArrayList<>());
 
         List<TravelSchedule> schedules = List.of(schedule1, schedule2, schedule3);
         Page<TravelSchedule> schedulePage = PageUtils.createPage(schedules, pageable, schedules.size());
@@ -266,8 +266,8 @@ public class ScheduleServiceTest extends ScheduleTest {
         TravelRoute route1 = createTravelRoute(schedule1, travelPlace1, 1);
         TravelRoute route2 = createTravelRoute(schedule1, travelPlace1, 2);
         TravelRoute route3 = createTravelRoute(schedule1, travelPlace2, 3);
-        schedule1.setTravelRouteList(List.of(route1, route2, route3));
-        schedule2.setTravelRouteList(new ArrayList<>());
+        schedule1.setTravelRoutes(List.of(route1, route2, route3));
+        schedule2.setTravelRoutes(new ArrayList<>());
 
         List<TravelSchedule> schedules = List.of(schedule1, schedule2);
         Page<TravelSchedule> schedulePage = PageUtils.createPage(schedules, pageable, schedules.size());
@@ -321,8 +321,8 @@ public class ScheduleServiceTest extends ScheduleTest {
         TravelRoute route1 = createTravelRoute(schedule1, travelPlace1, 1);
         TravelRoute route2 = createTravelRoute(schedule1, travelPlace1, 2);
         TravelRoute route3 = createTravelRoute(schedule1, travelPlace2, 3);
-        schedule1.setTravelRouteList(List.of(route1, route2, route3));
-        schedule2.setTravelRouteList(new ArrayList<>());
+        schedule1.setTravelRoutes(List.of(route1, route2, route3));
+        schedule2.setTravelRoutes(new ArrayList<>());
 
         List<TravelSchedule> schedules = List.of(schedule1, schedule2);
         Page<TravelSchedule> schedulePage = PageUtils.createPage(schedules, pageable, schedules.size());
@@ -558,8 +558,8 @@ public class ScheduleServiceTest extends ScheduleTest {
         TravelRoute route1 = createTravelRoute(schedule1, travelPlace1, 1);
         TravelRoute route2 = createTravelRoute(schedule1, travelPlace1, 2);
         TravelRoute route3 = createTravelRoute(schedule1, travelPlace2, 3);
-        schedule1.setTravelRouteList(List.of(route1, route2, route3));
-        schedule2.setTravelRouteList(new ArrayList<>());
+        schedule1.setTravelRoutes(List.of(route1, route2, route3));
+        schedule2.setTravelRoutes(new ArrayList<>());
 
         List<TravelSchedule> schedules = List.of(schedule1, schedule2, schedule3);
         Page<TravelSchedule> schedulePage = PageUtils.createPage(schedules, pageable, schedules.size());
@@ -615,8 +615,8 @@ public class ScheduleServiceTest extends ScheduleTest {
         TravelRoute route1 = createTravelRoute(schedule1, travelPlace1, 1);
         TravelRoute route2 = createTravelRoute(schedule1, travelPlace1, 2);
         TravelRoute route3 = createTravelRoute(schedule1, travelPlace2, 3);
-        schedule1.setTravelRouteList(List.of(route1, route2, route3));
-        schedule2.setTravelRouteList(new ArrayList<>());
+        schedule1.setTravelRoutes(List.of(route1, route2, route3));
+        schedule2.setTravelRoutes(new ArrayList<>());
 
         List<TravelSchedule> schedules = List.of(schedule1, schedule2);
         Page<TravelSchedule> schedulePage = PageUtils.createPage(schedules, pageable, schedules.size());
@@ -680,8 +680,8 @@ public class ScheduleServiceTest extends ScheduleTest {
         TravelRoute route1 = createTravelRoute(schedule1, travelPlace1, 1);
         TravelRoute route2 = createTravelRoute(schedule1, travelPlace1, 2);
         TravelRoute route3 = createTravelRoute(schedule1, travelPlace2, 3);
-        schedule1.setTravelRouteList(List.of(route1, route2, route3));
-        schedule2.setTravelRouteList(new ArrayList<>());
+        schedule1.setTravelRoutes(List.of(route1, route2, route3));
+        schedule2.setTravelRoutes(new ArrayList<>());
 
         List<TravelSchedule> travelScheduleList = List.of(schedule1);
         Page<TravelSchedule> schedulePage = PageUtils.createPage(travelScheduleList, PageUtils.schedulePageable(1), travelScheduleList.size());
@@ -723,7 +723,7 @@ public class ScheduleServiceTest extends ScheduleTest {
         // given
         List<TravelSchedule> travelScheduleList = List.of(schedule1);
         Page<TravelSchedule> schedulePage = PageUtils.createPage(travelScheduleList, PageUtils.schedulePageable(1), travelScheduleList.size());
-        for(TravelAttendee attendee : schedule1.getTravelAttendeeList()){
+        for(TravelAttendee attendee : schedule1.getTravelAttendees()){
             attendee.updateRole(AttendeeRole.GUEST);
         }
 
@@ -771,7 +771,7 @@ public class ScheduleServiceTest extends ScheduleTest {
     @DisplayName("작성자 조회해서 MemberProfileDTO 생성 시 작성자가 없어 예외 발생")
     void createAuthorDTO_authorNotFound(){
         // given
-        for(TravelAttendee attendee : schedule1.getTravelAttendeeList()){
+        for(TravelAttendee attendee : schedule1.getTravelAttendees()){
             attendee.updateRole(AttendeeRole.GUEST);
         }
 
@@ -790,7 +790,11 @@ public class ScheduleServiceTest extends ScheduleTest {
     @DisplayName("일정 생성")
     void createSchedule(){
         // given
-        ScheduleCreateRequest request = createScheduleRequest(LocalDate.now());
+        ScheduleCreateRequest request = createScheduleRequest(
+                "테스트",
+                LocalDate.now(),
+                LocalDate.now().plusDays(1)
+        );
 
         when(travelScheduleRepository.save(any())).thenReturn(schedule1);
         when(memberRepository.findById(anyLong())).thenReturn(Optional.of(member1));
@@ -808,7 +812,11 @@ public class ScheduleServiceTest extends ScheduleTest {
     @DisplayName("일정 생성 시 저장된 회원 정보 없어 예외 발생")
     void createSchedule_memberNotFound(){
         // given
-        ScheduleCreateRequest request = createScheduleRequest(LocalDate.now());
+        ScheduleCreateRequest request = createScheduleRequest(
+                "테스트",
+                LocalDate.now(),
+                LocalDate.now().plusDays(1)
+        );
 
         when(travelScheduleRepository.save(any())).thenReturn(schedule1);
         when(memberRepository.findById(anyLong())).thenReturn(Optional.empty());
@@ -912,10 +920,10 @@ public class ScheduleServiceTest extends ScheduleTest {
         assertDoesNotThrow(() -> scheduleService.updateSchedule(member1.getMemberId(), scheduleId, scheduleUpdateRequest));
 
         // then
-        assertThat(schedule1.getTravelRouteList().size()).isEqualTo(2);
+        assertThat(schedule1.getTravelRoutes().size()).isEqualTo(2);
         assertThat(schedule1.getScheduleName()).isEqualTo(scheduleUpdateRequest.getScheduleName());
         assertThat(schedule1.getStartDate()).isEqualTo(scheduleUpdateRequest.getStartDate());
-        assertThat(schedule1.getTravelRouteList().get(0).getTravelPlace().getPlaceName()).isEqualTo(travelPlace1.getPlaceName());
+        assertThat(schedule1.getTravelRoutes().get(0).getTravelPlace().getPlaceName()).isEqualTo(travelPlace1.getPlaceName());
     }
 
     @Test
@@ -944,10 +952,10 @@ public class ScheduleServiceTest extends ScheduleTest {
         assertDoesNotThrow(() -> scheduleService.updateSchedule(member1.getMemberId(), scheduleId, scheduleUpdateRequest));
 
         // then
-        assertThat(schedule2.getTravelRouteList().size()).isEqualTo(2);
+        assertThat(schedule2.getTravelRoutes().size()).isEqualTo(2);
         assertThat(schedule2.getScheduleName()).isEqualTo(scheduleUpdateRequest.getScheduleName());
         assertThat(schedule2.getStartDate()).isEqualTo(scheduleUpdateRequest.getStartDate());
-        assertThat(schedule2.getTravelRouteList().get(0).getTravelPlace().getPlaceName()).isEqualTo(travelPlace1.getPlaceName());
+        assertThat(schedule2.getTravelRoutes().get(0).getTravelPlace().getPlaceName()).isEqualTo(travelPlace1.getPlaceName());
     }
 
     @Test
@@ -964,8 +972,8 @@ public class ScheduleServiceTest extends ScheduleTest {
         TravelRoute route1 = createTravelRoute(schedule1, travelPlace1, 1);
         TravelRoute route2 = createTravelRoute(schedule1, travelPlace1, 2);
         TravelRoute route3 = createTravelRoute(schedule1, travelPlace2, 3);
-        schedule1.setTravelRouteList(new ArrayList<>(List.of(route1, route2, route3)));
-        schedule2.setTravelRouteList(new ArrayList<>());
+        schedule1.setTravelRoutes(new ArrayList<>(List.of(route1, route2, route3)));
+        schedule2.setTravelRoutes(new ArrayList<>());
 
         RouteRequest routeRequest1 = createRouteRequest(1, travelPlace1.getPlaceId());
         RouteRequest routeRequest2 = createRouteRequest(2, travelPlace2.getPlaceId());
@@ -975,11 +983,11 @@ public class ScheduleServiceTest extends ScheduleTest {
         when(travelPlaceRepository.findById(travelPlace2.getPlaceId())).thenReturn(Optional.of(travelPlace2));
 
         // when
-        assertDoesNotThrow(() -> scheduleService.updateTravelRouteInSchedule(schedule1, scheduleUpdateRequest.getTravelRoute()));
+        assertDoesNotThrow(() -> scheduleService.updateTravelRouteInSchedule(schedule1, scheduleUpdateRequest.getTravelRoutes()));
 
         // then
-        assertThat(schedule1.getTravelRouteList().size()).isEqualTo(2);
-        assertThat(schedule1.getTravelRouteList().get(0).getTravelPlace().getPlaceName()).isEqualTo(travelPlace1.getPlaceName());
+        assertThat(schedule1.getTravelRoutes().size()).isEqualTo(2);
+        assertThat(schedule1.getTravelRoutes().get(0).getTravelPlace().getPlaceName()).isEqualTo(travelPlace1.getPlaceName());
     }
 
 
@@ -1030,8 +1038,8 @@ public class ScheduleServiceTest extends ScheduleTest {
         TravelRoute route1 = createTravelRoute(schedule1, travelPlace1, 1);
         TravelRoute route2 = createTravelRoute(schedule1, travelPlace1, 2);
         TravelRoute route3 = createTravelRoute(schedule1, travelPlace2, 3);
-        schedule1.setTravelRouteList(List.of(route1, route2, route3));
-        schedule2.setTravelRouteList(new ArrayList<>());
+        schedule1.setTravelRoutes(List.of(route1, route2, route3));
+        schedule2.setTravelRoutes(new ArrayList<>());
 
         RouteRequest routeRequest1 = createRouteRequest(1, travelPlace1.getPlaceId());
         RouteRequest routeRequest2 = createRouteRequest(2, travelPlace2.getPlaceId());

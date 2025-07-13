@@ -9,33 +9,42 @@ import java.time.LocalDate;
 import java.util.List;
 
 public abstract class ScheduleTest extends BaseTest {
-    protected ScheduleCreateRequest createScheduleRequest(LocalDate startDate) {
+    protected ScheduleCreateRequest createScheduleRequest(String scheduleName, LocalDate startDate, LocalDate endDate) {
         return ScheduleCreateRequest.builder()
-                .scheduleName("테스트")
+                .scheduleName(scheduleName)
                 .startDate(startDate)
-                .endDate(LocalDate.now().plusDays(10))
+                .endDate(endDate)
                 .build();
     }
 
-    protected ScheduleUpdateRequest createUpdateScheduleRequest(List<RouteRequest> routeRequestList){
+    protected ScheduleUpdateRequest createUpdateScheduleRequest(List<RouteRequest> routeRequests){
         return ScheduleUpdateRequest.builder()
                 .scheduleName("수정 테스트")
                 .startDate(LocalDate.now().plusDays(5))
                 .endDate(LocalDate.now().plusDays(20))
-                .travelRoute(routeRequestList)
+                .travelRoutes(routeRequests)
                 .build();
     }
 
-    protected ScheduleUpdateRequest createUpdateScheduleRequest(String scheduleName, List<RouteRequest> routeRequestList){
+    protected ScheduleUpdateRequest createUpdateScheduleRequest(String scheduleName, LocalDate startDate, LocalDate endDate, List<RouteRequest> routeRequests){
+        return ScheduleUpdateRequest.builder()
+                .scheduleName(scheduleName)
+                .startDate(startDate)
+                .endDate(endDate)
+                .travelRoutes(routeRequests)
+                .build();
+    }
+
+    protected ScheduleUpdateRequest createUpdateScheduleRequest(String scheduleName, List<RouteRequest> routeRequests){
         return ScheduleUpdateRequest.builder()
                 .scheduleName(scheduleName)
                 .startDate(LocalDate.now().plusDays(5))
                 .endDate(LocalDate.now().plusDays(20))
-                .travelRoute(routeRequestList)
+                .travelRoutes(routeRequests)
                 .build();
     }
 
-    protected RouteRequest createRouteRequest(int routeOrder, Long placeId){
+    protected RouteRequest createRouteRequest(Integer routeOrder, Long placeId){
         return RouteRequest.of(routeOrder, placeId);
     }
 

@@ -33,7 +33,8 @@ class FileUtilsTest {
     @DisplayName("파일 확장자 추출 실패로 예외 발생")
     void getExtensionException(String fileName){
         // given, when
-        FileBadRequestException fail = assertThrows(FileBadRequestException.class, () -> FileUtils.getExtension(fileName));
+        FileBadRequestException fail = assertThrows(FileBadRequestException.class,
+                () -> FileUtils.getExtension(fileName));
 
         // then
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.INVALID_EXTENSION.getStatus());

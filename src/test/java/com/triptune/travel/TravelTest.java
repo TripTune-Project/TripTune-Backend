@@ -9,7 +9,7 @@ import com.triptune.travel.dto.response.PlaceSimpleResponse;
 import com.triptune.travel.entity.TravelPlace;
 
 public abstract class TravelTest extends BaseTest {
-    protected PlaceLocationRequest createTravelLocationRequest(double latitude, double longitude){
+    protected PlaceLocationRequest createTravelLocationRequest(Double latitude, Double longitude){
         return PlaceLocationRequest.builder()
                 .latitude(latitude)
                 .longitude(longitude)

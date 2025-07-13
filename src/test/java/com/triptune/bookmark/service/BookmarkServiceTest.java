@@ -76,7 +76,7 @@ public class BookmarkServiceTest extends BookmarkTest {
 
     @Test
     @DisplayName("북마크 추가 시 이미 북마크로 등록 되어 있어 예외 발생")
-    void createBookmark_dataExistException(){
+    void createBookmark_alreadyBookmarked(){
         // given
         BookmarkRequest request = createBookmarkRequest(travelPlace1.getPlaceId());
 
@@ -93,7 +93,7 @@ public class BookmarkServiceTest extends BookmarkTest {
 
     @Test
     @DisplayName("북마크 추가 시 회원 데이터 없어 예외 발생")
-    void createBookmark_memberDataNotFoundException(){
+    void createBookmark_memberNotFound(){
         // given
         BookmarkRequest request = createBookmarkRequest(travelPlace1.getPlaceId());
 
@@ -111,7 +111,7 @@ public class BookmarkServiceTest extends BookmarkTest {
 
     @Test
     @DisplayName("북마크 추가 시 여행지 데이터 없어 예외 발생")
-    void createBookmark_travelPlaceDataNotFoundException(){
+    void createBookmark_placeNotFound(){
         // given
         BookmarkRequest request = createBookmarkRequest(travelPlace1.getPlaceId());
 
@@ -148,7 +148,7 @@ public class BookmarkServiceTest extends BookmarkTest {
 
     @Test
     @DisplayName("북마크 삭제 시 북마크 데이터가 존재하지 않아 예외 발생")
-    void deleteBookmark_bookmarkNotFoundException(){
+    void deleteBookmark_bookmarkNotFound(){
         // given
         when(bookmarkRepository.existsByMember_MemberIdAndTravelPlace_PlaceId(anyLong(), anyLong())).thenReturn(false);
 
@@ -164,7 +164,7 @@ public class BookmarkServiceTest extends BookmarkTest {
 
     @Test
     @DisplayName("북마크 삭제 시 여행지 데이터가 존재하지 않아 예외 발생")
-    void deleteBookmark_travelPlaceNotFoundException(){
+    void deleteBookmark_placeNotFound(){
         // given
         when(bookmarkRepository.existsByMember_MemberIdAndTravelPlace_PlaceId(anyLong(), anyLong())).thenReturn(true);
         when(travelPlaceRepository.findById(anyLong())).thenReturn(Optional.empty());

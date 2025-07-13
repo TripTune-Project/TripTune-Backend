@@ -325,7 +325,7 @@ public class MemberServiceTest extends MemberTest {
         LogoutRequest request = createLogoutRequest(member.getNickname());
         MockHttpServletResponse mockHttpServletResponse = new MockHttpServletResponse();
 
-        when(memberRepository.existsByNickname(anyString())).thenReturn(true);
+        when(memberRepository.findByNickname(anyString())).thenReturn(Optional.of(member));
 
         // when
         memberService.logout(mockHttpServletResponse, request, accessToken);
@@ -334,8 +334,31 @@ public class MemberServiceTest extends MemberTest {
         Cookie[] cookies = mockHttpServletResponse.getCookies();
         assertThat(cookies).isNotNull();
         assertThat(cookies.length).isEqualTo(3);
+        assertThat(member.getRefreshToken()).isNull();
 
-        verify(memberRepository, times(1)).deleteRefreshTokenByNickname(request.getNickname());
+        verify(redisService, times(1)).saveExpiredData(accessToken, "logout", 3600);
+    }
+
+
+    @Test
+    @DisplayName("소셜 회원 로그아웃")
+    void logout_socialMember(){
+        // given
+        Member member = createSocialTypeMember(1L, "member@email.com");
+        LogoutRequest request = createLogoutRequest(member.getNickname());
+        MockHttpServletResponse mockHttpServletResponse = new MockHttpServletResponse();
+
+        when(memberRepository.findByNickname(anyString())).thenReturn(Optional.of(member));
+
+        // when
+        memberService.logout(mockHttpServletResponse, request, accessToken);
+
+        // then
+        Cookie[] cookies = mockHttpServletResponse.getCookies();
+        assertThat(cookies).isNotNull();
+        assertThat(cookies.length).isEqualTo(3);
+        assertThat(member.getRefreshToken()).isNull();
+
         verify(redisService, times(1)).saveExpiredData(accessToken, "logout", 3600);
     }
 
@@ -347,7 +370,7 @@ public class MemberServiceTest extends MemberTest {
         LogoutRequest request = createLogoutRequest(member.getNickname());
         MockHttpServletResponse mockHttpServletResponse = new MockHttpServletResponse();
 
-        when(memberRepository.existsByNickname(anyString())).thenReturn(true);
+        when(memberRepository.findByNickname(anyString())).thenReturn(Optional.of(member));
 
         // when
         memberService.logout(mockHttpServletResponse, request, accessToken);
@@ -356,8 +379,8 @@ public class MemberServiceTest extends MemberTest {
         Cookie[] cookies = mockHttpServletResponse.getCookies();
         assertThat(cookies).isNotNull();
         assertThat(cookies.length).isEqualTo(3);
+        assertThat(member.getRefreshToken()).isNull();
 
-        verify(memberRepository, times(1)).deleteRefreshTokenByNickname(request.getNickname());
         verify(redisService, times(1)).saveExpiredData(accessToken, "logout", 3600);
     }
 
@@ -368,7 +391,7 @@ public class MemberServiceTest extends MemberTest {
         LogoutRequest request = createLogoutRequest("notMember");
         MockHttpServletResponse mockHttpServletResponse = new MockHttpServletResponse();
 
-        when(memberRepository.existsByNickname(anyString())).thenReturn(false);
+        when(memberRepository.findByNickname(anyString())).thenReturn(Optional.empty());
 
         // when
         DataNotFoundException fail = assertThrows(DataNotFoundException.class,

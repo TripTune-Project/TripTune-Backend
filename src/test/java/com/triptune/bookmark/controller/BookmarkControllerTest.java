@@ -1,6 +1,7 @@
 package com.triptune.bookmark.controller;
 
 import com.triptune.bookmark.BookmarkTest;
+import com.triptune.bookmark.dto.request.BookmarkRequest;
 import com.triptune.bookmark.repository.BookmarkRepository;
 import com.triptune.common.entity.ApiCategory;
 import com.triptune.common.entity.City;
@@ -81,14 +82,18 @@ class BookmarkControllerTest extends BookmarkTest {
     @Test
     @DisplayName("북마크 추가")
     void createBookmark() throws Exception{
+        // given
         Member member = memberRepository.save(createMember(null, "member@email.com"));
         TravelPlace travelPlace = travelPlaceRepository.save(createTravelPlace(null, country, city, district, apiCategory));
 
         mockAuthentication(member);
 
+        BookmarkRequest request = createBookmarkRequest(travelPlace.getPlaceId());
+
+        // when, then
         mockMvc.perform(post("/api/bookmarks")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(toJsonString(createBookmarkRequest(travelPlace.getPlaceId()))))
+                .content(toJsonString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()));
@@ -104,11 +109,12 @@ class BookmarkControllerTest extends BookmarkTest {
         Member member = memberRepository.save(createMember(null, "member@email.com"));
         mockAuthentication(member);
 
-        // when
-        // then
+        BookmarkRequest request = createBookmarkRequest(input);
+
+        // when,  then
         mockMvc.perform(post("/api/bookmarks")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(createBookmarkRequest(input))))
+                        .content(toJsonString(request)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value("여행지 ID는 1 이상의 값이어야 합니다."));
@@ -121,11 +127,12 @@ class BookmarkControllerTest extends BookmarkTest {
         Member member = memberRepository.save(createMember(null, "member@email.com"));
         mockAuthentication(member);
 
-        // when
-        // then
+        BookmarkRequest request = createBookmarkRequest(null);
+
+        // when, then
         mockMvc.perform(post("/api/bookmarks")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(createBookmarkRequest(null))))
+                        .content(toJsonString(request)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value("여행지 ID는 필수 입력 값입니다."));
@@ -135,16 +142,20 @@ class BookmarkControllerTest extends BookmarkTest {
 
     @Test
     @DisplayName("북마크 추가 시 이미 북마크로 등록되어 있어 예외 발생")
-    void createBookmark_dataExistsException() throws Exception{
+    void createBookmark_alreadyBookmarked() throws Exception{
+        // given
         Member member = memberRepository.save(createMember(null, "member@email.com"));
         TravelPlace travelPlace = travelPlaceRepository.save(createTravelPlace(null, country, city, district, apiCategory));
         bookmarkRepository.save(createBookmark(null, member, travelPlace, LocalDateTime.now()));
 
         mockAuthentication(member);
 
+        BookmarkRequest request = createBookmarkRequest(travelPlace.getPlaceId());
+
+        // when, then
         mockMvc.perform(post("/api/bookmarks")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(createBookmarkRequest(travelPlace.getPlaceId()))))
+                        .content(toJsonString(request)))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value(ErrorCode.ALREADY_EXISTED_BOOKMARK.getMessage()));
@@ -153,15 +164,19 @@ class BookmarkControllerTest extends BookmarkTest {
 
     @Test
     @DisplayName("북마크 추가 시 회원 데이터 없어 예외 발생")
-    void createBookmark_memberNotFoundException() throws Exception{
+    void createBookmark_memberNotFound() throws Exception{
+        // given
         TravelPlace travelPlace = travelPlaceRepository.save(createTravelPlace(null, country, city, district, apiCategory));
 
         Member member = createMember(0L, "notMember@email.com");
         mockAuthentication(member);
 
+        BookmarkRequest request = createBookmarkRequest(travelPlace.getPlaceId());
+
+        // when, then
         mockMvc.perform(post("/api/bookmarks")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(createBookmarkRequest(travelPlace.getPlaceId()))))
+                        .content(toJsonString(request)))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value(ErrorCode.MEMBER_NOT_FOUND.getMessage()));
@@ -169,13 +184,17 @@ class BookmarkControllerTest extends BookmarkTest {
 
     @Test
     @DisplayName("북마크 추가 시 여행지 데이터 없어 예외 발생")
-    void createBookmark_travelPlaceNotFoundException() throws Exception{
+    void createBookmark_placeNotFound() throws Exception{
+        // given
         Member member = memberRepository.save(createMember(null, "member@email.com"));
         mockAuthentication(member);
 
+        BookmarkRequest request = createBookmarkRequest(1000L);
+
+        // when, then
         mockMvc.perform(post("/api/bookmarks")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(createBookmarkRequest(1000L))))
+                        .content(toJsonString(request)))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value(ErrorCode.PLACE_NOT_FOUND.getMessage()));
@@ -184,11 +203,13 @@ class BookmarkControllerTest extends BookmarkTest {
     @Test
     @DisplayName("북마크 삭제")
     void deleteBookmark() throws Exception{
+        // given
         Member member = memberRepository.save(createMember(null, "member@email.com"));
         TravelPlace travelPlace = travelPlaceRepository.save(createTravelPlace(null, country, city, district, apiCategory, "여행지", 10));
         bookmarkRepository.save(createBookmark(null, member, travelPlace, LocalDateTime.now()));
         mockAuthentication(member);
 
+        // when, then
         mockMvc.perform(delete("/api/bookmarks/{placeId}", travelPlace.getPlaceId()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
@@ -201,11 +222,13 @@ class BookmarkControllerTest extends BookmarkTest {
 
     @Test
     @DisplayName("북마크 삭제 시 북마크 데이터가 없는 경우")
-    void deleteBookmark_bookmarkNotFoundException() throws Exception{
+    void deleteBookmark_bookmarkNotFound() throws Exception{
+        // given
         Member member = memberRepository.save(createMember(null, "member@email.com"));
         TravelPlace travelPlace = travelPlaceRepository.save(createTravelPlace(null, country, city, district, apiCategory, "여행지", 0));
         mockAuthentication(member);
 
+        // when, then
         mockMvc.perform(delete("/api/bookmarks/{placeId}", travelPlace.getPlaceId()))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.success").value(false))

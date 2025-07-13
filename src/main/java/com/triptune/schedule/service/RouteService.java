@@ -43,7 +43,7 @@ public class RouteService {
         validateEnableEdit(scheduleId, memberId);
 
         TravelPlace place = findTravelPlaceByPlaceId(routeCreateRequest.getPlaceId());
-        TravelRoute route = TravelRoute.of(schedule, place, schedule.getTravelRouteList().size() + 1);
+        TravelRoute route = TravelRoute.of(schedule, place, schedule.getTravelRoutes().size() + 1);
 
         travelRouteRepository.save(route);
     }

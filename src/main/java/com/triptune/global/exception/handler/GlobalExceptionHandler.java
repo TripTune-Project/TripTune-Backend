@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.FieldError;
+import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -31,9 +32,9 @@ public class GlobalExceptionHandler {
     public ErrorResponse handleMethodArgumentNotValidException(MethodArgumentNotValidException ex, HttpServletRequest request){
         log.error("MethodArgumentNotValidException at {}: {}", request.getRequestURI(), ex.getMessage());
 
-        String message = ex.getBindingResult().getFieldErrors()
+        String message = ex.getBindingResult().getAllErrors()
                 .stream()
-                .map(FieldError::getDefaultMessage)
+                .map(ObjectError::getDefaultMessage)
                 .collect(Collectors.joining());
 
         return ErrorResponse.of(HttpStatus.BAD_REQUEST, message);

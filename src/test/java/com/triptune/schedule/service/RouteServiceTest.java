@@ -83,11 +83,11 @@ public class RouteServiceTest extends ScheduleTest {
         TravelRoute route1 = createTravelRoute(schedule1, travelPlace1, 1);
         TravelRoute route2 = createTravelRoute(schedule1, travelPlace1, 2);
         TravelRoute route3 = createTravelRoute(schedule1, travelPlace2, 3);
-        schedule1.setTravelRouteList(List.of(route1, route2, route3));
+        schedule1.setTravelRoutes(List.of(route1, route2, route3));
 
         attendee1 = createTravelAttendee(1L, member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL);
         attendee2 = createTravelAttendee(2L, member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ);
-        schedule1.setTravelAttendeeList(List.of(attendee1, attendee2));
+        schedule1.setTravelAttendees(List.of(attendee1, attendee2));
     }
 
 
@@ -99,7 +99,7 @@ public class RouteServiceTest extends ScheduleTest {
         Pageable pageable = PageUtils.defaultPageable(1);
 
         when(travelRouteRepository.findAllByTravelSchedule_ScheduleId(pageable, schedule1.getScheduleId()))
-                .thenReturn(PageUtils.createPage(schedule1.getTravelRouteList(), pageable, schedule1.getTravelRouteList().size()));
+                .thenReturn(PageUtils.createPage(schedule1.getTravelRoutes(), pageable, schedule1.getTravelRoutes().size()));
 
 
         // when
@@ -107,11 +107,11 @@ public class RouteServiceTest extends ScheduleTest {
 
         // then
         List<RouteResponse> content = response.getContent();
-        assertThat(response.getTotalElements()).isEqualTo(schedule1.getTravelRouteList().size());
+        assertThat(response.getTotalElements()).isEqualTo(schedule1.getTravelRoutes().size());
         assertThat(content.get(0).getAddress()).isEqualTo(travelPlace1.getAddress());
-        assertThat(content.get(0).getRouteOrder()).isEqualTo(schedule1.getTravelRouteList().get(0).getRouteOrder());
-        assertThat(content.get(1).getRouteOrder()).isEqualTo(schedule1.getTravelRouteList().get(1).getRouteOrder());
-        assertThat(content.get(2).getRouteOrder()).isEqualTo(schedule1.getTravelRouteList().get(2).getRouteOrder());
+        assertThat(content.get(0).getRouteOrder()).isEqualTo(schedule1.getTravelRoutes().get(0).getRouteOrder());
+        assertThat(content.get(1).getRouteOrder()).isEqualTo(schedule1.getTravelRoutes().get(1).getRouteOrder());
+        assertThat(content.get(2).getRouteOrder()).isEqualTo(schedule1.getTravelRoutes().get(2).getRouteOrder());
     }
 
     @Test
@@ -150,7 +150,7 @@ public class RouteServiceTest extends ScheduleTest {
     @DisplayName("여행 루트 마지막 루트에 여행지 추가 시 저장된 여행 루트가 존재하지 않는 경우")
     void createLastRoute_emptyRouteList(){
         // given
-        schedule1.setTravelRouteList(new ArrayList<>());
+        schedule1.setTravelRoutes(new ArrayList<>());
         RouteCreateRequest request = createRouteCreateRequest(travelPlace3.getPlaceId());
 
         when(travelScheduleRepository.findById(anyLong())).thenReturn(Optional.of(schedule1));
@@ -164,7 +164,7 @@ public class RouteServiceTest extends ScheduleTest {
 
     @Test
     @DisplayName("여행 루트 마지막 루트에 여행지 추가 시 일정 데이터 없어 예외 발생")
-    void createLastRoute_scheduleDataNotFoundException(){
+    void createLastRoute_scheduleNotFound(){
         // given
         RouteCreateRequest request = createRouteCreateRequest(travelPlace3.getPlaceId());
 
@@ -182,7 +182,7 @@ public class RouteServiceTest extends ScheduleTest {
 
     @Test
     @DisplayName("여행 루트 마지막 루트에 여행지 추가 시 참석자 정보가 없어 예외 발생")
-    void createLastRoute_attendeeDataNotFoundException(){
+    void createLastRoute_attendeeNotFound(){
         // given
         RouteCreateRequest request = createRouteCreateRequest(travelPlace3.getPlaceId());
 
@@ -202,7 +202,7 @@ public class RouteServiceTest extends ScheduleTest {
 
     @Test
     @DisplayName("여행 루트 마지막 루트에 여행지 추가 시 편집 권한이 없어 예외 발생")
-    void createLastRoute_forbiddenScheduleException(){
+    void createLastRoute_forbiddenEdit(){
         // given
         RouteCreateRequest request = createRouteCreateRequest(travelPlace3.getPlaceId());
 
@@ -222,7 +222,7 @@ public class RouteServiceTest extends ScheduleTest {
 
     @Test
     @DisplayName("여행 루트 마지막 루트에 여행지 추가 시 여행지 데이터 없어 예외 발생")
-    void createLastRoute_placeDataNotFoundException(){
+    void createLastRoute_placeNotFound(){
         // given
         RouteCreateRequest request = createRouteCreateRequest(travelPlace3.getPlaceId());
 

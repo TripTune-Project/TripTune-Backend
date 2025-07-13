@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/schedules/{scheduleId}")
 @RequiredArgsConstructor
 @Tag(name = "Schedule - Travel Place", description = "일정 만들기 중 여행지 관련 API")
-public class ScheduleTravelController {
+public class TravelScheduleController {
 
     private final TravelService travelService;
 

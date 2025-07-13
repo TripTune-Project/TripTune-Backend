@@ -9,6 +9,7 @@ import com.triptune.common.repository.ApiCategoryRepository;
 import com.triptune.common.repository.CityRepository;
 import com.triptune.common.repository.CountryRepository;
 import com.triptune.common.repository.DistrictRepository;
+import com.triptune.email.dto.request.EmailRequest;
 import com.triptune.member.dto.request.*;
 import com.triptune.member.enums.JoinType;
 import com.triptune.member.enums.SocialType;
@@ -465,8 +466,9 @@ public class MemberControllerTest extends MemberTest {
 
 
     @Test
-    @DisplayName("자체 로그인")
+    @DisplayName("일반 회원 로그인")
     void login() throws Exception {
+        // given
         ProfileImage profileImage = profileImageRepository.save(createProfileImage(null, "member"));
 
         String encodePassword = passwordEncoder.encode("password12!@");
@@ -479,9 +481,12 @@ public class MemberControllerTest extends MemberTest {
                 )
         );
 
+        LoginRequest request = createLoginRequest("member@email.com", "password12!@");
+
+        // when
         MvcResult result = mockMvc.perform(post("/api/members/login")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(createLoginRequest("member@email.com", "password12!@"))))
+                        .content(toJsonString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()))
@@ -489,6 +494,7 @@ public class MemberControllerTest extends MemberTest {
                 .andExpect(jsonPath("$.data.nickname").value(member.getNickname()))
                 .andReturn();
 
+        // then
         Cookie[] cookies = result.getResponse().getCookies();
 
         assertThat(cookies).isNotNull();
@@ -500,14 +506,18 @@ public class MemberControllerTest extends MemberTest {
     @Test
     @DisplayName("통합 회원 로그인")
     void login_bothMember() throws Exception {
+        // given
         String encodePassword = passwordEncoder.encode("password12!@");
         ProfileImage profileImage = profileImageRepository.save(createProfileImage(null, "member"));
         Member member = memberRepository.save(createBothTypeMember(null, "member@email.com", encodePassword, profileImage));
         socialMemberRepository.save(createSocialMember(null, member, "member", SocialType.NAVER));
 
+        LoginRequest request = createLoginRequest("member@email.com", "password12!@");
+
+        // when
         MvcResult result = mockMvc.perform(post("/api/members/login")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(createLoginRequest("member@email.com", "password12!@"))))
+                        .content(toJsonString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()))
@@ -515,6 +525,7 @@ public class MemberControllerTest extends MemberTest {
                 .andExpect(jsonPath("$.data.nickname").value(member.getNickname()))
                 .andReturn();
 
+        // then
         Cookie[] cookies = result.getResponse().getCookies();
 
         assertThat(cookies).isNotNull();
@@ -529,10 +540,7 @@ public class MemberControllerTest extends MemberTest {
     @ValueSource(strings = {"", " "})
     void login_invalidNotBlankEmail(String input) throws Exception {
         // given
-        LoginRequest request = createLoginRequest(
-                input,
-                "password12!@"
-        );
+        LoginRequest request = createLoginRequest(input, "password12!@");
 
         // when, then
         mockMvc.perform(post("/api/members/login")
@@ -547,10 +555,7 @@ public class MemberControllerTest extends MemberTest {
     @DisplayName("로그인 시 이메일 null 값이 들어와 예외 발생")
     void login_invalidNullEmail() throws Exception {
         // given
-        LoginRequest request = createLoginRequest(
-                null,
-                "password12!@"
-        );
+        LoginRequest request = createLoginRequest(null, "password12!@");
 
         // when, then
         mockMvc.perform(post("/api/members/login")
@@ -567,10 +572,7 @@ public class MemberControllerTest extends MemberTest {
     @ValueSource(strings = {"test", "test@", "test$email.com"})
     void login_invalidEmail(String input) throws Exception {
         // given
-        LoginRequest request = createLoginRequest(
-                input,
-                "password12!@"
-        );
+        LoginRequest request = createLoginRequest(input, "password12!@");
 
         // when, then
         mockMvc.perform(post("/api/members/login")
@@ -587,10 +589,7 @@ public class MemberControllerTest extends MemberTest {
     @ValueSource(strings = {"", " "})
     void login_invalidNotBlankPassword(String input) throws Exception {
         // given
-        LoginRequest request = createLoginRequest(
-                "member@email.com",
-                input
-        );
+        LoginRequest request = createLoginRequest("member@email.com", input);
 
         // when, then
         mockMvc.perform(post("/api/members/login")
@@ -605,10 +604,7 @@ public class MemberControllerTest extends MemberTest {
     @DisplayName("로그인 시 비밀번호 null 값이 들어와 예외 발생")
     void login_invalidNullPassword() throws Exception {
         // given
-        LoginRequest request = createLoginRequest(
-                "member@email.com",
-                null
-        );
+        LoginRequest request = createLoginRequest("member@email.com", null);
 
         // when, then
         mockMvc.perform(post("/api/members/login")
@@ -623,9 +619,13 @@ public class MemberControllerTest extends MemberTest {
     @Test
     @DisplayName("로그인 시 이메일 맞지 않아 예외 발생")
     void login_incorrectEmail() throws Exception {
+        // given
+        LoginRequest request = createLoginRequest("fail@email.com", "password12!@");
+
+        // when, then
         mockMvc.perform(post("/api/members/login")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(createLoginRequest("fail@email.com", "password12!@"))))
+                        .content(toJsonString(request)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value(ErrorCode.FAILED_LOGIN.getMessage()));
@@ -634,11 +634,14 @@ public class MemberControllerTest extends MemberTest {
     @Test
     @DisplayName("로그인 시 비밀번호 맞지 않아 예외 발생")
     void login_incorrectPassword() throws Exception {
+        // given
         memberRepository.save(createMember(null, "member@email.com"));
+        LoginRequest request = createLoginRequest("member@email.com", "fail!@");
 
+        // when, then
         mockMvc.perform(post("/api/members/login")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(createLoginRequest("member@email.com", "fail!@"))))
+                        .content(toJsonString(request)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value(ErrorCode.FAILED_LOGIN.getMessage()));
@@ -647,13 +650,23 @@ public class MemberControllerTest extends MemberTest {
     @Test
     @DisplayName("소셜 회원이 자체 로그인 시도해 예외 발생")
     void login_socialMember() throws Exception {
-        ProfileImage profileImage = profileImageRepository.save(createProfileImage(null, "member"));
-        Member member = memberRepository.save(createSocialTypeMember(null, "member@email.com", profileImage));
-        socialMemberRepository.save(createSocialMember(null, member, "member", SocialType.NAVER));
+        // given
+        Member member = memberRepository.save(createSocialTypeMember(null, "member@email.com"));
+        socialMemberRepository.save(
+                createSocialMember(
+                        null,
+                        member,
+                        "member",
+                        SocialType.NAVER
+                )
+        );
 
+        LoginRequest request = createLoginRequest("member@email.com", "fail!@");
+
+        // when, then
         mockMvc.perform(post("/api/members/login")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(createLoginRequest("member@email.com", "fail!@"))))
+                        .content(toJsonString(request)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value(ErrorCode.FAILED_LOGIN.getMessage()));
@@ -663,18 +676,23 @@ public class MemberControllerTest extends MemberTest {
     @Test
     @DisplayName("로그아웃")
     void logout() throws Exception {
+        // given
         Member member = memberRepository.save(createMember(null, "member@email.com"));
         String accessToken = jwtUtils.createAccessToken(member.getMemberId());
 
+        LogoutRequest request = createLogoutRequest(member.getNickname());
+
+        // when
         MvcResult result = mockMvc.perform(patch("/api/members/logout")
                         .header("Authorization", "Bearer " + accessToken)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(createLogoutRequest(member.getNickname()))))
+                        .content(toJsonString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()))
                 .andReturn();
 
+        // then
         Cookie[] cookies = result.getResponse().getCookies();
 
         assertThat(cookies).isNotNull();
@@ -750,11 +768,13 @@ public class MemberControllerTest extends MemberTest {
         Member member = memberRepository.save(createMember(null, "member@email.com"));
         String accessToken = jwtUtils.createAccessToken(member.getMemberId());
 
+        LogoutRequest request = createLogoutRequest("notMember");
+
         // when, then
         mockMvc.perform(patch("/api/members/logout")
                         .header("Authorization", "Bearer " + accessToken)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(createLogoutRequest("notMember"))))
+                        .content(toJsonString(request)))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value(ErrorCode.MEMBER_NOT_FOUND.getMessage()));
@@ -782,7 +802,7 @@ public class MemberControllerTest extends MemberTest {
     @Test
     @DisplayName("토큰 갱신 시 쿠키 존재하지 않아 예외 발생")
     void refreshToken_noCookie() throws Exception {
-        // given
+        // given, when, then
         mockMvc.perform(post("/api/members/refresh"))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.success").value(false))
@@ -795,6 +815,7 @@ public class MemberControllerTest extends MemberTest {
         // given
         Cookie cookie = new Cookie("error", "error");
 
+        // when, then
         mockMvc.perform(post("/api/members/refresh")
                         .cookie(cookie))
                 .andExpect(status().isUnauthorized())
@@ -805,11 +826,12 @@ public class MemberControllerTest extends MemberTest {
 
     @Test
     @DisplayName("토큰 갱신 시 refresh token 만료로 예외 발생")
-    void refreshToken_unauthorizedExpiredException() throws Exception {
+    void refreshToken_expired() throws Exception {
         // given
         String refreshToken = jwtUtils.createToken("ExpiredRefreshToken", -604800000);
         Cookie cookie = createRefreshTokenCookie(refreshToken);
 
+        // when, then
         mockMvc.perform(post("/api/members/refresh")
                         .cookie(cookie))
                 .andExpect(status().isUnauthorized())
@@ -824,6 +846,7 @@ public class MemberControllerTest extends MemberTest {
         String refreshToken = jwtUtils.createRefreshToken(0L);
         Cookie cookie = createRefreshTokenCookie(refreshToken);
 
+        // when, then
         mockMvc.perform(post("/api/members/refresh")
                         .cookie(cookie))
                 .andExpect(status().isNotFound())
@@ -865,10 +888,12 @@ public class MemberControllerTest extends MemberTest {
                 )
         );
 
+        FindPasswordRequest request = createFindPasswordRequest(member.getEmail());
+
         // when, then
         mockMvc.perform(post("/api/members/find-password")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(createFindPasswordRequest(member.getEmail()))))
+                        .content(toJsonString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()));
@@ -883,10 +908,12 @@ public class MemberControllerTest extends MemberTest {
         Member member = memberRepository.save(createSocialTypeMember(null, "member@email.com", profileImage));
         socialMemberRepository.save(createSocialMember(null, member, "member", SocialType.NAVER));
 
+        FindPasswordRequest request = createFindPasswordRequest(member.getEmail());
+
         // when, then
         mockMvc.perform(post("/api/members/find-password")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(createFindPasswordRequest(member.getEmail()))))
+                        .content(toJsonString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()));
@@ -909,10 +936,12 @@ public class MemberControllerTest extends MemberTest {
         );
         socialMemberRepository.save(createSocialMember(null, member, "member", SocialType.NAVER));
 
+        FindPasswordRequest request = createFindPasswordRequest(member.getEmail());
+
         // when, then
         mockMvc.perform(post("/api/members/find-password")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(createFindPasswordRequest(member.getEmail()))))
+                        .content(toJsonString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()));
@@ -970,9 +999,13 @@ public class MemberControllerTest extends MemberTest {
     @Test
     @DisplayName("비밀번호 찾기 시 회원 데이터 존재하지 않아 예외 발생")
     void findPassword_memberNotFound() throws Exception {
+        // given
+        FindPasswordRequest request = createFindPasswordRequest("notMember@email.com");
+
+        // when, then
         mockMvc.perform(post("/api/members/find-password")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(createFindPasswordRequest("notMember@email.com"))))
+                        .content(toJsonString(request)))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value(ErrorCode.MEMBER_NOT_FOUND.getMessage()));
@@ -985,9 +1018,10 @@ public class MemberControllerTest extends MemberTest {
         // given
         ResetPasswordRequest request = createResetPasswordRequest("changePassword", "password12!@", "password12!@");
 
-        ProfileImage profileImage = profileImageRepository.save(createProfileImage(null, "profileImage"));
         String savedPassword = passwordEncoder.encode("savedPassword12!@");
-        Member member = memberRepository.save(createNativeTypeMember(null, "member@email.com", savedPassword, profileImage));
+        Member member = memberRepository.save(
+                createNativeTypeMember(null, "member@email.com", savedPassword)
+        );
 
         when(redisService.getData(anyString())).thenReturn(member.getEmail());
 
@@ -1011,9 +1045,15 @@ public class MemberControllerTest extends MemberTest {
         // given
         ResetPasswordRequest request = createResetPasswordRequest("changePassword", "password12!@", "password12!@");
 
-        ProfileImage profileImage = profileImageRepository.save(createProfileImage(null, "member"));
-        Member member = memberRepository.save(createSocialTypeMember(null, "member@email.com", profileImage));
-        socialMemberRepository.save(createSocialMember(null, member, "member", SocialType.NAVER));
+        Member member = memberRepository.save(createSocialTypeMember(null, "member@email.com"));
+        socialMemberRepository.save(
+                createSocialMember(
+                    null,
+                    member,
+                    "member",
+                    SocialType.NAVER
+                )
+        );
 
         when(redisService.getData(anyString())).thenReturn(member.getEmail());
 
@@ -1036,10 +1076,16 @@ public class MemberControllerTest extends MemberTest {
         // given
         ResetPasswordRequest request = createResetPasswordRequest("changePassword", "password12!@", "password12!@");
 
-        ProfileImage profileImage = profileImageRepository.save(createProfileImage(null, "member"));
         String savedPassword = passwordEncoder.encode("savedPassword12!@");
-        Member member = memberRepository.save(createBothTypeMember(null, "member@email.com", savedPassword, profileImage));
-        socialMemberRepository.save(createSocialMember(null, member, "member", SocialType.NAVER));
+        Member member = memberRepository.save(createBothTypeMember(null, "member@email.com", savedPassword));
+        socialMemberRepository.save(
+                createSocialMember(
+                        null,
+                        member,
+                        "member",
+                        SocialType.NAVER
+                )
+        );
 
         when(redisService.getData(anyString())).thenReturn(member.getEmail());
 
@@ -1238,14 +1284,17 @@ public class MemberControllerTest extends MemberTest {
     @Test
     @DisplayName("일반 회원 비밀번호 변경")
     void changePassword_nativeMember() throws Exception {
+        // given
         String encodePassword = passwordEncoder.encode("test123@");
-        ProfileImage profileImage = profileImageRepository.save(createProfileImage(null, "member"));
-        Member member = memberRepository.save(createNativeTypeMember(null, "member@email.com", encodePassword, profileImage));
+        Member member = memberRepository.save(
+                createNativeTypeMember(null, "member@email.com", encodePassword)
+        );
 
         ChangePasswordRequest request = createChangePasswordRequest("test123@", "test123!", "test123!");
 
         mockAuthentication(member);
 
+        // when, then
         mockMvc.perform(patch("/api/members/change-password")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(toJsonString(request)))
@@ -1257,14 +1306,17 @@ public class MemberControllerTest extends MemberTest {
     @Test
     @DisplayName("통합 회원 비밀번호 변경")
     void changePassword_bothMember() throws Exception {
+        // given
         String encodePassword = passwordEncoder.encode("test123@");
-        ProfileImage profileImage = profileImageRepository.save(createProfileImage(null, "member"));
-        Member member = memberRepository.save(createBothTypeMember(null, "member@email.com", encodePassword, profileImage));
+        Member member = memberRepository.save(
+                createBothTypeMember(null, "member@email.com", encodePassword)
+        );
 
         ChangePasswordRequest request = createChangePasswordRequest("test123@", "test123!", "test123!");
 
         mockAuthentication(member);
 
+        // when, then
         mockMvc.perform(patch("/api/members/change-password")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(toJsonString(request)))
@@ -1483,13 +1535,7 @@ public class MemberControllerTest extends MemberTest {
     @DisplayName("비밀번호 변경 시 소셜 회원으로 예외 발생")
     void changePassword_socialMember() throws Exception {
         // given
-        ProfileImage profileImage = profileImageRepository.save(
-                createProfileImage(null, "member")
-        );
-
-        Member member = memberRepository.save(
-                createSocialTypeMember(null, "member@email.com", profileImage)
-        );
+        Member member = memberRepository.save(createSocialTypeMember(null, "member@email.com"));
 
         ChangePasswordRequest request = createChangePasswordRequest(
                 "password12!",
@@ -1512,18 +1558,9 @@ public class MemberControllerTest extends MemberTest {
     @DisplayName("비밀번호 변경 시 저장된 비밀번호와 현재 비밀번호가 일치하지 않아 예외 발생")
     void changePassword_incorrectSavedPassword() throws Exception {
         // given
-        ProfileImage profileImage = profileImageRepository.save(
-                createProfileImage(null, "member")
-        );
-
         String encodePassword = passwordEncoder.encode("test123@");
         Member member = memberRepository.save(
-                createNativeTypeMember(
-                        null,
-                        "member@email.com",
-                        encodePassword,
-                        profileImage
-                )
+                createNativeTypeMember(null, "member@email.com", encodePassword)
         );
 
         ChangePasswordRequest request = createChangePasswordRequest(
@@ -1551,7 +1588,6 @@ public class MemberControllerTest extends MemberTest {
         );
 
         String encodedPassword = passwordEncoder.encode("password12!@");
-
         Member member = memberRepository.save(
                 createNativeTypeMember(
                         null,
@@ -1631,9 +1667,11 @@ public class MemberControllerTest extends MemberTest {
     @Test
     @DisplayName("회원 정보 조회 시 회원 데이터 없어 예외 발생")
     void getMemberInfo_memberNotFound() throws Exception {
-        Member member = createMember(0L, "notMember@email.com");
+        // given
+        Member member = createMember(1000L, "notMember@email.com");
         mockAuthentication(member);
 
+        // when, then
         mockMvc.perform(get("/api/members/info"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.success").value(false))
@@ -1641,49 +1679,91 @@ public class MemberControllerTest extends MemberTest {
     }
 
 
-    // TODO: validation 테스트 추가
     @Test
     @DisplayName("회원 닉네임 변경")
     void changeNickname() throws Exception {
+        // given
         Member member = memberRepository.save(createMember(null, "member@email.com"));
         ChangeNicknameRequest request = createChangeNicknameRequest("newNickname");
 
         mockAuthentication(member);
 
+        // when, then
         mockMvc.perform(patch("/api/members/change-nickname")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(toJsonString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()));
-
     }
 
-    @Test
-    @DisplayName("회원 닉네임 변경 시 입력 조건이 맞지 않아 예외 발생")
-    void changeNickname_invalidNickname() throws Exception {
+
+    @ParameterizedTest
+    @DisplayName("닉네임 변경 시 닉네임 빈 값으로 예외 발생")
+    @ValueSource(strings = {"", " "})
+    void changeNickname_invalidNotBlankNickname(String input) throws Exception {
+        // given
         Member member = memberRepository.save(createMember(null, "member@email.com"));
-        ChangeNicknameRequest request = createChangeNicknameRequest("no");
+        ChangeNicknameRequest request = createChangeNicknameRequest(input);
 
         mockAuthentication(member);
 
+        // when, then
+        mockMvc.perform(patch("/api/members/change-nickname")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJsonString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value(containsString("닉네임은 필수 입력 값입니다.")));
+    }
+
+    @Test
+    @DisplayName("닉네임 변경 시 닉네임 null 값이 들어와 예외 발생")
+    void changeNickname_invalidNullNickname() throws Exception {
+        // given
+        Member member = memberRepository.save(createMember(null, "member@email.com"));
+        ChangeNicknameRequest request = createChangeNicknameRequest(null);
+
+        mockAuthentication(member);
+
+        // when, then
+        mockMvc.perform(patch("/api/members/change-nickname")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJsonString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value(containsString("닉네임은 필수 입력 값입니다.")));
+    }
+
+    @ParameterizedTest
+    @DisplayName("닉네임 변경 시 닉네임 입력값 검사로 예외 발생")
+    @ValueSource(strings = {"n", "닉", "1", "1@", "닉네임임임임임임임임임임임임임임", "@@@@@@@@@@@@@@@"})
+    void changeNickname_invalidNickname(String input) throws Exception {
+        // given
+        Member member = memberRepository.save(createMember(null, "member@email.com"));
+        ChangeNicknameRequest request = createChangeNicknameRequest(input);
+
+        mockAuthentication(member);
+
+        // when, then
         mockMvc.perform(patch("/api/members/change-nickname")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(toJsonString(request)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value("닉네임은 4자 이상 15자 이하이며, 한글 또는 영문자가 반드시 포함되어야 합니다."));
-
     }
 
     @Test
-    @DisplayName("회원 닉네임 변경 시 회원 데이터 없어 예외 발생")
+    @DisplayName("닉네임 변경 시 회원 데이터 없어 예외 발생")
     void changeNickname_memberNotFound() throws Exception {
+        // given
         ChangeNicknameRequest request = createChangeNicknameRequest("newNickname");
 
         Member member = createMember(0L, "notMember@email.com");
         mockAuthentication(member);
 
+        // when, then
         mockMvc.perform(patch("/api/members/change-nickname")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(toJsonString(request)))
@@ -1695,11 +1775,13 @@ public class MemberControllerTest extends MemberTest {
     @Test
     @DisplayName("회원 닉네임 변경 시 이미 존재하는 닉네임으로 예외 발생")
     void changeNickname_dataExist() throws Exception {
+        // given
         Member member = memberRepository.save(createMember(null, "member@email.com"));
         ChangeNicknameRequest request = createChangeNicknameRequest(member.getNickname());
 
         mockAuthentication(member);
 
+        // when, then
         mockMvc.perform(patch("/api/members/change-nickname")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(toJsonString(request)))
@@ -1708,31 +1790,104 @@ public class MemberControllerTest extends MemberTest {
                 .andExpect(jsonPath("$.message").value(ErrorCode.ALREADY_EXISTED_NICKNAME.getMessage()));
     }
 
+
     @Test
     @DisplayName("이메일 변경")
     void changeEmail() throws Exception {
+        // given
         Member member = memberRepository.save(createMember(null, "member@email.com"));
+        EmailRequest request = createEmailRequest("changeEmail@email.com");
+
         when(redisService.getEmailData(any(), anyString())).thenReturn("true");
 
         mockAuthentication(member);
 
+        // when, then
         mockMvc.perform(patch("/api/members/change-email")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(createEmailRequest("changeEmail@email.com"))))
+                        .content(toJsonString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()));
     }
 
+
+    @ParameterizedTest
+    @DisplayName("이메일 변경 시 이메일 빈 값으로 예외 발생")
+    @ValueSource(strings = {"", " "})
+    void changeEmail_invalidNotBlankEmail(String input) throws Exception {
+        // given
+        Member member = memberRepository.save(createMember(null, "member@email.com"));
+        EmailRequest request = createEmailRequest(input);
+
+        when(redisService.getEmailData(any(), anyString())).thenReturn("true");
+
+        mockAuthentication(member);
+
+        // when, then
+        mockMvc.perform(patch("/api/members/change-email")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJsonString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value(containsString("이메일은 필수 입력 값입니다.")));
+    }
+
+    @Test
+    @DisplayName("이메일 변경 시 이메일 null 값이 들어와 예외 발생")
+    void changeEmail_invalidNullEmail() throws Exception {
+        // given
+        Member member = memberRepository.save(createMember(null, "member@email.com"));
+        EmailRequest request = createEmailRequest(null);
+
+        when(redisService.getEmailData(any(), anyString())).thenReturn("true");
+
+        mockAuthentication(member);
+
+        // when, then
+        mockMvc.perform(patch("/api/members/change-email")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJsonString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value(containsString("이메일은 필수 입력 값입니다.")));
+
+    }
+
+    @ParameterizedTest
+    @DisplayName("이메일 변경 시 이메일 형식에 맞지 않아 예외 발생")
+    @ValueSource(strings = {"test", "test@", "test$email.com"})
+    void changeEmail_invalidEmail(String input) throws Exception {
+        // given
+        Member member = memberRepository.save(createMember(null, "member@email.com"));
+        EmailRequest request = createEmailRequest(input);
+
+        when(redisService.getEmailData(any(), anyString())).thenReturn("true");
+
+        mockAuthentication(member);
+
+        // when, then
+        mockMvc.perform(patch("/api/members/change-email")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJsonString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value(containsString("이메일 형식에 맞지 않습니다.")));
+    }
+
     @Test
     @DisplayName("이메일 변경 시 이미 존재하는 이메일로 예외 발생")
     void changeEmail_duplicateEmail() throws Exception {
+        // given
         Member member = memberRepository.save(createMember(null, "member@email.com"));
         mockAuthentication(member);
 
+        EmailRequest request = createEmailRequest("member@email.com");
+
+        // when, then
         mockMvc.perform(patch("/api/members/change-email")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(createEmailRequest("member@email.com"))))
+                        .content(toJsonString(request)))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value(ErrorCode.ALREADY_EXISTED_EMAIL.getMessage()));
@@ -1742,14 +1897,18 @@ public class MemberControllerTest extends MemberTest {
     @Test
     @DisplayName("이메일 변경 시 인증되지 않은 이메일로 예외 발생")
     void changeEmail_notVerifiedEmail() throws Exception {
+        // given
         Member member = memberRepository.save(createMember(null, "member"));
         mockAuthentication(member);
 
         when(redisService.getEmailData(any(), anyString())).thenReturn(null);
 
+        EmailRequest request = createEmailRequest("changeEmail@email.com");
+
+        // when, then
         mockMvc.perform(patch("/api/members/change-email")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(createEmailRequest("changeEmail@email.com"))))
+                        .content(toJsonString(request)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value(ErrorCode.NOT_VERIFIED_EMAIL.getMessage()));
@@ -1759,14 +1918,18 @@ public class MemberControllerTest extends MemberTest {
     @Test
     @DisplayName("이메일 변경 시 회원 데이터 없어 예외 발생")
     void changeEmail_memberNotFound() throws Exception {
+        // given
+        Member member = createMember(0L, "notMember@email.com");
         when(redisService.getEmailData(any(), anyString())).thenReturn("true");
 
-        Member member = createMember(0L, "notMember@email.com");
         mockAuthentication(member);
 
+        EmailRequest request = createEmailRequest("changeEmail@email.com");
+
+        // when, then
         mockMvc.perform(patch("/api/members/change-email")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(createEmailRequest("changeEmail@email.com"))))
+                        .content(toJsonString(request)))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value(ErrorCode.MEMBER_NOT_FOUND.getMessage()));
@@ -1776,17 +1939,22 @@ public class MemberControllerTest extends MemberTest {
     @Test
     @DisplayName("회원 북마크 조회 - 최신순")
     void getMemberBookmarks_sortNewest() throws Exception {
+        // given
         Member member = memberRepository.save(createMember(null, "member@email.com"));
-        bookmarkRepository.save(createBookmark(null, member, travelPlace1, LocalDateTime.now()));
-        bookmarkRepository.save(createBookmark(null, member, travelPlace2, LocalDateTime.now().minusDays(1)));
-        bookmarkRepository.save(createBookmark(null, member, travelPlace3, LocalDateTime.now().minusDays(2)));
+        bookmarkRepository.saveAll(List.of(
+                createBookmark(null, member, travelPlace1, LocalDateTime.now()),
+                createBookmark(null, member, travelPlace2, LocalDateTime.now().minusDays(1)),
+                createBookmark(null, member, travelPlace3, LocalDateTime.now().minusDays(2))
+        ));
 
         mockAuthentication(member);
 
+        // when, then
         mockMvc.perform(get("/api/members/bookmark")
                         .param("page", "1")
                         .param("sort", "newest"))
                 .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.totalElements").value(3))
                 .andExpect(jsonPath("$.data.content[0].placeName").value(travelPlace1.getPlaceName()))
                 .andExpect(jsonPath("$.data.content[0].thumbnailUrl").value(travelImage1.getS3ObjectUrl()))
@@ -1797,19 +1965,24 @@ public class MemberControllerTest extends MemberTest {
     }
 
     @Test
-    @DisplayName("회원 북마크 조회 - 오래된 순")
+    @DisplayName("회원 북마크 조회 - 오래된순")
     void getMemberBookmarks_sortOldest() throws Exception {
+        // given
         Member member = memberRepository.save(createMember(null, "member@email.com"));
-        bookmarkRepository.save(createBookmark(null, member, travelPlace1, LocalDateTime.now()));
-        bookmarkRepository.save(createBookmark(null, member, travelPlace2, LocalDateTime.now().minusDays(1)));
-        bookmarkRepository.save(createBookmark(null, member, travelPlace3, LocalDateTime.now().minusDays(2)));
+        bookmarkRepository.saveAll(List.of(
+                createBookmark(null, member, travelPlace1, LocalDateTime.now()),
+                createBookmark(null, member, travelPlace2, LocalDateTime.now().minusDays(1)),
+                createBookmark(null, member, travelPlace3, LocalDateTime.now().minusDays(2))
+        ));
 
         mockAuthentication(member);
 
+        // when, then
         mockMvc.perform(get("/api/members/bookmark")
                         .param("page", "1")
                         .param("sort", "oldest"))
                 .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.totalElements").value(3))
                 .andExpect(jsonPath("$.data.content[0].placeName").value(travelPlace3.getPlaceName()))
                 .andExpect(jsonPath("$.data.content[0].thumbnailUrl").value(travelImage3.getS3ObjectUrl()))
@@ -1822,17 +1995,22 @@ public class MemberControllerTest extends MemberTest {
     @Test
     @DisplayName("회원 북마크 조회 - 이름순")
     void getMemberBookmarks_sortName() throws Exception {
+        // given
         Member member = memberRepository.save(createMember(null, "member@email.com"));
-        bookmarkRepository.save(createBookmark(null, member, travelPlace1, LocalDateTime.now()));
-        bookmarkRepository.save(createBookmark(null, member, travelPlace2, LocalDateTime.now().minusDays(1)));
-        bookmarkRepository.save(createBookmark(null, member, travelPlace3, LocalDateTime.now().minusDays(2)));
+        bookmarkRepository.saveAll(List.of(
+                createBookmark(null, member, travelPlace1, LocalDateTime.now()),
+                createBookmark(null, member, travelPlace2, LocalDateTime.now().minusDays(1)),
+                createBookmark(null, member, travelPlace3, LocalDateTime.now().minusDays(2))
+        ));
 
         mockAuthentication(member);
 
+        // when, then
         mockMvc.perform(get("/api/members/bookmark")
                         .param("page", "1")
                         .param("sort", "name"))
                 .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.totalElements").value(3))
                 .andExpect(jsonPath("$.data.content[0].placeName").value(travelPlace1.getPlaceName()))
                 .andExpect(jsonPath("$.data.content[0].thumbnailUrl").value(travelImage1.getS3ObjectUrl()))
@@ -1845,35 +2023,43 @@ public class MemberControllerTest extends MemberTest {
     @Test
     @DisplayName("회원 북마크 조회 시 데이터 없는 경우")
     void getMemberBookmarks_emptyData() throws Exception {
+        // given
         Member member = memberRepository.save(createMember(null, "member"));
-
         mockAuthentication(member);
 
+        // when, then
         mockMvc.perform(get("/api/members/bookmark")
                         .param("page", "1")
                         .param("sort", "newest"))
                 .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.totalElements").value(0))
                 .andExpect(jsonPath("$.data.content").isEmpty());
     }
 
-    @Test
-    @DisplayName("회원 북마크 조회 시 정렬 잘못된 값이 들어와 예외 발생")
-    void getMemberBookmarks_IllegalSortType() throws Exception {
+    @ParameterizedTest
+    @DisplayName("회원 북마크 조회 시 정렬 파라미터 잘못된 값이 들어와 예외 발생")
+    @ValueSource(strings = {"ne", "@n", " ", ""})
+    void getMemberBookmarks_IllegalSortType(String input) throws Exception {
+        // given
         Member member = memberRepository.save(createMember(null, "member"));
         mockAuthentication(member);
 
+        // when, then
         mockMvc.perform(get("/api/members/bookmark")
                         .param("page", "1")
-                        .param("sort", "ne"))
+                        .param("sort", input))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value(ErrorCode.ILLEGAL_BOOKMARK_SORT_TYPE.getMessage()));
     }
 
+
+    // TODO: validation 테스트 추가
     @Test
     @DisplayName("일반 회원 탈퇴 - 작성자, 참석자 존재하는 경우")
     void deactivateMember_nativeMember1() throws Exception {
+        // given
         String encodePassword = passwordEncoder.encode("test123@");
 
         ProfileImage profileImage = profileImageRepository.save(createProfileImage(null, "test"));
@@ -1906,14 +2092,18 @@ public class MemberControllerTest extends MemberTest {
 
         mockAuthentication(member);
 
+        DeactivateRequest request = createDeactivateRequest("test123@");
+
+        // when
         MvcResult result = mockMvc.perform(patch("/api/members/deactivate")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(createDeactivateRequest("test123@"))))
+                        .content(toJsonString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()))
                 .andReturn();
 
+        // then
         Cookie[] cookies = result.getResponse().getCookies();
 
         assertThat(cookies).isNotNull();
@@ -1923,6 +2113,7 @@ public class MemberControllerTest extends MemberTest {
     @Test
     @DisplayName("일반 회원 탈퇴 - 작성자만 존재하는 경우")
     void deactivateMember_nativeMember2() throws Exception {
+        // given
         String encodePassword = passwordEncoder.encode("test123@");
 
         ProfileImage profileImage = profileImageRepository.save(createProfileImage(null, "test"));
@@ -1953,14 +2144,18 @@ public class MemberControllerTest extends MemberTest {
 
         mockAuthentication(member);
 
+        DeactivateRequest request = createDeactivateRequest("test123@");
+
+        // when
         MvcResult result = mockMvc.perform(patch("/api/members/deactivate")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(createDeactivateRequest("test123@"))))
+                        .content(toJsonString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()))
                 .andReturn();
 
+        // then
         Cookie[] cookies = result.getResponse().getCookies();
 
         assertThat(cookies).isNotNull();
@@ -1970,6 +2165,7 @@ public class MemberControllerTest extends MemberTest {
     @Test
     @DisplayName("일반 회원 탈퇴 - 참석자만 존재하는 경우")
     void deactivateMember_nativeMember3() throws Exception {
+        // given
         String encodePassword = passwordEncoder.encode("test123@");
 
         ProfileImage profileImage = profileImageRepository.save(createProfileImage(null, "test"));
@@ -2000,14 +2196,18 @@ public class MemberControllerTest extends MemberTest {
 
         mockAuthentication(member);
 
+        DeactivateRequest request = createDeactivateRequest("test123@");
+
+        // when
         MvcResult result = mockMvc.perform(patch("/api/members/deactivate")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(createDeactivateRequest("test123@"))))
+                        .content(toJsonString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()))
                 .andReturn();
 
+        // then
         Cookie[] cookies = result.getResponse().getCookies();
 
         assertThat(cookies).isNotNull();
@@ -2018,6 +2218,7 @@ public class MemberControllerTest extends MemberTest {
     @Test
     @DisplayName("통합 회원 탈퇴")
     void deactivateMember_bothMember() throws Exception {
+        // given
         String encodePassword = passwordEncoder.encode("test123@");
 
         ProfileImage profileImage = profileImageRepository.save(createProfileImage(null, "test"));
@@ -2055,14 +2256,18 @@ public class MemberControllerTest extends MemberTest {
 
         mockAuthentication(member);
 
+        DeactivateRequest request = createDeactivateRequest("test123@");
+
+        // when
         MvcResult result = mockMvc.perform(patch("/api/members/deactivate")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(createDeactivateRequest("test123@"))))
+                        .content(toJsonString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()))
                 .andReturn();
 
+        // then
         Cookie[] cookies = result.getResponse().getCookies();
 
         assertThat(cookies).isNotNull();
@@ -2073,6 +2278,7 @@ public class MemberControllerTest extends MemberTest {
     @Test
     @DisplayName("회원 탈퇴 - 일정 데이터 없는 경우")
     void deactivateMember_emptySchedule() throws Exception {
+        // given
         String encodePassword = passwordEncoder.encode("test123@");
 
         ProfileImage profileImage = profileImageRepository.save(createProfileImage(null, "test"));
@@ -2092,23 +2298,87 @@ public class MemberControllerTest extends MemberTest {
 
         mockAuthentication(member);
 
+        DeactivateRequest request = createDeactivateRequest("test123@");
+
+        // when, then
         mockMvc.perform(patch("/api/members/deactivate")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(createDeactivateRequest("test123@"))))
+                        .content(toJsonString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()));
     }
 
+
+    @ParameterizedTest
+    @DisplayName("회원 탈퇴 시 비밀번호 빈 값으로 예외 발생")
+    @ValueSource(strings = {"", " "})
+    void deactivateMember_invalidNotBlankPassword(String input) throws Exception {
+        // given
+        Member member = createMember(1L, "member@email.com");
+        DeactivateRequest request = createDeactivateRequest(input);
+
+        mockAuthentication(member);
+
+        // when, then
+        mockMvc.perform(patch("/api/members/deactivate")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJsonString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value(containsString("비밀번호는 필수 입력 값입니다.")));
+    }
+
+    @Test
+    @DisplayName("회원 탈퇴 시 비밀번호 null 값이 들어와 예외 발생")
+    void deactivateMember_invalidNullPassword() throws Exception {
+        // given
+        Member member = createMember(1L, "member@email.com");
+        DeactivateRequest request = createDeactivateRequest(null);
+
+        mockAuthentication(member);
+
+        // when, then
+        mockMvc.perform(patch("/api/members/deactivate")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJsonString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value(containsString("비밀번호는 필수 입력 값입니다.")));
+    }
+
+    @ParameterizedTest
+    @DisplayName("회원 탈퇴 시 비밀번호 유효성 검사로 예외 발생")
+    @ValueSource(strings = {"p", "p1@", "password", "1@", "passworddddddddd", "passworddddddddd!@", "password!@"})
+    void deactivateMember_invalidPassword(String input) throws Exception {
+        // given
+        Member member = createMember(1L, "member@email.com");
+        DeactivateRequest request = createDeactivateRequest(input);
+
+        mockAuthentication(member);
+
+        // when, then
+        mockMvc.perform(patch("/api/members/deactivate")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJsonString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value("비밀번호는 8자 이상 15자 이하의 영문, 숫자, 특수문자 조합이어야 합니다."));
+    }
+
     @Test
     @DisplayName("회원 탈퇴 시 회원 데이터를 찾을 수 없는 경우")
     void deactivateMember_memberNotFound() throws Exception {
-        Member member = createMember(0L, "notMember@email.com");
+        // given
+        Member member = createMember(1000L, "notMember@email.com");
         mockAuthentication(member);
 
+        DeactivateRequest request = createDeactivateRequest("test123@");
+
+        // when, then
         mockMvc.perform(patch("/api/members/deactivate")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(createDeactivateRequest("test123@"))))
+                        .content(toJsonString(request)))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value(ErrorCode.MEMBER_NOT_FOUND.getMessage()));
@@ -2118,6 +2388,7 @@ public class MemberControllerTest extends MemberTest {
     @Test
     @DisplayName("소셜 회원 탈퇴 요청으로 예외 발생")
     void deactivateMember_socialMember() throws Exception {
+        // given
         ProfileImage profileImage = profileImageRepository.save(createProfileImage(null, "test"));
         Member member = memberRepository.save(
                 createSocialTypeMember(
@@ -2134,9 +2405,12 @@ public class MemberControllerTest extends MemberTest {
 
         mockAuthentication(member);
 
+        DeactivateRequest request = createDeactivateRequest("test123@");
+
+        // when, then
         mockMvc.perform(patch("/api/members/deactivate")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(createDeactivateRequest("test123@"))))
+                        .content(toJsonString(request)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value(ErrorCode.SOCIAL_MEMBER_DEACTIVATE_NOT_ALLOWED.getMessage()))
@@ -2148,6 +2422,7 @@ public class MemberControllerTest extends MemberTest {
     @Test
     @DisplayName("회원 탈퇴 시 비밀번호가 맞지 않아 예외 발생")
     void deactivateMember_incorrectPassword() throws Exception {
+        // given
         String encodePassword = passwordEncoder.encode("incorrect12@");
 
         ProfileImage profileImage = profileImageRepository.save(createProfileImage(null, "test"));
@@ -2162,9 +2437,12 @@ public class MemberControllerTest extends MemberTest {
 
         mockAuthentication(member);
 
+        DeactivateRequest request = createDeactivateRequest("test123@");
+
+        // when, then
         mockMvc.perform(patch("/api/members/deactivate")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(createDeactivateRequest("test123@"))))
+                        .content(toJsonString(request)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value(ErrorCode.INCORRECT_PASSWORD.getMessage()));

@@ -62,7 +62,7 @@ public class ProfileImageServiceMockTest extends ProfileImageTest {
 
     @Test
     @DisplayName("프로필 이미지 수정 시 허용되지 않은 확장자로 예외 발생")
-    void updateProfileImage_invalidExtensionException() throws IOException {
+    void updateProfileImage_invalidExtension() throws IOException {
         // given
         byte[] content = createTestImage("gif");
         MockMultipartFile mockMultipartFile = new MockMultipartFile("newFile", "newFileOriginalName.gif", "image/gif", content);
@@ -78,7 +78,7 @@ public class ProfileImageServiceMockTest extends ProfileImageTest {
 
     @Test
     @DisplayName("프로필 이미지 수정 시 이미지 데이터 찾을 수 없어 예외 발생")
-    void updateProfileImage_ProfileImageDataNotFoundException() throws IOException {
+    void updateProfileImage_profileImageNotFound() throws IOException {
         // given
         byte[] content = createTestImage("png");
         MockMultipartFile mockMultipartFile = new MockMultipartFile("newFile", "newFileOriginalName.png", "image/png", content);

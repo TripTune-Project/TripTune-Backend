@@ -1,12 +1,9 @@
 package com.triptune.member;
 
 import com.triptune.BaseTest;
-import com.triptune.CookieType;
 import com.triptune.email.dto.request.EmailRequest;
-import com.triptune.global.util.CookieUtils;
 import com.triptune.member.dto.request.*;
 import jakarta.servlet.http.Cookie;
-import org.springframework.http.ResponseCookie;
 
 public class MemberTest extends BaseTest {
 

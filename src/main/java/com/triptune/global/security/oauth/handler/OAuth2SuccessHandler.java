@@ -1,11 +1,10 @@
 package com.triptune.global.security.oauth.handler;
 
-import com.triptune.CookieType;
+import com.triptune.global.security.CookieType;
 import com.triptune.global.security.CustomUserDetails;
 import com.triptune.global.security.jwt.JwtUtils;
 import com.triptune.global.util.CookieUtils;
 import jakarta.servlet.ServletException;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;

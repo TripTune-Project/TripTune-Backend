@@ -37,7 +37,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @ActiveProfiles("h2")
-public class ScheduleTravelControllerTest extends BaseTest {
+public class TravelScheduleControllerTest extends BaseTest {
 
     @Autowired private WebApplicationContext wac;
     @Autowired private TravelScheduleRepository travelScheduleRepository;
@@ -95,8 +95,8 @@ public class ScheduleTravelControllerTest extends BaseTest {
         TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(null, member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ));
         TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(null, member2, schedule2, AttendeeRole.AUTHOR, AttendeePermission.ALL));
 
-        schedule1.setTravelAttendeeList(List.of(attendee1, attendee2));
-        schedule2.setTravelAttendeeList(List.of(attendee3));
+        schedule1.setTravelAttendees(List.of(attendee1, attendee2));
+        schedule2.setTravelAttendees(List.of(attendee3));
 
     }
 
@@ -104,10 +104,14 @@ public class ScheduleTravelControllerTest extends BaseTest {
     @Test
     @DisplayName("여행지 조회")
     void getTravelPlaces() throws Exception {
+        // given
         mockAuthentication(member1);
+
+        // when, then
         mockMvc.perform(get("/api/schedules/{scheduleId}/travels", schedule1.getScheduleId())
                         .param("page", "1"))
                 .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.totalElements").value(1))
                 .andExpect(jsonPath("$.data.content[0].district").value(travelPlace2.getDistrict().getDistrictName()))
                 .andExpect(jsonPath("$.data.content[0].placeName").value(travelPlace2.getPlaceName()))
@@ -129,17 +133,22 @@ public class ScheduleTravelControllerTest extends BaseTest {
         mockMvc.perform(get("/api/schedules/{scheduleId}/travels", schedule1.getScheduleId())
                         .param("page", "1"))
                 .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.totalElements").value(0))
                 .andExpect(jsonPath("$.data.content").isEmpty());
     }
 
     @Test
     @DisplayName("여행지 조회 시 해당 일정에 접근 권한이 없어 예외 발생")
-    void getTravelPlaces_forbiddenScheduleException() throws Exception {
+    void getTravelPlaces_forbiddenScheduleAccess() throws Exception {
+        // given
         mockAuthentication(member1);
+
+        // when, then
         mockMvc.perform(get("/api/schedules/{scheduleId}/travels", schedule2.getScheduleId())
                         .param("page", "1"))
                 .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value(ErrorCode.FORBIDDEN_ACCESS_SCHEDULE.getMessage()));
     }
 
@@ -147,8 +156,11 @@ public class ScheduleTravelControllerTest extends BaseTest {
 
     @Test
     @DisplayName("여행지 조회 시 일정 데이터 존재하지 않아 예외 발생")
-    void getTravelPlaces_dataNotFoundException() throws Exception {
+    void getTravelPlaces_scheduleNotFound() throws Exception {
+        // given
         mockAuthentication(member1);
+
+        // when, then
         mockMvc.perform(get("/api/schedules/{scheduleId}/travels", 0L)
                         .param("page", "1"))
                 .andExpect(status().isNotFound())
@@ -160,11 +172,15 @@ public class ScheduleTravelControllerTest extends BaseTest {
     @Test
     @DisplayName("여행지 검색")
     void searchTravelPlaces() throws Exception {
+        // given
         mockAuthentication(member1);
+
+        // when, then
         mockMvc.perform(get("/api/schedules/{scheduleId}/travels/search", schedule1.getScheduleId())
                         .param("page", "1")
                         .param("keyword", "강남"))
                 .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.totalElements").value(1))
                 .andExpect(jsonPath("$.data.content[0].district").value(travelPlace1.getDistrict().getDistrictName()))
                 .andExpect(jsonPath("$.data.content[0].placeName").value(travelPlace1.getPlaceName()))
@@ -176,11 +192,15 @@ public class ScheduleTravelControllerTest extends BaseTest {
     @Test
     @DisplayName("여행지 검색 시 검색 결과가 존재하지 않는 경우")
     void searchTravelPlacesWithoutData() throws Exception {
+        // given
         mockAuthentication(member1);
+
+        // when, then
         mockMvc.perform(get("/api/schedules/{scheduleId}/travels/search", schedule1.getScheduleId())
                         .param("page", "1")
                         .param("keyword", "ㅁㄴㅇㄹ"))
                 .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.totalElements").value(0))
                 .andExpect(jsonPath("$.data.content").isEmpty());
     }
@@ -188,8 +208,11 @@ public class ScheduleTravelControllerTest extends BaseTest {
 
     @Test
     @DisplayName("여행지 검색 시 일정 데이터 존재하지 않아 예외 발생")
-    void searchTravelPlaces_dataNotFoundException() throws Exception {
+    void searchTravelPlaces_scheduleNotFound() throws Exception {
+        // given
         mockAuthentication(member1);
+
+        // when, then
         mockMvc.perform(get("/api/schedules/{scheduleId}/travels/search", 0L)
                         .param("page", "1")
                         .param("keyword", "ㅁㄴㅇㄹ"))
@@ -201,12 +224,16 @@ public class ScheduleTravelControllerTest extends BaseTest {
 
     @Test
     @DisplayName("여행지 검색 시 해당 일정에 접근 권한이 없어 예외 발생")
-    void searchTravelPlaces_forbiddenScheduleException() throws Exception {
+    void searchTravelPlaces_forbiddenScheduleAccess() throws Exception {
+        // given
         mockAuthentication(member1);
+
+        // when, then
         mockMvc.perform(get("/api/schedules/{scheduleId}/travels/search", schedule2.getScheduleId())
                         .param("page", "1")
                         .param("keyword", "중구"))
                 .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value(ErrorCode.FORBIDDEN_ACCESS_SCHEDULE.getMessage()));
     }
 
