@@ -86,7 +86,7 @@ public class TravelService {
 
     public Page<PlaceResponse> getTravelPlacesByJungGu(int page) {
         Pageable pageable = PageUtils.travelPageable(page);
-        return travelPlaceRepository.findAllByAreaData(pageable, "대한민국", "서울", "중구");
+        return travelPlaceRepository.findDefaultTravelPlacesByJungGu(pageable);
     }
 
 

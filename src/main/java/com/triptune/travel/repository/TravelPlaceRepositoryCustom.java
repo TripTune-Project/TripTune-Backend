@@ -16,9 +16,9 @@ import java.util.List;
 public interface TravelPlaceRepositoryCustom {
     Page<PlaceLocation> findNearByTravelPlaces(Pageable pageable, PlaceLocationRequest placeLocationRequest, int radius);
     Page<PlaceLocation> searchTravelPlacesWithLocation(Pageable pageable, PlaceSearchRequest placeSearchRequest);
-    Page<PlaceResponse> findAllByAreaData(Pageable pageable, String country, String city, String district);
     Page<PlaceResponse> searchTravelPlaces(Pageable pageable, String keyword);
     Integer countTotalElements(BooleanExpression booleanExpression);
     List<PlaceSimpleResponse> findPopularTravelPlacesByCity(CityType cityType);
     List<PlaceSimpleResponse> findRecommendTravelPlacesByTheme(ThemeType themeType);
+    Page<PlaceResponse> findDefaultTravelPlacesByJungGu(Pageable pageable);
 }

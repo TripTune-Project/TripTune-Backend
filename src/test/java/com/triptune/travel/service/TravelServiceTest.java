@@ -518,7 +518,7 @@ public class TravelServiceTest extends TravelTest {
                 createPlaceResponse(travelPlace2, null)
         );
 
-        when(travelPlaceRepository.findAllByAreaData(any(), anyString(), anyString(), anyString()))
+        when(travelPlaceRepository.findDefaultTravelPlacesByJungGu(any()))
                 .thenReturn(PageUtils.createPage(mockResponse, pageable, 1));
 
         // when
@@ -538,7 +538,7 @@ public class TravelServiceTest extends TravelTest {
         // given
         Pageable pageable = PageUtils.travelPageable(1);
 
-        when(travelPlaceRepository.findAllByAreaData(any(), anyString(), anyString(), anyString()))
+        when(travelPlaceRepository.findDefaultTravelPlacesByJungGu(any()))
                 .thenReturn(PageUtils.createPage(new ArrayList<>(), pageable, 0));
 
         // when

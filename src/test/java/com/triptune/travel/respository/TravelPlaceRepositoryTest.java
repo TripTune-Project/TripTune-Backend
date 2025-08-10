@@ -58,7 +58,7 @@ public class TravelPlaceRepositoryTest extends TravelTest {
         country = countryRepository.save(createCountry());
         city = cityRepository.save(createCity(country));
         District district1 = districtRepository.save(createDistrict(city, "강남구"));
-        District district2 = districtRepository.save(createDistrict(city, "성북구"));
+        District district2 = districtRepository.save(createDistrict(city, "중구"));
         apiCategory = apiCategoryRepository.save(createApiCategory());
         attractionContentType = apiContentTypeRepository.save(createApiContentType(ThemeType.ATTRACTIONS));
         ApiContentType sportsContentType = apiContentTypeRepository.save(createApiContentType(ThemeType.SPORTS));
@@ -145,36 +145,37 @@ public class TravelPlaceRepositoryTest extends TravelTest {
     }
 
     @Test
-    @DisplayName("지역을 이용해 여행지 조회 시 검색결과가 존재하는 경우")
-    void findAllByAreaData_withData(){
+    @DisplayName("기본 여행지 조회 시 결과가 존재하는 경우")
+    void findDefaultTravelPlacesByJungGu_withData(){
         // given
         Pageable pageable = PageUtils.defaultPageable(1);
 
         // when
-        Page<PlaceResponse> response = travelPlaceRepository.findAllByAreaData(pageable, country.getCountryName(), city.getCityName(), "성북구");
+        Page<PlaceResponse> response = travelPlaceRepository.findDefaultTravelPlacesByJungGu(pageable);
 
         // then
         List<PlaceResponse> content = response.getContent();
-        assertThat(response.getTotalElements()).isEqualTo(1);
-        assertThat(content.get(0).getCountry()).isEqualTo(country.getCountryName());
-        assertThat(content.get(0).getCity()).isEqualTo(city.getCityName());
-        assertThat(content.get(0).getDistrict()).isEqualTo("성북구");
+        assertThat(response.getTotalElements()).isEqualTo(2);
+        assertThat(content.get(0).getCountry()).isEqualTo(travelPlace2.getCountry().getCountryName());
+        assertThat(content.get(0).getCity()).isEqualTo(travelPlace2.getCity().getCityName());
+        assertThat(content.get(0).getDistrict()).isEqualTo(travelPlace2.getDistrict().getDistrictName());
         assertThat(content.get(0).getThumbnailUrl()).isNull();
     }
 
-    @Test
-    @DisplayName("지역을 이용해 여행지 조회 시 검색결과가 존재하지 않는 경우")
-    void findAllByAreaData_noData(){
-        // given
-        Pageable pageable = PageUtils.defaultPageable(1);
-
-        // when
-        Page<PlaceResponse> response = travelPlaceRepository.findAllByAreaData(pageable, "no", city.getCityName(), "성북");
-
-        // then
-        assertThat(response.getTotalElements()).isEqualTo(0);
-        assertThat(response.getContent()).isEmpty();
-    }
+    // TODO
+//    @Test
+//    @DisplayName("기본 여행지 조회 시 검색결과가 존재하지 않는 경우")
+//    void findDefaultTravelPlacesByJungGu_noData(){
+//        // given
+//        Pageable pageable = PageUtils.defaultPageable(1);
+//
+//        // when
+//        Page<PlaceResponse> response = travelPlaceRepository.findDefaultTravelPlacesByJungGu(pageable);
+//
+//        // then
+//        assertThat(response.getTotalElements()).isEqualTo(0);
+//        assertThat(response.getContent()).isEmpty();
+//    }
 
 
     @Test

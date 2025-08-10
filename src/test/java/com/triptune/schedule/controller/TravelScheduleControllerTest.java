@@ -112,7 +112,7 @@ public class TravelScheduleControllerTest extends BaseTest {
                         .param("page", "1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.totalElements").value(1))
+                .andExpect(jsonPath("$.data.totalElements").value(2))
                 .andExpect(jsonPath("$.data.content[0].district").value(travelPlace2.getDistrict().getDistrictName()))
                 .andExpect(jsonPath("$.data.content[0].placeName").value(travelPlace2.getPlaceName()))
                 .andExpect(jsonPath("$.data.content[0].longitude").isNotEmpty())
