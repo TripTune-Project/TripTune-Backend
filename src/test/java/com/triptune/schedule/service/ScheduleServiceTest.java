@@ -846,7 +846,7 @@ public class ScheduleServiceTest extends ScheduleTest {
         Pageable pageable = PageUtils.defaultPageable(1);
 
         when(travelScheduleRepository.findById(any())).thenReturn(Optional.of(schedule1));
-        when(travelPlaceRepository.findAllByAreaData(any(), anyString(), anyString(), anyString()))
+        when(travelPlaceRepository.findDefaultTravelPlacesByJungGu(any()))
                 .thenReturn(PageUtils.createPage(placeList, pageable, 1));
 
         // when
@@ -867,7 +867,7 @@ public class ScheduleServiceTest extends ScheduleTest {
         Pageable pageable = PageUtils.defaultPageable(1);
 
         when(travelScheduleRepository.findById(any())).thenReturn(Optional.of(schedule1));
-        when(travelPlaceRepository.findAllByAreaData(any(), anyString(), anyString(), anyString()))
+        when(travelPlaceRepository.findDefaultTravelPlacesByJungGu(any()))
                 .thenReturn(PageUtils.createPage(new ArrayList<>(), pageable, 0));
 
         // when

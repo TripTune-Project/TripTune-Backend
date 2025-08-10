@@ -19,7 +19,6 @@ import com.triptune.travel.entity.QTravelPlace;
 import com.triptune.travel.enums.CityType;
 import com.triptune.travel.enums.ThemeType;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
@@ -164,41 +163,6 @@ public class TravelPlaceRepositoryCustomImpl implements TravelPlaceRepositoryCus
 
 
     @Override
-    public Page<PlaceResponse> findAllByAreaData(Pageable pageable, String country, String city, String district) {
-        BooleanExpression expression = travelPlace.country.countryName.eq(country)
-                .and(travelPlace.city.cityName.eq(city))
-                .and(travelPlace.district.districtName.eq(district));
-
-        List<PlaceResponse> content = jpaQueryFactory
-                .select(Projections.constructor(PlaceResponse.class,
-                        travelPlace.placeId,
-                        travelPlace.country.countryName,
-                        travelPlace.city.cityName,
-                        travelPlace.district.districtName,
-                        travelPlace.address,
-                        travelPlace.detailAddress,
-                        travelPlace.longitude,
-                        travelPlace.latitude,
-                        travelPlace.placeName,
-                        JPAExpressions
-                                .select(travelImage.s3ObjectUrl)
-                                .from(travelImage)
-                                .where(travelImage.travelPlace.placeId.eq(travelPlace.placeId)
-                                        .and(travelImage.isThumbnail.isTrue()))
-                                .limit(1)))
-                .from(travelPlace)
-                .where(expression)
-                .offset(pageable.getOffset())
-                .limit(pageable.getPageSize())
-                .fetch();
-
-        // 전체 갯수 조회
-        int totalElements = countTotalElements(expression);
-
-        return new PageImpl<>(content, pageable, totalElements);
-    }
-
-    @Override
     public Page<PlaceResponse> searchTravelPlaces(Pageable pageable, String keyword) {
         BooleanExpression booleanExpression = travelPlace.country.countryName.contains(keyword)
                 .or(travelPlace.city.cityName.contains(keyword))
@@ -251,6 +215,66 @@ public class TravelPlaceRepositoryCustomImpl implements TravelPlaceRepositoryCus
         int totalElements = countTotalElements(booleanExpression);
 
         return PageUtils.createPage(content, pageable, totalElements);
+    }
+
+    @Override
+    public Page<PlaceResponse> findDefaultTravelPlacesByJungGu(Pageable pageable) {
+        String baseKeyword = "중구";
+        String orderCaseString = accuracyQuery();
+
+        List<PlaceResponse> content = jpaQueryFactory
+                .select(Projections.constructor(PlaceResponse.class,
+                        travelPlace.placeId,
+                        travelPlace.country.countryName,
+                        travelPlace.city.cityName,
+                        travelPlace.district.districtName,
+                        travelPlace.address,
+                        travelPlace.detailAddress,
+                        travelPlace.longitude,
+                        travelPlace.latitude,
+                        travelPlace.placeName,
+                        JPAExpressions
+                                .select(travelImage.s3ObjectUrl)
+                                .from(travelImage)
+                                .where(travelImage.travelPlace.placeId.eq(travelPlace.placeId)
+                                        .and(travelImage.isThumbnail.isTrue()))
+                                .limit(1)))
+                .from(travelPlace)
+                .orderBy(
+                        Expressions.stringTemplate(
+                                orderCaseString,
+                                travelPlace.placeName, baseKeyword, baseKeyword + "%", "%" + baseKeyword + "%", "%" + baseKeyword
+                        ).asc(),
+                        Expressions.stringTemplate(
+                                orderCaseString,
+                                travelPlace.country.countryName, baseKeyword, baseKeyword + "%", "%" + baseKeyword + "%", "%" + baseKeyword
+                        ).asc(),
+                        Expressions.stringTemplate(
+                                orderCaseString,
+                                travelPlace.city.cityName, baseKeyword, baseKeyword + "%", "%" + baseKeyword + "%", "%" + baseKeyword
+                        ).asc(),
+                        Expressions.stringTemplate(
+                                orderCaseString,
+                                travelPlace.district.districtName, baseKeyword, baseKeyword + "%", "%" + baseKeyword + "%", "%" + baseKeyword
+                        ).asc()
+                )
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
+                .fetch();
+
+        int totalElements = countTotalTravelPlaces();
+
+        return PageUtils.createPage(content, pageable, totalElements);
+    }
+
+    private int countTotalTravelPlaces() {
+        Long totalElements = jpaQueryFactory
+                .select(travelPlace.count())
+                .from(travelPlace)
+                .fetchOne();
+
+        if (totalElements == null) totalElements = 0L;
+        return totalElements.intValue();
     }
 
 
@@ -308,6 +332,8 @@ public class TravelPlaceRepositoryCustomImpl implements TravelPlaceRepositoryCus
                 .fetch();
 
     }
+
+
 
     private BooleanExpression themeTypeCondition(ThemeType themeType){
         if (themeType == ThemeType.All){

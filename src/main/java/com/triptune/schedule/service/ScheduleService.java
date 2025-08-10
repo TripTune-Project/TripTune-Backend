@@ -194,7 +194,7 @@ public class ScheduleService {
 
         // 여행지 정보: Page<TravelPlace> -> PageResponse<TravelSimpleResponse> 로 변경
         Pageable pageable = PageUtils.defaultPageable(page);
-        Page<PlaceResponse> travelPlacesDTO = travelPlaceRepository.findAllByAreaData(pageable, "대한민국", "서울", "중구");
+        Page<PlaceResponse> travelPlacesDTO = travelPlaceRepository.findDefaultTravelPlacesByJungGu(pageable);
 
         return ScheduleDetailResponse.from(schedule, PageResponse.of(travelPlacesDTO));
     }
