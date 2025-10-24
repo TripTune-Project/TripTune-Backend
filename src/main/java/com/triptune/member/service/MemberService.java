@@ -35,20 +35,20 @@ import com.triptune.travel.entity.TravelPlace;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Stream;
 
 @Slf4j
 @Service
-@Transactional
+@Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class MemberService {
     private static final int LOGOUT_DURATION = 3600;
@@ -66,6 +66,7 @@ public class MemberService {
     private final CookieUtils cookieUtils;
 
 
+    @Transactional
     public void join(JoinRequest joinRequest) {
         validateUniqueEmail(joinRequest.getEmail());
         validateUniqueNickname(joinRequest.getNickname());
@@ -104,6 +105,7 @@ public class MemberService {
     }
 
 
+    @Transactional
     public LoginResponse login(LoginRequest loginRequest, HttpServletResponse response) {
         Member member = memberRepository.findByEmail(loginRequest.getEmail())
                 .orElseThrow(() -> new FailLoginException(ErrorCode.FAILED_LOGIN));
@@ -126,7 +128,7 @@ public class MemberService {
         return passwordEncoder.matches(requestPassword, savedPassword);
     }
 
-
+    @Transactional
     public void logout(HttpServletResponse response, LogoutRequest logoutRequest, String accessToken) {
         Member member = getMemberByNickname(logoutRequest.getNickname());
         member.logout();
@@ -173,7 +175,7 @@ public class MemberService {
         emailService.sendResetPasswordEmail(findPasswordRequest);
     }
 
-
+    @Transactional
     public void resetPassword(ResetPasswordRequest resetPasswordRequest) {
         String email = redisService.getData(resetPasswordRequest.getPasswordToken());
 
@@ -186,7 +188,7 @@ public class MemberService {
         member.resetPassword(encodedPassword);
     }
 
-
+    @Transactional
     public void changePassword(Long memberId, ChangePasswordRequest passwordRequest){
         Member member = getMemberById(memberId);
 
@@ -211,6 +213,7 @@ public class MemberService {
                 .orElseThrow(() -> new DataNotFoundException(ErrorCode.MEMBER_NOT_FOUND));
     }
 
+    @Transactional
     public void changeNickname(Long memberId, ChangeNicknameRequest changeNicknameRequest) {
         validateUniqueNickname(changeNicknameRequest.getNickname());
 
@@ -218,6 +221,7 @@ public class MemberService {
         member.updateNickname(changeNicknameRequest.getNickname());
     }
 
+    @Transactional
     public void changeEmail(Long memberId, EmailRequest emailRequest) {
         validateUniqueEmail(emailRequest.getEmail());
         validateVerifiedEmail(emailRequest.getEmail());
@@ -233,7 +237,7 @@ public class MemberService {
         return travelPlaces.map(PlaceBookmarkResponse::from);
     }
 
-
+    @Transactional
     public void deactivateMember(HttpServletResponse response, String accessToken, Long memberId, DeactivateRequest deactivateRequest) {
         // 1. 회원 비밀번호 확인
         Member member = getMemberAndSocailMember(memberId);

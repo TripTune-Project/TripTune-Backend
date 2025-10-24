@@ -28,11 +28,11 @@ import com.triptune.global.exception.DataNotFoundException;
 import com.triptune.global.response.pagination.PageResponse;
 import com.triptune.global.response.pagination.SchedulePageResponse;
 import com.triptune.global.util.PageUtils;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -40,7 +40,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-@Transactional
+@Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class ScheduleService {
 
@@ -114,6 +114,7 @@ public class ScheduleService {
     }
 
 
+    @Transactional
     public List<ScheduleInfoResponse> createScheduleInfoResponse(Page<TravelSchedule> schedulePage, Long memberId){
         if (schedulePage.getContent().isEmpty()){
             return Collections.emptyList();
@@ -170,6 +171,7 @@ public class ScheduleService {
     }
 
 
+    @Transactional
     public ScheduleCreateResponse createSchedule(ScheduleCreateRequest scheduleCreateRequest, Long memberId){
         TravelSchedule travelSchedule = TravelSchedule.from(scheduleCreateRequest);
         TravelSchedule savedTravelSchedule = travelScheduleRepository.save(travelSchedule);
@@ -200,6 +202,7 @@ public class ScheduleService {
     }
 
 
+    @Transactional
     public void updateSchedule(Long memberId, Long scheduleId, ScheduleUpdateRequest scheduleUpdateRequest) {
         TravelSchedule schedule = getScheduleByScheduleId(scheduleId);
         TravelAttendee attendee = getAttendeeInfo(schedule, memberId);
@@ -221,7 +224,7 @@ public class ScheduleService {
         }
     }
 
-
+    @Transactional
     public void updateTravelRouteInSchedule(TravelSchedule schedule, List<RouteRequest> routeRequestList){
         travelRouteRepository.deleteAllByTravelSchedule_ScheduleId(schedule.getScheduleId());
 
@@ -248,6 +251,7 @@ public class ScheduleService {
     }
 
 
+    @Transactional
     public void deleteSchedule(Long scheduleId, Long memberId) {
         TravelAttendee attendee = travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_MemberId(scheduleId, memberId)
                 .orElseThrow(() -> new ForbiddenScheduleException(ErrorCode.FORBIDDEN_ACCESS_SCHEDULE));
@@ -259,7 +263,6 @@ public class ScheduleService {
         travelScheduleRepository.deleteById(scheduleId);
         deleteChatMessageByScheduleId(scheduleId);
     }
-
 
     public void deleteChatMessageByScheduleId(Long scheduleId){
         List<ChatMessage> chatMessages = chatMessageRepository.findAllByScheduleId(scheduleId);

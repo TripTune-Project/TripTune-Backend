@@ -21,7 +21,6 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
 @Slf4j
 public class S3Service {
     private static final String PROFILE_DIR = "img/profile/";

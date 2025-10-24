@@ -9,14 +9,14 @@ import com.triptune.global.exception.FileBadRequestException;
 import com.triptune.profile.properties.DefaultProfileImageProperties;
 import com.triptune.global.s3.S3Service;
 import com.triptune.global.util.FileUtils;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 @Service
-@Transactional
+@Transactional(readOnly = true)
 @RequiredArgsConstructor
 @EnableConfigurationProperties(DefaultProfileImageProperties.class)
 public class ProfileImageService {
@@ -26,11 +26,13 @@ public class ProfileImageService {
     private final ProfileImageRepository profileImageRepository;
     private final S3Service s3Service;
 
+    @Transactional
     public ProfileImage saveDefaultProfileImage() {
         ProfileImage profileImage = ProfileImage.from(profileImageProperties);
         return profileImageRepository.save(profileImage);
     }
 
+    @Transactional
     public void updateProfileImage(Long memberId, MultipartFile profileImageFile) {
         validateFileExtension(profileImageFile);
 
@@ -43,7 +45,6 @@ public class ProfileImageService {
         String s3ObjectUrl = s3Service.uploadToS3(profileImageFile, s3FileKey);
 
         profileImage.updateProfileImage(profileImageFile, s3ObjectUrl, s3FileKey, savedFileName, extension);
-        profileImage.getMember().updateUpdatedAt();
     }
 
     private void validateFileExtension(MultipartFile profileImageFile){
@@ -57,6 +58,7 @@ public class ProfileImageService {
                 .orElseThrow(() -> new DataNotFoundException(ErrorCode.PROFILE_IMAGE_NOT_FOUND));
     }
 
+    @Transactional
     public void updateDefaultProfileImage(Member member) {
         ProfileImage profileImage = member.getProfileImage();
 

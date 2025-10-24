@@ -14,17 +14,17 @@ import com.triptune.travel.entity.TravelPlace;
 import com.triptune.travel.enums.CityType;
 import com.triptune.travel.enums.ThemeType;
 import com.triptune.travel.repository.TravelPlaceRepository;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Service
+@Transactional(readOnly = true)
 @RequiredArgsConstructor
-@Transactional
 public class TravelService {
     private static final int RADIUS_SIZE = 5;
 
