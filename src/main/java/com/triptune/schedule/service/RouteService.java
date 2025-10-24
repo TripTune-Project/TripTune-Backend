@@ -14,14 +14,14 @@ import com.triptune.travel.repository.TravelPlaceRepository;
 import com.triptune.global.response.enums.ErrorCode;
 import com.triptune.global.exception.DataNotFoundException;
 import com.triptune.global.util.PageUtils;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
-@Transactional
+@Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class RouteService {
 
@@ -37,6 +37,7 @@ public class RouteService {
         return travelRoutes.map(RouteResponse::from);
     }
 
+    @Transactional
     public void createLastRoute(Long scheduleId, Long memberId, RouteCreateRequest routeCreateRequest) {
         TravelSchedule schedule = findTravelScheduleByScheduleId(scheduleId);
 

@@ -10,12 +10,12 @@ import com.triptune.travel.repository.TravelPlaceRepository;
 import com.triptune.global.response.enums.ErrorCode;
 import com.triptune.global.exception.DataExistException;
 import com.triptune.global.exception.DataNotFoundException;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
-@Transactional
+@Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class BookmarkService {
 
@@ -23,6 +23,7 @@ public class BookmarkService {
     private final TravelPlaceRepository travelPlaceRepository;
     private final BookmarkRepository bookmarkRepository;
 
+    @Transactional
     public void createBookmark(Long memberId, BookmarkRequest bookmarkRequest) {
         if (isExistBookmark(memberId, bookmarkRequest.getPlaceId())){
             throw new DataExistException(ErrorCode.ALREADY_EXISTED_BOOKMARK);
@@ -48,6 +49,7 @@ public class BookmarkService {
                 .orElseThrow(() -> new DataNotFoundException(ErrorCode.PLACE_NOT_FOUND));
     }
 
+    @Transactional
     public void deleteBookmark(Long memberId, Long placeId) {
         if (!isExistBookmark(memberId, placeId)){
             throw new DataNotFoundException(ErrorCode.BOOKMARK_NOT_FOUND);

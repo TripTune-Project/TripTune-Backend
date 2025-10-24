@@ -13,7 +13,6 @@ import com.triptune.global.redis.RedisService;
 import com.triptune.member.repository.MemberRepository;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -21,6 +20,7 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
@@ -29,8 +29,8 @@ import java.util.Random;
 
 @Slf4j
 @Service
+@Transactional(readOnly = true)
 @RequiredArgsConstructor
-@Transactional
 public class EmailService {
 
     private static final String IMAGE_FOLDER_PATH = "static/images/";
@@ -65,24 +65,9 @@ public class EmailService {
     private long resetPasswordDuration;
 
 
-    public void verifyAuthCode(VerifyAuthRequest verifyAuthRequest){
-        String savedCode = redisService.getEmailData(RedisKeyType.AUTH_CODE, verifyAuthRequest.getEmail());
-
-        if(savedCode == null){
-            throw new EmailVerifyException(ErrorCode.INVALID_VERIFIED_EMAIL);
-        }
-
-        if(!savedCode.equals(verifyAuthRequest.getAuthCode())){
-            throw new EmailVerifyException(ErrorCode.INCORRECT_VERIFIED_EMAIL);
-        }
-
-        redisService.saveEmailData(RedisKeyType.VERIFIED, verifyAuthRequest.getEmail(), "true", verificationDuration);
-    }
-
     public void sendCertificationEmail(EmailRequest emailRequest) throws MessagingException {
         String email = emailRequest.getEmail();
         validateUniqueEmail(email);
-
         deleteAuthCodeIfExists(email);
 
         String authCode = createAuthCode();
@@ -102,6 +87,7 @@ public class EmailService {
         log.info("인증 이메일 전송 완료 : {}", email);
     }
 
+
     private void validateUniqueEmail(String email){
         if(memberRepository.existsByEmail(email)){
             throw new DataExistException(ErrorCode.ALREADY_EXISTED_EMAIL);
@@ -113,6 +99,32 @@ public class EmailService {
             redisService.deleteEmailData(RedisKeyType.AUTH_CODE, email);
         }
     }
+
+    public String createAuthCode() {
+        Random random = new Random();
+
+        return random.ints(LEFT_LIMIT, RIGHT_LIMIT + 1)
+                .filter(i -> (i <= NUMERIC_LIMIT || i >= UPPERCASE_LIMIT) && (i <= 90 || i >= LOWERCASE_LIMIT))
+                .limit(TARGET_STRING_LENGTH)
+                .collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
+                .toString();
+    }
+
+
+    public void verifyAuthCode(VerifyAuthRequest verifyAuthRequest){
+        String savedCode = redisService.getEmailData(RedisKeyType.AUTH_CODE, verifyAuthRequest.getEmail());
+
+        if(savedCode == null){
+            throw new EmailVerifyException(ErrorCode.INVALID_VERIFIED_EMAIL);
+        }
+
+        if(!savedCode.equals(verifyAuthRequest.getAuthCode())){
+            throw new EmailVerifyException(ErrorCode.INCORRECT_VERIFIED_EMAIL);
+        }
+
+        redisService.saveEmailData(RedisKeyType.VERIFIED, verifyAuthRequest.getEmail(), "true", verificationDuration);
+    }
+
 
     public void sendResetPasswordEmail(FindPasswordRequest findPasswordRequest) throws MessagingException {
         String passwordToken = jwtUtils.createPasswordToken(findPasswordRequest.getEmail());
@@ -151,16 +163,5 @@ public class EmailService {
 
         return message;
     }
-
-    public String createAuthCode() {
-        Random random = new Random();
-
-        return random.ints(LEFT_LIMIT, RIGHT_LIMIT + 1)
-                .filter(i -> (i <= NUMERIC_LIMIT || i >= UPPERCASE_LIMIT) && (i <= 90 || i >= LOWERCASE_LIMIT))
-                .limit(TARGET_STRING_LENGTH)
-                .collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
-                .toString();
-    }
-
 
 }

@@ -14,15 +14,15 @@ import com.triptune.schedule.exception.ConflictAttendeeException;
 import com.triptune.schedule.exception.ForbiddenAttendeeException;
 import com.triptune.schedule.repository.TravelAttendeeRepository;
 import com.triptune.schedule.repository.TravelScheduleRepository;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-@Transactional
+@Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class AttendeeService {
     private static final int MAX_ATTENDEE_NUMBER = 5;
@@ -39,6 +39,7 @@ public class AttendeeService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional
     public void createAttendee(Long scheduleId, Long memberId, AttendeeRequest attendeeRequest) {
         TravelSchedule schedule = getScheduleByScheduleId(scheduleId);
         validateAttendeeAddition(scheduleId, memberId);
@@ -91,6 +92,7 @@ public class AttendeeService {
         }
     }
 
+    @Transactional
     public void updateAttendeePermission(Long scheduleId, Long memberId, Long attendeeId, AttendeePermissionRequest attendeePermissionRequest) {
         validateAuthor(scheduleId, memberId, ErrorCode.FORBIDDEN_UPDATE_ATTENDEE_PERMISSION);
 
@@ -104,7 +106,7 @@ public class AttendeeService {
         attendee.updatePermission(attendeePermissionRequest.getPermission());
     }
 
-
+    @Transactional
     public void leaveAttendee(Long scheduleId, Long memberId) {
         TravelAttendee attendee = travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_MemberId(scheduleId, memberId)
                 .orElseThrow(() -> new ForbiddenAttendeeException(ErrorCode.FORBIDDEN_ACCESS_SCHEDULE));
@@ -116,7 +118,7 @@ public class AttendeeService {
         travelAttendeeRepository.deleteById(attendee.getAttendeeId());
     }
 
-
+    @Transactional
     public void removeAttendee(Long scheduleId, Long memberId, Long attendeeId) {
         validateAuthor(scheduleId, memberId, ErrorCode.FORBIDDEN_REMOVE_ATTENDEE);
 

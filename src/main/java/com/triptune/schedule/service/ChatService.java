@@ -14,19 +14,19 @@ import com.triptune.schedule.repository.TravelAttendeeRepository;
 import com.triptune.schedule.repository.TravelScheduleRepository;
 import com.triptune.global.response.enums.ErrorCode;
 import com.triptune.global.util.PageUtils;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional(readOnly = true)
 @RequiredArgsConstructor
-@Transactional
 public class ChatService {
 
     private final ChatMessageRepository chatMessageRepository;
@@ -67,6 +67,7 @@ public class ChatService {
     }
 
 
+    @Transactional
     public ChatResponse sendChatMessage(ChatMessageRequest chatMessageRequest) {
         validateSchedule(chatMessageRequest.getScheduleId());
 
