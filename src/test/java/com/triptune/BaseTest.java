@@ -274,7 +274,6 @@ public abstract class BaseTest {
                 .longitude(127.0281573537)
                 .placeName("테스트 장소명")
                 .bookmarkCnt(0)
-                .createdAt(LocalDateTime.now())
                 .description("테스트 장소 설명")
                 .build();
     }
@@ -296,7 +295,6 @@ public abstract class BaseTest {
                 .longitude(127.0281573537)
                 .placeName("테스트 장소명")
                 .bookmarkCnt(0)
-                .createdAt(LocalDateTime.now())
                 .description("테스트 장소 설명")
                 .build();
     }
@@ -318,7 +316,6 @@ public abstract class BaseTest {
                 .longitude(127.0281573537)
                 .placeName("테스트 장소명")
                 .bookmarkCnt(bookmarkCnt)
-                .createdAt(LocalDateTime.now())
                 .description("테스트 장소 설명")
                 .build();
     }
@@ -338,7 +335,6 @@ public abstract class BaseTest {
                 .longitude(longitude)
                 .placeName("테스트 장소명")
                 .bookmarkCnt(0)
-                .createdAt(LocalDateTime.now())
                 .description("테스트 장소 설명")
                 .travelImageList(travelImageList)
                 .build();
@@ -361,7 +357,6 @@ public abstract class BaseTest {
                 .longitude(longitude)
                 .placeName("테스트 장소명")
                 .bookmarkCnt(0)
-                .createdAt(LocalDateTime.now())
                 .description("테스트 장소 설명")
                 .build();
     }
@@ -381,7 +376,6 @@ public abstract class BaseTest {
                 .longitude(longitude)
                 .placeName("테스트 장소명")
                 .bookmarkCnt(0)
-                .createdAt(LocalDateTime.now())
                 .description("테스트 장소 설명")
                 .build();
     }
@@ -402,7 +396,6 @@ public abstract class BaseTest {
                 .longitude(127.0281573537)
                 .placeName("테스트 장소명")
                 .bookmarkCnt(0)
-                .createdAt(LocalDateTime.now())
                 .description("테스트 장소 설명")
                 .travelImageList(travelImageList)
                 .build();
@@ -423,7 +416,6 @@ public abstract class BaseTest {
                 .longitude(127.0281573537)
                 .placeName(placeName)
                 .bookmarkCnt(0)
-                .createdAt(LocalDateTime.now())
                 .description("테스트 장소 설명")
                 .build();
     }
@@ -444,7 +436,6 @@ public abstract class BaseTest {
                 .longitude(127.0281573537)
                 .placeName(placeName)
                 .bookmarkCnt(0)
-                .createdAt(LocalDateTime.now())
                 .description("테스트 장소 설명")
                 .travelImageList(travelImageList)
                 .build();
@@ -465,7 +456,6 @@ public abstract class BaseTest {
                 .longitude(127.0281573537)
                 .placeName(placeName)
                 .bookmarkCnt(bookmarkCnt)
-                .createdAt(LocalDateTime.now())
                 .description("테스트 장소 설명")
                 .build();
     }
@@ -485,7 +475,6 @@ public abstract class BaseTest {
                 .longitude(127.0281573537)
                 .placeName("장소")
                 .bookmarkCnt(0)
-                .createdAt(LocalDateTime.now())
                 .description("테스트 장소 설명")
                 .travelImageList(travelImageList)
                 .build();
@@ -508,7 +497,6 @@ public abstract class BaseTest {
                 .longitude(127.0281573537)
                 .placeName("장소")
                 .bookmarkCnt(0)
-                .createdAt(LocalDateTime.now())
                 .description("테스트 장소 설명")
                 .useTime(useTime)
                 .travelImageList(travelImageList)
@@ -532,7 +520,6 @@ public abstract class BaseTest {
                 .longitude(127.0281573537)
                 .placeName("장소")
                 .bookmarkCnt(0)
-                .createdAt(LocalDateTime.now())
                 .description("테스트 장소 설명")
                 .checkInTime(checkInTime)
                 .checkOutTime(checkOutTime)
@@ -559,7 +546,6 @@ public abstract class BaseTest {
                 .fileName(fileName + ".jpg")
                 .fileType("jpg")
                 .fileSize(20)
-                .createdAt(LocalDateTime.now())
                 .isThumbnail(isThumbnail)
                 .build();
     }

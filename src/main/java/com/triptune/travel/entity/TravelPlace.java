@@ -2,6 +2,7 @@ package com.triptune.travel.entity;
 
 import com.triptune.common.entity.*;
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -12,8 +13,8 @@ import java.util.List;
 
 @Entity
 @Getter
-@NoArgsConstructor
-public class TravelPlace {
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+public class TravelPlace extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -76,18 +77,13 @@ public class TravelPlace {
     @Column(name = "bookmark_cnt")
     private int bookmarkCnt;
 
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
-
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
 
     @OneToMany(mappedBy = "travelPlace", fetch = FetchType.LAZY)
     private List<TravelImage> travelImageList = new ArrayList<>();
 
 
     @Builder
-    public TravelPlace(Long placeId, Country country, City city, District district, ApiCategory apiCategory, ApiContentType apiContentType, String placeName, String address, String detailAddress, String useTime, String checkInTime, String checkOutTime, String homepage, String phoneNumber, double longitude, double latitude, String description, int bookmarkCnt, LocalDateTime createdAt, LocalDateTime updatedAt, List<TravelImage> travelImageList) {
+    public TravelPlace(Long placeId, Country country, City city, District district, ApiCategory apiCategory, ApiContentType apiContentType, String placeName, String address, String detailAddress, String useTime, String checkInTime, String checkOutTime, String homepage, String phoneNumber, double longitude, double latitude, String description, int bookmarkCnt, List<TravelImage> travelImageList) {
         this.placeId = placeId;
         this.country = country;
         this.city = city;
@@ -106,8 +102,6 @@ public class TravelPlace {
         this.latitude = latitude;
         this.description = description;
         this.bookmarkCnt = bookmarkCnt;
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
         this.travelImageList = travelImageList;
     }
 

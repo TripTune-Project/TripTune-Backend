@@ -1,18 +1,16 @@
 package com.triptune.travel.entity;
 
+import com.triptune.common.entity.BaseTimeEntity;
 import jakarta.persistence.*;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Getter
 @Setter
-@NoArgsConstructor
-public class TravelImage {
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+public class TravelImage extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -41,15 +39,12 @@ public class TravelImage {
     @Column(name = "file_size")
     private double fileSize;
 
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
-
     @Column(name = "is_thumbnail")
     private boolean isThumbnail;
 
 
     @Builder
-    public TravelImage(Long travelImageId, TravelPlace travelPlace, String s3ObjectUrl, String s3ObjectKey, String originalName, String fileName, String fileType, double fileSize, LocalDateTime createdAt, boolean isThumbnail) {
+    public TravelImage(Long travelImageId, TravelPlace travelPlace, String s3ObjectUrl, String s3ObjectKey, String originalName, String fileName, String fileType, double fileSize, boolean isThumbnail) {
         this.travelImageId = travelImageId;
         this.travelPlace = travelPlace;
         this.s3ObjectUrl = s3ObjectUrl;
@@ -58,7 +53,6 @@ public class TravelImage {
         this.fileName = fileName;
         this.fileType = fileType;
         this.fileSize = fileSize;
-        this.createdAt = createdAt;
         this.isThumbnail = isThumbnail;
     }
 }
