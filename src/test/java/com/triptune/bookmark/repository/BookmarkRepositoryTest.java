@@ -1,6 +1,7 @@
 package com.triptune.bookmark.repository;
 
 import com.triptune.bookmark.BookmarkTest;
+import com.triptune.bookmark.entity.Bookmark;
 import com.triptune.bookmark.enums.BookmarkSortType;
 import com.triptune.common.entity.ApiCategory;
 import com.triptune.common.entity.City;
@@ -61,13 +62,29 @@ class BookmarkRepositoryTest extends BookmarkTest {
     }
 
     @Test
+    @DisplayName("북마크 생성 시 생성일 자동 입력 확인")
+    void createBookmark() {
+        // given
+        Bookmark bookmark = Bookmark.from(member, travelPlace1);
+
+        // when
+        bookmarkRepository.save(bookmark);
+
+        // then
+        assertThat(bookmark.getCreatedAt()).isNotNull();
+
+    }
+
+    @Test
     @DisplayName("북마크로 등록된 여행지 데이터 조회 - 최신순")
-    void getBookmarkTravelPlaces_sortNewest(){
+    void getBookmarkTravelPlaces_sortNewest() throws Exception{
         // given
         Pageable pageable = PageUtils.bookmarkPageable(1);
-        bookmarkRepository.save(createBookmark(null, member, travelPlace1, LocalDateTime.now().minusDays(2)));
-        bookmarkRepository.save(createBookmark(null, member, travelPlace2, LocalDateTime.now().minusDays(1)));
-        bookmarkRepository.save(createBookmark(null, member, travelPlace3, LocalDateTime.now()));
+        bookmarkRepository.save(createBookmark(null, member, travelPlace1));
+        Thread.sleep(10);
+        bookmarkRepository.save(createBookmark(null, member, travelPlace2));
+        Thread.sleep(10);
+        bookmarkRepository.save(createBookmark(null, member, travelPlace3));
 
         // when
         Page<TravelPlace> response = bookmarkRepository.findSortedMemberBookmarks(member.getMemberId(), pageable, BookmarkSortType.NEWEST);
@@ -84,9 +101,9 @@ class BookmarkRepositoryTest extends BookmarkTest {
     void getBookmarkTravelPlaces_sortName(){
         // given
         Pageable pageable = PageUtils.bookmarkPageable(1);
-        bookmarkRepository.save(createBookmark(null, member, travelPlace1, LocalDateTime.now().minusDays(2)));
-        bookmarkRepository.save(createBookmark(null, member, travelPlace2, LocalDateTime.now().minusDays(1)));
-        bookmarkRepository.save(createBookmark(null, member, travelPlace3, LocalDateTime.now()));
+        bookmarkRepository.save(createBookmark(null, member, travelPlace1));
+        bookmarkRepository.save(createBookmark(null, member, travelPlace2));
+        bookmarkRepository.save(createBookmark(null, member, travelPlace3));
 
         // when
         Page<TravelPlace> response = bookmarkRepository.findSortedMemberBookmarks(member.getMemberId(), pageable, BookmarkSortType.NAME);
