@@ -1943,11 +1943,12 @@ public class MemberControllerTest extends MemberTest {
     void getMemberBookmarks_sortNewest() throws Exception {
         // given
         Member member = memberRepository.save(createMember(null, "member@email.com"));
-        bookmarkRepository.saveAll(List.of(
-                createBookmark(null, member, travelPlace1, LocalDateTime.now()),
-                createBookmark(null, member, travelPlace2, LocalDateTime.now().minusDays(1)),
-                createBookmark(null, member, travelPlace3, LocalDateTime.now().minusDays(2))
-        ));
+        bookmarkRepository.save(createBookmark(null, member, travelPlace1));
+        Thread.sleep(10);
+        bookmarkRepository.save(createBookmark(null, member, travelPlace2));
+        Thread.sleep(10);
+        bookmarkRepository.save(createBookmark(null, member, travelPlace3));
+
 
         mockAuthentication(member);
 
@@ -1955,34 +1956,6 @@ public class MemberControllerTest extends MemberTest {
         mockMvc.perform(get("/api/members/bookmark")
                         .param("page", "1")
                         .param("sort", "newest"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.totalElements").value(3))
-                .andExpect(jsonPath("$.data.content[0].placeName").value(travelPlace1.getPlaceName()))
-                .andExpect(jsonPath("$.data.content[0].thumbnailUrl").value(travelImage1.getS3ObjectUrl()))
-                .andExpect(jsonPath("$.data.content[1].placeName").value(travelPlace2.getPlaceName()))
-                .andExpect(jsonPath("$.data.content[1].thumbnailUrl").value(travelImage2.getS3ObjectUrl()))
-                .andExpect(jsonPath("$.data.content[2].placeName").value(travelPlace3.getPlaceName()))
-                .andExpect(jsonPath("$.data.content[2].thumbnailUrl").value(travelImage3.getS3ObjectUrl()));
-    }
-
-    @Test
-    @DisplayName("회원 북마크 조회 - 오래된순")
-    void getMemberBookmarks_sortOldest() throws Exception {
-        // given
-        Member member = memberRepository.save(createMember(null, "member@email.com"));
-        bookmarkRepository.saveAll(List.of(
-                createBookmark(null, member, travelPlace1, LocalDateTime.now()),
-                createBookmark(null, member, travelPlace2, LocalDateTime.now().minusDays(1)),
-                createBookmark(null, member, travelPlace3, LocalDateTime.now().minusDays(2))
-        ));
-
-        mockAuthentication(member);
-
-        // when, then
-        mockMvc.perform(get("/api/members/bookmark")
-                        .param("page", "1")
-                        .param("sort", "oldest"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.totalElements").value(3))
@@ -1995,14 +1968,43 @@ public class MemberControllerTest extends MemberTest {
     }
 
     @Test
+    @DisplayName("회원 북마크 조회 - 오래된순")
+    void getMemberBookmarks_sortOldest() throws Exception {
+        // given
+        Member member = memberRepository.save(createMember(null, "member@email.com"));
+        bookmarkRepository.save(createBookmark(null, member, travelPlace1));
+        Thread.sleep(10);
+        bookmarkRepository.save(createBookmark(null, member, travelPlace2));
+        Thread.sleep(10);
+        bookmarkRepository.save(createBookmark(null, member, travelPlace3));
+
+
+        mockAuthentication(member);
+
+        // when, then
+        mockMvc.perform(get("/api/members/bookmark")
+                        .param("page", "1")
+                        .param("sort", "oldest"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.totalElements").value(3))
+                .andExpect(jsonPath("$.data.content[0].placeName").value(travelPlace1.getPlaceName()))
+                .andExpect(jsonPath("$.data.content[0].thumbnailUrl").value(travelImage1.getS3ObjectUrl()))
+                .andExpect(jsonPath("$.data.content[1].placeName").value(travelPlace2.getPlaceName()))
+                .andExpect(jsonPath("$.data.content[1].thumbnailUrl").value(travelImage2.getS3ObjectUrl()))
+                .andExpect(jsonPath("$.data.content[2].placeName").value(travelPlace3.getPlaceName()))
+                .andExpect(jsonPath("$.data.content[2].thumbnailUrl").value(travelImage3.getS3ObjectUrl()));
+    }
+
+    @Test
     @DisplayName("회원 북마크 조회 - 이름순")
     void getMemberBookmarks_sortName() throws Exception {
         // given
         Member member = memberRepository.save(createMember(null, "member@email.com"));
         bookmarkRepository.saveAll(List.of(
-                createBookmark(null, member, travelPlace1, LocalDateTime.now()),
-                createBookmark(null, member, travelPlace2, LocalDateTime.now().minusDays(1)),
-                createBookmark(null, member, travelPlace3, LocalDateTime.now().minusDays(2))
+                createBookmark(null, member, travelPlace1),
+                createBookmark(null, member, travelPlace2),
+                createBookmark(null, member, travelPlace3)
         ));
 
         mockAuthentication(member);
@@ -2088,8 +2090,8 @@ public class MemberControllerTest extends MemberTest {
         ));
 
         bookmarkRepository.saveAll(List.of(
-                createBookmark(null, member, travelPlace1, LocalDateTime.now()),
-                createBookmark(null, member, travelPlace1, LocalDateTime.now())
+                createBookmark(null, member, travelPlace1),
+                createBookmark(null, member, travelPlace1)
         ));
 
         mockAuthentication(member);
@@ -2140,8 +2142,8 @@ public class MemberControllerTest extends MemberTest {
         ));
 
         bookmarkRepository.saveAll(List.of(
-                createBookmark(null, member, travelPlace1, LocalDateTime.now()),
-                createBookmark(null, member, travelPlace1, LocalDateTime.now())
+                createBookmark(null, member, travelPlace1),
+                createBookmark(null, member, travelPlace1)
         ));
 
         mockAuthentication(member);
@@ -2192,8 +2194,8 @@ public class MemberControllerTest extends MemberTest {
         ));
 
         bookmarkRepository.saveAll(List.of(
-                createBookmark(null, member, travelPlace1, LocalDateTime.now()),
-                createBookmark(null, member, travelPlace1, LocalDateTime.now())
+                createBookmark(null, member, travelPlace1),
+                createBookmark(null, member, travelPlace1)
         ));
 
         mockAuthentication(member);
@@ -2252,8 +2254,8 @@ public class MemberControllerTest extends MemberTest {
         ));
 
         bookmarkRepository.saveAll(List.of(
-                createBookmark(null, member, travelPlace1, LocalDateTime.now()),
-                createBookmark(null, member, travelPlace1, LocalDateTime.now())
+                createBookmark(null, member, travelPlace1),
+                createBookmark(null, member, travelPlace1)
         ));
 
         mockAuthentication(member);
@@ -2294,8 +2296,8 @@ public class MemberControllerTest extends MemberTest {
         );
 
         bookmarkRepository.saveAll(List.of(
-                createBookmark(null, member, travelPlace1, LocalDateTime.now()),
-                createBookmark(null, member, travelPlace1, LocalDateTime.now())
+                createBookmark(null, member, travelPlace1),
+                createBookmark(null, member, travelPlace1)
         ));
 
         mockAuthentication(member);

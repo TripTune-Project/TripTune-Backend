@@ -106,7 +106,7 @@ public class TravelControllerTest extends TravelTest {
     @DisplayName("회원의 위치를 기반으로 여행지 목록을 조회")
     void getNearByTravelPlaces_member() throws Exception {
         // given
-        bookmarkRepository.save(createBookmark(null, member, travelPlace1, LocalDateTime.now()));
+        bookmarkRepository.save(createBookmark(null, member, travelPlace1));
         mockAuthentication(member);
 
         PlaceLocationRequest request = createTravelLocationRequest(37.4970465429, 127.0281573537);
@@ -185,7 +185,7 @@ public class TravelControllerTest extends TravelTest {
     void getNearByTravelPlaces_nonMember() throws Exception {
         // given
         // 북마크 존재하지만 비회원이기 때문에 조회 결과 bookmarkStatus 는 false 이여야 함
-        bookmarkRepository.save(createBookmark(null, member, travelPlace1, LocalDateTime.now()));
+        bookmarkRepository.save(createBookmark(null, member, travelPlace1));
         PlaceLocationRequest request = createTravelLocationRequest(37.4970465429, 127.0281573537);
 
         // when, then
@@ -228,7 +228,7 @@ public class TravelControllerTest extends TravelTest {
     @DisplayName("회원의 위치를 기반으로 여행지 검색할 때, 검색 결과가 존재하는 경우")
     void searchTravelPlacesWithLocation_member() throws Exception {
         // given
-        bookmarkRepository.save(createBookmark(null, member, travelPlace1, LocalDateTime.now()));
+        bookmarkRepository.save(createBookmark(null, member, travelPlace1));
         mockAuthentication(member);
 
         PlaceSearchRequest request = createTravelSearchRequest(37.4970465429, 127.0281573537, "강남");
@@ -273,7 +273,7 @@ public class TravelControllerTest extends TravelTest {
     void searchTravelPlacesWithLocation_nonMember() throws Exception {
         // given
         // 북마크 존재하지만 비회원이기 때문에 조회 결과 bookmarkStatus 는 false 이여야 함
-        bookmarkRepository.save(createBookmark(null, member, travelPlace1, LocalDateTime.now()));
+        bookmarkRepository.save(createBookmark(null, member, travelPlace1));
         PlaceSearchRequest request = createTravelSearchRequest(37.4970465429, 127.0281573537, "강남");
 
         // when, then
@@ -315,7 +315,7 @@ public class TravelControllerTest extends TravelTest {
     @DisplayName("회원의 위치를 기반하지 않고 여행지를 검색할 때, 검색 결과가 존재하는 경우")
     void searchTravelPlacesWithoutLocation_member() throws Exception {
         // given
-        bookmarkRepository.save(createBookmark(null, member, travelPlace1, LocalDateTime.now()));
+        bookmarkRepository.save(createBookmark(null, member, travelPlace1));
         mockAuthentication(member);
 
         PlaceSearchRequest request = createTravelSearchRequest("강남");
@@ -359,7 +359,7 @@ public class TravelControllerTest extends TravelTest {
     @DisplayName("비회원의 위치를 기반하지 않고 여행지를 검색할 때, 검색 결과가 존재하는 경우")
     void searchTravelPlacesWithoutLocation_nonMember() throws Exception {
         // given
-        bookmarkRepository.save(createBookmark(null, member, travelPlace1, LocalDateTime.now()));
+        bookmarkRepository.save(createBookmark(null, member, travelPlace1));
         PlaceSearchRequest request = createTravelSearchRequest("강남");
 
         // when, then
@@ -466,7 +466,7 @@ public class TravelControllerTest extends TravelTest {
         ApiContentType apiContentType = apiContentTypeRepository.save(createApiContentType(ThemeType.ATTRACTIONS));
         travelPlace1 = travelPlaceRepository.save(createTravelPlace(null, country, city, district1, apiCategory, apiContentType, List.of(travelImage1, travelImage2)));
 
-        bookmarkRepository.save(createBookmark(null, member, travelPlace1, LocalDateTime.now()));
+        bookmarkRepository.save(createBookmark(null, member, travelPlace1));
         mockAuthentication(member);
 
         // when, then
@@ -486,7 +486,7 @@ public class TravelControllerTest extends TravelTest {
         ApiContentType apiContentType = apiContentTypeRepository.save(createApiContentType(ThemeType.ATTRACTIONS));
         travelPlace1 = travelPlaceRepository.save(createTravelPlace(null, country, city, district1, apiCategory, apiContentType, List.of(travelImage1, travelImage2)));
 
-        bookmarkRepository.save(createBookmark(null, member, travelPlace1, LocalDateTime.now()));
+        bookmarkRepository.save(createBookmark(null, member, travelPlace1));
 
         // when, then
         mockMvc.perform(get("/api/travels/{placeId}", travelPlace1.getPlaceId()))

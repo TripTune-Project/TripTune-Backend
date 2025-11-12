@@ -600,12 +600,11 @@ public abstract class BaseTest {
                 .build();
     }
 
-    protected Bookmark createBookmark(Long bookmarkId, Member member, TravelPlace travelPlace, LocalDateTime localDateTime){
+    protected Bookmark createBookmark(Long bookmarkId, Member member, TravelPlace travelPlace){
         return Bookmark.builder()
                 .bookmarkId(bookmarkId)
                 .member(member)
                 .travelPlace(travelPlace)
-                .createdAt(localDateTime)
                 .build();
     }
 

@@ -148,7 +148,7 @@ class BookmarkControllerTest extends BookmarkTest {
         // given
         Member member = memberRepository.save(createMember(null, "member@email.com"));
         TravelPlace travelPlace = travelPlaceRepository.save(createTravelPlace(null, country, city, district, apiCategory));
-        bookmarkRepository.save(createBookmark(null, member, travelPlace, LocalDateTime.now()));
+        bookmarkRepository.save(createBookmark(null, member, travelPlace));
 
         mockAuthentication(member);
 
@@ -208,7 +208,7 @@ class BookmarkControllerTest extends BookmarkTest {
         // given
         Member member = memberRepository.save(createMember(null, "member@email.com"));
         TravelPlace travelPlace = travelPlaceRepository.save(createTravelPlace(null, country, city, district, apiCategory, "여행지", 10));
-        bookmarkRepository.save(createBookmark(null, member, travelPlace, LocalDateTime.now()));
+        bookmarkRepository.save(createBookmark(null, member, travelPlace));
         mockAuthentication(member);
 
         // when, then
