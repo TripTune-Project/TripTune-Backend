@@ -1,16 +1,14 @@
 package com.triptune.common.entity;
 
-import com.triptune.travel.entity.TravelPlace;
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
-
 @Entity
 @Getter
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class District {
 
     @Id
