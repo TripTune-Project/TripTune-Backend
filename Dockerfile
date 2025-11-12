@@ -1,5 +1,5 @@
 # base 이미지 설정
-FROM openjdk:17-jdk-slim
+FROM eclipse-temurin:17-jdk-jammy
 
 # JAR 파일을 Docker 컨테이너로 복사
 ARG JAR_FILE=build/libs/*.jar
