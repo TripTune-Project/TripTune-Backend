@@ -48,8 +48,8 @@ public class ScheduleService {
     private final MemberRepository memberRepository;
     private final TravelAttendeeRepository travelAttendeeRepository;
     private final TravelPlaceRepository travelPlaceRepository;
-    private final TravelRouteRepository travelRouteRepository;
     private final ChatMessageRepository chatMessageRepository;
+    private final RouteService routeService;
 
     public SchedulePageResponse<ScheduleInfoResponse> getAllSchedules(int page, Long memberId) {
         Pageable pageable = PageUtils.schedulePageable(page);
@@ -209,7 +209,7 @@ public class ScheduleService {
         checkScheduleEditPermission(attendee);
 
         schedule.updateSchedule(scheduleUpdateRequest);
-        updateTravelRouteInSchedule(schedule, scheduleUpdateRequest.getTravelRoutes());
+        routeService.updateTravelRouteInSchedule(schedule, scheduleUpdateRequest.getTravelRoutes());
     }
 
 
@@ -222,32 +222,6 @@ public class ScheduleService {
         if (!attendee.getPermission().isEnableEdit()){
             throw new ForbiddenScheduleException(ErrorCode.FORBIDDEN_EDIT_SCHEDULE);
         }
-    }
-
-    @Transactional
-    public void updateTravelRouteInSchedule(TravelSchedule schedule, List<RouteRequest> routeRequestList){
-        travelRouteRepository.deleteAllByTravelSchedule_ScheduleId(schedule.getScheduleId());
-
-        if (schedule.getTravelRoutes() == null){
-            schedule.updateTravelRouteList(new ArrayList<>());
-        } else{
-            schedule.getTravelRoutes().clear();
-        }
-
-        if (routeRequestList != null && !routeRequestList.isEmpty()){
-            for(RouteRequest routeRequest : routeRequestList){
-                TravelPlace place = getPlaceByPlaceId(routeRequest.getPlaceId());
-                TravelRoute route = TravelRoute.of(schedule, place, routeRequest.getRouteOrder());
-                schedule.getTravelRoutes().add(route);
-                travelRouteRepository.save(route);
-            }
-        }
-    }
-
-
-    private TravelPlace getPlaceByPlaceId(Long placeId){
-        return travelPlaceRepository.findById(placeId)
-                .orElseThrow(() ->  new DataNotFoundException(ErrorCode.PLACE_NOT_FOUND));
     }
 
 
@@ -264,7 +238,7 @@ public class ScheduleService {
         deleteChatMessageByScheduleId(scheduleId);
     }
 
-    public void deleteChatMessageByScheduleId(Long scheduleId){
+    private void deleteChatMessageByScheduleId(Long scheduleId){
         List<ChatMessage> chatMessages = chatMessageRepository.findAllByScheduleId(scheduleId);
 
         if (!chatMessages.isEmpty()){

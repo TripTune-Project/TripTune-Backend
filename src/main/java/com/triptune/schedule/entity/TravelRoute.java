@@ -3,13 +3,14 @@ package com.triptune.schedule.entity;
 import com.triptune.common.entity.BaseCreatedEntity;
 import com.triptune.travel.entity.TravelPlace;
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
 @Getter
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class TravelRoute extends BaseCreatedEntity {
 
     @Id
@@ -43,6 +44,10 @@ public class TravelRoute extends BaseCreatedEntity {
     }
 
     public static TravelRoute of(TravelSchedule travelSchedule, TravelPlace travelPlace, int routeOrder){
-        return new TravelRoute(travelSchedule, travelPlace, routeOrder);
+        return TravelRoute.builder()
+                .travelSchedule(travelSchedule)
+                .travelPlace(travelPlace)
+                .routeOrder(routeOrder)
+                .build();
     }
 }
