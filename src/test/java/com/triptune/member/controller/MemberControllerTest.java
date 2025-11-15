@@ -1037,7 +1037,6 @@ public class MemberControllerTest extends MemberTest {
 
         assertThat(passwordEncoder.matches(request.getPassword(), member.getPassword())).isTrue();
         assertThat(member.getJoinType()).isEqualTo(JoinType.NATIVE);
-        assertThat(member.getUpdatedAt()).isNotNull();
     }
 
 
@@ -1069,7 +1068,6 @@ public class MemberControllerTest extends MemberTest {
 
         assertThat(passwordEncoder.matches(request.getPassword(), member.getPassword())).isTrue();
         assertThat(member.getJoinType()).isEqualTo(JoinType.BOTH);
-        assertThat(member.getUpdatedAt()).isNotNull();
     }
 
     @Test
@@ -1101,7 +1099,6 @@ public class MemberControllerTest extends MemberTest {
 
         assertThat(passwordEncoder.matches(request.getPassword(), member.getPassword())).isTrue();
         assertThat(member.getJoinType()).isEqualTo(JoinType.BOTH);
-        assertThat(member.getUpdatedAt()).isNotNull();
     }
 
 
@@ -1303,6 +1300,7 @@ public class MemberControllerTest extends MemberTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()));
+
     }
 
     @Test
@@ -1325,6 +1323,7 @@ public class MemberControllerTest extends MemberTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()));
+
     }
 
 
@@ -1684,6 +1683,7 @@ public class MemberControllerTest extends MemberTest {
     @Test
     @DisplayName("회원 닉네임 변경")
     void changeNickname() throws Exception {
+
         // given
         Member member = memberRepository.save(createMember(null, "member@email.com"));
         ChangeNicknameRequest request = createChangeNicknameRequest("newNickname");
@@ -1697,6 +1697,7 @@ public class MemberControllerTest extends MemberTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()));
+
     }
 
 
@@ -2304,13 +2305,21 @@ public class MemberControllerTest extends MemberTest {
 
         DeactivateRequest request = createDeactivateRequest("test123@");
 
-        // when, then
-        mockMvc.perform(patch("/api/members/deactivate")
+        // when
+        MvcResult result = mockMvc.perform(patch("/api/members/deactivate")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(toJsonString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()));
+                .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()))
+                .andReturn();
+
+
+        // then
+        Cookie[] cookies = result.getResponse().getCookies();
+
+        assertThat(cookies).isNotNull();
+        assertThat(cookies.length).isEqualTo(3);
     }
 
 

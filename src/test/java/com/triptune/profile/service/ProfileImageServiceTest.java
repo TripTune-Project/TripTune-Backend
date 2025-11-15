@@ -27,7 +27,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-public class ProfileImageServiceMockTest extends ProfileImageTest {
+public class ProfileImageServiceTest extends ProfileImageTest {
 
     @InjectMocks private ProfileImageService profileImageService;
     @Mock private S3Service s3Service;
@@ -56,7 +56,6 @@ public class ProfileImageServiceMockTest extends ProfileImageTest {
         assertThat(profileImage.getOriginalName()).isEqualTo(mockMultipartFile.getOriginalFilename());
         assertThat(profileImage.getFileSize()).isEqualTo(mockMultipartFile.getSize());
         assertThat(profileImage.getFileType()).isEqualTo("jpeg");
-        assertThat(profileImage.getUpdatedAt()).isNotNull();
     }
 
 

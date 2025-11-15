@@ -212,7 +212,6 @@ class CustomOAuth2UserServiceTest extends SocialMemberTest {
         assertThat(response.getNickname()).isEqualTo(nativeMember.getNickname());
         assertThat(response.getProfileImage().getS3ObjectUrl()).isEqualTo(profileImage.getS3ObjectUrl());
         assertThat(response.getJoinType()).isEqualTo(JoinType.BOTH);
-        assertThat(response.getUpdatedAt()).isNotNull();
 
         verify(socialMemberRepository, times(1)).save(any());
     }
@@ -243,7 +242,6 @@ class CustomOAuth2UserServiceTest extends SocialMemberTest {
         assertThat(response.getNickname()).isEqualTo(nativeMember.getNickname());
         assertThat(response.getProfileImage().getS3ObjectUrl()).isEqualTo(profileImage.getS3ObjectUrl());
         assertThat(response.getJoinType()).isEqualTo(JoinType.BOTH);
-        assertThat(response.getUpdatedAt()).isNotNull();
 
         verify(socialMemberRepository, times(1)).save(any());
     }
@@ -273,7 +271,6 @@ class CustomOAuth2UserServiceTest extends SocialMemberTest {
         assertThat(response.getNickname()).isEqualTo(naverMember.getNickname());
         assertThat(response.getProfileImage().getS3ObjectUrl()).isEqualTo(profileImage.getS3ObjectUrl());
         assertThat(response.getJoinType()).isEqualTo(JoinType.SOCIAL);
-        assertThat(response.getUpdatedAt()).isNotNull();
 
         verify(socialMemberRepository, times(1)).save(any());
     }
@@ -304,7 +301,6 @@ class CustomOAuth2UserServiceTest extends SocialMemberTest {
         assertThat(response.getNickname()).isEqualTo(bothMember.getNickname());
         assertThat(response.getProfileImage().getS3ObjectUrl()).isEqualTo(profileImage.getS3ObjectUrl());
         assertThat(response.getJoinType()).isEqualTo(JoinType.BOTH);
-        assertThat(response.getUpdatedAt()).isNotNull();
 
         verify(socialMemberRepository, times(1)).save(any());
     }
@@ -566,7 +562,6 @@ class CustomOAuth2UserServiceTest extends SocialMemberTest {
         assertThat(response.getNickname()).isEqualTo(nativeMember.getNickname());
         assertThat(response.getProfileImage().getS3ObjectUrl()).isEqualTo(profileImage.getS3ObjectUrl());
         assertThat(response.getJoinType()).isEqualTo(JoinType.BOTH);
-        assertThat(response.getUpdatedAt()).isNotNull();
 
         verify(socialMemberRepository, times(1)).save(any());
     }
@@ -594,7 +589,6 @@ class CustomOAuth2UserServiceTest extends SocialMemberTest {
         assertThat(response.getNickname()).isEqualTo(nativeMember.getNickname());
         assertThat(response.getProfileImage().getS3ObjectUrl()).isEqualTo(profileImage.getS3ObjectUrl());
         assertThat(response.getJoinType()).isEqualTo(JoinType.BOTH);
-        assertThat(response.getUpdatedAt()).isNotNull();
 
         verify(socialMemberRepository, times(1)).save(any());
     }
@@ -621,7 +615,6 @@ class CustomOAuth2UserServiceTest extends SocialMemberTest {
         assertThat(response.getNickname()).isEqualTo(naverMember.getNickname());
         assertThat(response.getProfileImage().getS3ObjectUrl()).isEqualTo(profileImage.getS3ObjectUrl());
         assertThat(response.getJoinType()).isEqualTo(JoinType.SOCIAL);
-        assertThat(response.getUpdatedAt()).isNotNull();
 
         verify(socialMemberRepository, times(1)).save(any());
     }
@@ -649,7 +642,6 @@ class CustomOAuth2UserServiceTest extends SocialMemberTest {
         assertThat(response.getNickname()).isEqualTo(bothMember.getNickname());
         assertThat(response.getProfileImage().getS3ObjectUrl()).isEqualTo(profileImage.getS3ObjectUrl());
         assertThat(response.getJoinType()).isEqualTo(JoinType.BOTH);
-        assertThat(response.getUpdatedAt()).isNotNull();
 
         verify(socialMemberRepository, times(1)).save(any());
     }
@@ -680,8 +672,6 @@ class CustomOAuth2UserServiceTest extends SocialMemberTest {
         assertThat(response.getNickname()).isNotNull();
         assertThat(response.getProfileImage().getS3ObjectUrl()).isEqualTo(profileImage.getS3ObjectUrl());
         assertThat(response.getJoinType()).isEqualTo(JoinType.SOCIAL);
-        assertThat(response.getCreatedAt()).isNotNull();
-        assertThat(response.getUpdatedAt()).isNull();
 
         verify(socialMemberRepository, times(1)).save(any());
     }
@@ -712,8 +702,6 @@ class CustomOAuth2UserServiceTest extends SocialMemberTest {
         assertThat(response.getNickname()).isNotNull();
         assertThat(response.getProfileImage().getS3ObjectUrl()).isEqualTo(profileImage.getS3ObjectUrl());
         assertThat(response.getJoinType()).isEqualTo(JoinType.SOCIAL);
-        assertThat(response.getCreatedAt()).isNotNull();
-        assertThat(response.getUpdatedAt()).isNull();
 
         verify(socialMemberRepository, times(1)).save(any());
     }

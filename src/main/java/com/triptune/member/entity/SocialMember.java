@@ -1,5 +1,6 @@
 package com.triptune.member.entity;
 
+import com.triptune.common.entity.BaseTimeEntity;
 import com.triptune.global.security.oauth.userinfo.OAuth2UserInfo;
 import com.triptune.member.enums.DeactivateValue;
 import com.triptune.member.enums.SocialType;
@@ -13,7 +14,7 @@ import java.time.LocalDateTime;
 @Entity
 @Getter
 @NoArgsConstructor
-public class SocialMember {
+public class SocialMember extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -31,20 +32,13 @@ public class SocialMember {
     @Column(name = "social_id")
     private String socialId;
 
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
-
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
 
     @Builder
-    public SocialMember(Long socialMemberId, Member member, SocialType socialType, String socialId, LocalDateTime createdAt, LocalDateTime updatedAt) {
+    public SocialMember(Long socialMemberId, Member member, SocialType socialType, String socialId) {
         this.socialMemberId = socialMemberId;
         this.member = member;
         this.socialType = socialType;
         this.socialId = socialId;
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
     }
 
     public static SocialMember from(Member member, OAuth2UserInfo oAuth2UserInfo){
@@ -52,7 +46,6 @@ public class SocialMember {
                 .member(member)
                 .socialType(oAuth2UserInfo.getSocialType())
                 .socialId(oAuth2UserInfo.getSocialId())
-                .createdAt(LocalDateTime.now())
                 .build();
 
         member.addSocialMember(socialMember);
@@ -61,6 +54,5 @@ public class SocialMember {
 
     public void deactivate() {
         this.socialId = DeactivateValue.DEACTIVATE.name();
-        this.updatedAt = LocalDateTime.now();
     }
 }

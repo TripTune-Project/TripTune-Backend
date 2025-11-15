@@ -27,6 +27,23 @@ class SocialMemberRepositoryTest extends MemberTest {
     @Autowired private SocialMemberRepository socialMemberRepository;
 
 
+
+    @Test
+    @DisplayName("소셜 사용자 생성")
+    void createSocialMember() {
+        // given
+        Member member = createMember(null, "member@email.com");
+        SocialMember socialMember = createSocialMember(null, member, "test", SocialType.KAKAO);
+
+        // when
+        memberRepository.save(member);
+        socialMemberRepository.save(socialMember);
+
+        // then
+        assertThat(socialMember.getSocialMemberId()).isNotNull();
+        assertThat(socialMember.getCreatedAt()).isEqualTo(socialMember.getUpdatedAt());
+    }
+
     @Test
     @DisplayName("소셜 정보로 회원 조회")
     void findBySocialInfo() {

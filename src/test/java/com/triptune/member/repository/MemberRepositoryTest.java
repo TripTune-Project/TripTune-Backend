@@ -33,6 +33,22 @@ class MemberRepositoryTest extends MemberTest {
     @Autowired private ProfileImageRepository profileImageRepository;
     @Autowired private SocialMemberRepository socialMemberRepository;
 
+
+    @Test
+    @DisplayName("사용자 생성")
+    void createMember() {
+        // given
+        Member member = createMember(null, "member@email.com");
+
+        // when
+        memberRepository.save(member);
+
+        // then
+        assertThat(member.getMemberId()).isNotNull();
+        assertThat(member.getCreatedAt()).isEqualTo(member.getUpdatedAt());
+    }
+
+
     @Test
     @DisplayName("채팅 회원들 프로필 조회")
     void findMembersProfileByMemberId() {
