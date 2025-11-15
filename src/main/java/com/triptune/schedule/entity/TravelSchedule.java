@@ -36,7 +36,7 @@ public class TravelSchedule extends BaseTimeEntity {
     @OneToMany(mappedBy = "travelSchedule", fetch = FetchType.LAZY, cascade = CascadeType.PERSIST, orphanRemoval = true)
     private List<TravelAttendee> travelAttendees = new ArrayList<>();
 
-    @OneToMany(mappedBy = "travelSchedule", fetch = FetchType.LAZY, cascade = CascadeType.PERSIST, orphanRemoval = true)
+    @OneToMany(mappedBy = "travelSchedule", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private List<TravelRoute> travelRoutes = new ArrayList<>();
 
     @Builder
@@ -63,7 +63,7 @@ public class TravelSchedule extends BaseTimeEntity {
         this.endDate = request.getEndDate();
     }
 
-    public void updateTravelRouteList(List<TravelRoute> travelRouteList){
-        this.travelRoutes = travelRouteList;
+    public void addTravelRoutes(TravelRoute route) {
+        this.travelRoutes.add(route);
     }
 }

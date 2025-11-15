@@ -66,6 +66,7 @@ public class ScheduleServiceTest extends ScheduleTest {
     @Mock private TravelPlaceRepository travelPlaceRepository;
     @Mock private TravelRouteRepository travelRouteRepository;
     @Mock private ChatMessageRepository chatMessageRepository;
+    @Mock private RouteService routeService;
 
     private Country country;
     private City city;
@@ -907,23 +908,18 @@ public class ScheduleServiceTest extends ScheduleTest {
         TravelImage travelImage4 = createTravelImage(travelPlace2, "test2", false);
         travelPlace2 = createTravelPlace(2L, country, city, district, apiCategory, List.of(travelImage3, travelImage4));
 
-
         RouteRequest routeRequest1 = createRouteRequest(1, travelPlace1.getPlaceId());
         RouteRequest routeRequest2 = createRouteRequest(2, travelPlace2.getPlaceId());
         ScheduleUpdateRequest scheduleUpdateRequest = createUpdateScheduleRequest(List.of(routeRequest1, routeRequest2));
 
         when(travelScheduleRepository.findById(scheduleId)).thenReturn(Optional.of(schedule1));
-        when(travelPlaceRepository.findById(travelPlace1.getPlaceId())).thenReturn(Optional.of(travelPlace1));
-        when(travelPlaceRepository.findById(travelPlace2.getPlaceId())).thenReturn(Optional.of(travelPlace2));
 
         // when
         assertDoesNotThrow(() -> scheduleService.updateSchedule(member1.getMemberId(), scheduleId, scheduleUpdateRequest));
 
         // then
-        assertThat(schedule1.getTravelRoutes().size()).isEqualTo(2);
         assertThat(schedule1.getScheduleName()).isEqualTo(scheduleUpdateRequest.getScheduleName());
         assertThat(schedule1.getStartDate()).isEqualTo(scheduleUpdateRequest.getStartDate());
-        assertThat(schedule1.getTravelRoutes().get(0).getTravelPlace().getPlaceName()).isEqualTo(travelPlace1.getPlaceName());
     }
 
     @Test
@@ -945,49 +941,13 @@ public class ScheduleServiceTest extends ScheduleTest {
         ScheduleUpdateRequest scheduleUpdateRequest = createUpdateScheduleRequest(List.of(routeRequest1, routeRequest2));
 
         when(travelScheduleRepository.findById(scheduleId)).thenReturn(Optional.of(schedule2));
-        when(travelPlaceRepository.findById(travelPlace1.getPlaceId())).thenReturn(Optional.of(travelPlace1));
-        when(travelPlaceRepository.findById(travelPlace2.getPlaceId())).thenReturn(Optional.of(travelPlace2));
 
         // when
         assertDoesNotThrow(() -> scheduleService.updateSchedule(member1.getMemberId(), scheduleId, scheduleUpdateRequest));
 
         // then
-        assertThat(schedule2.getTravelRoutes().size()).isEqualTo(2);
         assertThat(schedule2.getScheduleName()).isEqualTo(scheduleUpdateRequest.getScheduleName());
         assertThat(schedule2.getStartDate()).isEqualTo(scheduleUpdateRequest.getStartDate());
-        assertThat(schedule2.getTravelRoutes().get(0).getTravelPlace().getPlaceName()).isEqualTo(travelPlace1.getPlaceName());
-    }
-
-    @Test
-    @DisplayName("일정의 여행 루트 수정 시 기존에 저장된 여행 루트가 존재하는 경우")
-    void updateTravelRoute_existedTravelRoute(){
-        TravelImage travelImage1 = createTravelImage(travelPlace1, "test1", true);
-        TravelImage travelImage2 = createTravelImage(travelPlace1, "test2", false);
-        travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, List.of(travelImage1, travelImage2));
-
-        TravelImage travelImage3 = createTravelImage(travelPlace2, "test1", true);
-        TravelImage travelImage4 = createTravelImage(travelPlace2, "test2", false);
-        travelPlace2 = createTravelPlace(2L, country, city, district, apiCategory, List.of(travelImage3, travelImage4));
-
-        TravelRoute route1 = createTravelRoute(schedule1, travelPlace1, 1);
-        TravelRoute route2 = createTravelRoute(schedule1, travelPlace1, 2);
-        TravelRoute route3 = createTravelRoute(schedule1, travelPlace2, 3);
-        schedule1.setTravelRoutes(new ArrayList<>(List.of(route1, route2, route3)));
-        schedule2.setTravelRoutes(new ArrayList<>());
-
-        RouteRequest routeRequest1 = createRouteRequest(1, travelPlace1.getPlaceId());
-        RouteRequest routeRequest2 = createRouteRequest(2, travelPlace2.getPlaceId());
-        ScheduleUpdateRequest scheduleUpdateRequest = createUpdateScheduleRequest(List.of(routeRequest1, routeRequest2));
-
-        when(travelPlaceRepository.findById(travelPlace1.getPlaceId())).thenReturn(Optional.of(travelPlace1));
-        when(travelPlaceRepository.findById(travelPlace2.getPlaceId())).thenReturn(Optional.of(travelPlace2));
-
-        // when
-        assertDoesNotThrow(() -> scheduleService.updateTravelRouteInSchedule(schedule1, scheduleUpdateRequest.getTravelRoutes()));
-
-        // then
-        assertThat(schedule1.getTravelRoutes().size()).isEqualTo(2);
-        assertThat(schedule1.getTravelRoutes().get(0).getTravelPlace().getPlaceName()).isEqualTo(travelPlace1.getPlaceName());
     }
 
 
@@ -1088,37 +1048,6 @@ public class ScheduleServiceTest extends ScheduleTest {
     }
 
 
-    @Test
-    @DisplayName("일정 수정 시 여행 루트에 저장된 여행지가 없어 예외 발생")
-    void updateSchedule_placeNotFoundInTravelRoute(){
-        // given
-        Long scheduleId = schedule1.getScheduleId();
-
-
-        TravelImage travelImage1 = createTravelImage(travelPlace1, "test1", true);
-        TravelImage travelImage2 = createTravelImage(travelPlace1, "test2", false);
-        travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, List.of(travelImage1, travelImage2));
-
-        TravelImage travelImage3 = createTravelImage(travelPlace2, "test1", true);
-        TravelImage travelImage4 = createTravelImage(travelPlace2, "test2", false);
-        travelPlace2 = createTravelPlace(2L, country, city, district, apiCategory, List.of(travelImage3, travelImage4));
-
-
-        RouteRequest routeRequest1 = createRouteRequest(1, travelPlace1.getPlaceId());
-        RouteRequest routeRequest2 = createRouteRequest(2, travelPlace2.getPlaceId());
-        ScheduleUpdateRequest scheduleUpdateRequest = createUpdateScheduleRequest(List.of(routeRequest1, routeRequest2));
-
-        when(travelScheduleRepository.findById(scheduleId)).thenReturn(Optional.of(schedule1));
-        when(travelPlaceRepository.findById(anyLong())).thenReturn(Optional.empty());
-
-        // when
-        DataNotFoundException fail = assertThrows(DataNotFoundException.class,
-                () -> scheduleService.updateSchedule(member1.getMemberId(), scheduleId, scheduleUpdateRequest));
-
-        // then
-        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.PLACE_NOT_FOUND.getStatus());
-        assertThat(fail.getMessage()).isEqualTo(ErrorCode.PLACE_NOT_FOUND.getMessage());
-    }
 
     @Test
     @DisplayName("참가자 정보 조회")
@@ -1247,38 +1176,5 @@ public class ScheduleServiceTest extends ScheduleTest {
         assertThat(fail.getMessage()).isEqualTo(ErrorCode.FORBIDDEN_DELETE_SCHEDULE.getMessage());
     }
 
-    @Test
-    @DisplayName("일정 id를 통해 채팅 메시지 삭제")
-    void deleteChatMessageByScheduleId(){
-        // given
-        ChatMessage message1 = createChatMessage("chat1", schedule1.getScheduleId(), member1, "hello1");
-        ChatMessage message2 = createChatMessage("chat2", schedule1.getScheduleId(), member1, "hello2");
-        ChatMessage message3 = createChatMessage("chat3", schedule1.getScheduleId(), member2, "hello3");
-        List<ChatMessage> chatMessages = List.of(message1, message2, message3);
-
-       when(chatMessageRepository.findAllByScheduleId(anyLong())).thenReturn(chatMessages);
-
-        // when
-        assertDoesNotThrow(() -> scheduleService.deleteChatMessageByScheduleId(schedule1.getScheduleId()));
-
-        // then
-        verify(chatMessageRepository, times(1)).deleteAllByScheduleId(schedule1.getScheduleId());
-
-    }
-
-
-    @Test
-    @DisplayName("일정 id를 통해 채팅 메시지 삭제 시 채팅 메시지 데이터 없는 경우")
-    void deleteChatMessageByScheduleId_noData(){
-        // given
-        when(chatMessageRepository.findAllByScheduleId(anyLong())).thenReturn(new ArrayList<>());
-
-        // when
-        assertDoesNotThrow(() -> scheduleService.deleteChatMessageByScheduleId(schedule1.getScheduleId()));
-
-        // then
-        verify(chatMessageRepository, times(0)).deleteAllByScheduleId(schedule1.getScheduleId());
-
-    }
 
 }

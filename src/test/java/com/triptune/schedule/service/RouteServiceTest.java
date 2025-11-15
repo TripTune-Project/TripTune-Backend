@@ -7,6 +7,8 @@ import com.triptune.common.entity.District;
 import com.triptune.member.entity.Member;
 import com.triptune.schedule.ScheduleTest;
 import com.triptune.schedule.dto.request.RouteCreateRequest;
+import com.triptune.schedule.dto.request.RouteRequest;
+import com.triptune.schedule.dto.request.ScheduleUpdateRequest;
 import com.triptune.schedule.dto.response.RouteResponse;
 import com.triptune.schedule.entity.TravelAttendee;
 import com.triptune.schedule.entity.TravelRoute;
@@ -59,13 +61,17 @@ public class RouteServiceTest extends ScheduleTest {
     private TravelAttendee attendee2;
     private Member member1;
     private Member member2;
+    private Country country;
+    private City city;
+    private District district;
+    private ApiCategory apiCategory;
 
     @BeforeEach
     void setUp(){
-        Country country = createCountry();
-        City city = createCity(country);
-        District district = createDistrict(city, "중구");
-        ApiCategory apiCategory = createApiCategory();
+        country = createCountry();
+        city = createCity(country);
+        district = createDistrict(city, "중구");
+        apiCategory = createApiCategory();
         TravelImage travelImage1 = createTravelImage(travelPlace1, "test1", true);
         TravelImage travelImage2 = createTravelImage(travelPlace1, "test2", false);
         travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, List.of(travelImage1, travelImage2));
@@ -238,6 +244,73 @@ public class RouteServiceTest extends ScheduleTest {
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.PLACE_NOT_FOUND.getStatus());
         assertThat(fail.getMessage()).isEqualTo(ErrorCode.PLACE_NOT_FOUND.getMessage());
 
+    }
+
+
+    @Test
+    @DisplayName("여행 루트 수정 시 기존에 저장된 여행 루트가 존재하는 경우")
+    void updateTravelRoute_existedTravelRoute(){
+        TravelImage travelImage1 = createTravelImage(travelPlace1, "test1", true);
+        TravelImage travelImage2 = createTravelImage(travelPlace1, "test2", false);
+        travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, List.of(travelImage1, travelImage2));
+
+        TravelImage travelImage3 = createTravelImage(travelPlace2, "test1", true);
+        TravelImage travelImage4 = createTravelImage(travelPlace2, "test2", false);
+        travelPlace2 = createTravelPlace(2L, country, city, district, apiCategory, List.of(travelImage3, travelImage4));
+
+        TravelRoute route1 = createTravelRoute(schedule1, travelPlace1, 1);
+        TravelRoute route2 = createTravelRoute(schedule1, travelPlace1, 2);
+        TravelRoute route3 = createTravelRoute(schedule1, travelPlace2, 3);
+        schedule1.setTravelRoutes(new ArrayList<>(List.of(route1, route2, route3)));
+
+        RouteRequest routeRequest1 = createRouteRequest(1, travelPlace1.getPlaceId());
+        RouteRequest routeRequest2 = createRouteRequest(2, travelPlace2.getPlaceId());
+        ScheduleUpdateRequest scheduleUpdateRequest = createUpdateScheduleRequest(List.of(routeRequest1, routeRequest2));
+
+        when(travelPlaceRepository.findById(travelPlace1.getPlaceId())).thenReturn(Optional.of(travelPlace1));
+        when(travelPlaceRepository.findById(travelPlace2.getPlaceId())).thenReturn(Optional.of(travelPlace2));
+
+
+        // when
+        assertDoesNotThrow(() -> routeService.updateTravelRouteInSchedule(schedule1, scheduleUpdateRequest.getTravelRoutes()));
+
+        // then
+        assertThat(schedule1.getTravelRoutes().size()).isEqualTo(2);
+        assertThat(schedule1.getTravelRoutes().get(0).getTravelPlace().getPlaceName()).isEqualTo(travelPlace1.getPlaceName());
+    }
+
+
+    @Test
+    @DisplayName("여행 루트에 저장된 여행지 데이터가 없어 예외 발생")
+    void updateSchedule_placeNotFoundInTravelRoute(){
+        // given
+        TravelImage travelImage1 = createTravelImage(travelPlace1, "test1", true);
+        TravelImage travelImage2 = createTravelImage(travelPlace1, "test2", false);
+        travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, new ArrayList<>(List.of(travelImage1, travelImage2)));
+
+        TravelImage travelImage3 = createTravelImage(travelPlace2, "test1", true);
+        TravelImage travelImage4 = createTravelImage(travelPlace2, "test2", false);
+        travelPlace2 = createTravelPlace(2L, country, city, district, apiCategory, new ArrayList<>(List.of(travelImage3, travelImage4)));
+
+        // TODO : 추후 변경
+        schedule1.setTravelRoutes(new ArrayList<>());
+
+        RouteRequest routeRequest1 = createRouteRequest(1, travelPlace1.getPlaceId());
+        RouteRequest routeRequest2 = createRouteRequest(2, travelPlace2.getPlaceId());
+        List<RouteRequest> routes = new ArrayList<>();
+        routes.add(routeRequest1);
+        routes.add(routeRequest2);
+
+        when(travelPlaceRepository.findById(travelPlace1.getPlaceId())).thenReturn(Optional.ofNullable(travelPlace1));
+        when(travelPlaceRepository.findById(travelPlace2.getPlaceId())).thenReturn(Optional.empty());
+
+        // when
+        DataNotFoundException fail = assertThrows(DataNotFoundException.class,
+                () -> routeService.updateTravelRouteInSchedule(schedule1, routes));
+
+        // then
+        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.PLACE_NOT_FOUND.getStatus());
+        assertThat(fail.getMessage()).isEqualTo(ErrorCode.PLACE_NOT_FOUND.getMessage());
     }
 
 }

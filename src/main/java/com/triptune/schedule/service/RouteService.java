@@ -1,6 +1,7 @@
 package com.triptune.schedule.service;
 
 import com.triptune.schedule.dto.request.RouteCreateRequest;
+import com.triptune.schedule.dto.request.RouteRequest;
 import com.triptune.schedule.dto.response.RouteResponse;
 import com.triptune.schedule.entity.TravelAttendee;
 import com.triptune.schedule.entity.TravelRoute;
@@ -19,6 +20,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 @Transactional(readOnly = true)
@@ -67,6 +71,27 @@ public class RouteService {
     public TravelPlace findTravelPlaceByPlaceId(Long placeId){
         return travelPlaceRepository.findById(placeId)
                 .orElseThrow(() -> new DataNotFoundException(ErrorCode.PLACE_NOT_FOUND));
+    }
+
+    @Transactional
+    public void updateTravelRouteInSchedule(TravelSchedule schedule, List<RouteRequest> routeRequests){
+        travelRouteRepository.deleteAllByTravelSchedule_ScheduleId(schedule.getScheduleId());
+
+        List<TravelRoute> routes = schedule.getTravelRoutes();
+        if (routes != null && !routes.isEmpty()) {
+            while (!routes.isEmpty()) {
+                routes.remove(0);
+            }
+        }
+
+        if (routeRequests != null && !routeRequests.isEmpty()){
+            for(RouteRequest routeRequest : routeRequests){
+                TravelPlace place = findTravelPlaceByPlaceId(routeRequest.getPlaceId());
+                TravelRoute route = TravelRoute.of(schedule, place, routeRequest.getRouteOrder());
+                schedule.addTravelRoutes(route);
+                travelRouteRepository.save(route);
+            }
+        }
     }
 
 
