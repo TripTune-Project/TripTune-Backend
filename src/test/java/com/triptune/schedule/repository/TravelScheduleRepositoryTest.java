@@ -26,6 +26,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -35,6 +36,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest
 @Import({QueryDSLConfig.class})
 @ActiveProfiles("h2")
+@Transactional
 public class TravelScheduleRepositoryTest extends ScheduleTest {
     @Autowired private TravelScheduleRepository travelScheduleRepository;
     @Autowired private TravelAttendeeRepository travelAttendeeRepository;
@@ -76,6 +78,19 @@ public class TravelScheduleRepositoryTest extends ScheduleTest {
         schedule3 = travelScheduleRepository.save(createTravelSchedule(null,"테스트3"));
     }
 
+    @Test
+    @DisplayName("일정 생성")
+    void createTravelSchedule() {
+        // given
+        TravelSchedule schedule = createTravelSchedule(null, "테스트 일정");
+
+        // when
+        travelScheduleRepository.save(schedule);
+
+        // then
+        assertThat(schedule.getScheduleId()).isNotNull();
+        assertThat(schedule.getCreatedAt()).isEqualTo(schedule.getUpdatedAt());
+    }
 
     @Test
     @DisplayName("전체 일정 목록 조회")

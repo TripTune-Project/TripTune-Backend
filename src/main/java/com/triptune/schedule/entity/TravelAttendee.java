@@ -1,5 +1,6 @@
 package com.triptune.schedule.entity;
 
+import com.triptune.common.entity.BaseTimeEntity;
 import com.triptune.member.entity.Member;
 import com.triptune.schedule.enums.AttendeePermission;
 import com.triptune.schedule.enums.AttendeeRole;
@@ -11,7 +12,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @Getter
 @NoArgsConstructor
-public class TravelAttendee {
+public class TravelAttendee extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
