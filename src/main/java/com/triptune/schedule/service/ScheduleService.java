@@ -208,7 +208,7 @@ public class ScheduleService {
         TravelAttendee attendee = getAttendeeInfo(schedule, memberId);
         checkScheduleEditPermission(attendee);
 
-        schedule.set(scheduleUpdateRequest);
+        schedule.updateSchedule(scheduleUpdateRequest);
         updateTravelRouteInSchedule(schedule, scheduleUpdateRequest.getTravelRoutes());
     }
 

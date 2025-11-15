@@ -516,7 +516,6 @@ public abstract class BaseTest {
                 .scheduleName(scheduleName)
                 .startDate(LocalDate.now())
                 .endDate(LocalDate.now().plusDays(10))
-                .createdAt(LocalDateTime.now())
                 .build();
     }
 

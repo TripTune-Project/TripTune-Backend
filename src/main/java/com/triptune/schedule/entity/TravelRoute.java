@@ -1,5 +1,6 @@
 package com.triptune.schedule.entity;
 
+import com.triptune.common.entity.BaseCreatedEntity;
 import com.triptune.travel.entity.TravelPlace;
 import jakarta.persistence.*;
 import lombok.Builder;
@@ -9,7 +10,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @Getter
 @NoArgsConstructor
-public class TravelRoute {
+public class TravelRoute extends BaseCreatedEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

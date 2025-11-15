@@ -15,12 +15,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.transaction.annotation.Transactional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 @Import({QueryDSLConfig.class})
 @ActiveProfiles("h2")
+@Transactional
 public class TravelAttendeeRepositoryTest extends ScheduleTest {
     @Autowired private TravelScheduleRepository travelScheduleRepository;
     @Autowired private TravelAttendeeRepository travelAttendeeRepository;
@@ -43,9 +45,23 @@ public class TravelAttendeeRepositoryTest extends ScheduleTest {
         schedule2 = travelScheduleRepository.save(createTravelSchedule(null,"테스트2"));
         schedule3 = travelScheduleRepository.save(createTravelSchedule(null,"테스트3"));
 
-        TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(0L, member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
-        TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(0L, member1, schedule2, AttendeeRole.GUEST, AttendeePermission.READ));
-        TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(0L, member2, schedule3, AttendeeRole.AUTHOR, AttendeePermission.ALL));
+        travelAttendeeRepository.save(createTravelAttendee(null, member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
+        travelAttendeeRepository.save(createTravelAttendee(null, member1, schedule2, AttendeeRole.GUEST, AttendeePermission.READ));
+        travelAttendeeRepository.save(createTravelAttendee(null, member2, schedule3, AttendeeRole.AUTHOR, AttendeePermission.ALL));
+    }
+
+    @Test
+    @DisplayName("참석자 생성")
+    void createTravelAttendee() {
+        // given
+        TravelAttendee attendee = createTravelAttendee(null, member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL);
+
+        // when
+        travelAttendeeRepository.save(attendee);
+
+        // then
+        assertThat(attendee.getAttendeeId()).isNotNull();
+        assertThat(attendee.getCreatedAt()).isEqualTo(attendee.getUpdatedAt());
     }
 
     @Test
