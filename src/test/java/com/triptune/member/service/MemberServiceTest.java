@@ -533,7 +533,6 @@ public class MemberServiceTest extends MemberTest {
         verify(memberRepository, times(1)).findByEmail(member.getEmail());
         assertThat(member.getPassword()).isEqualTo(request.getPassword());
         assertThat(member.getJoinType()).isEqualTo(JoinType.NATIVE);
-        assertThat(member.getUpdatedAt()).isNotNull();
     }
 
     @Test
@@ -556,7 +555,6 @@ public class MemberServiceTest extends MemberTest {
         verify(memberRepository, times(1)).findByEmail(member.getEmail());
         assertThat(member.getPassword()).isEqualTo(request.getPassword());
         assertThat(member.getJoinType()).isEqualTo(JoinType.BOTH);
-        assertThat(member.getUpdatedAt()).isNotNull();
     }
 
     @Test
@@ -579,7 +577,7 @@ public class MemberServiceTest extends MemberTest {
         verify(memberRepository, times(1)).findByEmail(member.getEmail());
         assertThat(member.getPassword()).isEqualTo(request.getPassword());
         assertThat(member.getJoinType()).isEqualTo(JoinType.BOTH);
-        assertThat(member.getUpdatedAt()).isNotNull();
+
     }
 
     @Test
@@ -638,7 +636,6 @@ public class MemberServiceTest extends MemberTest {
 
         assertThat(member.getPassword()).isEqualTo(newPassword);
         assertThat(member.getJoinType()).isEqualTo(JoinType.NATIVE);
-        assertThat(member.getUpdatedAt()).isNotNull();
 
     }
 
@@ -663,7 +660,6 @@ public class MemberServiceTest extends MemberTest {
 
         assertThat(member.getPassword()).isEqualTo(newPassword);
         assertThat(member.getJoinType()).isEqualTo(JoinType.BOTH);
-        assertThat(member.getUpdatedAt()).isNotNull();
 
     }
 
@@ -1142,7 +1138,6 @@ public class MemberServiceTest extends MemberTest {
         assertThat(member.getPassword()).isEqualTo(DeactivateValue.DEACTIVATE.name());
         assertThat(member.getNickname()).isEqualTo(DeactivateValue.DEACTIVATE.name());
         assertThat(member.getJoinType()).isEqualTo(JoinType.NATIVE);
-        assertThat(member.getUpdatedAt()).isNotNull();
         assertThat(member.isActive()).isFalse();
     }
 
@@ -1189,7 +1184,6 @@ public class MemberServiceTest extends MemberTest {
         assertThat(member.getPassword()).isEqualTo(DeactivateValue.DEACTIVATE.name());
         assertThat(member.getNickname()).isEqualTo(DeactivateValue.DEACTIVATE.name());
         assertThat(member.getJoinType()).isEqualTo(JoinType.NATIVE);
-        assertThat(member.getUpdatedAt()).isNotNull();
         assertThat(member.isActive()).isFalse();
     }
 
@@ -1237,7 +1231,6 @@ public class MemberServiceTest extends MemberTest {
         assertThat(member.getPassword()).isEqualTo(DeactivateValue.DEACTIVATE.name());
         assertThat(member.getNickname()).isEqualTo(DeactivateValue.DEACTIVATE.name());
         assertThat(member.getJoinType()).isEqualTo(JoinType.NATIVE);
-        assertThat(member.getUpdatedAt()).isNotNull();
         assertThat(member.isActive()).isFalse();
     }
 
@@ -1283,14 +1276,9 @@ public class MemberServiceTest extends MemberTest {
         assertThat(member.getPassword()).isEqualTo(DeactivateValue.DEACTIVATE.name());
         assertThat(member.getNickname()).isEqualTo(DeactivateValue.DEACTIVATE.name());
         assertThat(member.getJoinType()).isEqualTo(JoinType.BOTH);
-        assertThat(member.getUpdatedAt()).isNotNull();
         assertThat(member.isActive()).isFalse();
         assertThat(member.getSocialMembers().get(0).getSocialId()).isEqualTo(DeactivateValue.DEACTIVATE.name());
-        assertThat(member.getSocialMembers().get(0).getUpdatedAt()).isNotNull();
     }
-
-
-
 
 
     @Test
@@ -1325,7 +1313,6 @@ public class MemberServiceTest extends MemberTest {
         assertThat(member.getPassword()).isEqualTo(DeactivateValue.DEACTIVATE.name());
         assertThat(member.getNickname()).isEqualTo(DeactivateValue.DEACTIVATE.name());
         assertThat(member.getJoinType()).isEqualTo(JoinType.NATIVE);
-        assertThat(member.getUpdatedAt()).isNotNull();
         assertThat(member.isActive()).isFalse();
     }
 

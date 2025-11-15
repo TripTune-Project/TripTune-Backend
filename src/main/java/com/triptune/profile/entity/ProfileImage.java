@@ -1,5 +1,6 @@
 package com.triptune.profile.entity;
 
+import com.triptune.common.entity.BaseTimeEntity;
 import com.triptune.member.entity.Member;
 import com.triptune.profile.properties.DefaultProfileImageProperties;
 import jakarta.persistence.*;
@@ -13,7 +14,7 @@ import java.time.LocalDateTime;
 @Entity
 @Getter
 @NoArgsConstructor
-public class ProfileImage {
+public class ProfileImage extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -41,15 +42,9 @@ public class ProfileImage {
     @Column(name = "file_size")
     private double fileSize;
 
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
-
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
-
 
     @Builder
-    public ProfileImage(Long profileImageId, Member member, String s3ObjectUrl, String s3ObjectKey, String originalName, String fileName, String fileType, double fileSize, LocalDateTime createdAt, LocalDateTime updatedAt) {
+    public ProfileImage(Long profileImageId, Member member, String s3ObjectUrl, String s3ObjectKey, String originalName, String fileName, String fileType, double fileSize) {
         this.profileImageId = profileImageId;
         this.member = member;
         this.s3ObjectUrl = s3ObjectUrl;
@@ -58,8 +53,6 @@ public class ProfileImage {
         this.fileName = fileName;
         this.fileType = fileType;
         this.fileSize = fileSize;
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
     }
 
     public static ProfileImage from(DefaultProfileImageProperties imageProperties){
@@ -70,7 +63,6 @@ public class ProfileImage {
                 .fileName(imageProperties.getFileName())
                 .fileType(imageProperties.getExtension())
                 .fileSize(imageProperties.getSize())
-                .createdAt(LocalDateTime.now())
                 .build();
     }
 
@@ -81,7 +73,6 @@ public class ProfileImage {
         this.fileName = savedFileName;
         this.fileType = extension;
         this.fileSize = profileImageFile.getSize();
-        this.updatedAt = LocalDateTime.now();
     }
 
     public void updateDefaultProfileImage(DefaultProfileImageProperties imageProperties) {
@@ -91,7 +82,6 @@ public class ProfileImage {
         this.fileName = imageProperties.getFileName();
         this.fileType = imageProperties.getExtension();
         this.fileSize = imageProperties.getSize();
-        this.updatedAt = LocalDateTime.now();
     }
 
 }

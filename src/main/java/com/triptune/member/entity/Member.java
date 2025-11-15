@@ -1,5 +1,6 @@
 package com.triptune.member.entity;
 
+import com.triptune.common.entity.BaseTimeEntity;
 import com.triptune.global.security.oauth.userinfo.OAuth2UserInfo;
 import com.triptune.member.dto.request.JoinRequest;
 import com.triptune.member.enums.DeactivateValue;
@@ -18,7 +19,7 @@ import java.util.List;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Member {
+public class Member extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -45,12 +46,6 @@ public class Member {
     @Column(name = "join_type")
     private JoinType joinType;
 
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
-
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
-
     @Column(name = "is_active")
     private boolean isActive;
 
@@ -58,7 +53,7 @@ public class Member {
     private List<SocialMember> socialMembers = new ArrayList<>();
 
     @Builder
-    public Member(Long memberId, ProfileImage profileImage, String email, String password, String nickname, String refreshToken, JoinType joinType, LocalDateTime createdAt, LocalDateTime updatedAt, boolean isActive, List<SocialMember> socialMembers) {
+    public Member(Long memberId, ProfileImage profileImage, String email, String password, String nickname, String refreshToken, JoinType joinType, boolean isActive, List<SocialMember> socialMembers) {
         this.memberId = memberId;
         this.profileImage = profileImage;
         this.email = email;
@@ -66,8 +61,6 @@ public class Member {
         this.nickname = nickname;
         this.refreshToken = refreshToken;
         this.joinType = joinType;
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
         this.isActive = isActive;
         this.socialMembers = (socialMembers != null) ? socialMembers : new ArrayList<>();
     }
@@ -79,7 +72,6 @@ public class Member {
                 .password(encodePassword)
                 .nickname(joinRequest.getNickname())
                 .joinType(JoinType.NATIVE)
-                .createdAt(LocalDateTime.now())
                 .isActive(true)
                 .build();
     }
@@ -90,12 +82,9 @@ public class Member {
                 .email(oAuth2UserInfo.getEmail())
                 .nickname(nickname)
                 .joinType(JoinType.SOCIAL)
-                .createdAt(LocalDateTime.now())
                 .isActive(true)
                 .build();
     }
-
-
 
     public boolean isMatchRefreshToken(String refreshToken){
         return this.refreshToken.equals(refreshToken);
@@ -107,17 +96,14 @@ public class Member {
 
     public void updatePassword(String password) {
         this.password = password;
-        updateUpdatedAt();
     }
 
     public void updateNickname(String nickname) {
         this.nickname = nickname;
-        updateUpdatedAt();
     }
 
     public void updateEmail(String email) {
         this.email = email;
-        updateUpdatedAt();
     }
 
     public void deactivate() {
@@ -129,7 +115,6 @@ public class Member {
         this.password = deactivation;
         this.refreshToken = null;
         this.isActive = false;
-        updateUpdatedAt();
 
         for (SocialMember socialMember : socialMembers) {
             socialMember.deactivate();
@@ -138,12 +123,8 @@ public class Member {
 
     public void updateProfileImage(ProfileImage profileImage) {
         this.profileImage = profileImage;
-        updateUpdatedAt();
     }
 
-    public void updateUpdatedAt() {
-        this.updatedAt = LocalDateTime.now();
-    }
 
     public void resetPassword(String password) {
         if (isSocialMember()){
@@ -151,7 +132,6 @@ public class Member {
         }
 
         this.password = password;
-        updateUpdatedAt();
     }
 
     public boolean isSocialMember() {
@@ -163,8 +143,6 @@ public class Member {
         if (isNativeMember()){
             this.joinType = JoinType.BOTH;
         }
-
-        updateUpdatedAt();
     }
 
     public boolean isNativeMember(){

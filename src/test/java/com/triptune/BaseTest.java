@@ -45,7 +45,6 @@ public abstract class BaseTest {
                 .nickname(email.split("@")[0])
                 .refreshToken(refreshToken)
                 .joinType(JoinType.NATIVE)
-                .createdAt(LocalDateTime.now())
                 .build();
     }
     protected Member createMember(Long memberId, String email, ProfileImage profileImage){
@@ -56,7 +55,6 @@ public abstract class BaseTest {
                 .nickname(email.split("@")[0])
                 .refreshToken(refreshToken)
                 .joinType(JoinType.NATIVE)
-                .createdAt(LocalDateTime.now())
                 .build();
     }
 
@@ -69,7 +67,6 @@ public abstract class BaseTest {
                 .nickname(email.split("@")[0])
                 .refreshToken(refreshToken)
                 .joinType(JoinType.NATIVE)
-                .createdAt(LocalDateTime.now())
                 .build();
     }
 
@@ -82,7 +79,6 @@ public abstract class BaseTest {
                 .nickname(email.split("@")[0])
                 .refreshToken(refreshToken)
                 .joinType(joinType)
-                .createdAt(LocalDateTime.now())
                 .build();
     }
 
@@ -94,7 +90,6 @@ public abstract class BaseTest {
                 .nickname(email.split("@")[0])
                 .refreshToken(refreshToken)
                 .joinType(joinType)
-                .createdAt(LocalDateTime.now())
                 .build();
     }
 
@@ -107,7 +102,6 @@ public abstract class BaseTest {
                 .nickname(email.split("@")[0])
                 .refreshToken(refreshToken)
                 .joinType(JoinType.NATIVE)
-                .createdAt(LocalDateTime.now())
                 .isActive(true)
                 .build();
     }
@@ -121,7 +115,6 @@ public abstract class BaseTest {
                 .nickname(email.split("@")[0])
                 .refreshToken(refreshToken)
                 .joinType(JoinType.NATIVE)
-                .createdAt(LocalDateTime.now())
                 .isActive(true)
                 .build();
     }
@@ -135,7 +128,6 @@ public abstract class BaseTest {
                 .nickname(email.split("@")[0])
                 .refreshToken(refreshToken)
                 .joinType(JoinType.NATIVE)
-                .createdAt(LocalDateTime.now())
                 .isActive(true)
                 .build();
     }
@@ -148,7 +140,6 @@ public abstract class BaseTest {
                 .nickname(email.split("@")[0])
                 .refreshToken(refreshToken)
                 .joinType(JoinType.SOCIAL)
-                .createdAt(LocalDateTime.now())
                 .isActive(true)
                 .build();
     }
@@ -162,7 +153,6 @@ public abstract class BaseTest {
                 .nickname(email.split("@")[0])
                 .refreshToken(refreshToken)
                 .joinType(JoinType.SOCIAL)
-                .createdAt(LocalDateTime.now())
                 .isActive(true)
                 .build();
     }
@@ -176,7 +166,6 @@ public abstract class BaseTest {
                 .nickname(email.split("@")[0])
                 .refreshToken(refreshToken)
                 .joinType(JoinType.BOTH)
-                .createdAt(LocalDateTime.now())
                 .isActive(true)
                 .build();
     }
@@ -190,7 +179,6 @@ public abstract class BaseTest {
                 .nickname(email.split("@")[0])
                 .refreshToken(refreshToken)
                 .joinType(JoinType.BOTH)
-                .createdAt(LocalDateTime.now())
                 .isActive(true)
                 .build();
     }
@@ -203,7 +191,6 @@ public abstract class BaseTest {
                 .nickname(email.split("@")[0])
                 .refreshToken(refreshToken)
                 .joinType(JoinType.BOTH)
-                .createdAt(LocalDateTime.now())
                 .isActive(true)
                 .build();
     }
@@ -218,8 +205,6 @@ public abstract class BaseTest {
                 .fileName(fileName + ".jpg")
                 .fileType("jpg")
                 .fileSize(20)
-                .createdAt(LocalDateTime.now())
-                .updatedAt(null)
                 .build();
     }
 
@@ -234,8 +219,6 @@ public abstract class BaseTest {
                 .fileName(fileName + ".jpg")
                 .fileType("jpg")
                 .fileSize(20)
-                .createdAt(LocalDateTime.now())
-                .updatedAt(null)
                 .build();
     }
 
@@ -600,7 +583,6 @@ public abstract class BaseTest {
                 .member(member)
                 .socialId(socialId)
                 .socialType(socialType)
-                .createdAt(LocalDateTime.now())
                 .build();
 
         member.addSocialMember(socialMember);

@@ -25,6 +25,21 @@ class ProfileImageRepositoryTest extends ProfileImageTest {
     @Autowired private MemberRepository memberRepository;
 
     @Test
+    @DisplayName("프로필 이미지 생성")
+    void createMember() {
+        // given
+        ProfileImage profileImage = createProfileImage(null, "testProfileImage");
+
+        // when
+        profileImageRepository.save(profileImage);
+
+        // then
+        assertThat(profileImage.getProfileImageId()).isNotNull();
+        assertThat(profileImage.getCreatedAt()).isEqualTo(profileImage.getUpdatedAt());
+    }
+
+
+    @Test
     @DisplayName("회원 아이디 이용해 프로필 이미지 조회")
     void findByMemberId() {
         // given
