@@ -89,11 +89,11 @@ public class TravelServiceTest extends TravelTest {
         PlaceLocationRequest request = createTravelLocationRequest(37.4970465429, 127.0281573537);
 
         Pageable pageable = PageUtils.defaultPageable(1);
-        List<PlaceLocation> locationList = List.of(
+        List<PlaceLocation> locations = List.of(
                 createPlaceLocation(travelPlace1, travelImage1.getS3ObjectUrl()),
                 createPlaceLocation(travelPlace2, null)
         );
-        Page<PlaceLocation> mockResponse = PageUtils.createPage(locationList, pageable, locationList.size());
+        Page<PlaceLocation> mockResponse = PageUtils.createPage(locations, pageable, locations.size());
 
         when(travelPlaceRepository.findNearByTravelPlaces(pageable, request, 5)).thenReturn(mockResponse);
         when(bookmarkRepository.existsByMember_MemberIdAndTravelPlace_PlaceId(member.getMemberId(), travelPlace1.getPlaceId())).thenReturn(true);
@@ -140,11 +140,11 @@ public class TravelServiceTest extends TravelTest {
         PlaceLocationRequest request = createTravelLocationRequest(37.4970465429, 127.0281573537);
 
         Pageable pageable = PageUtils.defaultPageable(1);
-        List<PlaceLocation> locationList = List.of(
+        List<PlaceLocation> locations = List.of(
                 createPlaceLocation(travelPlace1, travelImage1.getS3ObjectUrl()),
                 createPlaceLocation(travelPlace2, null)
         );
-        Page<PlaceLocation> mockResponse = PageUtils.createPage(locationList, pageable, locationList.size());
+        Page<PlaceLocation> mockResponse = PageUtils.createPage(locations, pageable, locations.size());
 
         when(travelPlaceRepository.findNearByTravelPlaces(pageable, request, 5)).thenReturn(mockResponse);
 
@@ -192,11 +192,11 @@ public class TravelServiceTest extends TravelTest {
         PlaceSearchRequest request = createTravelSearchRequest(37.49, 127.0, "테스트");
 
         Pageable pageable = PageUtils.defaultPageable(1);
-        List<PlaceLocation> locationList = List.of(
+        List<PlaceLocation> locations = List.of(
                 createPlaceLocation(travelPlace1, travelImage1.getS3ObjectUrl()),
                 createPlaceLocation(travelPlace2, null)
         );
-        Page<PlaceLocation> mockResponse = PageUtils.createPage(locationList, pageable, locationList.size());
+        Page<PlaceLocation> mockResponse = PageUtils.createPage(locations, pageable, locations.size());
 
         when(travelPlaceRepository.searchTravelPlacesWithLocation(pageable, request)).thenReturn(mockResponse);
         when(bookmarkRepository.existsByMember_MemberIdAndTravelPlace_PlaceId(member.getMemberId(), travelPlace1.getPlaceId())).thenReturn(true);
@@ -244,11 +244,11 @@ public class TravelServiceTest extends TravelTest {
         PlaceSearchRequest request = createTravelSearchRequest(37.49, 127.0, "테스트");
 
         Pageable pageable = PageUtils.defaultPageable(1);
-        List<PlaceLocation> locationList = List.of(
+        List<PlaceLocation> locations = List.of(
                 createPlaceLocation(travelPlace1, travelImage1.getS3ObjectUrl()),
                 createPlaceLocation(travelPlace2, null)
         );
-        Page<PlaceLocation> mockResponse = PageUtils.createPage(locationList, pageable, locationList.size());
+        Page<PlaceLocation> mockResponse = PageUtils.createPage(locations, pageable, locations.size());
 
         when(travelPlaceRepository.searchTravelPlacesWithLocation(pageable, request)).thenReturn(mockResponse);
 
@@ -296,11 +296,11 @@ public class TravelServiceTest extends TravelTest {
         PlaceSearchRequest request = createTravelSearchRequest("테스트");
 
         Pageable pageable = PageUtils.defaultPageable(1);
-        List<PlaceResponse> locationList = List.of(
+        List<PlaceResponse> locations = List.of(
                 createPlaceResponse(travelPlace1, travelImage1.getS3ObjectUrl()),
                 createPlaceResponse(travelPlace2, null)
         );
-        Page<PlaceResponse> mockResponse = PageUtils.createPage(locationList, pageable, locationList.size());
+        Page<PlaceResponse> mockResponse = PageUtils.createPage(locations, pageable, locations.size());
 
         when(travelPlaceRepository.searchTravelPlaces(pageable, request.getKeyword())).thenReturn(mockResponse);
         when(bookmarkRepository.existsByMember_MemberIdAndTravelPlace_PlaceId(member.getMemberId(), travelPlace1.getPlaceId())).thenReturn(true);
@@ -346,11 +346,11 @@ public class TravelServiceTest extends TravelTest {
         PlaceSearchRequest request = createTravelSearchRequest("테스트");
 
         Pageable pageable = PageUtils.defaultPageable(1);
-        List<PlaceResponse> locationList = List.of(
+        List<PlaceResponse> locations = List.of(
                 createPlaceResponse(travelPlace1, travelImage1.getS3ObjectUrl()),
                 createPlaceResponse(travelPlace2, null)
         );
-        Page<PlaceResponse> mockResponse = PageUtils.createPage(locationList, pageable, locationList.size());
+        Page<PlaceResponse> mockResponse = PageUtils.createPage(locations, pageable, locations.size());
 
         when(travelPlaceRepository.searchTravelPlaces(pageable, request.getKeyword())).thenReturn(mockResponse);
 

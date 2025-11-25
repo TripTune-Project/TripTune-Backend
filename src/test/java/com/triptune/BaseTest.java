@@ -303,7 +303,7 @@ public abstract class BaseTest {
                 .build();
     }
 
-    protected TravelPlace createTravelPlace(Long placeId, Country country, City city, District district, ApiCategory apiCategory, double latitude, double longitude, List<TravelImage> travelImageList){
+    protected TravelPlace createTravelPlace(Long placeId, Country country, City city, District district, ApiCategory apiCategory, double latitude, double longitude, List<TravelImage> travelImages){
         return TravelPlace.builder()
                 .placeId(placeId)
                 .country(country)
@@ -319,7 +319,7 @@ public abstract class BaseTest {
                 .placeName("테스트 장소명")
                 .bookmarkCnt(0)
                 .description("테스트 장소 설명")
-                .travelImageList(travelImageList)
+                .travelImages(travelImages)
                 .build();
     }
 
@@ -363,7 +363,7 @@ public abstract class BaseTest {
                 .build();
     }
 
-    protected TravelPlace createTravelPlace(Long placeId, Country country, City city, District district, ApiCategory apiCategory, ApiContentType apiContentType, List<TravelImage> travelImageList){
+    protected TravelPlace createTravelPlace(Long placeId, Country country, City city, District district, ApiCategory apiCategory, ApiContentType apiContentType, List<TravelImage> travelImages){
         return TravelPlace.builder()
                 .placeId(placeId)
                 .country(country)
@@ -380,7 +380,7 @@ public abstract class BaseTest {
                 .placeName("테스트 장소명")
                 .bookmarkCnt(0)
                 .description("테스트 장소 설명")
-                .travelImageList(travelImageList)
+                .travelImages(travelImages)
                 .build();
     }
 
@@ -404,7 +404,7 @@ public abstract class BaseTest {
     }
 
 
-    protected TravelPlace createTravelPlace(Long placeId, Country country, City city, District district, ApiCategory apiCategory, String placeName, List<TravelImage> travelImageList){
+    protected TravelPlace createTravelPlace(Long placeId, Country country, City city, District district, ApiCategory apiCategory, String placeName, List<TravelImage> travelImages){
         return TravelPlace.builder()
                 .placeId(placeId)
                 .country(country)
@@ -420,7 +420,7 @@ public abstract class BaseTest {
                 .placeName(placeName)
                 .bookmarkCnt(0)
                 .description("테스트 장소 설명")
-                .travelImageList(travelImageList)
+                .travelImages(travelImages)
                 .build();
     }
 
@@ -443,7 +443,7 @@ public abstract class BaseTest {
                 .build();
     }
 
-    protected TravelPlace createTravelPlace(Long placeId, Country country, City city, District district, ApiCategory apiCategory, List<TravelImage> travelImageList){
+    protected TravelPlace createTravelPlace(Long placeId, Country country, City city, District district, ApiCategory apiCategory, List<TravelImage> travelImages){
         return TravelPlace.builder()
                 .placeId(placeId)
                 .country(country)
@@ -459,12 +459,12 @@ public abstract class BaseTest {
                 .placeName("장소")
                 .bookmarkCnt(0)
                 .description("테스트 장소 설명")
-                .travelImageList(travelImageList)
+                .travelImages(travelImages)
                 .build();
     }
 
 
-    protected TravelPlace createTravelPlace(Long placeId, Country country, City city, District district, ApiCategory apiCategory, ApiContentType apiContentType, String useTime, List<TravelImage> travelImageList){
+    protected TravelPlace createTravelPlace(Long placeId, Country country, City city, District district, ApiCategory apiCategory, ApiContentType apiContentType, String useTime, List<TravelImage> travelImages){
         return TravelPlace.builder()
                 .placeId(placeId)
                 .country(country)
@@ -482,12 +482,12 @@ public abstract class BaseTest {
                 .bookmarkCnt(0)
                 .description("테스트 장소 설명")
                 .useTime(useTime)
-                .travelImageList(travelImageList)
+                .travelImages(travelImages)
                 .build();
     }
 
 
-    protected TravelPlace createTravelPlace(Long placeId, Country country, City city, District district, ApiCategory apiCategory, ApiContentType apiContentType, String checkInTime, String checkOutTime, List<TravelImage> travelImageList){
+    protected TravelPlace createTravelPlace(Long placeId, Country country, City city, District district, ApiCategory apiCategory, ApiContentType apiContentType, String checkInTime, String checkOutTime, List<TravelImage> travelImages){
         return TravelPlace.builder()
                 .placeId(placeId)
                 .country(country)
@@ -506,7 +506,7 @@ public abstract class BaseTest {
                 .description("테스트 장소 설명")
                 .checkInTime(checkInTime)
                 .checkOutTime(checkOutTime)
-                .travelImageList(travelImageList)
+                .travelImages(travelImages)
                 .build();
     }
 

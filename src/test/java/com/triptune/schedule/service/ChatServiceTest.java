@@ -75,8 +75,8 @@ class ChatServiceTest extends ScheduleTest {
         ChatMessage message5 = createChatMessage("id5", schedule.getScheduleId(), member3, "hello5");
         ChatMessage message6 = createChatMessage("id6", schedule.getScheduleId(), member1, "hello6");
 
-        List<ChatMessage> messageList = List.of(message1, message2, message3, message4, message5, message6);
-        Page<ChatMessage> chatPage = PageUtils.createPage(messageList, pageable, messageList.size());
+        List<ChatMessage> messages = List.of(message1, message2, message3, message4, message5, message6);
+        Page<ChatMessage> chatPage = PageUtils.createPage(messages, pageable, messages.size());
 
         List<MemberProfileResponse> memberProfileResponses = List.of(
                 createMemberProfileResponse(1L, "member1"),
@@ -116,13 +116,13 @@ class ChatServiceTest extends ScheduleTest {
         // given
         Pageable pageable = PageUtils.chatPageable(1);
 
-        List<ChatMessage> messageList = List.of(
+        List<ChatMessage> messages = List.of(
                 createChatMessage("id1", schedule.getScheduleId(), member1, "hello1"),
                 createChatMessage("id2", schedule.getScheduleId(), member1, "hello2"),
                 createChatMessage("id3", schedule.getScheduleId(), member1, "hello3")
         );
 
-        Page<ChatMessage> chatPage = PageUtils.createPage(messageList, pageable, messageList.size());
+        Page<ChatMessage> chatPage = PageUtils.createPage(messages, pageable, messages.size());
 
         List<MemberProfileResponse> memberProfileResponses = List.of(
                 createMemberProfileResponse(1L, "member1"),
@@ -153,8 +153,8 @@ class ChatServiceTest extends ScheduleTest {
         ChatMessage message2 = createChatMessage("id4", schedule.getScheduleId(), member2, "hello2");
         ChatMessage message3 = createChatMessage("id5", schedule.getScheduleId(), member3, "hello3");
 
-        List<ChatMessage> messageList = List.of(message1, message2, message3);
-        Page<ChatMessage> chatPage = PageUtils.createPage(messageList, pageable, messageList.size());
+        List<ChatMessage> messages = List.of(message1, message2, message3);
+        Page<ChatMessage> chatPage = PageUtils.createPage(messages, pageable, messages.size());
 
         List<MemberProfileResponse> memberProfileResponses = List.of(
                 createMemberProfileResponse(1L, "member1"),
@@ -209,10 +209,10 @@ class ChatServiceTest extends ScheduleTest {
         ChatMessage message1 = createChatMessage("id1", schedule.getScheduleId(), member1, "hello1");
         ChatMessage message2 = createChatMessage("id4", schedule.getScheduleId(), member2, "hello2");
         ChatMessage message3 = createChatMessage("id5", schedule.getScheduleId(), member3, "hello3");
-        List<ChatMessage> messageList = List.of(message1, message2, message3);
+        List<ChatMessage> messages = List.of(message1, message2, message3);
 
         // when
-        Set<Long> response = chatService.extractMemberId(messageList);
+        Set<Long> response = chatService.extractMemberId(messages);
 
         // then
         assertThat(response.size()).isEqualTo(3);
@@ -225,10 +225,10 @@ class ChatServiceTest extends ScheduleTest {
     @DisplayName("채팅 메시지에서 회원 인덱스 추출 시 채팅 메시지가 없는 경우")
     void extractMemberId_emptyMessage(){
         // given
-        List<ChatMessage> messageList = new ArrayList<>();
+        List<ChatMessage> messages = new ArrayList<>();
 
         // when
-        Set<Long> response = chatService.extractMemberId(messageList);
+        Set<Long> response = chatService.extractMemberId(messages);
 
         // then
         assertThat(response.size()).isEqualTo(0);
