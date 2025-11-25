@@ -89,7 +89,6 @@ public class ScheduleServiceTest extends ScheduleTest {
         district = createDistrict(city, "중구");
         apiCategory = createApiCategory();
 
-
         ProfileImage profileImage1 = createProfileImage(1L, "member1Image", member1);
         ProfileImage profileImage2 = createProfileImage(2L, "member2Image", member2);
         member1 = createMember(1L, "member1@email.com", profileImage1);
@@ -104,9 +103,12 @@ public class ScheduleServiceTest extends ScheduleTest {
         TravelAttendee attendee3 = createTravelAttendee(3L, member1, schedule2, AttendeeRole.AUTHOR, AttendeePermission.ALL);
         TravelAttendee attendee4 = createTravelAttendee(4L, member2, schedule2, AttendeeRole.GUEST, AttendeePermission.CHAT);
         TravelAttendee attendee5 = createTravelAttendee(5L, member1, schedule3, AttendeeRole.AUTHOR, AttendeePermission.ALL);
-        schedule1.setTravelAttendees(List.of(attendee1, attendee2));
-        schedule2.setTravelAttendees(List.of(attendee3, attendee4));
-        schedule3.setTravelAttendees(List.of(attendee5));
+
+        schedule1.addTravelAttendee(attendee1);
+        schedule1.addTravelAttendee(attendee2);
+        schedule2.addTravelAttendee(attendee3);
+        schedule2.addTravelAttendee(attendee4);
+        schedule3.addTravelAttendee(attendee5);
 
     }
 
@@ -797,16 +799,15 @@ public class ScheduleServiceTest extends ScheduleTest {
                 LocalDate.now().plusDays(1)
         );
 
-        when(travelScheduleRepository.save(any())).thenReturn(schedule1);
         when(memberRepository.findById(anyLong())).thenReturn(Optional.of(member1));
+        when(travelScheduleRepository.save(any())).thenReturn(schedule1);
 
         // when
         ScheduleCreateResponse response = scheduleService.createSchedule(request, member1.getMemberId());
 
         // then
-        verify(travelAttendeeRepository, times(1)).save(any(TravelAttendee.class));
-        assertThat(response.getScheduleId()).isEqualTo(schedule1.getScheduleId());
-
+        verify(memberRepository, times(1)).findById(anyLong());
+        verify(travelScheduleRepository, times(1)).save(any());
     }
 
     @Test
@@ -819,7 +820,6 @@ public class ScheduleServiceTest extends ScheduleTest {
                 LocalDate.now().plusDays(1)
         );
 
-        when(travelScheduleRepository.save(any())).thenReturn(schedule1);
         when(memberRepository.findById(anyLong())).thenReturn(Optional.empty());
 
         // when

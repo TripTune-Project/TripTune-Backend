@@ -43,11 +43,16 @@ public class TravelRoute extends BaseCreatedEntity {
         this.routeOrder = routeOrder;
     }
 
+
     public static TravelRoute of(TravelSchedule travelSchedule, TravelPlace travelPlace, int routeOrder){
         return TravelRoute.builder()
                 .travelSchedule(travelSchedule)
                 .travelPlace(travelPlace)
                 .routeOrder(routeOrder)
                 .build();
+    }
+
+    public void setTravelSchedule(TravelSchedule travelSchedule){
+        this.travelSchedule = travelSchedule;
     }
 }
