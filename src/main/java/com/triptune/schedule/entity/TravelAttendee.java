@@ -70,4 +70,8 @@ public class TravelAttendee extends BaseTimeEntity {
         this.role = role;
     }
 
+    public void setTravelSchedule(TravelSchedule travelSchedule) {
+        this.travelSchedule = travelSchedule;
+    }
+
 }

@@ -173,15 +173,15 @@ public class ScheduleService {
 
     @Transactional
     public ScheduleCreateResponse createSchedule(ScheduleCreateRequest scheduleCreateRequest, Long memberId){
-        TravelSchedule travelSchedule = TravelSchedule.from(scheduleCreateRequest);
-        TravelSchedule savedTravelSchedule = travelScheduleRepository.save(travelSchedule);
-
+        TravelSchedule schedule = TravelSchedule.from(scheduleCreateRequest);
         Member member = getMemberById(memberId);
 
-        TravelAttendee travelAttendee = TravelAttendee.of(savedTravelSchedule, member);
-        travelAttendeeRepository.save(travelAttendee);
+        TravelAttendee attendee = TravelAttendee.of(schedule, member);
+        schedule.addTravelAttendee(attendee);
 
-        return ScheduleCreateResponse.from(savedTravelSchedule);
+        travelScheduleRepository.save(schedule);
+
+        return ScheduleCreateResponse.from(schedule);
     }
 
 

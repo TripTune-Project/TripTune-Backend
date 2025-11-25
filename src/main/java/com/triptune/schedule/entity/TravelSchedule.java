@@ -33,7 +33,7 @@ public class TravelSchedule extends BaseTimeEntity {
     @Column(name = "end_date")
     private LocalDate endDate;
 
-    @OneToMany(mappedBy = "travelSchedule", fetch = FetchType.LAZY, cascade = CascadeType.PERSIST, orphanRemoval = true)
+    @OneToMany(mappedBy = "travelSchedule", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private List<TravelAttendee> travelAttendees = new ArrayList<>();
 
     @OneToMany(mappedBy = "travelSchedule", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
@@ -63,7 +63,13 @@ public class TravelSchedule extends BaseTimeEntity {
         this.endDate = request.getEndDate();
     }
 
-    public void addTravelRoutes(TravelRoute route) {
-        this.travelRoutes.add(route);
+    public void addTravelRoutes(TravelRoute travelRoute) {
+        this.travelRoutes.add(travelRoute);
+        travelRoute.setTravelSchedule(this);
+    }
+
+    public void addTravelAttendee(TravelAttendee travelAttendee) {
+        this.travelAttendees.add(travelAttendee);
+        travelAttendee.setTravelSchedule(this);
     }
 }
