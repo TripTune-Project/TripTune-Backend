@@ -71,16 +71,16 @@ public class AttendeeServiceTest extends ScheduleTest {
     @DisplayName("일정 참석자 조회")
     void getAttendeesByScheduleId(){
         // given
-        List<TravelAttendee> travelAttendeeList = schedule1.getTravelAttendees();
+        List<TravelAttendee> travelAttendees = schedule1.getTravelAttendees();
 
         when(travelAttendeeRepository.findAllByTravelSchedule_ScheduleId(schedule1.getScheduleId()))
-                .thenReturn(travelAttendeeList);
+                .thenReturn(travelAttendees);
 
         // when
         List<AttendeeResponse> response = attendeeService.getAttendeesByScheduleId(schedule1.getScheduleId());
 
         // then
-        assertThat(response.size()).isEqualTo(travelAttendeeList.size());
+        assertThat(response.size()).isEqualTo(travelAttendees.size());
         assertThat(response.get(0).getNickname()).isEqualTo(attendee1.getMember().getNickname());
         assertThat(response.get(0).getRole()).isEqualTo(attendee1.getRole().name());
         assertThat(response.get(0).getProfileUrl()).isEqualTo(attendee1.getMember().getProfileImage().getS3ObjectUrl());

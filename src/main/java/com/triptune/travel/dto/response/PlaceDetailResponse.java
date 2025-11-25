@@ -5,7 +5,6 @@ import com.triptune.travel.entity.TravelPlace;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -75,7 +74,7 @@ public class PlaceDetailResponse {
                 .placeName(travelPlace.getPlaceName())
                 .bookmarkStatus(bookmarkStatus)
                 .description(travelPlace.getDescription())
-                .imageList(travelPlace.getTravelImageList().stream()   // TravelImageFile -> TravelImageResponse 로 변경
+                .imageList(travelPlace.getTravelImages().stream()   // TravelImageFile -> TravelImageResponse 로 변경
                         .map(TravelImageResponse::from)
                         .collect(Collectors.toList()))
                 .build();

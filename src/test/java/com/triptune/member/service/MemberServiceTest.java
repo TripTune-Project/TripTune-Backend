@@ -1025,8 +1025,8 @@ public class MemberServiceTest extends MemberTest {
 
         Member member = createNativeTypeMember(1L, "member@email.com");
 
-        List<TravelPlace> travelPlaceList = List.of(travelPlace1, travelPlace2, travelPlace3);
-        Page<TravelPlace> travelPlacePage = PageUtils.createPage(travelPlaceList, pageable, travelPlaceList.size());
+        List<TravelPlace> travelPlaces = List.of(travelPlace1, travelPlace2, travelPlace3);
+        Page<TravelPlace> travelPlacePage = PageUtils.createPage(travelPlaces, pageable, travelPlaces.size());
 
         when(bookmarkRepository.findSortedMemberBookmarks(anyLong(), any(), any()))
                 .thenReturn(travelPlacePage);
@@ -1054,8 +1054,8 @@ public class MemberServiceTest extends MemberTest {
 
         Member member = createNativeTypeMember(1L, "member@email.com");
 
-        List<TravelPlace> travelPlaceList = List.of(travelPlace1, travelPlace2, travelPlace3);
-        Page<TravelPlace> travelPlacePage = PageUtils.createPage(travelPlaceList, pageable, travelPlaceList.size());
+        List<TravelPlace> travelPlaces = List.of(travelPlace1, travelPlace2, travelPlace3);
+        Page<TravelPlace> travelPlacePage = PageUtils.createPage(travelPlaces, pageable, travelPlaces.size());
 
         when(bookmarkRepository.findSortedMemberBookmarks(anyLong(), any(), any()))
                 .thenReturn(travelPlacePage);

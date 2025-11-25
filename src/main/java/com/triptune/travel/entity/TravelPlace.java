@@ -7,7 +7,6 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -77,13 +76,12 @@ public class TravelPlace extends BaseTimeEntity {
     @Column(name = "bookmark_cnt")
     private int bookmarkCnt;
 
-
     @OneToMany(mappedBy = "travelPlace", fetch = FetchType.LAZY)
-    private List<TravelImage> travelImageList = new ArrayList<>();
+    private List<TravelImage> travelImages = new ArrayList<>();
 
 
     @Builder
-    public TravelPlace(Long placeId, Country country, City city, District district, ApiCategory apiCategory, ApiContentType apiContentType, String placeName, String address, String detailAddress, String useTime, String checkInTime, String checkOutTime, String homepage, String phoneNumber, double longitude, double latitude, String description, int bookmarkCnt, List<TravelImage> travelImageList) {
+    public TravelPlace(Long placeId, Country country, City city, District district, ApiCategory apiCategory, ApiContentType apiContentType, String placeName, String address, String detailAddress, String useTime, String checkInTime, String checkOutTime, String homepage, String phoneNumber, double longitude, double latitude, String description, int bookmarkCnt, List<TravelImage> travelImages) {
         this.placeId = placeId;
         this.country = country;
         this.city = city;
@@ -102,11 +100,11 @@ public class TravelPlace extends BaseTimeEntity {
         this.latitude = latitude;
         this.description = description;
         this.bookmarkCnt = bookmarkCnt;
-        this.travelImageList = travelImageList;
+        this.travelImages = travelImages;
     }
 
     public String getThumbnailUrl(){
-        return travelImageList.stream()
+        return travelImages.stream()
                 .filter(TravelImage::isThumbnail)
                 .map(TravelImage::getS3ObjectUrl)
                 .findFirst()

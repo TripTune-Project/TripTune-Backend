@@ -684,8 +684,8 @@ public class ScheduleServiceTest extends ScheduleTest {
         schedule1.setTravelRoutes(List.of(route1, route2, route3));
         schedule2.setTravelRoutes(new ArrayList<>());
 
-        List<TravelSchedule> travelScheduleList = List.of(schedule1);
-        Page<TravelSchedule> schedulePage = PageUtils.createPage(travelScheduleList, PageUtils.schedulePageable(1), travelScheduleList.size());
+        List<TravelSchedule> travelSchedules = List.of(schedule1);
+        Page<TravelSchedule> schedulePage = PageUtils.createPage(travelSchedules, PageUtils.schedulePageable(1), travelSchedules.size());
         // when
         List<ScheduleInfoResponse> response = scheduleService.createScheduleInfoResponse(schedulePage, member1.getMemberId());
 
@@ -704,8 +704,8 @@ public class ScheduleServiceTest extends ScheduleTest {
         travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, new ArrayList<>());
         travelPlace2 = createTravelPlace(2L, country, city, district, apiCategory, new ArrayList<>());
 
-        List<TravelSchedule> travelScheduleList = List.of(schedule1);
-        Page<TravelSchedule> schedulePage = PageUtils.createPage(travelScheduleList, PageUtils.schedulePageable(1), travelScheduleList.size());
+        List<TravelSchedule> travelSchedules = List.of(schedule1);
+        Page<TravelSchedule> schedulePage = PageUtils.createPage(travelSchedules, PageUtils.schedulePageable(1), travelSchedules.size());
 
 
         // when
@@ -722,8 +722,8 @@ public class ScheduleServiceTest extends ScheduleTest {
     @DisplayName("TravelSchedule 를 ScheduleInfoResponse 로 변경 시 작성자가 없어 예외 발생")
     void createScheduleInfoResponse_authorNotFound(){
         // given
-        List<TravelSchedule> travelScheduleList = List.of(schedule1);
-        Page<TravelSchedule> schedulePage = PageUtils.createPage(travelScheduleList, PageUtils.schedulePageable(1), travelScheduleList.size());
+        List<TravelSchedule> travelSchedules = List.of(schedule1);
+        Page<TravelSchedule> schedulePage = PageUtils.createPage(travelSchedules, PageUtils.schedulePageable(1), travelSchedules.size());
         for(TravelAttendee attendee : schedule1.getTravelAttendees()){
             attendee.updateRole(AttendeeRole.GUEST);
         }
@@ -742,8 +742,8 @@ public class ScheduleServiceTest extends ScheduleTest {
     @DisplayName("TravelSchedule 를 ScheduleInfoResponse 로 변경 시 접근 권한이 없어 예외 발생")
     void createScheduleInfoResponse_forbiddenSchedule(){
         // given
-        List<TravelSchedule> travelScheduleList = List.of(schedule3);
-        Page<TravelSchedule> schedulePage = PageUtils.createPage(travelScheduleList, PageUtils.schedulePageable(1), travelScheduleList.size());
+        List<TravelSchedule> travelSchedules = List.of(schedule3);
+        Page<TravelSchedule> schedulePage = PageUtils.createPage(travelSchedules, PageUtils.schedulePageable(1), travelSchedules.size());
 
         // when
         ForbiddenScheduleException fail = assertThrows(ForbiddenScheduleException.class,
@@ -843,12 +843,12 @@ public class ScheduleServiceTest extends ScheduleTest {
         TravelImage travelImage4 = createTravelImage(travelPlace2, "test2", false);
         travelPlace2 = createTravelPlace(2L, country, city, district, apiCategory, List.of(travelImage3, travelImage4));
 
-        List<PlaceResponse> placeList = List.of(PlaceResponse.from(travelPlace1), PlaceResponse.from(travelPlace2));
+        List<PlaceResponse> places = List.of(PlaceResponse.from(travelPlace1), PlaceResponse.from(travelPlace2));
         Pageable pageable = PageUtils.defaultPageable(1);
 
         when(travelScheduleRepository.findById(any())).thenReturn(Optional.of(schedule1));
         when(travelPlaceRepository.findDefaultTravelPlacesByJungGu(any()))
-                .thenReturn(PageUtils.createPage(placeList, pageable, 1));
+                .thenReturn(PageUtils.createPage(places, pageable, 1));
 
         // when
         ScheduleDetailResponse response = scheduleService.getScheduleDetail(schedule1.getScheduleId(), 1);
@@ -856,8 +856,8 @@ public class ScheduleServiceTest extends ScheduleTest {
         // then
         assertThat(response.getScheduleName()).isEqualTo(schedule1.getScheduleName());
         assertThat(response.getCreatedAt()).isEqualTo(schedule1.getCreatedAt());
-        assertThat(response.getPlaceList().getTotalElements()).isEqualTo(placeList.size());
-        assertThat(response.getPlaceList().getContent().get(0).getPlaceName()).isEqualTo(placeList.get(0).getPlaceName());
+        assertThat(response.getPlaceList().getTotalElements()).isEqualTo(places.size());
+        assertThat(response.getPlaceList().getContent().get(0).getPlaceName()).isEqualTo(places.get(0).getPlaceName());
         assertThat(response.getPlaceList().getContent().get(0).getThumbnailUrl()).isNotNull();
     }
 

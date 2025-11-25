@@ -55,10 +55,10 @@ public class ScheduleService {
         Pageable pageable = PageUtils.schedulePageable(page);
         Page<TravelSchedule> schedulePage = travelScheduleRepository.findTravelSchedulesByMemberId(pageable, memberId);
 
-        List<ScheduleInfoResponse> scheduleInfoResponseList = createScheduleInfoResponse(schedulePage, memberId);
+        List<ScheduleInfoResponse> scheduleInfoResponses = createScheduleInfoResponse(schedulePage, memberId);
         int sharedScheduleCnt = travelScheduleRepository.countSharedTravelSchedulesByMemberId(memberId);
 
-        Page<ScheduleInfoResponse> scheduleInfoResponsePage = PageUtils.createPage(scheduleInfoResponseList, pageable, schedulePage.getTotalElements());
+        Page<ScheduleInfoResponse> scheduleInfoResponsePage = PageUtils.createPage(scheduleInfoResponses, pageable, schedulePage.getTotalElements());
         return SchedulePageResponse.ofAll(scheduleInfoResponsePage, sharedScheduleCnt);
     }
 
@@ -67,10 +67,10 @@ public class ScheduleService {
         Pageable pageable = PageUtils.schedulePageable(page);
         Page<TravelSchedule> schedulePage = travelScheduleRepository.findSharedTravelSchedulesByMemberId(pageable, memberId);
 
-        List<ScheduleInfoResponse> scheduleInfoResponseList = createScheduleInfoResponse(schedulePage, memberId);
+        List<ScheduleInfoResponse> scheduleInfoResponses = createScheduleInfoResponse(schedulePage, memberId);
         int totalElements = travelScheduleRepository.countTravelSchedulesByMemberId(memberId);
 
-        Page<ScheduleInfoResponse> scheduleInfoResponsePage = PageUtils.createPage(scheduleInfoResponseList, pageable, schedulePage.getTotalElements());
+        Page<ScheduleInfoResponse> scheduleInfoResponsePage = PageUtils.createPage(scheduleInfoResponses, pageable, schedulePage.getTotalElements());
         return SchedulePageResponse.ofShared(scheduleInfoResponsePage, totalElements);
     }
 
@@ -93,10 +93,10 @@ public class ScheduleService {
         Pageable pageable = PageUtils.schedulePageable(page);
         Page<TravelSchedule> schedulesPage = travelScheduleRepository.searchTravelSchedulesByMemberIdAndKeyword(pageable, keyword, memberId);
 
-        List<ScheduleInfoResponse> scheduleInfoResponseList = createScheduleInfoResponse(schedulesPage, memberId);
+        List<ScheduleInfoResponse> scheduleInfoResponses = createScheduleInfoResponse(schedulesPage, memberId);
         int sharedElements = travelScheduleRepository.countSharedTravelSchedulesByMemberIdAndKeyword(keyword, memberId);
 
-        Page<ScheduleInfoResponse> scheduleInfoResponsePage = PageUtils.createPage(scheduleInfoResponseList, pageable, schedulesPage.getTotalElements());
+        Page<ScheduleInfoResponse> scheduleInfoResponsePage = PageUtils.createPage(scheduleInfoResponses, pageable, schedulesPage.getTotalElements());
         return SchedulePageResponse.ofAll(scheduleInfoResponsePage, sharedElements);
     }
 
@@ -106,10 +106,10 @@ public class ScheduleService {
         Pageable pageable = PageUtils.schedulePageable(page);
         Page<TravelSchedule> schedulesPage = travelScheduleRepository.searchSharedTravelSchedulesByMemberIdAndKeyword(pageable, keyword, memberId);
 
-        List<ScheduleInfoResponse> scheduleInfoResponseList = createScheduleInfoResponse(schedulesPage, memberId);
+        List<ScheduleInfoResponse> scheduleInfoResponses = createScheduleInfoResponse(schedulesPage, memberId);
         int totalElements = travelScheduleRepository.countTravelSchedulesByMemberIdAndKeyword(keyword, memberId);
 
-        Page<ScheduleInfoResponse> scheduleInfoResponsePage = PageUtils.createPage(scheduleInfoResponseList, pageable, schedulesPage.getTotalElements());
+        Page<ScheduleInfoResponse> scheduleInfoResponsePage = PageUtils.createPage(scheduleInfoResponses, pageable, schedulesPage.getTotalElements());
         return SchedulePageResponse.ofShared(scheduleInfoResponsePage, totalElements);
     }
 
@@ -154,9 +154,9 @@ public class ScheduleService {
 
     public String getThumbnailUrl(TravelSchedule schedule){
         String thumbnailUrl = null;
-        List<TravelRoute> travelRouteList = schedule.getTravelRoutes();
+        List<TravelRoute> travelRoutes = schedule.getTravelRoutes();
 
-        if (travelRouteList != null && !travelRouteList.isEmpty()){
+        if (travelRoutes != null && !travelRoutes.isEmpty()){
             TravelRoute route = schedule.getTravelRoutes().stream()
                     .filter(travelRoute -> travelRoute.getRouteOrder() == 1)
                     .findFirst()
