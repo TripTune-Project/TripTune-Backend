@@ -1,5 +1,6 @@
 package com.triptune.schedule.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.triptune.common.entity.*;
 import com.triptune.common.repository.*;
 import com.triptune.member.entity.Member;
@@ -27,6 +28,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
@@ -49,8 +51,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @Transactional
+@AutoConfigureMockMvc
 @ActiveProfiles("h2")
 public class TravelRouteControllerTest extends ScheduleTest {
+    @Autowired private MockMvc mockMvc;
+    @Autowired private ObjectMapper objectMapper;
     @Autowired private WebApplicationContext wac;
     @Autowired private TravelScheduleRepository travelScheduleRepository;
     @Autowired private TravelAttendeeRepository travelAttendeeRepository;
@@ -63,7 +68,6 @@ public class TravelRouteControllerTest extends ScheduleTest {
     @Autowired private TravelImageRepository travelImageRepository;
     @Autowired private TravelRouteRepository travelRouteRepository;
 
-    private MockMvc mockMvc;
 
     private Country country;
     private City city;
@@ -88,12 +92,6 @@ public class TravelRouteControllerTest extends ScheduleTest {
 
     @BeforeEach
     void setUp(){
-        mockMvc = MockMvcBuilders.webAppContextSetup(wac)
-                .addFilter(new CharacterEncodingFilter("UTF-8", true))
-                .apply(springSecurity())
-                .alwaysDo(print())
-                .build();
-
         country = countryRepository.save(createCountry());
         city = cityRepository.save(createCity(country));
         district = districtRepository.save(createDistrict(city, "강남구"));
@@ -140,6 +138,7 @@ public class TravelRouteControllerTest extends ScheduleTest {
         // when, then
         mockMvc.perform(get("/api/schedules/{scheduleId}/routes", schedule1.getScheduleId())
                         .param("page", "1"))
+                .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.totalElements").value(3))
@@ -160,6 +159,7 @@ public class TravelRouteControllerTest extends ScheduleTest {
         // when, then
         mockMvc.perform(get("/api/schedules/{scheduleId}/routes", schedule1.getScheduleId())
                         .param("page", "1"))
+                .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.totalElements").value(0))
@@ -175,6 +175,7 @@ public class TravelRouteControllerTest extends ScheduleTest {
         // when, then
         mockMvc.perform(get("/api/schedules/{scheduleId}/routes", 0L)
                         .param("page", "1"))
+                .andDo(print())
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value(ErrorCode.SCHEDULE_NOT_FOUND.getMessage()));
@@ -189,6 +190,7 @@ public class TravelRouteControllerTest extends ScheduleTest {
         // when, then
         mockMvc.perform(get("/api/schedules/{scheduleId}/routes", schedule2.getScheduleId())
                         .param("page", "1"))
+                .andDo(print())
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value(ErrorCode.FORBIDDEN_ACCESS_SCHEDULE.getMessage()));
@@ -215,7 +217,8 @@ public class TravelRouteControllerTest extends ScheduleTest {
         // when, then
         mockMvc.perform(post("/api/schedules/{scheduleId}/routes", schedule1.getScheduleId())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(request)))
+                        .content(objectMapper.writeValueAsString(request)))
+                .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()));
@@ -232,7 +235,8 @@ public class TravelRouteControllerTest extends ScheduleTest {
         // when, then
         mockMvc.perform(post("/api/schedules/{scheduleId}/routes", schedule1.getScheduleId())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(request)))
+                        .content(objectMapper.writeValueAsString(request)))
+                .andDo(print())
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value(containsString("여행지 ID는 필수 입력 값입니다.")));
@@ -250,7 +254,8 @@ public class TravelRouteControllerTest extends ScheduleTest {
         // when, then
         mockMvc.perform(post("/api/schedules/{scheduleId}/routes", schedule1.getScheduleId())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(request)))
+                        .content(objectMapper.writeValueAsString(request)))
+                .andDo(print())
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value(containsString("여행지 ID는 1 이상의 값이어야 합니다.")));
@@ -266,7 +271,8 @@ public class TravelRouteControllerTest extends ScheduleTest {
         // when, then
         mockMvc.perform(post("/api/schedules/{scheduleId}/routes", schedule1.getScheduleId())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(request)))
+                        .content(objectMapper.writeValueAsString(request)))
+                .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()));
@@ -283,7 +289,8 @@ public class TravelRouteControllerTest extends ScheduleTest {
         // when, then
         mockMvc.perform(post("/api/schedules/{scheduleId}/routes", 0L)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(request)))
+                        .content(objectMapper.writeValueAsString(request)))
+                .andDo(print())
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value(ErrorCode.SCHEDULE_NOT_FOUND.getMessage()));
@@ -302,7 +309,8 @@ public class TravelRouteControllerTest extends ScheduleTest {
         // when, then
         mockMvc.perform(post("/api/schedules/{scheduleId}/routes", schedule1.getScheduleId())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(request)))
+                        .content(objectMapper.writeValueAsString(request)))
+                .andDo(print())
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value(ErrorCode.ATTENDEE_NOT_FOUND.getMessage()));
@@ -330,7 +338,8 @@ public class TravelRouteControllerTest extends ScheduleTest {
         // when, then
         mockMvc.perform(post("/api/schedules/{scheduleId}/routes", schedule1.getScheduleId())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(request)))
+                        .content(objectMapper.writeValueAsString(request)))
+                .andDo(print())
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value(ErrorCode.FORBIDDEN_EDIT_SCHEDULE.getMessage()));
@@ -347,7 +356,8 @@ public class TravelRouteControllerTest extends ScheduleTest {
         // when, then
         mockMvc.perform(post("/api/schedules/{scheduleId}/routes", schedule1.getScheduleId())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(request)))
+                        .content(objectMapper.writeValueAsString(request)))
+                .andDo(print())
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value(ErrorCode.PLACE_NOT_FOUND.getMessage()));

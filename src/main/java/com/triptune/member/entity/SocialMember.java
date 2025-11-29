@@ -5,6 +5,7 @@ import com.triptune.global.security.oauth.userinfo.OAuth2UserInfo;
 import com.triptune.member.enums.DeactivateValue;
 import com.triptune.member.enums.SocialType;
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -13,7 +14,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Getter
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class SocialMember extends BaseTimeEntity {
 
     @Id

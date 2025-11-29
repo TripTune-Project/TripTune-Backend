@@ -1,5 +1,6 @@
 package com.triptune.schedule.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.triptune.global.response.enums.ErrorCode;
 import com.triptune.global.response.enums.SuccessCode;
 import com.triptune.member.entity.Member;
@@ -21,6 +22,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
@@ -43,15 +45,17 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @Transactional
+@AutoConfigureMockMvc
 @ActiveProfiles("h2")
 public class TravelAttendeeControllerTest extends ScheduleTest {
+    @Autowired private MockMvc mockMvc;
+    @Autowired private ObjectMapper objectMapper;
     @Autowired private WebApplicationContext wac;
     @Autowired private TravelScheduleRepository travelScheduleRepository;
     @Autowired private TravelAttendeeRepository travelAttendeeRepository;
     @Autowired private MemberRepository memberRepository;
     @Autowired private ProfileImageRepository profileImageRepository;
 
-    private MockMvc mockMvc;
 
     private TravelSchedule schedule1;
     private TravelSchedule schedule2;
@@ -67,12 +71,6 @@ public class TravelAttendeeControllerTest extends ScheduleTest {
 
     @BeforeEach
     void setUp(){
-        mockMvc = MockMvcBuilders.webAppContextSetup(wac)
-                .addFilter(new CharacterEncodingFilter("UTF-8", true))
-                .apply(springSecurity())
-                .alwaysDo(print())
-                .build();
-
         ProfileImage profileImage1 = profileImageRepository.save(createProfileImage(null, "member1Image"));
         ProfileImage profileImage2 = profileImageRepository.save(createProfileImage(null, "member2Image"));
         ProfileImage profileImage3 = profileImageRepository.save(createProfileImage(null, "member3Image"));
@@ -98,6 +96,7 @@ public class TravelAttendeeControllerTest extends ScheduleTest {
 
         // when, then
         mockMvc.perform(get("/api/schedules/{scheduleId}/attendees", schedule1.getScheduleId()))
+                .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data[0].nickname").value(member1.getNickname()))
@@ -114,6 +113,7 @@ public class TravelAttendeeControllerTest extends ScheduleTest {
 
         // when, then
         mockMvc.perform(get("/api/schedules/{scheduleId}/attendees", 0L))
+                .andDo(print())
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value(ErrorCode.SCHEDULE_NOT_FOUND.getMessage()));
@@ -128,6 +128,7 @@ public class TravelAttendeeControllerTest extends ScheduleTest {
 
         // when, then
         mockMvc.perform(get("/api/schedules/{scheduleId}/attendees", schedule2.getScheduleId()))
+                .andDo(print())
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value(ErrorCode.FORBIDDEN_ACCESS_SCHEDULE.getMessage()));
@@ -144,7 +145,8 @@ public class TravelAttendeeControllerTest extends ScheduleTest {
         // when, then
         mockMvc.perform(post("/api/schedules/{scheduleId}/attendees", schedule1.getScheduleId())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(request)))
+                        .content(objectMapper.writeValueAsString(request)))
+                .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()));
@@ -163,7 +165,8 @@ public class TravelAttendeeControllerTest extends ScheduleTest {
         // when, then
         mockMvc.perform(post("/api/schedules/{scheduleId}/attendees", schedule1.getScheduleId())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(request)))
+                        .content(objectMapper.writeValueAsString(request)))
+                .andDo(print())
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value(containsString("이메일은 필수 입력 값입니다.")));
@@ -179,7 +182,8 @@ public class TravelAttendeeControllerTest extends ScheduleTest {
         // when, then
         mockMvc.perform(post("/api/schedules/{scheduleId}/attendees", schedule1.getScheduleId())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(request)))
+                        .content(objectMapper.writeValueAsString(request)))
+                .andDo(print())
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value(containsString("이메일은 필수 입력 값입니다.")));
@@ -197,7 +201,8 @@ public class TravelAttendeeControllerTest extends ScheduleTest {
         // when, then
         mockMvc.perform(post("/api/schedules/{scheduleId}/attendees", schedule1.getScheduleId())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(request)))
+                        .content(objectMapper.writeValueAsString(request)))
+                .andDo(print())
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value(containsString("이메일 형식에 맞지 않습니다.")));
@@ -213,7 +218,8 @@ public class TravelAttendeeControllerTest extends ScheduleTest {
         // when, then
         mockMvc.perform(post("/api/schedules/{scheduleId}/attendees", schedule1.getScheduleId())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(request)))
+                        .content(objectMapper.writeValueAsString(request)))
+                .andDo(print())
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value(containsString("참석자 권한은 필수 입력 값입니다.")));
@@ -230,7 +236,8 @@ public class TravelAttendeeControllerTest extends ScheduleTest {
         // when, then
         mockMvc.perform(post("/api/schedules/{scheduleId}/attendees", 1000L)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(request)))
+                        .content(objectMapper.writeValueAsString(request)))
+                .andDo(print())
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value(ErrorCode.SCHEDULE_NOT_FOUND.getMessage()));
@@ -257,7 +264,8 @@ public class TravelAttendeeControllerTest extends ScheduleTest {
         // when, then
         mockMvc.perform(post("/api/schedules/{scheduleId}/attendees", schedule1.getScheduleId())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(request)))
+                        .content(objectMapper.writeValueAsString(request)))
+                .andDo(print())
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value(ErrorCode.OVER_ATTENDEE_NUMBER.getMessage()));
@@ -274,7 +282,8 @@ public class TravelAttendeeControllerTest extends ScheduleTest {
         // when, then
         mockMvc.perform(post("/api/schedules/{scheduleId}/attendees", schedule1.getScheduleId())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(request)))
+                        .content(objectMapper.writeValueAsString(request)))
+                .andDo(print())
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value(ErrorCode.FORBIDDEN_SHARE_ATTENDEE.getMessage()));
@@ -291,7 +300,8 @@ public class TravelAttendeeControllerTest extends ScheduleTest {
         // when, then
         mockMvc.perform(post("/api/schedules/{scheduleId}/attendees", schedule1.getScheduleId())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(request)))
+                        .content(objectMapper.writeValueAsString(request)))
+                .andDo(print())
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value(ErrorCode.MEMBER_NOT_FOUND.getMessage()));
@@ -308,7 +318,8 @@ public class TravelAttendeeControllerTest extends ScheduleTest {
         // when, then
         mockMvc.perform(post("/api/schedules/{scheduleId}/attendees", schedule1.getScheduleId())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(request)))
+                        .content(objectMapper.writeValueAsString(request)))
+                .andDo(print())
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value(ErrorCode.ALREADY_ATTENDEE.getMessage()));
@@ -326,7 +337,8 @@ public class TravelAttendeeControllerTest extends ScheduleTest {
         mockMvc.perform(patch("/api/schedules/{scheduleId}/attendees/{attendeeId}",
                         schedule1.getScheduleId(), attendee2.getAttendeeId())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(request)))
+                        .content(objectMapper.writeValueAsString(request)))
+                .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()));
@@ -343,7 +355,8 @@ public class TravelAttendeeControllerTest extends ScheduleTest {
         mockMvc.perform(patch("/api/schedules/{scheduleId}/attendees/{attendeeId}",
                         schedule1.getScheduleId(), attendee2.getAttendeeId())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(request)))
+                        .content(objectMapper.writeValueAsString(request)))
+                .andDo(print())
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value("참석자 권한은 필수 입력 값입니다."));
@@ -360,7 +373,8 @@ public class TravelAttendeeControllerTest extends ScheduleTest {
         mockMvc.perform(patch("/api/schedules/{scheduleId}/attendees/{attendeeId}",
                         0L, attendee2.getAttendeeId())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(request)))
+                        .content(objectMapper.writeValueAsString(request)))
+                .andDo(print())
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value(ErrorCode.SCHEDULE_NOT_FOUND.getMessage()));
@@ -378,7 +392,8 @@ public class TravelAttendeeControllerTest extends ScheduleTest {
         mockMvc.perform(patch("/api/schedules/{scheduleId}/attendees/{attendeeId}",
                         schedule1.getScheduleId(), attendee2.getAttendeeId())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(request)))
+                        .content(objectMapper.writeValueAsString(request)))
+                .andDo(print())
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value(ErrorCode.FORBIDDEN_UPDATE_ATTENDEE_PERMISSION.getMessage()));
@@ -395,7 +410,8 @@ public class TravelAttendeeControllerTest extends ScheduleTest {
         mockMvc.perform(patch("/api/schedules/{scheduleId}/attendees/{attendeeId}",
                         schedule1.getScheduleId(), attendee3.getAttendeeId())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(request)))
+                        .content(objectMapper.writeValueAsString(request)))
+                .andDo(print())
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value(ErrorCode.ATTENDEE_NOT_FOUND.getMessage()));
@@ -413,7 +429,8 @@ public class TravelAttendeeControllerTest extends ScheduleTest {
         mockMvc.perform(patch("/api/schedules/{scheduleId}/attendees/{attendeeId}",
                         schedule1.getScheduleId(), attendee1.getAttendeeId())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(request)))
+                        .content(objectMapper.writeValueAsString(request)))
+                .andDo(print())
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value(ErrorCode.FORBIDDEN_UPDATE_AUTHOR_PERMISSION.getMessage()));
@@ -427,6 +444,7 @@ public class TravelAttendeeControllerTest extends ScheduleTest {
 
         // when, then
         mockMvc.perform(delete("/api/schedules/{scheduleId}/attendees", schedule1.getScheduleId()))
+                .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value("200(성공)"));
@@ -443,6 +461,7 @@ public class TravelAttendeeControllerTest extends ScheduleTest {
 
         // when, then
         mockMvc.perform(delete("/api/schedules/{scheduleId}/attendees", 0L))
+                .andDo(print())
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value(ErrorCode.SCHEDULE_NOT_FOUND.getMessage()));
@@ -457,6 +476,7 @@ public class TravelAttendeeControllerTest extends ScheduleTest {
 
         // when, then
         mockMvc.perform(delete("/api/schedules/{scheduleId}/attendees", schedule1.getScheduleId()))
+                .andDo(print())
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value(ErrorCode.FORBIDDEN_LEAVE_AUTHOR.getMessage()));
@@ -470,6 +490,7 @@ public class TravelAttendeeControllerTest extends ScheduleTest {
 
         // when, then
         mockMvc.perform(delete("/api/schedules/{scheduleId}/attendees", schedule2.getScheduleId()))
+                .andDo(print())
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value(ErrorCode.FORBIDDEN_ACCESS_SCHEDULE.getMessage()));
@@ -484,6 +505,7 @@ public class TravelAttendeeControllerTest extends ScheduleTest {
         // when, then
         mockMvc.perform(delete("/api/schedules/{scheduleId}/attendees/{attendeeId}",
                         schedule1.getScheduleId(), attendee2.getAttendeeId()))
+                .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()));
@@ -501,6 +523,7 @@ public class TravelAttendeeControllerTest extends ScheduleTest {
         // when, then
         mockMvc.perform(delete("/api/schedules/{scheduleId}/attendees/{attendeeId}",
                         0L, attendee2.getAttendeeId()))
+                .andDo(print())
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value(ErrorCode.SCHEDULE_NOT_FOUND.getMessage()));
@@ -516,6 +539,7 @@ public class TravelAttendeeControllerTest extends ScheduleTest {
         // when, then
         mockMvc.perform(delete("/api/schedules/{scheduleId}/attendees/{attendeeId}",
                         schedule1.getScheduleId(), attendee2.getAttendeeId()))
+                .andDo(print())
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value(ErrorCode.FORBIDDEN_REMOVE_ATTENDEE.getMessage()));
@@ -530,6 +554,7 @@ public class TravelAttendeeControllerTest extends ScheduleTest {
         // when, then
         mockMvc.perform(delete("/api/schedules/{scheduleId}/attendees/{attendeeId}",
                         schedule1.getScheduleId(), 0L))
+                .andDo(print())
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value(ErrorCode.ATTENDEE_NOT_FOUND.getMessage()));
@@ -544,6 +569,7 @@ public class TravelAttendeeControllerTest extends ScheduleTest {
         // when, then
         mockMvc.perform(delete("/api/schedules/{scheduleId}/attendees/{attendeeId}",
                         schedule1.getScheduleId(), attendee1.getAttendeeId()))
+                .andDo(print())
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value(ErrorCode.FORBIDDEN_LEAVE_AUTHOR.getMessage()));

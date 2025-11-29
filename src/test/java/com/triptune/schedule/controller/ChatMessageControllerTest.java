@@ -17,6 +17,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
@@ -33,16 +34,16 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @Transactional
+@AutoConfigureMockMvc
 @ActiveProfiles("mongo")
 public class ChatMessageControllerTest extends ScheduleTest {
+    @Autowired private MockMvc mockMvc;
     @Autowired private WebApplicationContext wac;
     @Autowired private TravelScheduleRepository travelScheduleRepository;
     @Autowired private MemberRepository memberRepository;
     @Autowired private ProfileImageRepository profileImageRepository;
     @Autowired private TravelAttendeeRepository travelAttendeeRepository;
     @Autowired private ChatMessageRepository chatMessageRepository;
-
-    private MockMvc mockMvc;
 
     private TravelSchedule schedule;
     private Member member1;
@@ -51,12 +52,6 @@ public class ChatMessageControllerTest extends ScheduleTest {
 
     @BeforeEach
     void setUp(){
-        mockMvc = MockMvcBuilders.webAppContextSetup(wac)
-                .addFilter(new CharacterEncodingFilter("UTF-8", true))
-                .apply(springSecurity())
-                .alwaysDo(print())
-                .build();
-
         chatMessageRepository.deleteAll();
 
         ProfileImage profileImage1 = profileImageRepository.save(createProfileImage(null, "member1Image"));
@@ -95,6 +90,7 @@ public class ChatMessageControllerTest extends ScheduleTest {
         // when, then
         mockMvc.perform(get("/api/schedules/{scheduleId}/chats", schedule.getScheduleId())
                         .param("page", "1"))
+                .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.totalElements").value(6))
@@ -121,6 +117,7 @@ public class ChatMessageControllerTest extends ScheduleTest {
         // when, then
         mockMvc.perform(get("/api/schedules/{scheduleId}/chats", schedule.getScheduleId())
                         .param("page", "1"))
+                .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.totalElements").value(0))

@@ -1,7 +1,5 @@
 package com.triptune;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.triptune.bookmark.entity.Bookmark;
 import com.triptune.common.entity.*;
 import com.triptune.global.security.CustomUserDetails;
@@ -19,22 +17,15 @@ import com.triptune.schedule.enums.AttendeeRole;
 import com.triptune.travel.entity.TravelImage;
 import com.triptune.travel.entity.TravelPlace;
 import com.triptune.travel.enums.ThemeType;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 
 public abstract class BaseTest {
-
-    @Autowired private ObjectMapper objectMapper;
-
     private final String refreshToken = "MemberRefreshToken";
-
 
     protected Member createMember(Long memberId, String email){
         return Member.builder()
@@ -594,7 +585,4 @@ public abstract class BaseTest {
         SecurityContextHolder.getContext().setAuthentication(auth);
     }
 
-    protected String toJsonString(Object obj) throws JsonProcessingException {
-        return objectMapper.writeValueAsString(obj);
-    }
 }
