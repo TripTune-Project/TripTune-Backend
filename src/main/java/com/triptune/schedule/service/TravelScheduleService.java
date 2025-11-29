@@ -4,7 +4,6 @@ import com.triptune.member.entity.Member;
 import com.triptune.member.repository.MemberRepository;
 import com.triptune.schedule.dto.AuthorDTO;
 import com.triptune.schedule.dto.request.ScheduleCreateRequest;
-import com.triptune.schedule.dto.request.RouteRequest;
 import com.triptune.schedule.dto.request.ScheduleUpdateRequest;
 import com.triptune.schedule.dto.response.OverviewScheduleResponse;
 import com.triptune.schedule.dto.response.ScheduleCreateResponse;
@@ -18,10 +17,8 @@ import com.triptune.schedule.enums.AttendeeRole;
 import com.triptune.schedule.exception.ForbiddenScheduleException;
 import com.triptune.schedule.repository.ChatMessageRepository;
 import com.triptune.schedule.repository.TravelAttendeeRepository;
-import com.triptune.schedule.repository.TravelRouteRepository;
 import com.triptune.schedule.repository.TravelScheduleRepository;
 import com.triptune.travel.dto.response.PlaceResponse;
-import com.triptune.travel.entity.TravelPlace;
 import com.triptune.travel.repository.TravelPlaceRepository;
 import com.triptune.global.response.enums.ErrorCode;
 import com.triptune.global.exception.DataNotFoundException;
@@ -34,7 +31,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -42,14 +38,14 @@ import java.util.stream.Collectors;
 @Service
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
-public class ScheduleService {
+public class TravelScheduleService {
 
     private final TravelScheduleRepository travelScheduleRepository;
     private final MemberRepository memberRepository;
     private final TravelAttendeeRepository travelAttendeeRepository;
     private final TravelPlaceRepository travelPlaceRepository;
     private final ChatMessageRepository chatMessageRepository;
-    private final RouteService routeService;
+    private final TravelRouteService travelRouteService;
 
     public SchedulePageResponse<ScheduleInfoResponse> getAllSchedules(int page, Long memberId) {
         Pageable pageable = PageUtils.schedulePageable(page);
@@ -209,7 +205,7 @@ public class ScheduleService {
         checkScheduleEditPermission(attendee);
 
         schedule.updateSchedule(scheduleUpdateRequest);
-        routeService.updateTravelRouteInSchedule(schedule, scheduleUpdateRequest.getTravelRoutes());
+        travelRouteService.updateTravelRouteInSchedule(schedule, scheduleUpdateRequest.getTravelRoutes());
     }
 
 

@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
 @Service
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
-public class ChatService {
+public class ChatMessageService {
 
     private final ChatMessageRepository chatMessageRepository;
     private final MemberRepository memberRepository;

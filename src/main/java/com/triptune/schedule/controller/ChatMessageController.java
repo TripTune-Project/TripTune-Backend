@@ -3,7 +3,7 @@ package com.triptune.schedule.controller;
 import com.triptune.schedule.dto.request.ChatMessageRequest;
 import com.triptune.schedule.dto.response.ChatResponse;
 import com.triptune.schedule.exception.BadRequestChatException;
-import com.triptune.schedule.service.ChatService;
+import com.triptune.schedule.service.ChatMessageService;
 import com.triptune.global.aop.AttendeeCheck;
 import com.triptune.global.response.enums.ErrorCode;
 import com.triptune.global.response.pagination.ApiPageResponse;
@@ -19,10 +19,10 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequiredArgsConstructor
 @Tag(name = "Schedule - Chat", description = "일정 만들기 중 채팅 관련 API")
-public class ChatController {
+public class ChatMessageController {
     private static final int MAX_MESSAGE_LENGTH = 1000;
 
-    private final ChatService chatService;
+    private final ChatMessageService chatMessageService;
     private final SimpMessagingTemplate messagingTemplate;
 
     @AttendeeCheck
@@ -30,7 +30,7 @@ public class ChatController {
     @Operation(summary = "채팅 조회", description = "채팅 기록을 조회한다.")
     public ApiPageResponse<ChatResponse> getChatMessages(@PathVariable(name = "scheduleId") Long scheduleId,
                                                          @RequestParam(name = "page") int page){
-        Page<ChatResponse> response = chatService.getChatMessages(page, scheduleId);
+        Page<ChatResponse> response = chatMessageService.getChatMessages(page, scheduleId);
         return ApiPageResponse.dataResponse(response);
     }
 
@@ -41,7 +41,7 @@ public class ChatController {
             throw new BadRequestChatException(ErrorCode.CHAT_MESSAGE_TOO_LONG);
         }
 
-        ChatResponse response = chatService.sendChatMessage(chatMessageRequest);
+        ChatResponse response = chatMessageService.sendChatMessage(chatMessageRequest);
 
         messagingTemplate.convertAndSend(
                 "/sub/schedules/" + chatMessageRequest.getScheduleId() + "/chats",

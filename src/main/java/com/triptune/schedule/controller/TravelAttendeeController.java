@@ -3,7 +3,7 @@ package com.triptune.schedule.controller;
 import com.triptune.schedule.dto.request.AttendeePermissionRequest;
 import com.triptune.schedule.dto.response.AttendeeResponse;
 import com.triptune.schedule.dto.request.AttendeeRequest;
-import com.triptune.schedule.service.AttendeeService;
+import com.triptune.schedule.service.TravelAttendeeService;
 import com.triptune.global.aop.AttendeeCheck;
 import com.triptune.global.aop.ScheduleCheck;
 import com.triptune.global.response.ApiResponse;
@@ -20,15 +20,15 @@ import java.util.List;
 @RequestMapping("/api/schedules/{scheduleId}/attendees")
 @RequiredArgsConstructor
 @Tag(name = "Schedule - Attendee", description = "일정 만들기 중 참석자 관련 API")
-public class AttendeeController {
+public class TravelAttendeeController {
 
-    private final AttendeeService attendeeService;
+    private final TravelAttendeeService travelAttendeeService;
 
     @AttendeeCheck
     @GetMapping
     @Operation(summary = "일정 참석자 조회", description = "일정 참석자를 조회합니다.")
     public ApiResponse<List<AttendeeResponse>> getAttendees(@PathVariable(name = "scheduleId") Long scheduleId){
-        List<AttendeeResponse> response = attendeeService.getAttendeesByScheduleId(scheduleId);
+        List<AttendeeResponse> response = travelAttendeeService.getAttendeesByScheduleId(scheduleId);
 
         return ApiResponse.dataResponse(response);
     }
@@ -38,7 +38,7 @@ public class AttendeeController {
     public ApiResponse<Void> createAttendee(@AuthenticationPrincipal(expression = "memberId") Long memberId,
                                             @PathVariable(name = "scheduleId") Long scheduleId,
                                             @Valid @RequestBody AttendeeRequest attendeeRequest){
-        attendeeService.createAttendee(scheduleId, memberId, attendeeRequest);
+        travelAttendeeService.createAttendee(scheduleId, memberId, attendeeRequest);
         return ApiResponse.okResponse();
     }
 
@@ -49,7 +49,7 @@ public class AttendeeController {
                                                       @PathVariable(name = "scheduleId") Long scheduleId,
                                                       @PathVariable(name = "attendeeId") Long attendeeId,
                                                       @Valid @RequestBody AttendeePermissionRequest attendeePermissionRequest){
-        attendeeService.updateAttendeePermission(scheduleId, memberId, attendeeId, attendeePermissionRequest);
+        travelAttendeeService.updateAttendeePermission(scheduleId, memberId, attendeeId, attendeePermissionRequest);
 
         return ApiResponse.okResponse();
     }
@@ -60,7 +60,7 @@ public class AttendeeController {
     @Operation(summary = "일정 나가기", description = "일정에 참석자 목록에서 삭제됩니다.")
     public ApiResponse<Void> leaveAttendee(@AuthenticationPrincipal(expression = "memberId") Long memberId,
                                            @PathVariable(name = "scheduleId") Long scheduleId){
-        attendeeService.leaveAttendee(scheduleId, memberId);
+        travelAttendeeService.leaveAttendee(scheduleId, memberId);
         return ApiResponse.okResponse();
     }
 
@@ -70,7 +70,7 @@ public class AttendeeController {
     public ApiResponse<Void> removeAttendee(@AuthenticationPrincipal(expression = "memberId") Long memberId,
                                             @PathVariable(name = "scheduleId") Long scheduleId,
                                             @PathVariable(name = "attendeeId") Long attendeeId){
-        attendeeService.removeAttendee(scheduleId, memberId, attendeeId);
+        travelAttendeeService.removeAttendee(scheduleId, memberId, attendeeId);
         return ApiResponse.okResponse();
     }
 

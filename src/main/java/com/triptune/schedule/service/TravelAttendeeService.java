@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 @Service
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
-public class AttendeeService {
+public class TravelAttendeeService {
     private static final int MAX_ATTENDEE_NUMBER = 5;
 
     private final TravelAttendeeRepository travelAttendeeRepository;

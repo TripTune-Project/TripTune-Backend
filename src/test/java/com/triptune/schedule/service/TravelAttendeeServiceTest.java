@@ -35,8 +35,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class AttendeeServiceTest extends ScheduleTest {
-    @InjectMocks private AttendeeService attendeeService;
+public class TravelAttendeeServiceTest extends ScheduleTest {
+    @InjectMocks private TravelAttendeeService travelAttendeeService;
     @Mock private TravelAttendeeRepository travelAttendeeRepository;
     @Mock private TravelScheduleRepository travelScheduleRepository;
     @Mock private MemberRepository memberRepository;
@@ -78,7 +78,7 @@ public class AttendeeServiceTest extends ScheduleTest {
                 .thenReturn(travelAttendees);
 
         // when
-        List<AttendeeResponse> response = attendeeService.getAttendeesByScheduleId(schedule1.getScheduleId());
+        List<AttendeeResponse> response = travelAttendeeService.getAttendeesByScheduleId(schedule1.getScheduleId());
 
         // then
         assertThat(response.size()).isEqualTo(travelAttendees.size());
@@ -98,7 +98,7 @@ public class AttendeeServiceTest extends ScheduleTest {
                 .thenReturn(Collections.emptyList());
 
         // when
-        List<AttendeeResponse> response = attendeeService.getAttendeesByScheduleId(schedule1.getScheduleId());
+        List<AttendeeResponse> response = travelAttendeeService.getAttendeesByScheduleId(schedule1.getScheduleId());
 
         // then
         assertThat(response.size()).isEqualTo(0);
@@ -119,7 +119,7 @@ public class AttendeeServiceTest extends ScheduleTest {
 
 
         // when, then
-        assertDoesNotThrow(() ->  attendeeService.createAttendee(schedule1.getScheduleId(), member1.getMemberId(), attendeeRequest));
+        assertDoesNotThrow(() ->  travelAttendeeService.createAttendee(schedule1.getScheduleId(), member1.getMemberId(), attendeeRequest));
 
     }
 
@@ -133,7 +133,7 @@ public class AttendeeServiceTest extends ScheduleTest {
 
         // when, then
         DataNotFoundException fail = assertThrows(DataNotFoundException.class,
-                () ->  attendeeService.createAttendee(schedule1.getScheduleId(), member1.getMemberId(), attendeeRequest));
+                () ->  travelAttendeeService.createAttendee(schedule1.getScheduleId(), member1.getMemberId(), attendeeRequest));
 
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.SCHEDULE_NOT_FOUND.getStatus());
         assertThat(fail.getMessage()).isEqualTo(ErrorCode.SCHEDULE_NOT_FOUND.getMessage());
@@ -151,7 +151,7 @@ public class AttendeeServiceTest extends ScheduleTest {
 
         // when, then
         ConflictAttendeeException fail = assertThrows(ConflictAttendeeException.class,
-                () ->  attendeeService.createAttendee(schedule1.getScheduleId(), member1.getMemberId(), attendeeRequest));
+                () ->  travelAttendeeService.createAttendee(schedule1.getScheduleId(), member1.getMemberId(), attendeeRequest));
 
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.OVER_ATTENDEE_NUMBER.getStatus());
         assertThat(fail.getMessage()).isEqualTo(ErrorCode.OVER_ATTENDEE_NUMBER.getMessage());
@@ -171,7 +171,7 @@ public class AttendeeServiceTest extends ScheduleTest {
 
         // when, then
         ForbiddenAttendeeException fail = assertThrows(ForbiddenAttendeeException.class,
-                () ->  attendeeService.createAttendee(schedule1.getScheduleId(), member1.getMemberId(), attendeeRequest));
+                () ->  travelAttendeeService.createAttendee(schedule1.getScheduleId(), member1.getMemberId(), attendeeRequest));
 
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.FORBIDDEN_SHARE_ATTENDEE.getStatus());
         assertThat(fail.getMessage()).isEqualTo(ErrorCode.FORBIDDEN_SHARE_ATTENDEE.getMessage());
@@ -192,7 +192,7 @@ public class AttendeeServiceTest extends ScheduleTest {
 
         // when, then
         DataNotFoundException fail = assertThrows(DataNotFoundException.class,
-                () ->  attendeeService.createAttendee(schedule1.getScheduleId(), member1.getMemberId(), attendeeRequest));
+                () ->  travelAttendeeService.createAttendee(schedule1.getScheduleId(), member1.getMemberId(), attendeeRequest));
 
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.MEMBER_NOT_FOUND.getStatus());
         assertThat(fail.getMessage()).isEqualTo(ErrorCode.MEMBER_NOT_FOUND.getMessage());
@@ -215,7 +215,7 @@ public class AttendeeServiceTest extends ScheduleTest {
 
         // when, then
         ConflictAttendeeException fail = assertThrows(ConflictAttendeeException.class,
-                () ->  attendeeService.createAttendee(schedule1.getScheduleId(), member1.getMemberId(), attendeeRequest));
+                () ->  travelAttendeeService.createAttendee(schedule1.getScheduleId(), member1.getMemberId(), attendeeRequest));
 
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.ALREADY_ATTENDEE.getStatus());
         assertThat(fail.getMessage()).isEqualTo(ErrorCode.ALREADY_ATTENDEE.getMessage());
@@ -229,7 +229,7 @@ public class AttendeeServiceTest extends ScheduleTest {
         when(travelAttendeeRepository.countByTravelSchedule_ScheduleId(anyLong())).thenReturn(4);
 
         // when, then
-        assertDoesNotThrow(() -> attendeeService.validateAttendeeCount(schedule1.getScheduleId()));
+        assertDoesNotThrow(() -> travelAttendeeService.validateAttendeeCount(schedule1.getScheduleId()));
     }
 
     @Test
@@ -240,7 +240,7 @@ public class AttendeeServiceTest extends ScheduleTest {
 
         // when
         ConflictAttendeeException fail = assertThrows(ConflictAttendeeException.class,
-                () -> attendeeService.validateAttendeeCount(schedule1.getScheduleId()));
+                () -> travelAttendeeService.validateAttendeeCount(schedule1.getScheduleId()));
 
         // then
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.OVER_ATTENDEE_NUMBER.getStatus());
@@ -254,7 +254,7 @@ public class AttendeeServiceTest extends ScheduleTest {
         when(travelAttendeeRepository.existsByTravelSchedule_ScheduleIdAndMember_MemberIdAndRole(anyLong(), anyLong(), any())).thenReturn(true);
 
         // when, then
-        assertDoesNotThrow(() -> attendeeService.validateAuthor(schedule1.getScheduleId(), member1.getMemberId(), ErrorCode.FORBIDDEN_ACCESS_SCHEDULE));
+        assertDoesNotThrow(() -> travelAttendeeService.validateAuthor(schedule1.getScheduleId(), member1.getMemberId(), ErrorCode.FORBIDDEN_ACCESS_SCHEDULE));
     }
 
     @Test
@@ -265,7 +265,7 @@ public class AttendeeServiceTest extends ScheduleTest {
 
         // when, then
         ForbiddenAttendeeException fail = assertThrows(ForbiddenAttendeeException.class,
-                () -> attendeeService.validateAuthor(schedule1.getScheduleId(), member1.getMemberId(), ErrorCode.FORBIDDEN_ACCESS_SCHEDULE));
+                () -> travelAttendeeService.validateAuthor(schedule1.getScheduleId(), member1.getMemberId(), ErrorCode.FORBIDDEN_ACCESS_SCHEDULE));
 
         // then
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.FORBIDDEN_ACCESS_SCHEDULE.getStatus());
@@ -279,7 +279,7 @@ public class AttendeeServiceTest extends ScheduleTest {
         when(travelAttendeeRepository.existsByTravelSchedule_ScheduleIdAndMember_MemberId(anyLong(), anyLong())).thenReturn(false);
 
         // when, then
-        assertDoesNotThrow(() -> attendeeService.validateAttendeeAlreadyExists(schedule1.getScheduleId(), member1.getMemberId()));
+        assertDoesNotThrow(() -> travelAttendeeService.validateAttendeeAlreadyExists(schedule1.getScheduleId(), member1.getMemberId()));
     }
 
     @Test
@@ -290,7 +290,7 @@ public class AttendeeServiceTest extends ScheduleTest {
 
         // when, then
         ConflictAttendeeException fail = assertThrows(ConflictAttendeeException.class,
-                () -> attendeeService.validateAttendeeAlreadyExists(schedule1.getScheduleId(), member1.getMemberId()));
+                () -> travelAttendeeService.validateAttendeeAlreadyExists(schedule1.getScheduleId(), member1.getMemberId()));
 
         // then
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.ALREADY_ATTENDEE.getStatus());
@@ -307,7 +307,7 @@ public class AttendeeServiceTest extends ScheduleTest {
         when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndAttendeeId(anyLong(), anyLong())).thenReturn(Optional.of(attendee2));
 
         // when
-        assertDoesNotThrow(() -> attendeeService.updateAttendeePermission(schedule1.getScheduleId(), member1.getMemberId(), attendee2.getAttendeeId(), request));
+        assertDoesNotThrow(() -> travelAttendeeService.updateAttendeePermission(schedule1.getScheduleId(), member1.getMemberId(), attendee2.getAttendeeId(), request));
 
         // then
         assertThat(attendee2.getPermission()).isEqualTo(AttendeePermission.READ);
@@ -324,7 +324,7 @@ public class AttendeeServiceTest extends ScheduleTest {
 
         // when
         ForbiddenAttendeeException fail = assertThrows(ForbiddenAttendeeException.class,
-                () -> attendeeService.updateAttendeePermission(schedule1.getScheduleId(), member3.getMemberId(), attendee2.getAttendeeId(), request));
+                () -> travelAttendeeService.updateAttendeePermission(schedule1.getScheduleId(), member3.getMemberId(), attendee2.getAttendeeId(), request));
 
         // then
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.FORBIDDEN_UPDATE_ATTENDEE_PERMISSION.getStatus());
@@ -342,7 +342,7 @@ public class AttendeeServiceTest extends ScheduleTest {
 
         // when
         DataNotFoundException fail = assertThrows(DataNotFoundException.class,
-                () -> attendeeService.updateAttendeePermission(schedule1.getScheduleId(), member1.getMemberId(), attendee2.getAttendeeId(), request));
+                () -> travelAttendeeService.updateAttendeePermission(schedule1.getScheduleId(), member1.getMemberId(), attendee2.getAttendeeId(), request));
 
         // then
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.ATTENDEE_NOT_FOUND.getStatus());
@@ -362,7 +362,7 @@ public class AttendeeServiceTest extends ScheduleTest {
 
         // when
         ForbiddenAttendeeException fail = assertThrows(ForbiddenAttendeeException.class,
-                () -> attendeeService.updateAttendeePermission(schedule1.getScheduleId(), member1.getMemberId(), attendee1.getAttendeeId(), request));
+                () -> travelAttendeeService.updateAttendeePermission(schedule1.getScheduleId(), member1.getMemberId(), attendee1.getAttendeeId(), request));
 
         // then
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.FORBIDDEN_UPDATE_AUTHOR_PERMISSION.getStatus());
@@ -378,7 +378,7 @@ public class AttendeeServiceTest extends ScheduleTest {
         when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_MemberId(anyLong(), anyLong())).thenReturn(Optional.of(attendee2));
 
         // when
-        attendeeService.leaveAttendee(schedule1.getScheduleId(), member2.getMemberId());
+        travelAttendeeService.leaveAttendee(schedule1.getScheduleId(), member2.getMemberId());
 
         // then
         verify(travelAttendeeRepository, times(1)).deleteById(any());
@@ -392,7 +392,7 @@ public class AttendeeServiceTest extends ScheduleTest {
 
         // when
         ForbiddenAttendeeException fail = assertThrows(ForbiddenAttendeeException.class,
-                () -> attendeeService.leaveAttendee(schedule1.getScheduleId(), member1.getMemberId()));
+                () -> travelAttendeeService.leaveAttendee(schedule1.getScheduleId(), member1.getMemberId()));
 
         // then
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.FORBIDDEN_ACCESS_SCHEDULE.getStatus());
@@ -407,7 +407,7 @@ public class AttendeeServiceTest extends ScheduleTest {
 
         // when
         ForbiddenAttendeeException fail = assertThrows(ForbiddenAttendeeException.class,
-                () -> attendeeService.leaveAttendee(schedule1.getScheduleId(), member1.getMemberId()));
+                () -> travelAttendeeService.leaveAttendee(schedule1.getScheduleId(), member1.getMemberId()));
 
         // then
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.FORBIDDEN_LEAVE_AUTHOR.getStatus());
@@ -424,7 +424,7 @@ public class AttendeeServiceTest extends ScheduleTest {
 
         // when
         // then
-        assertDoesNotThrow(() -> attendeeService.removeAttendee(schedule1.getScheduleId(), member1.getMemberId(), attendee2.getAttendeeId()));
+        assertDoesNotThrow(() -> travelAttendeeService.removeAttendee(schedule1.getScheduleId(), member1.getMemberId(), attendee2.getAttendeeId()));
     }
 
     @Test
@@ -436,7 +436,7 @@ public class AttendeeServiceTest extends ScheduleTest {
 
         // when
         ForbiddenAttendeeException fail = assertThrows(ForbiddenAttendeeException.class,
-                () -> attendeeService.removeAttendee(schedule1.getScheduleId(), member1.getMemberId(), attendee2.getAttendeeId()));
+                () -> travelAttendeeService.removeAttendee(schedule1.getScheduleId(), member1.getMemberId(), attendee2.getAttendeeId()));
 
         // then
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.FORBIDDEN_REMOVE_ATTENDEE.getStatus());
@@ -453,7 +453,7 @@ public class AttendeeServiceTest extends ScheduleTest {
 
         // when
         DataNotFoundException fail = assertThrows(DataNotFoundException.class,
-                () -> attendeeService.removeAttendee(schedule1.getScheduleId(), member1.getMemberId(), attendee2.getAttendeeId()));
+                () -> travelAttendeeService.removeAttendee(schedule1.getScheduleId(), member1.getMemberId(), attendee2.getAttendeeId()));
 
         // then
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.ATTENDEE_NOT_FOUND.getStatus());
@@ -470,7 +470,7 @@ public class AttendeeServiceTest extends ScheduleTest {
 
         // when
         ForbiddenAttendeeException fail = assertThrows(ForbiddenAttendeeException.class,
-                () -> attendeeService.removeAttendee(schedule1.getScheduleId(), member1.getMemberId(), attendee2.getAttendeeId()));
+                () -> travelAttendeeService.removeAttendee(schedule1.getScheduleId(), member1.getMemberId(), attendee2.getAttendeeId()));
 
         // then
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.FORBIDDEN_LEAVE_AUTHOR.getStatus());

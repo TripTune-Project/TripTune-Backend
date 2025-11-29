@@ -36,9 +36,9 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class ChatServiceTest extends ScheduleTest {
+class ChatMessageServiceTest extends ScheduleTest {
 
-    @InjectMocks private ChatService chatService;
+    @InjectMocks private ChatMessageService chatMessageService;
     @Mock private ChatMessageRepository chatMessageRepository;
     @Mock private MemberRepository memberRepository;
     @Mock private TravelAttendeeRepository travelAttendeeRepository;
@@ -89,7 +89,7 @@ class ChatServiceTest extends ScheduleTest {
 
 
         // when
-        Page<ChatResponse> response = chatService.getChatMessages(1, schedule.getScheduleId());
+        Page<ChatResponse> response = chatMessageService.getChatMessages(1, schedule.getScheduleId());
 
         // then
         List<ChatResponse> content = response.getContent();
@@ -133,7 +133,7 @@ class ChatServiceTest extends ScheduleTest {
         when(memberRepository.findMembersProfileByMemberId(any())).thenReturn(memberProfileResponses);
 
         // when
-        Page<ChatResponse> response = chatService.getChatMessages(1, schedule.getScheduleId());
+        Page<ChatResponse> response = chatMessageService.getChatMessages(1, schedule.getScheduleId());
 
         // then
         List<ChatResponse> content = response.getContent();
@@ -167,7 +167,7 @@ class ChatServiceTest extends ScheduleTest {
 
 
         // when
-        Page<ChatResponse> response = chatService.getChatMessages(1, schedule.getScheduleId());
+        Page<ChatResponse> response = chatMessageService.getChatMessages(1, schedule.getScheduleId());
 
         // then
         List<ChatResponse> content = response.getContent();
@@ -193,7 +193,7 @@ class ChatServiceTest extends ScheduleTest {
         when(chatMessageRepository.findAllByScheduleId(pageable, schedule.getScheduleId())).thenReturn(chatPage);
 
         // when
-        Page<ChatResponse> response = chatService.getChatMessages(1, schedule.getScheduleId());
+        Page<ChatResponse> response = chatMessageService.getChatMessages(1, schedule.getScheduleId());
 
         // then
         assertThat(response.getTotalElements()).isEqualTo(0);
@@ -212,7 +212,7 @@ class ChatServiceTest extends ScheduleTest {
         List<ChatMessage> messages = List.of(message1, message2, message3);
 
         // when
-        Set<Long> response = chatService.extractMemberId(messages);
+        Set<Long> response = chatMessageService.extractMemberId(messages);
 
         // then
         assertThat(response.size()).isEqualTo(3);
@@ -228,7 +228,7 @@ class ChatServiceTest extends ScheduleTest {
         List<ChatMessage> messages = new ArrayList<>();
 
         // when
-        Set<Long> response = chatService.extractMemberId(messages);
+        Set<Long> response = chatMessageService.extractMemberId(messages);
 
         // then
         assertThat(response.size()).isEqualTo(0);
@@ -252,7 +252,7 @@ class ChatServiceTest extends ScheduleTest {
                 .thenReturn(memberProfileResponses);
 
         // when
-        Map<Long, MemberProfileResponse> response = chatService.getMemberProfiles(request);
+        Map<Long, MemberProfileResponse> response = chatMessageService.getMemberProfiles(request);
 
         // then
         assertThat(response.size()).isEqualTo(2);
@@ -272,7 +272,7 @@ class ChatServiceTest extends ScheduleTest {
                 .thenReturn(new ArrayList<>());
 
         // when
-        Map<Long, MemberProfileResponse> response = chatService.getMemberProfiles(request);
+        Map<Long, MemberProfileResponse> response = chatMessageService.getMemberProfiles(request);
 
         // then
         assertThat(response.size()).isEqualTo(0);
@@ -295,7 +295,7 @@ class ChatServiceTest extends ScheduleTest {
 
 
         // when
-        List<ChatResponse> response = chatService.convertChatResponse(chatMessages, memberProfileMap);
+        List<ChatResponse> response = chatMessageService.convertChatResponse(chatMessages, memberProfileMap);
 
         // then
         assertThat(response.size()).isEqualTo(3);
@@ -322,7 +322,7 @@ class ChatServiceTest extends ScheduleTest {
 
 
         // when
-        ChatResponse response = chatService.sendChatMessage(request);
+        ChatResponse response = chatMessageService.sendChatMessage(request);
 
         // then
         assertThat(response.getMessageId()).isNotEmpty();
@@ -343,7 +343,7 @@ class ChatServiceTest extends ScheduleTest {
                 .thenReturn(Optional.of(attendee));
 
         // when
-        ForbiddenChatException fail = assertThrows(ForbiddenChatException.class, () -> chatService.sendChatMessage(request));
+        ForbiddenChatException fail = assertThrows(ForbiddenChatException.class, () -> chatMessageService.sendChatMessage(request));
 
         // then
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.FORBIDDEN_CHAT_ATTENDEE.getStatus());
@@ -364,7 +364,7 @@ class ChatServiceTest extends ScheduleTest {
 
 
         // when
-        ForbiddenChatException fail = assertThrows(ForbiddenChatException.class, () -> chatService.sendChatMessage(request));
+        ForbiddenChatException fail = assertThrows(ForbiddenChatException.class, () -> chatMessageService.sendChatMessage(request));
         // then
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.FORBIDDEN_CHAT_ATTENDEE.getStatus());
         assertThat(fail.getMessage()).isEqualTo(ErrorCode.FORBIDDEN_CHAT_ATTENDEE.getMessage());

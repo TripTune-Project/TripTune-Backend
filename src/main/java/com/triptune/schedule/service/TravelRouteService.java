@@ -21,13 +21,12 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
-public class RouteService {
+public class TravelRouteService {
 
     private final TravelRouteRepository travelRouteRepository;
     private final TravelScheduleRepository travelScheduleRepository;
