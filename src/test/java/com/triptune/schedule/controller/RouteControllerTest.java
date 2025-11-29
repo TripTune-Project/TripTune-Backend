@@ -113,9 +113,9 @@ public class RouteControllerTest extends ScheduleTest {
         TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(0L, member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
         TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(0L, member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ));
         TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(0L, member2, schedule2, AttendeeRole.AUTHOR, AttendeePermission.ALL));
-
-        schedule1.setTravelAttendees(List.of(attendee1, attendee2));
-        schedule2.setTravelAttendees(List.of(attendee3));
+        schedule1.addTravelAttendee(attendee1);
+        schedule1.addTravelAttendee(attendee2);
+        schedule2.addTravelAttendee(attendee3);
 
         travelPlace3 = travelPlaceRepository.save(createTravelPlace(null, country, city, district, apiCategory, List.of(travelImage3)));
     }
@@ -131,8 +131,9 @@ public class RouteControllerTest extends ScheduleTest {
         TravelRoute route1 = travelRouteRepository.save(createTravelRoute(schedule1, travelPlace1, 1));
         TravelRoute route2 = travelRouteRepository.save(createTravelRoute(schedule1, travelPlace1, 2));
         TravelRoute route3 = travelRouteRepository.save(createTravelRoute(schedule1, travelPlace2, 3));
-
-        schedule1.setTravelRoutes(List.of(route1, route2, route3));
+        schedule1.addTravelRoutes(route1);
+        schedule1.addTravelRoutes(route2);
+        schedule1.addTravelRoutes(route3);
 
         mockAuthentication(member1);
 
@@ -200,12 +201,13 @@ public class RouteControllerTest extends ScheduleTest {
         travelPlace1 = travelPlaceRepository.save(createTravelPlace(null, country, city, district, apiCategory, List.of(travelImage1, travelImage2)));
         travelPlace2 = travelPlaceRepository.save(createTravelPlace(null, country, city, district, apiCategory, List.of(travelImage3, travelImage4)));
 
-        List<TravelRoute> routes = travelRouteRepository.saveAll(List.of(
-                createTravelRoute(schedule1, travelPlace1, 1),
-                createTravelRoute(schedule1, travelPlace1, 2),
-                createTravelRoute(schedule1, travelPlace2, 3)
-        ));
-        schedule1.setTravelRoutes(routes);
+        TravelRoute route1 = travelRouteRepository.save(createTravelRoute(schedule1, travelPlace1, 1));
+        TravelRoute route2 = travelRouteRepository.save(createTravelRoute(schedule1, travelPlace1, 2));
+        TravelRoute route3 = travelRouteRepository.save(createTravelRoute(schedule1, travelPlace2, 3));
+        schedule1.addTravelRoutes(route1);
+        schedule1.addTravelRoutes(route2);
+        schedule1.addTravelRoutes(route3);
+
         mockAuthentication(member1);
 
         RouteCreateRequest request = createRouteCreateRequest(travelPlace3.getPlaceId());
@@ -317,8 +319,10 @@ public class RouteControllerTest extends ScheduleTest {
         TravelRoute route1 = travelRouteRepository.save(createTravelRoute(schedule1, travelPlace1, 1));
         TravelRoute route2 = travelRouteRepository.save(createTravelRoute(schedule1, travelPlace1, 2));
         TravelRoute route3 = travelRouteRepository.save(createTravelRoute(schedule1, travelPlace2, 3));
+        schedule1.addTravelRoutes(route1);
+        schedule1.addTravelRoutes(route2);
+        schedule1.addTravelRoutes(route3);
 
-        schedule1.setTravelRoutes(List.of(route1, route2, route3));
         mockAuthentication(member2);
 
         RouteCreateRequest request = createRouteCreateRequest(travelPlace3.getPlaceId());

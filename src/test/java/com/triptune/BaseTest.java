@@ -29,7 +29,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
-@Transactional
 public abstract class BaseTest {
 
     @Autowired private ObjectMapper objectMapper;

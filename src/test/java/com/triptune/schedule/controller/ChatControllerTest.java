@@ -36,7 +36,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @Transactional
-@AutoConfigureDataMongo
 @ActiveProfiles("mongo")
 public class ChatControllerTest extends ScheduleTest {
     @Autowired private WebApplicationContext wac;
@@ -76,8 +75,10 @@ public class ChatControllerTest extends ScheduleTest {
         TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(null, member1, schedule, AttendeeRole.AUTHOR, AttendeePermission.ALL));
         TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(null, member2, schedule, AttendeeRole.GUEST, AttendeePermission.READ));
         TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(null, member3, schedule, AttendeeRole.GUEST, AttendeePermission.CHAT));
+        schedule.addTravelAttendee(attendee1);
+        schedule.addTravelAttendee(attendee2);
+        schedule.addTravelAttendee(attendee3);
 
-        schedule.setTravelAttendees(List.of(attendee1, attendee2, attendee3));
 
     }
 

@@ -8,24 +8,24 @@ import com.triptune.member.enums.JoinType;
 import com.triptune.member.enums.SocialType;
 import com.triptune.profile.entity.ProfileImage;
 import com.triptune.profile.repository.ProfileImageRepository;
-import com.triptune.global.config.QueryDSLConfig;
+import com.triptune.global.config.QuerydslConfig;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
-@Import({QueryDSLConfig.class})
+@Import({QuerydslConfig.class})
+@Transactional
 @ActiveProfiles("h2")
 class MemberRepositoryTest extends MemberTest {
 

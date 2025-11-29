@@ -15,7 +15,7 @@ import com.triptune.travel.entity.TravelPlace;
 import com.triptune.travel.enums.ThemeType;
 import com.triptune.travel.repository.TravelImageRepository;
 import com.triptune.travel.repository.TravelPlaceRepository;
-import com.triptune.global.config.QueryDSLConfig;
+import com.triptune.global.config.QuerydslConfig;
 import com.triptune.global.util.PageUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -34,7 +34,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
-@Import({QueryDSLConfig.class})
+@Import({QuerydslConfig.class})
 @ActiveProfiles("h2")
 @Transactional
 public class TravelScheduleRepositoryTest extends ScheduleTest {
@@ -101,10 +101,9 @@ public class TravelScheduleRepositoryTest extends ScheduleTest {
         TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(null, member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
         TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(null, member1, schedule2, AttendeeRole.GUEST, AttendeePermission.READ));
         TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(null, member2, schedule3, AttendeeRole.AUTHOR, AttendeePermission.ALL));
-
-        schedule1.setTravelAttendees(List.of(attendee1));
-        schedule2.setTravelAttendees(List.of(attendee2));
-        schedule3.setTravelAttendees(List.of(attendee3));
+        schedule1.addTravelAttendee(attendee1);
+        schedule2.addTravelAttendee(attendee2);
+        schedule3.addTravelAttendee(attendee3);
 
         // when
         Page<TravelSchedule> response = travelScheduleRepository.findTravelSchedulesByMemberId(pageable, member1.getMemberId());
@@ -142,10 +141,10 @@ public class TravelScheduleRepositoryTest extends ScheduleTest {
         TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(null, member1, schedule2, AttendeeRole.AUTHOR, AttendeePermission.ALL));
         TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(null, member2, schedule2, AttendeeRole.GUEST, AttendeePermission.READ));
         TravelAttendee attendee4 = travelAttendeeRepository.save(createTravelAttendee(null, member2, schedule3, AttendeeRole.AUTHOR, AttendeePermission.ALL));
-
-        schedule1.setTravelAttendees(List.of(attendee1));
-        schedule2.setTravelAttendees(List.of(attendee2, attendee3));
-        schedule3.setTravelAttendees(List.of(attendee4));
+        schedule1.addTravelAttendee(attendee1);
+        schedule2.addTravelAttendee(attendee2);
+        schedule2.addTravelAttendee(attendee3);
+        schedule3.addTravelAttendee(attendee4);
 
         // when
         Page<TravelSchedule> response = travelScheduleRepository.findSharedTravelSchedulesByMemberId(pageable, member1.getMemberId());
@@ -180,10 +179,9 @@ public class TravelScheduleRepositoryTest extends ScheduleTest {
         TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(null, member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
         TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(null, member1, schedule2, AttendeeRole.AUTHOR, AttendeePermission.READ));
         TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(null, member2, schedule3, AttendeeRole.AUTHOR, AttendeePermission.ALL));
-
-        schedule1.setTravelAttendees(List.of(attendee1));
-        schedule2.setTravelAttendees(List.of(attendee2));
-        schedule3.setTravelAttendees(List.of(attendee3));
+        schedule1.addTravelAttendee(attendee1);
+        schedule2.addTravelAttendee(attendee2);
+        schedule3.addTravelAttendee(attendee3);
 
         // when
         Integer response = travelScheduleRepository.countTravelSchedulesByMemberId(member1.getMemberId());
@@ -210,10 +208,10 @@ public class TravelScheduleRepositoryTest extends ScheduleTest {
         TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(null, member1, schedule2, AttendeeRole.AUTHOR, AttendeePermission.ALL));
         TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(null, member2, schedule2, AttendeeRole.GUEST, AttendeePermission.READ));
         TravelAttendee attendee4 = travelAttendeeRepository.save(createTravelAttendee(null, member2, schedule3, AttendeeRole.AUTHOR, AttendeePermission.ALL));
-
-        schedule1.setTravelAttendees(List.of(attendee1));
-        schedule2.setTravelAttendees(List.of(attendee2, attendee3));
-        schedule3.setTravelAttendees(List.of(attendee4));
+        schedule1.addTravelAttendee(attendee1);
+        schedule2.addTravelAttendee(attendee2);
+        schedule2.addTravelAttendee(attendee3);
+        schedule3.addTravelAttendee(attendee4);
 
         // when
         Integer response = travelScheduleRepository.countSharedTravelSchedulesByMemberId(member1.getMemberId());
@@ -236,15 +234,16 @@ public class TravelScheduleRepositoryTest extends ScheduleTest {
     @DisplayName("전체 일정 목록 중 검색")
     void searchTravelSchedulesByEmail(){
         // given
+        TravelSchedule searchSchedule = travelScheduleRepository.save(createTravelSchedule(null, "테스트23"));
+
         TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(null, member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
         TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(null, member1, schedule2, AttendeeRole.AUTHOR, AttendeePermission.ALL));
         TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(null, member2, schedule2, AttendeeRole.GUEST, AttendeePermission.READ));
-        TravelAttendee attendee4 = travelAttendeeRepository.save(createTravelAttendee(null, member2, schedule3, AttendeeRole.AUTHOR, AttendeePermission.ALL));
-        attendee4.getTravelSchedule().setScheduleName("테스트23");
-
-        schedule1.setTravelAttendees(List.of(attendee1));
-        schedule2.setTravelAttendees(List.of(attendee2, attendee3));
-        schedule3.setTravelAttendees(List.of(attendee4));
+        TravelAttendee attendee4 = travelAttendeeRepository.save(createTravelAttendee(null, member2, searchSchedule, AttendeeRole.AUTHOR, AttendeePermission.ALL));
+        schedule1.addTravelAttendee(attendee1);
+        schedule2.addTravelAttendee(attendee2);
+        schedule2.addTravelAttendee(attendee3);
+        schedule3.addTravelAttendee(attendee4);
 
         Pageable pageable = PageUtils.schedulePageable(1);
 
@@ -274,7 +273,6 @@ public class TravelScheduleRepositoryTest extends ScheduleTest {
 
     }
 
-
     @Test
     @DisplayName("공유된 일정 목록 검색")
     void searchSharedTravelSchedulesByEmailAndKeyword(){
@@ -283,10 +281,10 @@ public class TravelScheduleRepositoryTest extends ScheduleTest {
         TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(null, member1, schedule2, AttendeeRole.AUTHOR, AttendeePermission.ALL));
         TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(null, member2, schedule2, AttendeeRole.GUEST, AttendeePermission.READ));
         TravelAttendee attendee4 = travelAttendeeRepository.save(createTravelAttendee(null, member2, schedule3, AttendeeRole.AUTHOR, AttendeePermission.ALL));
-
-        schedule1.setTravelAttendees(List.of(attendee1));
-        schedule2.setTravelAttendees(List.of(attendee2, attendee3));
-        schedule3.setTravelAttendees(List.of(attendee4));
+        schedule1.addTravelAttendee(attendee1);
+        schedule2.addTravelAttendee(attendee2);
+        schedule2.addTravelAttendee(attendee3);
+        schedule3.addTravelAttendee(attendee4);
 
         Pageable pageable = PageUtils.schedulePageable(1);
 
@@ -323,10 +321,9 @@ public class TravelScheduleRepositoryTest extends ScheduleTest {
         TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(null, member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
         TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(null, member1, schedule2, AttendeeRole.AUTHOR, AttendeePermission.READ));
         TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(null, member2, schedule3, AttendeeRole.AUTHOR, AttendeePermission.ALL));
-
-        schedule1.setTravelAttendees(List.of(attendee1));
-        schedule2.setTravelAttendees(List.of(attendee2));
-        schedule3.setTravelAttendees(List.of(attendee3));
+        schedule1.addTravelAttendee(attendee1);
+        schedule2.addTravelAttendee(attendee2);
+        schedule3.addTravelAttendee(attendee3);
 
         // when
         Integer response = travelScheduleRepository.countTravelSchedulesByMemberIdAndKeyword("2", member1.getMemberId());
@@ -354,10 +351,10 @@ public class TravelScheduleRepositoryTest extends ScheduleTest {
         TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(null, member1, schedule2, AttendeeRole.AUTHOR, AttendeePermission.ALL));
         TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(null, member2, schedule2, AttendeeRole.GUEST, AttendeePermission.READ));
         TravelAttendee attendee4 = travelAttendeeRepository.save(createTravelAttendee(null, member2, schedule3, AttendeeRole.AUTHOR, AttendeePermission.ALL));
-
-        schedule1.setTravelAttendees(List.of(attendee1));
-        schedule2.setTravelAttendees(List.of(attendee2, attendee3));
-        schedule3.setTravelAttendees(List.of(attendee4));
+        schedule1.addTravelAttendee(attendee1);
+        schedule2.addTravelAttendee(attendee2);
+        schedule2.addTravelAttendee(attendee3);
+        schedule3.addTravelAttendee(attendee4);
 
         // when
         Integer response = travelScheduleRepository.countSharedTravelSchedulesByMemberIdAndKeyword("2", member1.getMemberId());
