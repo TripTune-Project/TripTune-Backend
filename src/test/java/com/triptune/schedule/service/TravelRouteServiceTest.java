@@ -45,9 +45,9 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-public class RouteServiceTest extends ScheduleTest {
+public class TravelRouteServiceTest extends ScheduleTest {
 
-    @InjectMocks private RouteService routeService;
+    @InjectMocks private TravelRouteService travelRouteService;
     @Mock private TravelRouteRepository travelRouteRepository;
     @Mock private TravelScheduleRepository travelScheduleRepository;
     @Mock private TravelPlaceRepository travelPlaceRepository;
@@ -112,7 +112,7 @@ public class RouteServiceTest extends ScheduleTest {
 
 
         // when
-        Page<RouteResponse> response = routeService.getTravelRoutes(schedule1.getScheduleId(), 1);
+        Page<RouteResponse> response = travelRouteService.getTravelRoutes(schedule1.getScheduleId(), 1);
 
         // then
         List<RouteResponse> content = response.getContent();
@@ -134,7 +134,7 @@ public class RouteServiceTest extends ScheduleTest {
 
 
         // when
-        Page<RouteResponse> response = routeService.getTravelRoutes(schedule1.getScheduleId(), 1);
+        Page<RouteResponse> response = travelRouteService.getTravelRoutes(schedule1.getScheduleId(), 1);
 
         // then
         assertThat(response.getTotalElements()).isEqualTo(0);
@@ -152,7 +152,7 @@ public class RouteServiceTest extends ScheduleTest {
         when(travelPlaceRepository.findById(anyLong())).thenReturn(Optional.of(travelPlace3));
 
         // when, then
-        assertDoesNotThrow(() -> routeService.createLastRoute(schedule1.getScheduleId(), member1.getMemberId(), request));
+        assertDoesNotThrow(() -> travelRouteService.createLastRoute(schedule1.getScheduleId(), member1.getMemberId(), request));
     }
 
     @Test
@@ -167,7 +167,7 @@ public class RouteServiceTest extends ScheduleTest {
         when(travelPlaceRepository.findById(anyLong())).thenReturn(Optional.of(travelPlace3));
 
         // when, then
-        assertDoesNotThrow(() -> routeService.createLastRoute(schedule.getScheduleId(), member1.getMemberId(), request));
+        assertDoesNotThrow(() -> travelRouteService.createLastRoute(schedule.getScheduleId(), member1.getMemberId(), request));
     }
 
 
@@ -181,7 +181,7 @@ public class RouteServiceTest extends ScheduleTest {
 
         // when
         DataNotFoundException fail = assertThrows(DataNotFoundException.class,
-                () -> routeService.createLastRoute(0L, member1.getMemberId(), request));
+                () -> travelRouteService.createLastRoute(0L, member1.getMemberId(), request));
 
         // then
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.SCHEDULE_NOT_FOUND.getStatus());
@@ -201,7 +201,7 @@ public class RouteServiceTest extends ScheduleTest {
 
         // when
         DataNotFoundException fail = assertThrows(DataNotFoundException.class,
-                () -> routeService.createLastRoute(schedule1.getScheduleId(), 0L, request));
+                () -> travelRouteService.createLastRoute(schedule1.getScheduleId(), 0L, request));
 
         // then
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.ATTENDEE_NOT_FOUND.getStatus());
@@ -220,7 +220,7 @@ public class RouteServiceTest extends ScheduleTest {
 
         // when
         ForbiddenScheduleException fail = assertThrows(ForbiddenScheduleException.class,
-                () -> routeService.createLastRoute(schedule1.getScheduleId(), member2.getMemberId(), request));
+                () -> travelRouteService.createLastRoute(schedule1.getScheduleId(), member2.getMemberId(), request));
 
         // then
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.FORBIDDEN_EDIT_SCHEDULE.getStatus());
@@ -241,7 +241,7 @@ public class RouteServiceTest extends ScheduleTest {
 
         // when
         DataNotFoundException fail = assertThrows(DataNotFoundException.class,
-                () -> routeService.createLastRoute(schedule1.getScheduleId(), member1.getMemberId(), request));
+                () -> travelRouteService.createLastRoute(schedule1.getScheduleId(), member1.getMemberId(), request));
 
         // then
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.PLACE_NOT_FOUND.getStatus());
@@ -277,7 +277,7 @@ public class RouteServiceTest extends ScheduleTest {
 
 
         // when
-        assertDoesNotThrow(() -> routeService.updateTravelRouteInSchedule(schedule1, scheduleUpdateRequest.getTravelRoutes()));
+        assertDoesNotThrow(() -> travelRouteService.updateTravelRouteInSchedule(schedule1, scheduleUpdateRequest.getTravelRoutes()));
 
         // then
         assertThat(schedule1.getTravelRoutes().size()).isEqualTo(2);
@@ -310,7 +310,7 @@ public class RouteServiceTest extends ScheduleTest {
 
         // when
         DataNotFoundException fail = assertThrows(DataNotFoundException.class,
-                () -> routeService.updateTravelRouteInSchedule(schedule, routes));
+                () -> travelRouteService.updateTravelRouteInSchedule(schedule, routes));
 
         // then
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.PLACE_NOT_FOUND.getStatus());

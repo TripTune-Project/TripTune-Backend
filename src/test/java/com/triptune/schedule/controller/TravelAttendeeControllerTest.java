@@ -2,7 +2,6 @@ package com.triptune.schedule.controller;
 
 import com.triptune.global.response.enums.ErrorCode;
 import com.triptune.global.response.enums.SuccessCode;
-import com.triptune.member.dto.request.LoginRequest;
 import com.triptune.member.entity.Member;
 import com.triptune.member.repository.MemberRepository;
 import com.triptune.profile.entity.ProfileImage;
@@ -45,7 +44,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @Transactional
 @ActiveProfiles("h2")
-public class AttendeeControllerTest extends ScheduleTest {
+public class TravelAttendeeControllerTest extends ScheduleTest {
     @Autowired private WebApplicationContext wac;
     @Autowired private TravelScheduleRepository travelScheduleRepository;
     @Autowired private TravelAttendeeRepository travelAttendeeRepository;

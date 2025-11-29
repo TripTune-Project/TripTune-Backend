@@ -50,7 +50,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @Transactional
 @ActiveProfiles("h2")
-public class RouteControllerTest extends ScheduleTest {
+public class TravelRouteControllerTest extends ScheduleTest {
     @Autowired private WebApplicationContext wac;
     @Autowired private TravelScheduleRepository travelScheduleRepository;
     @Autowired private TravelAttendeeRepository travelAttendeeRepository;
