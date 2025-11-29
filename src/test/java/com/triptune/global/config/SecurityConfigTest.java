@@ -22,19 +22,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 public class SecurityConfigTest {
 
-    @Autowired private WebApplicationContext wac;
+    @Autowired private MockMvc mockMvc;
     @MockBean private HttpRequestEndpointChecker endpointChecker;
-
-    private MockMvc mockMvc;
-
-    @BeforeEach
-    void setUp(){
-        mockMvc = MockMvcBuilders.webAppContextSetup(wac)
-                .addFilter(new CharacterEncodingFilter("UTF-8", true))
-                .apply(springSecurity())
-                .alwaysDo(print())
-                .build();
-    }
 
     @Test
     @DisplayName("404 페이지 접속 테스트")

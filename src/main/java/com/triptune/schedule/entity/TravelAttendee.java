@@ -5,13 +5,14 @@ import com.triptune.member.entity.Member;
 import com.triptune.schedule.enums.AttendeePermission;
 import com.triptune.schedule.enums.AttendeeRole;
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
 @Getter
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class TravelAttendee extends BaseTimeEntity {
 
     @Id

@@ -13,6 +13,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpMethod;
@@ -33,26 +34,16 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @Transactional
+@AutoConfigureMockMvc
 @ActiveProfiles("h2")
 class ProfileImageControllerTest extends ProfileImageTest {
-
-    @Autowired private WebApplicationContext wac;
+    @Autowired private MockMvc mockMvc;
     @Autowired private JwtUtils jwtUtils;
     @Autowired private MemberRepository memberRepository;
     @Autowired private ProfileImageRepository profileImageRepository;
 
     @MockBean private S3Service s3Service;
 
-    private MockMvc mockMvc;
-
-    @BeforeEach
-    void setUp(){
-        mockMvc = MockMvcBuilders.webAppContextSetup(wac)
-                .addFilter(new CharacterEncodingFilter("UTF-8", true))
-                .apply(springSecurity())
-                .alwaysDo(print())
-                .build();
-    }
 
     @Test
     @DisplayName("프로필 이미지 수정")
@@ -70,6 +61,7 @@ class ProfileImageControllerTest extends ProfileImageTest {
         // when, then
         mockMvc.perform(multipart(HttpMethod.PATCH,"/api/profiles")
                         .file(mockMultipartFile))
+                .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()));
@@ -90,6 +82,7 @@ class ProfileImageControllerTest extends ProfileImageTest {
         // when, then
         mockMvc.perform(multipart(HttpMethod.PATCH,"/api/profiles")
                         .file(mockMultipartFile))
+                .andDo(print())
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value(ErrorCode.INVALID_EXTENSION.getMessage()));
@@ -109,6 +102,7 @@ class ProfileImageControllerTest extends ProfileImageTest {
         // when, then
         mockMvc.perform(multipart(HttpMethod.PATCH,"/api/profiles")
                         .file(mockMultipartFile))
+                .andDo(print())
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value(ErrorCode.PROFILE_IMAGE_NOT_FOUND.getMessage()));

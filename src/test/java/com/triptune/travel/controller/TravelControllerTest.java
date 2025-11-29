@@ -1,5 +1,6 @@
 package com.triptune.travel.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.triptune.bookmark.repository.BookmarkRepository;
 import com.triptune.common.entity.*;
 import com.triptune.common.repository.*;
@@ -23,6 +24,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
@@ -46,9 +48,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @Transactional
+@AutoConfigureMockMvc
 @ActiveProfiles("h2")
 public class TravelControllerTest extends TravelTest {
-    @Autowired private WebApplicationContext wac;
+    @Autowired private MockMvc mockMvc;
+    @Autowired private ObjectMapper objectMapper;
     @Autowired private TravelPlaceRepository travelPlaceRepository;
     @Autowired private CountryRepository countryRepository;
     @Autowired private CityRepository cityRepository;
@@ -58,8 +62,6 @@ public class TravelControllerTest extends TravelTest {
     @Autowired private ApiContentTypeRepository apiContentTypeRepository;
     @Autowired private BookmarkRepository bookmarkRepository;
     @Autowired private MemberRepository memberRepository;
-
-    private MockMvc mockMvc;
 
     private Country country;
     private City city;
@@ -78,12 +80,6 @@ public class TravelControllerTest extends TravelTest {
 
     @BeforeEach
     void setUp() {
-        mockMvc = MockMvcBuilders.webAppContextSetup(wac)
-                .addFilter(new CharacterEncodingFilter("UTF-8", true))
-                .apply(springSecurity())
-                .alwaysDo(print())
-                .build();
-
         country = countryRepository.save(createCountry());
         city = cityRepository.save(createCity(country));
         district1 = districtRepository.save(createDistrict(city, "강남"));
@@ -115,7 +111,8 @@ public class TravelControllerTest extends TravelTest {
         mockMvc.perform(post("/api/travels")
                         .param("page", "1")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(request)))
+                        .content(objectMapper.writeValueAsString(request)))
+                .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.totalElements").value(2))
@@ -139,7 +136,8 @@ public class TravelControllerTest extends TravelTest {
         mockMvc.perform(post("/api/travels")
                         .param("page", "1")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(request)))
+                        .content(objectMapper.writeValueAsString(request)))
+                .andDo(print())
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value(containsString("위도는 필수 입력 값입니다.")));
@@ -156,7 +154,8 @@ public class TravelControllerTest extends TravelTest {
         mockMvc.perform(post("/api/travels")
                         .param("page", "1")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(request)))
+                        .content(objectMapper.writeValueAsString(request)))
+                .andDo(print())
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value(containsString("경도는 필수 입력 값입니다.")));
@@ -173,7 +172,8 @@ public class TravelControllerTest extends TravelTest {
         mockMvc.perform(post("/api/travels")
                         .param("page", "1")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(request)))
+                        .content(objectMapper.writeValueAsString(request)))
+                .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.totalElements").value(0))
@@ -192,7 +192,8 @@ public class TravelControllerTest extends TravelTest {
         mockMvc.perform(post("/api/travels")
                         .param("page", "1")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(request)))
+                        .content(objectMapper.writeValueAsString(request)))
+                .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.totalElements").value(2))
@@ -216,7 +217,8 @@ public class TravelControllerTest extends TravelTest {
         mockMvc.perform(post("/api/travels")
                         .param("page", "1")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(request)))
+                        .content(objectMapper.writeValueAsString(request)))
+                .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.totalElements").value(0))
@@ -237,7 +239,8 @@ public class TravelControllerTest extends TravelTest {
         mockMvc.perform(post("/api/travels/search")
                         .param("page", "1")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(request)))
+                        .content(objectMapper.writeValueAsString(request)))
+                .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.totalElements").value(2))
@@ -261,7 +264,8 @@ public class TravelControllerTest extends TravelTest {
         mockMvc.perform(post("/api/travels/search")
                         .param("page", "1")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(request)))
+                        .content(objectMapper.writeValueAsString(request)))
+                .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.totalElements").value(0))
@@ -280,7 +284,8 @@ public class TravelControllerTest extends TravelTest {
         mockMvc.perform(post("/api/travels/search")
                         .param("page", "1")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(request)))
+                        .content(objectMapper.writeValueAsString(request)))
+                .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.totalElements").value(2))
@@ -303,7 +308,8 @@ public class TravelControllerTest extends TravelTest {
         mockMvc.perform(post("/api/travels/search")
                         .param("page", "1")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(request)))
+                        .content(objectMapper.writeValueAsString(request)))
+                .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.totalElements").value(0))
@@ -324,7 +330,8 @@ public class TravelControllerTest extends TravelTest {
         mockMvc.perform(post("/api/travels/search")
                         .param("page", "1")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(request)))
+                        .content(objectMapper.writeValueAsString(request)))
+                .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.totalElements").value(2))
@@ -348,7 +355,8 @@ public class TravelControllerTest extends TravelTest {
         mockMvc.perform(post("/api/travels/search")
                         .param("page", "1")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(request)))
+                        .content(objectMapper.writeValueAsString(request)))
+                .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.totalElements").value(0))
@@ -366,7 +374,8 @@ public class TravelControllerTest extends TravelTest {
         mockMvc.perform(post("/api/travels/search")
                         .param("page", "1")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(request)))
+                        .content(objectMapper.writeValueAsString(request)))
+                .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.totalElements").value(2))
@@ -389,7 +398,8 @@ public class TravelControllerTest extends TravelTest {
         mockMvc.perform(post("/api/travels/search")
                         .param("page", "1")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(request)))
+                        .content(objectMapper.writeValueAsString(request)))
+                .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.totalElements").value(0))
@@ -412,7 +422,8 @@ public class TravelControllerTest extends TravelTest {
         mockMvc.perform(post("/api/travels/search")
                         .param("page", "1")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(request)))
+                        .content(objectMapper.writeValueAsString(request)))
+                .andDo(print())
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value("검색어는 필수 입력 값입니다."));
@@ -432,7 +443,8 @@ public class TravelControllerTest extends TravelTest {
         mockMvc.perform(post("/api/travels/search")
                         .param("page", "1")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(request)))
+                        .content(objectMapper.writeValueAsString(request)))
+                .andDo(print())
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value("검색어는 필수 입력 값입니다."));
@@ -453,7 +465,8 @@ public class TravelControllerTest extends TravelTest {
         mockMvc.perform(post("/api/travels/search")
                         .param("page", "1")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(request)))
+                        .content(objectMapper.writeValueAsString(request)))
+                .andDo(print())
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value("검색어에 특수문자는 사용 불가합니다."));
@@ -471,6 +484,7 @@ public class TravelControllerTest extends TravelTest {
 
         // when, then
         mockMvc.perform(get("/api/travels/{placeId}", travelPlace1.getPlaceId()))
+                .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.placeId").value(travelPlace1.getPlaceId()))
@@ -490,6 +504,7 @@ public class TravelControllerTest extends TravelTest {
 
         // when, then
         mockMvc.perform(get("/api/travels/{placeId}", travelPlace1.getPlaceId()))
+                .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.placeId").value(travelPlace1.getPlaceId()))
@@ -503,6 +518,7 @@ public class TravelControllerTest extends TravelTest {
     void getTravelDetails_placeNotFound() throws Exception {
         // given, when, then
         mockMvc.perform(get("/api/travels/{placeId}", 0L))
+                .andDo(print())
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.errorCode").value(ErrorCode.DATA_NOT_FOUND.getStatus().value()))
@@ -527,6 +543,7 @@ public class TravelControllerTest extends TravelTest {
         // when, then
         mockMvc.perform(get("/api/travels/popular")
                         .param("city", CityType.ALL.getValue()))
+                .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()))
@@ -558,6 +575,7 @@ public class TravelControllerTest extends TravelTest {
         // when, then
         mockMvc.perform(get("/api/travels/popular")
                         .param("city", CityType.GYEONGSANG.getValue()))
+                .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()))
@@ -575,6 +593,7 @@ public class TravelControllerTest extends TravelTest {
         // given, when, then
         mockMvc.perform(get("/api/travels/popular")
                         .param("city", CityType.GYEONGSANG.getValue()))
+                .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()))
@@ -587,6 +606,7 @@ public class TravelControllerTest extends TravelTest {
         // given, when, then
         mockMvc.perform(get("/api/travels/popular")
                         .param("city", "seou"))
+                .andDo(print())
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value(ErrorCode.ILLEGAL_CITY_TYPE.getMessage()));
@@ -611,6 +631,7 @@ public class TravelControllerTest extends TravelTest {
         // when, then
         mockMvc.perform(get("/api/travels/recommend")
                         .param("theme", ThemeType.All.getValue()))
+                .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()))
@@ -643,6 +664,7 @@ public class TravelControllerTest extends TravelTest {
         // when, then
         mockMvc.perform(get("/api/travels/recommend")
                         .param("theme", ThemeType.ATTRACTIONS.getValue()))
+                .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()))
@@ -659,6 +681,7 @@ public class TravelControllerTest extends TravelTest {
         // given, when, then
         mockMvc.perform(get("/api/travels/recommend")
                         .param("theme", ThemeType.FOOD.getValue()))
+                .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()))
@@ -672,6 +695,7 @@ public class TravelControllerTest extends TravelTest {
         // given, when, then
         mockMvc.perform(get("/api/travels/recommend")
                         .param("theme", "foo"))
+                .andDo(print())
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value(ErrorCode.ILLEGAL_THEME_TYPE.getMessage()));

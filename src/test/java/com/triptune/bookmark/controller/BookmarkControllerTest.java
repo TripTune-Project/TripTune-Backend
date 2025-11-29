@@ -1,5 +1,6 @@
 package com.triptune.bookmark.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.triptune.bookmark.BookmarkTest;
 import com.triptune.bookmark.dto.request.BookmarkRequest;
 import com.triptune.bookmark.repository.BookmarkRepository;
@@ -25,6 +26,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
@@ -46,10 +48,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @Transactional
+@AutoConfigureMockMvc
 @ActiveProfiles("h2")
 class BookmarkControllerTest extends BookmarkTest {
 
-    @Autowired private WebApplicationContext wac;
+    @Autowired private MockMvc mockMvc;
+    @Autowired private ObjectMapper objectMapper;
     @Autowired private JwtUtils jwtUtils;
     @Autowired private BookmarkRepository bookmarkRepository;
     @Autowired private MemberRepository memberRepository;
@@ -59,7 +63,6 @@ class BookmarkControllerTest extends BookmarkTest {
     @Autowired private DistrictRepository districtRepository;
     @Autowired private ApiCategoryRepository apiCategoryRepository;
 
-    private MockMvc mockMvc;
 
     private Country country;
     private City city;
@@ -68,13 +71,6 @@ class BookmarkControllerTest extends BookmarkTest {
 
     @BeforeEach
     void setUp(){
-        mockMvc = MockMvcBuilders.webAppContextSetup(wac)
-                .addFilter(new JwtAuthFilter(jwtUtils))
-                .addFilter(new CharacterEncodingFilter("UTF-8", true))
-                .apply(springSecurity())
-                .alwaysDo(print())
-                .build();
-
         country = countryRepository.save(createCountry());
         city = cityRepository.save(createCity(country));
         district = districtRepository.save(createDistrict(city, "강남"));
@@ -94,8 +90,9 @@ class BookmarkControllerTest extends BookmarkTest {
 
         // when, then
         mockMvc.perform(post("/api/bookmarks")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(toJsonString(request)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()));
@@ -116,7 +113,8 @@ class BookmarkControllerTest extends BookmarkTest {
         // when,  then
         mockMvc.perform(post("/api/bookmarks")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(request)))
+                        .content(objectMapper.writeValueAsString(request)))
+                .andDo(print())
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value("여행지 ID는 1 이상의 값이어야 합니다."));
@@ -134,7 +132,8 @@ class BookmarkControllerTest extends BookmarkTest {
         // when, then
         mockMvc.perform(post("/api/bookmarks")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(request)))
+                        .content(objectMapper.writeValueAsString(request)))
+                .andDo(print())
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value("여행지 ID는 필수 입력 값입니다."));
@@ -157,7 +156,8 @@ class BookmarkControllerTest extends BookmarkTest {
         // when, then
         mockMvc.perform(post("/api/bookmarks")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(request)))
+                        .content(objectMapper.writeValueAsString(request)))
+                .andDo(print())
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value(ErrorCode.ALREADY_EXISTED_BOOKMARK.getMessage()));
@@ -178,7 +178,8 @@ class BookmarkControllerTest extends BookmarkTest {
         // when, then
         mockMvc.perform(post("/api/bookmarks")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(request)))
+                        .content(objectMapper.writeValueAsString(request)))
+                .andDo(print())
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value(ErrorCode.MEMBER_NOT_FOUND.getMessage()));
@@ -196,7 +197,8 @@ class BookmarkControllerTest extends BookmarkTest {
         // when, then
         mockMvc.perform(post("/api/bookmarks")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJsonString(request)))
+                        .content(objectMapper.writeValueAsString(request)))
+                .andDo(print())
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value(ErrorCode.PLACE_NOT_FOUND.getMessage()));
@@ -213,6 +215,7 @@ class BookmarkControllerTest extends BookmarkTest {
 
         // when, then
         mockMvc.perform(delete("/api/bookmarks/{placeId}", travelPlace.getPlaceId()))
+                .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()));
@@ -232,6 +235,7 @@ class BookmarkControllerTest extends BookmarkTest {
 
         // when, then
         mockMvc.perform(delete("/api/bookmarks/{placeId}", travelPlace.getPlaceId()))
+                .andDo(print())
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value(ErrorCode.BOOKMARK_NOT_FOUND.getMessage()));
