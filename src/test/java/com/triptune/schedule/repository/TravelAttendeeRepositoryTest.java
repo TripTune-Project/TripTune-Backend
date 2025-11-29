@@ -7,7 +7,7 @@ import com.triptune.schedule.entity.TravelAttendee;
 import com.triptune.schedule.entity.TravelSchedule;
 import com.triptune.schedule.enums.AttendeePermission;
 import com.triptune.schedule.enums.AttendeeRole;
-import com.triptune.global.config.QueryDSLConfig;
+import com.triptune.global.config.QuerydslConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -20,7 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
-@Import({QueryDSLConfig.class})
+@Import({QuerydslConfig.class})
 @ActiveProfiles("h2")
 @Transactional
 public class TravelAttendeeRepositoryTest extends ScheduleTest {

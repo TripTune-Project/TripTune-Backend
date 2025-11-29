@@ -8,7 +8,7 @@ import com.triptune.common.entity.City;
 import com.triptune.common.entity.Country;
 import com.triptune.common.entity.District;
 import com.triptune.common.repository.*;
-import com.triptune.global.config.QueryDSLConfig;
+import com.triptune.global.config.QuerydslConfig;
 import com.triptune.global.util.PageUtils;
 import com.triptune.member.entity.Member;
 import com.triptune.member.repository.MemberRepository;
@@ -23,14 +23,14 @@ import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.ActiveProfiles;
-
-import java.time.LocalDateTime;
+import org.springframework.transaction.annotation.Transactional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 
 @SpringBootTest
-@Import({QueryDSLConfig.class})
+@Import({QuerydslConfig.class})
+@Transactional
 @ActiveProfiles("h2")
 class BookmarkRepositoryTest extends BookmarkTest {
 

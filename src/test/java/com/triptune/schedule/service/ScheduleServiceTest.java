@@ -109,7 +109,6 @@ public class ScheduleServiceTest extends ScheduleTest {
         schedule2.addTravelAttendee(attendee3);
         schedule2.addTravelAttendee(attendee4);
         schedule3.addTravelAttendee(attendee5);
-
     }
 
 
@@ -130,8 +129,10 @@ public class ScheduleServiceTest extends ScheduleTest {
         TravelRoute route1 = createTravelRoute(schedule1, travelPlace1, 1);
         TravelRoute route2 = createTravelRoute(schedule1, travelPlace1, 2);
         TravelRoute route3 = createTravelRoute(schedule1, travelPlace2, 3);
-        schedule1.setTravelRoutes(List.of(route1, route2, route3));
-        schedule2.setTravelRoutes(new ArrayList<>());
+        schedule1.addTravelRoutes(route1);
+        schedule1.addTravelRoutes(route2);
+        schedule1.addTravelRoutes(route3);
+
 
         List<TravelSchedule> schedules = List.of(schedule1, schedule2, schedule3);
         Page<TravelSchedule> schedulePage = PageUtils.createPage(schedules, pageable, schedules.size());
@@ -269,8 +270,9 @@ public class ScheduleServiceTest extends ScheduleTest {
         TravelRoute route1 = createTravelRoute(schedule1, travelPlace1, 1);
         TravelRoute route2 = createTravelRoute(schedule1, travelPlace1, 2);
         TravelRoute route3 = createTravelRoute(schedule1, travelPlace2, 3);
-        schedule1.setTravelRoutes(List.of(route1, route2, route3));
-        schedule2.setTravelRoutes(new ArrayList<>());
+        schedule1.addTravelRoutes(route1);
+        schedule1.addTravelRoutes(route2);
+        schedule1.addTravelRoutes(route3);
 
         List<TravelSchedule> schedules = List.of(schedule1, schedule2);
         Page<TravelSchedule> schedulePage = PageUtils.createPage(schedules, pageable, schedules.size());
@@ -324,8 +326,9 @@ public class ScheduleServiceTest extends ScheduleTest {
         TravelRoute route1 = createTravelRoute(schedule1, travelPlace1, 1);
         TravelRoute route2 = createTravelRoute(schedule1, travelPlace1, 2);
         TravelRoute route3 = createTravelRoute(schedule1, travelPlace2, 3);
-        schedule1.setTravelRoutes(List.of(route1, route2, route3));
-        schedule2.setTravelRoutes(new ArrayList<>());
+        schedule1.addTravelRoutes(route1);
+        schedule1.addTravelRoutes(route2);
+        schedule1.addTravelRoutes(route3);
 
         List<TravelSchedule> schedules = List.of(schedule1, schedule2);
         Page<TravelSchedule> schedulePage = PageUtils.createPage(schedules, pageable, schedules.size());
@@ -494,7 +497,6 @@ public class ScheduleServiceTest extends ScheduleTest {
         travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, new ArrayList<>());
         travelPlace2 = createTravelPlace(2L, country, city, district, apiCategory, new ArrayList<>());
 
-
         List<TravelSchedule> schedules = List.of(schedule1, schedule2);
         Page<TravelSchedule> schedulePage = PageUtils.createPage(schedules, pageable, schedules.size());
 
@@ -549,7 +551,6 @@ public class ScheduleServiceTest extends ScheduleTest {
         String keyword = "테스트";
         Pageable pageable = PageUtils.schedulePageable(1);
 
-
         TravelImage travelImage1 = createTravelImage(travelPlace1, "test1", true);
         TravelImage travelImage2 = createTravelImage(travelPlace1, "test2", false);
         travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, List.of(travelImage1, travelImage2));
@@ -561,8 +562,9 @@ public class ScheduleServiceTest extends ScheduleTest {
         TravelRoute route1 = createTravelRoute(schedule1, travelPlace1, 1);
         TravelRoute route2 = createTravelRoute(schedule1, travelPlace1, 2);
         TravelRoute route3 = createTravelRoute(schedule1, travelPlace2, 3);
-        schedule1.setTravelRoutes(List.of(route1, route2, route3));
-        schedule2.setTravelRoutes(new ArrayList<>());
+        schedule1.addTravelRoutes(route1);
+        schedule1.addTravelRoutes(route2);
+        schedule1.addTravelRoutes(route3);
 
         List<TravelSchedule> schedules = List.of(schedule1, schedule2, schedule3);
         Page<TravelSchedule> schedulePage = PageUtils.createPage(schedules, pageable, schedules.size());
@@ -618,8 +620,9 @@ public class ScheduleServiceTest extends ScheduleTest {
         TravelRoute route1 = createTravelRoute(schedule1, travelPlace1, 1);
         TravelRoute route2 = createTravelRoute(schedule1, travelPlace1, 2);
         TravelRoute route3 = createTravelRoute(schedule1, travelPlace2, 3);
-        schedule1.setTravelRoutes(List.of(route1, route2, route3));
-        schedule2.setTravelRoutes(new ArrayList<>());
+        schedule1.addTravelRoutes(route1);
+        schedule1.addTravelRoutes(route2);
+        schedule1.addTravelRoutes(route3);
 
         List<TravelSchedule> schedules = List.of(schedule1, schedule2);
         Page<TravelSchedule> schedulePage = PageUtils.createPage(schedules, pageable, schedules.size());
@@ -683,8 +686,9 @@ public class ScheduleServiceTest extends ScheduleTest {
         TravelRoute route1 = createTravelRoute(schedule1, travelPlace1, 1);
         TravelRoute route2 = createTravelRoute(schedule1, travelPlace1, 2);
         TravelRoute route3 = createTravelRoute(schedule1, travelPlace2, 3);
-        schedule1.setTravelRoutes(List.of(route1, route2, route3));
-        schedule2.setTravelRoutes(new ArrayList<>());
+        schedule1.addTravelRoutes(route1);
+        schedule1.addTravelRoutes(route2);
+        schedule1.addTravelRoutes(route3);
 
         List<TravelSchedule> travelSchedules = List.of(schedule1);
         Page<TravelSchedule> schedulePage = PageUtils.createPage(travelSchedules, PageUtils.schedulePageable(1), travelSchedules.size());
@@ -998,8 +1002,9 @@ public class ScheduleServiceTest extends ScheduleTest {
         TravelRoute route1 = createTravelRoute(schedule1, travelPlace1, 1);
         TravelRoute route2 = createTravelRoute(schedule1, travelPlace1, 2);
         TravelRoute route3 = createTravelRoute(schedule1, travelPlace2, 3);
-        schedule1.setTravelRoutes(List.of(route1, route2, route3));
-        schedule2.setTravelRoutes(new ArrayList<>());
+        schedule1.addTravelRoutes(route1);
+        schedule1.addTravelRoutes(route2);
+        schedule1.addTravelRoutes(route3);
 
         RouteRequest routeRequest1 = createRouteRequest(1, travelPlace1.getPlaceId());
         RouteRequest routeRequest2 = createRouteRequest(2, travelPlace2.getPlaceId());

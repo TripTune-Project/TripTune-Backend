@@ -1,6 +1,6 @@
 package com.triptune.schedule.repository;
 
-import com.triptune.global.config.QueryDSLConfig;
+import com.triptune.global.config.QuerydslConfig;
 import com.triptune.member.entity.Member;
 import com.triptune.member.repository.MemberRepository;
 import com.triptune.schedule.ScheduleTest;
@@ -20,9 +20,9 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
-@Import({QueryDSLConfig.class})
-@ActiveProfiles("mongo")
+@Import({QuerydslConfig.class})
 @Transactional
+@ActiveProfiles("mongo")
 public class ChatMessageRepositoryTest extends ScheduleTest {
 
     @Autowired private ChatMessageRepository chatMessageRepository;

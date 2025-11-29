@@ -134,17 +134,19 @@ public class ScheduleControllerTest extends ScheduleTest {
         TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(null, member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ));
         TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(null, member1, schedule2, AttendeeRole.AUTHOR, AttendeePermission.ALL));
         TravelAttendee attendee4 = travelAttendeeRepository.save(createTravelAttendee(null, member3, schedule3, AttendeeRole.AUTHOR, AttendeePermission.ALL));
-
-        schedule1.setTravelAttendees(List.of(attendee1, attendee2));
-        schedule2.setTravelAttendees(List.of(attendee3));
-        schedule3.setTravelAttendees(List.of(attendee4));
+        schedule1.addTravelAttendee(attendee1);
+        schedule1.addTravelAttendee(attendee2);
+        schedule2.addTravelAttendee(attendee3);
+        schedule3.addTravelAttendee(attendee4);
 
         TravelRoute route1 = travelRouteRepository.save(createTravelRoute(schedule1, travelPlace1, 1));
         TravelRoute route2 = travelRouteRepository.save(createTravelRoute(schedule1, travelPlace2, 2));
         TravelRoute route3 = travelRouteRepository.save(createTravelRoute(schedule2, travelPlace1, 1));
         TravelRoute route4 = travelRouteRepository.save(createTravelRoute(schedule2, travelPlace2, 2));
-        schedule1.setTravelRoutes(List.of(route1, route2));
-        schedule2.setTravelRoutes(List.of(route3, route4));
+        schedule1.addTravelRoutes(route1);
+        schedule1.addTravelRoutes(route2);
+        schedule2.addTravelRoutes(route3);
+        schedule2.addTravelRoutes(route4);
 
         mockAuthentication(member1);
 
@@ -166,7 +168,7 @@ public class ScheduleControllerTest extends ScheduleTest {
     void getAllSchedulesNoRouteData() throws Exception {
         // given
         TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(null, member3, schedule3, AttendeeRole.AUTHOR, AttendeePermission.ALL));
-        schedule3.setTravelAttendees(List.of(attendee1));
+        schedule3.addTravelAttendee(attendee1);
 
         mockAuthentication(member3);
 
@@ -205,17 +207,19 @@ public class ScheduleControllerTest extends ScheduleTest {
         TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(null, member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ));
         TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(null, member1, schedule2, AttendeeRole.AUTHOR, AttendeePermission.ALL));
         TravelAttendee attendee4 = travelAttendeeRepository.save(createTravelAttendee(null, member1, schedule3, AttendeeRole.AUTHOR, AttendeePermission.ALL));
-
-        schedule1.setTravelAttendees(List.of(attendee1, attendee2));
-        schedule2.setTravelAttendees(List.of(attendee3));
-        schedule3.setTravelAttendees(List.of(attendee4));
+        schedule1.addTravelAttendee(attendee1);
+        schedule1.addTravelAttendee(attendee2);
+        schedule2.addTravelAttendee(attendee3);
+        schedule3.addTravelAttendee(attendee4);
 
         TravelRoute route1 = travelRouteRepository.save(createTravelRoute(schedule1, travelPlace1, 1));
         TravelRoute route2 = travelRouteRepository.save(createTravelRoute(schedule1, travelPlace2, 2));
         TravelRoute route3 = travelRouteRepository.save(createTravelRoute(schedule2, travelPlace1, 1));
         TravelRoute route4 = travelRouteRepository.save(createTravelRoute(schedule2, travelPlace2, 2));
-        schedule1.setTravelRoutes(Arrays.asList(route1, route2));
-        schedule2.setTravelRoutes(Arrays.asList(route3, route4));
+        schedule1.addTravelRoutes(route1);
+        schedule1.addTravelRoutes(route2);
+        schedule2.addTravelRoutes(route3);
+        schedule2.addTravelRoutes(route4);
 
         mockAuthentication(member1);
 
@@ -240,10 +244,10 @@ public class ScheduleControllerTest extends ScheduleTest {
         TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(null, member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ));
         TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(null, member1, schedule2, AttendeeRole.AUTHOR, AttendeePermission.ALL));
         TravelAttendee attendee4 = travelAttendeeRepository.save(createTravelAttendee(null, member1, schedule3, AttendeeRole.AUTHOR, AttendeePermission.ALL));
-
-        schedule1.setTravelAttendees(List.of(attendee1, attendee2));
-        schedule2.setTravelAttendees(List.of(attendee3));
-        schedule3.setTravelAttendees(List.of(attendee4));
+        schedule1.addTravelAttendee(attendee1);
+        schedule1.addTravelAttendee(attendee2);
+        schedule2.addTravelAttendee(attendee3);
+        schedule3.addTravelAttendee(attendee4);
 
         mockAuthentication(member1);
 
@@ -265,12 +269,11 @@ public class ScheduleControllerTest extends ScheduleTest {
     void getSharedSchedulesWithoutSharedDataByEmail() throws Exception {
         // given
         TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(null, member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
-        TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(null, member1, schedule2, AttendeeRole.AUTHOR, AttendeePermission.ALL));
-        TravelAttendee attendee4 = travelAttendeeRepository.save(createTravelAttendee(null, member1, schedule3, AttendeeRole.AUTHOR, AttendeePermission.ALL));
-
-        schedule1.setTravelAttendees(List.of(attendee1));
-        schedule2.setTravelAttendees(List.of(attendee3));
-        schedule3.setTravelAttendees(List.of(attendee4));
+        TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(null, member1, schedule2, AttendeeRole.AUTHOR, AttendeePermission.ALL));
+        TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(null, member1, schedule3, AttendeeRole.AUTHOR, AttendeePermission.ALL));
+        schedule1.addTravelAttendee(attendee1);
+        schedule2.addTravelAttendee(attendee2);
+        schedule3.addTravelAttendee(attendee3);
 
         mockAuthentication(member1);
 
@@ -309,9 +312,11 @@ public class ScheduleControllerTest extends ScheduleTest {
         TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(null, member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ));
         TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(null, member3, schedule2, AttendeeRole.AUTHOR, AttendeePermission.ALL));
         TravelAttendee attendee4 = travelAttendeeRepository.save(createTravelAttendee(null, member1, schedule2, AttendeeRole.GUEST, AttendeePermission.CHAT));
+        schedule1.addTravelAttendee(attendee1);
+        schedule1.addTravelAttendee(attendee2);
+        schedule2.addTravelAttendee(attendee3);
+        schedule3.addTravelAttendee(attendee4);
 
-        schedule1.setTravelAttendees(List.of(attendee1, attendee2));
-        schedule2.setTravelAttendees(List.of(attendee3, attendee4));
 
         mockAuthentication(member1);
 
@@ -326,7 +331,7 @@ public class ScheduleControllerTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("수정 가능한 일정 조회 시 일정 데이터가 없는 경우")
+    @DisplayName("수정 권한 있는 일정 조회 시 일정 데이터가 없는 경우")
     void getEnableEditSchedule_emptySchedules() throws Exception {
         // given
         mockAuthentication(member1);
@@ -349,17 +354,19 @@ public class ScheduleControllerTest extends ScheduleTest {
         TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(null, member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ));
         TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(null, member1, schedule2, AttendeeRole.AUTHOR, AttendeePermission.ALL));
         TravelAttendee attendee4 = travelAttendeeRepository.save(createTravelAttendee(null, member1, schedule3, AttendeeRole.AUTHOR, AttendeePermission.ALL));
-
-        schedule1.setTravelAttendees(List.of(attendee1, attendee2));
-        schedule2.setTravelAttendees(List.of(attendee3));
-        schedule3.setTravelAttendees(List.of(attendee4));
+        schedule1.addTravelAttendee(attendee1);
+        schedule1.addTravelAttendee(attendee2);
+        schedule2.addTravelAttendee(attendee3);
+        schedule3.addTravelAttendee(attendee4);
 
         TravelRoute route1 = travelRouteRepository.save(createTravelRoute(schedule1, travelPlace1, 1));
         TravelRoute route2 = travelRouteRepository.save(createTravelRoute(schedule1, travelPlace2, 2));
         TravelRoute route3 = travelRouteRepository.save(createTravelRoute(schedule2, travelPlace1, 1));
         TravelRoute route4 = travelRouteRepository.save(createTravelRoute(schedule2, travelPlace2, 2));
-        schedule1.setTravelRoutes(Arrays.asList(route1, route2));
-        schedule2.setTravelRoutes(Arrays.asList(route3, route4));
+        schedule1.addTravelRoutes(route1);
+        schedule1.addTravelRoutes(route2);
+        schedule2.addTravelRoutes(route3);
+        schedule2.addTravelRoutes(route4);
 
         mockAuthentication(member1);
 
@@ -386,10 +393,10 @@ public class ScheduleControllerTest extends ScheduleTest {
         TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(null, member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ));
         TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(null, member1, schedule2, AttendeeRole.AUTHOR, AttendeePermission.ALL));
         TravelAttendee attendee4 = travelAttendeeRepository.save(createTravelAttendee(null, member1, schedule3, AttendeeRole.AUTHOR, AttendeePermission.ALL));
-
-        schedule1.setTravelAttendees(List.of(attendee1, attendee2));
-        schedule2.setTravelAttendees(List.of(attendee3));
-        schedule3.setTravelAttendees(List.of(attendee4));
+        schedule1.addTravelAttendee(attendee1);
+        schedule1.addTravelAttendee(attendee2);
+        schedule2.addTravelAttendee(attendee3);
+        schedule3.addTravelAttendee(attendee4);
 
         mockAuthentication(member1);
 
@@ -413,12 +420,11 @@ public class ScheduleControllerTest extends ScheduleTest {
     void searchSchedulesWithoutSharedData() throws Exception {
         // given
         TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(null, member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
-        TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(null, member1, schedule2, AttendeeRole.AUTHOR, AttendeePermission.ALL));
-        TravelAttendee attendee4 = travelAttendeeRepository.save(createTravelAttendee(null, member1, schedule3, AttendeeRole.AUTHOR, AttendeePermission.ALL));
-
-        schedule1.setTravelAttendees(List.of(attendee1));
-        schedule2.setTravelAttendees(List.of(attendee3));
-        schedule3.setTravelAttendees(List.of(attendee4));
+        TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(null, member1, schedule2, AttendeeRole.AUTHOR, AttendeePermission.ALL));
+        TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(null, member1, schedule3, AttendeeRole.AUTHOR, AttendeePermission.ALL));
+        schedule1.addTravelAttendee(attendee1);
+        schedule2.addTravelAttendee(attendee2);
+        schedule3.addTravelAttendee(attendee3);
 
         mockAuthentication(member1);
 
@@ -460,17 +466,19 @@ public class ScheduleControllerTest extends ScheduleTest {
         TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(null, member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ));
         TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(null, member1, schedule2, AttendeeRole.AUTHOR, AttendeePermission.ALL));
         TravelAttendee attendee4 = travelAttendeeRepository.save(createTravelAttendee(null, member1, schedule3, AttendeeRole.AUTHOR, AttendeePermission.ALL));
-
-        schedule1.setTravelAttendees(List.of(attendee1, attendee2));
-        schedule2.setTravelAttendees(List.of(attendee3));
-        schedule3.setTravelAttendees(List.of(attendee4));
+        schedule1.addTravelAttendee(attendee1);
+        schedule1.addTravelAttendee(attendee2);
+        schedule2.addTravelAttendee(attendee3);
+        schedule3.addTravelAttendee(attendee4);
 
         TravelRoute route1 = travelRouteRepository.save(createTravelRoute(schedule1, travelPlace1, 1));
         TravelRoute route2 = travelRouteRepository.save(createTravelRoute(schedule1, travelPlace2, 2));
         TravelRoute route3 = travelRouteRepository.save(createTravelRoute(schedule2, travelPlace1, 1));
         TravelRoute route4 = travelRouteRepository.save(createTravelRoute(schedule2, travelPlace2, 2));
-        schedule1.setTravelRoutes(Arrays.asList(route1, route2));
-        schedule2.setTravelRoutes(Arrays.asList(route3, route4));
+        schedule1.addTravelRoutes(route1);
+        schedule1.addTravelRoutes(route2);
+        schedule2.addTravelRoutes(route3);
+        schedule2.addTravelRoutes(route4);
 
         mockAuthentication(member1);
 
@@ -497,10 +505,10 @@ public class ScheduleControllerTest extends ScheduleTest {
         TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(null, member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ));
         TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(null, member1, schedule2, AttendeeRole.AUTHOR, AttendeePermission.ALL));
         TravelAttendee attendee4 = travelAttendeeRepository.save(createTravelAttendee(null, member1, schedule3, AttendeeRole.AUTHOR, AttendeePermission.ALL));
-
-        schedule1.setTravelAttendees(List.of(attendee1, attendee2));
-        schedule2.setTravelAttendees(List.of(attendee3));
-        schedule3.setTravelAttendees(List.of(attendee4));
+        schedule1.addTravelAttendee(attendee1);
+        schedule1.addTravelAttendee(attendee2);
+        schedule2.addTravelAttendee(attendee3);
+        schedule3.addTravelAttendee(attendee4);
 
         mockAuthentication(member1);
 
@@ -721,8 +729,8 @@ public class ScheduleControllerTest extends ScheduleTest {
         // given
         TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(null, member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
         TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(null, member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ));
-
-        schedule1.setTravelAttendees(List.of(attendee1, attendee2));
+        schedule1.addTravelAttendee(attendee1);
+        schedule1.addTravelAttendee(attendee2);
 
         mockAuthentication(member1);
 
@@ -738,29 +746,29 @@ public class ScheduleControllerTest extends ScheduleTest {
                 .andExpect(jsonPath("$.data.placeList.content[0].thumbnailUrl").exists());
     }
 
-    // TODO
-//    @Test
-//    @DisplayName("일정 상세 조회 시 여행지 데이터 존재하지 않는 경우")
-//    void getScheduleDetail_noTravelData() throws Exception {
-//        // given
-//        travelPlaceRepository.deleteAll();
-//
-//        TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(null, member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
-//        TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(null, member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ));
-//
-//        schedule1.setTravelAttendees(List.of(attendee1, attendee2));
-//
-//        mockAuthentication(member1);
-//
-//        // when, then
-//        mockMvc.perform(get("/api/schedules/{scheduleId}", schedule1.getScheduleId())
-//                        .param("page", "1"))
-//                .andExpect(status().isOk())
-//                .andExpect(jsonPath("$.success").value(true))
-//                .andExpect(jsonPath("$.data.scheduleName").value(schedule1.getScheduleName()))
-//                .andExpect(jsonPath("$.data.placeList.totalElements").value(0))
-//                .andExpect(jsonPath("$.data.placeList.content").isEmpty());
-//    }
+    @Test
+    @DisplayName("일정 상세 조회 시 여행지 데이터 존재하지 않는 경우")
+    void getScheduleDetail_noTravelData() throws Exception {
+        // given
+        travelImageRepository.deleteAll();
+        travelPlaceRepository.deleteAll();
+
+        TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(null, member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
+        TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(null, member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ));
+        schedule1.addTravelAttendee(attendee1);
+        schedule1.addTravelAttendee(attendee2);
+
+        mockAuthentication(member1);
+
+        // when, then
+        mockMvc.perform(get("/api/schedules/{scheduleId}", schedule1.getScheduleId())
+                        .param("page", "1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.scheduleName").value(schedule1.getScheduleName()))
+                .andExpect(jsonPath("$.data.placeList.totalElements").value(0))
+                .andExpect(jsonPath("$.data.placeList.content").isEmpty());
+    }
 
     @Test
     @DisplayName("일정 상세 조회 시 일정 데이터 존재하지 않아 예외 발생")
@@ -795,17 +803,15 @@ public class ScheduleControllerTest extends ScheduleTest {
     @DisplayName("일정 수정")
     void updateSchedule() throws Exception {
         // given
-        List<TravelAttendee> attendees = travelAttendeeRepository.saveAll(List.of(
-                createTravelAttendee(null, member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL),
-                createTravelAttendee(null, member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ)
-        ));
-        schedule1.setTravelAttendees(attendees);
+        TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(null, member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
+        TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(null, member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ));
+        schedule1.addTravelAttendee(attendee1);
+        schedule1.addTravelAttendee(attendee2);
 
-        List<TravelRoute> routes = travelRouteRepository.saveAll(List.of(
-                createTravelRoute(schedule1, travelPlace1, 1),
-                createTravelRoute(schedule1, travelPlace2, 2))
-        );
-        schedule1.setTravelRoutes(routes);
+        TravelRoute route1 = travelRouteRepository.save(createTravelRoute(schedule1, travelPlace1, 1));
+        TravelRoute route2 = travelRouteRepository.save(createTravelRoute(schedule1, travelPlace2, 2));
+        schedule1.addTravelRoutes(route1);
+        schedule1.addTravelRoutes(route2);
 
         List<RouteRequest> routeRequests = List.of(
                 createRouteRequest(1, travelPlace1.getPlaceId()),
@@ -841,11 +847,10 @@ public class ScheduleControllerTest extends ScheduleTest {
     @DisplayName("일정 수정 시 여행 루트 안 만든 경우")
     void updateSchedule_emptyTravelRoutes() throws Exception {
         // given
-        List<TravelAttendee> attendees = travelAttendeeRepository.saveAll(List.of(
-                createTravelAttendee(null, member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL),
-                createTravelAttendee(null, member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ)
-        ));
-        schedule1.setTravelAttendees(attendees);
+        TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(null, member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
+        TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(null, member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ));
+        schedule1.addTravelAttendee(attendee1);
+        schedule1.addTravelAttendee(attendee2);
 
         ScheduleUpdateRequest request = createUpdateScheduleRequest(
                 "수정 테스트",
@@ -877,17 +882,15 @@ public class ScheduleControllerTest extends ScheduleTest {
     @ValueSource(strings = {"", " "})
     void updateSchedule_invalidNotBlankScheduleName(String input) throws Exception {
         // given
-        List<TravelAttendee> attendees = travelAttendeeRepository.saveAll(List.of(
-                createTravelAttendee(null, member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL),
-                createTravelAttendee(null, member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ)
-        ));
-        schedule1.setTravelAttendees(attendees);
+        TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(null, member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
+        TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(null, member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ));
+        schedule1.addTravelAttendee(attendee1);
+        schedule1.addTravelAttendee(attendee2);
 
-        List<TravelRoute> routes = travelRouteRepository.saveAll(List.of(
-                createTravelRoute(schedule1, travelPlace1, 1),
-                createTravelRoute(schedule1, travelPlace2, 2))
-        );
-        schedule1.setTravelRoutes(routes);
+        TravelRoute route1 = travelRouteRepository.save(createTravelRoute(schedule1, travelPlace1, 1));
+        TravelRoute route2 = travelRouteRepository.save(createTravelRoute(schedule1, travelPlace2, 2));
+        schedule1.addTravelRoutes(route1);
+        schedule1.addTravelRoutes(route2);
 
         List<RouteRequest> routeRequests = List.of(
                 createRouteRequest(1, travelPlace1.getPlaceId()),
@@ -916,17 +919,15 @@ public class ScheduleControllerTest extends ScheduleTest {
     @DisplayName("일정 수정 시 일정명 null 값이 들어와 예외 발생")
     void updateSchedule_invalidNullScheduleName() throws Exception {
         // given
-        List<TravelAttendee> attendees = travelAttendeeRepository.saveAll(List.of(
-                createTravelAttendee(null, member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL),
-                createTravelAttendee(null, member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ)
-        ));
-        schedule1.setTravelAttendees(attendees);
+        TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(null, member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
+        TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(null, member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ));
+        schedule1.addTravelAttendee(attendee1);
+        schedule1.addTravelAttendee(attendee2);
 
-        List<TravelRoute> routes = travelRouteRepository.saveAll(List.of(
-                createTravelRoute(schedule1, travelPlace1, 1),
-                createTravelRoute(schedule1, travelPlace2, 2))
-        );
-        schedule1.setTravelRoutes(routes);
+        TravelRoute route1 = travelRouteRepository.save(createTravelRoute(schedule1, travelPlace1, 1));
+        TravelRoute route2 = travelRouteRepository.save(createTravelRoute(schedule1, travelPlace2, 2));
+        schedule1.addTravelRoutes(route1);
+        schedule1.addTravelRoutes(route2);
 
         List<RouteRequest> routeRequests = List.of(
                 createRouteRequest(1, travelPlace1.getPlaceId()),
@@ -955,17 +956,15 @@ public class ScheduleControllerTest extends ScheduleTest {
     @DisplayName("일정 수정 시 일정 시작일 null 값이 들어와 예외 발생")
     void updateSchedule_invalidNullStartDate() throws Exception {
         // given
-        List<TravelAttendee> attendees = travelAttendeeRepository.saveAll(List.of(
-                createTravelAttendee(null, member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL),
-                createTravelAttendee(null, member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ)
-        ));
-        schedule1.setTravelAttendees(attendees);
+        TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(null, member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
+        TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(null, member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ));
+        schedule1.addTravelAttendee(attendee1);
+        schedule1.addTravelAttendee(attendee2);
 
-        List<TravelRoute> routes = travelRouteRepository.saveAll(List.of(
-                createTravelRoute(schedule1, travelPlace1, 1),
-                createTravelRoute(schedule1, travelPlace2, 2))
-        );
-        schedule1.setTravelRoutes(routes);
+        TravelRoute route1 = travelRouteRepository.save(createTravelRoute(schedule1, travelPlace1, 1));
+        TravelRoute route2 = travelRouteRepository.save(createTravelRoute(schedule1, travelPlace2, 2));
+        schedule1.addTravelRoutes(route1);
+        schedule1.addTravelRoutes(route2);
 
         List<RouteRequest> routeRequests = List.of(
                 createRouteRequest(1, travelPlace1.getPlaceId()),
@@ -995,17 +994,15 @@ public class ScheduleControllerTest extends ScheduleTest {
     @DisplayName("일정 수정 시 일정 종료일 null 값이 들어와 예외 발생")
     void updateSchedule_invalidNullEndDate() throws Exception {
         // given
-        List<TravelAttendee> attendees = travelAttendeeRepository.saveAll(List.of(
-                createTravelAttendee(null, member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL),
-                createTravelAttendee(null, member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ)
-        ));
-        schedule1.setTravelAttendees(attendees);
+        TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(null, member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
+        TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(null, member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ));
+        schedule1.addTravelAttendee(attendee1);
+        schedule1.addTravelAttendee(attendee2);
 
-        List<TravelRoute> routes = travelRouteRepository.saveAll(List.of(
-                createTravelRoute(schedule1, travelPlace1, 1),
-                createTravelRoute(schedule1, travelPlace2, 2))
-        );
-        schedule1.setTravelRoutes(routes);
+        TravelRoute route1 = travelRouteRepository.save(createTravelRoute(schedule1, travelPlace1, 1));
+        TravelRoute route2 = travelRouteRepository.save(createTravelRoute(schedule1, travelPlace2, 2));
+        schedule1.addTravelRoutes(route1);
+        schedule1.addTravelRoutes(route2);
 
         List<RouteRequest> routeRequests = List.of(
                 createRouteRequest(1, travelPlace1.getPlaceId()),
@@ -1034,17 +1031,15 @@ public class ScheduleControllerTest extends ScheduleTest {
     @DisplayName("일정 수정 시 일정 생성일이 종료일 이후 날짜로 예외 발생")
     void updateSchedule_invalidStartDateAfterEndDate() throws Exception {
         // given
-        List<TravelAttendee> attendees = travelAttendeeRepository.saveAll(List.of(
-                createTravelAttendee(null, member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL),
-                createTravelAttendee(null, member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ)
-        ));
-        schedule1.setTravelAttendees(attendees);
+        TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(null, member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
+        TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(null, member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ));
+        schedule1.addTravelAttendee(attendee1);
+        schedule1.addTravelAttendee(attendee2);
 
-        List<TravelRoute> routes = travelRouteRepository.saveAll(List.of(
-                createTravelRoute(schedule1, travelPlace1, 1),
-                createTravelRoute(schedule1, travelPlace2, 2))
-        );
-        schedule1.setTravelRoutes(routes);
+        TravelRoute route1 = travelRouteRepository.save(createTravelRoute(schedule1, travelPlace1, 1));
+        TravelRoute route2 = travelRouteRepository.save(createTravelRoute(schedule1, travelPlace2, 2));
+        schedule1.addTravelRoutes(route1);
+        schedule1.addTravelRoutes(route2);
 
         List<RouteRequest> routeRequests = List.of(
                 createRouteRequest(1, travelPlace1.getPlaceId()),
@@ -1074,21 +1069,17 @@ public class ScheduleControllerTest extends ScheduleTest {
     @DisplayName("일정 수정 시 여행 루트 순서 null 값이 들어와 예외 발생")
     void updateSchedule_invalidNullRouteOrder() throws Exception {
         // given
-        List<TravelAttendee> attendees = travelAttendeeRepository.saveAll(List.of(
-                createTravelAttendee(null, member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL),
-                createTravelAttendee(null, member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ)
-        ));
-        schedule1.setTravelAttendees(attendees);
+        TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(null, member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
+        TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(null, member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ));
+        schedule1.addTravelAttendee(attendee1);
+        schedule1.addTravelAttendee(attendee2);
 
-        List<TravelRoute> routes = travelRouteRepository.saveAll(List.of(
-                createTravelRoute(schedule1, travelPlace1, 1),
-                createTravelRoute(schedule1, travelPlace2, 2))
-        );
-        schedule1.setTravelRoutes(routes);
+        TravelRoute route1 = travelRouteRepository.save(createTravelRoute(schedule1, travelPlace1, 1));
+        TravelRoute route2 = travelRouteRepository.save(createTravelRoute(schedule1, travelPlace2, 2));
+        schedule1.addTravelRoutes(route1);
+        schedule1.addTravelRoutes(route2);
 
-        List<RouteRequest> routeRequests = List.of(
-                createRouteRequest(null, travelPlace1.getPlaceId())
-        );
+        List<RouteRequest> routeRequests = List.of(createRouteRequest(null, travelPlace1.getPlaceId()));
 
         ScheduleUpdateRequest request = createUpdateScheduleRequest(
                 "수정 테스트",
@@ -1114,21 +1105,18 @@ public class ScheduleControllerTest extends ScheduleTest {
     @ValueSource(ints = {-1000, -1, 0})
     void updateSchedule_invalidMinRouteOrder(Integer input) throws Exception {
         // given
-        List<TravelAttendee> attendees = travelAttendeeRepository.saveAll(List.of(
-                createTravelAttendee(null, member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL),
-                createTravelAttendee(null, member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ)
-        ));
-        schedule1.setTravelAttendees(attendees);
+        TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(null, member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
+        TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(null, member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ));
+        schedule1.addTravelAttendee(attendee1);
+        schedule1.addTravelAttendee(attendee2);
 
-        List<TravelRoute> routes = travelRouteRepository.saveAll(List.of(
-                createTravelRoute(schedule1, travelPlace1, 1),
-                createTravelRoute(schedule1, travelPlace2, 2))
-        );
-        schedule1.setTravelRoutes(routes);
+        TravelRoute route1 = travelRouteRepository.save(createTravelRoute(schedule1, travelPlace1, 1));
+        TravelRoute route2 = travelRouteRepository.save(createTravelRoute(schedule1, travelPlace2, 2));
+        schedule1.addTravelRoutes(route1);
+        schedule1.addTravelRoutes(route2);
 
-        List<RouteRequest> routeRequests = List.of(
-                createRouteRequest(input, travelPlace1.getPlaceId())
-        );
+
+        List<RouteRequest> routeRequests = List.of(createRouteRequest(input, travelPlace1.getPlaceId()));
 
         ScheduleUpdateRequest request = createUpdateScheduleRequest(
                 "수정 테스트",
@@ -1152,21 +1140,18 @@ public class ScheduleControllerTest extends ScheduleTest {
     @DisplayName("일정 수정 시 여행 루트의 여행지 id에 null 값이 들어와 예외 발생")
     void updateSchedule_invalidNullPlaceId() throws Exception {
         // given
-        List<TravelAttendee> attendees = travelAttendeeRepository.saveAll(List.of(
-                createTravelAttendee(null, member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL),
-                createTravelAttendee(null, member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ)
-        ));
-        schedule1.setTravelAttendees(attendees);
+        TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(null, member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
+        TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(null, member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ));
+        schedule1.addTravelAttendee(attendee1);
+        schedule1.addTravelAttendee(attendee2);
 
-        List<TravelRoute> routes = travelRouteRepository.saveAll(List.of(
-                createTravelRoute(schedule1, travelPlace1, 1),
-                createTravelRoute(schedule1, travelPlace2, 2))
-        );
-        schedule1.setTravelRoutes(routes);
+        TravelRoute route1 = travelRouteRepository.save(createTravelRoute(schedule1, travelPlace1, 1));
+        TravelRoute route2 = travelRouteRepository.save(createTravelRoute(schedule1, travelPlace2, 2));
+        schedule1.addTravelRoutes(route1);
+        schedule1.addTravelRoutes(route2);
 
-        List<RouteRequest> routeRequests = List.of(
-                createRouteRequest(1, null)
-        );
+
+        List<RouteRequest> routeRequests = List.of(createRouteRequest(1, null));
 
         ScheduleUpdateRequest request = createUpdateScheduleRequest(
                 "수정 테스트",
@@ -1194,21 +1179,18 @@ public class ScheduleControllerTest extends ScheduleTest {
     @ValueSource(longs = {-1L, 0L})
     void updateSchedule_invalidMinPlaceId(Long input) throws Exception {
         // given
-        List<TravelAttendee> attendees = travelAttendeeRepository.saveAll(List.of(
-                createTravelAttendee(null, member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL),
-                createTravelAttendee(null, member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ)
-        ));
-        schedule1.setTravelAttendees(attendees);
+        TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(null, member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
+        TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(null, member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ));
+        schedule1.addTravelAttendee(attendee1);
+        schedule1.addTravelAttendee(attendee2);
 
-        List<TravelRoute> routes = travelRouteRepository.saveAll(List.of(
-                createTravelRoute(schedule1, travelPlace1, 1),
-                createTravelRoute(schedule1, travelPlace2, 2))
-        );
-        schedule1.setTravelRoutes(routes);
+        TravelRoute route1 = travelRouteRepository.save(createTravelRoute(schedule1, travelPlace1, 1));
+        TravelRoute route2 = travelRouteRepository.save(createTravelRoute(schedule1, travelPlace2, 2));
+        schedule1.addTravelRoutes(route1);
+        schedule1.addTravelRoutes(route2);
 
-        List<RouteRequest> routeRequests = List.of(
-                createRouteRequest(1, input)
-        );
+
+        List<RouteRequest> routeRequests = List.of(createRouteRequest(1, input));
 
         ScheduleUpdateRequest request = createUpdateScheduleRequest(
                 "수정 테스트",
@@ -1233,9 +1215,9 @@ public class ScheduleControllerTest extends ScheduleTest {
     void updateSchedule_forbiddenAccess() throws Exception {
         // given
         TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(null, member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
-        TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(null, member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ));
-
-        schedule1.setTravelAttendees(List.of(attendee1, attendee3));
+        TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(null, member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ));
+        schedule1.addTravelAttendee(attendee1);
+        schedule1.addTravelAttendee(attendee2);
 
         RouteRequest routeRequest1 = createRouteRequest(1, travelPlace1.getPlaceId());
         ScheduleUpdateRequest request = createUpdateScheduleRequest(List.of(routeRequest1));
@@ -1257,9 +1239,9 @@ public class ScheduleControllerTest extends ScheduleTest {
     void updateSchedule_forbiddenEdit() throws Exception {
         // given
         TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(null, member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
-        TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(null, member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ));
-
-        schedule1.setTravelAttendees(List.of(attendee1, attendee3));
+        TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(null, member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ));
+        schedule1.addTravelAttendee(attendee1);
+        schedule1.addTravelAttendee(attendee2);
 
         RouteRequest routeRequest1 = createRouteRequest(1, travelPlace1.getPlaceId());
         ScheduleUpdateRequest request = createUpdateScheduleRequest(List.of(routeRequest1));
@@ -1282,8 +1264,13 @@ public class ScheduleControllerTest extends ScheduleTest {
         // given
         TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(null, member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
         TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(null, member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ));
+        schedule1.addTravelAttendee(attendee1);
+        schedule1.addTravelAttendee(attendee2);
 
-        schedule1.setTravelAttendees(List.of(attendee1, attendee2));
+        TravelRoute route1 = travelRouteRepository.save(createTravelRoute(schedule1, travelPlace1, 1));
+        TravelRoute route2 = travelRouteRepository.save(createTravelRoute(schedule1, travelPlace2, 2));
+        schedule1.addTravelRoutes(route1);
+        schedule1.addTravelRoutes(route2);
 
         chatMessageRepository.save(createChatMessage("chat1", schedule1.getScheduleId(), member1, "hello1"));
         chatMessageRepository.save(createChatMessage("chat2", schedule1.getScheduleId(), member1, "hello2"));
@@ -1305,8 +1292,13 @@ public class ScheduleControllerTest extends ScheduleTest {
         // given
         TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(null, member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
         TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(null, member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ));
+        schedule1.addTravelAttendee(attendee1);
+        schedule1.addTravelAttendee(attendee2);
 
-        schedule1.setTravelAttendees(List.of(attendee1, attendee2));
+        TravelRoute route1 = travelRouteRepository.save(createTravelRoute(schedule1, travelPlace1, 1));
+        TravelRoute route2 = travelRouteRepository.save(createTravelRoute(schedule1, travelPlace2, 2));
+        schedule1.addTravelRoutes(route1);
+        schedule1.addTravelRoutes(route2);
 
         mockAuthentication(member1);
 
@@ -1324,8 +1316,13 @@ public class ScheduleControllerTest extends ScheduleTest {
         // given
         TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(null, member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
         TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(null, member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ));
+        schedule1.addTravelAttendee(attendee1);
+        schedule1.addTravelAttendee(attendee2);
 
-        schedule1.setTravelAttendees(List.of(attendee1, attendee2));
+        TravelRoute route1 = travelRouteRepository.save(createTravelRoute(schedule1, travelPlace1, 1));
+        TravelRoute route2 = travelRouteRepository.save(createTravelRoute(schedule1, travelPlace2, 2));
+        schedule1.addTravelRoutes(route1);
+        schedule1.addTravelRoutes(route2);
 
         mockAuthentication(member2);
 

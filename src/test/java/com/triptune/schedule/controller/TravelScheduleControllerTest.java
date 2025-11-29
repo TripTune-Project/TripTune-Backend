@@ -96,9 +96,10 @@ public class TravelScheduleControllerTest extends BaseTest {
         TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(null, member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
         TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(null, member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ));
         TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(null, member2, schedule2, AttendeeRole.AUTHOR, AttendeePermission.ALL));
+        schedule1.addTravelAttendee(attendee1);
+        schedule1.addTravelAttendee(attendee2);
+        schedule2.addTravelAttendee(attendee3);
 
-        schedule1.setTravelAttendees(List.of(attendee1, attendee2));
-        schedule2.setTravelAttendees(List.of(attendee3));
 
     }
 

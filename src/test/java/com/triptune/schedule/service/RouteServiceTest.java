@@ -89,11 +89,14 @@ public class RouteServiceTest extends ScheduleTest {
         TravelRoute route1 = createTravelRoute(schedule1, travelPlace1, 1);
         TravelRoute route2 = createTravelRoute(schedule1, travelPlace1, 2);
         TravelRoute route3 = createTravelRoute(schedule1, travelPlace2, 3);
-        schedule1.setTravelRoutes(List.of(route1, route2, route3));
+        schedule1.addTravelRoutes(route1);
+        schedule1.addTravelRoutes(route2);
+        schedule1.addTravelRoutes(route3);
 
         attendee1 = createTravelAttendee(1L, member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL);
         attendee2 = createTravelAttendee(2L, member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ);
-        schedule1.setTravelAttendees(List.of(attendee1, attendee2));
+        schedule1.addTravelAttendee(attendee1);
+        schedule1.addTravelAttendee(attendee2);
     }
 
 
@@ -148,7 +151,7 @@ public class RouteServiceTest extends ScheduleTest {
         when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_MemberId(anyLong(), anyLong())).thenReturn(Optional.of(attendee1));
         when(travelPlaceRepository.findById(anyLong())).thenReturn(Optional.of(travelPlace3));
 
-        // when
+        // when, then
         assertDoesNotThrow(() -> routeService.createLastRoute(schedule1.getScheduleId(), member1.getMemberId(), request));
     }
 
@@ -156,15 +159,15 @@ public class RouteServiceTest extends ScheduleTest {
     @DisplayName("여행 루트 마지막 루트에 여행지 추가 시 저장된 여행 루트가 존재하지 않는 경우")
     void createLastRoute_emptyRouteList(){
         // given
-        schedule1.setTravelRoutes(new ArrayList<>());
+        TravelSchedule schedule = createTravelSchedule(1L, "테스트");
         RouteCreateRequest request = createRouteCreateRequest(travelPlace3.getPlaceId());
 
-        when(travelScheduleRepository.findById(anyLong())).thenReturn(Optional.of(schedule1));
+        when(travelScheduleRepository.findById(anyLong())).thenReturn(Optional.of(schedule));
         when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_MemberId(anyLong(), anyLong())).thenReturn(Optional.of(attendee1));
         when(travelPlaceRepository.findById(anyLong())).thenReturn(Optional.of(travelPlace3));
 
-        // when
-        assertDoesNotThrow(() -> routeService.createLastRoute(schedule1.getScheduleId(), member1.getMemberId(), request));
+        // when, then
+        assertDoesNotThrow(() -> routeService.createLastRoute(schedule.getScheduleId(), member1.getMemberId(), request));
     }
 
 
@@ -261,7 +264,9 @@ public class RouteServiceTest extends ScheduleTest {
         TravelRoute route1 = createTravelRoute(schedule1, travelPlace1, 1);
         TravelRoute route2 = createTravelRoute(schedule1, travelPlace1, 2);
         TravelRoute route3 = createTravelRoute(schedule1, travelPlace2, 3);
-        schedule1.setTravelRoutes(new ArrayList<>(List.of(route1, route2, route3)));
+        schedule1.addTravelRoutes(route1);
+        schedule1.addTravelRoutes(route2);
+        schedule1.addTravelRoutes(route3);
 
         RouteRequest routeRequest1 = createRouteRequest(1, travelPlace1.getPlaceId());
         RouteRequest routeRequest2 = createRouteRequest(2, travelPlace2.getPlaceId());
@@ -292,8 +297,7 @@ public class RouteServiceTest extends ScheduleTest {
         TravelImage travelImage4 = createTravelImage(travelPlace2, "test2", false);
         travelPlace2 = createTravelPlace(2L, country, city, district, apiCategory, new ArrayList<>(List.of(travelImage3, travelImage4)));
 
-        // TODO : 추후 변경
-        schedule1.setTravelRoutes(new ArrayList<>());
+        TravelSchedule schedule = createTravelSchedule(1L, "테스트");
 
         RouteRequest routeRequest1 = createRouteRequest(1, travelPlace1.getPlaceId());
         RouteRequest routeRequest2 = createRouteRequest(2, travelPlace2.getPlaceId());
@@ -306,7 +310,7 @@ public class RouteServiceTest extends ScheduleTest {
 
         // when
         DataNotFoundException fail = assertThrows(DataNotFoundException.class,
-                () -> routeService.updateTravelRouteInSchedule(schedule1, routes));
+                () -> routeService.updateTravelRouteInSchedule(schedule, routes));
 
         // then
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.PLACE_NOT_FOUND.getStatus());
