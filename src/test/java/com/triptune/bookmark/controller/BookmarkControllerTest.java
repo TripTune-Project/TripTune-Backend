@@ -54,7 +54,6 @@ class BookmarkControllerTest extends BookmarkTest {
 
     @Autowired private MockMvc mockMvc;
     @Autowired private ObjectMapper objectMapper;
-    @Autowired private WebApplicationContext wac;
     @Autowired private JwtUtils jwtUtils;
     @Autowired private BookmarkRepository bookmarkRepository;
     @Autowired private MemberRepository memberRepository;

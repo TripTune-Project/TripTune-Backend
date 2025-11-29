@@ -79,7 +79,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class MemberControllerTest extends MemberTest {
     @Autowired private MockMvc mockMvc;
     @Autowired private ObjectMapper objectMapper;
-    @Autowired private WebApplicationContext wac;
     @Autowired private JwtUtils jwtUtils;
     @Autowired private MemberRepository memberRepository;
     @Autowired private ProfileImageRepository profileImageRepository;

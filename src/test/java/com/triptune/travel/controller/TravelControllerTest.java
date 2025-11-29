@@ -53,7 +53,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class TravelControllerTest extends TravelTest {
     @Autowired private MockMvc mockMvc;
     @Autowired private ObjectMapper objectMapper;
-    @Autowired private WebApplicationContext wac;
     @Autowired private TravelPlaceRepository travelPlaceRepository;
     @Autowired private CountryRepository countryRepository;
     @Autowired private CityRepository cityRepository;

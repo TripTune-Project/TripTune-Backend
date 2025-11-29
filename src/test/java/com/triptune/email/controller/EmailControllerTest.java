@@ -37,7 +37,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class EmailControllerTest extends EmailTest {
     @Autowired private MockMvc mockMvc;
     @Autowired private ObjectMapper objectMapper;
-    @Autowired private WebApplicationContext wac;
     @Autowired private JwtUtils jwtUtils;
 
 

@@ -38,7 +38,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("h2")
 class ProfileImageControllerTest extends ProfileImageTest {
     @Autowired private MockMvc mockMvc;
-    @Autowired private WebApplicationContext wac;
     @Autowired private JwtUtils jwtUtils;
     @Autowired private MemberRepository memberRepository;
     @Autowired private ProfileImageRepository profileImageRepository;

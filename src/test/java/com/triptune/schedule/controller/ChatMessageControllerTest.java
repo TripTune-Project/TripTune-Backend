@@ -38,7 +38,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("mongo")
 public class ChatMessageControllerTest extends ScheduleTest {
     @Autowired private MockMvc mockMvc;
-    @Autowired private WebApplicationContext wac;
     @Autowired private TravelScheduleRepository travelScheduleRepository;
     @Autowired private MemberRepository memberRepository;
     @Autowired private ProfileImageRepository profileImageRepository;

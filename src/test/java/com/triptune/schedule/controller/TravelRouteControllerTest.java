@@ -56,7 +56,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class TravelRouteControllerTest extends ScheduleTest {
     @Autowired private MockMvc mockMvc;
     @Autowired private ObjectMapper objectMapper;
-    @Autowired private WebApplicationContext wac;
     @Autowired private TravelScheduleRepository travelScheduleRepository;
     @Autowired private TravelAttendeeRepository travelAttendeeRepository;
     @Autowired private MemberRepository memberRepository;
