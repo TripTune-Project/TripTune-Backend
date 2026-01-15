@@ -96,10 +96,10 @@ public class TravelService {
     }
 
     public List<PlaceSimpleResponse> getPopularTravelPlacesByCity(CityType cityType) {
-        return travelPlaceRepository.findPopularTravelPlacesByCity(cityType);
+        return travelPlaceRepository.findPopularTravelPlaces(cityType);
     }
 
     public List<PlaceSimpleResponse> getRecommendTravelPlacesByTheme(ThemeType themeType) {
-        return travelPlaceRepository.findRecommendTravelPlacesByTheme(themeType);
+        return travelPlaceRepository.findRecommendTravelPlaces(themeType);
     }
 }

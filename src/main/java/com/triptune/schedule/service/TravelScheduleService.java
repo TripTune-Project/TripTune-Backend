@@ -49,32 +49,34 @@ public class TravelScheduleService {
 
     public SchedulePageResponse<ScheduleInfoResponse> getAllSchedules(int page, Long memberId) {
         Pageable pageable = PageUtils.schedulePageable(page);
-        Page<TravelSchedule> schedulePage = travelScheduleRepository.findTravelSchedulesByMemberId(pageable, memberId);
+        Page<TravelSchedule> schedulePage = travelScheduleRepository.findTravelSchedules(pageable, memberId);
 
         List<ScheduleInfoResponse> scheduleInfoResponses = createScheduleInfoResponse(schedulePage, memberId);
-        int sharedScheduleCnt = travelScheduleRepository.countSharedTravelSchedulesByMemberId(memberId);
+        Page<ScheduleInfoResponse> pageResult = PageUtils.createPage(scheduleInfoResponses, pageable, schedulePage.getTotalElements());
 
-        Page<ScheduleInfoResponse> scheduleInfoResponsePage = PageUtils.createPage(scheduleInfoResponses, pageable, schedulePage.getTotalElements());
-        return SchedulePageResponse.ofAll(scheduleInfoResponsePage, sharedScheduleCnt);
+        int sharedScheduleCnt = travelScheduleRepository.countSharedTravelSchedules(memberId);
+
+        return SchedulePageResponse.ofAll(pageResult, sharedScheduleCnt);
     }
 
 
     public SchedulePageResponse<ScheduleInfoResponse> getSharedSchedules(int page, Long memberId) {
         Pageable pageable = PageUtils.schedulePageable(page);
-        Page<TravelSchedule> schedulePage = travelScheduleRepository.findSharedTravelSchedulesByMemberId(pageable, memberId);
+        Page<TravelSchedule> schedulePage = travelScheduleRepository.findSharedTravelSchedules(pageable, memberId);
 
         List<ScheduleInfoResponse> scheduleInfoResponses = createScheduleInfoResponse(schedulePage, memberId);
-        int totalElements = travelScheduleRepository.countTravelSchedulesByMemberId(memberId);
+        Page<ScheduleInfoResponse> pageResult = PageUtils.createPage(scheduleInfoResponses, pageable, schedulePage.getTotalElements());
 
-        Page<ScheduleInfoResponse> scheduleInfoResponsePage = PageUtils.createPage(scheduleInfoResponses, pageable, schedulePage.getTotalElements());
-        return SchedulePageResponse.ofShared(scheduleInfoResponsePage, totalElements);
+        int totalScheduleCnt = travelScheduleRepository.countTravelSchedules(memberId);
+
+        return SchedulePageResponse.ofShared(pageResult, totalScheduleCnt);
     }
 
 
     public Page<OverviewScheduleResponse> getEnableEditSchedule(int page, Long memberId) {
         Pageable pageable = PageUtils.scheduleModalPageable(page);
 
-        return travelScheduleRepository.findEnableEditTravelSchedulesByMemberId(pageable, memberId)
+        return travelScheduleRepository.findEnableEditTravelSchedules(pageable, memberId)
                 .map(schedule -> {
                     String author = findAuthorNicknameByScheduleId(schedule.getScheduleId());
                     return OverviewScheduleResponse.from(schedule, author);
@@ -87,26 +89,30 @@ public class TravelScheduleService {
 
     public SchedulePageResponse<ScheduleInfoResponse> searchAllSchedules(int page, String keyword, Long memberId) {
         Pageable pageable = PageUtils.schedulePageable(page);
-        Page<TravelSchedule> schedulesPage = travelScheduleRepository.searchTravelSchedulesByMemberIdAndKeyword(pageable, keyword, memberId);
+        Page<TravelSchedule> schedulesPage = travelScheduleRepository.searchTravelSchedules(pageable, keyword, memberId);
 
         List<ScheduleInfoResponse> scheduleInfoResponses = createScheduleInfoResponse(schedulesPage, memberId);
-        int sharedElements = travelScheduleRepository.countSharedTravelSchedulesByMemberIdAndKeyword(keyword, memberId);
+        Page<ScheduleInfoResponse> pageResult = PageUtils.createPage(scheduleInfoResponses, pageable, schedulesPage.getTotalElements());
 
-        Page<ScheduleInfoResponse> scheduleInfoResponsePage = PageUtils.createPage(scheduleInfoResponses, pageable, schedulesPage.getTotalElements());
-        return SchedulePageResponse.ofAll(scheduleInfoResponsePage, sharedElements);
+        int totalScheduleCnt = travelScheduleRepository.countTravelSchedules(memberId);
+        int sharedScheduleCnt = travelScheduleRepository.countSharedTravelSchedules(memberId);
+
+        return SchedulePageResponse.of(pageResult, totalScheduleCnt, sharedScheduleCnt);
     }
 
 
 
     public SchedulePageResponse<ScheduleInfoResponse> searchSharedSchedules(int page, String keyword, Long memberId) {
         Pageable pageable = PageUtils.schedulePageable(page);
-        Page<TravelSchedule> schedulesPage = travelScheduleRepository.searchSharedTravelSchedulesByMemberIdAndKeyword(pageable, keyword, memberId);
+        Page<TravelSchedule> schedulesPage = travelScheduleRepository.searchSharedTravelSchedules(pageable, keyword, memberId);
 
         List<ScheduleInfoResponse> scheduleInfoResponses = createScheduleInfoResponse(schedulesPage, memberId);
-        int totalElements = travelScheduleRepository.countTravelSchedulesByMemberIdAndKeyword(keyword, memberId);
+        Page<ScheduleInfoResponse> pageResult = PageUtils.createPage(scheduleInfoResponses, pageable, schedulesPage.getTotalElements());
 
-        Page<ScheduleInfoResponse> scheduleInfoResponsePage = PageUtils.createPage(scheduleInfoResponses, pageable, schedulesPage.getTotalElements());
-        return SchedulePageResponse.ofShared(scheduleInfoResponsePage, totalElements);
+        int totalScheduleCnt = travelScheduleRepository.countTravelSchedules(memberId);
+        int sharedScheduleCnt = travelScheduleRepository.countSharedTravelSchedules(memberId);
+
+        return SchedulePageResponse.of(pageResult, totalScheduleCnt, sharedScheduleCnt);
     }
 
 
@@ -141,7 +147,7 @@ public class TravelScheduleService {
 
     public TravelAttendee getAttendeeInfo(TravelSchedule schedule, Long memberId){
         return schedule.getTravelAttendees().stream()
-                .filter(attendee -> attendee.getMember().getMemberId().equals(memberId))
+                .filter(attendee -> attendee.isSameMember(memberId))
                 .findFirst()
                 .orElseThrow(() -> new ForbiddenScheduleException(ErrorCode.FORBIDDEN_ACCESS_SCHEDULE));
 
@@ -169,13 +175,17 @@ public class TravelScheduleService {
 
     @Transactional
     public ScheduleCreateResponse createSchedule(ScheduleCreateRequest scheduleCreateRequest, Long memberId){
-        TravelSchedule schedule = TravelSchedule.from(scheduleCreateRequest);
+        TravelSchedule schedule = TravelSchedule.createTravelSchedule(
+                scheduleCreateRequest.getScheduleName(),
+                scheduleCreateRequest.getStartDate(),
+                scheduleCreateRequest.getEndDate()
+        );
+        travelScheduleRepository.save(schedule);
+
         Member member = getMemberById(memberId);
 
-        TravelAttendee attendee = TravelAttendee.of(schedule, member);
-        schedule.addTravelAttendee(attendee);
-
-        travelScheduleRepository.save(schedule);
+        TravelAttendee attendee = TravelAttendee.createAuthor(schedule, member);
+        travelAttendeeRepository.save(attendee);
 
         return ScheduleCreateResponse.from(schedule);
     }
@@ -199,7 +209,7 @@ public class TravelScheduleService {
 
 
     @Transactional
-    public void updateSchedule(Long memberId, Long scheduleId, ScheduleUpdateRequest scheduleUpdateRequest) {
+    public void updateSchedule(ScheduleUpdateRequest scheduleUpdateRequest, Long memberId, Long scheduleId) {
         TravelSchedule schedule = getScheduleByScheduleId(scheduleId);
         TravelAttendee attendee = getAttendeeInfo(schedule, memberId);
         checkScheduleEditPermission(attendee);

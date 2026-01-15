@@ -32,7 +32,7 @@ public class BookmarkService {
         Member member = getMemberByMemberId(memberId);
         TravelPlace travelPlace = findTravelPlaceByPlaceId(bookmarkRequest.getPlaceId());
 
-        Bookmark bookmark = Bookmark.from(member, travelPlace);
+        Bookmark bookmark = Bookmark.createBookmark(member, travelPlace);
         bookmarkRepository.save(bookmark);
 
         travelPlace.increaseBookmarkCnt();

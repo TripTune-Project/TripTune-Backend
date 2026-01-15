@@ -42,8 +42,8 @@ public class ProfileImageServiceTest extends ProfileImageTest {
         byte[] content = createTestImage("jpeg");
         MockMultipartFile mockMultipartFile = new MockMultipartFile("newFile", "newFileOriginalName.jpeg", "image/jpeg", content);
 
-        Member member = createMember(1L, "member@email.com");
-        ProfileImage profileImage = createProfileImage(1L, "savedImage", member);
+        ProfileImage profileImage = createProfileImage("memberImage");
+        Member member = createNativeTypeMember("member@email.com", profileImage);
 
         when(profileImageRepository.findByMemberId(any())).thenReturn(Optional.of(profileImage));
         when(imageProperties.getS3ObjectKey()).thenReturn(profileImage.getS3ObjectKey());

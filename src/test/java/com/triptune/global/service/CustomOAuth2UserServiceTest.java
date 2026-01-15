@@ -44,25 +44,20 @@ class CustomOAuth2UserServiceTest extends SocialMemberTest {
         // given
         OAuth2UserInfo oAuth2UserInfo = createNaverUserInfo("naverMember@email.com");
 
-        ProfileImage profileImage = createProfileImage(1L, "image");
-        Member savedMember = createMember(
-                1L,
-                oAuth2UserInfo.getEmail(),
-                null,
-                JoinType.SOCIAL,
-                profileImage
-        );
+        ProfileImage profileImage = createProfileImage("memberImage");
+        Member member = createSocialTypeMember(oAuth2UserInfo.getEmail(), profileImage);
+        createSocialMember(member, SocialType.NAVER, "naverMember");
 
         when(socialMemberRepository.findBySocialIdAndSocialType(anyString(), any()))
-                .thenReturn(Optional.of(savedMember));
+                .thenReturn(Optional.of(member));
 
         // when
         Member response = customOAuth2UserService.joinOrLogin(oAuth2UserInfo);
 
         // then
-        assertThat(response.getEmail()).isEqualTo(oAuth2UserInfo.getEmail());
+        assertThat(response.getEmail()).isEqualTo(member.getEmail());
         assertThat(response.getPassword()).isNull();
-        assertThat(response.getNickname()).isEqualTo(savedMember.getNickname());
+        assertThat(response.getNickname()).isEqualTo(member.getNickname());
         assertThat(response.getProfileImage().getS3ObjectUrl()).isEqualTo(profileImage.getS3ObjectUrl());
         assertThat(response.getJoinType()).isEqualTo(JoinType.SOCIAL);
     }
@@ -74,25 +69,20 @@ class CustomOAuth2UserServiceTest extends SocialMemberTest {
         // given
         OAuth2UserInfo oAuth2UserInfo = createKaKaoUserInfo("kakaoMember@email.com");
 
-        ProfileImage profileImage = createProfileImage(1L, "image");
-        Member savedMember = createMember(
-                1L,
-                oAuth2UserInfo.getEmail(),
-                null,
-                JoinType.SOCIAL,
-                profileImage
-        );
+        ProfileImage profileImage = createProfileImage("memberImage");
+        Member member = createSocialTypeMember(oAuth2UserInfo.getEmail(), profileImage);
+        createSocialMember(member, SocialType.KAKAO, "kakaoMember");
 
         when(socialMemberRepository.findBySocialIdAndSocialType(anyString(), any()))
-                .thenReturn(Optional.of(savedMember));
+                .thenReturn(Optional.of(member));
 
         // when
         Member response = customOAuth2UserService.joinOrLogin(oAuth2UserInfo);
 
         // then
-        assertThat(response.getEmail()).isEqualTo(oAuth2UserInfo.getEmail());
+        assertThat(response.getEmail()).isEqualTo(member.getEmail());
         assertThat(response.getPassword()).isNull();
-        assertThat(response.getNickname()).isEqualTo(savedMember.getNickname());
+        assertThat(response.getNickname()).isEqualTo(member.getNickname());
         assertThat(response.getProfileImage().getS3ObjectUrl()).isEqualTo(profileImage.getS3ObjectUrl());
         assertThat(response.getJoinType()).isEqualTo(JoinType.SOCIAL);
     }
@@ -103,25 +93,21 @@ class CustomOAuth2UserServiceTest extends SocialMemberTest {
         // given
         OAuth2UserInfo oAuth2UserInfo = createKaKaoUserInfo("member@email.com");
 
-        ProfileImage profileImage = createProfileImage(1L, "image");
-        Member savedMember = createMember(
-                1L,
-                "member@email.com",
-                null,
-                JoinType.SOCIAL,
-                profileImage
-        );
+        ProfileImage profileImage = createProfileImage("memberImage");
+        Member member = createSocialTypeMember(oAuth2UserInfo.getEmail(), profileImage);
+        createSocialMember(member, SocialType.KAKAO, "kakaoMember");
+        createSocialMember(member, SocialType.NAVER, "naverMember");
 
         when(socialMemberRepository.findBySocialIdAndSocialType(anyString(), any()))
-                .thenReturn(Optional.of(savedMember));
+                .thenReturn(Optional.of(member));
 
         // when
         Member response = customOAuth2UserService.joinOrLogin(oAuth2UserInfo);
 
         // then
-        assertThat(response.getEmail()).isEqualTo(savedMember.getEmail());
-        assertThat(response.getPassword()).isNull();
-        assertThat(response.getNickname()).isEqualTo(savedMember.getNickname());
+        assertThat(response.getEmail()).isEqualTo(member.getEmail());
+        assertThat(response.getPassword()).isEqualTo(member.getPassword());
+        assertThat(response.getNickname()).isEqualTo(member.getNickname());
         assertThat(response.getProfileImage().getS3ObjectUrl()).isEqualTo(profileImage.getS3ObjectUrl());
         assertThat(response.getJoinType()).isEqualTo(JoinType.SOCIAL);
     }
@@ -132,25 +118,20 @@ class CustomOAuth2UserServiceTest extends SocialMemberTest {
         // given
         OAuth2UserInfo oAuth2UserInfo = createNaverUserInfo("member@email.com");
 
-        ProfileImage profileImage = createProfileImage(1L, "image");
-        Member savedMember = createMember(
-                1L,
-                "member@email.com",
-                passwordEncoder.encode("password12!@"),
-                JoinType.BOTH,
-                profileImage
-        );
+        ProfileImage profileImage = createProfileImage("memberImage");
+        Member member = createBothTypeMember(oAuth2UserInfo.getEmail(), profileImage);
+        createSocialMember(member, SocialType.NAVER, "naverMember");
 
         when(socialMemberRepository.findBySocialIdAndSocialType(anyString(), any()))
-                .thenReturn(Optional.of(savedMember));
+                .thenReturn(Optional.of(member));
 
         // when
         Member response = customOAuth2UserService.joinOrLogin(oAuth2UserInfo);
 
         // then
-        assertThat(response.getEmail()).isEqualTo(savedMember.getEmail());
-        assertThat(response.getPassword()).isEqualTo(savedMember.getPassword());
-        assertThat(response.getNickname()).isEqualTo(savedMember.getNickname());
+        assertThat(response.getEmail()).isEqualTo(member.getEmail());
+        assertThat(response.getPassword()).isEqualTo(member.getPassword());
+        assertThat(response.getNickname()).isEqualTo(member.getNickname());
         assertThat(response.getProfileImage().getS3ObjectUrl()).isEqualTo(profileImage.getS3ObjectUrl());
         assertThat(response.getJoinType()).isEqualTo(JoinType.BOTH);
 
@@ -162,25 +143,20 @@ class CustomOAuth2UserServiceTest extends SocialMemberTest {
         // given
         OAuth2UserInfo oAuth2UserInfo = createKaKaoUserInfo("member@email.com");
 
-        ProfileImage profileImage = createProfileImage(1L, "image");
-        Member savedMember = createMember(
-                1L,
-                "member@email.com",
-                passwordEncoder.encode("password12!@"),
-                JoinType.BOTH,
-                profileImage
-        );
+        ProfileImage profileImage = createProfileImage("memberImage");
+        Member member = createBothTypeMember(oAuth2UserInfo.getEmail(), profileImage);
+        createSocialMember(member, SocialType.KAKAO, "kakaoMember");
 
         when(socialMemberRepository.findBySocialIdAndSocialType(anyString(), any()))
-                .thenReturn(Optional.of(savedMember));
+                .thenReturn(Optional.of(member));
 
         // when
         Member response = customOAuth2UserService.joinOrLogin(oAuth2UserInfo);
 
         // then
-        assertThat(response.getEmail()).isEqualTo(savedMember.getEmail());
-        assertThat(response.getPassword()).isEqualTo(savedMember.getPassword());
-        assertThat(response.getNickname()).isEqualTo(savedMember.getNickname());
+        assertThat(response.getEmail()).isEqualTo(member.getEmail());
+        assertThat(response.getPassword()).isEqualTo(member.getPassword());
+        assertThat(response.getNickname()).isEqualTo(member.getNickname());
         assertThat(response.getProfileImage().getS3ObjectUrl()).isEqualTo(profileImage.getS3ObjectUrl());
         assertThat(response.getJoinType()).isEqualTo(JoinType.BOTH);
 
@@ -192,24 +168,19 @@ class CustomOAuth2UserServiceTest extends SocialMemberTest {
         // given
         OAuth2UserInfo oAuth2UserInfo = createNaverUserInfo("member@email.com");
 
-        ProfileImage profileImage = createProfileImage(1L, "image");
-        Member nativeMember = createNativeTypeMember(
-                1L,
-                "member@email.com",
-                passwordEncoder.encode("password12!@"),
-                profileImage
-        );
+        ProfileImage profileImage = createProfileImage("memberImage");
+        Member member = createNativeTypeMember(oAuth2UserInfo.getEmail(), profileImage);
 
         when(socialMemberRepository.findBySocialIdAndSocialType(anyString(), any())).thenReturn(Optional.empty());
-        when(memberRepository.findByEmail(anyString())).thenReturn(Optional.of(nativeMember));
+        when(memberRepository.findByEmail(anyString())).thenReturn(Optional.of(member));
 
         // when
         Member response = customOAuth2UserService.joinOrLogin(oAuth2UserInfo);
 
         // then
-        assertThat(response.getEmail()).isEqualTo(nativeMember.getEmail());
-        assertThat(response.getPassword()).isEqualTo(nativeMember.getPassword());
-        assertThat(response.getNickname()).isEqualTo(nativeMember.getNickname());
+        assertThat(response.getEmail()).isEqualTo(member.getEmail());
+        assertThat(response.getPassword()).isEqualTo(member.getPassword());
+        assertThat(response.getNickname()).isEqualTo(member.getNickname());
         assertThat(response.getProfileImage().getS3ObjectUrl()).isEqualTo(profileImage.getS3ObjectUrl());
         assertThat(response.getJoinType()).isEqualTo(JoinType.BOTH);
 
@@ -222,24 +193,19 @@ class CustomOAuth2UserServiceTest extends SocialMemberTest {
         // given
         OAuth2UserInfo oAuth2UserInfo = createKaKaoUserInfo("member@email.com");
 
-        ProfileImage profileImage = createProfileImage(1L, "image");
-        Member nativeMember = createNativeTypeMember(
-                1L,
-                "member@email.com",
-                passwordEncoder.encode("password12!@"),
-                profileImage
-        );
+        ProfileImage profileImage = createProfileImage("memberImage");
+        Member member = createNativeTypeMember(oAuth2UserInfo.getEmail(), profileImage);
 
         when(socialMemberRepository.findBySocialIdAndSocialType(anyString(), any())).thenReturn(Optional.empty());
-        when(memberRepository.findByEmail(anyString())).thenReturn(Optional.of(nativeMember));
+        when(memberRepository.findByEmail(anyString())).thenReturn(Optional.of(member));
 
         // when
         Member response = customOAuth2UserService.joinOrLogin(oAuth2UserInfo);
 
         // then
-        assertThat(response.getEmail()).isEqualTo(nativeMember.getEmail());
-        assertThat(response.getPassword()).isEqualTo(nativeMember.getPassword());
-        assertThat(response.getNickname()).isEqualTo(nativeMember.getNickname());
+        assertThat(response.getEmail()).isEqualTo(member.getEmail());
+        assertThat(response.getPassword()).isEqualTo(member.getPassword());
+        assertThat(response.getNickname()).isEqualTo(member.getNickname());
         assertThat(response.getProfileImage().getS3ObjectUrl()).isEqualTo(profileImage.getS3ObjectUrl());
         assertThat(response.getJoinType()).isEqualTo(JoinType.BOTH);
 
@@ -252,23 +218,19 @@ class CustomOAuth2UserServiceTest extends SocialMemberTest {
         // given
         OAuth2UserInfo oAuth2UserInfo = createKaKaoUserInfo("member@email.com");
 
-        ProfileImage profileImage = createProfileImage(1L, "image");
-        Member naverMember = createSocialTypeMember(
-                1L,
-                "member@email.com",
-                profileImage
-        );
+        ProfileImage profileImage = createProfileImage("memberImage");
+        Member member = createSocialTypeMember(oAuth2UserInfo.getEmail(), profileImage);
 
         when(socialMemberRepository.findBySocialIdAndSocialType(anyString(), any())).thenReturn(Optional.empty());
-        when(memberRepository.findByEmail(anyString())).thenReturn(Optional.of(naverMember));
+        when(memberRepository.findByEmail(anyString())).thenReturn(Optional.of(member));
 
         // when
         Member response = customOAuth2UserService.joinOrLogin(oAuth2UserInfo);
 
         // then
-        assertThat(response.getEmail()).isEqualTo(naverMember.getEmail());
+        assertThat(response.getEmail()).isEqualTo(member.getEmail());
         assertThat(response.getPassword()).isNull();
-        assertThat(response.getNickname()).isEqualTo(naverMember.getNickname());
+        assertThat(response.getNickname()).isEqualTo(member.getNickname());
         assertThat(response.getProfileImage().getS3ObjectUrl()).isEqualTo(profileImage.getS3ObjectUrl());
         assertThat(response.getJoinType()).isEqualTo(JoinType.SOCIAL);
 
@@ -281,24 +243,19 @@ class CustomOAuth2UserServiceTest extends SocialMemberTest {
         // given
         OAuth2UserInfo oAuth2UserInfo = createKaKaoUserInfo("member@email.com");
 
-        ProfileImage profileImage = createProfileImage(1L, "image");
-        Member bothMember = createBothTypeMember(
-                1L,
-                "member@email.com",
-                passwordEncoder.encode("password12!@"),
-                profileImage
-        );
+        ProfileImage profileImage = createProfileImage("memberImage");
+        Member member = createBothTypeMember(oAuth2UserInfo.getEmail(), profileImage);
 
         when(socialMemberRepository.findBySocialIdAndSocialType(anyString(), any())).thenReturn(Optional.empty());
-        when(memberRepository.findByEmail(anyString())).thenReturn(Optional.of(bothMember));
+        when(memberRepository.findByEmail(anyString())).thenReturn(Optional.of(member));
 
         // when
         Member response = customOAuth2UserService.joinOrLogin(oAuth2UserInfo);
 
         // then
-        assertThat(response.getEmail()).isEqualTo(bothMember.getEmail());
-        assertThat(response.getPassword()).isEqualTo(bothMember.getPassword());
-        assertThat(response.getNickname()).isEqualTo(bothMember.getNickname());
+        assertThat(response.getEmail()).isEqualTo(member.getEmail());
+        assertThat(response.getPassword()).isEqualTo(member.getPassword());
+        assertThat(response.getNickname()).isEqualTo(member.getNickname());
         assertThat(response.getProfileImage().getS3ObjectUrl()).isEqualTo(profileImage.getS3ObjectUrl());
         assertThat(response.getJoinType()).isEqualTo(JoinType.BOTH);
 
@@ -313,24 +270,18 @@ class CustomOAuth2UserServiceTest extends SocialMemberTest {
         // given
         OAuth2UserInfo oAuth2UserInfo = createNaverUserInfo("naverMember@email.com");
 
-        ProfileImage profileImage = createProfileImage(1L, "image");
-        Member member = createSocialTypeMember(
-                1L,
-                oAuth2UserInfo.getEmail(),
-                profileImage
-        );
+        ProfileImage profileImage = createProfileImage("memberImage");
+        Member member = createSocialTypeMember(oAuth2UserInfo.getEmail(), profileImage);
 
         when(socialMemberRepository.findBySocialIdAndSocialType(anyString(), any())).thenReturn(Optional.empty());
         when(profileImageService.saveDefaultProfileImage()).thenReturn(profileImage);
-        when(memberRepository.save(any())).thenReturn(member);
 
         // when
         Member response = customOAuth2UserService.joinOrLogin(oAuth2UserInfo);
 
         // then
-        assertThat(response.getEmail()).isEqualTo(oAuth2UserInfo.getEmail());
+        assertThat(response.getEmail()).isEqualTo(member.getEmail());
         assertThat(response.getPassword()).isNull();
-        assertThat(response.getNickname()).isNotNull();
         assertThat(response.getProfileImage().getS3ObjectUrl()).isEqualTo(profileImage.getS3ObjectUrl());
         assertThat(response.getJoinType()).isEqualTo(JoinType.SOCIAL);
 
@@ -343,24 +294,18 @@ class CustomOAuth2UserServiceTest extends SocialMemberTest {
         // given
         OAuth2UserInfo oAuth2UserInfo = createKaKaoUserInfo("kakaoMember@email.com");
 
-        ProfileImage profileImage = createProfileImage(1L, "image");
-        Member member = createSocialTypeMember(
-                1L,
-                oAuth2UserInfo.getEmail(),
-                profileImage
-        );
+        ProfileImage profileImage = createProfileImage("memberImage");
+        Member member = createSocialTypeMember(oAuth2UserInfo.getEmail(), profileImage);
 
         when(socialMemberRepository.findBySocialIdAndSocialType(anyString(), any())).thenReturn(Optional.empty());
         when(profileImageService.saveDefaultProfileImage()).thenReturn(profileImage);
-        when(memberRepository.save(any())).thenReturn(member);
 
         // when
         Member response = customOAuth2UserService.joinOrLogin(oAuth2UserInfo);
 
         // then
-        assertThat(response.getEmail()).isEqualTo(oAuth2UserInfo.getEmail());
+        assertThat(response.getEmail()).isEqualTo(member.getEmail());
         assertThat(response.getPassword()).isNull();
-        assertThat(response.getNickname()).isNotNull();
         assertThat(response.getProfileImage().getS3ObjectUrl()).isEqualTo(profileImage.getS3ObjectUrl());
         assertThat(response.getJoinType()).isEqualTo(JoinType.SOCIAL);
 
@@ -373,23 +318,18 @@ class CustomOAuth2UserServiceTest extends SocialMemberTest {
         // given
         OAuth2UserInfo oAuth2UserInfo = createNaverUserInfo("member@email.com");
 
-        ProfileImage profileImage = createProfileImage(1L, "image");
-        Member nativeMember = createNativeTypeMember(
-                1L,
-                "member@email.com",
-                passwordEncoder.encode("password12!@"),
-                profileImage
-        );
+        ProfileImage profileImage = createProfileImage("memberImage");
+        Member member = createNativeTypeMember(oAuth2UserInfo.getEmail(), profileImage);
 
-        when(memberRepository.findByEmail(anyString())).thenReturn(Optional.of(nativeMember));
+        when(memberRepository.findByEmail(anyString())).thenReturn(Optional.of(member));
 
         // when
         Member response = customOAuth2UserService.processSocialLogin(oAuth2UserInfo);
 
         // then
-        assertThat(response.getEmail()).isEqualTo(nativeMember.getEmail());
-        assertThat(response.getPassword()).isEqualTo(nativeMember.getPassword());
-        assertThat(response.getNickname()).isEqualTo(nativeMember.getNickname());
+        assertThat(response.getEmail()).isEqualTo(member.getEmail());
+        assertThat(response.getPassword()).isEqualTo(member.getPassword());
+        assertThat(response.getNickname()).isEqualTo(member.getNickname());
         assertThat(response.getProfileImage().getS3ObjectUrl()).isEqualTo(profileImage.getS3ObjectUrl());
         assertThat(response.getJoinType()).isEqualTo(JoinType.BOTH);
 
@@ -401,23 +341,18 @@ class CustomOAuth2UserServiceTest extends SocialMemberTest {
         // given
         OAuth2UserInfo oAuth2UserInfo = createKaKaoUserInfo("member@email.com");
 
-        ProfileImage profileImage = createProfileImage(1L, "image");
-        Member nativeMember = createNativeTypeMember(
-                1L,
-                "member@email.com",
-                passwordEncoder.encode("password12!@"),
-                profileImage
-        );
+        ProfileImage profileImage = createProfileImage("memberImage");
+        Member member = createNativeTypeMember(oAuth2UserInfo.getEmail(), profileImage);
 
-        when(memberRepository.findByEmail(anyString())).thenReturn(Optional.of(nativeMember));
+        when(memberRepository.findByEmail(anyString())).thenReturn(Optional.of(member));
 
         // when
         Member response = customOAuth2UserService.processSocialLogin(oAuth2UserInfo);
 
         // then
-        assertThat(response.getEmail()).isEqualTo(nativeMember.getEmail());
-        assertThat(response.getPassword()).isEqualTo(nativeMember.getPassword());
-        assertThat(response.getNickname()).isEqualTo(nativeMember.getNickname());
+        assertThat(response.getEmail()).isEqualTo(member.getEmail());
+        assertThat(response.getPassword()).isEqualTo(member.getPassword());
+        assertThat(response.getNickname()).isEqualTo(member.getNickname());
         assertThat(response.getProfileImage().getS3ObjectUrl()).isEqualTo(profileImage.getS3ObjectUrl());
         assertThat(response.getJoinType()).isEqualTo(JoinType.BOTH);
     }
@@ -428,22 +363,18 @@ class CustomOAuth2UserServiceTest extends SocialMemberTest {
         // given
         OAuth2UserInfo oAuth2UserInfo = createKaKaoUserInfo("member@email.com");
 
-        ProfileImage profileImage = createProfileImage(1L, "image");
-        Member naverMember = createSocialTypeMember(
-                1L,
-                "member@email.com",
-                profileImage
-        );
+        ProfileImage profileImage = createProfileImage("memberImage");
+        Member member = createSocialTypeMember(oAuth2UserInfo.getEmail(), profileImage);
 
-        when(memberRepository.findByEmail(anyString())).thenReturn(Optional.of(naverMember));
+        when(memberRepository.findByEmail(anyString())).thenReturn(Optional.of(member));
 
         // when
         Member response = customOAuth2UserService.processSocialLogin(oAuth2UserInfo);
 
         // then
-        assertThat(response.getEmail()).isEqualTo(naverMember.getEmail());
+        assertThat(response.getEmail()).isEqualTo(member.getEmail());
         assertThat(response.getPassword()).isNull();
-        assertThat(response.getNickname()).isEqualTo(naverMember.getNickname());
+        assertThat(response.getNickname()).isEqualTo(member.getNickname());
         assertThat(response.getProfileImage().getS3ObjectUrl()).isEqualTo(profileImage.getS3ObjectUrl());
         assertThat(response.getJoinType()).isEqualTo(JoinType.SOCIAL);
 
@@ -455,23 +386,18 @@ class CustomOAuth2UserServiceTest extends SocialMemberTest {
         // given
         OAuth2UserInfo oAuth2UserInfo = createKaKaoUserInfo("member@email.com");
 
-        ProfileImage profileImage = createProfileImage(1L, "image");
-        Member bothMember = createBothTypeMember(
-                1L,
-                "member@email.com",
-                passwordEncoder.encode("password12!@"),
-                profileImage
-        );
+        ProfileImage profileImage = createProfileImage("memberImage");
+        Member member = createBothTypeMember(oAuth2UserInfo.getEmail(), profileImage);
 
-        when(memberRepository.findByEmail(anyString())).thenReturn(Optional.of(bothMember));
+        when(memberRepository.findByEmail(anyString())).thenReturn(Optional.of(member));
 
         // when
         Member response = customOAuth2UserService.processSocialLogin(oAuth2UserInfo);
 
         // then
-        assertThat(response.getEmail()).isEqualTo(bothMember.getEmail());
-        assertThat(response.getPassword()).isEqualTo(bothMember.getPassword());
-        assertThat(response.getNickname()).isEqualTo(bothMember.getNickname());
+        assertThat(response.getEmail()).isEqualTo(member.getEmail());
+        assertThat(response.getPassword()).isEqualTo(member.getPassword());
+        assertThat(response.getNickname()).isEqualTo(member.getNickname());
         assertThat(response.getProfileImage().getS3ObjectUrl()).isEqualTo(profileImage.getS3ObjectUrl());
         assertThat(response.getJoinType()).isEqualTo(JoinType.BOTH);
 
@@ -483,25 +409,20 @@ class CustomOAuth2UserServiceTest extends SocialMemberTest {
         // given
         OAuth2UserInfo oAuth2UserInfo = createNaverUserInfo("naverMember@email.com");
 
-        ProfileImage profileImage = createProfileImage(1L, "image");
-        Member member = createSocialTypeMember(
-                1L,
-                oAuth2UserInfo.getEmail(),
-                profileImage
-        );
-        createSocialMember(1L, member, oAuth2UserInfo.getSocialId(), SocialType.NAVER);
+        ProfileImage profileImage = createProfileImage("memberImage");
+        Member member = createSocialTypeMember(oAuth2UserInfo.getEmail(), profileImage);
+
+        createSocialMember(member, SocialType.NAVER, oAuth2UserInfo.getSocialId());
 
         when(memberRepository.findByEmail(anyString())).thenReturn(Optional.empty());
         when(profileImageService.saveDefaultProfileImage()).thenReturn(profileImage);
-        when(memberRepository.save(any())).thenReturn(member);
 
         // when
         Member response = customOAuth2UserService.processSocialLogin(oAuth2UserInfo);
 
         // then
-        assertThat(response.getEmail()).isEqualTo(oAuth2UserInfo.getEmail());
+        assertThat(response.getEmail()).isEqualTo(member.getEmail());
         assertThat(response.getPassword()).isNull();
-        assertThat(response.getNickname()).isNotNull();
         assertThat(response.getProfileImage().getS3ObjectUrl()).isEqualTo(profileImage.getS3ObjectUrl());
         assertThat(response.getJoinType()).isEqualTo(JoinType.SOCIAL);
 
@@ -514,25 +435,20 @@ class CustomOAuth2UserServiceTest extends SocialMemberTest {
         // given
         OAuth2UserInfo oAuth2UserInfo = createKaKaoUserInfo("kakaoMember@email.com");
 
-        ProfileImage profileImage = createProfileImage(1L, "image");
-        Member member = createSocialTypeMember(
-                1L,
-                oAuth2UserInfo.getEmail(),
-                profileImage
-        );
-        createSocialMember(1L, member, oAuth2UserInfo.getSocialId(), SocialType.KAKAO);
+        ProfileImage profileImage = createProfileImage("memberImage");
+        Member member = createSocialTypeMember(oAuth2UserInfo.getEmail(), profileImage);
+
+        createSocialMember(member, SocialType.KAKAO, oAuth2UserInfo.getSocialId());
 
         when(memberRepository.findByEmail(anyString())).thenReturn(Optional.empty());
         when(profileImageService.saveDefaultProfileImage()).thenReturn(profileImage);
-        when(memberRepository.save(any())).thenReturn(member);
 
         // when
         Member response = customOAuth2UserService.processSocialLogin(oAuth2UserInfo);
 
         // then
-        assertThat(response.getEmail()).isEqualTo(oAuth2UserInfo.getEmail());
+        assertThat(response.getEmail()).isEqualTo(member.getEmail());
         assertThat(response.getPassword()).isNull();
-        assertThat(response.getNickname()).isNotNull();
         assertThat(response.getProfileImage().getS3ObjectUrl()).isEqualTo(profileImage.getS3ObjectUrl());
         assertThat(response.getJoinType()).isEqualTo(JoinType.SOCIAL);
 
@@ -545,21 +461,16 @@ class CustomOAuth2UserServiceTest extends SocialMemberTest {
         // given
         OAuth2UserInfo oAuth2UserInfo = createNaverUserInfo("member@email.com");
 
-        ProfileImage profileImage = createProfileImage(1L, "image");
-        Member nativeMember = createNativeTypeMember(
-                1L,
-                "member@email.com",
-                passwordEncoder.encode("password12!@"),
-                profileImage
-        );
+        ProfileImage profileImage = createProfileImage("memberImage");
+        Member member = createNativeTypeMember(oAuth2UserInfo.getEmail(), profileImage);
 
         // when
-        Member response = customOAuth2UserService.integrateMember(nativeMember, oAuth2UserInfo);
+        Member response = customOAuth2UserService.integrateMember(member, oAuth2UserInfo);
 
         // then
-        assertThat(response.getEmail()).isEqualTo(nativeMember.getEmail());
-        assertThat(response.getPassword()).isNull();
-        assertThat(response.getNickname()).isEqualTo(nativeMember.getNickname());
+        assertThat(response.getEmail()).isEqualTo(member.getEmail());
+        assertThat(response.getPassword()).isEqualTo(member.getPassword());
+        assertThat(response.getNickname()).isEqualTo(member.getNickname());
         assertThat(response.getProfileImage().getS3ObjectUrl()).isEqualTo(profileImage.getS3ObjectUrl());
         assertThat(response.getJoinType()).isEqualTo(JoinType.BOTH);
 
@@ -572,21 +483,16 @@ class CustomOAuth2UserServiceTest extends SocialMemberTest {
         // given
         OAuth2UserInfo oAuth2UserInfo = createKaKaoUserInfo("member@email.com");
 
-        ProfileImage profileImage = createProfileImage(1L, "image");
-        Member nativeMember = createNativeTypeMember(
-                1L,
-                "member@email.com",
-                passwordEncoder.encode("password12!@"),
-                profileImage
-        );
+        ProfileImage profileImage = createProfileImage("memberImage");
+        Member member = createNativeTypeMember(oAuth2UserInfo.getEmail(), profileImage);
 
         // when
-        Member response = customOAuth2UserService.integrateMember(nativeMember, oAuth2UserInfo);
+        Member response = customOAuth2UserService.integrateMember(member, oAuth2UserInfo);
 
         // then
-        assertThat(response.getEmail()).isEqualTo(nativeMember.getEmail());
-        assertThat(response.getPassword()).isNull();
-        assertThat(response.getNickname()).isEqualTo(nativeMember.getNickname());
+        assertThat(response.getEmail()).isEqualTo(member.getEmail());
+        assertThat(response.getPassword()).isEqualTo(member.getPassword());
+        assertThat(response.getNickname()).isEqualTo(member.getNickname());
         assertThat(response.getProfileImage().getS3ObjectUrl()).isEqualTo(profileImage.getS3ObjectUrl());
         assertThat(response.getJoinType()).isEqualTo(JoinType.BOTH);
 
@@ -599,20 +505,16 @@ class CustomOAuth2UserServiceTest extends SocialMemberTest {
         // given
         OAuth2UserInfo oAuth2UserInfo = createKaKaoUserInfo("member@email.com");
 
-        ProfileImage profileImage = createProfileImage(1L, "image");
-        Member naverMember = createSocialTypeMember(
-                1L,
-                "member@email.com",
-                profileImage
-        );
+        ProfileImage profileImage = createProfileImage("memberImage");
+        Member member = createSocialTypeMember(oAuth2UserInfo.getEmail(), profileImage);
 
         // when
-        Member response = customOAuth2UserService.integrateMember(naverMember, oAuth2UserInfo);
+        Member response = customOAuth2UserService.integrateMember(member, oAuth2UserInfo);
 
         // then
-        assertThat(response.getEmail()).isEqualTo(naverMember.getEmail());
+        assertThat(response.getEmail()).isEqualTo(member.getEmail());
         assertThat(response.getPassword()).isNull();
-        assertThat(response.getNickname()).isEqualTo(naverMember.getNickname());
+        assertThat(response.getNickname()).isEqualTo(member.getNickname());
         assertThat(response.getProfileImage().getS3ObjectUrl()).isEqualTo(profileImage.getS3ObjectUrl());
         assertThat(response.getJoinType()).isEqualTo(JoinType.SOCIAL);
 
@@ -625,21 +527,16 @@ class CustomOAuth2UserServiceTest extends SocialMemberTest {
         // given
         OAuth2UserInfo oAuth2UserInfo = createKaKaoUserInfo("member@email.com");
 
-        ProfileImage profileImage = createProfileImage(1L, "image");
-        Member bothMember = createBothTypeMember(
-                1L,
-                "member@email.com",
-                passwordEncoder.encode("password12!@"),
-                profileImage
-        );
+        ProfileImage profileImage = createProfileImage("memberImage");
+        Member member = createBothTypeMember(oAuth2UserInfo.getEmail(), profileImage);
 
         // when
-        Member response = customOAuth2UserService.integrateMember(bothMember, oAuth2UserInfo);
+        Member response = customOAuth2UserService.integrateMember(member, oAuth2UserInfo);
 
         // then
-        assertThat(response.getEmail()).isEqualTo(bothMember.getEmail());
-        assertThat(response.getPassword()).isNull();
-        assertThat(response.getNickname()).isEqualTo(bothMember.getNickname());
+        assertThat(response.getEmail()).isEqualTo(member.getEmail());
+        assertThat(response.getPassword()).isEqualTo(member.getPassword());
+        assertThat(response.getNickname()).isEqualTo(member.getNickname());
         assertThat(response.getProfileImage().getS3ObjectUrl()).isEqualTo(profileImage.getS3ObjectUrl());
         assertThat(response.getJoinType()).isEqualTo(JoinType.BOTH);
 
@@ -653,23 +550,17 @@ class CustomOAuth2UserServiceTest extends SocialMemberTest {
         // given
         OAuth2UserInfo oAuth2UserInfo = createNaverUserInfo("naverMember@email.com");
 
-        ProfileImage profileImage = createProfileImage(1L, "image");
-        Member member = createSocialTypeMember(
-                1L,
-                oAuth2UserInfo.getEmail(),
-                profileImage
-        );
+        ProfileImage profileImage = createProfileImage("memberImage");
+        Member member = createSocialTypeMember(oAuth2UserInfo.getEmail(), profileImage);
 
         when(profileImageService.saveDefaultProfileImage()).thenReturn(profileImage);
-        when(memberRepository.save(any())).thenReturn(member);
 
         // when
         Member response = customOAuth2UserService.createMember(oAuth2UserInfo);
 
         // then
-        assertThat(response.getEmail()).isEqualTo(oAuth2UserInfo.getEmail());
+        assertThat(response.getEmail()).isEqualTo(member.getEmail());
         assertThat(response.getPassword()).isNull();
-        assertThat(response.getNickname()).isNotNull();
         assertThat(response.getProfileImage().getS3ObjectUrl()).isEqualTo(profileImage.getS3ObjectUrl());
         assertThat(response.getJoinType()).isEqualTo(JoinType.SOCIAL);
 
@@ -683,23 +574,17 @@ class CustomOAuth2UserServiceTest extends SocialMemberTest {
         // given
         OAuth2UserInfo oAuth2UserInfo = createKaKaoUserInfo("kakaoMember@email.com");
 
-        ProfileImage profileImage = createProfileImage(1L, "image");
-        Member member = createSocialTypeMember(
-                1L,
-                oAuth2UserInfo.getEmail(),
-                profileImage
-        );
+        ProfileImage profileImage = createProfileImage("memberImage");
+        Member member = createSocialTypeMember(oAuth2UserInfo.getEmail(), profileImage);
 
         when(profileImageService.saveDefaultProfileImage()).thenReturn(profileImage);
-        when(memberRepository.save(any())).thenReturn(member);
 
         // when
         Member response = customOAuth2UserService.createMember(oAuth2UserInfo);
 
         // then
-        assertThat(response.getEmail()).isEqualTo(oAuth2UserInfo.getEmail());
+        assertThat(response.getEmail()).isEqualTo(member.getEmail());
         assertThat(response.getPassword()).isNull();
-        assertThat(response.getNickname()).isNotNull();
         assertThat(response.getProfileImage().getS3ObjectUrl()).isEqualTo(profileImage.getS3ObjectUrl());
         assertThat(response.getJoinType()).isEqualTo(JoinType.SOCIAL);
 

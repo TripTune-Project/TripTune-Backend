@@ -153,7 +153,7 @@ public class MemberController {
     public ApiPageResponse<PlaceBookmarkResponse> getMemberBookmarks(@AuthenticationPrincipal(expression = "memberId") Long memberId,
                                                                      @RequestParam(name = "page") int page,
                                                                      @RequestParam(name = "sort") String sort){
-        BookmarkSortType sortType = BookmarkSortType.from(sort);
+        BookmarkSortType sortType = BookmarkSortType.determineSortType(sort);
         Page<PlaceBookmarkResponse> PlaceBookmarkResponses = memberService.getMemberBookmarks(page, memberId, sortType);
 
         return ApiPageResponse.dataResponse(PlaceBookmarkResponses);

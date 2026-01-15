@@ -4,6 +4,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
@@ -25,6 +26,17 @@ public class SchedulePageResponse<T> {
         this.totalSharedElements = totalSharedElements;
         this.pageSize = pageSize;
         this.content = content;
+    }
+
+    public static<T> SchedulePageResponse<T> of(Page<T> object, long totalElements, long totalSharedElements){
+        return SchedulePageResponse.<T>builder()
+                .totalPages(object.getTotalPages())
+                .currentPage(object.getNumber())
+                .totalElements(totalElements)
+                .totalSharedElements(totalSharedElements)
+                .pageSize(object.getSize())
+                .content(object.getContent())
+                .build();
     }
 
     public static <T> SchedulePageResponse<T> ofAll(Page<T> object, long totalSharedElements){

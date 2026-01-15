@@ -52,10 +52,9 @@ class ProfileImageControllerTest extends ProfileImageTest {
         byte[] content = createTestImage("jpg");
         MockMultipartFile mockMultipartFile = new MockMultipartFile("profileImage", "newFileOriginalName.jpg", "image/jpg", content);
 
-        Member member = memberRepository.save(createMember(null, "member@email.com"));
-        ProfileImage profileImage = profileImageRepository.save(createProfileImage(null, "beforeImage", member));
+        ProfileImage profileImage = profileImageRepository.save(createProfileImage("memberImage"));
+        Member member = memberRepository.save(createNativeTypeMember("member@email.com", profileImage));
 
-        member.updateProfileImage(profileImage);
         mockAuthentication(member);
 
         // when, then
@@ -74,8 +73,8 @@ class ProfileImageControllerTest extends ProfileImageTest {
         byte[] content = createTestImage("gif");
         MockMultipartFile mockMultipartFile = new MockMultipartFile("profileImage", "newFileOriginalName.gif", "image/gif", content);
 
-        Member member = memberRepository.save(createMember(null, "member@email.com"));
-        profileImageRepository.save(createProfileImage(null, "beforeImage", member));
+        ProfileImage profileImage = profileImageRepository.save(createProfileImage("memberImage"));
+        Member member = memberRepository.save(createNativeTypeMember( "member@email.com", profileImage));
 
         mockAuthentication(member);
 
@@ -89,23 +88,5 @@ class ProfileImageControllerTest extends ProfileImageTest {
 
     }
 
-    @Test
-    @DisplayName("프로필 이미지 수정 시 이미지 데이터 존재하지 않아 예외 발생")
-    void updateProfileImage_profileImageNotFound() throws Exception{
-        // given
-        byte[] content = createTestImage("png");
-        MockMultipartFile mockMultipartFile = new MockMultipartFile("profileImage", "newFileOriginalName.png", "image/png", content);
 
-        Member member = memberRepository.save(createMember(null, "member@email.com"));
-        mockAuthentication(member);
-
-        // when, then
-        mockMvc.perform(multipart(HttpMethod.PATCH,"/api/profiles")
-                        .file(mockMultipartFile))
-                .andDo(print())
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.success").value(false))
-                .andExpect(jsonPath("$.message").value(ErrorCode.PROFILE_IMAGE_NOT_FOUND.getMessage()));
-
-    }
 }

@@ -25,15 +25,15 @@ public class PlaceDetailResponse {
     private String checkOutTime;
     private String homepage;
     private String phoneNumber;
-    private double longitude;
     private double latitude;
+    private double longitude;
     private String placeName;
     private boolean bookmarkStatus;
     private String description;
     private List<TravelImageResponse> imageList;
 
     @Builder
-    public PlaceDetailResponse(Long placeId, String placeType, String country, String city, String district, String address, String detailAddress, String useTime, String checkInTime, String checkOutTime, String homepage, String phoneNumber, double longitude, double latitude, String placeName, boolean bookmarkStatus, String description, List<TravelImageResponse> imageList) {
+    public PlaceDetailResponse(Long placeId, String placeType, String country, String city, String district, String address, String detailAddress, String useTime, String checkInTime, String checkOutTime, String homepage, String phoneNumber, double latitude, double longitude, String placeName, boolean bookmarkStatus, String description, List<TravelImageResponse> imageList) {
         this.placeId = placeId;
         this.placeType = placeType;
         this.country = country;
@@ -46,8 +46,8 @@ public class PlaceDetailResponse {
         this.checkOutTime = checkOutTime;
         this.homepage = homepage;
         this.phoneNumber = phoneNumber;
-        this.longitude = longitude;
         this.latitude = latitude;
+        this.longitude = longitude;
         this.placeName = placeName;
         this.bookmarkStatus = bookmarkStatus;
         this.description = description;
@@ -69,8 +69,8 @@ public class PlaceDetailResponse {
                 .checkOutTime(travelPlace.getCheckOutTime())
                 .homepage(travelPlace.getHomepage())
                 .phoneNumber(travelPlace.getPhoneNumber())
-                .longitude(travelPlace.getLongitude())
                 .latitude(travelPlace.getLatitude())
+                .longitude(travelPlace.getLongitude())
                 .placeName(travelPlace.getPlaceName())
                 .bookmarkStatus(bookmarkStatus)
                 .description(travelPlace.getDescription())

@@ -1,19 +1,16 @@
 package com.triptune.schedule.entity;
 
-import com.triptune.member.entity.Member;
-import com.triptune.schedule.dto.request.ChatMessageRequest;
 import jakarta.persistence.Id;
-import lombok.Builder;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
 
 @Getter
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Document(collection = "chat_message")
 public class ChatMessage {
 
@@ -26,21 +23,20 @@ public class ChatMessage {
     private String message;
     private Instant timestamp;
 
-    @Builder
-    public ChatMessage(String messageId, Long scheduleId, Long memberId, String message, Instant timestamp) {
-        this.messageId = messageId;
+    private ChatMessage(Long scheduleId, Long memberId, String message, Instant timestamp) {
         this.scheduleId = scheduleId;
         this.memberId = memberId;
         this.message = message;
         this.timestamp = timestamp;
     }
 
-    public static ChatMessage of(Member member, ChatMessageRequest chatMessageRequest) {
-        return ChatMessage.builder()
-                .scheduleId(chatMessageRequest.getScheduleId())
-                .memberId(member.getMemberId())
-                .message(chatMessageRequest.getMessage())
-                .timestamp(Instant.now())
-                .build();
+
+    public static ChatMessage createChatMessage(Long scheduleId, Long memberId, String message) {
+        return new ChatMessage(
+                scheduleId,
+                memberId,
+                message,
+                Instant.now()
+        );
     }
 }

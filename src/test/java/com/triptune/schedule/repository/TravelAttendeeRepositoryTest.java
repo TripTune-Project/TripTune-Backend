@@ -2,6 +2,8 @@ package com.triptune.schedule.repository;
 
 import com.triptune.member.entity.Member;
 import com.triptune.member.repository.MemberRepository;
+import com.triptune.profile.entity.ProfileImage;
+import com.triptune.profile.repository.ProfileImageRepository;
 import com.triptune.schedule.ScheduleTest;
 import com.triptune.schedule.entity.TravelAttendee;
 import com.triptune.schedule.entity.TravelSchedule;
@@ -27,6 +29,7 @@ public class TravelAttendeeRepositoryTest extends ScheduleTest {
     @Autowired private TravelScheduleRepository travelScheduleRepository;
     @Autowired private TravelAttendeeRepository travelAttendeeRepository;
     @Autowired private MemberRepository memberRepository;
+    @Autowired private ProfileImageRepository profileImageRepository;
 
     private TravelSchedule schedule1;
     private TravelSchedule schedule2;
@@ -38,35 +41,43 @@ public class TravelAttendeeRepositoryTest extends ScheduleTest {
 
     @BeforeEach
     void setUp(){
-        member1 = memberRepository.save(createMember(null, "member1@email.com"));
-        member2 = memberRepository.save(createMember(null, "member2@email.com"));
+        ProfileImage profileImage1 = profileImageRepository.save(createProfileImage("member1Image"));
+        member1 = memberRepository.save(createNativeTypeMember("member1@email.com", profileImage1));
 
-        schedule1 = travelScheduleRepository.save(createTravelSchedule(null,"테스트1"));
-        schedule2 = travelScheduleRepository.save(createTravelSchedule(null,"테스트2"));
-        schedule3 = travelScheduleRepository.save(createTravelSchedule(null,"테스트3"));
+        ProfileImage profileImage2 = profileImageRepository.save(createProfileImage("member2Image"));
+        member2 = memberRepository.save(createNativeTypeMember("member2@email.com", profileImage2));
 
-        travelAttendeeRepository.save(createTravelAttendee(null, member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL));
-        travelAttendeeRepository.save(createTravelAttendee(null, member1, schedule2, AttendeeRole.GUEST, AttendeePermission.READ));
-        travelAttendeeRepository.save(createTravelAttendee(null, member2, schedule3, AttendeeRole.AUTHOR, AttendeePermission.ALL));
+        schedule1 = travelScheduleRepository.save(createTravelSchedule("테스트1"));
+        schedule2 = travelScheduleRepository.save(createTravelSchedule("테스트2"));
+        schedule3 = travelScheduleRepository.save(createTravelSchedule("테스트3"));
     }
 
     @Test
     @DisplayName("참석자 생성")
     void createTravelAttendee() {
         // given
-        TravelAttendee attendee = createTravelAttendee(null, member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL);
+        travelAttendeeRepository.save(createAuthorTravelAttendee(schedule1, member1));
+        travelAttendeeRepository.save(createGuestTravelAttendee(schedule2, member1, AttendeePermission.READ));
+        travelAttendeeRepository.save(createAuthorTravelAttendee(schedule3, member2));
+
+        TravelAttendee guest = createGuestTravelAttendee(schedule1, member1, AttendeePermission.ALL);
 
         // when
-        travelAttendeeRepository.save(attendee);
+        travelAttendeeRepository.save(guest);
 
         // then
-        assertThat(attendee.getAttendeeId()).isNotNull();
-        assertThat(attendee.getCreatedAt()).isEqualTo(attendee.getUpdatedAt());
+        assertThat(guest.getAttendeeId()).isNotNull();
+        assertThat(guest.getCreatedAt()).isEqualTo(guest.getUpdatedAt());
     }
 
     @Test
     @DisplayName("일정 참가자인지 확인 true 반환")
     void existsAttendee_true(){
+        // given
+        travelAttendeeRepository.save(createAuthorTravelAttendee(schedule1, member1));
+        travelAttendeeRepository.save(createGuestTravelAttendee(schedule2, member1, AttendeePermission.READ));
+        travelAttendeeRepository.save(createAuthorTravelAttendee(schedule3, member2));
+
         // when
         boolean response = travelAttendeeRepository.existsByTravelSchedule_ScheduleIdAndMember_MemberId(schedule1.getScheduleId(), member1.getMemberId());
 
@@ -77,6 +88,12 @@ public class TravelAttendeeRepositoryTest extends ScheduleTest {
     @Test
     @DisplayName("일정 참가자인지 확인 false 반환")
     void existsAttendee_false(){
+        // given
+        travelAttendeeRepository.save(createAuthorTravelAttendee(schedule1, member1));
+        travelAttendeeRepository.save(createGuestTravelAttendee(schedule2, member1, AttendeePermission.READ));
+        travelAttendeeRepository.save(createAuthorTravelAttendee(schedule3, member2));
+
+
         // when
         boolean response = travelAttendeeRepository.existsByTravelSchedule_ScheduleIdAndMember_MemberId(schedule1.getScheduleId(), member2.getMemberId());
 
@@ -87,7 +104,12 @@ public class TravelAttendeeRepositoryTest extends ScheduleTest {
     @Test
     @DisplayName("일정 작성자 닉네임 조회")
     void findAuthorNicknameByScheduleId(){
-        // given, when
+        // given
+        travelAttendeeRepository.save(createAuthorTravelAttendee(schedule1, member1));
+        travelAttendeeRepository.save(createGuestTravelAttendee(schedule2, member1, AttendeePermission.READ));
+        travelAttendeeRepository.save(createAuthorTravelAttendee(schedule3, member2));
+
+        // when
         String response = travelAttendeeRepository.findAuthorNicknameByScheduleId(schedule1.getScheduleId());
 
         // then

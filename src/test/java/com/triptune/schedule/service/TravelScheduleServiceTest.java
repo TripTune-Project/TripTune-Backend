@@ -1,9 +1,6 @@
 package com.triptune.schedule.service;
 
-import com.triptune.common.entity.ApiCategory;
-import com.triptune.common.entity.City;
-import com.triptune.common.entity.Country;
-import com.triptune.common.entity.District;
+import com.triptune.common.entity.*;
 import com.triptune.member.entity.Member;
 import com.triptune.profile.entity.ProfileImage;
 import com.triptune.member.repository.MemberRepository;
@@ -30,6 +27,7 @@ import com.triptune.schedule.repository.TravelScheduleRepository;
 import com.triptune.travel.dto.response.PlaceResponse;
 import com.triptune.travel.entity.TravelImage;
 import com.triptune.travel.entity.TravelPlace;
+import com.triptune.travel.enums.ThemeType;
 import com.triptune.travel.repository.TravelPlaceRepository;
 import com.triptune.global.response.enums.ErrorCode;
 import com.triptune.global.exception.DataNotFoundException;
@@ -47,6 +45,7 @@ import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -58,7 +57,6 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class TravelScheduleServiceTest extends ScheduleTest {
-
     @InjectMocks private TravelScheduleService travelScheduleService;
     @Mock private TravelScheduleRepository travelScheduleRepository;
     @Mock private MemberRepository memberRepository;
@@ -68,47 +66,57 @@ public class TravelScheduleServiceTest extends ScheduleTest {
     @Mock private ChatMessageRepository chatMessageRepository;
     @Mock private TravelRouteService travelRouteService;
 
-    private Country country;
-    private City city;
-    private District district;
-    private ApiCategory apiCategory;
-    private TravelSchedule schedule1;
-    private TravelSchedule schedule2;
-    private TravelSchedule schedule3;
-    private TravelPlace travelPlace1;
-    private TravelPlace travelPlace2;
+    private TravelPlace placeWithThumbnail1;
+    private TravelPlace placeWithThumbnail2;
+    private TravelPlace placeWithoutThumbnail;
+
     private Member member1;
     private Member member2;
-    private TravelAttendee attendee1;
-    private TravelAttendee attendee2;
+
 
     @BeforeEach
     void setUp(){
-        country = createCountry();
-        city = createCity(country);
-        district = createDistrict(city, "중구");
-        apiCategory = createApiCategory();
+        Country country = createCountry();
+        City city = createCity(country, "서울");
+        District district = createDistrict(city, "중구");
+        ApiCategory apiCategory = createApiCategory();
+        ApiContentType apiContentType = createApiContentType(ThemeType.ATTRACTIONS);
 
-        ProfileImage profileImage1 = createProfileImage(1L, "member1Image", member1);
-        ProfileImage profileImage2 = createProfileImage(2L, "member2Image", member2);
-        member1 = createMember(1L, "member1@email.com", profileImage1);
-        member2 = createMember(2L, "member2@email.com", profileImage2);
+        ProfileImage profileImage1 = createProfileImage("member1Image");
+        member1 = createNativeTypeMember("member1@email.com", profileImage1);
+        ProfileImage profileImage2 = createProfileImage("member2Image");
+        member2 = createNativeTypeMember("member2@email.com", profileImage2);
 
-        schedule1 = createTravelSchedule(1L, "테스트1");
-        schedule2 = createTravelSchedule(2L, "테스트2");
-        schedule3 = createTravelSchedule(3L, "테스트3");
+        placeWithThumbnail1 = createTravelPlace(
+                country,
+                city,
+                district,
+                apiCategory,
+                apiContentType,
+                "여행지1"
+        );
+        createTravelImage(placeWithThumbnail1, "test1", true);
+        createTravelImage(placeWithThumbnail1, "test2", false);
 
-        attendee1 = createTravelAttendee(1L, member1, schedule1, AttendeeRole.AUTHOR, AttendeePermission.ALL);
-        attendee2 = createTravelAttendee(2L, member2, schedule1, AttendeeRole.GUEST, AttendeePermission.READ);
-        TravelAttendee attendee3 = createTravelAttendee(3L, member1, schedule2, AttendeeRole.AUTHOR, AttendeePermission.ALL);
-        TravelAttendee attendee4 = createTravelAttendee(4L, member2, schedule2, AttendeeRole.GUEST, AttendeePermission.CHAT);
-        TravelAttendee attendee5 = createTravelAttendee(5L, member1, schedule3, AttendeeRole.AUTHOR, AttendeePermission.ALL);
+        placeWithThumbnail2 = createTravelPlace(
+                country,
+                city,
+                district,
+                apiCategory,
+                apiContentType,
+                "여행지3"
+        );
+        createTravelImage(placeWithThumbnail2, "test1", true);
+        createTravelImage(placeWithThumbnail2, "test2", false);
 
-        schedule1.addTravelAttendee(attendee1);
-        schedule1.addTravelAttendee(attendee2);
-        schedule2.addTravelAttendee(attendee3);
-        schedule2.addTravelAttendee(attendee4);
-        schedule3.addTravelAttendee(attendee5);
+        placeWithoutThumbnail = createTravelPlace(
+                country,
+                city,
+                district,
+                apiCategory,
+                apiContentType,
+                "여행지2"
+        );
     }
 
 
@@ -116,66 +124,92 @@ public class TravelScheduleServiceTest extends ScheduleTest {
     @DisplayName("내 일정 목록 조회")
     void getAllSchedules(){
         // given
+        ProfileImage defaultImage = createProfileImage("defaultImage");
+        Member authorMember = createNativeTypeMemberWithId(1L, "authorMember@email.com", defaultImage);
+        Member guestMember = createNativeTypeMemberWithId(2L, "guestMember@email.com", defaultImage);
+
+        TravelSchedule schedule1 = createTravelSchedule("당일 여행");
+        createAuthorTravelAttendee(schedule1, authorMember);
+        createGuestTravelAttendee(schedule1, guestMember, AttendeePermission.READ);
+        createTravelRoute(schedule1, placeWithThumbnail1, 1);
+        createTravelRoute(schedule1, placeWithoutThumbnail, 2);
+        createTravelRoute(schedule1, placeWithThumbnail2, 3);
+
+        TravelSchedule schedule2 = createTravelSchedule("도보 여행");
+        createAuthorTravelAttendee(schedule2, guestMember);
+        createGuestTravelAttendee(schedule2, authorMember, AttendeePermission.CHAT);
+
+        TravelSchedule schedule3 = createTravelSchedule("역사 여행");
+        createAuthorTravelAttendee(schedule3, authorMember);
+
         Pageable pageable = PageUtils.schedulePageable(1);
-
-        TravelImage travelImage1 = createTravelImage(travelPlace1, "test1", true);
-        TravelImage travelImage2 = createTravelImage(travelPlace1, "test2", false);
-        travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, List.of(travelImage1, travelImage2));
-
-        TravelImage travelImage3 = createTravelImage(travelPlace2, "test1", true);
-        TravelImage travelImage4 = createTravelImage(travelPlace2, "test2", false);
-        travelPlace2 = createTravelPlace(2L, country, city, district, apiCategory, List.of(travelImage3, travelImage4));
-
-        TravelRoute route1 = createTravelRoute(schedule1, travelPlace1, 1);
-        TravelRoute route2 = createTravelRoute(schedule1, travelPlace1, 2);
-        TravelRoute route3 = createTravelRoute(schedule1, travelPlace2, 3);
-        schedule1.addTravelRoutes(route1);
-        schedule1.addTravelRoutes(route2);
-        schedule1.addTravelRoutes(route3);
-
-
         List<TravelSchedule> schedules = List.of(schedule1, schedule2, schedule3);
-        Page<TravelSchedule> schedulePage = PageUtils.createPage(schedules, pageable, schedules.size());
+        Page<TravelSchedule> schedulePage = PageUtils.createPage(schedules, PageUtils.schedulePageable(1), schedules.size());
 
-        when(travelScheduleRepository.findTravelSchedulesByMemberId(pageable, member1.getMemberId())).thenReturn(schedulePage);
-        when(travelScheduleRepository.countSharedTravelSchedulesByMemberId(anyLong())).thenReturn(2);
+        when(travelScheduleRepository.findTravelSchedules(pageable, 1L)).thenReturn(schedulePage);
+        when(travelScheduleRepository.countSharedTravelSchedules(anyLong())).thenReturn(2);
 
         // when
-        SchedulePageResponse<ScheduleInfoResponse> response = travelScheduleService.getAllSchedules(1, member1.getMemberId());
+        SchedulePageResponse<ScheduleInfoResponse> response = travelScheduleService.getAllSchedules(1, authorMember.getMemberId());
 
         // then
-        List<ScheduleInfoResponse> content = response.getContent();
         assertThat(response.getTotalElements()).isEqualTo(3);
         assertThat(response.getTotalSharedElements()).isEqualTo(2);
-        assertThat(content.get(0).getScheduleName()).isEqualTo(schedule1.getScheduleName());
-        assertThat(content.get(0).getSinceUpdate()).isNotNull();
-        assertThat(content.get(0).getThumbnailUrl()).isNotNull();
-        assertThat(content.get(0).getAuthor().getNickname()).isEqualTo(member1.getNickname());
-        assertThat(content.get(0).getRole()).isEqualTo(AttendeeRole.AUTHOR);
+        assertThat(response.getContent()).hasSize(3);
+
+        ScheduleInfoResponse first = response.getContent().get(0);
+        ScheduleInfoResponse second = response.getContent().get(1);
+        ScheduleInfoResponse third = response.getContent().get(2);
+
+        assertAll(
+                () -> assertThat(first.getScheduleName()).isEqualTo(schedule1.getScheduleName()),
+                () -> assertThat(first.getSinceUpdate()).isNotNull(),
+                () -> assertThat(first.getThumbnailUrl()).isEqualTo(placeWithThumbnail2.getThumbnailUrl()),
+                () -> assertThat(first.getAuthor().getNickname()).isEqualTo(authorMember.getNickname()),
+                () -> assertThat(first.getRole()).isEqualTo(AttendeeRole.AUTHOR)
+        );
+        assertAll(
+                () -> assertThat(second.getScheduleName()).isEqualTo(schedule2.getScheduleName()),
+                () -> assertThat(second.getThumbnailUrl()).isNull(),
+                () -> assertThat(second.getAuthor().getNickname()).isEqualTo(guestMember.getNickname()),
+                () -> assertThat(second.getRole()).isEqualTo(AttendeeRole.GUEST)
+        );
+        assertAll(
+                () -> assertThat(third.getScheduleName()).isEqualTo(schedule3.getScheduleName()),
+                () -> assertThat(third.getThumbnailUrl()).isNull(),
+                () -> assertThat(third.getAuthor().getNickname()).isEqualTo(authorMember.getNickname()),
+                () -> assertThat(third.getRole()).isEqualTo(AttendeeRole.AUTHOR)
+        );
     }
 
     @Test
     @DisplayName("내 일정 목록 조회 시 공유된 일정이 없는 경우")
     void getAllSchedules_noSharedScheduleData(){
         // given
-        Pageable pageable = PageUtils.schedulePageable(1);
+        ProfileImage defaultImage = createProfileImage("defaultImage");
+        Member authorMember = createNativeTypeMemberWithId(1L, "authorMember@email.com", defaultImage);
 
-        List<TravelSchedule> schedules = List.of(schedule3);
+        TravelSchedule schedule = createTravelSchedule("역사 여행");
+        createAuthorTravelAttendee(schedule, authorMember);
+
+        Pageable pageable = PageUtils.schedulePageable(1);
+        List<TravelSchedule> schedules = List.of(schedule);
         Page<TravelSchedule> schedulePage = PageUtils.createPage(schedules, pageable, schedules.size());
 
-        when(travelScheduleRepository.findTravelSchedulesByMemberId(pageable, member1.getMemberId())).thenReturn(schedulePage);
-        when(travelScheduleRepository.countSharedTravelSchedulesByMemberId(anyLong())).thenReturn(0);
+        when(travelScheduleRepository.findTravelSchedules(pageable, authorMember.getMemberId())).thenReturn(schedulePage);
+        when(travelScheduleRepository.countSharedTravelSchedules(anyLong())).thenReturn(0);
 
         // when
-        SchedulePageResponse<ScheduleInfoResponse> response = travelScheduleService.getAllSchedules(1, member1.getMemberId());
+        SchedulePageResponse<ScheduleInfoResponse> response = travelScheduleService.getAllSchedules(1, authorMember.getMemberId());
 
         // then
         List<ScheduleInfoResponse> content = response.getContent();
         assertThat(response.getTotalElements()).isEqualTo(1);
         assertThat(response.getTotalSharedElements()).isEqualTo(0);
-        assertThat(content.get(0).getScheduleName()).isEqualTo(schedule3.getScheduleName());
+        assertThat(content).hasSize(1);
+        assertThat(content.get(0).getScheduleName()).isEqualTo(schedule.getScheduleName());
         assertThat(content.get(0).getSinceUpdate()).isNotNull();
-        assertThat(content.get(0).getAuthor().getNickname()).isEqualTo(member1.getNickname());
+        assertThat(content.get(0).getAuthor().getNickname()).isEqualTo(authorMember.getNickname());
     }
 
     @Test
@@ -183,73 +217,143 @@ public class TravelScheduleServiceTest extends ScheduleTest {
     void getAllSchedules_noScheduleData(){
         // given
         Pageable pageable = PageUtils.schedulePageable(1);
-        Page<TravelSchedule> emptySchedulePage = PageUtils.createPage(new ArrayList<>(), pageable, 0);
+        Page<TravelSchedule> emptySchedulePage = PageUtils.createPage(Collections.emptyList(), pageable, 0);
 
-        when(travelScheduleRepository.findTravelSchedulesByMemberId(pageable, member1.getMemberId())).thenReturn(emptySchedulePage);
-        when(travelScheduleRepository.countSharedTravelSchedulesByMemberId(anyLong())).thenReturn(2);
+        when(travelScheduleRepository.findTravelSchedules(pageable, 1L)).thenReturn(emptySchedulePage);
+        when(travelScheduleRepository.countSharedTravelSchedules(anyLong())).thenReturn(2);
 
         // when
-        SchedulePageResponse<ScheduleInfoResponse> response = travelScheduleService.getAllSchedules(1, member1.getMemberId());
+        SchedulePageResponse<ScheduleInfoResponse> response = travelScheduleService.getAllSchedules(1, 1L);
 
         // then
         assertThat(response.getTotalElements()).isEqualTo(0);
         assertThat(response.getTotalSharedElements()).isEqualTo(2);
+        assertThat(response.getContent()).hasSize(0);
         assertThat(response.getContent()).isEmpty();
         verify(travelRouteRepository, times(0)).findAllByTravelSchedule_ScheduleId(any(), any());
     }
 
     @Test
-    @DisplayName("내 일정 목록 조회 시 이미지 썸네일 데이터 없는 경우")
+    @DisplayName("내 일정 목록 조회 시 이미지 썸네일 없는 경우")
     void getAllSchedules_noImageThumbnail(){
         // given
+        ProfileImage defaultImage = createProfileImage("defaultImage");
+        Member authorMember = createNativeTypeMemberWithId(1L, "authorMember@email.com", defaultImage);
+        Member guestMember = createNativeTypeMemberWithId(2L, "guestMember@email.com", defaultImage);
+
+        TravelSchedule schedule1 = createTravelSchedule("당일 여행");
+        createAuthorTravelAttendee(schedule1, authorMember);
+        createGuestTravelAttendee(schedule1, guestMember, AttendeePermission.READ);
+        createTravelRoute(schedule1, placeWithoutThumbnail, 1);
+
+        TravelSchedule schedule2 = createTravelSchedule("도보 여행");
+        createAuthorTravelAttendee(schedule2, guestMember);
+        createTravelRoute(schedule2, placeWithoutThumbnail, 1);
+
+        createGuestTravelAttendee(schedule2, authorMember, AttendeePermission.CHAT);
+        TravelSchedule schedule3 = createTravelSchedule("역사 여행");
+        createAuthorTravelAttendee(schedule3, authorMember);
+
         Pageable pageable = PageUtils.schedulePageable(1);
-
-        travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, new ArrayList<>());
-        travelPlace2 = createTravelPlace(2L, country, city, district, apiCategory, new ArrayList<>());
-
-        List<TravelSchedule> schedules = List.of(schedule1, schedule2);
+        List<TravelSchedule> schedules = List.of(schedule1, schedule2, schedule3);
         Page<TravelSchedule> schedulePage = PageUtils.createPage(schedules, pageable, schedules.size());
 
-        when(travelScheduleRepository.findTravelSchedulesByMemberId(pageable, member1.getMemberId())).thenReturn(schedulePage);
-        when(travelScheduleRepository.countSharedTravelSchedulesByMemberId(anyLong())).thenReturn(1);
+        when(travelScheduleRepository.findTravelSchedules(pageable, authorMember.getMemberId())).thenReturn(schedulePage);
+        when(travelScheduleRepository.countSharedTravelSchedules(anyLong())).thenReturn(2);
 
         // when
-        SchedulePageResponse<ScheduleInfoResponse> response = travelScheduleService.getAllSchedules(1, member1.getMemberId());
+        SchedulePageResponse<ScheduleInfoResponse> response = travelScheduleService.getAllSchedules(1, authorMember.getMemberId());
 
         // then
-        List<ScheduleInfoResponse> content = response.getContent();
-        assertThat(response.getTotalElements()).isEqualTo(2);
-        assertThat(response.getTotalSharedElements()).isEqualTo(1);
-        assertThat(content.get(0).getScheduleName()).isEqualTo("테스트1");
-        assertThat(content.get(0).getSinceUpdate()).isNotNull();
-        assertThat(content.get(0).getThumbnailUrl()).isNull();
+        assertThat(response.getTotalElements()).isEqualTo(3);
+        assertThat(response.getTotalSharedElements()).isEqualTo(2);
+        assertThat(response.getContent()).hasSize(3);
+
+        ScheduleInfoResponse first = response.getContent().get(0);
+        ScheduleInfoResponse second = response.getContent().get(1);
+        ScheduleInfoResponse third = response.getContent().get(2);
+
+        assertAll(
+                () -> assertThat(first.getScheduleName()).isEqualTo(schedule1.getScheduleName()),
+                () -> assertThat(first.getSinceUpdate()).isNotNull(),
+                () -> assertThat(first.getThumbnailUrl()).isNull(),
+                () -> assertThat(first.getAuthor().getNickname()).isEqualTo(authorMember.getNickname()),
+                () -> assertThat(first.getRole()).isEqualTo(AttendeeRole.AUTHOR)
+        );
+        assertAll(
+                () -> assertThat(second.getScheduleName()).isEqualTo(schedule2.getScheduleName()),
+                () -> assertThat(second.getThumbnailUrl()).isNull(),
+                () -> assertThat(second.getAuthor().getNickname()).isEqualTo(guestMember.getNickname()),
+                () -> assertThat(second.getRole()).isEqualTo(AttendeeRole.GUEST)
+        );
+        assertAll(
+                () -> assertThat(third.getScheduleName()).isEqualTo(schedule3.getScheduleName()),
+                () -> assertThat(third.getThumbnailUrl()).isNull(),
+                () -> assertThat(third.getAuthor().getNickname()).isEqualTo(authorMember.getNickname()),
+                () -> assertThat(third.getRole()).isEqualTo(AttendeeRole.AUTHOR)
+        );
 
     }
 
 
     @Test
-    @DisplayName("내 일정 목록 조회 시 이미지 데이터 없는 경우")
-    void getAllSchedules_noImageData(){
+    @DisplayName("내 일정 목록 조회 시 여행 루트 없는 경우")
+    void getAllSchedules_noTravelRoute(){
         // given
-        Pageable pageable = PageUtils.schedulePageable(1);
-        travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, new ArrayList<>());
+        ProfileImage defaultImage = createProfileImage("defaultImage");
+        Member authorMember = createNativeTypeMemberWithId(1L, "authorMember@email.com", defaultImage);
+        Member guestMember = createNativeTypeMemberWithId(2L, "guestMember@email.com", defaultImage);
 
-        List<TravelSchedule> schedules = List.of(schedule1);
+        TravelSchedule schedule1 = createTravelSchedule("당일 여행");
+        createAuthorTravelAttendee(schedule1, authorMember);
+        createGuestTravelAttendee(schedule1, guestMember, AttendeePermission.READ);
+
+        TravelSchedule schedule2 = createTravelSchedule("도보 여행");
+        createAuthorTravelAttendee(schedule2, guestMember);
+        createGuestTravelAttendee(schedule2, authorMember, AttendeePermission.CHAT);
+
+        TravelSchedule schedule3 = createTravelSchedule("역사 여행");
+        createAuthorTravelAttendee(schedule3, authorMember);
+
+        Pageable pageable = PageUtils.schedulePageable(1);
+
+        List<TravelSchedule> schedules = List.of(schedule1, schedule2, schedule3);
         Page<TravelSchedule> schedulePage = PageUtils.createPage(schedules, pageable, schedules.size());
 
-        when(travelScheduleRepository.findTravelSchedulesByMemberId(pageable, member1.getMemberId())).thenReturn(schedulePage);
-        when(travelScheduleRepository.countSharedTravelSchedulesByMemberId(anyLong())).thenReturn(1);
+        when(travelScheduleRepository.findTravelSchedules(pageable, authorMember.getMemberId())).thenReturn(schedulePage);
+        when(travelScheduleRepository.countSharedTravelSchedules(anyLong())).thenReturn(2);
 
         // when
-        SchedulePageResponse<ScheduleInfoResponse> response = travelScheduleService.getAllSchedules(1, member1.getMemberId());
+        SchedulePageResponse<ScheduleInfoResponse> response = travelScheduleService.getAllSchedules(1, authorMember.getMemberId());
 
         // then
-        List<ScheduleInfoResponse> content = response.getContent();
-        assertThat(response.getTotalElements()).isEqualTo(1);
-        assertThat(response.getTotalSharedElements()).isEqualTo(1);
-        assertThat(content.get(0).getScheduleName()).isEqualTo("테스트1");
-        assertThat(content.get(0).getSinceUpdate()).isNotNull();
-        assertThat(content.get(0).getThumbnailUrl()).isNull();
+        assertThat(response.getTotalElements()).isEqualTo(3);
+        assertThat(response.getTotalSharedElements()).isEqualTo(2);
+        assertThat(response.getContent()).hasSize(3);
+
+        ScheduleInfoResponse first = response.getContent().get(0);
+        ScheduleInfoResponse second = response.getContent().get(1);
+        ScheduleInfoResponse third = response.getContent().get(2);
+
+        assertAll(
+                () -> assertThat(first.getScheduleName()).isEqualTo(schedule1.getScheduleName()),
+                () -> assertThat(first.getSinceUpdate()).isNotNull(),
+                () -> assertThat(first.getThumbnailUrl()).isNull(),
+                () -> assertThat(first.getAuthor().getNickname()).isEqualTo(authorMember.getNickname()),
+                () -> assertThat(first.getRole()).isEqualTo(AttendeeRole.AUTHOR)
+        );
+        assertAll(
+                () -> assertThat(second.getScheduleName()).isEqualTo(schedule2.getScheduleName()),
+                () -> assertThat(second.getThumbnailUrl()).isNull(),
+                () -> assertThat(second.getAuthor().getNickname()).isEqualTo(guestMember.getNickname()),
+                () -> assertThat(second.getRole()).isEqualTo(AttendeeRole.GUEST)
+        );
+        assertAll(
+                () -> assertThat(third.getScheduleName()).isEqualTo(schedule3.getScheduleName()),
+                () -> assertThat(third.getThumbnailUrl()).isNull(),
+                () -> assertThat(third.getAuthor().getNickname()).isEqualTo(authorMember.getNickname()),
+                () -> assertThat(third.getRole()).isEqualTo(AttendeeRole.AUTHOR)
+        );
 
     }
 
@@ -257,41 +361,56 @@ public class TravelScheduleServiceTest extends ScheduleTest {
     @DisplayName("공유된 일정 목록 조회")
     void getSharedSchedules(){
         // given
+        ProfileImage defaultImage = createProfileImage("defaultImage");
+        Member authorMember = createNativeTypeMemberWithId(1L, "authorMember@email.com", defaultImage);
+        Member guestMember = createNativeTypeMemberWithId(2L, "guestMember@email.com", defaultImage);
+
+        TravelSchedule schedule1 = createTravelSchedule("당일 여행");
+        createAuthorTravelAttendee(schedule1, authorMember);
+        createGuestTravelAttendee(schedule1, guestMember, AttendeePermission.READ);
+        createTravelRoute(schedule1, placeWithThumbnail1, 1);
+        createTravelRoute(schedule1, placeWithoutThumbnail, 2);
+        createTravelRoute(schedule1, placeWithThumbnail2, 3);
+
+        TravelSchedule schedule2 = createTravelSchedule("도보 여행");
+        createAuthorTravelAttendee(schedule2, guestMember);
+        createGuestTravelAttendee(schedule2, authorMember, AttendeePermission.CHAT);
+
+        TravelSchedule schedule3 = createTravelSchedule("역사 여행");
+        createAuthorTravelAttendee(schedule3, authorMember);
+
+
         Pageable pageable = PageUtils.schedulePageable(1);
-
-        TravelImage travelImage1 = createTravelImage(travelPlace1, "test1", true);
-        TravelImage travelImage2 = createTravelImage(travelPlace1, "test2", false);
-        travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, List.of(travelImage1, travelImage2));
-
-        TravelImage travelImage3 = createTravelImage(travelPlace2, "test1", true);
-        TravelImage travelImage4 = createTravelImage(travelPlace2, "test2", false);
-        travelPlace2 = createTravelPlace(2L, country, city, district, apiCategory, List.of(travelImage3, travelImage4));
-
-        TravelRoute route1 = createTravelRoute(schedule1, travelPlace1, 1);
-        TravelRoute route2 = createTravelRoute(schedule1, travelPlace1, 2);
-        TravelRoute route3 = createTravelRoute(schedule1, travelPlace2, 3);
-        schedule1.addTravelRoutes(route1);
-        schedule1.addTravelRoutes(route2);
-        schedule1.addTravelRoutes(route3);
-
         List<TravelSchedule> schedules = List.of(schedule1, schedule2);
         Page<TravelSchedule> schedulePage = PageUtils.createPage(schedules, pageable, schedules.size());
 
-        when(travelScheduleRepository.findSharedTravelSchedulesByMemberId(pageable, member1.getMemberId())).thenReturn(schedulePage);
-        when(travelScheduleRepository.countTravelSchedulesByMemberId(anyLong())).thenReturn(3);
+        when(travelScheduleRepository.findSharedTravelSchedules(pageable, 1L)).thenReturn(schedulePage);
+        when(travelScheduleRepository.countTravelSchedules(anyLong())).thenReturn(3);
 
         // when
-        SchedulePageResponse<ScheduleInfoResponse> response = travelScheduleService.getSharedSchedules(1, member1.getMemberId());
+        SchedulePageResponse<ScheduleInfoResponse> response = travelScheduleService.getSharedSchedules(1, authorMember.getMemberId());
 
         // then
-        List<ScheduleInfoResponse> content = response.getContent();
         assertThat(response.getTotalElements()).isEqualTo(3);
         assertThat(response.getTotalSharedElements()).isEqualTo(2);
-        assertThat(content.get(0).getScheduleName()).isEqualTo(schedule1.getScheduleName());
-        assertThat(content.get(0).getSinceUpdate()).isNotNull();
-        assertThat(content.get(0).getThumbnailUrl()).isNotNull();
-        assertThat(content.get(0).getAuthor().getNickname()).isEqualTo(member1.getNickname());
-        assertThat(content.get(0).getRole()).isEqualTo(AttendeeRole.AUTHOR);
+        assertThat(response.getContent()).hasSize(2);
+
+        ScheduleInfoResponse first = response.getContent().get(0);
+        ScheduleInfoResponse second = response.getContent().get(1);
+
+        assertAll(
+                () -> assertThat(first.getScheduleName()).isEqualTo(schedule1.getScheduleName()),
+                () -> assertThat(first.getSinceUpdate()).isNotNull(),
+                () -> assertThat(first.getThumbnailUrl()).isEqualTo(placeWithThumbnail2.getThumbnailUrl()),
+                () -> assertThat(first.getAuthor().getNickname()).isEqualTo(authorMember.getNickname()),
+                () -> assertThat(first.getRole()).isEqualTo(AttendeeRole.AUTHOR)
+        );
+        assertAll(
+                () -> assertThat(second.getScheduleName()).isEqualTo(schedule2.getScheduleName()),
+                () -> assertThat(second.getThumbnailUrl()).isNull(),
+                () -> assertThat(second.getAuthor().getNickname()).isEqualTo(guestMember.getNickname()),
+                () -> assertThat(second.getRole()).isEqualTo(AttendeeRole.GUEST)
+        );
     }
 
 
@@ -300,17 +419,18 @@ public class TravelScheduleServiceTest extends ScheduleTest {
     void getSharedSchedules_noScheduleData(){
         // given
         Pageable pageable = PageUtils.schedulePageable(1);
-        Page<TravelSchedule> emptySchedulePage = PageUtils.createPage(new ArrayList<>(), pageable, 0);
+        Page<TravelSchedule> emptySchedulePage = PageUtils.createPage(Collections.emptyList(), pageable, 0);
 
-        when(travelScheduleRepository.findSharedTravelSchedulesByMemberId(pageable, member1.getMemberId())).thenReturn(emptySchedulePage);
-        when(travelScheduleRepository.countTravelSchedulesByMemberId(anyLong())).thenReturn(2);
+        when(travelScheduleRepository.findSharedTravelSchedules(pageable, 1L)).thenReturn(emptySchedulePage);
+        when(travelScheduleRepository.countTravelSchedules(anyLong())).thenReturn(2);
 
         // when
-        SchedulePageResponse<ScheduleInfoResponse> response = travelScheduleService.getSharedSchedules(1, member1.getMemberId());
+        SchedulePageResponse<ScheduleInfoResponse> response = travelScheduleService.getSharedSchedules(1, 1L);
 
         // then
         assertThat(response.getTotalElements()).isEqualTo(2);
         assertThat(response.getTotalSharedElements()).isEqualTo(0);
+        assertThat(response.getContent()).hasSize(0);
         assertThat(response.getContent()).isEmpty();
     }
 
@@ -318,61 +438,109 @@ public class TravelScheduleServiceTest extends ScheduleTest {
     @DisplayName("공유된 일정 목록 조회 시 이미지 썸네일 데이터 없는 경우")
     void getSharedSchedules_noImageThumbnail(){
         // given
+        ProfileImage defaultImage = createProfileImage("defaultImage");
+        Member authorMember = createNativeTypeMemberWithId(1L, "authorMember@email.com", defaultImage);
+        Member guestMember = createNativeTypeMemberWithId(2L, "guestMember@email.com", defaultImage);
+
+        TravelSchedule schedule1 = createTravelSchedule("당일 여행");
+        createAuthorTravelAttendee(schedule1, authorMember);
+        createGuestTravelAttendee(schedule1, guestMember, AttendeePermission.READ);
+        createTravelRoute(schedule1, placeWithoutThumbnail, 1);
+
+        TravelSchedule schedule2 = createTravelSchedule("도보 여행");
+        createAuthorTravelAttendee(schedule2, guestMember);
+        createGuestTravelAttendee(schedule2, authorMember, AttendeePermission.CHAT);
+        createTravelRoute(schedule2, placeWithoutThumbnail, 1);
+
+        TravelSchedule schedule3 = createTravelSchedule("역사 여행");
+        createAuthorTravelAttendee(schedule3, authorMember);
+        createTravelRoute(schedule3, placeWithoutThumbnail, 1);
+
         Pageable pageable = PageUtils.schedulePageable(1);
-
-        travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, new ArrayList<>());
-        travelPlace2 = createTravelPlace(2L, country, city, district, apiCategory, new ArrayList<>());
-
-        TravelRoute route1 = createTravelRoute(schedule1, travelPlace1, 1);
-        TravelRoute route2 = createTravelRoute(schedule1, travelPlace1, 2);
-        TravelRoute route3 = createTravelRoute(schedule1, travelPlace2, 3);
-        schedule1.addTravelRoutes(route1);
-        schedule1.addTravelRoutes(route2);
-        schedule1.addTravelRoutes(route3);
-
         List<TravelSchedule> schedules = List.of(schedule1, schedule2);
         Page<TravelSchedule> schedulePage = PageUtils.createPage(schedules, pageable, schedules.size());
 
-        when(travelScheduleRepository.findSharedTravelSchedulesByMemberId(pageable, member1.getMemberId())).thenReturn(schedulePage);
-        when(travelScheduleRepository.countTravelSchedulesByMemberId(anyLong())).thenReturn(3);
+        when(travelScheduleRepository.findSharedTravelSchedules(pageable, authorMember.getMemberId())).thenReturn(schedulePage);
+        when(travelScheduleRepository.countTravelSchedules(anyLong())).thenReturn(3);
 
         // when
-        SchedulePageResponse<ScheduleInfoResponse> response = travelScheduleService.getSharedSchedules(1, member1.getMemberId());
+        SchedulePageResponse<ScheduleInfoResponse> response = travelScheduleService.getSharedSchedules(1, authorMember.getMemberId());
 
         // then
-        List<ScheduleInfoResponse> content = response.getContent();
         assertThat(response.getTotalElements()).isEqualTo(3);
         assertThat(response.getTotalSharedElements()).isEqualTo(2);
-        assertThat(content.get(0).getScheduleName()).isEqualTo("테스트1");
-        assertThat(content.get(0).getSinceUpdate()).isNotNull();
-        assertThat(content.get(0).getThumbnailUrl()).isNull();
+        assertThat(response.getContent()).hasSize(2);
 
+        ScheduleInfoResponse first = response.getContent().get(0);
+        ScheduleInfoResponse second = response.getContent().get(1);
+
+        assertAll(
+                () -> assertThat(first.getScheduleName()).isEqualTo(schedule1.getScheduleName()),
+                () -> assertThat(first.getSinceUpdate()).isNotNull(),
+                () -> assertThat(first.getThumbnailUrl()).isNull(),
+                () -> assertThat(first.getAuthor().getNickname()).isEqualTo(authorMember.getNickname()),
+                () -> assertThat(first.getRole()).isEqualTo(AttendeeRole.AUTHOR)
+        );
+        assertAll(
+                () -> assertThat(second.getScheduleName()).isEqualTo(schedule2.getScheduleName()),
+                () -> assertThat(second.getThumbnailUrl()).isNull(),
+                () -> assertThat(second.getAuthor().getNickname()).isEqualTo(guestMember.getNickname()),
+                () -> assertThat(second.getRole()).isEqualTo(AttendeeRole.GUEST)
+        );
     }
 
 
     @Test
-    @DisplayName("내 일정 목록 조회 시 이미지 데이터 없는 경우")
-    void getSharedSchedules_noImageData(){
+    @DisplayName("공유된 일정 목록 조회 시 여행 루트 없는 경우")
+    void getSharedSchedules_noTravelRoutes(){
         // given
-        Pageable pageable = PageUtils.schedulePageable(1);
-        travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, new ArrayList<>());
+        ProfileImage defaultImage = createProfileImage("defaultImage");
+        Member authorMember = createNativeTypeMemberWithId(1L, "authorMember@email.com", defaultImage);
+        Member guestMember = createNativeTypeMemberWithId(2L, "guestMember@email.com", defaultImage);
 
-        List<TravelSchedule> schedules = List.of(schedule1);
+        TravelSchedule schedule1 = createTravelSchedule("당일 여행");
+        createAuthorTravelAttendee(schedule1, authorMember);
+        createGuestTravelAttendee(schedule1, guestMember, AttendeePermission.READ);
+
+        TravelSchedule schedule2 = createTravelSchedule("도보 여행");
+        createAuthorTravelAttendee(schedule2, guestMember);
+        createGuestTravelAttendee(schedule2, authorMember, AttendeePermission.CHAT);
+
+        TravelSchedule schedule3 = createTravelSchedule("역사 여행");
+        createAuthorTravelAttendee(schedule3, authorMember);
+
+
+        Pageable pageable = PageUtils.schedulePageable(1);
+        List<TravelSchedule> schedules = List.of(schedule1, schedule2);
         Page<TravelSchedule> schedulePage = PageUtils.createPage(schedules, pageable, schedules.size());
 
-        when(travelScheduleRepository.findSharedTravelSchedulesByMemberId(pageable, member1.getMemberId())).thenReturn(schedulePage);
-        when(travelScheduleRepository.countTravelSchedulesByMemberId(anyLong())).thenReturn(1);
+        when(travelScheduleRepository.findSharedTravelSchedules(pageable, authorMember.getMemberId())).thenReturn(schedulePage);
+        when(travelScheduleRepository.countTravelSchedules(anyLong())).thenReturn(3);
 
         // when
-        SchedulePageResponse<ScheduleInfoResponse> response = travelScheduleService.getSharedSchedules(1, member1.getMemberId());
+        SchedulePageResponse<ScheduleInfoResponse> response = travelScheduleService.getSharedSchedules(1, authorMember.getMemberId());
 
         // then
-        List<ScheduleInfoResponse> content = response.getContent();
-        assertThat(response.getTotalElements()).isEqualTo(1);
-        assertThat(response.getTotalSharedElements()).isEqualTo(1);
-        assertThat(content.get(0).getScheduleName()).isEqualTo("테스트1");
-        assertThat(content.get(0).getSinceUpdate()).isNotNull();
-        assertThat(content.get(0).getThumbnailUrl()).isNull();
+        assertThat(response.getTotalElements()).isEqualTo(3);
+        assertThat(response.getTotalSharedElements()).isEqualTo(2);
+        assertThat(response.getContent()).hasSize(2);
+
+        ScheduleInfoResponse first = response.getContent().get(0);
+        ScheduleInfoResponse second = response.getContent().get(1);
+
+        assertAll(
+                () -> assertThat(first.getScheduleName()).isEqualTo(schedule1.getScheduleName()),
+                () -> assertThat(first.getSinceUpdate()).isNotNull(),
+                () -> assertThat(first.getThumbnailUrl()).isNull(),
+                () -> assertThat(first.getAuthor().getNickname()).isEqualTo(authorMember.getNickname()),
+                () -> assertThat(first.getRole()).isEqualTo(AttendeeRole.AUTHOR)
+        );
+        assertAll(
+                () -> assertThat(second.getScheduleName()).isEqualTo(schedule2.getScheduleName()),
+                () -> assertThat(second.getThumbnailUrl()).isNull(),
+                () -> assertThat(second.getAuthor().getNickname()).isEqualTo(guestMember.getNickname()),
+                () -> assertThat(second.getRole()).isEqualTo(AttendeeRole.GUEST)
+        );
 
     }
 
@@ -380,36 +548,64 @@ public class TravelScheduleServiceTest extends ScheduleTest {
     @DisplayName("수정 권한 있는 내 일정 목록 조회")
     void getEnableEditSchedule(){
         // given
-        Pageable pageable = PageUtils.scheduleModalPageable(1);
+        TravelSchedule schedule1 = createTravelScheduleWithId(1L, "당일 여행");
+        createAuthorTravelAttendee(schedule1, member1);
+        createGuestTravelAttendee(schedule1, member2, AttendeePermission.READ);
+        createTravelRoute(schedule1, placeWithThumbnail1, 1);
+        createTravelRoute(schedule1, placeWithoutThumbnail, 2);
+        createTravelRoute(schedule1, placeWithThumbnail2, 3);
 
+        TravelSchedule schedule2 = createTravelScheduleWithId(2L, "도보 여행");
+        createAuthorTravelAttendee(schedule2, member2);
+        createGuestTravelAttendee(schedule2, member1, AttendeePermission.CHAT);
+
+        TravelSchedule schedule3 = createTravelScheduleWithId(3L, "역사 여행");
+        createAuthorTravelAttendee(schedule3, member1);
+
+
+        Pageable pageable = PageUtils.scheduleModalPageable(1);
         List<TravelSchedule> schedules = List.of(schedule1);
         Page<TravelSchedule> schedulePage = PageUtils.createPage(schedules, pageable, schedules.size());
 
-        when(travelScheduleRepository.findEnableEditTravelSchedulesByMemberId(any(), anyLong())).thenReturn(schedulePage);
+        when(travelScheduleRepository.findEnableEditTravelSchedules(any(), anyLong())).thenReturn(schedulePage);
         when(travelAttendeeRepository.findAuthorNicknameByScheduleId(anyLong())).thenReturn(member1.getNickname());
 
         // when
-        Page<OverviewScheduleResponse> response = travelScheduleService.getEnableEditSchedule(1, member1.getMemberId());
+        Page<OverviewScheduleResponse> response = travelScheduleService.getEnableEditSchedule(1, 1L);
 
         // then
-        assertThat(response.getTotalElements()).isNotZero();
-        assertThat(response.getContent().get(0).getScheduleName()).isEqualTo(schedule1.getScheduleName());
-        assertThat(response.getContent().get(0).getStartDate()).isEqualTo(schedule1.getStartDate());
-        assertThat(response.getContent().get(0).getAuthor()).isEqualTo(member1.getNickname());
+        List<OverviewScheduleResponse> content = response.getContent();
+        assertThat(response.getTotalElements()).isEqualTo(1);
+        assertThat(content.get(0).getScheduleName()).isEqualTo(schedule1.getScheduleName());
+        assertThat(content.get(0).getStartDate()).isEqualTo(schedule1.getStartDate());
+        assertThat(content.get(0).getAuthor()).isEqualTo(member1.getNickname());
     }
 
     @Test
     @DisplayName("수정 권한 있는 내 일정 목록 조회 시 일정 데이터 존재하지 않는 경우")
     void getEnableEditSchedule_noScheduleData(){
         // given
+        TravelSchedule schedule1 = createTravelSchedule("당일 여행");
+        createAuthorTravelAttendee(schedule1, member1);
+        createGuestTravelAttendee(schedule1, member2, AttendeePermission.READ);
+        createTravelRoute(schedule1, placeWithThumbnail1, 1);
+        createTravelRoute(schedule1, placeWithoutThumbnail, 2);
+        createTravelRoute(schedule1, placeWithThumbnail2, 3);
+
+        TravelSchedule schedule2 = createTravelSchedule("도보 여행");
+        createAuthorTravelAttendee(schedule2, member2);
+        createGuestTravelAttendee(schedule2, member1, AttendeePermission.CHAT);
+
+        TravelSchedule schedule3 = createTravelSchedule("역사 여행");
+        createAuthorTravelAttendee(schedule3, member1);
+
         Pageable pageable = PageUtils.scheduleModalPageable(1);
+        Page<TravelSchedule> schedulePage = PageUtils.createPage(Collections.emptyList(), pageable, 0);
 
-        Page<TravelSchedule> schedulePage = PageUtils.createPage(new ArrayList<>(), pageable, 0);
-
-        when(travelScheduleRepository.findEnableEditTravelSchedulesByMemberId(any(), anyLong())).thenReturn(schedulePage);
+        when(travelScheduleRepository.findEnableEditTravelSchedules(any(), anyLong())).thenReturn(schedulePage);
 
         // when
-        Page<OverviewScheduleResponse> response = travelScheduleService.getEnableEditSchedule(1, member1.getMemberId());
+        Page<OverviewScheduleResponse> response = travelScheduleService.getEnableEditSchedule(1, 1L);
 
         // then
         assertThat(response.getTotalElements()).isZero();
@@ -420,66 +616,100 @@ public class TravelScheduleServiceTest extends ScheduleTest {
     @DisplayName("내 일정 검색")
     void searchAllSchedules(){
         // given
-        String keyword = "테스트";
-        Pageable pageable = PageUtils.schedulePageable(1);
+        ProfileImage defaultImage = createProfileImage("defaultImage");
+        Member authorMember = createNativeTypeMemberWithId(1L, "authorMember@email.com", defaultImage);
+        Member guestMember = createNativeTypeMemberWithId(2L, "guestMember@email.com", defaultImage);
 
-        List<TravelSchedule> schedules = List.of(schedule1, schedule2, schedule3);
+        TravelSchedule schedule1 = createTravelSchedule("당일 여행");
+        createAuthorTravelAttendee(schedule1, authorMember);
+        createGuestTravelAttendee(schedule1, guestMember, AttendeePermission.READ);
+        createTravelRoute(schedule1, placeWithThumbnail1, 1);
+        createTravelRoute(schedule1, placeWithoutThumbnail, 2);
+        createTravelRoute(schedule1, placeWithThumbnail2, 3);
+
+        String keyword = "서울";
+
+        Pageable pageable = PageUtils.schedulePageable(1);
+        List<TravelSchedule> schedules = List.of(schedule1);
         Page<TravelSchedule> schedulePage = PageUtils.createPage(schedules, pageable, schedules.size());
 
-        when(travelScheduleRepository.searchTravelSchedulesByMemberIdAndKeyword(pageable, keyword, member1.getMemberId())).thenReturn(schedulePage);
-        when(travelScheduleRepository.countSharedTravelSchedulesByMemberIdAndKeyword(keyword, member1.getMemberId())).thenReturn(1);
+        when(travelScheduleRepository.searchTravelSchedules(pageable, keyword, authorMember.getMemberId()))
+                .thenReturn(schedulePage);
+        when(travelScheduleRepository.countTravelSchedules(anyLong())).thenReturn(2);
+        when(travelScheduleRepository.countSharedTravelSchedules(anyLong())).thenReturn(2);
 
         // when
-        SchedulePageResponse<ScheduleInfoResponse> response = travelScheduleService.searchAllSchedules(1, keyword, member1.getMemberId());
+        SchedulePageResponse<ScheduleInfoResponse> response
+                = travelScheduleService.searchAllSchedules(1, keyword, authorMember.getMemberId());
 
         // then
-        List<ScheduleInfoResponse> content = response.getContent();
-        assertThat(response.getTotalElements()).isEqualTo(3);
-        assertThat(response.getTotalSharedElements()).isEqualTo(1);
-        assertThat(content.get(0).getScheduleName()).isNotNull();
-        assertThat(content.get(0).getSinceUpdate()).isNotNull();
-        assertThat(content.get(0).getAuthor().getNickname()).isEqualTo(member1.getNickname());
-        assertThat(content.get(0).getRole()).isEqualTo(AttendeeRole.AUTHOR);
+        assertThat(response.getTotalElements()).isEqualTo(2);
+        assertThat(response.getTotalSharedElements()).isEqualTo(2);
+        assertThat(response.getContent()).hasSize(1);
+
+        ScheduleInfoResponse first = response.getContent().get(0);
+
+        assertAll(
+                () -> assertThat(first.getScheduleName()).isEqualTo(schedule1.getScheduleName()),
+                () -> assertThat(first.getSinceUpdate()).isNotNull(),
+                () -> assertThat(first.getThumbnailUrl()).isEqualTo(placeWithThumbnail2.getThumbnailUrl()),
+                () -> assertThat(first.getAuthor().getNickname()).isEqualTo(authorMember.getNickname()),
+                () -> assertThat(first.getRole()).isEqualTo(AttendeeRole.AUTHOR)
+        );
+
     }
 
     @Test
     @DisplayName("내 일정 검색 시 공유된 일정이 없는 경우")
     void searchAllSchedules_noSharedSchedule(){
         // given
-        String keyword = "3";
+        ProfileImage defaultImage = createProfileImage("defaultImage");
+        Member authorMember = createNativeTypeMemberWithId(1L, "authorMember@email.com", defaultImage);
+
+        TravelSchedule schedule1 = createTravelSchedule("당일 여행");
+        createAuthorTravelAttendee(schedule1, authorMember);
+        createTravelRoute(schedule1, placeWithThumbnail1, 1);
+        createTravelRoute(schedule1, placeWithoutThumbnail, 2);
+        createTravelRoute(schedule1, placeWithThumbnail2, 3);
+
+        String keyword = "서울";
         Pageable pageable = PageUtils.schedulePageable(1);
 
-        List<TravelSchedule> schedules = List.of(schedule3);
+        List<TravelSchedule> schedules = List.of(schedule1);
         Page<TravelSchedule> schedulePage = PageUtils.createPage(schedules, pageable, schedules.size());
 
-        when(travelScheduleRepository.searchTravelSchedulesByMemberIdAndKeyword(pageable, keyword, member1.getMemberId())).thenReturn(schedulePage);
-        when(travelScheduleRepository.countSharedTravelSchedulesByMemberIdAndKeyword(keyword, member1.getMemberId())).thenReturn(0);
+        when(travelScheduleRepository.searchTravelSchedules(pageable, keyword, authorMember.getMemberId()))
+                .thenReturn(schedulePage);
+        when(travelScheduleRepository.countTravelSchedules(anyLong())).thenReturn(1);
+        when(travelScheduleRepository.countSharedTravelSchedules(anyLong())).thenReturn(0);
 
         // when
-        SchedulePageResponse<ScheduleInfoResponse> response = travelScheduleService.searchAllSchedules(1, "3", member1.getMemberId());
+        SchedulePageResponse<ScheduleInfoResponse> response
+                = travelScheduleService.searchAllSchedules(1, keyword, authorMember.getMemberId());
 
         // then
         List<ScheduleInfoResponse> content = response.getContent();
         assertThat(response.getTotalElements()).isEqualTo(1);
         assertThat(response.getTotalSharedElements()).isEqualTo(0);
-        assertThat(content.get(0).getScheduleName()).isEqualTo(schedule3.getScheduleName());
+        assertThat(content).hasSize(1);
+        assertThat(content.get(0).getScheduleName()).isEqualTo(schedule1.getScheduleName());
         assertThat(content.get(0).getSinceUpdate()).isNotNull();
-        assertThat(content.get(0).getAuthor().getNickname()).isEqualTo(member1.getNickname());
+        assertThat(content.get(0).getAuthor().getNickname()).isEqualTo(authorMember.getNickname());
     }
 
     @Test
     @DisplayName("내 일정 검색 시 검색 결과가 없는 경우")
-    void searchAllSchedules_noData(){
+    void searchAllSchedules_emptyResult(){
         // given
         String keyword = "ㅁㄴㅇㄹ";
         Pageable pageable = PageUtils.schedulePageable(1);
-        Page<TravelSchedule> emptySchedulePage = PageUtils.createPage(new ArrayList<>(), pageable, 0);
+        Page<TravelSchedule> emptySchedulePage = PageUtils.createPage(Collections.emptyList(), pageable, 0);
 
-        when(travelScheduleRepository.searchTravelSchedulesByMemberIdAndKeyword(pageable, keyword, member1.getMemberId())).thenReturn(emptySchedulePage);
-        when(travelScheduleRepository.countSharedTravelSchedulesByMemberIdAndKeyword(keyword, member1.getMemberId())).thenReturn(2);
+        when(travelScheduleRepository.searchTravelSchedules(pageable, keyword, 1L)).thenReturn(emptySchedulePage);
+        when(travelScheduleRepository.countSharedTravelSchedules(anyLong())).thenReturn(2);
 
         // when
-        SchedulePageResponse<ScheduleInfoResponse> response = travelScheduleService.searchAllSchedules(1, keyword, member1.getMemberId());
+        SchedulePageResponse<ScheduleInfoResponse> response = travelScheduleService.searchAllSchedules(1, keyword, 1L);
 
         // then
         assertThat(response.getTotalElements()).isEqualTo(0);
@@ -488,57 +718,94 @@ public class TravelScheduleServiceTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("내 일정 검색 시 이미지 썸네일 데이터 없는 경우")
+    @DisplayName("내 일정 검색 시 이미지 썸네일 없는 경우")
     void searchAllSchedules_noImageThumbnail(){
         // given
-        String keyword = "테스트";
+        ProfileImage defaultImage = createProfileImage("defaultImage");
+        Member authorMember = createNativeTypeMemberWithId(1L, "authorMember@email.com", defaultImage);
+        Member guestMember = createNativeTypeMemberWithId(2L, "guestMember@email.com", defaultImage);
+
+        TravelSchedule schedule1 = createTravelSchedule("당일 여행");
+        createAuthorTravelAttendee(schedule1, authorMember);
+        createGuestTravelAttendee(schedule1, guestMember, AttendeePermission.READ);
+        createTravelRoute(schedule1, placeWithoutThumbnail, 1);
+
+        TravelSchedule schedule2 = createTravelSchedule("도보 여행");
+        createAuthorTravelAttendee(schedule2, guestMember);
+        createGuestTravelAttendee(schedule2, authorMember, AttendeePermission.CHAT);
+        createTravelRoute(schedule2, placeWithoutThumbnail, 1);
+
+        String keyword = "여행";
+
         Pageable pageable = PageUtils.schedulePageable(1);
-
-        travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, new ArrayList<>());
-        travelPlace2 = createTravelPlace(2L, country, city, district, apiCategory, new ArrayList<>());
-
         List<TravelSchedule> schedules = List.of(schedule1, schedule2);
         Page<TravelSchedule> schedulePage = PageUtils.createPage(schedules, pageable, schedules.size());
 
-        when(travelScheduleRepository.searchTravelSchedulesByMemberIdAndKeyword(pageable, keyword, member1.getMemberId())).thenReturn(schedulePage);
-        when(travelScheduleRepository.countSharedTravelSchedulesByMemberIdAndKeyword(keyword, member1.getMemberId())).thenReturn(1);
+        when(travelScheduleRepository.searchTravelSchedules(pageable, keyword, authorMember.getMemberId()))
+                .thenReturn(schedulePage);
+        when(travelScheduleRepository.countTravelSchedules(anyLong())).thenReturn(2);
+        when(travelScheduleRepository.countSharedTravelSchedules(anyLong())).thenReturn(2);
 
         // when
-        SchedulePageResponse<ScheduleInfoResponse> response = travelScheduleService.searchAllSchedules(1, keyword, member1.getMemberId());
+        SchedulePageResponse<ScheduleInfoResponse> response
+                = travelScheduleService.searchAllSchedules(1, keyword, authorMember.getMemberId());
 
         // then
-        List<ScheduleInfoResponse> content = response.getContent();
         assertThat(response.getTotalElements()).isEqualTo(2);
-        assertThat(response.getTotalSharedElements()).isEqualTo(1);
-        assertThat(content.get(0).getScheduleName()).isEqualTo("테스트1");
-        assertThat(content.get(0).getSinceUpdate()).isNotNull();
-        assertThat(content.get(0).getThumbnailUrl()).isNull();
+        assertThat(response.getTotalSharedElements()).isEqualTo(2);
+        assertThat(response.getContent()).hasSize(2);
 
+        ScheduleInfoResponse first = response.getContent().get(0);
+        ScheduleInfoResponse second = response.getContent().get(1);
+
+        assertAll(
+                () -> assertThat(first.getScheduleName()).isEqualTo(schedule1.getScheduleName()),
+                () -> assertThat(first.getSinceUpdate()).isNotNull(),
+                () -> assertThat(first.getThumbnailUrl()).isNull(),
+                () -> assertThat(first.getAuthor().getNickname()).isEqualTo(authorMember.getNickname()),
+                () -> assertThat(first.getRole()).isEqualTo(AttendeeRole.AUTHOR)
+        );
+        assertAll(
+                () -> assertThat(second.getScheduleName()).isEqualTo(schedule2.getScheduleName()),
+                () -> assertThat(second.getThumbnailUrl()).isNull(),
+                () -> assertThat(second.getAuthor().getNickname()).isEqualTo(guestMember.getNickname()),
+                () -> assertThat(second.getRole()).isEqualTo(AttendeeRole.GUEST)
+        );
     }
 
 
     @Test
-    @DisplayName("내 일정 목록 조회 시 이미지 데이터 없는 경우")
-    void searchAllSchedules_noImageData(){
+    @DisplayName("내 일정 검색 시 여행 루트 없는 경우")
+    void searchAllSchedules_noTravelRoutes(){
         // given
-        String keyword = "1";
-        Pageable pageable = PageUtils.schedulePageable(1);
-        travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, new ArrayList<>());
+        ProfileImage defaultImage = createProfileImage("defaultImage");
+        Member authorMember = createNativeTypeMemberWithId(1L, "authorMember@email.com", defaultImage);
+        Member guestMember = createNativeTypeMemberWithId(2L, "guestMember@email.com", defaultImage);
 
+        TravelSchedule schedule1 = createTravelSchedule( "당일 여행");
+        createAuthorTravelAttendee(schedule1, authorMember);
+        createGuestTravelAttendee(schedule1, guestMember, AttendeePermission.READ);
+
+        String keyword = "서울";
+
+        Pageable pageable = PageUtils.schedulePageable(1);
         List<TravelSchedule> schedules = List.of(schedule1);
         Page<TravelSchedule> schedulePage = PageUtils.createPage(schedules, pageable, schedules.size());
 
-        when(travelScheduleRepository.searchTravelSchedulesByMemberIdAndKeyword(pageable, keyword, member1.getMemberId())).thenReturn(schedulePage);
-        when(travelScheduleRepository.countSharedTravelSchedulesByMemberIdAndKeyword(keyword, member1.getMemberId())).thenReturn(1);
+        when(travelScheduleRepository.searchTravelSchedules(pageable, keyword, authorMember.getMemberId())).thenReturn(schedulePage);
+        when(travelScheduleRepository.countTravelSchedules(anyLong())).thenReturn(2);
+        when(travelScheduleRepository.countSharedTravelSchedules(anyLong())).thenReturn(2);
 
         // when
-        SchedulePageResponse<ScheduleInfoResponse> response = travelScheduleService.searchAllSchedules(1, keyword, member1.getMemberId());
+        SchedulePageResponse<ScheduleInfoResponse> response
+                = travelScheduleService.searchAllSchedules(1, keyword, authorMember.getMemberId());
 
         // then
         List<ScheduleInfoResponse> content = response.getContent();
-        assertThat(response.getTotalElements()).isEqualTo(1);
-        assertThat(response.getTotalSharedElements()).isEqualTo(1);
-        assertThat(content.get(0).getScheduleName()).isEqualTo("테스트1");
+        assertThat(response.getTotalElements()).isEqualTo(2);
+        assertThat(response.getTotalSharedElements()).isEqualTo(2);
+        assertThat(response.getContent()).hasSize(1);
+        assertThat(content.get(0).getScheduleName()).isEqualTo(schedule1.getScheduleName());
         assertThat(content.get(0).getSinceUpdate()).isNotNull();
         assertThat(content.get(0).getThumbnailUrl()).isNull();
 
@@ -548,58 +815,72 @@ public class TravelScheduleServiceTest extends ScheduleTest {
     @DisplayName("공유된 일정 검색")
     void searchSharedSchedules(){
         // given
-        String keyword = "테스트";
+        ProfileImage defaultImage = createProfileImage("defaultImage");
+        Member authorMember = createNativeTypeMemberWithId(1L, "authorMember@email.com", defaultImage);
+        Member guestMember = createNativeTypeMemberWithId(2L, "guestMember@email.com", defaultImage);
+
+        TravelSchedule schedule1 = createTravelSchedule("당일 여행");
+        createAuthorTravelAttendee(schedule1, authorMember);
+        createGuestTravelAttendee(schedule1, guestMember, AttendeePermission.READ);
+        createTravelRoute(schedule1, placeWithThumbnail1, 1);
+        createTravelRoute(schedule1, placeWithoutThumbnail, 2);
+        createTravelRoute(schedule1, placeWithThumbnail2, 3);
+
+        TravelSchedule schedule2 = createTravelSchedule("도보 여행");
+        createAuthorTravelAttendee(schedule2, guestMember);
+        createGuestTravelAttendee(schedule2, authorMember, AttendeePermission.CHAT);
+
+        String keyword = "여행";
+
         Pageable pageable = PageUtils.schedulePageable(1);
-
-        TravelImage travelImage1 = createTravelImage(travelPlace1, "test1", true);
-        TravelImage travelImage2 = createTravelImage(travelPlace1, "test2", false);
-        travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, List.of(travelImage1, travelImage2));
-
-        TravelImage travelImage3 = createTravelImage(travelPlace2, "test1", true);
-        TravelImage travelImage4 = createTravelImage(travelPlace2, "test2", false);
-        travelPlace2 = createTravelPlace(2L, country, city, district, apiCategory, List.of(travelImage3, travelImage4));
-
-        TravelRoute route1 = createTravelRoute(schedule1, travelPlace1, 1);
-        TravelRoute route2 = createTravelRoute(schedule1, travelPlace1, 2);
-        TravelRoute route3 = createTravelRoute(schedule1, travelPlace2, 3);
-        schedule1.addTravelRoutes(route1);
-        schedule1.addTravelRoutes(route2);
-        schedule1.addTravelRoutes(route3);
-
-        List<TravelSchedule> schedules = List.of(schedule1, schedule2, schedule3);
+        List<TravelSchedule> schedules = List.of(schedule1, schedule2);
         Page<TravelSchedule> schedulePage = PageUtils.createPage(schedules, pageable, schedules.size());
 
-        when(travelScheduleRepository.searchSharedTravelSchedulesByMemberIdAndKeyword(pageable, keyword, member1.getMemberId())).thenReturn(schedulePage);
-        when(travelScheduleRepository.countTravelSchedulesByMemberIdAndKeyword(keyword, member1.getMemberId())).thenReturn(5);
+        when(travelScheduleRepository.searchSharedTravelSchedules(pageable, keyword, authorMember.getMemberId())).thenReturn(schedulePage);
+        when(travelScheduleRepository.countTravelSchedules(anyLong())).thenReturn(3);
+        when(travelScheduleRepository.countSharedTravelSchedules(anyLong())).thenReturn(2);
 
         // when
-        SchedulePageResponse<ScheduleInfoResponse> response = travelScheduleService.searchSharedSchedules(1, keyword, member1.getMemberId());
+        SchedulePageResponse<ScheduleInfoResponse> response
+                = travelScheduleService.searchSharedSchedules(1, keyword, authorMember.getMemberId());
 
         // then
-        List<ScheduleInfoResponse> content = response.getContent();
-        assertThat(response.getTotalElements()).isEqualTo(5);
-        assertThat(response.getTotalSharedElements()).isEqualTo(3);
-        assertThat(content.get(0).getScheduleName()).isEqualTo(schedule1.getScheduleName());
-        assertThat(content.get(0).getSinceUpdate()).isNotNull();
-        assertThat(content.get(0).getThumbnailUrl()).isNotNull();
-        assertThat(content.get(0).getAuthor().getNickname()).isEqualTo(member1.getNickname());
-        assertThat(content.get(0).getRole()).isEqualTo(AttendeeRole.AUTHOR);
+        assertThat(response.getTotalElements()).isEqualTo(3);
+        assertThat(response.getTotalSharedElements()).isEqualTo(2);
+        assertThat(response.getContent()).hasSize(2);
+
+        ScheduleInfoResponse first = response.getContent().get(0);
+        ScheduleInfoResponse second = response.getContent().get(1);
+
+        assertAll(
+                () -> assertThat(first.getScheduleName()).isEqualTo(schedule1.getScheduleName()),
+                () -> assertThat(first.getSinceUpdate()).isNotNull(),
+                () -> assertThat(first.getThumbnailUrl()).isEqualTo(placeWithThumbnail2.getThumbnailUrl()),
+                () -> assertThat(first.getAuthor().getNickname()).isEqualTo(authorMember.getNickname()),
+                () -> assertThat(first.getRole()).isEqualTo(AttendeeRole.AUTHOR)
+        );
+        assertAll(
+                () -> assertThat(second.getScheduleName()).isEqualTo(schedule2.getScheduleName()),
+                () -> assertThat(second.getThumbnailUrl()).isNull(),
+                () -> assertThat(second.getAuthor().getNickname()).isEqualTo(guestMember.getNickname()),
+                () -> assertThat(second.getRole()).isEqualTo(AttendeeRole.GUEST)
+        );
+
     }
 
-
     @Test
-    @DisplayName("공유된 일정 목록 조회 시 일정 데이터 없는 경우")
+    @DisplayName("공유된 일정 검색 시 일정 데이터 없는 경우")
     void searchSharedSchedules_noScheduleData(){
         // given
         String keyword = "테스트";
         Pageable pageable = PageUtils.schedulePageable(1);
-        Page<TravelSchedule> emptySchedulePage = PageUtils.createPage(new ArrayList<>(), pageable, 0);
+        Page<TravelSchedule> emptySchedulePage = PageUtils.createPage(Collections.emptyList(), pageable, 0);
 
-        when(travelScheduleRepository.searchSharedTravelSchedulesByMemberIdAndKeyword(pageable, keyword, member1.getMemberId())).thenReturn(emptySchedulePage);
-        when(travelScheduleRepository.countTravelSchedulesByMemberIdAndKeyword(keyword, member1.getMemberId())).thenReturn(2);
+        when(travelScheduleRepository.searchSharedTravelSchedules(pageable, keyword, 1L)).thenReturn(emptySchedulePage);
+        when(travelScheduleRepository.countTravelSchedules(anyLong())).thenReturn(2);
 
         // when
-        SchedulePageResponse<ScheduleInfoResponse> response = travelScheduleService.searchSharedSchedules(1, keyword, member1.getMemberId());
+        SchedulePageResponse<ScheduleInfoResponse> response = travelScheduleService.searchSharedSchedules(1, keyword, 1L);
 
         // then
         assertThat(response.getTotalElements()).isEqualTo(2);
@@ -608,64 +889,95 @@ public class TravelScheduleServiceTest extends ScheduleTest {
     }
 
     @Test
-    @DisplayName("공유된 일정 목록 조회 시 이미지 썸네일 데이터 없는 경우")
+    @DisplayName("공유된 일정 검색 시 이미지 썸네일 없는 경우")
     void searchSharedSchedules_noImageThumbnail(){
         // given
-        String keyword = "테스트";
+        ProfileImage defaultImage = createProfileImage("defaultImage");
+        Member authorMember = createNativeTypeMemberWithId(1L, "authorMember@email.com", defaultImage);
+        Member guestMember = createNativeTypeMemberWithId(2L, "guestMember@email.com", defaultImage);
+
+        TravelSchedule schedule1 = createTravelSchedule("당일 여행");
+        createAuthorTravelAttendee(schedule1, authorMember);
+        createGuestTravelAttendee(schedule1, guestMember, AttendeePermission.READ);
+        createTravelRoute(schedule1, placeWithoutThumbnail, 1);
+
+        TravelSchedule schedule2 = createTravelSchedule("도보 여행");
+        createAuthorTravelAttendee(schedule2, guestMember);
+        createTravelRoute(schedule2, placeWithoutThumbnail, 1);
+        createGuestTravelAttendee(schedule2, authorMember, AttendeePermission.CHAT);
+
+        String keyword = "여행";
+
         Pageable pageable = PageUtils.schedulePageable(1);
-
-        travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, new ArrayList<>());
-        travelPlace2 = createTravelPlace(2L, country, city, district, apiCategory, new ArrayList<>());
-
-        TravelRoute route1 = createTravelRoute(schedule1, travelPlace1, 1);
-        TravelRoute route2 = createTravelRoute(schedule1, travelPlace1, 2);
-        TravelRoute route3 = createTravelRoute(schedule1, travelPlace2, 3);
-        schedule1.addTravelRoutes(route1);
-        schedule1.addTravelRoutes(route2);
-        schedule1.addTravelRoutes(route3);
-
         List<TravelSchedule> schedules = List.of(schedule1, schedule2);
         Page<TravelSchedule> schedulePage = PageUtils.createPage(schedules, pageable, schedules.size());
 
-        when(travelScheduleRepository.searchSharedTravelSchedulesByMemberIdAndKeyword(pageable, keyword, member1.getMemberId())).thenReturn(schedulePage);
-        when(travelScheduleRepository.countTravelSchedulesByMemberIdAndKeyword(keyword, member1.getMemberId())).thenReturn(3);
+        when(travelScheduleRepository.searchSharedTravelSchedules(pageable, keyword, authorMember.getMemberId())).thenReturn(schedulePage);
+        when(travelScheduleRepository.countTravelSchedules(anyLong())).thenReturn(3);
+        when(travelScheduleRepository.countSharedTravelSchedules(anyLong())).thenReturn(2);
 
         // when
-        SchedulePageResponse<ScheduleInfoResponse> response = travelScheduleService.searchSharedSchedules(1, keyword, member1.getMemberId());
+        SchedulePageResponse<ScheduleInfoResponse> response
+                = travelScheduleService.searchSharedSchedules(1, keyword, authorMember.getMemberId());
 
         // then
-        List<ScheduleInfoResponse> content = response.getContent();
         assertThat(response.getTotalElements()).isEqualTo(3);
         assertThat(response.getTotalSharedElements()).isEqualTo(2);
-        assertThat(content.get(0).getScheduleName()).isEqualTo("테스트1");
-        assertThat(content.get(0).getSinceUpdate()).isNotNull();
-        assertThat(content.get(0).getThumbnailUrl()).isNull();
+        assertThat(response.getContent()).hasSize(2);
+
+        ScheduleInfoResponse first = response.getContent().get(0);
+        ScheduleInfoResponse second = response.getContent().get(1);
+
+        assertAll(
+                () -> assertThat(first.getScheduleName()).isEqualTo(schedule1.getScheduleName()),
+                () -> assertThat(first.getSinceUpdate()).isNotNull(),
+                () -> assertThat(first.getThumbnailUrl()).isNull(),
+                () -> assertThat(first.getAuthor().getNickname()).isEqualTo(authorMember.getNickname()),
+                () -> assertThat(first.getRole()).isEqualTo(AttendeeRole.AUTHOR)
+        );
+        assertAll(
+                () -> assertThat(second.getScheduleName()).isEqualTo(schedule2.getScheduleName()),
+                () -> assertThat(second.getThumbnailUrl()).isNull(),
+                () -> assertThat(second.getAuthor().getNickname()).isEqualTo(guestMember.getNickname()),
+                () -> assertThat(second.getRole()).isEqualTo(AttendeeRole.GUEST)
+        );
 
     }
 
 
     @Test
-    @DisplayName("공유된 일정 검색 시 이미지 데이터 없는 경우")
-    void searchSharedSchedules_noImageData(){
+    @DisplayName("공유된 일정 검색 시 여행 루트 없는 경우")
+    void searchSharedSchedules_noTravelRoutes(){
         // given
-        String keyword = "테스트";
+        ProfileImage defaultImage = createProfileImage("defaultImage");
+        Member authorMember = createNativeTypeMemberWithId(1L, "authorMember@email.com", defaultImage);
+        Member guestMember = createNativeTypeMemberWithId(2L, "guestMember@email.com", defaultImage);
+
+        TravelSchedule schedule1 = createTravelSchedule("당일 여행");
+        createAuthorTravelAttendee(schedule1, authorMember);
+        createGuestTravelAttendee(schedule1, guestMember, AttendeePermission.READ);
+
+        String keyword = "여행";
+
         Pageable pageable = PageUtils.schedulePageable(1);
-        travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, new ArrayList<>());
+        List<TravelSchedule> schedules = List.of(schedule1);
+        Page<TravelSchedule> schedulePage = PageUtils.createPage(schedules, pageable, 2);
 
-        List<TravelSchedule> schedules = List.of(schedule1, schedule2);
-        Page<TravelSchedule> schedulePage = PageUtils.createPage(schedules, pageable, schedules.size());
-
-        when(travelScheduleRepository.searchSharedTravelSchedulesByMemberIdAndKeyword(pageable, keyword, member1.getMemberId())).thenReturn(schedulePage);
-        when(travelScheduleRepository.countTravelSchedulesByMemberIdAndKeyword(keyword, member1.getMemberId())).thenReturn(1);
+        when(travelScheduleRepository.searchSharedTravelSchedules(pageable, keyword, authorMember.getMemberId()))
+                .thenReturn(schedulePage);
+        when(travelScheduleRepository.countTravelSchedules(anyLong())).thenReturn(3);
+        when(travelScheduleRepository.countSharedTravelSchedules(anyLong())).thenReturn(2);
 
         // when
-        SchedulePageResponse<ScheduleInfoResponse> response = travelScheduleService.searchSharedSchedules(1, keyword, member1.getMemberId());
+        SchedulePageResponse<ScheduleInfoResponse> response
+                = travelScheduleService.searchSharedSchedules(1, keyword, authorMember.getMemberId());
 
         // then
         List<ScheduleInfoResponse> content = response.getContent();
-        assertThat(response.getTotalElements()).isEqualTo(1);
+        assertThat(response.getTotalElements()).isEqualTo(3);
         assertThat(response.getTotalSharedElements()).isEqualTo(2);
-        assertThat(content.get(0).getScheduleName()).isEqualTo("테스트1");
+        assertThat(response.getContent()).hasSize(1);
+        assertThat(content.get(0).getScheduleName()).isEqualTo(schedule1.getScheduleName());
         assertThat(content.get(0).getSinceUpdate()).isNotNull();
         assertThat(content.get(0).getThumbnailUrl()).isNull();
 
@@ -675,68 +987,117 @@ public class TravelScheduleServiceTest extends ScheduleTest {
     @DisplayName("TravelSchedule 를 ScheduleInfoResponse 로 변경")
     void createScheduleInfoResponse(){
         // given
-        TravelImage travelImage1 = createTravelImage(travelPlace1, "test1", true);
-        TravelImage travelImage2 = createTravelImage(travelPlace1, "test2", false);
-        travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, List.of(travelImage1, travelImage2));
+        ProfileImage defaultImage = createProfileImage("defaultImage");
+        Member authorMember = createNativeTypeMemberWithId(1L, "authorMember@email.com", defaultImage);
+        Member guestMember = createNativeTypeMemberWithId(2L, "guestMember@email.com", defaultImage);
 
-        TravelImage travelImage3 = createTravelImage(travelPlace2, "test1", true);
-        TravelImage travelImage4 = createTravelImage(travelPlace2, "test2", false);
-        travelPlace2 = createTravelPlace(2L, country, city, district, apiCategory, List.of(travelImage3, travelImage4));
+        TravelSchedule schedule1 = createTravelSchedule("당일 여행");
+        createAuthorTravelAttendee(schedule1, authorMember);
+        createGuestTravelAttendee(schedule1, guestMember, AttendeePermission.READ);
+        createTravelRoute(schedule1, placeWithThumbnail1, 1);
+        createTravelRoute(schedule1, placeWithoutThumbnail, 2);
+        createTravelRoute(schedule1, placeWithThumbnail2, 3);
 
-        TravelRoute route1 = createTravelRoute(schedule1, travelPlace1, 1);
-        TravelRoute route2 = createTravelRoute(schedule1, travelPlace1, 2);
-        TravelRoute route3 = createTravelRoute(schedule1, travelPlace2, 3);
-        schedule1.addTravelRoutes(route1);
-        schedule1.addTravelRoutes(route2);
-        schedule1.addTravelRoutes(route3);
+        TravelSchedule schedule2 = createTravelSchedule("도보 여행");
+        createAuthorTravelAttendee(schedule2, guestMember);
+        createGuestTravelAttendee(schedule2, authorMember, AttendeePermission.CHAT);
+
+        TravelSchedule schedule3 = createTravelSchedule("역사 여행");
+        createAuthorTravelAttendee(schedule3, authorMember);
+
 
         List<TravelSchedule> travelSchedules = List.of(schedule1);
         Page<TravelSchedule> schedulePage = PageUtils.createPage(travelSchedules, PageUtils.schedulePageable(1), travelSchedules.size());
+
         // when
-        List<ScheduleInfoResponse> response = travelScheduleService.createScheduleInfoResponse(schedulePage, member1.getMemberId());
+        List<ScheduleInfoResponse> response = travelScheduleService.createScheduleInfoResponse(schedulePage, authorMember.getMemberId());
 
         // then
-        assertThat(response.size()).isEqualTo(1);
+        assertThat(response).hasSize(1);
         assertThat(response.get(0).getScheduleName()).isEqualTo(schedule1.getScheduleName());
         assertThat(response.get(0).getSinceUpdate()).isNotNull();
         assertThat(response.get(0).getThumbnailUrl()).isNotNull();
-        assertThat(response.get(0).getAuthor().getNickname()).isEqualTo(member1.getNickname());
+        assertThat(response.get(0).getAuthor().getNickname()).isEqualTo(authorMember.getNickname());
     }
 
     @Test
     @DisplayName("TravelSchedule 를 ScheduleInfoResponse 로 변경 시 썸네일 없는 경우")
     void createScheduleInfoResponse_noImageThumbnail(){
         // given
-        travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, new ArrayList<>());
-        travelPlace2 = createTravelPlace(2L, country, city, district, apiCategory, new ArrayList<>());
+        ProfileImage defaultImage = createProfileImage("defaultImage");
+        Member authorMember = createNativeTypeMemberWithId(1L, "authorMember@email.com", defaultImage);
+        Member guestMember = createNativeTypeMemberWithId(2L, "guestMember@email.com", defaultImage);
 
-        List<TravelSchedule> travelSchedules = List.of(schedule1);
+        TravelSchedule schedule1 = createTravelSchedule("당일 여행");
+        createAuthorTravelAttendee(schedule1, authorMember);
+        createGuestTravelAttendee(schedule1, guestMember, AttendeePermission.READ);
+        createTravelRoute(schedule1, placeWithoutThumbnail, 1);
+        createTravelRoute(schedule1, placeWithoutThumbnail, 2);
+        createTravelRoute(schedule1, placeWithoutThumbnail, 3);
+
+        TravelSchedule schedule2 = createTravelSchedule("도보 여행");
+        createAuthorTravelAttendee(schedule2, guestMember);
+        createGuestTravelAttendee(schedule2, authorMember, AttendeePermission.CHAT);
+
+        TravelSchedule schedule3 = createTravelSchedule("역사 여행");
+        createAuthorTravelAttendee(schedule3, authorMember);
+
+        List<TravelSchedule> travelSchedules = List.of(schedule1, schedule2, schedule3);
         Page<TravelSchedule> schedulePage = PageUtils.createPage(travelSchedules, PageUtils.schedulePageable(1), travelSchedules.size());
 
 
         // when
-        List<ScheduleInfoResponse> response = travelScheduleService.createScheduleInfoResponse(schedulePage, member1.getMemberId());
+        List<ScheduleInfoResponse> response = travelScheduleService.createScheduleInfoResponse(schedulePage, authorMember.getMemberId());
 
         // then
-        assertThat(response.get(0).getScheduleName()).isEqualTo(schedule1.getScheduleName());
-        assertThat(response.get(0).getSinceUpdate()).isNotNull();
-        assertThat(response.get(0).getThumbnailUrl()).isNull();
-        assertThat(response.get(0).getAuthor().getNickname()).isEqualTo(member1.getNickname());
+        assertThat(response).hasSize(3);
+
+        ScheduleInfoResponse first = response.get(0);
+        ScheduleInfoResponse second = response.get(1);
+        ScheduleInfoResponse third = response.get(2);
+
+        assertAll(
+                () -> assertThat(first.getScheduleName()).isEqualTo(schedule1.getScheduleName()),
+                () -> assertThat(first.getSinceUpdate()).isNotNull(),
+                () -> assertThat(first.getThumbnailUrl()).isNull(),
+                () -> assertThat(first.getAuthor().getNickname()).isEqualTo(authorMember.getNickname()),
+                () -> assertThat(first.getRole()).isEqualTo(AttendeeRole.AUTHOR)
+        );
+        assertAll(
+                () -> assertThat(second.getScheduleName()).isEqualTo(schedule2.getScheduleName()),
+                () -> assertThat(second.getThumbnailUrl()).isNull(),
+                () -> assertThat(second.getAuthor().getNickname()).isEqualTo(guestMember.getNickname()),
+                () -> assertThat(second.getRole()).isEqualTo(AttendeeRole.GUEST)
+        );
+        assertAll(
+                () -> assertThat(third.getScheduleName()).isEqualTo(schedule3.getScheduleName()),
+                () -> assertThat(third.getThumbnailUrl()).isNull(),
+                () -> assertThat(third.getAuthor().getNickname()).isEqualTo(authorMember.getNickname()),
+                () -> assertThat(third.getRole()).isEqualTo(AttendeeRole.AUTHOR)
+        );
     }
 
     @Test
     @DisplayName("TravelSchedule 를 ScheduleInfoResponse 로 변경 시 작성자가 없어 예외 발생")
     void createScheduleInfoResponse_authorNotFound(){
         // given
-        List<TravelSchedule> travelSchedules = List.of(schedule1);
+        ProfileImage defaultImage = createProfileImage("defaultImage");
+        Member guestMember = createNativeTypeMemberWithId(1L, "guestMember@email.com", defaultImage);
+
+        TravelSchedule schedule = createTravelSchedule("당일 여행");
+        createGuestTravelAttendee(schedule, guestMember, AttendeePermission.ALL);
+
+        createTravelRoute(schedule, placeWithThumbnail1, 1);
+        createTravelRoute(schedule, placeWithoutThumbnail, 2);
+        createTravelRoute(schedule, placeWithThumbnail2, 3);
+
+        List<TravelSchedule> travelSchedules = List.of(schedule);
         Page<TravelSchedule> schedulePage = PageUtils.createPage(travelSchedules, PageUtils.schedulePageable(1), travelSchedules.size());
-        for(TravelAttendee attendee : schedule1.getTravelAttendees()){
-            attendee.updateRole(AttendeeRole.GUEST);
-        }
+
 
         // when
         DataNotFoundException fail = assertThrows(DataNotFoundException.class,
-                () -> travelScheduleService.createScheduleInfoResponse(schedulePage, member1.getMemberId()));
+                () -> travelScheduleService.createScheduleInfoResponse(schedulePage, guestMember.getMemberId()));
 
         // then
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.AUTHOR_NOT_FOUND.getStatus());
@@ -748,12 +1109,27 @@ public class TravelScheduleServiceTest extends ScheduleTest {
     @DisplayName("TravelSchedule 를 ScheduleInfoResponse 로 변경 시 접근 권한이 없어 예외 발생")
     void createScheduleInfoResponse_forbiddenSchedule(){
         // given
+        TravelSchedule schedule1 = createTravelSchedule("당일 여행");
+        createAuthorTravelAttendee(schedule1, member1);
+        createGuestTravelAttendee(schedule1, member2, AttendeePermission.READ);
+        createTravelRoute(schedule1, placeWithThumbnail1, 1);
+        createTravelRoute(schedule1, placeWithoutThumbnail, 2);
+        createTravelRoute(schedule1, placeWithThumbnail2, 3);
+
+        TravelSchedule schedule2 = createTravelSchedule("도보 여행");
+        createAuthorTravelAttendee(schedule2, member2);
+        createGuestTravelAttendee(schedule2, member1, AttendeePermission.CHAT);
+
+        TravelSchedule schedule3 = createTravelSchedule("역사 여행");
+        createAuthorTravelAttendee(schedule3, member1);
+
+
         List<TravelSchedule> travelSchedules = List.of(schedule3);
         Page<TravelSchedule> schedulePage = PageUtils.createPage(travelSchedules, PageUtils.schedulePageable(1), travelSchedules.size());
 
         // when
         ForbiddenScheduleException fail = assertThrows(ForbiddenScheduleException.class,
-                () -> travelScheduleService.createScheduleInfoResponse(schedulePage, member2.getMemberId()));
+                () -> travelScheduleService.createScheduleInfoResponse(schedulePage, 2L));
 
         // then
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.FORBIDDEN_ACCESS_SCHEDULE.getStatus());
@@ -765,8 +1141,17 @@ public class TravelScheduleServiceTest extends ScheduleTest {
     @DisplayName("작성자 조회해서 MemberProfileDTO 생성")
     void createAuthorDTO(){
         // given
+        TravelSchedule schedule = createTravelSchedule("당일 여행");
+
+        createAuthorTravelAttendee(schedule, member1);
+        createGuestTravelAttendee(schedule, member2, AttendeePermission.READ);
+
+        createTravelRoute(schedule, placeWithThumbnail1, 1);
+        createTravelRoute(schedule, placeWithoutThumbnail, 2);
+        createTravelRoute(schedule, placeWithThumbnail2, 3);
+
         // when
-        AuthorDTO response = travelScheduleService.createAuthorDTO(schedule1);
+        AuthorDTO response = travelScheduleService.createAuthorDTO(schedule);
 
         // then
         assertThat(response.getNickname()).isEqualTo(member1.getNickname());
@@ -778,12 +1163,18 @@ public class TravelScheduleServiceTest extends ScheduleTest {
     @DisplayName("작성자 조회해서 MemberProfileDTO 생성 시 작성자가 없어 예외 발생")
     void createAuthorDTO_authorNotFound(){
         // given
-        for(TravelAttendee attendee : schedule1.getTravelAttendees()){
-            attendee.updateRole(AttendeeRole.GUEST);
-        }
+        TravelSchedule schedule = createTravelSchedule("당일 여행");
+
+        createGuestTravelAttendee(schedule, member2, AttendeePermission.READ);
+
+        createTravelRoute(schedule, placeWithThumbnail1, 1);
+        createTravelRoute(schedule, placeWithoutThumbnail, 2);
+        createTravelRoute(schedule, placeWithThumbnail2, 3);
+
 
         // when
-        DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> travelScheduleService.createAuthorDTO(schedule1));
+        DataNotFoundException fail = assertThrows(DataNotFoundException.class,
+                () -> travelScheduleService.createAuthorDTO(schedule));
 
         // then
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.AUTHOR_NOT_FOUND.getStatus());
@@ -797,6 +1188,9 @@ public class TravelScheduleServiceTest extends ScheduleTest {
     @DisplayName("일정 생성")
     void createSchedule(){
         // given
+        TravelSchedule schedule = createTravelSchedule("당일 여행");
+        createAuthorTravelAttendee(schedule, member1);
+
         ScheduleCreateRequest request = createScheduleRequest(
                 "테스트",
                 LocalDate.now(),
@@ -804,10 +1198,10 @@ public class TravelScheduleServiceTest extends ScheduleTest {
         );
 
         when(memberRepository.findById(anyLong())).thenReturn(Optional.of(member1));
-        when(travelScheduleRepository.save(any())).thenReturn(schedule1);
+        when(travelScheduleRepository.save(any())).thenReturn(schedule);
 
         // when
-        ScheduleCreateResponse response = travelScheduleService.createSchedule(request, member1.getMemberId());
+        ScheduleCreateResponse response = travelScheduleService.createSchedule(request, 1L);
 
         // then
         verify(memberRepository, times(1)).findById(anyLong());
@@ -827,7 +1221,8 @@ public class TravelScheduleServiceTest extends ScheduleTest {
         when(memberRepository.findById(anyLong())).thenReturn(Optional.empty());
 
         // when
-        DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> travelScheduleService.createSchedule(request, 0L));
+        DataNotFoundException fail = assertThrows(DataNotFoundException.class,
+                () -> travelScheduleService.createSchedule(request, 1000L));
 
         // then
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.MEMBER_NOT_FOUND.getStatus());
@@ -839,48 +1234,58 @@ public class TravelScheduleServiceTest extends ScheduleTest {
     @DisplayName("일정 상세 조회")
     void getScheduleDetail(){
         // given
-        TravelImage travelImage1 = createTravelImage(travelPlace1, "test1", true);
-        TravelImage travelImage2 = createTravelImage(travelPlace1, "test2", false);
-        travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, List.of(travelImage1, travelImage2));
+        TravelSchedule schedule = createTravelSchedule("당일 여행");
 
-        TravelImage travelImage3 = createTravelImage(travelPlace2, "test1", true);
-        TravelImage travelImage4 = createTravelImage(travelPlace2, "test2", false);
-        travelPlace2 = createTravelPlace(2L, country, city, district, apiCategory, List.of(travelImage3, travelImage4));
+        createAuthorTravelAttendee(schedule, member1);
+        createGuestTravelAttendee(schedule, member2, AttendeePermission.READ);
 
-        List<PlaceResponse> places = List.of(PlaceResponse.from(travelPlace1), PlaceResponse.from(travelPlace2));
+        createTravelRoute(schedule, placeWithThumbnail1, 1);
+        createTravelRoute(schedule, placeWithoutThumbnail, 2);
+        createTravelRoute(schedule, placeWithThumbnail2, 3);
+
+        List<PlaceResponse> places = List.of(PlaceResponse.from(placeWithThumbnail1), PlaceResponse.from(placeWithoutThumbnail));
         Pageable pageable = PageUtils.defaultPageable(1);
 
-        when(travelScheduleRepository.findById(any())).thenReturn(Optional.of(schedule1));
+        when(travelScheduleRepository.findById(any())).thenReturn(Optional.of(schedule));
         when(travelPlaceRepository.findDefaultTravelPlacesByJungGu(any()))
                 .thenReturn(PageUtils.createPage(places, pageable, 1));
 
         // when
-        ScheduleDetailResponse response = travelScheduleService.getScheduleDetail(schedule1.getScheduleId(), 1);
+        ScheduleDetailResponse response = travelScheduleService.getScheduleDetail(1L, 1);
 
         // then
-        assertThat(response.getScheduleName()).isEqualTo(schedule1.getScheduleName());
-        assertThat(response.getCreatedAt()).isEqualTo(schedule1.getCreatedAt());
+        assertThat(response.getScheduleName()).isEqualTo(schedule.getScheduleName());
+        assertThat(response.getCreatedAt()).isEqualTo(schedule.getCreatedAt());
         assertThat(response.getPlaceList().getTotalElements()).isEqualTo(places.size());
         assertThat(response.getPlaceList().getContent().get(0).getPlaceName()).isEqualTo(places.get(0).getPlaceName());
-        assertThat(response.getPlaceList().getContent().get(0).getThumbnailUrl()).isNotNull();
+        assertThat(response.getPlaceList().getContent().get(0).getThumbnailUrl()).isEqualTo(placeWithThumbnail2.getThumbnailUrl());
     }
 
     @Test
     @DisplayName("일정 상세 조회 시 여행지 데이터 없는 경우")
-    void getScheduleDetail_noData(){
+    void getScheduleDetail_emptyResult(){
         // given
+        TravelSchedule schedule = createTravelSchedule( "당일 여행");
+
+        createAuthorTravelAttendee(schedule, member1);
+        createGuestTravelAttendee(schedule, member2, AttendeePermission.READ);
+
+        createTravelRoute(schedule, placeWithThumbnail1, 1);
+        createTravelRoute(schedule, placeWithoutThumbnail, 2);
+        createTravelRoute(schedule, placeWithThumbnail2, 3);
+
         Pageable pageable = PageUtils.defaultPageable(1);
 
-        when(travelScheduleRepository.findById(any())).thenReturn(Optional.of(schedule1));
+        when(travelScheduleRepository.findById(any())).thenReturn(Optional.of(schedule));
         when(travelPlaceRepository.findDefaultTravelPlacesByJungGu(any()))
-                .thenReturn(PageUtils.createPage(new ArrayList<>(), pageable, 0));
+                .thenReturn(PageUtils.createPage(Collections.emptyList(), pageable, 0));
 
         // when
-        ScheduleDetailResponse response = travelScheduleService.getScheduleDetail(schedule1.getScheduleId(), 1);
+        ScheduleDetailResponse response = travelScheduleService.getScheduleDetail(1L, 1);
 
         // then
-        assertThat(response.getScheduleName()).isEqualTo(schedule1.getScheduleName());
-        assertThat(response.getCreatedAt()).isEqualTo(schedule1.getCreatedAt());
+        assertThat(response.getScheduleName()).isEqualTo(schedule.getScheduleName());
+        assertThat(response.getCreatedAt()).isEqualTo(schedule.getCreatedAt());
         assertThat(response.getPlaceList().getTotalElements()).isEqualTo(0);
         assertThat(response.getPlaceList().getContent()).isEmpty();
     }
@@ -892,7 +1297,8 @@ public class TravelScheduleServiceTest extends ScheduleTest {
         when(travelScheduleRepository.findById(any())).thenReturn(Optional.empty());
 
         // when
-        DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> travelScheduleService.getScheduleDetail(0L, 1));
+        DataNotFoundException fail = assertThrows(DataNotFoundException.class,
+                () -> travelScheduleService.getScheduleDetail(0L, 1));
 
         // then
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.SCHEDULE_NOT_FOUND.getStatus());
@@ -902,56 +1308,115 @@ public class TravelScheduleServiceTest extends ScheduleTest {
     @Test
     @DisplayName("일정 수정")
     void updateSchedule(){
-        Long scheduleId = schedule1.getScheduleId();
+        // given
+        ProfileImage defaultImage = createProfileImage("defaultImage");
+        Member authorMember = createNativeTypeMemberWithId(1L, "authorMember@email.com", defaultImage);
+        Member guestMember = createNativeTypeMemberWithId(2L, "guestMember@email.com", defaultImage);
 
-        TravelImage travelImage1 = createTravelImage(travelPlace1, "test1", true);
-        TravelImage travelImage2 = createTravelImage(travelPlace1, "test2", false);
-        travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, List.of(travelImage1, travelImage2));
+        TravelSchedule schedule = createTravelScheduleWithId(1L, "당일 여행");
 
-        TravelImage travelImage3 = createTravelImage(travelPlace2, "test1", true);
-        TravelImage travelImage4 = createTravelImage(travelPlace2, "test2", false);
-        travelPlace2 = createTravelPlace(2L, country, city, district, apiCategory, List.of(travelImage3, travelImage4));
+        createAuthorTravelAttendee(schedule, authorMember);
+        createGuestTravelAttendee(schedule, guestMember, AttendeePermission.READ);
 
-        RouteRequest routeRequest1 = createRouteRequest(1, travelPlace1.getPlaceId());
-        RouteRequest routeRequest2 = createRouteRequest(2, travelPlace2.getPlaceId());
-        ScheduleUpdateRequest scheduleUpdateRequest = createUpdateScheduleRequest(List.of(routeRequest1, routeRequest2));
+        createTravelRoute(schedule, placeWithThumbnail1, 1);
+        createTravelRoute(schedule, placeWithoutThumbnail, 2);
+        createTravelRoute(schedule, placeWithThumbnail2, 3);
 
-        when(travelScheduleRepository.findById(scheduleId)).thenReturn(Optional.of(schedule1));
+        RouteRequest routeRequest1 = createRouteRequest(1, placeWithThumbnail2.getPlaceId());
+        RouteRequest routeRequest2 = createRouteRequest(2, placeWithoutThumbnail.getPlaceId());
+
+        ScheduleUpdateRequest request = createUpdateScheduleRequest(
+                "수정 테스트",
+                LocalDate.now(),
+                LocalDate.now().plusDays(5),
+                routeRequest1,
+                routeRequest2
+        );
+
+        when(travelScheduleRepository.findById(anyLong())).thenReturn(Optional.of(schedule));
+
 
         // when
-        assertDoesNotThrow(() -> travelScheduleService.updateSchedule(member1.getMemberId(), scheduleId, scheduleUpdateRequest));
+        assertDoesNotThrow(
+                () -> travelScheduleService.updateSchedule(request, authorMember.getMemberId(), schedule.getScheduleId()));
 
         // then
-        assertThat(schedule1.getScheduleName()).isEqualTo(scheduleUpdateRequest.getScheduleName());
-        assertThat(schedule1.getStartDate()).isEqualTo(scheduleUpdateRequest.getStartDate());
+        assertThat(schedule.getScheduleName()).isEqualTo(request.getScheduleName());
+        assertThat(schedule.getStartDate()).isEqualTo(request.getStartDate());
+        assertThat(schedule.getEndDate()).isEqualTo(request.getEndDate());
+        verify(travelRouteService).updateTravelRouteInSchedule(eq(schedule), eq(request.getTravelRoutes()));
+
+    }
+
+    @Test
+    @DisplayName("일정 수정 시 요청에 여행루트 없는 경우")
+    void updateSchedule_emptyRequestRoutes(){
+        ProfileImage defaultImage = createProfileImage("defaultImage");
+        Member authorMember = createNativeTypeMemberWithId(1L, "authorMember@email.com", defaultImage);
+        Member guestMember = createNativeTypeMemberWithId(2L, "guestMember@email.com", defaultImage);
+
+        TravelSchedule schedule = createTravelScheduleWithId(1L, "당일 여행");
+
+        createAuthorTravelAttendee(schedule, authorMember);
+        createGuestTravelAttendee(schedule, guestMember, AttendeePermission.READ);
+
+        createTravelRoute(schedule, placeWithThumbnail1, 1);
+        createTravelRoute(schedule, placeWithoutThumbnail, 2);
+        createTravelRoute(schedule, placeWithThumbnail2, 3);
+
+        ScheduleUpdateRequest request = createUpdateScheduleRequest(
+                "수정 테스트",
+                LocalDate.now(),
+                LocalDate.now().plusDays(5)
+        );
+
+        when(travelScheduleRepository.findById(anyLong())).thenReturn(Optional.of(schedule));
+
+        // when
+        assertDoesNotThrow(
+                () -> travelScheduleService.updateSchedule(request, authorMember.getMemberId(), schedule.getScheduleId()));
+
+        // then
+        assertThat(schedule.getScheduleName()).isEqualTo(request.getScheduleName());
+        assertThat(schedule.getStartDate()).isEqualTo(request.getStartDate());
+        assertThat(schedule.getEndDate()).isEqualTo(request.getEndDate());
+        verify(travelRouteService).updateTravelRouteInSchedule(eq(schedule), eq(request.getTravelRoutes()));
     }
 
     @Test
     @DisplayName("일정 수정 중 여행 루트 삭제에서 기존에 저장된 여행 루트가 없을 경우")
     void updateSchedule_noSavedTravelRouteList(){
         // given
-        Long scheduleId = schedule2.getScheduleId();
+        ProfileImage defaultImage = createProfileImage("defaultImage");
+        Member authorMember = createNativeTypeMemberWithId(1L, "authorMember@email.com", defaultImage);
+        Member guestMember = createNativeTypeMemberWithId(2L, "guestMember@email.com", defaultImage);
 
-        TravelImage travelImage1 = createTravelImage(travelPlace1, "test1", true);
-        TravelImage travelImage2 = createTravelImage(travelPlace1, "test2", false);
-        travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, List.of(travelImage1, travelImage2));
+        TravelSchedule schedule = createTravelScheduleWithId(1L, "당일 여행");
 
-        TravelImage travelImage3 = createTravelImage(travelPlace2, "test1", true);
-        TravelImage travelImage4 = createTravelImage(travelPlace2, "test2", false);
-        travelPlace2 = createTravelPlace(2L, country, city, district, apiCategory, List.of(travelImage3, travelImage4));
+        createAuthorTravelAttendee(schedule, authorMember);
+        createGuestTravelAttendee(schedule, guestMember, AttendeePermission.READ);
 
-        RouteRequest routeRequest1 = createRouteRequest(1, travelPlace1.getPlaceId());
-        RouteRequest routeRequest2 = createRouteRequest(2, travelPlace2.getPlaceId());
-        ScheduleUpdateRequest scheduleUpdateRequest = createUpdateScheduleRequest(List.of(routeRequest1, routeRequest2));
+        RouteRequest routeRequest1 = createRouteRequest(1, placeWithThumbnail1.getPlaceId());
+        RouteRequest routeRequest2 = createRouteRequest(2, placeWithThumbnail2.getPlaceId());
 
-        when(travelScheduleRepository.findById(scheduleId)).thenReturn(Optional.of(schedule2));
+        ScheduleUpdateRequest request = createUpdateScheduleRequest(
+                "수정 테스트",
+                LocalDate.now(),
+                LocalDate.now().plusDays(5),
+                routeRequest1,
+                routeRequest2
+        );
+
+        when(travelScheduleRepository.findById(anyLong())).thenReturn(Optional.of(schedule));
 
         // when
-        assertDoesNotThrow(() -> travelScheduleService.updateSchedule(member1.getMemberId(), scheduleId, scheduleUpdateRequest));
+        assertDoesNotThrow(
+                () -> travelScheduleService.updateSchedule(request, authorMember.getMemberId(), schedule.getScheduleId()));
 
         // then
-        assertThat(schedule2.getScheduleName()).isEqualTo(scheduleUpdateRequest.getScheduleName());
-        assertThat(schedule2.getStartDate()).isEqualTo(scheduleUpdateRequest.getStartDate());
+        assertThat(schedule.getScheduleName()).isEqualTo(request.getScheduleName());
+        assertThat(schedule.getStartDate()).isEqualTo(request.getStartDate());
+        verify(travelRouteService).updateTravelRouteInSchedule(eq(schedule), eq(request.getTravelRoutes()));
     }
 
 
@@ -959,25 +1424,22 @@ public class TravelScheduleServiceTest extends ScheduleTest {
     @DisplayName("일정 수정 시 일정 데이터 없어 예외 발생")
     void updateSchedule_scheduleNotFound(){
         // given
-        Long scheduleId = schedule1.getScheduleId();
+        RouteRequest routeRequest1 = createRouteRequest(1, placeWithThumbnail1.getPlaceId());
+        RouteRequest routeRequest2 = createRouteRequest(2, placeWithThumbnail2.getPlaceId());
 
-        TravelImage travelImage1 = createTravelImage(travelPlace1, "test1", true);
-        TravelImage travelImage2 = createTravelImage(travelPlace1, "test2", false);
-        travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, List.of(travelImage1, travelImage2));
+        ScheduleUpdateRequest request = createUpdateScheduleRequest(
+                "수정 테스트",
+                LocalDate.now(),
+                LocalDate.now().plusDays(5),
+                routeRequest1,
+                routeRequest2
+        );
 
-        TravelImage travelImage3 = createTravelImage(travelPlace2, "test1", true);
-        TravelImage travelImage4 = createTravelImage(travelPlace2, "test2", false);
-        travelPlace2 = createTravelPlace(2L, country, city, district, apiCategory, List.of(travelImage3, travelImage4));
-
-        RouteRequest routeRequest1 = createRouteRequest(1, travelPlace1.getPlaceId());
-        RouteRequest routeRequest2 = createRouteRequest(2, travelPlace2.getPlaceId());
-        ScheduleUpdateRequest scheduleUpdateRequest = createUpdateScheduleRequest(List.of(routeRequest1, routeRequest2));
-
-        when(travelScheduleRepository.findById(scheduleId)).thenReturn(Optional.empty());
+        when(travelScheduleRepository.findById(anyLong())).thenReturn(Optional.empty());
 
         // when
         DataNotFoundException fail = assertThrows(DataNotFoundException.class,
-                () -> travelScheduleService.updateSchedule(member1.getMemberId(), scheduleId, scheduleUpdateRequest));
+                () -> travelScheduleService.updateSchedule(request, 1L, 1000L));
 
         // then
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.SCHEDULE_NOT_FOUND.getStatus());
@@ -989,32 +1451,31 @@ public class TravelScheduleServiceTest extends ScheduleTest {
     @DisplayName("일정 수정 시 요청 회원에게 접근 권한이 없어 예외 발생")
     void updateSchedule_forbiddenSchedule(){
         // given
-        Long scheduleId = schedule3.getScheduleId();
+        TravelSchedule schedule = createTravelScheduleWithId(1L, "당일 여행");
 
-        TravelImage travelImage1 = createTravelImage(travelPlace1, "test1", true);
-        TravelImage travelImage2 = createTravelImage(travelPlace1, "test2", false);
-        travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, List.of(travelImage1, travelImage2));
+        createAuthorTravelAttendee(schedule, member1);
 
-        TravelImage travelImage3 = createTravelImage(travelPlace2, "test1", true);
-        TravelImage travelImage4 = createTravelImage(travelPlace2, "test2", false);
-        travelPlace2 = createTravelPlace(2L, country, city, district, apiCategory, List.of(travelImage3, travelImage4));
+        createTravelRoute(schedule, placeWithThumbnail1, 1);
+        createTravelRoute(schedule, placeWithoutThumbnail, 2);
+        createTravelRoute(schedule, placeWithThumbnail2, 3);
 
-        TravelRoute route1 = createTravelRoute(schedule1, travelPlace1, 1);
-        TravelRoute route2 = createTravelRoute(schedule1, travelPlace1, 2);
-        TravelRoute route3 = createTravelRoute(schedule1, travelPlace2, 3);
-        schedule1.addTravelRoutes(route1);
-        schedule1.addTravelRoutes(route2);
-        schedule1.addTravelRoutes(route3);
+        RouteRequest routeRequest1 = createRouteRequest(1, placeWithThumbnail1.getPlaceId());
+        RouteRequest routeRequest2 = createRouteRequest(2, placeWithThumbnail2.getPlaceId());
 
-        RouteRequest routeRequest1 = createRouteRequest(1, travelPlace1.getPlaceId());
-        RouteRequest routeRequest2 = createRouteRequest(2, travelPlace2.getPlaceId());
-        ScheduleUpdateRequest scheduleUpdateRequest = createUpdateScheduleRequest(List.of(routeRequest1, routeRequest2));
+        ScheduleUpdateRequest request = createUpdateScheduleRequest(
+                "수정 테스트",
+                LocalDate.now(),
+                LocalDate.now().plusDays(5),
+                routeRequest1,
+                routeRequest2
+        );
 
-        when(travelScheduleRepository.findById(scheduleId)).thenReturn(Optional.of(schedule3));
+
+        when(travelScheduleRepository.findById(anyLong())).thenReturn(Optional.of(schedule));
 
         // when
         ForbiddenScheduleException fail = assertThrows(ForbiddenScheduleException.class,
-                () -> travelScheduleService.updateSchedule(member2.getMemberId(), scheduleId, scheduleUpdateRequest));
+                () -> travelScheduleService.updateSchedule(request, 2L, 1L));
 
         // then
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.FORBIDDEN_ACCESS_SCHEDULE.getStatus());
@@ -1026,26 +1487,35 @@ public class TravelScheduleServiceTest extends ScheduleTest {
     @DisplayName("일정 수정 시 요청 회원에게 수정 권한이 없어 예외 발생")
     void updateSchedule_forbiddenEdit(){
         // given
-        Long scheduleId = schedule1.getScheduleId();
+        ProfileImage defaultImage = createProfileImage("defaultImage");
+        Member authorMember = createNativeTypeMemberWithId(1L, "authorMember@email.com", defaultImage);
+        Member guestMember = createNativeTypeMemberWithId(2L, "guestMember@email.com", defaultImage);
 
-        TravelImage travelImage1 = createTravelImage(travelPlace1, "test1", true);
-        TravelImage travelImage2 = createTravelImage(travelPlace1, "test2", false);
-        travelPlace1 = createTravelPlace(1L, country, city, district, apiCategory, List.of(travelImage1, travelImage2));
+        TravelSchedule schedule = createTravelScheduleWithId(1L, "당일 여행");
 
-        TravelImage travelImage3 = createTravelImage(travelPlace2, "test1", true);
-        TravelImage travelImage4 = createTravelImage(travelPlace2, "test2", false);
-        travelPlace2 = createTravelPlace(2L, country, city, district, apiCategory, List.of(travelImage3, travelImage4));
+        createAuthorTravelAttendee(schedule, authorMember);
+        createGuestTravelAttendee(schedule, guestMember, AttendeePermission.READ);
 
+        createTravelRoute(schedule, placeWithThumbnail1, 1);
+        createTravelRoute(schedule, placeWithoutThumbnail, 2);
+        createTravelRoute(schedule, placeWithThumbnail2, 3);
 
-        RouteRequest routeRequest1 = createRouteRequest(1, travelPlace1.getPlaceId());
-        RouteRequest routeRequest2 = createRouteRequest(2, travelPlace2.getPlaceId());
-        ScheduleUpdateRequest scheduleUpdateRequest = createUpdateScheduleRequest(List.of(routeRequest1, routeRequest2));
+        RouteRequest routeRequest1 = createRouteRequest(1, placeWithThumbnail1.getPlaceId());
+        RouteRequest routeRequest2 = createRouteRequest(2, placeWithThumbnail2.getPlaceId());
 
-        when(travelScheduleRepository.findById(scheduleId)).thenReturn(Optional.of(schedule1));
+        ScheduleUpdateRequest request = createUpdateScheduleRequest(
+                "수정 테스트",
+                LocalDate.now(),
+                LocalDate.now().plusDays(5),
+                routeRequest1,
+                routeRequest2
+        );
+
+        when(travelScheduleRepository.findById(anyLong())).thenReturn(Optional.of(schedule));
 
         // when
         ForbiddenScheduleException fail = assertThrows(ForbiddenScheduleException.class,
-                () -> travelScheduleService.updateSchedule(member2.getMemberId(), scheduleId, scheduleUpdateRequest));
+                () -> travelScheduleService.updateSchedule(request, guestMember.getMemberId(), schedule.getScheduleId()));
 
         // then
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.FORBIDDEN_EDIT_SCHEDULE.getStatus());
@@ -1053,26 +1523,43 @@ public class TravelScheduleServiceTest extends ScheduleTest {
     }
 
 
-
     @Test
     @DisplayName("참가자 정보 조회")
     void getAttendeeInfo(){
         // given
+        ProfileImage defaultImage = createProfileImage("defaultImage");
+        Member authorMember = createNativeTypeMemberWithId(1L, "authorMember@email.com", defaultImage);
+        Member guestMember = createNativeTypeMemberWithId(2L, "guestMember@email.com", defaultImage);
+
+        TravelSchedule schedule = createTravelSchedule("당일 여행");
+        createAuthorTravelAttendee(schedule, authorMember);
+        createGuestTravelAttendee(schedule, guestMember, AttendeePermission.READ);
+
+        createTravelRoute(schedule, placeWithThumbnail1, 1);
+        createTravelRoute(schedule, placeWithoutThumbnail, 2);
+        createTravelRoute(schedule, placeWithThumbnail2, 3);
+
         // when
-        TravelAttendee response = travelScheduleService.getAttendeeInfo(schedule1, member1.getMemberId());
+        TravelAttendee response = travelScheduleService.getAttendeeInfo(schedule, authorMember.getMemberId());
 
         // then
-        assertThat(response.getMember().getEmail()).isEqualTo(member1.getEmail());
-        assertThat(response.getTravelSchedule().getScheduleName()).isEqualTo(schedule1.getScheduleName());
+        assertThat(response.getMember().getEmail()).isEqualTo(authorMember.getEmail());
+        assertThat(response.getTravelSchedule().getScheduleName()).isEqualTo(schedule.getScheduleName());
     }
 
     @Test
     @DisplayName("참가자 정보 조회 시 데이터 존재하지 않는 경우")
-    void getAttendeeInfo_noData(){
+    void getAttendeeInfo_emptyResult(){
         // given
+        TravelSchedule schedule = createTravelSchedule("역사 여행");
+
+        createTravelRoute(schedule, placeWithThumbnail1, 1);
+        createTravelRoute(schedule, placeWithoutThumbnail, 2);
+        createTravelRoute(schedule, placeWithThumbnail2, 3);
+
         // when
         ForbiddenScheduleException fail = assertThrows(ForbiddenScheduleException.class,
-                () -> travelScheduleService.getAttendeeInfo(schedule3, member2.getMemberId()));
+                () -> travelScheduleService.getAttendeeInfo(schedule, 1L));
 
         // then
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.FORBIDDEN_ACCESS_SCHEDULE.getStatus());
@@ -1084,32 +1571,54 @@ public class TravelScheduleServiceTest extends ScheduleTest {
     @DisplayName("일정 수정 회원 권한 체크 ALL")
     void checkSchedule_editPermissionALL(){
         // given
-        attendee1.updatePermission(AttendeePermission.ALL);
+        TravelSchedule schedule = createTravelSchedule("당일 여행");
+
+        TravelAttendee author = createAuthorTravelAttendee(schedule, member1);
+        createGuestTravelAttendee(schedule, member2, AttendeePermission.READ);
+
+        createTravelRoute(schedule, placeWithThumbnail1, 1);
+        createTravelRoute(schedule, placeWithoutThumbnail, 2);
+        createTravelRoute(schedule, placeWithThumbnail2, 3);
+
 
         // when, then
-        assertDoesNotThrow(() -> travelScheduleService.checkScheduleEditPermission(attendee1));
+        assertDoesNotThrow(() -> travelScheduleService.checkScheduleEditPermission(author));
     }
 
     @Test
     @DisplayName("일정 수정 회원 권한 체크 EDIT")
     void checkSchedule_editPermissionEdit(){
         // given
-        attendee1.updatePermission(AttendeePermission.EDIT);
+        TravelSchedule schedule = createTravelSchedule("도보 여행");
 
-        // when
-        // then
-        assertDoesNotThrow(() -> travelScheduleService.checkScheduleEditPermission(attendee1));
+        createAuthorTravelAttendee(schedule, member1);
+        TravelAttendee guest = createGuestTravelAttendee(schedule, member2, AttendeePermission.EDIT);
+
+        createTravelRoute(schedule, placeWithThumbnail1, 1);
+        createTravelRoute(schedule, placeWithoutThumbnail, 2);
+        createTravelRoute(schedule, placeWithThumbnail2, 3);
+
+
+        // when, then
+        assertDoesNotThrow(() -> travelScheduleService.checkScheduleEditPermission(guest));
     }
 
     @Test
     @DisplayName("일정 수정 회원 권한 체크 중 CHAT 권한으로 예외 발생")
     void checkSchedule_editPermissionCHAT_forbiddenSchedule(){
         // given
-        attendee1.updatePermission(AttendeePermission.CHAT);
+        TravelSchedule schedule = createTravelSchedule("도보 여행");
+
+        createAuthorTravelAttendee(schedule, member1);
+        TravelAttendee guest = createGuestTravelAttendee(schedule, member2, AttendeePermission.CHAT);
+
+        createTravelRoute(schedule, placeWithThumbnail1, 1);
+        createTravelRoute(schedule, placeWithoutThumbnail, 2);
+        createTravelRoute(schedule, placeWithThumbnail2, 3);
 
         // when
         ForbiddenScheduleException fail = assertThrows(ForbiddenScheduleException.class,
-                () -> travelScheduleService.checkScheduleEditPermission(attendee1));
+                () -> travelScheduleService.checkScheduleEditPermission(guest));
 
         // then
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.FORBIDDEN_EDIT_SCHEDULE.getStatus());
@@ -1120,11 +1629,19 @@ public class TravelScheduleServiceTest extends ScheduleTest {
     @DisplayName("일정 수정 회원 권한 체크 시 READ 권한으로 예외 발생")
     void checkSchedule_editPermissionREAD_forbiddenSchedule(){
         // given
-        attendee1.updatePermission(AttendeePermission.READ);
+        TravelSchedule schedule = createTravelSchedule("당일 여행");
+
+        createAuthorTravelAttendee(schedule, member1);
+        TravelAttendee guest = createGuestTravelAttendee(schedule, member2, AttendeePermission.READ);
+
+        createTravelRoute(schedule, placeWithThumbnail1, 1);
+        createTravelRoute(schedule, placeWithoutThumbnail, 2);
+        createTravelRoute(schedule, placeWithThumbnail2, 3);
+
 
         // when
         ForbiddenScheduleException fail = assertThrows(ForbiddenScheduleException.class,
-                () -> travelScheduleService.checkScheduleEditPermission(attendee1));
+                () -> travelScheduleService.checkScheduleEditPermission(guest));
 
         // then
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.FORBIDDEN_EDIT_SCHEDULE.getStatus());
@@ -1135,47 +1652,74 @@ public class TravelScheduleServiceTest extends ScheduleTest {
     @DisplayName("일정 삭제")
     void deleteSchedule(){
         // given
-        ChatMessage message1 = createChatMessage("chat1", schedule1.getScheduleId(), member1, "hello1");
-        ChatMessage message2 = createChatMessage("chat2", schedule1.getScheduleId(), member1, "hello2");
-        ChatMessage message3 = createChatMessage("chat3", schedule1.getScheduleId(), member2, "hello3");
+        TravelSchedule schedule = createTravelScheduleWithId(1L, "당일 여행");
+
+        TravelAttendee author = createAuthorTravelAttendee(schedule, member1);
+        createGuestTravelAttendee(schedule, member2, AttendeePermission.READ);
+
+        createTravelRoute(schedule, placeWithThumbnail1, 1);
+        createTravelRoute(schedule, placeWithoutThumbnail, 2);
+        createTravelRoute(schedule, placeWithThumbnail2, 3);
+
+        ChatMessage message1 = createChatMessage(1L, 1L, "hello1");
+        ChatMessage message2 = createChatMessage(1L, 1L, "hello2");
+        ChatMessage message3 = createChatMessage(1L, 2L, "hello3");
         List<ChatMessage> chatMessages = List.of(message1, message2, message3);
 
         when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_MemberId(anyLong(), anyLong()))
-                .thenReturn(Optional.of(attendee1));
+                .thenReturn(Optional.of(author));
         when(chatMessageRepository.findAllByScheduleId(anyLong())).thenReturn(chatMessages);
 
         // when
-        assertDoesNotThrow(() -> travelScheduleService.deleteSchedule(schedule1.getScheduleId(), member1.getMemberId()));
+        assertDoesNotThrow(() -> travelScheduleService.deleteSchedule(1L, 1L));
 
         // then
-        verify(chatMessageRepository, times(1)).deleteAllByScheduleId(schedule1.getScheduleId());
+        verify(chatMessageRepository, times(1)).deleteAllByScheduleId(1L);
     }
 
     @Test
     @DisplayName("일정 삭제 시 채팅 메시지 없는 경우")
     void deleteSchedule_noChatMessageData(){
         // given
+        TravelSchedule schedule = createTravelScheduleWithId(1L, "당일 여행");
+
+        TravelAttendee author = createAuthorTravelAttendee(schedule, member1);
+        createGuestTravelAttendee(schedule, member2, AttendeePermission.READ);
+
+        createTravelRoute(schedule, placeWithThumbnail1, 1);
+        createTravelRoute(schedule, placeWithoutThumbnail, 2);
+        createTravelRoute(schedule, placeWithThumbnail2, 3);
+
         when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_MemberId(anyLong(), anyLong()))
-                .thenReturn(Optional.of(attendee1));
-        when(chatMessageRepository.findAllByScheduleId(anyLong())).thenReturn(new ArrayList<>());
+                .thenReturn(Optional.of(author));
+        when(chatMessageRepository.findAllByScheduleId(anyLong())).thenReturn(Collections.emptyList());
 
         // when
-        assertDoesNotThrow(() -> travelScheduleService.deleteSchedule(schedule1.getScheduleId(), member1.getMemberId()));
+        assertDoesNotThrow(() -> travelScheduleService.deleteSchedule(1L, 1L));
 
         // then
-        verify(chatMessageRepository, times(0)).deleteAllByScheduleId(schedule1.getScheduleId());
+        verify(chatMessageRepository, times(0)).deleteAllByScheduleId(1L);
     }
 
     @Test
     @DisplayName("일정 삭제 시 작성자가 아닌 회원의 삭제 요청으로 인해 예외 발생")
     void deleteSchedule_notAuthor_forbiddenSchedule(){
         // given
+        TravelSchedule schedule = createTravelScheduleWithId(1L, "당일 여행");
+
+        createAuthorTravelAttendee(schedule, member1);
+        TravelAttendee guest = createGuestTravelAttendee(schedule, member2, AttendeePermission.READ);
+
+        createTravelRoute(schedule, placeWithThumbnail1, 1);
+        createTravelRoute(schedule, placeWithoutThumbnail, 2);
+        createTravelRoute(schedule, placeWithThumbnail2, 3);
+
         when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_MemberId(anyLong(), anyLong()))
-                .thenReturn(Optional.of(attendee2));
+                .thenReturn(Optional.of(guest));
 
         // when
         ForbiddenScheduleException fail = assertThrows(ForbiddenScheduleException.class,
-                () -> travelScheduleService.deleteSchedule(schedule1.getScheduleId(), member2.getMemberId()));
+                () -> travelScheduleService.deleteSchedule(1L, 2L));
 
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.FORBIDDEN_DELETE_SCHEDULE.getStatus());
         assertThat(fail.getMessage()).isEqualTo(ErrorCode.FORBIDDEN_DELETE_SCHEDULE.getMessage());

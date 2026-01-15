@@ -4,7 +4,6 @@ import com.triptune.common.entity.BaseCreatedEntity;
 import com.triptune.travel.entity.TravelPlace;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -29,30 +28,30 @@ public class TravelRoute extends BaseCreatedEntity {
     @Column(name = "route_order")
     private int routeOrder;
 
-    @Builder
-    public TravelRoute(Long routeId, TravelSchedule travelSchedule, TravelPlace travelPlace, int routeOrder) {
-        this.routeId = routeId;
-        this.travelSchedule = travelSchedule;
+
+    private TravelRoute(TravelPlace travelPlace, int routeOrder) {
         this.travelPlace = travelPlace;
         this.routeOrder = routeOrder;
     }
 
-    public TravelRoute(TravelSchedule travelSchedule, TravelPlace travelPlace, int routeOrder) {
+    public static TravelRoute createTravelRoute(TravelSchedule travelSchedule, TravelPlace travelPlace, int routeOrder){
+        TravelRoute travelRoute = new TravelRoute(
+                travelPlace,
+                routeOrder
+        );
+        travelRoute.assignTravelSchedule(travelSchedule);
+        return travelRoute;
+    }
+
+    public void assignTravelSchedule(TravelSchedule travelSchedule){
         this.travelSchedule = travelSchedule;
-        this.travelPlace = travelPlace;
-        this.routeOrder = routeOrder;
+        travelSchedule.addTravelRoutes(this);
+    }
+
+    protected void detachTravelSchedule(){
+        this.travelSchedule = null;
     }
 
 
-    public static TravelRoute of(TravelSchedule travelSchedule, TravelPlace travelPlace, int routeOrder){
-        return TravelRoute.builder()
-                .travelSchedule(travelSchedule)
-                .travelPlace(travelPlace)
-                .routeOrder(routeOrder)
-                .build();
-    }
 
-    public void setTravelSchedule(TravelSchedule travelSchedule){
-        this.travelSchedule = travelSchedule;
-    }
 }

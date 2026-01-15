@@ -34,23 +34,19 @@ public class TravelPlaceRepositoryCustomImpl implements TravelPlaceRepositoryCus
     private final JPAQueryFactory jpaQueryFactory;
     private final QTravelPlace travelPlace;
     private final QTravelImage travelImage;
-    private final QCity city;
-    private final QApiContentType apiContentType;
 
     public TravelPlaceRepositoryCustomImpl(JPAQueryFactory jpaQueryFactory){
         this.jpaQueryFactory = jpaQueryFactory;
         this.travelPlace = QTravelPlace.travelPlace;
         this.travelImage = QTravelImage.travelImage;
-        this.city = QCity.city;
-        this.apiContentType = QApiContentType.apiContentType;
     }
 
 
     @Override
     public Page<PlaceLocation> findNearByTravelPlaces(Pageable pageable, PlaceLocationRequest placeLocationRequest, int radius) {
-        NumberExpression<Double> harversineExpression = getHarversineFormula(placeLocationRequest.getLatitude(), placeLocationRequest.getLongitude());
+        NumberExpression<Double> haversineExpression = getHaversineFormula(placeLocationRequest.getLatitude(), placeLocationRequest.getLongitude());
 
-        BooleanExpression loeExpression = harversineExpression.loe(radius);
+        BooleanExpression loeExpression = haversineExpression.loe(radius);
 
         List<PlaceLocation> content = jpaQueryFactory
                 .select(Projections.constructor(PlaceLocation.class,
@@ -60,8 +56,8 @@ public class TravelPlaceRepositoryCustomImpl implements TravelPlaceRepositoryCus
                         travelPlace.district.districtName,
                         travelPlace.address,
                         travelPlace.detailAddress,
-                        travelPlace.longitude,
                         travelPlace.latitude,
+                        travelPlace.longitude,
                         travelPlace.placeName,
                         JPAExpressions
                                 .select(travelImage.s3ObjectUrl)
@@ -69,10 +65,13 @@ public class TravelPlaceRepositoryCustomImpl implements TravelPlaceRepositoryCus
                                 .where(travelImage.travelPlace.placeId.eq(travelPlace.placeId)
                                         .and(travelImage.isThumbnail.isTrue()))
                                 .limit(1),
-                        harversineExpression.as("distance")))
+                        haversineExpression.as("distance")))
                 .from(travelPlace)
                 .where(loeExpression)
-                .orderBy(harversineExpression.asc())
+                .orderBy(
+                        haversineExpression.asc(),
+                        travelPlace.placeId.desc()
+                )
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetch();
@@ -93,8 +92,7 @@ public class TravelPlaceRepositoryCustomImpl implements TravelPlaceRepositoryCus
                 .or(travelPlace.district.districtName.contains(keyword))
                 .or(travelPlace.placeName.contains(keyword));
 
-
-        NumberExpression<Double> harversineExpression = getHarversineFormula(placeSearchRequest.getLatitude(), placeSearchRequest.getLongitude());
+        NumberExpression<Double> haversineExpression = getHaversineFormula(placeSearchRequest.getLatitude(), placeSearchRequest.getLongitude());
         String orderCaseString = accuracyQuery();
 
         List<PlaceLocation> content = jpaQueryFactory
@@ -105,8 +103,8 @@ public class TravelPlaceRepositoryCustomImpl implements TravelPlaceRepositoryCus
                         travelPlace.district.districtName,
                         travelPlace.address,
                         travelPlace.detailAddress,
-                        travelPlace.longitude,
                         travelPlace.latitude,
+                        travelPlace.longitude,
                         travelPlace.placeName,
                         JPAExpressions
                                 .select(travelImage.s3ObjectUrl)
@@ -114,26 +112,43 @@ public class TravelPlaceRepositoryCustomImpl implements TravelPlaceRepositoryCus
                                 .where(travelImage.travelPlace.placeId.eq(travelPlace.placeId)
                                         .and(travelImage.isThumbnail.isTrue()))
                                 .limit(1),
-                        harversineExpression.as("distance")))
+                        haversineExpression.as("distance")))
                 .from(travelPlace)
                 .where(booleanExpression)
                 .orderBy(
                         Expressions.stringTemplate(
                                 orderCaseString,
-                                travelPlace.placeName, keyword, keyword + "%", "%" + keyword + "%", "%" + keyword
+                                travelPlace.placeName,
+                                keyword,
+                                keyword + "%",
+                                "%" + keyword + "%",
+                                "%" + keyword
                         ).asc(),
                         Expressions.stringTemplate(
                                 orderCaseString,
-                                travelPlace.country.countryName, keyword, keyword + "%", "%" + keyword + "%", "%" + keyword
+                                travelPlace.country.countryName,
+                                keyword,
+                                keyword + "%",
+                                "%" + keyword + "%",
+                                "%" + keyword
                         ).asc(),
                         Expressions.stringTemplate(
                                 orderCaseString,
-                                travelPlace.city.cityName, keyword, keyword + "%", "%" + keyword + "%", "%" + keyword
+                                travelPlace.city.cityName,
+                                keyword,
+                                keyword + "%",
+                                "%" + keyword + "%",
+                                "%" + keyword
                         ).asc(),
                         Expressions.stringTemplate(
                                 orderCaseString,
-                                travelPlace.district.districtName, keyword, keyword + "%", "%" + keyword + "%", "%" + keyword
-                        ).asc()
+                                travelPlace.district.districtName,
+                                keyword,
+                                keyword + "%",
+                                "%" + keyword + "%",
+                                "%" + keyword
+                        ).asc(),
+                        travelPlace.placeId.desc()
                 )
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
@@ -145,18 +160,18 @@ public class TravelPlaceRepositoryCustomImpl implements TravelPlaceRepositoryCus
     }
 
 
-
-    private NumberExpression<Double> getHarversineFormula(double latRad, double lonRad){
+    private NumberExpression<Double> getHaversineFormula(double latDeg, double lonDeg){
         double earthRadius = 6371.0;
 
-        // harversine 공식을 적용하여 거리 계산
+        // haversine 공식을 적용하여 거리 계산
         return acos(
-                sin(radians(constant(latRad)))
+                sin(radians(constant(latDeg)))
                         .multiply(sin(radians(travelPlace.latitude)))
                         .add(
-                                cos(radians(constant(latRad)))
+                                cos(radians(constant(latDeg)))
                                         .multiply(cos(radians(travelPlace.latitude)))
-                                        .multiply(cos(radians(constant(lonRad)).subtract(radians(travelPlace.longitude))))
+                                        .multiply(cos(radians(constant(lonDeg))
+                                                .subtract(radians(travelPlace.longitude))))
                         )
         ).multiply(earthRadius);
     }
@@ -179,8 +194,8 @@ public class TravelPlaceRepositoryCustomImpl implements TravelPlaceRepositoryCus
                         travelPlace.district.districtName,
                         travelPlace.address,
                         travelPlace.detailAddress,
-                        travelPlace.longitude,
                         travelPlace.latitude,
+                        travelPlace.longitude,
                         travelPlace.placeName,
                         JPAExpressions
                                 .select(travelImage.s3ObjectUrl)
@@ -193,20 +208,37 @@ public class TravelPlaceRepositoryCustomImpl implements TravelPlaceRepositoryCus
                 .orderBy(
                         Expressions.stringTemplate(
                                 orderCaseString,
-                                travelPlace.placeName, keyword, keyword + "%", "%" + keyword + "%", "%" + keyword
+                                travelPlace.placeName,
+                                keyword,
+                                keyword + "%",
+                                "%" + keyword + "%",
+                                "%" + keyword
                         ).asc(),
                         Expressions.stringTemplate(
                                 orderCaseString,
-                                travelPlace.country.countryName, keyword, keyword + "%", "%" + keyword + "%", "%" + keyword
+                                travelPlace.country.countryName,
+                                keyword,
+                                keyword + "%",
+                                "%" + keyword + "%",
+                                "%" + keyword
                         ).asc(),
                         Expressions.stringTemplate(
                                 orderCaseString,
-                                travelPlace.city.cityName, keyword, keyword + "%", "%" + keyword + "%", "%" + keyword
+                                travelPlace.city.cityName,
+                                keyword,
+                                keyword + "%",
+                                "%" + keyword + "%",
+                                "%" + keyword
                         ).asc(),
                         Expressions.stringTemplate(
                                 orderCaseString,
-                                travelPlace.district.districtName, keyword, keyword + "%", "%" + keyword + "%", "%" + keyword
-                        ).asc()
+                                travelPlace.district.districtName,
+                                keyword,
+                                keyword + "%",
+                                "%" + keyword + "%",
+                                "%" + keyword
+                        ).asc(),
+                        travelPlace.placeId.desc()
                 )
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
@@ -219,8 +251,39 @@ public class TravelPlaceRepositoryCustomImpl implements TravelPlaceRepositoryCus
 
     @Override
     public Page<PlaceResponse> findDefaultTravelPlacesByJungGu(Pageable pageable) {
-        String baseKeyword = "중구";
-        String orderCaseString = accuracyQuery();
+        double jungGuLatDeg = 37.56397;
+        double jungGuLongDeg = 126.997688;
+
+        NumberExpression<Double> haversineExpression = getHaversineFormula(jungGuLatDeg, jungGuLongDeg);
+
+//        List<PlaceLocation> content = jpaQueryFactory
+//                .select(Projections.constructor(PlaceLocation.class,
+//                        travelPlace.placeId,
+//                        travelPlace.country.countryName,
+//                        travelPlace.city.cityName,
+//                        travelPlace.district.districtName,
+//                        travelPlace.address,
+//                        travelPlace.detailAddress,
+//                        travelPlace.latitude,
+//                        travelPlace.longitude,
+//                        travelPlace.placeName,
+//                        JPAExpressions
+//                                .select(travelImage.s3ObjectUrl)
+//                                .from(travelImage)
+//                                .where(travelImage.travelPlace.placeId.eq(travelPlace.placeId)
+//                                        .and(travelImage.isThumbnail.isTrue()))
+//                                .limit(1),
+//                        haversineExpression.as("distance")))
+//                .from(travelPlace)
+//                .where(loeExpression)
+//                .orderBy(
+//                        haversineExpression.asc(),
+//                        travelPlace.placeId.desc()
+//                )
+//                .offset(pageable.getOffset())
+//                .limit(pageable.getPageSize())
+//                .fetch();
+//
 
         List<PlaceResponse> content = jpaQueryFactory
                 .select(Projections.constructor(PlaceResponse.class,
@@ -230,8 +293,8 @@ public class TravelPlaceRepositoryCustomImpl implements TravelPlaceRepositoryCus
                         travelPlace.district.districtName,
                         travelPlace.address,
                         travelPlace.detailAddress,
-                        travelPlace.longitude,
                         travelPlace.latitude,
+                        travelPlace.longitude,
                         travelPlace.placeName,
                         JPAExpressions
                                 .select(travelImage.s3ObjectUrl)
@@ -241,22 +304,8 @@ public class TravelPlaceRepositoryCustomImpl implements TravelPlaceRepositoryCus
                                 .limit(1)))
                 .from(travelPlace)
                 .orderBy(
-                        Expressions.stringTemplate(
-                                orderCaseString,
-                                travelPlace.placeName, baseKeyword, baseKeyword + "%", "%" + baseKeyword + "%", "%" + baseKeyword
-                        ).asc(),
-                        Expressions.stringTemplate(
-                                orderCaseString,
-                                travelPlace.country.countryName, baseKeyword, baseKeyword + "%", "%" + baseKeyword + "%", "%" + baseKeyword
-                        ).asc(),
-                        Expressions.stringTemplate(
-                                orderCaseString,
-                                travelPlace.city.cityName, baseKeyword, baseKeyword + "%", "%" + baseKeyword + "%", "%" + baseKeyword
-                        ).asc(),
-                        Expressions.stringTemplate(
-                                orderCaseString,
-                                travelPlace.district.districtName, baseKeyword, baseKeyword + "%", "%" + baseKeyword + "%", "%" + baseKeyword
-                        ).asc()
+                        haversineExpression.asc(),
+                        travelPlace.placeId.desc()
                 )
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
@@ -292,7 +341,7 @@ public class TravelPlaceRepositoryCustomImpl implements TravelPlaceRepositoryCus
     }
 
     @Override
-    public List<PlaceSimpleResponse> findPopularTravelPlacesByCity(CityType cityType) {
+    public List<PlaceSimpleResponse> findPopularTravelPlaces(CityType cityType) {
         return jpaQueryFactory
                 .select(Projections.constructor(PlaceSimpleResponse.class,
                         travelPlace.placeId,
@@ -302,18 +351,19 @@ public class TravelPlaceRepositoryCustomImpl implements TravelPlaceRepositoryCus
                         travelImage.s3ObjectUrl
                 ))
                 .from(travelPlace)
-                .leftJoin(travelImage)
-                .on(travelImage.travelPlace.placeId.eq(travelPlace.placeId)
-                        .and(travelImage.isThumbnail.isTrue()))
-                .join(travelPlace.city, city)
+                .leftJoin(travelPlace.travelImages, travelImage)
+                .on(travelImage.isThumbnail.isTrue())
                 .where(travelPlace.city.cityName.in(cityType.getDbCityGrouping()))
-                .orderBy(travelPlace.bookmarkCnt.desc())
+                .orderBy(
+                        travelPlace.bookmarkCnt.desc(),
+                        travelPlace.placeId.desc()
+                )
                 .limit(CAROUSEL_LIMIT)
                 .fetch();
     }
 
     @Override
-    public List<PlaceSimpleResponse> findRecommendTravelPlacesByTheme(ThemeType themeType) {
+    public List<PlaceSimpleResponse> findRecommendTravelPlaces(ThemeType themeType) {
         return jpaQueryFactory
                 .select(Projections.constructor(PlaceSimpleResponse.class,
                         travelPlace.placeId,
@@ -322,12 +372,13 @@ public class TravelPlaceRepositoryCustomImpl implements TravelPlaceRepositoryCus
                         travelPlace.placeName,
                         travelImage.s3ObjectUrl))
                 .from(travelPlace)
-                .leftJoin(travelImage)
-                .on(travelImage.travelPlace.placeId.eq(travelPlace.placeId)
-                        .and(travelImage.isThumbnail.isTrue()))
-                .join(travelPlace.apiContentType, apiContentType)
+                .leftJoin(travelPlace.travelImages, travelImage)
+                .on(travelImage.isThumbnail.isTrue())
                 .where(themeTypeCondition(themeType))
-                .orderBy(travelPlace.bookmarkCnt.desc())
+                .orderBy(
+                        travelPlace.bookmarkCnt.desc(),
+                        travelPlace.placeId.desc()
+                )
                 .limit(CAROUSEL_LIMIT)
                 .fetch();
 
@@ -344,10 +395,11 @@ public class TravelPlaceRepositoryCustomImpl implements TravelPlaceRepositoryCus
     }
 
     private String accuracyQuery(){
-        return "CASE WHEN {0} = {1} THEN 0 " +
-                "WHEN {0} = {2} THEN 1 " +
-                "WHEN {0} = {3} THEN 2 " +
-                "WHEN {0} = {3} THEN 3 " +
+        return "CASE " +
+                "WHEN {0} = {1} THEN 0 " +
+                "WHEN {0} LIKE {2} THEN 1 " +
+                "WHEN {0} LIKE {3} THEN 2 " +
+                "WHEN {0} LIKE {3} THEN 3 " +
                 "ELSE 4 " +
                 "END";
     }

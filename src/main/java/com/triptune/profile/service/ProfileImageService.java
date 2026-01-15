@@ -28,7 +28,15 @@ public class ProfileImageService {
 
     @Transactional
     public ProfileImage saveDefaultProfileImage() {
-        ProfileImage profileImage = ProfileImage.from(profileImageProperties);
+        ProfileImage profileImage = ProfileImage.createProfileImage(
+                profileImageProperties.getS3ObjectUrl(),
+                profileImageProperties.getS3ObjectKey(),
+                profileImageProperties.getOriginalName(),
+                profileImageProperties.getFileName(),
+                profileImageProperties.getExtension(),
+                profileImageProperties.getSize()
+        );
+
         return profileImageRepository.save(profileImage);
     }
 
@@ -67,7 +75,7 @@ public class ProfileImageService {
     }
 
     public void deleteS3File(ProfileImage profileImage){
-        if(!profileImage.getS3ObjectKey().equals(profileImageProperties.getS3ObjectKey())){
+        if (!profileImage.isDefaultImage(profileImageProperties.getS3ObjectKey())){
             s3Service.deleteS3File(profileImage.getS3ObjectKey());
         }
     }

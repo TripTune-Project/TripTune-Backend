@@ -13,10 +13,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
 import java.util.List;
@@ -38,7 +36,8 @@ class MemberRepositoryTest extends MemberTest {
     @DisplayName("사용자 생성")
     void createMember() {
         // given
-        Member member = createMember(null, "member@email.com");
+        ProfileImage profileImage = createProfileImage("memberImage");
+        Member member = createNativeTypeMember("member@email.com", profileImage);
 
         // when
         memberRepository.save(member);
@@ -53,10 +52,12 @@ class MemberRepositoryTest extends MemberTest {
     @DisplayName("채팅 회원들 프로필 조회")
     void findMembersProfileByMemberId() {
         // given
-        ProfileImage profileImage1 = profileImageRepository.save(createProfileImage(null, "member1Image"));
-        ProfileImage profileImage2 = profileImageRepository.save(createProfileImage(null, "member2Image"));
-        Member member1 = memberRepository.save(createMember(null, "member1@email.com", profileImage1));
-        Member member2 = memberRepository.save(createMember(null, "member2@email.com", profileImage2));
+        ProfileImage profileImage1 = profileImageRepository.save(createProfileImage("member1Image"));
+        Member member1 = memberRepository.save(createNativeTypeMember("member1@email.com", profileImage1));
+
+        ProfileImage profileImage2 = profileImageRepository.save(createProfileImage("member2Image"));
+        Member member2 = memberRepository.save(createNativeTypeMember("member2@email.com", profileImage2));
+
 
         Set<Long> request = new HashSet<>();
         request.add(member1.getMemberId());
@@ -80,13 +81,11 @@ class MemberRepositoryTest extends MemberTest {
     @DisplayName("회원의 일반 정보와 소셜 정보 조회 - 소셜 회원")
     void findByIdWithSocialMembers_socialMember() {
         // given
-        Member member = memberRepository.save(createSocialTypeMember(null, "member@email.com"));
-        SocialMember socialMember1 = socialMemberRepository.save(
-                createSocialMember(null, member, "kakao", SocialType.KAKAO)
-        );
-        SocialMember socialMember2 = socialMemberRepository.save(
-                createSocialMember(null, member, "naver", SocialType.NAVER)
-        );
+        ProfileImage profileImage = profileImageRepository.save(createProfileImage("memberImage"));
+        Member member = memberRepository.save(createSocialTypeMember("member1@email.com", profileImage));
+
+        SocialMember socialMember1 = socialMemberRepository.save(createSocialMember(member, SocialType.KAKAO, "kakao"));
+        SocialMember socialMember2 = socialMemberRepository.save(createSocialMember(member, SocialType.NAVER, "naver"));
 
         // when
         Member response = memberRepository.findByIdWithSocialMembers(member.getMemberId()).get();
@@ -103,7 +102,8 @@ class MemberRepositoryTest extends MemberTest {
     @DisplayName("회원의 일반 정보와 소셜 정보 조회 - 일반 회원")
     void findByIdWithSocialMembers_nativeMember() {
         // given
-        Member member = memberRepository.save(createNativeTypeMember(null, "member@email.com"));
+        ProfileImage profileImage = profileImageRepository.save(createProfileImage("memberImage"));
+        Member member = memberRepository.save(createNativeTypeMember("member@email.com", profileImage));
 
         // when
         Member response = memberRepository.findByIdWithSocialMembers(member.getMemberId()).get();
@@ -119,13 +119,11 @@ class MemberRepositoryTest extends MemberTest {
     @DisplayName("회원의 일반 정보와 소셜 정보 조회 - 통합 회원")
     void findByIdWithSocialMembers_bothMember() {
         // given
-        Member member = memberRepository.save(createBothTypeMember(null, "member@email.com"));
-        SocialMember socialMember1 = socialMemberRepository.save(
-                createSocialMember(null, member, "kakao", SocialType.KAKAO)
-        );
-        SocialMember socialMember2 = socialMemberRepository.save(
-                createSocialMember(null, member, "naver", SocialType.NAVER)
-        );
+        ProfileImage profileImage = profileImageRepository.save(createProfileImage("memberImage"));
+        Member member = memberRepository.save(createBothTypeMember("member@email.com", profileImage));
+
+        SocialMember socialMember1 = socialMemberRepository.save(createSocialMember(member, SocialType.KAKAO, "kakao"));
+        SocialMember socialMember2 = socialMemberRepository.save(createSocialMember(member, SocialType.NAVER, "naver"));
 
         // when
         Member response = memberRepository.findByIdWithSocialMembers(member.getMemberId()).get();

@@ -55,7 +55,7 @@ public class ChatMessageService {
     public Map<Long, MemberProfileResponse> getMemberProfiles(Set<Long> memberIds){
         return memberRepository.findMembersProfileByMemberId(memberIds)
                 .stream()
-                .collect(Collectors.toMap(MemberProfileResponse::getMemberId, Function.identity()));
+                .collect(Collectors.toConcurrentMap(MemberProfileResponse::getMemberId, Function.identity()));
 
     }
 
@@ -74,13 +74,18 @@ public class ChatMessageService {
         Member member = getMemberByNickname(chatMessageRequest.getNickname());
         TravelAttendee attendee = getTravelAttendee(chatMessageRequest.getScheduleId(), member.getMemberId());
 
-        if (!attendee.getPermission().isEnableChat()){
+        if (!attendee.isEnableChat()){
             throw new ForbiddenChatException(ErrorCode.FORBIDDEN_CHAT_ATTENDEE);
         }
 
-        ChatMessage message = chatMessageRepository.save(ChatMessage.of(member, chatMessageRequest));
+        ChatMessage chatMessage = ChatMessage.createChatMessage(
+                chatMessageRequest.getScheduleId(),
+                member.getMemberId(),
+                chatMessageRequest.getMessage()
+        );
+        chatMessageRepository.save(chatMessage);
 
-        return ChatResponse.from(message, member);
+        return ChatResponse.from(chatMessage, member);
     }
 
     public void validateSchedule(Long scheduleId){

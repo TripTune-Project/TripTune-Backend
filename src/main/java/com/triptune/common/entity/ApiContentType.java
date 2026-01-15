@@ -1,9 +1,7 @@
 package com.triptune.common.entity;
 
 import jakarta.persistence.*;
-import jakarta.persistence.criteria.CriteriaBuilder;
 import lombok.AccessLevel;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -24,10 +22,14 @@ public class ApiContentType {
     private Integer apiContentTypeId;
 
 
-    @Builder
-    public ApiContentType(Long contentTypeId, String contentTypeName, Integer apiContentTypeId) {
-        this.contentTypeId = contentTypeId;
+    private ApiContentType(String contentTypeName, Integer apiContentTypeId) {
         this.contentTypeName = contentTypeName;
         this.apiContentTypeId = apiContentTypeId;
     }
+
+    public static ApiContentType createApiContentType(String contentTypeName, Integer apiContentTypeId) {
+        return new ApiContentType(contentTypeName, apiContentTypeId);
+    }
+
+
 }

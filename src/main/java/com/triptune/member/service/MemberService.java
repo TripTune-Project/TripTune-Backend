@@ -74,7 +74,12 @@ public class MemberService {
 
         ProfileImage profileImage = profileImageService.saveDefaultProfileImage();
 
-        Member member = Member.from(joinRequest, profileImage, passwordEncoder.encode(joinRequest.getPassword()));
+        Member member = Member.createNativeMember(
+                joinRequest.getEmail(),
+                passwordEncoder.encode(joinRequest.getPassword()),
+                joinRequest.getNickname(),
+                profileImage
+        );
         memberRepository.save(member);
     }
 
@@ -110,7 +115,7 @@ public class MemberService {
         Member member = memberRepository.findByEmail(loginRequest.getEmail())
                 .orElseThrow(() -> new FailLoginException(ErrorCode.FAILED_LOGIN));
 
-        if (!isPasswordMatch(loginRequest.getPassword(), member.getPassword())) {
+        if (!passwordEncoder.matches(loginRequest.getPassword(), member.getPassword())) {
             throw new FailLoginException(ErrorCode.FAILED_LOGIN);
         }
 
@@ -124,9 +129,6 @@ public class MemberService {
         return LoginResponse.of(accessToken, member.getNickname());
     }
 
-    private boolean isPasswordMatch(String requestPassword, String savedPassword){
-        return passwordEncoder.matches(requestPassword, savedPassword);
-    }
 
     @Transactional
     public void logout(HttpServletResponse response, LogoutRequest logoutRequest, String accessToken) {
@@ -196,7 +198,7 @@ public class MemberService {
             throw new UnsupportedSocialMemberException(ErrorCode.SOCIAL_MEMBER_PASSWORD_CHANGE_NOT_ALLOWED);
         }
 
-        if(!isPasswordMatch(passwordRequest.getNowPassword(), member.getPassword())){
+        if(!passwordEncoder.matches(passwordRequest.getNowPassword(), member.getPassword())){
             throw new IncorrectPasswordException(ErrorCode.INCORRECT_PASSWORD);
         }
 
@@ -247,7 +249,7 @@ public class MemberService {
             throw new UnsupportedSocialMemberException(ErrorCode.SOCIAL_MEMBER_DEACTIVATE_NOT_ALLOWED);
         }
 
-        if(!isPasswordMatch(deactivateRequest.getPassword(), member.getPassword())){
+        if(!passwordEncoder.matches(deactivateRequest.getPassword(), member.getPassword())){
             throw new IncorrectPasswordException(ErrorCode.INCORRECT_PASSWORD);
         }
 

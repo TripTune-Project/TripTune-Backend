@@ -49,7 +49,7 @@ public class TravelAttendeeController {
                                                       @PathVariable(name = "scheduleId") Long scheduleId,
                                                       @PathVariable(name = "attendeeId") Long attendeeId,
                                                       @Valid @RequestBody AttendeePermissionRequest attendeePermissionRequest){
-        travelAttendeeService.updateAttendeePermission(scheduleId, memberId, attendeeId, attendeePermissionRequest);
+        travelAttendeeService.updateAttendeePermission(attendeePermissionRequest, scheduleId, memberId, attendeeId);
 
         return ApiResponse.okResponse();
     }

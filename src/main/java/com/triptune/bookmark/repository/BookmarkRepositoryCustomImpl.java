@@ -31,7 +31,7 @@ public class BookmarkRepositoryCustomImpl implements BookmarkRepositoryCustom {
     @Override
     public Page<TravelPlace> findSortedMemberBookmarks(Long memberId, Pageable pageable, BookmarkSortType sortType) {
         BooleanExpression expression = bookmark.member.memberId.eq(memberId);
-        OrderSpecifier<?> orderBySortType = getOrderBySortType(sortType);
+        OrderSpecifier<?>[] sortTypes = getOrderBySortType(sortType);
 
         List<TravelPlace> content = jpaQueryFactory
                 .select(travelPlace)
@@ -40,7 +40,7 @@ public class BookmarkRepositoryCustomImpl implements BookmarkRepositoryCustom {
                 .where(expression)
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
-                .orderBy(orderBySortType)
+                .orderBy(sortTypes)
                 .fetch();
 
         int totalElements = countTotalElements(expression);
@@ -61,11 +61,20 @@ public class BookmarkRepositoryCustomImpl implements BookmarkRepositoryCustom {
         return totalElements.intValue();
     }
 
-    public OrderSpecifier<?> getOrderBySortType(BookmarkSortType order){
-        return switch (order) {
-            case NEWEST -> bookmark.createdAt.desc();
-            case OLDEST -> bookmark.createdAt.asc();
-            case NAME -> travelPlace.placeName.asc();
+    public OrderSpecifier<?>[] getOrderBySortType(BookmarkSortType sortType){
+        return switch (sortType) {
+            case NEWEST -> new OrderSpecifier[] {
+                    bookmark.createdAt.desc(),
+                    travelPlace.placeId.desc()
+            };
+            case OLDEST -> new OrderSpecifier[] {
+                    bookmark.createdAt.asc(),
+                    travelPlace.placeId.asc()
+            };
+            case NAME ->  new OrderSpecifier[] {
+                    travelPlace.placeName.asc(),
+                    travelPlace.placeId.desc()
+            };
         };
     }
 

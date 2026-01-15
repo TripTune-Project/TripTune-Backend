@@ -47,7 +47,7 @@ public class TravelAttendeeService {
         Member guest = getMemberByEmail(attendeeRequest.getEmail());
         validateAttendeeAlreadyExists(scheduleId, guest.getMemberId());
 
-        TravelAttendee travelAttendee = TravelAttendee.of(schedule, guest, attendeeRequest.getPermission());
+        TravelAttendee travelAttendee = TravelAttendee.createGuest(schedule, guest, attendeeRequest.getPermission());
         travelAttendeeRepository.save(travelAttendee);
     }
 
@@ -93,7 +93,10 @@ public class TravelAttendeeService {
     }
 
     @Transactional
-    public void updateAttendeePermission(Long scheduleId, Long memberId, Long attendeeId, AttendeePermissionRequest attendeePermissionRequest) {
+    public void updateAttendeePermission(AttendeePermissionRequest attendeePermissionRequest,
+                                         Long scheduleId,
+                                         Long memberId,
+                                         Long attendeeId) {
         validateAuthor(scheduleId, memberId, ErrorCode.FORBIDDEN_UPDATE_ATTENDEE_PERMISSION);
 
         TravelAttendee attendee = travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndAttendeeId(scheduleId, attendeeId)

@@ -5,11 +5,8 @@ import com.triptune.member.entity.Member;
 import com.triptune.travel.entity.TravelPlace;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalDateTime;
 
 @Entity
 @Getter
@@ -29,18 +26,12 @@ public class Bookmark extends BaseCreatedEntity {
     @JoinColumn(name = "place_id")
     private TravelPlace travelPlace;
 
-
-    @Builder
-    public Bookmark(Long bookmarkId, Member member, TravelPlace travelPlace) {
-        this.bookmarkId = bookmarkId;
+    private Bookmark(Member member, TravelPlace travelPlace){
         this.member = member;
         this.travelPlace = travelPlace;
     }
 
-    public static Bookmark from(Member member, TravelPlace travelPlace){
-        return Bookmark.builder()
-                .member(member)
-                .travelPlace(travelPlace)
-                .build();
+    public static Bookmark createBookmark(Member member, TravelPlace travelPlace){
+        return new Bookmark(member, travelPlace);
     }
 }

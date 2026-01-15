@@ -15,6 +15,7 @@ import com.triptune.travel.repository.TravelPlaceRepository;
 import com.triptune.global.response.enums.ErrorCode;
 import com.triptune.global.exception.DataNotFoundException;
 import com.triptune.global.util.PageUtils;
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -32,6 +33,7 @@ public class TravelRouteService {
     private final TravelScheduleRepository travelScheduleRepository;
     private final TravelAttendeeRepository travelAttendeeRepository;
     private final TravelPlaceRepository travelPlaceRepository;
+    private final EntityManager em;
 
     public Page<RouteResponse> getTravelRoutes(Long scheduleId, int page) {
         Pageable pageable = PageUtils.defaultPageable(page);
@@ -47,7 +49,7 @@ public class TravelRouteService {
         validateEnableEdit(scheduleId, memberId);
 
         TravelPlace place = findTravelPlaceByPlaceId(routeCreateRequest.getPlaceId());
-        TravelRoute route = TravelRoute.of(schedule, place, schedule.getTravelRoutes().size() + 1);
+        TravelRoute route = TravelRoute.createTravelRoute(schedule, place, schedule.getTravelRoutes().size() + 1);
 
         travelRouteRepository.save(route);
     }
@@ -75,19 +77,13 @@ public class TravelRouteService {
     @Transactional
     public void updateTravelRouteInSchedule(TravelSchedule schedule, List<RouteRequest> routeRequests){
         travelRouteRepository.deleteAllByTravelSchedule_ScheduleId(schedule.getScheduleId());
+        schedule.clearTravelRoutes();
 
-        List<TravelRoute> routes = schedule.getTravelRoutes();
-        if (routes != null && !routes.isEmpty()) {
-            while (!routes.isEmpty()) {
-                routes.remove(0);
-            }
-        }
-
+        // TODO: 추후 수정
         if (routeRequests != null && !routeRequests.isEmpty()){
             for(RouteRequest routeRequest : routeRequests){
                 TravelPlace place = findTravelPlaceByPlaceId(routeRequest.getPlaceId());
-                TravelRoute route = TravelRoute.of(schedule, place, routeRequest.getRouteOrder());
-                schedule.addTravelRoutes(route);
+                TravelRoute route = TravelRoute.createTravelRoute(schedule, place, routeRequest.getRouteOrder());
                 travelRouteRepository.save(route);
             }
         }

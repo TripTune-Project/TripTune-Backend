@@ -2,6 +2,7 @@ package com.triptune.schedule;
 
 import com.triptune.BaseTest;
 import com.triptune.member.dto.response.MemberProfileResponse;
+import com.triptune.member.entity.Member;
 import com.triptune.schedule.dto.request.*;
 import com.triptune.schedule.enums.AttendeePermission;
 
@@ -17,32 +18,15 @@ public abstract class ScheduleTest extends BaseTest {
                 .build();
     }
 
-    protected ScheduleUpdateRequest createUpdateScheduleRequest(List<RouteRequest> routeRequests){
-        return ScheduleUpdateRequest.builder()
-                .scheduleName("수정 테스트")
-                .startDate(LocalDate.now().plusDays(5))
-                .endDate(LocalDate.now().plusDays(20))
-                .travelRoutes(routeRequests)
-                .build();
-    }
-
-    protected ScheduleUpdateRequest createUpdateScheduleRequest(String scheduleName, LocalDate startDate, LocalDate endDate, List<RouteRequest> routeRequests){
+    protected ScheduleUpdateRequest createUpdateScheduleRequest(String scheduleName, LocalDate startDate, LocalDate endDate, RouteRequest... routeRequest){
         return ScheduleUpdateRequest.builder()
                 .scheduleName(scheduleName)
                 .startDate(startDate)
                 .endDate(endDate)
-                .travelRoutes(routeRequests)
+                .travelRoutes(List.of(routeRequest))
                 .build();
     }
 
-    protected ScheduleUpdateRequest createUpdateScheduleRequest(String scheduleName, List<RouteRequest> routeRequests){
-        return ScheduleUpdateRequest.builder()
-                .scheduleName(scheduleName)
-                .startDate(LocalDate.now().plusDays(5))
-                .endDate(LocalDate.now().plusDays(20))
-                .travelRoutes(routeRequests)
-                .build();
-    }
 
     protected RouteRequest createRouteRequest(Integer routeOrder, Long placeId){
         return RouteRequest.of(routeOrder, placeId);
@@ -74,11 +58,11 @@ public abstract class ScheduleTest extends BaseTest {
         return RouteCreateRequest.builder().placeId(placeId).build();
     }
 
-    protected MemberProfileResponse createMemberProfileResponse(Long memberId, String nickname){
+    protected MemberProfileResponse createMemberProfileResponse(Long memberId, String nickname, String profileUrl){
         return MemberProfileResponse.builder()
                 .memberId(memberId)
                 .nickname(nickname)
-                .profileUrl(nickname + ".jpg")
+                .profileUrl(profileUrl)
                 .build();
     }
 

@@ -1,19 +1,14 @@
 package com.triptune.schedule.repository;
 
 import com.triptune.BaseTest;
-import com.triptune.common.entity.ApiCategory;
-import com.triptune.common.entity.City;
-import com.triptune.common.entity.Country;
-import com.triptune.common.entity.District;
-import com.triptune.common.repository.ApiCategoryRepository;
-import com.triptune.common.repository.CityRepository;
-import com.triptune.common.repository.CountryRepository;
-import com.triptune.common.repository.DistrictRepository;
+import com.triptune.common.entity.*;
+import com.triptune.common.repository.*;
 import com.triptune.global.config.QuerydslConfig;
 import com.triptune.schedule.ScheduleTest;
 import com.triptune.schedule.entity.TravelRoute;
 import com.triptune.schedule.entity.TravelSchedule;
 import com.triptune.travel.entity.TravelPlace;
+import com.triptune.travel.enums.ThemeType;
 import com.triptune.travel.repository.TravelPlaceRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -39,25 +34,20 @@ class TravelRouteRepositoryTest extends ScheduleTest {
     @Autowired private DistrictRepository districtRepository;
     @Autowired private TravelPlaceRepository travelPlaceRepository;
     @Autowired private ApiCategoryRepository apiCategoryRepository;
+    @Autowired private ApiContentTypeRepository apiContentTypeRepository;
 
 
     @Test
     @DisplayName("여행 루트 생성")
     void createTravelRoute() {
         // given
-        TravelSchedule schedule = createTravelSchedule(null, "테스트");
-        travelScheduleRepository.save(schedule);
-        Country country = createCountry();
-        countryRepository.save(country);
-        City city = createCity(country);
-        cityRepository.save(city);
-        District district = createDistrict(city, "부암동");
-        districtRepository.save(district);
-        ApiCategory apiCategory = createApiCategory();
-        apiCategoryRepository.save(apiCategory);
-
-        TravelPlace place = createTravelPlace(null, country, city, district, apiCategory);
-        travelPlaceRepository.save(place);
+        TravelSchedule schedule = travelScheduleRepository.save(createTravelSchedule("테스트"));
+        Country country = countryRepository.save(createCountry());
+        City city = cityRepository.save(createCity(country, "서울"));
+        District district = districtRepository.save(createDistrict(city, "부암동"));
+        ApiCategory apiCategory = apiCategoryRepository.save(createApiCategory());
+        ApiContentType apiContentType = apiContentTypeRepository.save(createApiContentType(ThemeType.ATTRACTIONS));
+        TravelPlace place = travelPlaceRepository.save(createTravelPlace(country, city, district, apiCategory, apiContentType, "여행지"));
 
         TravelRoute route = createTravelRoute(schedule, place, 1);
 
