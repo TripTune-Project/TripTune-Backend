@@ -8,11 +8,9 @@ import com.triptune.member.enums.JoinType;
 import com.triptune.profile.entity.ProfileImage;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -52,42 +50,52 @@ public class Member extends BaseTimeEntity {
     @OneToMany(mappedBy = "member", fetch = FetchType.LAZY)
     private List<SocialMember> socialMembers = new ArrayList<>();
 
-    @Builder
-    public Member(Long memberId, ProfileImage profileImage, String email, String password, String nickname, String refreshToken, JoinType joinType, boolean isActive, List<SocialMember> socialMembers) {
-        this.memberId = memberId;
-        this.profileImage = profileImage;
+
+    private Member(String email, String password, String nickname, JoinType joinType, boolean isActive) {
         this.email = email;
         this.password = password;
         this.nickname = nickname;
-        this.refreshToken = refreshToken;
         this.joinType = joinType;
         this.isActive = isActive;
-        this.socialMembers = (socialMembers != null) ? socialMembers : new ArrayList<>();
     }
 
-    public static Member from(JoinRequest joinRequest, ProfileImage profileImage, String encodePassword){
-        return Member.builder()
-                .profileImage(profileImage)
-                .email(joinRequest.getEmail())
-                .password(encodePassword)
-                .nickname(joinRequest.getNickname())
-                .joinType(JoinType.NATIVE)
-                .isActive(true)
-                .build();
+    private Member(String email, String nickname, JoinType joinType, boolean isActive) {
+        this.email = email;
+        this.nickname = nickname;
+        this.joinType = joinType;
+        this.isActive = isActive;
     }
 
-    public static Member from(ProfileImage profileImage, OAuth2UserInfo oAuth2UserInfo, String nickname){
-        return Member.builder()
-                .profileImage(profileImage)
-                .email(oAuth2UserInfo.getEmail())
-                .nickname(nickname)
-                .joinType(JoinType.SOCIAL)
-                .isActive(true)
-                .build();
+    public static Member createNativeMember(String email, String encodedPassword, String nickname, ProfileImage profileImage){
+        Member member = new Member(
+                email,
+                encodedPassword,
+                nickname,
+                JoinType.NATIVE,
+                true
+        );
+        member.initProfileImage(profileImage);
+        return member;
+    }
+
+    public static Member createSocialMember(String email, String nickname, ProfileImage profileImage){
+        Member member = new Member(
+                email,
+                nickname,
+                JoinType.SOCIAL,
+                true
+        );
+        member.initProfileImage(profileImage);
+        return member;
+    }
+
+    private void initProfileImage(ProfileImage profileImage) {
+        this.profileImage = profileImage;
+        profileImage.assignMember(this);
     }
 
     public boolean isMatchRefreshToken(String refreshToken){
-        return this.refreshToken.equals(refreshToken);
+        return refreshToken != null && refreshToken.equals(this.refreshToken);
     }
 
     public void updateRefreshToken(String refreshToken) {
@@ -121,8 +129,12 @@ public class Member extends BaseTimeEntity {
         }
     }
 
-    public void updateProfileImage(ProfileImage profileImage) {
-        this.profileImage = profileImage;
+    public void updateProfileImage(ProfileImage newProfileImage) {
+        // 기존 이미지와 관계 끊기
+        this.profileImage.assignMember(null);
+
+        this.profileImage = newProfileImage;
+        newProfileImage.assignMember(this);
     }
 
 

@@ -101,7 +101,12 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         String nickname = nicknameGenerator.createNickname();
 
         ProfileImage profileImage = profileImageService.saveDefaultProfileImage();
-        Member newMember = memberRepository.save(Member.from(profileImage, oAuth2UserInfo, nickname));
+        Member newMember = Member.createSocialMember(
+                oAuth2UserInfo.getEmail(),
+                nickname,
+                profileImage
+        );
+        memberRepository.save(newMember);
 
         createSocialMember(newMember, oAuth2UserInfo);
 
@@ -111,7 +116,12 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     }
 
     public void createSocialMember(Member member, OAuth2UserInfo oAuth2UserInfo){
-        SocialMember socialMember = SocialMember.from(member, oAuth2UserInfo);
+        SocialMember socialMember = SocialMember.createSocialMember(
+                member,
+                oAuth2UserInfo.getSocialType(),
+                oAuth2UserInfo.getSocialId()
+        );
+
         socialMemberRepository.save(socialMember);
     }
 

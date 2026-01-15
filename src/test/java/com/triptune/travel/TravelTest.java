@@ -7,6 +7,8 @@ import com.triptune.travel.dto.request.PlaceSearchRequest;
 import com.triptune.travel.dto.response.PlaceResponse;
 import com.triptune.travel.dto.response.PlaceSimpleResponse;
 import com.triptune.travel.entity.TravelPlace;
+import org.junit.platform.commons.util.ReflectionUtils;
+import org.springframework.test.util.ReflectionTestUtils;
 
 public abstract class TravelTest extends BaseTest {
     protected PlaceLocationRequest createTravelLocationRequest(Double latitude, Double longitude){
@@ -17,10 +19,10 @@ public abstract class TravelTest extends BaseTest {
     }
 
 
-    protected PlaceSearchRequest createTravelSearchRequest(Double longitude, Double latitude, String keyword){
+    protected PlaceSearchRequest createTravelSearchRequest(Double latitude, Double longitude, String keyword){
         return PlaceSearchRequest.builder()
-                .longitude(longitude)
                 .latitude(latitude)
+                .longitude(longitude)
                 .keyword(keyword)
                 .build();
     }

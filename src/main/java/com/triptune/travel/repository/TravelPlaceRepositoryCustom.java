@@ -18,7 +18,7 @@ public interface TravelPlaceRepositoryCustom {
     Page<PlaceLocation> searchTravelPlacesWithLocation(Pageable pageable, PlaceSearchRequest placeSearchRequest);
     Page<PlaceResponse> searchTravelPlaces(Pageable pageable, String keyword);
     Integer countTotalElements(BooleanExpression booleanExpression);
-    List<PlaceSimpleResponse> findPopularTravelPlacesByCity(CityType cityType);
-    List<PlaceSimpleResponse> findRecommendTravelPlacesByTheme(ThemeType themeType);
+    List<PlaceSimpleResponse> findPopularTravelPlaces(CityType cityType);
+    List<PlaceSimpleResponse> findRecommendTravelPlaces(ThemeType themeType);
     Page<PlaceResponse> findDefaultTravelPlacesByJungGu(Pageable pageable);
 }

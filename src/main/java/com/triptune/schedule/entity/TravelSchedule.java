@@ -1,7 +1,6 @@
 package com.triptune.schedule.entity;
 
 import com.triptune.common.entity.BaseTimeEntity;
-import com.triptune.schedule.dto.request.ScheduleCreateRequest;
 import com.triptune.schedule.dto.request.ScheduleUpdateRequest;
 import jakarta.persistence.*;
 import lombok.*;
@@ -35,22 +34,18 @@ public class TravelSchedule extends BaseTimeEntity {
     @OneToMany(mappedBy = "travelSchedule", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private List<TravelRoute> travelRoutes = new ArrayList<>();
 
-    @Builder
-    public TravelSchedule(Long scheduleId, String scheduleName, LocalDate startDate, LocalDate endDate, List<TravelAttendee> travelAttendees, List<TravelRoute> travelRoutes) {
-        this.scheduleId = scheduleId;
+    private TravelSchedule(String scheduleName, LocalDate startDate, LocalDate endDate) {
         this.scheduleName = scheduleName;
         this.startDate = startDate;
         this.endDate = endDate;
-        this.travelAttendees = (travelAttendees != null) ? travelAttendees : new ArrayList<>();
-        this.travelRoutes = (travelRoutes != null) ? travelRoutes : new ArrayList<>();
     }
 
-    public static TravelSchedule from(ScheduleCreateRequest request){
-        return TravelSchedule.builder()
-                .scheduleName(request.getScheduleName())
-                .startDate(request.getStartDate())
-                .endDate(request.getEndDate())
-                .build();
+    public static TravelSchedule createTravelSchedule(String scheduleName, LocalDate startDate, LocalDate endDate) {
+        return new TravelSchedule(
+                scheduleName,
+                startDate,
+                endDate
+        );
     }
 
     public void updateSchedule(ScheduleUpdateRequest request) {
@@ -59,13 +54,22 @@ public class TravelSchedule extends BaseTimeEntity {
         this.endDate = request.getEndDate();
     }
 
-    public void addTravelRoutes(TravelRoute travelRoute) {
-        this.travelRoutes.add(travelRoute);
-        travelRoute.setTravelSchedule(this);
+    public void removeTravelRoutes(TravelRoute travelRoute){
+        travelRoutes.remove(travelRoute);
+        travelRoute.detachTravelSchedule();
     }
 
-    public void addTravelAttendee(TravelAttendee travelAttendee) {
-        this.travelAttendees.add(travelAttendee);
-        travelAttendee.setTravelSchedule(this);
+    public void clearTravelRoutes() {
+        for (TravelRoute travelRoute : new ArrayList<>(travelRoutes)) {
+            removeTravelRoutes(travelRoute);
+        }
+    }
+
+    public void addTravelRoutes(TravelRoute travelRoute) {
+        travelRoutes.add(travelRoute);
+    }
+
+    public void addTravelAttendees(TravelAttendee travelAttendee) {
+        travelAttendees.add(travelAttendee);
     }
 }

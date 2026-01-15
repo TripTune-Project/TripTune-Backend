@@ -2,7 +2,6 @@ package com.triptune.common.entity;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -24,10 +23,12 @@ public class City {
     private String cityName;
 
 
-    @Builder
-    public City(Long cityId, Country country, String cityName) {
-        this.cityId = cityId;
+    private City(Country country, String cityName) {
         this.country = country;
         this.cityName = cityName;
+    }
+
+    public static City createCity(Country country, String cityName) {
+        return new City(country, cityName);
     }
 }

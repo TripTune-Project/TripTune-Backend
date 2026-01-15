@@ -21,10 +21,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.context.WebApplicationContext;
-import org.springframework.web.filter.CharacterEncodingFilter;
 
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -53,23 +50,20 @@ public class ChatMessageControllerTest extends ScheduleTest {
     void setUp(){
         chatMessageRepository.deleteAll();
 
-        ProfileImage profileImage1 = profileImageRepository.save(createProfileImage(null, "member1Image"));
-        ProfileImage profileImage2 = profileImageRepository.save(createProfileImage(null, "member2Image"));
-        ProfileImage profileImage3 = profileImageRepository.save(createProfileImage(null, "member3Image"));
+        ProfileImage profileImage1 = profileImageRepository.save(createProfileImage("member1Image"));
+        member1 = memberRepository.save(createNativeTypeMember("member1@email.com", profileImage1));
 
-        member1 = memberRepository.save(createMember(null, "member1@email.com", profileImage1));
-        member2 = memberRepository.save(createMember(null, "member2@email.com", profileImage2));
-        member3 = memberRepository.save(createMember(null, "member3@email.com", profileImage3));
+        ProfileImage profileImage2 = profileImageRepository.save(createProfileImage("member2Image"));
+        member2 = memberRepository.save(createNativeTypeMember("member2@email.com", profileImage2));
 
-        schedule = travelScheduleRepository.save(createTravelSchedule(null,"테스트1"));
+        ProfileImage profileImage3 = profileImageRepository.save(createProfileImage("member3Image"));
+        member3 = memberRepository.save(createNativeTypeMember("member3@email.com", profileImage3));
 
-        TravelAttendee attendee1 = travelAttendeeRepository.save(createTravelAttendee(null, member1, schedule, AttendeeRole.AUTHOR, AttendeePermission.ALL));
-        TravelAttendee attendee2 = travelAttendeeRepository.save(createTravelAttendee(null, member2, schedule, AttendeeRole.GUEST, AttendeePermission.READ));
-        TravelAttendee attendee3 = travelAttendeeRepository.save(createTravelAttendee(null, member3, schedule, AttendeeRole.GUEST, AttendeePermission.CHAT));
-        schedule.addTravelAttendee(attendee1);
-        schedule.addTravelAttendee(attendee2);
-        schedule.addTravelAttendee(attendee3);
+        schedule = travelScheduleRepository.save(createTravelSchedule("테스트1"));
 
+        travelAttendeeRepository.save(createAuthorTravelAttendee(schedule, member1));
+        travelAttendeeRepository.save(createGuestTravelAttendee(schedule, member2, AttendeePermission.READ));
+        travelAttendeeRepository.save(createGuestTravelAttendee(schedule, member3, AttendeePermission.CHAT));
 
     }
 
@@ -77,12 +71,12 @@ public class ChatMessageControllerTest extends ScheduleTest {
     @DisplayName("채팅 내용 조회")
     void getChatMessages() throws Exception {
         // given
-        ChatMessage message1 = chatMessageRepository.save(createChatMessage("id1", schedule.getScheduleId(), member1, "hello1"));
-        ChatMessage message2 = chatMessageRepository.save(createChatMessage("id2", schedule.getScheduleId(), member1, "hello2"));
-        ChatMessage message3 = chatMessageRepository.save(createChatMessage("id3", schedule.getScheduleId(), member1, "hello3"));
-        ChatMessage message4 = chatMessageRepository.save(createChatMessage("id4", schedule.getScheduleId(), member2, "hello4"));
-        ChatMessage message5 = chatMessageRepository.save(createChatMessage("id5", schedule.getScheduleId(), member3, "hello5"));
-        ChatMessage message6 = chatMessageRepository.save(createChatMessage("id6", schedule.getScheduleId(), member1, "hello6"));
+        ChatMessage message1 = chatMessageRepository.save(createChatMessage(schedule.getScheduleId(), member1.getMemberId(), "hello1"));
+        ChatMessage message2 = chatMessageRepository.save(createChatMessage(schedule.getScheduleId(), member1.getMemberId(), "hello2"));
+        ChatMessage message3 = chatMessageRepository.save(createChatMessage(schedule.getScheduleId(), member1.getMemberId(), "hello3"));
+        ChatMessage message4 = chatMessageRepository.save(createChatMessage(schedule.getScheduleId(), member2.getMemberId(), "hello4"));
+        ChatMessage message5 = chatMessageRepository.save(createChatMessage(schedule.getScheduleId(), member3.getMemberId(), "hello5"));
+        ChatMessage message6 = chatMessageRepository.save(createChatMessage(schedule.getScheduleId(), member1.getMemberId(), "hello6"));
 
         mockAuthentication(member1);
 

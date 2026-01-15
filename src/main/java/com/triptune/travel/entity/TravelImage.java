@@ -40,11 +40,7 @@ public class TravelImage extends BaseTimeEntity {
     @Column(name = "is_thumbnail")
     private boolean isThumbnail;
 
-
-    @Builder
-    public TravelImage(Long travelImageId, TravelPlace travelPlace, String s3ObjectUrl, String s3ObjectKey, String originalName, String fileName, String fileType, double fileSize, boolean isThumbnail) {
-        this.travelImageId = travelImageId;
-        this.travelPlace = travelPlace;
+    private TravelImage(String s3ObjectUrl, String s3ObjectKey, String originalName, String fileName, String fileType, double fileSize, boolean isThumbnail) {
         this.s3ObjectUrl = s3ObjectUrl;
         this.s3ObjectKey = s3ObjectKey;
         this.originalName = originalName;
@@ -52,5 +48,24 @@ public class TravelImage extends BaseTimeEntity {
         this.fileType = fileType;
         this.fileSize = fileSize;
         this.isThumbnail = isThumbnail;
+    }
+
+    public static TravelImage createTravelImage(TravelPlace travelPlace, String s3ObjectUrl, String s3ObjectKey, String originalName, String fileName, String fileType, double fileSize, boolean isThumbnail) {
+        TravelImage travelImage = new TravelImage(
+                s3ObjectUrl,
+                s3ObjectKey,
+                originalName,
+                fileName,
+                fileType,
+                fileSize,
+                isThumbnail
+        );
+        travelImage.assignTravelPlace(travelPlace);
+        return travelImage;
+    }
+
+    public void assignTravelPlace(TravelPlace travelPlace){
+        this.travelPlace = travelPlace;
+        travelPlace.addTravelImages(this);
     }
 }

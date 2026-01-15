@@ -30,7 +30,7 @@ class ProfileImageRepositoryTest extends ProfileImageTest {
     @DisplayName("프로필 이미지 생성")
     void createMember() {
         // given
-        ProfileImage profileImage = createProfileImage(null, "testProfileImage");
+        ProfileImage profileImage = createProfileImage("testProfileImage");
 
         // when
         profileImageRepository.save(profileImage);
@@ -45,16 +45,16 @@ class ProfileImageRepositoryTest extends ProfileImageTest {
     @DisplayName("회원 아이디 이용해 프로필 이미지 조회")
     void findByMemberId() {
         // given
-        ProfileImage profileImage = profileImageRepository.save(createProfileImage(null, "member1Image"));
-        Member member = memberRepository.save(createMember(null, "member1@email.com", profileImage));
+        ProfileImage profileImage = profileImageRepository.save(createProfileImage("member1Image"));
+        Member member = memberRepository.save(createNativeTypeMember("member1@email.com", profileImage));
 
         // when
-        Optional<ProfileImage> response = profileImageRepository.findByMemberId(member.getMemberId());
+        ProfileImage response = profileImageRepository.findByMemberId(member.getMemberId()).get();
 
         // then
-        assertThat(response.get().getProfileImageId()).isEqualTo(profileImage.getProfileImageId());
-        assertThat(response.get().getFileName()).isEqualTo(profileImage.getFileName());
-        assertThat(response.get().getS3ObjectUrl()).isEqualTo(profileImage.getS3ObjectUrl());
+        assertThat(response.getProfileImageId()).isEqualTo(profileImage.getProfileImageId());
+        assertThat(response.getFileName()).isEqualTo(profileImage.getFileName());
+        assertThat(response.getS3ObjectUrl()).isEqualTo(profileImage.getS3ObjectUrl());
     }
 
 }

@@ -18,7 +18,7 @@ public enum BookmarkSortType {
     private final String value;
     private final String description;
 
-    public static BookmarkSortType from(String sort){
+    public static BookmarkSortType determineSortType(String sort){
         return Arrays.stream(BookmarkSortType.values())
                 .filter(type -> type.getValue().equals(sort))
                 .findFirst()

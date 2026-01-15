@@ -6,9 +6,10 @@ import com.triptune.schedule.enums.AttendeePermission;
 import com.triptune.schedule.enums.AttendeeRole;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import java.util.Objects;
 
 @Entity
 @Getter
@@ -36,31 +37,38 @@ public class TravelAttendee extends BaseTimeEntity {
     @Column(name = "permission")
     private AttendeePermission permission;
 
-    @Builder
-    public TravelAttendee(Long attendeeId, TravelSchedule travelSchedule, Member member, AttendeeRole role, AttendeePermission permission) {
-        this.attendeeId = attendeeId;
-        this.travelSchedule = travelSchedule;
+
+    private TravelAttendee(Member member, AttendeeRole role, AttendeePermission permission) {
         this.member = member;
         this.role = role;
         this.permission = permission;
     }
 
-    public static TravelAttendee of(TravelSchedule schedule, Member member){
-        return TravelAttendee.builder()
-                .travelSchedule(schedule)
-                .member(member)
-                .role(AttendeeRole.AUTHOR)
-                .permission(AttendeePermission.ALL)
-                .build();
+    public static TravelAttendee createAuthor(TravelSchedule travelSchedule, Member member){
+        TravelAttendee attendee = new TravelAttendee(
+                member,
+                AttendeeRole.AUTHOR,
+                AttendeePermission.ALL
+        );
+
+        attendee.assignSchedule(travelSchedule);
+        return attendee;
     }
 
-    public static TravelAttendee of(TravelSchedule schedule, Member member, AttendeePermission permission){
-        return TravelAttendee.builder()
-                .travelSchedule(schedule)
-                .member(member)
-                .role(AttendeeRole.GUEST)
-                .permission(permission)
-                .build();
+    public static TravelAttendee createGuest(TravelSchedule travelSchedule, Member member, AttendeePermission permission){
+        TravelAttendee attendee = new TravelAttendee(
+                member,
+                AttendeeRole.GUEST,
+                permission
+        );
+
+        attendee.assignSchedule(travelSchedule);
+        return attendee;
+    }
+
+    public void assignSchedule(TravelSchedule travelSchedule){
+        this.travelSchedule = travelSchedule;
+        travelSchedule.addTravelAttendees(this);
     }
 
     public void updatePermission(AttendeePermission permission){
@@ -71,8 +79,11 @@ public class TravelAttendee extends BaseTimeEntity {
         this.role = role;
     }
 
-    public void setTravelSchedule(TravelSchedule travelSchedule) {
-        this.travelSchedule = travelSchedule;
+    public boolean isEnableChat() {
+        return permission.isEnableChat();
     }
 
+    public boolean isSameMember(Long memberId) {
+        return Objects.equals(this.getMember().getMemberId(), memberId);
+    }
 }

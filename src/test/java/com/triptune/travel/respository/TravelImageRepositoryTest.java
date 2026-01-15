@@ -6,6 +6,7 @@ import com.triptune.global.config.QuerydslConfig;
 import com.triptune.travel.TravelTest;
 import com.triptune.travel.entity.TravelImage;
 import com.triptune.travel.entity.TravelPlace;
+import com.triptune.travel.enums.ThemeType;
 import com.triptune.travel.repository.TravelImageRepository;
 import com.triptune.travel.repository.TravelPlaceRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -32,30 +33,38 @@ public class TravelImageRepositoryTest extends TravelTest {
     @Autowired private DistrictRepository districtRepository;
     @Autowired private ApiCategoryRepository apiCategoryRepository;
     @Autowired private TravelPlaceRepository travelPlaceRepository;
-
-    private TravelPlace travelPlace;
-    private TravelImage travelImage1;
+    @Autowired private ApiContentTypeRepository apiContentTypeRepository;
 
 
-    @BeforeEach
-    void setUp(){
-        Country country = countryRepository.save(createCountry());
-        City city = cityRepository.save(createCity(country));
-        District district = districtRepository.save(createDistrict(city, "강남구"));
-        ApiCategory apiCategory = apiCategoryRepository.save(createApiCategory());
-        travelPlace = travelPlaceRepository.save(createTravelPlace(null, country, city, district, apiCategory));
-        travelImage1 = travelImageRepository.save(createTravelImage(travelPlace, "test1", true));
-        travelImageRepository.save(createTravelImage(travelPlace, "test2", false));
-    }
 
     @Test
     @DisplayName("placeId 를 이용해서 썸네일 이미지 조회")
     void findThumbnailImageByPlaceId(){
-        // given, when
-        String response = travelImageRepository.findThumbnailUrlByPlaceId(travelPlace.getPlaceId());
+        // given
+        Country country = countryRepository.save(createCountry());
+        City city = cityRepository.save(createCity(country, "서울"));
+        District district = districtRepository.save(createDistrict(city, "강남구"));
+        ApiCategory apiCategory = apiCategoryRepository.save(createApiCategory());
+        ApiContentType apiContentType = apiContentTypeRepository.save(createApiContentType(ThemeType.ATTRACTIONS));
+
+        TravelPlace place = travelPlaceRepository.save(
+                createTravelPlace(
+                        country,
+                        city,
+                        district,
+                        apiCategory,
+                        apiContentType,
+                        "여행지"
+                )
+        );
+        TravelImage placeThumbnail = travelImageRepository.save(createTravelImage(place, "test1", true));
+        travelImageRepository.save(createTravelImage(place, "test2", false));
+
+        // when
+        String response = travelImageRepository.findThumbnailUrlByPlaceId(place.getPlaceId());
 
         // then
-        assertThat(response).isEqualTo(travelImage1.getS3ObjectUrl());
+        assertThat(response).isEqualTo(placeThumbnail.getS3ObjectUrl());
     }
 
 }

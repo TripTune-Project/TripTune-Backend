@@ -21,12 +21,10 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -45,37 +43,60 @@ public class TravelPlaceRepositoryTest extends TravelTest {
     @Autowired private TravelImageRepository travelImageRepository;
     @Autowired private ApiContentTypeRepository apiContentTypeRepository;
 
-    private TravelPlace travelPlace1;
-    private TravelPlace travelPlace2;
-    private TravelImage travelImage1;
-
     private Country country;
     private City city;
+    private District gangnam;
+    private District junggu;
     private ApiCategory apiCategory;
     private ApiContentType attractionContentType;
+    private ApiContentType sportsContentType;
+
+
 
     @BeforeEach
     void setUp(){
         country = countryRepository.save(createCountry());
-        city = cityRepository.save(createCity(country));
-        District district1 = districtRepository.save(createDistrict(city, "강남구"));
-        District district2 = districtRepository.save(createDistrict(city, "중구"));
+        city = cityRepository.save(createCity(country, "서울"));
+        gangnam = districtRepository.save(createDistrict(city, "강남구"));
+        junggu = districtRepository.save(createDistrict(city, "중구"));
         apiCategory = apiCategoryRepository.save(createApiCategory());
         attractionContentType = apiContentTypeRepository.save(createApiContentType(ThemeType.ATTRACTIONS));
-        ApiContentType sportsContentType = apiContentTypeRepository.save(createApiContentType(ThemeType.SPORTS));
-
-        travelPlace1 = travelPlaceRepository.save(createTravelPlace(null, country, city, district1, apiCategory, attractionContentType, 0));
-        travelPlace2 = travelPlaceRepository.save(createTravelPlace(null, country, city, district2, apiCategory, sportsContentType, 0));
-
-        travelImage1 = travelImageRepository.save(createTravelImage(travelPlace1, "test1", true));
-        travelImageRepository.save(createTravelImage(travelPlace1, "test2", false));
+        sportsContentType = apiContentTypeRepository.save(createApiContentType(ThemeType.SPORTS));
     }
-    
+
 
     @Test
     @DisplayName("위치 정보에 따른 여행지 목록 조회 시 데이터 존재하는 경우")
     void findNearByTravelPlaceList_withData(){
         // given
+        TravelPlace gangnamPlace = travelPlaceRepository.save(
+                createTravelPlaceWithLocation(
+                        country,
+                        city,
+                        gangnam,
+                        apiCategory,
+                        attractionContentType,
+                        "여행지1",
+                        37.5,
+                        127.0281573537
+                )
+        );
+        TravelImage gangnamThumbnail = travelImageRepository.save(createTravelImage(gangnamPlace, "test1", true));
+        travelImageRepository.save(createTravelImage(gangnamPlace, "test2", false));
+
+        TravelPlace jungguPlace = travelPlaceRepository.save(
+                createTravelPlaceWithLocation(
+                        country,
+                        city,
+                        junggu,
+                        apiCategory,
+                        sportsContentType,
+                        "여행지2",
+                        37.477,
+                        127.0
+                )
+        );
+
         Pageable pageable = PageUtils.defaultPageable(1);
         PlaceLocationRequest placeLocationRequest = createTravelLocationRequest(37.497, 127.0);
         int radius = 5;   // 5km 이내
@@ -86,19 +107,45 @@ public class TravelPlaceRepositoryTest extends TravelTest {
         // then
         List<PlaceLocation> content = response.getContent();
         assertThat(response.getTotalElements()).isEqualTo(2);
-        assertThat(content.get(0).getCity()).isEqualTo(travelPlace1.getCity().getCityName());
-        assertThat(content.get(0).getPlaceName()).isEqualTo(travelPlace1.getPlaceName());
-        assertThat(content.get(0).getAddress()).isEqualTo(travelPlace1.getAddress());
+        assertThat(content.get(0).getCity()).isEqualTo(jungguPlace.getCity().getCityName());
+        assertThat(content.get(0).getPlaceName()).isEqualTo(jungguPlace.getPlaceName());
+        assertThat(content.get(0).getAddress()).isEqualTo(jungguPlace.getAddress());
         assertThat(content.get(0).getDistance()).isNotNull();
-        assertThat(content.get(0).getThumbnailUrl()).isEqualTo(travelImage1.getS3ObjectUrl());
+        assertThat(content.get(0).getThumbnailUrl()).isNull();
+        assertThat(content.get(1).getPlaceName()).isEqualTo(gangnamPlace.getPlaceName());
         assertThat(content.get(1).getDistance()).isNotNull();
-        assertThat(content.get(1).getThumbnailUrl()).isNull();
+        assertThat(content.get(1).getThumbnailUrl()).isEqualTo(gangnamThumbnail.getS3ObjectUrl());
     }
 
+    // TODO: 수정 후 다시 테스트(현재: 반경 5km 라서 데이터 안나옴, 수정 후: 반경에 상관없이 데이터 나와야함)
     @Test
     @DisplayName("위치 정보에 따른 여행지 목록을 조회하며 조회 결과가 없는 경우")
-    void findNearByTravelPlaceList_noData(){
+    void findNearByTravelPlaceList_emptyResult(){
         // given
+        TravelPlace gangnamPlace = travelPlaceRepository.save(
+                createTravelPlace(
+                        country,
+                        city,
+                        gangnam,
+                        apiCategory,
+                        attractionContentType,
+                        "여행지1"
+                )
+        );
+        travelImageRepository.save(createTravelImage(gangnamPlace, "test1", true));
+        travelImageRepository.save(createTravelImage(gangnamPlace, "test2", false));
+
+        travelPlaceRepository.save(
+                createTravelPlace(
+                        country,
+                        city,
+                        junggu,
+                        apiCategory,
+                        sportsContentType,
+                        "여행지2"
+                )
+        );
+
         Pageable pageable = PageUtils.defaultPageable(1);
         PlaceLocationRequest placeLocationRequest = createTravelLocationRequest(99.999999, 99.999999);
         int radius = 5;   // 5km 이내
@@ -115,6 +162,34 @@ public class TravelPlaceRepositoryTest extends TravelTest {
     @DisplayName("키워드와 위치를 이용해 검색 시 검색 결과에 데이터가 존재하는 경우")
     void searchTravelPlacesWithLocation_withData(){
         // given
+        TravelPlace gangnamPlace = travelPlaceRepository.save(
+                createTravelPlaceWithLocation(
+                        country,
+                        city,
+                        gangnam,
+                        apiCategory,
+                        attractionContentType,
+                        "여행지1",
+                        37.49,
+                        127.0281573537
+                )
+        );
+        TravelImage gangnamThumbnail = travelImageRepository.save(createTravelImage(gangnamPlace, "test1", true));
+        travelImageRepository.save(createTravelImage(gangnamPlace, "test2", false));
+
+        travelPlaceRepository.save(
+                createTravelPlaceWithLocation(
+                        country,
+                        city,
+                        junggu,
+                        apiCategory,
+                        sportsContentType,
+                        "여행지2",
+                        37.477,
+                        127.0
+                )
+        );
+
         Pageable pageable = PageUtils.defaultPageable(1);
         PlaceSearchRequest request = createTravelSearchRequest(37.4970465429, 127.0281573537, "강남");
 
@@ -124,16 +199,44 @@ public class TravelPlaceRepositoryTest extends TravelTest {
         // then
         List<PlaceLocation> content = response.getContent();
         assertThat(response.getTotalElements()).isEqualTo(1);
-        assertThat(content.get(0).getDistrict()).contains("강남");
+        assertThat(content.get(0).getPlaceName()).isEqualTo(gangnamPlace.getPlaceName());
+        assertThat(content.get(0).getDistrict()).isEqualTo(gangnamPlace.getDistrict().getDistrictName());
         assertThat(content.get(0).getDistance()).isNotNull();
-        assertThat(content.get(0).getThumbnailUrl()).isEqualTo(travelImage1.getS3ObjectUrl());
+        assertThat(content.get(0).getThumbnailUrl()).isEqualTo(gangnamThumbnail.getS3ObjectUrl());
     }
 
 
     @Test
     @DisplayName("키워드와 위치를 이용해 검색 시 검색결과가 존재하지 않는 경우")
-    void searchTravelPlacesWithLocation_noData(){
+    void searchTravelPlacesWithLocation_emptyResult(){
         // given
+        TravelPlace gangnamPlace = travelPlaceRepository.save(
+                createTravelPlaceWithLocation(
+                        country,
+                        city,
+                        gangnam,
+                        apiCategory,
+                        attractionContentType,
+                        "여행지1",
+                        37.49,
+                        127.0281573537
+                )
+        );
+        travelImageRepository.save(createTravelImage(gangnamPlace, "test1", true));
+        travelImageRepository.save(createTravelImage(gangnamPlace, "test2", false));
+
+        travelPlaceRepository.save(
+                createTravelPlaceWithLocation(
+                        country,
+                        city,
+                        junggu,
+                        apiCategory,
+                        sportsContentType,
+                        "여행지2",
+                        37.477,
+                        127.0
+                )
+        );
         Pageable pageable = PageUtils.defaultPageable(1);
         PlaceSearchRequest request = createTravelSearchRequest(37.4970465429, 127.0281573537, "ㅁㄴㅇㄹ");
 
@@ -146,9 +249,54 @@ public class TravelPlaceRepositoryTest extends TravelTest {
     }
 
     @Test
-    @DisplayName("기본 여행지 조회 시 결과가 존재하는 경우")
+    @DisplayName("기본 여행지(중구) 조회 시 결과가 존재하는 경우")
     void findDefaultTravelPlacesByJungGu_withData(){
         // given
+        TravelPlace gangnamPlace = travelPlaceRepository.save(
+                createTravelPlaceWithLocation(
+                        country,
+                        city,
+                        gangnam,
+                        apiCategory,
+                        attractionContentType,
+                        "여행지1",
+                        37.49850,
+                        127.02820
+                )
+        );
+        TravelImage gangnamThumbnail = travelImageRepository.save(createTravelImage(gangnamPlace, "test1", true));
+        travelImageRepository.save(createTravelImage(gangnamPlace, "test2", false));
+
+        TravelPlace jungguPlace = travelPlaceRepository.save(
+                createTravelPlaceWithLocation(
+                        country,
+                        city,
+                        junggu,
+                        apiCategory,
+                        sportsContentType,
+                        "여행지2",
+                        37.56420,
+                        126.99800
+                )
+        );
+
+        City busan = cityRepository.save(createCity(country, "부산"));
+        District busanDistrict = districtRepository.save(createDistrict(busan, "금정구"));
+        TravelPlace busanPlace = travelPlaceRepository.save(
+                createTravelPlaceWithLocation(
+                        country,
+                        busan,
+                        busanDistrict,
+                        apiCategory,
+                        attractionContentType,
+                        "부산 여행지",
+                        35.15830,
+                        129.06010
+                )
+        );
+        TravelImage busanThumbnail = travelImageRepository.save(createTravelImage(busanPlace, "부산이미지1", true));
+        travelImageRepository.save(createTravelImage(busanPlace, "부산이미지2", false));
+
         Pageable pageable = PageUtils.defaultPageable(1);
 
         // when
@@ -156,49 +304,106 @@ public class TravelPlaceRepositoryTest extends TravelTest {
 
         // then
         List<PlaceResponse> content = response.getContent();
-        assertThat(response.getTotalElements()).isEqualTo(2);
-        assertThat(content.get(0).getCountry()).isEqualTo(travelPlace2.getCountry().getCountryName());
-        assertThat(content.get(0).getCity()).isEqualTo(travelPlace2.getCity().getCityName());
-        assertThat(content.get(0).getDistrict()).isEqualTo(travelPlace2.getDistrict().getDistrictName());
+        assertThat(response.getTotalElements()).isEqualTo(3);
+        assertThat(content.get(0).getPlaceName()).isEqualTo(jungguPlace.getPlaceName());
+        assertThat(content.get(0).getDistrict()).isEqualTo(jungguPlace.getDistrict().getDistrictName());
         assertThat(content.get(0).getThumbnailUrl()).isNull();
+        assertThat(content.get(1).getPlaceName()).isEqualTo(gangnamPlace.getPlaceName());
+        assertThat(content.get(1).getDistrict()).isEqualTo(gangnamPlace.getDistrict().getDistrictName());
+        assertThat(content.get(1).getThumbnailUrl()).isEqualTo(gangnamThumbnail.getS3ObjectUrl());
+        assertThat(content.get(2).getPlaceName()).isEqualTo(busanPlace.getPlaceName());
+        assertThat(content.get(2).getDistrict()).isEqualTo(busanPlace.getDistrict().getDistrictName());
+        assertThat(content.get(2).getThumbnailUrl()).isEqualTo(busanThumbnail.getS3ObjectUrl());
+
     }
 
-    // TODO
-//    @Test
-//    @DisplayName("기본 여행지 조회 시 검색결과가 존재하지 않는 경우")
-//    void findDefaultTravelPlacesByJungGu_noData(){
-//        // given
-//        Pageable pageable = PageUtils.defaultPageable(1);
-//
-//        // when
-//        Page<PlaceResponse> response = travelPlaceRepository.findDefaultTravelPlacesByJungGu(pageable);
-//
-//        // then
-//        assertThat(response.getTotalElements()).isEqualTo(0);
-//        assertThat(response.getContent()).isEmpty();
-//    }
+
+    @Test
+    @DisplayName("기본 여행지(중구) 조회 시 검색결과가 존재하지 않는 경우")
+    void findDefaultTravelPlacesByJungGu_emptyResult(){
+        // given
+        Pageable pageable = PageUtils.defaultPageable(1);
+
+        // when
+        Page<PlaceResponse> response = travelPlaceRepository.findDefaultTravelPlacesByJungGu(pageable);
+
+        // then
+        assertThat(response.getTotalElements()).isEqualTo(0);
+        assertThat(response.getContent()).isEmpty();
+    }
 
 
     @Test
     @DisplayName("키워드 이용해 검색 시 검색결과가 존재하는 경우")
     void searchTravelPlaces_withData(){
         // given
+        TravelPlace gangnamPlace = travelPlaceRepository.save(
+                createTravelPlace(
+                        country,
+                        city,
+                        gangnam,
+                        apiCategory,
+                        attractionContentType,
+                        "여행지1"
+                )
+        );
+        TravelImage gangnamThumbnail = travelImageRepository.save(createTravelImage(gangnamPlace, "test1", true));
+        travelImageRepository.save(createTravelImage(gangnamPlace, "test2", false));
+
+        travelPlaceRepository.save(
+                createTravelPlace(
+                        country,
+                        city,
+                        junggu,
+                        apiCategory,
+                        sportsContentType,
+                        "여행지2"
+                )
+        );
+
         Pageable pageable = PageUtils.defaultPageable(1);
 
+        String keyword = "강남";
+
         // when
-        Page<PlaceResponse> response = travelPlaceRepository.searchTravelPlaces(pageable, "강남");
+        Page<PlaceResponse> response = travelPlaceRepository.searchTravelPlaces(pageable, keyword);
 
         // then
         List<PlaceResponse> content = response.getContent();
         assertThat(response.getTotalElements()).isEqualTo(1);
-        assertThat(response.getContent().get(0).getDistrict()).contains("강남");
-        assertThat(content.get(0).getThumbnailUrl()).isEqualTo(travelImage1.getS3ObjectUrl());
+        assertThat(content.get(0).getDistrict()).contains(keyword);
+        assertThat(content.get(0).getPlaceName()).isEqualTo(gangnamPlace.getPlaceName());
+        assertThat(content.get(0).getThumbnailUrl()).isEqualTo(gangnamThumbnail.getS3ObjectUrl());
     }
 
     @Test
     @DisplayName("키워드 이용해 검색 시 검색결과가 존재하지 않는 경우")
-    void searchTravelPlaces_noData(){
+    void searchTravelPlaces_emptyResult(){
         // given
+        TravelPlace gangnamPlace = travelPlaceRepository.save(
+                createTravelPlace(
+                        country,
+                        city,
+                        gangnam,
+                        apiCategory,
+                        attractionContentType,
+                        "여행지1"
+                )
+        );
+        travelImageRepository.save(createTravelImage(gangnamPlace, "test1", true));
+        travelImageRepository.save(createTravelImage(gangnamPlace, "test2", false));
+
+        travelPlaceRepository.save(
+                createTravelPlace(
+                        country,
+                        city,
+                        junggu,
+                        apiCategory,
+                        sportsContentType,
+                        "여행지2"
+                )
+        );
+
         Pageable pageable = PageUtils.defaultPageable(1);
 
         // when
@@ -213,28 +418,74 @@ public class TravelPlaceRepositoryTest extends TravelTest {
     @DisplayName("인기 여행지 조회 - 전체")
     void findPopularTravelPlacesByCity_ALL(){
         // given
+        TravelPlace gangnamPlace = travelPlaceRepository.save(
+                createTravelPlaceWithBookmarkCnt(
+                        country,
+                        city,
+                        gangnam,
+                        apiCategory,
+                        attractionContentType,
+                        "여행지1",
+                        1
+                )
+        );
+        TravelImage gangnamThumbnail = travelImageRepository.save(createTravelImage(gangnamPlace, "test1", true));
+        travelImageRepository.save(createTravelImage(gangnamPlace, "test2", false));
+
+        TravelPlace jungguPlace = travelPlaceRepository.save(
+                createTravelPlaceWithBookmarkCnt(
+                        country,
+                        city,
+                        junggu,
+                        apiCategory,
+                        sportsContentType,
+                        "여행지2",
+                        0
+                )
+        );
+
         City busan = cityRepository.save(createCity(country, "부산"));
         District busanDistrict = districtRepository.save(createDistrict(busan, "금정구"));
-        TravelPlace travelPlace3 = travelPlaceRepository.save(createTravelPlace(null, country, busan, busanDistrict, apiCategory, "부산 여행지", 5));
-        TravelImage busanImage1 = travelImageRepository.save(createTravelImage(travelPlace3, "부산이미지1", true));
-        travelImageRepository.save(createTravelImage(travelPlace3, "부산이미지2", false));
+        TravelPlace busanPlace = travelPlaceRepository.save(
+                createTravelPlaceWithBookmarkCnt(
+                        country,
+                        busan,
+                        busanDistrict,
+                        apiCategory,
+                        attractionContentType,
+                        "부산 여행지",
+                        2
+                )
+        );
+        TravelImage busanThumbnail = travelImageRepository.save(createTravelImage(busanPlace, "부산이미지1", true));
+        travelImageRepository.save(createTravelImage(busanPlace, "부산이미지2", false));
 
         City jeolla = cityRepository.save(createCity(country, "전라남도"));
         District jeollaDistrict = districtRepository.save(createDistrict(busan, "보성구"));
-        TravelPlace travelPlace4 = travelPlaceRepository.save(createTravelPlace(null, country, jeolla, jeollaDistrict, apiCategory, "전라 여행지", 10));
+        TravelPlace jeollaPlace = travelPlaceRepository.save(
+                createTravelPlaceWithBookmarkCnt(
+                        country,
+                        jeolla,
+                        jeollaDistrict,
+                        apiCategory,
+                        attractionContentType,
+                        "전라 여행지",
+                        3
+                )
+        );
 
         // when
-        List<PlaceSimpleResponse> response = travelPlaceRepository.findPopularTravelPlacesByCity(CityType.ALL);
+        List<PlaceSimpleResponse> response = travelPlaceRepository.findPopularTravelPlaces(CityType.ALL);
 
         // then
         assertThat(response.size()).isEqualTo(4);
-        assertThat(response.get(0).getPlaceName()).isEqualTo(travelPlace4.getPlaceName());
+        assertThat(response.get(0).getPlaceName()).isEqualTo(jeollaPlace.getPlaceName());
         assertThat(response.get(0).getThumbnailUrl()).isNull();
-        assertThat(response.get(1).getPlaceName()).isEqualTo(travelPlace3.getPlaceName());
-        assertThat(response.get(1).getThumbnailUrl()).isEqualTo(busanImage1.getS3ObjectUrl());
-        assertThat(response.get(2).getPlaceName()).isEqualTo(travelPlace1.getPlaceName());
-        assertThat(response.get(2).getThumbnailUrl()).isEqualTo(travelImage1.getS3ObjectUrl());
-        assertThat(response.get(3).getPlaceName()).isEqualTo(travelPlace2.getPlaceName());
+        assertThat(response.get(1).getPlaceName()).isEqualTo(busanPlace.getPlaceName());
+        assertThat(response.get(1).getThumbnailUrl()).isEqualTo(busanThumbnail.getS3ObjectUrl());
+        assertThat(response.get(2).getPlaceName()).isEqualTo(gangnamPlace.getPlaceName());
+        assertThat(response.get(2).getThumbnailUrl()).isEqualTo(gangnamThumbnail.getS3ObjectUrl());
+        assertThat(response.get(3).getPlaceName()).isEqualTo(jungguPlace.getPlaceName());
         assertThat(response.get(3).getThumbnailUrl()).isNull();
 
     }
@@ -243,25 +494,70 @@ public class TravelPlaceRepositoryTest extends TravelTest {
     @DisplayName("인기 여행지 조회 - 전라도")
     void findPopularTravelPlacesByCity_JEOLLA(){
         // given
+        TravelPlace gangnamPlace = travelPlaceRepository.save(
+                createTravelPlaceWithBookmarkCnt(
+                        country,
+                        city,
+                        gangnam,
+                        apiCategory,
+                        attractionContentType,
+                        "여행지1",
+                        1
+                )
+        );
+        travelImageRepository.save(createTravelImage(gangnamPlace, "test1", true));
+        travelImageRepository.save(createTravelImage(gangnamPlace, "test2", false));
+
+        travelPlaceRepository.save(
+                createTravelPlaceWithBookmarkCnt(
+                        country,
+                        city,
+                        junggu,
+                        apiCategory,
+                        sportsContentType,
+                        "여행지2",
+                        0
+                )
+        );
+
         City jeolla1 = cityRepository.save(createCity(country, "전북특별자치도"));
         District jeolla1District = districtRepository.save(createDistrict(jeolla1, "고창군"));
-        TravelPlace travelPlace3 = travelPlaceRepository.save(createTravelPlace(null, country, jeolla1, jeolla1District, apiCategory, "고창 여행지", 5));
-        TravelImage jeolla1Image1 = travelImageRepository.save(createTravelImage(travelPlace3, "부산이미지1", true));
-        travelImageRepository.save(createTravelImage(travelPlace3, "부산이미지2", false));
+        TravelPlace jeollaPlace1 = travelPlaceRepository.save(
+                createTravelPlaceWithBookmarkCnt(
+                        country,
+                        jeolla1,
+                        jeolla1District,
+                        apiCategory, attractionContentType,
+                        "고창 여행지",
+                        1
+                )
+        );
+        TravelImage jeolla1Thumbnail = travelImageRepository.save(createTravelImage(jeollaPlace1, "부산이미지1", true));
+        travelImageRepository.save(createTravelImage(jeollaPlace1, "부산이미지2", false));
 
         City jeolla2 = cityRepository.save(createCity(country, "전라남도"));
         District jeolla2District = districtRepository.save(createDistrict(jeolla2, "보성구"));
-        TravelPlace travelPlace4 = travelPlaceRepository.save(createTravelPlace(null, country, jeolla2, jeolla2District, apiCategory, "보성 여행지", 10));
+        TravelPlace jeollaPlace2 = travelPlaceRepository.save(
+                createTravelPlaceWithBookmarkCnt(
+                        country,
+                        jeolla2,
+                        jeolla2District,
+                        apiCategory,
+                        sportsContentType,
+                        "보성 여행지",
+                        2
+                )
+        );
 
         // when
-        List<PlaceSimpleResponse> response = travelPlaceRepository.findPopularTravelPlacesByCity(CityType.JEOLLA);
+        List<PlaceSimpleResponse> response = travelPlaceRepository.findPopularTravelPlaces(CityType.JEOLLA);
 
         // then
         assertThat(response.size()).isEqualTo(2);
-        assertThat(response.get(0).getPlaceName()).isEqualTo(travelPlace4.getPlaceName());
+        assertThat(response.get(0).getPlaceName()).isEqualTo(jeollaPlace2.getPlaceName());
         assertThat(response.get(0).getThumbnailUrl()).isNull();
-        assertThat(response.get(1).getPlaceName()).isEqualTo(travelPlace3.getPlaceName());
-        assertThat(response.get(1).getThumbnailUrl()).isEqualTo(jeolla1Image1.getS3ObjectUrl());
+        assertThat(response.get(1).getPlaceName()).isEqualTo(jeollaPlace1.getPlaceName());
+        assertThat(response.get(1).getThumbnailUrl()).isEqualTo(jeolla1Thumbnail.getS3ObjectUrl());
 
     }
 
@@ -270,8 +566,23 @@ public class TravelPlaceRepositoryTest extends TravelTest {
     @DisplayName("인기 여행지 조회 시 데이터 없는 경우")
     void findPopularTravelPlacesByCity_empty(){
         // given
+        TravelPlace gangnamPlace = travelPlaceRepository.save(
+                createTravelPlace(
+                        country,
+                        city,
+                        gangnam,
+                        apiCategory,
+                        attractionContentType,
+                        "여행지1"
+                )
+        );
+        travelImageRepository.save(createTravelImage(gangnamPlace, "test1", true));
+        travelImageRepository.save(createTravelImage(gangnamPlace, "test2", false));
+
+        travelPlaceRepository.save(createTravelPlace(country, city, junggu, apiCategory, sportsContentType, "여행지2"));
+
         // when
-        List<PlaceSimpleResponse> response = travelPlaceRepository.findPopularTravelPlacesByCity(CityType.JEOLLA);
+        List<PlaceSimpleResponse> response = travelPlaceRepository.findPopularTravelPlaces(CityType.JEOLLA);
 
         // then
         assertThat(response.size()).isEqualTo(0);
@@ -284,29 +595,75 @@ public class TravelPlaceRepositoryTest extends TravelTest {
     @DisplayName("추천 테마 여행지 조회 - 전체")
     void findRecommendTravelPlacesByTheme_ALL(){
         // given
+        TravelPlace gangnamPlace = travelPlaceRepository.save(
+                createTravelPlaceWithBookmarkCnt(
+                        country,
+                        city,
+                        gangnam,
+                        apiCategory,
+                        attractionContentType,
+                        "여행지1",
+                        1
+                )
+        );
+        TravelImage gangnamThumbnail = travelImageRepository.save(createTravelImage(gangnamPlace, "test1", true));
+        travelImageRepository.save(createTravelImage(gangnamPlace, "test2", false));
+
+        TravelPlace jungguPlace = travelPlaceRepository.save(
+                createTravelPlaceWithBookmarkCnt(
+                        country,
+                        city,
+                        junggu,
+                        apiCategory,
+                        sportsContentType,
+                        "여행지2",
+                        0
+                )
+        );
+
         City busan = cityRepository.save(createCity(country, "부산"));
         District busanDistrict = districtRepository.save(createDistrict(busan, "금정구"));
         ApiContentType cultureContentType = apiContentTypeRepository.save(createApiContentType(ThemeType.CULTURE));
-        TravelPlace travelPlace3 = travelPlaceRepository.save(createTravelPlace(null, country, busan, busanDistrict, apiCategory, cultureContentType, 5));
-        TravelImage busanImage1 = travelImageRepository.save(createTravelImage(travelPlace3, "부산이미지1", true));
-        travelImageRepository.save(createTravelImage(travelPlace3, "부산이미지2", false));
+        TravelPlace busanPlace = travelPlaceRepository.save(
+                createTravelPlaceWithBookmarkCnt(
+                        country,
+                        busan,
+                        busanDistrict,
+                        apiCategory,
+                        cultureContentType,
+                        "여행지3",
+                        2
+                )
+        );
+        TravelImage busanImage1 = travelImageRepository.save(createTravelImage(busanPlace, "부산이미지1", true));
+        travelImageRepository.save(createTravelImage(busanPlace, "부산이미지2", false));
 
         City jeolla = cityRepository.save(createCity(country, "전라남도"));
         District jeollaDistrict = districtRepository.save(createDistrict(busan, "보성구"));
-        TravelPlace travelPlace4 = travelPlaceRepository.save(createTravelPlace(null, country, jeolla, jeollaDistrict, apiCategory, attractionContentType, 10));
+        TravelPlace jeollaPlace = travelPlaceRepository.save(
+                createTravelPlaceWithBookmarkCnt(
+                        country,
+                        jeolla,
+                        jeollaDistrict,
+                        apiCategory,
+                        attractionContentType,
+                        "여행지4",
+                        3
+                )
+        );
 
         // when
-        List<PlaceSimpleResponse> response = travelPlaceRepository.findRecommendTravelPlacesByTheme(ThemeType.All);
+        List<PlaceSimpleResponse> response = travelPlaceRepository.findRecommendTravelPlaces(ThemeType.All);
 
         // then
         assertThat(response.size()).isEqualTo(4);
-        assertThat(response.get(0).getPlaceId()).isEqualTo(travelPlace4.getPlaceId());
+        assertThat(response.get(0).getPlaceName()).isEqualTo(jeollaPlace.getPlaceName());
         assertThat(response.get(0).getThumbnailUrl()).isNull();
-        assertThat(response.get(1).getPlaceId()).isEqualTo(travelPlace3.getPlaceId());
+        assertThat(response.get(1).getPlaceName()).isEqualTo(busanPlace.getPlaceName());
         assertThat(response.get(1).getThumbnailUrl()).isEqualTo(busanImage1.getS3ObjectUrl());
-        assertThat(response.get(2).getPlaceId()).isEqualTo(travelPlace1.getPlaceId());
-        assertThat(response.get(2).getThumbnailUrl()).isEqualTo(travelImage1.getS3ObjectUrl());
-        assertThat(response.get(3).getPlaceId()).isEqualTo(travelPlace2.getPlaceId());
+        assertThat(response.get(2).getPlaceName()).isEqualTo(gangnamPlace.getPlaceName());
+        assertThat(response.get(2).getThumbnailUrl()).isEqualTo(gangnamThumbnail.getS3ObjectUrl());
+        assertThat(response.get(3).getPlaceName()).isEqualTo(jungguPlace.getPlaceName());
         assertThat(response.get(3).getThumbnailUrl()).isNull();
     }
 
@@ -314,26 +671,70 @@ public class TravelPlaceRepositoryTest extends TravelTest {
     @DisplayName("추천 테마 여행지 조회 - 관광지")
     void findRecommendTravelPlacesByTheme_ATTRACTIONS(){
         // given
+        TravelPlace gangnamPlace = travelPlaceRepository.save(
+                createTravelPlaceWithBookmarkCnt(
+                        country,
+                        city,
+                        gangnam,
+                        apiCategory,
+                        attractionContentType,
+                        "여행지1",
+                        0
+                )
+        );
+        TravelImage gangnamThumbnail = travelImageRepository.save(createTravelImage(gangnamPlace, "test1", true));
+        travelImageRepository.save(createTravelImage(gangnamPlace, "test2", false));
+
+        travelPlaceRepository.save(
+                createTravelPlaceWithBookmarkCnt(
+                        country,
+                        city,
+                        junggu,
+                        apiCategory,
+                        sportsContentType,
+                        "여행지2",
+                        1));
+
         City jeolla1 = cityRepository.save(createCity(country, "전북특별자치도"));
         District jeolla1District = districtRepository.save(createDistrict(jeolla1, "고창군"));
         ApiContentType cultureContentType = apiContentTypeRepository.save(createApiContentType(ThemeType.CULTURE));
-        TravelPlace travelPlace3 = travelPlaceRepository.save(createTravelPlace(null, country, jeolla1, jeolla1District, apiCategory, cultureContentType, 5));
-        travelImageRepository.save(createTravelImage(travelPlace3, "부산이미지1", true));
-        travelImageRepository.save(createTravelImage(travelPlace3, "부산이미지2", false));
+        TravelPlace jeollaPlace1 = travelPlaceRepository.save(
+                createTravelPlaceWithBookmarkCnt(
+                        country,
+                        jeolla1,
+                        jeolla1District,
+                        apiCategory,
+                        cultureContentType,
+                        "여행지3",
+                        2
+                )
+        );
+        travelImageRepository.save(createTravelImage(jeollaPlace1, "부산이미지1", true));
+        travelImageRepository.save(createTravelImage(jeollaPlace1, "부산이미지2", false));
 
         City jeolla2 = cityRepository.save(createCity(country, "전라남도"));
         District jeolla2District = districtRepository.save(createDistrict(jeolla2, "보성구"));
-        TravelPlace travelPlace4 = travelPlaceRepository.save(createTravelPlace(null, country, jeolla2, jeolla2District, apiCategory, attractionContentType, 10));
+        TravelPlace jellaPlace2 = travelPlaceRepository.save(
+                createTravelPlaceWithBookmarkCnt(
+                        country,
+                        jeolla2,
+                        jeolla2District,
+                        apiCategory,
+                        attractionContentType,
+                        "여행지4",
+                        3
+                )
+        );
 
         // when
-        List<PlaceSimpleResponse> response = travelPlaceRepository.findRecommendTravelPlacesByTheme(ThemeType.ATTRACTIONS);
+        List<PlaceSimpleResponse> response = travelPlaceRepository.findRecommendTravelPlaces(ThemeType.ATTRACTIONS);
 
         // then
         assertThat(response.size()).isEqualTo(2);
-        assertThat(response.get(0).getPlaceId()).isEqualTo(travelPlace4.getPlaceId());
+        assertThat(response.get(0).getPlaceName()).isEqualTo(jellaPlace2.getPlaceName());
         assertThat(response.get(0).getThumbnailUrl()).isNull();
-        assertThat(response.get(1).getPlaceId()).isEqualTo(travelPlace1.getPlaceId());
-        assertThat(response.get(1).getThumbnailUrl()).isEqualTo(travelImage1.getS3ObjectUrl());
+        assertThat(response.get(1).getPlaceName()).isEqualTo(gangnamPlace.getPlaceName());
+        assertThat(response.get(1).getThumbnailUrl()).isEqualTo(gangnamThumbnail.getS3ObjectUrl());
 
     }
 
@@ -342,8 +743,32 @@ public class TravelPlaceRepositoryTest extends TravelTest {
     @DisplayName("추천 테마 여행지 조회 시 데이터 없는 경우")
     void findRecommendTravelPlacesByTheme_empty(){
         // given
+        TravelPlace gangnamPlace = travelPlaceRepository.save(
+                createTravelPlace(
+                        country,
+                        city,
+                        gangnam,
+                        apiCategory,
+                        attractionContentType,
+                        "여행지1"
+                )
+        );
+        travelImageRepository.save(createTravelImage(gangnamPlace, "test1", true));
+        travelImageRepository.save(createTravelImage(gangnamPlace, "test2", false));
+
+        travelPlaceRepository.save(
+                createTravelPlace(
+                        country,
+                        city,
+                        junggu,
+                        apiCategory,
+                        sportsContentType,
+                        "여행지2"
+                )
+        );
+
         // when
-        List<PlaceSimpleResponse> response = travelPlaceRepository.findRecommendTravelPlacesByTheme(ThemeType.FOOD);
+        List<PlaceSimpleResponse> response = travelPlaceRepository.findRecommendTravelPlaces(ThemeType.FOOD);
 
         // then
         assertThat(response.size()).isEqualTo(0);

@@ -14,22 +14,22 @@ public class PlaceResponse {
     private String district;
     private String address;
     private String detailAddress;
-    private double longitude;
     private double latitude;
+    private double longitude;
     private String placeName;
     private String thumbnailUrl;
 
 
     @Builder
-    public PlaceResponse(Long placeId, String country, String city, String district, String address, String detailAddress, double longitude, double latitude, String placeName, String thumbnailUrl) {
+    public PlaceResponse(Long placeId, String country, String city, String district, String address, String detailAddress, double latitude, double longitude, String placeName, String thumbnailUrl) {
         this.placeId = placeId;
         this.country = country;
         this.city = city;
         this.district = district;
         this.address = address;
         this.detailAddress = detailAddress;
-        this.longitude = longitude;
         this.latitude = latitude;
+        this.longitude = longitude;
         this.placeName = placeName;
         this.thumbnailUrl = thumbnailUrl;
     }
@@ -42,8 +42,8 @@ public class PlaceResponse {
                 .district(travelPlace.getDistrict().getDistrictName())
                 .address(travelPlace.getAddress())
                 .detailAddress(travelPlace.getDetailAddress())
-                .longitude(travelPlace.getLongitude())
                 .latitude(travelPlace.getLatitude())
+                .longitude(travelPlace.getLongitude())
                 .placeName(travelPlace.getPlaceName())
                 .thumbnailUrl(travelPlace.getThumbnailUrl())
                 .build();

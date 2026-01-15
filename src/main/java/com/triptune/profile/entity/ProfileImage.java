@@ -5,7 +5,6 @@ import com.triptune.member.entity.Member;
 import com.triptune.profile.properties.DefaultProfileImageProperties;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.web.multipart.MultipartFile;
@@ -42,10 +41,7 @@ public class ProfileImage extends BaseTimeEntity {
     private double fileSize;
 
 
-    @Builder
-    public ProfileImage(Long profileImageId, Member member, String s3ObjectUrl, String s3ObjectKey, String originalName, String fileName, String fileType, double fileSize) {
-        this.profileImageId = profileImageId;
-        this.member = member;
+    private ProfileImage(String s3ObjectUrl, String s3ObjectKey, String originalName, String fileName, String fileType, double fileSize) {
         this.s3ObjectUrl = s3ObjectUrl;
         this.s3ObjectKey = s3ObjectKey;
         this.originalName = originalName;
@@ -54,15 +50,16 @@ public class ProfileImage extends BaseTimeEntity {
         this.fileSize = fileSize;
     }
 
-    public static ProfileImage from(DefaultProfileImageProperties imageProperties){
-        return ProfileImage.builder()
-                .s3ObjectUrl(imageProperties.getS3ObjectUrl())
-                .s3ObjectKey(imageProperties.getS3ObjectKey())
-                .originalName(imageProperties.getOriginalName())
-                .fileName(imageProperties.getFileName())
-                .fileType(imageProperties.getExtension())
-                .fileSize(imageProperties.getSize())
-                .build();
+
+    public static ProfileImage createProfileImage(String s3ObjectUrl, String s3ObjectKey, String originalName, String fileName, String fileType, double fileSize) {
+        return new ProfileImage(
+                s3ObjectUrl,
+                s3ObjectKey,
+                originalName,
+                fileName,
+                fileType,
+                fileSize
+        );
     }
 
     public void updateProfileImage(MultipartFile profileImageFile, String s3ObjectUrl, String s3FileKey, String savedFileName, String extension){
@@ -83,4 +80,11 @@ public class ProfileImage extends BaseTimeEntity {
         this.fileSize = imageProperties.getSize();
     }
 
+    public void assignMember(Member member){
+        this.member = member;
+    }
+
+    public boolean isDefaultImage(String s3ObjectKey) {
+        return this.s3ObjectKey.equals(s3ObjectKey);
+    }
 }

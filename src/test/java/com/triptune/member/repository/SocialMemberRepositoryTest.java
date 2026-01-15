@@ -11,10 +11,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.transaction.annotation.Transactional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -33,11 +31,12 @@ class SocialMemberRepositoryTest extends MemberTest {
     @DisplayName("소셜 사용자 생성")
     void createSocialMember() {
         // given
-        Member member = createMember(null, "member@email.com");
-        SocialMember socialMember = createSocialMember(null, member, "test", SocialType.KAKAO);
+        ProfileImage profileImage = profileImageRepository.save(createProfileImage("memberImage"));
+        Member member = memberRepository.save(createNativeTypeMember("member@email.com", profileImage));
+
+        SocialMember socialMember = createSocialMember(member, SocialType.KAKAO, "test");
 
         // when
-        memberRepository.save(member);
         socialMemberRepository.save(socialMember);
 
         // then
@@ -49,23 +48,13 @@ class SocialMemberRepositoryTest extends MemberTest {
     @DisplayName("소셜 정보로 회원 조회")
     void findBySocialInfo() {
         // given
-        ProfileImage profileImage = profileImageRepository.save(createProfileImage(null, "image"));
-        Member member = memberRepository.save(
-                createSocialTypeMember(null, "member@email.com", profileImage)
-        );
+        ProfileImage profileImage = profileImageRepository.save(createProfileImage("memberImage"));
+        Member member = memberRepository.save(createSocialTypeMember("member@email.com", profileImage));
 
-        SocialMember socialMember = socialMemberRepository.save(
-                createSocialMember(
-                        null,
-                        member,
-                        "socialMember",
-                        SocialType.NAVER
-                )
-        );
+        SocialMember socialMember = socialMemberRepository.save(createSocialMember(member, SocialType.NAVER, "socialMember"));
 
         // when
-        Member response =
-                socialMemberRepository.findBySocialIdAndSocialType(socialMember.getSocialId(), socialMember.getSocialType()).get();
+        Member response = socialMemberRepository.findBySocialIdAndSocialType(socialMember.getSocialId(), socialMember.getSocialType()).get();
 
         // then
         assertThat(response.getEmail()).isEqualTo(member.getEmail());

@@ -3,9 +3,7 @@ package com.triptune.common.entity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-import jakarta.persistence.Table;
 import lombok.AccessLevel;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -27,13 +25,20 @@ public class ApiCategory {
     @Column(name = "level")
     private int level;
 
-
-
-    @Builder
-    public ApiCategory(String categoryCode, String categoryName, String parentCode, int level) {
+    private ApiCategory(String categoryCode, String categoryName, String parentCode, int level) {
         this.categoryCode = categoryCode;
         this.categoryName = categoryName;
         this.parentCode = parentCode;
         this.level = level;
     }
+
+    public static ApiCategory createApiCategory(String categoryCode, String categoryName, String parentCode, int level) {
+        return new ApiCategory(
+                categoryCode,
+                categoryName,
+                parentCode,
+                level
+        );
+    }
+
 }

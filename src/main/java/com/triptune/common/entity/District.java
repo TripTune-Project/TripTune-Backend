@@ -2,7 +2,6 @@ package com.triptune.common.entity;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -24,14 +23,13 @@ public class District {
     private String districtName;
 
 
-    @Builder
-    public District(Long districtId, City city, String districtName) {
-        this.districtId = districtId;
+    private District(City city, String districtName) {
         this.city = city;
         this.districtName = districtName;
     }
 
-    public void updateDistrictName(String districtName) {
-        this.districtName = districtName;
+    public static District createDistrict(City city, String districtName) {
+        return new District(city, districtName);
     }
+
 }

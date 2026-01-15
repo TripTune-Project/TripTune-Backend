@@ -3,7 +3,6 @@ package com.triptune.travel.entity;
 import com.triptune.common.entity.*;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -64,11 +63,11 @@ public class TravelPlace extends BaseTimeEntity {
     @Column(name = "phone_number")
     private String phoneNumber;
 
-    @Column(name = "longitude")
-    private double longitude;
-
     @Column(name = "latitude")
-    private double latitude;
+    private double latitude;    // 위도
+
+    @Column(name = "longitude")
+    private double longitude;   // 경도
 
     @Column(name = "description")
     private String description;
@@ -79,10 +78,7 @@ public class TravelPlace extends BaseTimeEntity {
     @OneToMany(mappedBy = "travelPlace", fetch = FetchType.LAZY)
     private List<TravelImage> travelImages = new ArrayList<>();
 
-
-    @Builder
-    public TravelPlace(Long placeId, Country country, City city, District district, ApiCategory apiCategory, ApiContentType apiContentType, String placeName, String address, String detailAddress, String useTime, String checkInTime, String checkOutTime, String homepage, String phoneNumber, double longitude, double latitude, String description, int bookmarkCnt, List<TravelImage> travelImages) {
-        this.placeId = placeId;
+    private TravelPlace(Country country, City city, District district, ApiCategory apiCategory, ApiContentType apiContentType, String placeName, String address, String detailAddress, String useTime, String checkInTime, String checkOutTime, String homepage, String phoneNumber, double latitude, double longitude, String description, int bookmarkCnt) {
         this.country = country;
         this.city = city;
         this.district = district;
@@ -96,11 +92,38 @@ public class TravelPlace extends BaseTimeEntity {
         this.checkOutTime = checkOutTime;
         this.homepage = homepage;
         this.phoneNumber = phoneNumber;
-        this.longitude = longitude;
         this.latitude = latitude;
+        this.longitude = longitude;
         this.description = description;
         this.bookmarkCnt = bookmarkCnt;
-        this.travelImages = travelImages;
+    }
+
+
+    public static TravelPlace createTravelPlace(Country country, City city, District district, ApiCategory apiCategory, ApiContentType apiContentType, String placeName, String address, String detailAddress, String useTime, String checkInTime, String checkOutTime, String homepage, String phoneNumber, double latitude, double longitude, String description, int bookmarkCnt) {
+        return new TravelPlace(
+                country,
+                city,
+                district,
+                apiCategory,
+                apiContentType,
+                placeName,
+                address,
+                detailAddress,
+                useTime,
+                checkInTime,
+                checkOutTime,
+                homepage,
+                phoneNumber,
+                latitude,
+                longitude,
+                description,
+                bookmarkCnt
+        );
+
+    }
+
+    protected void addTravelImages(TravelImage travelImage){
+        travelImages.add(travelImage);
     }
 
     public String getThumbnailUrl(){

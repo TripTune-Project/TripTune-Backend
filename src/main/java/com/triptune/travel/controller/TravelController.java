@@ -45,7 +45,7 @@ public class TravelController {
     public ApiPageResponse<PlaceLocation> searchTravelPlaces(@RequestBody @Valid PlaceSearchRequest placeSearchRequest,
                                                              @RequestParam int page){
         Long memberId = getAuthenticateMemberId();
-        boolean hasLocation = placeSearchRequest.getLongitude() != null && placeSearchRequest.getLatitude() != null;
+        boolean hasLocation = placeSearchRequest.getLatitude() != null && placeSearchRequest.getLongitude() != null;
 
         Page<PlaceLocation> response = hasLocation
                 ? travelService.searchTravelPlacesWithLocation(page, memberId, placeSearchRequest)

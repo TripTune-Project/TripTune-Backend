@@ -16,13 +16,13 @@ public class RouteResponse {
     private String district;
     private String address;
     private String detailAddress;
-    private double longitude;
     private double latitude;
+    private double longitude;
     private String placeName;
     private String thumbnailUrl;
 
     @Builder
-    public RouteResponse(int routeOrder, Long placeId, String country, String city, String district, String address, String detailAddress, double longitude, double latitude, String placeName, String thumbnailUrl) {
+    public RouteResponse(int routeOrder, Long placeId, String country, String city, String district, String address, String detailAddress, double latitude, double longitude, String placeName, String thumbnailUrl) {
         this.routeOrder = routeOrder;
         this.placeId = placeId;
         this.country = country;
@@ -30,8 +30,8 @@ public class RouteResponse {
         this.district = district;
         this.address = address;
         this.detailAddress = detailAddress;
-        this.longitude = longitude;
         this.latitude = latitude;
+        this.longitude = longitude;
         this.placeName = placeName;
         this.thumbnailUrl = thumbnailUrl;
     }
@@ -48,8 +48,8 @@ public class RouteResponse {
                 .district(travelPlace.getDistrict().getDistrictName())
                 .address(travelPlace.getAddress())
                 .detailAddress(travelPlace.getDetailAddress())
-                .longitude(travelPlace.getLongitude())
                 .latitude(travelPlace.getLatitude())
+                .longitude(travelPlace.getLongitude())
                 .placeName(travelPlace.getPlaceName())
                 .thumbnailUrl(travelPlace.getThumbnailUrl())
                 .build();

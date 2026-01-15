@@ -12,9 +12,9 @@ class BookmarkSortTypeTest {
 
     @Test
     @DisplayName("소문자로 들어온 값과 enum 매칭")
-    void from(){
+    void determineSortType(){
         // given, when
-        BookmarkSortType response = BookmarkSortType.from("newest");
+        BookmarkSortType response = BookmarkSortType.determineSortType("newest");
 
         // then
         assertThat(response).isEqualTo(BookmarkSortType.NEWEST);
@@ -22,9 +22,9 @@ class BookmarkSortTypeTest {
 
     @Test
     @DisplayName("소문자로 들어온 값과 enum 매칭 실패로 예외 발생")
-    void from_Illegal(){
+    void determineSortType_Illegal(){
         // given, when, then
-        assertThatThrownBy(() -> BookmarkSortType.from("fail"))
+        assertThatThrownBy(() -> BookmarkSortType.determineSortType("fail"))
                 .isInstanceOf(CustomIllegalArgumentException.class)
                 .hasMessage(ErrorCode.ILLEGAL_BOOKMARK_SORT_TYPE.getMessage());
 

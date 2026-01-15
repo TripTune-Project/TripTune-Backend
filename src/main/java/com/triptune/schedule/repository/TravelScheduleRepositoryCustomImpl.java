@@ -24,110 +24,64 @@ public class TravelScheduleRepositoryCustomImpl implements TravelScheduleReposit
     private final QTravelAttendee travelAttendee;
 
 
-    public TravelScheduleRepositoryCustomImpl(JPAQueryFactory jpaRepository){
-        this.jpaQueryFactory = jpaRepository;
+    public TravelScheduleRepositoryCustomImpl(JPAQueryFactory jpaQueryFactory){
+        this.jpaQueryFactory = jpaQueryFactory;
         this.travelSchedule = QTravelSchedule.travelSchedule;
         this.travelAttendee = QTravelAttendee.travelAttendee;
     }
 
     @Override
-    public Page<TravelSchedule> findTravelSchedulesByMemberId(Pageable pageable, Long memberId) {
+    public Page<TravelSchedule> findTravelSchedules(Pageable pageable, Long memberId) {
         List<TravelSchedule> travelSchedules = jpaQueryFactory
                 .selectFrom(travelSchedule)
                 .join(travelSchedule.travelAttendees, travelAttendee)
                 .where(travelAttendee.member.memberId.eq(memberId))
-                .orderBy(orderByTravelScheduleDateDESC())
-                .offset(pageable.getOffset())
-                .limit(pageable.getPageSize())
-                .fetch();
-
-
-        Integer totalElements = countTravelSchedulesByMemberId(memberId);
-
-        return PageUtils.createPage(travelSchedules, pageable, totalElements);
-    }
-
-    @Override
-    public Page<TravelSchedule> findSharedTravelSchedulesByMemberId(Pageable pageable, Long memberId) {
-        List<TravelSchedule> travelSchedules = jpaQueryFactory
-                .selectFrom(travelSchedule)
-                .join(travelSchedule.travelAttendees, travelAttendee)
-                .where(travelAttendee.member.memberId.eq(memberId)
-                        .and(travelSchedule.travelAttendees.size().gt(1)))
-                .orderBy(orderByTravelScheduleDateDESC())
-                .offset(pageable.getOffset())
-                .limit(pageable.getPageSize())
-                .fetch();
-
-
-        Integer totalElements = countSharedTravelSchedulesByMemberId(memberId);
-
-        return PageUtils.createPage(travelSchedules, pageable, totalElements);
-    }
-
-    @Override
-    public Integer countTravelSchedulesByMemberId(Long memberId) {
-        Long totalElements = jpaQueryFactory
-                .select(travelSchedule.count())
-                .from(travelSchedule)
-                .leftJoin(travelSchedule.travelAttendees, travelAttendee)
-                .where(travelAttendee.member.memberId.eq(memberId))
-                .fetchOne();
-
-
-        if (totalElements == null) totalElements = 0L;
-
-        return totalElements.intValue();
-    }
-
-    @Override
-    public Integer countSharedTravelSchedulesByMemberId(Long memberId) {
-        Long totalElements = jpaQueryFactory
-                .select(travelSchedule.count())
-                .from(travelSchedule)
-                .leftJoin(travelSchedule.travelAttendees, travelAttendee)
-                .where(travelAttendee.member.memberId.eq(memberId)
-                        .and(travelSchedule.travelAttendees.size().gt(1)))
-                .fetchOne();
-
-
-        if (totalElements == null) totalElements = 0L;
-
-        return totalElements.intValue();
-    }
-
-    @Override
-    public Page<TravelSchedule> searchTravelSchedulesByMemberIdAndKeyword(Pageable pageable, String keyword, Long memberId) {
-        String orderCaseString = accuracyQuery();
-
-        List<TravelSchedule> content = jpaQueryFactory
-                .selectFrom(travelSchedule)
-                .leftJoin(travelSchedule.travelAttendees, travelAttendee)
-                .where(travelAttendee.member.memberId.eq(memberId)
-                        .and(travelSchedule.scheduleName.contains(keyword)))
-                .orderBy(Expressions.stringTemplate(
-                        orderCaseString,
-                        travelSchedule.scheduleName, keyword,  keyword + "%", "%" + keyword + "%", "%" + keyword
-                        ).asc()
+                .orderBy(
+                        travelSchedule.updatedAt.desc(),
+                        travelSchedule.scheduleId.desc()
                 )
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetch();
 
-        int totalElements = countTravelSchedulesByMemberIdAndKeyword(keyword, memberId);
 
-        return PageUtils.createPage(content, pageable, totalElements);
+        Integer totalElements = countTravelSchedules(memberId);
+
+        return PageUtils.createPage(travelSchedules, pageable, totalElements);
     }
 
     @Override
-    public Integer countTravelSchedulesByMemberIdAndKeyword(String keyword, Long memberId) {
+    public Page<TravelSchedule> findSharedTravelSchedules(Pageable pageable, Long memberId) {
+        List<TravelSchedule> travelSchedules = jpaQueryFactory
+                .selectFrom(travelSchedule)
+                .join(travelSchedule.travelAttendees, travelAttendee)
+                .where(
+                        travelAttendee.member.memberId.eq(memberId),
+                        travelSchedule.travelAttendees.size().gt(1)
+                )
+                .orderBy(
+                        travelSchedule.updatedAt.desc(),
+                        travelSchedule.scheduleId.desc()
+                )
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
+                .fetch();
+
+
+        Integer totalElements = countSharedTravelSchedules(memberId);
+
+        return PageUtils.createPage(travelSchedules, pageable, totalElements);
+    }
+
+    @Override
+    public Integer countTravelSchedules(Long memberId) {
         Long totalElements = jpaQueryFactory
-                .select(travelSchedule.count())
+                .select(travelSchedule.scheduleId.countDistinct())
                 .from(travelSchedule)
-                .leftJoin(travelSchedule.travelAttendees, travelAttendee)
-                .where(travelAttendee.member.memberId.eq(memberId)
-                        .and(travelSchedule.scheduleName.contains(keyword)))
+                .join(travelSchedule.travelAttendees, travelAttendee)
+                .where(travelAttendee.member.memberId.eq(memberId))
                 .fetchOne();
+
 
         if (totalElements == null) totalElements = 0L;
 
@@ -135,73 +89,160 @@ public class TravelScheduleRepositoryCustomImpl implements TravelScheduleReposit
     }
 
     @Override
-    public Page<TravelSchedule> searchSharedTravelSchedulesByMemberIdAndKeyword(Pageable pageable, String keyword, Long memberId) {
+    public Integer countSharedTravelSchedules(Long memberId) {
+        Long totalElements = jpaQueryFactory
+                .select(travelSchedule.scheduleId.countDistinct())
+                .from(travelSchedule)
+                .join(travelSchedule.travelAttendees, travelAttendee)
+                .where(
+                        travelAttendee.member.memberId.eq(memberId),
+                        travelSchedule.travelAttendees.size().gt(1)
+                )
+                .fetchOne();
+
+
+        if (totalElements == null) totalElements = 0L;
+
+        return totalElements.intValue();
+    }
+
+    @Override
+    public Page<TravelSchedule> searchTravelSchedules(Pageable pageable, String keyword, Long memberId) {
         String orderCaseString = accuracyQuery();
 
         List<TravelSchedule> content = jpaQueryFactory
                 .selectFrom(travelSchedule)
-                .leftJoin(travelSchedule.travelAttendees, travelAttendee)
-                .where(travelAttendee.member.memberId.eq(memberId)
-                        .and(travelSchedule.travelAttendees.size().gt(1))
-                        .and(travelSchedule.scheduleName.contains(keyword)))
-                .orderBy(Expressions.stringTemplate(
+                .join(travelSchedule.travelAttendees, travelAttendee)
+                .where(
+                        travelAttendee.member.memberId.eq(memberId),
+                        travelSchedule.scheduleName.contains(keyword)
+                )
+                .orderBy(
+                        Expressions.stringTemplate(
                                 orderCaseString,
-                                travelSchedule.scheduleName, keyword,  keyword + "%", "%" + keyword + "%", "%" + keyword
-                        ).asc()
+                                travelSchedule.scheduleName,
+                                keyword,
+                                keyword + "%",
+                                "%" + keyword + "%",
+                                "%" + keyword
+                        ).asc(),
+                        travelSchedule.scheduleId.desc()
                 )
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetch();
 
-        int totalElements = countSharedTravelSchedulesByMemberIdAndKeyword(keyword, memberId);
+        int totalElements = countSearchTravelSchedules(keyword, memberId);
 
         return PageUtils.createPage(content, pageable, totalElements);
     }
 
-    @Override
-    public Integer countSharedTravelSchedulesByMemberIdAndKeyword(String keyword, Long memberId) {
+    private Integer countSearchTravelSchedules(String keyword, Long memberId) {
         Long totalElements = jpaQueryFactory
-                .select(travelSchedule.count())
+                .select(travelSchedule.scheduleId.countDistinct())
                 .from(travelSchedule)
-                .leftJoin(travelSchedule.travelAttendees, travelAttendee)
-                .where(travelAttendee.member.memberId.eq(memberId)
-                        .and(travelSchedule.travelAttendees.size().gt(1))
-                        .and(travelSchedule.scheduleName.contains(keyword)))
+                .join(travelSchedule.travelAttendees, travelAttendee)
+                .where(
+                        travelAttendee.member.memberId.eq(memberId),
+                        travelSchedule.scheduleName.contains(keyword)
+                )
                 .fetchOne();
+
 
         if (totalElements == null) totalElements = 0L;
 
         return totalElements.intValue();
     }
 
+
+
     @Override
-    public Page<TravelSchedule> findEnableEditTravelSchedulesByMemberId(Pageable pageable, Long memberId) {
+    public Page<TravelSchedule> searchSharedTravelSchedules(Pageable pageable, String keyword, Long memberId) {
+        String orderCaseString = accuracyQuery();
+
+        List<TravelSchedule> content = jpaQueryFactory
+                .selectFrom(travelSchedule)
+                .join(travelSchedule.travelAttendees, travelAttendee)
+                .where(
+                        travelAttendee.member.memberId.eq(memberId),
+                        travelSchedule.travelAttendees.size().gt(1),
+                        travelSchedule.scheduleName.contains(keyword)
+                )
+                .orderBy(
+                        Expressions.stringTemplate(
+                                orderCaseString,
+                                travelSchedule.scheduleName,
+                                keyword,
+                                keyword + "%",
+                                "%" + keyword + "%",
+                                "%" + keyword
+                        ).asc(),
+                        travelSchedule.scheduleId.desc()
+                )
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
+                .fetch();
+
+        int totalElements = countSearchSharedTravelSchedules(keyword, memberId);
+
+        return PageUtils.createPage(content, pageable, totalElements);
+    }
+
+    private Integer countSearchSharedTravelSchedules(String keyword, Long memberId) {
+        Long totalElements = jpaQueryFactory
+                .select(travelSchedule.scheduleId.countDistinct())
+                .from(travelSchedule)
+                .join(travelSchedule.travelAttendees, travelAttendee)
+                .where(
+                        travelAttendee.member.memberId.eq(memberId),
+                        travelSchedule.travelAttendees.size().gt(1),
+                        travelSchedule.scheduleName.contains(keyword)
+                )
+                .fetchOne();
+
+
+        if (totalElements == null) totalElements = 0L;
+
+        return totalElements.intValue();
+    }
+    @Override
+    public Page<TravelSchedule> findEnableEditTravelSchedules(Pageable pageable, Long memberId) {
         List<TravelSchedule> travelSchedules = jpaQueryFactory
                 .selectFrom(travelSchedule)
-                .leftJoin(travelSchedule.travelAttendees, travelAttendee)
-                .where(travelAttendee.member.memberId.eq(memberId)
-                        .and(travelAttendee.permission.eq(AttendeePermission.ALL)
-                                .or(travelAttendee.permission.eq(AttendeePermission.EDIT))))
-                .orderBy(orderByTravelScheduleDateDESC())
+                .join(travelSchedule.travelAttendees, travelAttendee)
+                .where(
+                        travelAttendee.member.memberId.eq(memberId),
+                        travelAttendee.permission.in(
+                                AttendeePermission.ALL,
+                                AttendeePermission.EDIT
+                        )
+                )
+                .orderBy(
+                        travelSchedule.updatedAt.desc(),
+                        travelSchedule.scheduleId.desc()
+                )
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetch();
 
 
-        Integer totalElements = countEnableEditTravelSchedulesByMemberId(memberId);
+        Integer totalElements = countEnableEditTravelSchedules(memberId);
 
         return PageUtils.createPage(travelSchedules, pageable, totalElements);
     }
 
-    @Override
-    public Integer countEnableEditTravelSchedulesByMemberId(Long memberId) {
+    private Integer countEnableEditTravelSchedules(Long memberId) {
         Long totalElements = jpaQueryFactory
-                .select(travelSchedule.count())
+                .select(travelSchedule.scheduleId.countDistinct())
                 .from(travelSchedule)
-                .leftJoin(travelSchedule.travelAttendees, travelAttendee)
-                .where(travelAttendee.member.memberId.eq(memberId)
-                        .and(travelAttendee.permission.eq(AttendeePermission.ALL)
-                                .or(travelAttendee.permission.eq(AttendeePermission.EDIT))))
+                .join(travelSchedule.travelAttendees, travelAttendee)
+                .where(
+                        travelAttendee.member.memberId.eq(memberId),
+                        travelAttendee.permission.in(
+                                AttendeePermission.ALL,
+                                AttendeePermission.EDIT
+                        )
+                )
                 .fetchOne();
 
         if (totalElements == null) totalElements = 0L;
@@ -211,19 +252,13 @@ public class TravelScheduleRepositoryCustomImpl implements TravelScheduleReposit
 
 
     private String accuracyQuery(){
-        return "CASE WHEN {0} = {1} THEN 0 " +
-                "WHEN {0} = {2} THEN 1 " +
-                "WHEN {0} = {3} THEN 2 " +
-                "WHEN {0} = {3} THEN 3 " +
+        return "CASE " +
+                "WHEN {0} = {1} THEN 0 " +
+                "WHEN {0} LIKE {2} THEN 1 " +
+                "WHEN {0} LIKE {3} THEN 2 " +
+                "WHEN {0} LIKE {3} THEN 3 " +
                 "ELSE 4 " +
                 "END";
     }
 
-    private OrderSpecifier<LocalDateTime> orderByTravelScheduleDateDESC(){
-        return new CaseBuilder()
-                .when(travelSchedule.updatedAt.isNull())
-                .then(travelSchedule.createdAt)
-                .otherwise(travelSchedule.updatedAt)
-                .desc();
-    }
 }

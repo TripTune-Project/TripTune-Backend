@@ -15,23 +15,23 @@ public class PlaceDistanceResponse {
     private String district;
     private String address;
     private String detailAddress;
-    private double longitude;
     private double latitude;
+    private double longitude;
     private String placeName;
     private String thumbnailUrl;
     private Double distance;
     private boolean bookmarkStatus;
 
     @Builder
-    public PlaceDistanceResponse(Long placeId, String country, String city, String district, String address, String detailAddress, double longitude, double latitude, String placeName, String thumbnailUrl, Double distance, boolean bookmarkStatus) {
+    public PlaceDistanceResponse(Long placeId, String country, String city, String district, String address, String detailAddress, double latitude, double longitude, String placeName, String thumbnailUrl, Double distance, boolean bookmarkStatus) {
         this.placeId = placeId;
         this.country = country;
         this.city = city;
         this.district = district;
         this.address = address;
         this.detailAddress = detailAddress;
-        this.longitude = longitude;
         this.latitude = latitude;
+        this.longitude = longitude;
         this.placeName = placeName;
         this.thumbnailUrl = thumbnailUrl;
         this.distance = Math.floor(distance * 10) / 10.0;
@@ -46,8 +46,8 @@ public class PlaceDistanceResponse {
                 .district(travelPlace.getDistrict().getDistrictName())
                 .address(travelPlace.getAddress())
                 .detailAddress(travelPlace.getDetailAddress())
-                .longitude(travelPlace.getLongitude())
                 .latitude(travelPlace.getLatitude())
+                .longitude(travelPlace.getLongitude())
                 .placeName(travelPlace.getPlaceName())
                 .thumbnailUrl(travelPlace.getThumbnailUrl())
                 .build();
@@ -61,8 +61,8 @@ public class PlaceDistanceResponse {
                 .district(placeLocation.getDistrict())
                 .address(placeLocation.getAddress())
                 .detailAddress(placeLocation.getDetailAddress())
-                .longitude(placeLocation.getLongitude())
                 .latitude(placeLocation.getLatitude())
+                .longitude(placeLocation.getLongitude())
                 .placeName(placeLocation.getPlaceName())
                 .thumbnailUrl(placeLocation.getThumbnailUrl())
                 .distance(placeLocation.getDistance())
