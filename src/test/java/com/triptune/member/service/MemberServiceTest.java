@@ -8,6 +8,7 @@ import com.triptune.email.exception.EmailVerifyException;
 import com.triptune.email.service.EmailService;
 import com.triptune.global.util.CookieUtils;
 import com.triptune.member.MemberTest;
+import com.triptune.member.dto.LoginResult;
 import com.triptune.member.dto.request.*;
 import com.triptune.member.dto.response.LoginResponse;
 import com.triptune.member.dto.response.MemberInfoResponse;
@@ -50,7 +51,6 @@ import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.ArrayList;
@@ -78,7 +78,6 @@ public class MemberServiceTest extends MemberTest {
     @Mock private ChatMessageRepository chatMessageRepository;
     @Mock private TravelScheduleRepository travelScheduleRepository;
     @Mock private BookmarkRepository bookmarkRepository;
-    @Spy private CookieUtils cookieUtils;
 
     private final String accessToken = "MemberAccessToken";
     private final String refreshToken = "MemberRefreshToken";
@@ -232,8 +231,6 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("일반 회원 로그인")
     void login_nativeMember(){
         // given
-        MockHttpServletResponse mockHttpServletResponse = new MockHttpServletResponse();
-
         ProfileImage profileImage = createProfileImage("memberImage");
         Member member = createNativeTypeMemberWithId(1L, "member@email.com", profileImage);
 
@@ -245,22 +242,18 @@ public class MemberServiceTest extends MemberTest {
         when(jwtUtils.createRefreshToken(anyLong())).thenReturn(refreshToken);
 
         // when
-        LoginResponse response = memberService.login(loginRequest, mockHttpServletResponse);
+        LoginResult response = memberService.login(loginRequest);
 
         // then
-        Cookie[] cookies = mockHttpServletResponse.getCookies();
-        assertThat(cookies).isNotNull();
-        assertThat(cookies.length).isEqualTo(1);
-        assertThat(response.getNickname()).isEqualTo(member.getNickname());
-        assertThat(response.getAccessToken()).isNotNull();
+        assertThat(response.nickname()).isEqualTo(member.getNickname());
+        assertThat(response.accessToken()).isEqualTo(accessToken);
+        assertThat(response.refreshToken()).isEqualTo(refreshToken);
     }
 
     @Test
     @DisplayName("통합 회원 로그인")
     void login_bothMember(){
         // given
-        MockHttpServletResponse mockHttpServletResponse = new MockHttpServletResponse();
-
         ProfileImage profileImage = createProfileImage("memberImage");
         Member member = createBothTypeMemberWithId(1L, "member@email.com", profileImage);
 
@@ -272,28 +265,25 @@ public class MemberServiceTest extends MemberTest {
         when(jwtUtils.createRefreshToken(anyLong())).thenReturn(refreshToken);
 
         // when
-        LoginResponse response = memberService.login(loginRequest, mockHttpServletResponse);
+        LoginResult response = memberService.login(loginRequest);
 
         // then
-        Cookie[] cookies = mockHttpServletResponse.getCookies();
-        assertThat(cookies).isNotNull();
-        assertThat(cookies.length).isEqualTo(1);
-        assertThat(response.getNickname()).isEqualTo(member.getNickname());
-        assertThat(response.getAccessToken()).isNotNull();
+        assertThat(response.nickname()).isEqualTo(member.getNickname());
+        assertThat(response.accessToken()).isEqualTo(accessToken);
+        assertThat(response.refreshToken()).isEqualTo(refreshToken);
     }
 
     @Test
     @DisplayName("로그인 시 회원 데이터 없어 예외 발생")
     void login_memberNotFound(){
         // given
-        MockHttpServletResponse mockHttpServletResponse = new MockHttpServletResponse();
         LoginRequest loginRequest = createLoginRequest("notMember@email.com", passwordToken);
 
         when(memberRepository.findByEmail(anyString())).thenReturn(Optional.empty());
 
         // when
         FailLoginException fail = assertThrows(FailLoginException.class,
-                () -> memberService.login(loginRequest, mockHttpServletResponse));
+                () -> memberService.login(loginRequest));
 
         // then
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.FAILED_LOGIN.getStatus());
@@ -304,8 +294,6 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("로그인 시 비밀번호 맞지 않아 예외 발생")
     void login_mismatchPassword(){
         // given
-        MockHttpServletResponse mockHttpServletResponse = new MockHttpServletResponse();
-
         ProfileImage profileImage = createProfileImage("memberImage");
         Member member = createNativeTypeMember("member@email.com", profileImage);
 
@@ -316,7 +304,7 @@ public class MemberServiceTest extends MemberTest {
 
         // when
         FailLoginException fail = assertThrows(FailLoginException.class,
-                () -> memberService.login(loginRequest, mockHttpServletResponse));
+                () -> memberService.login(loginRequest));
 
         // then
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.FAILED_LOGIN.getStatus());
@@ -327,8 +315,6 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("일반 회원 로그아웃")
     void logout_nativeMember(){
         // given
-        MockHttpServletResponse mockHttpServletResponse = new MockHttpServletResponse();
-
         ProfileImage profileImage = createProfileImage("memberImage");
         Member member = createNativeTypeMember("member@email.com", profileImage);
 
@@ -337,14 +323,10 @@ public class MemberServiceTest extends MemberTest {
         when(memberRepository.findByNickname(anyString())).thenReturn(Optional.of(member));
 
         // when
-        memberService.logout(mockHttpServletResponse, request, accessToken);
+        memberService.logout(request, accessToken);
 
         // then
-        Cookie[] cookies = mockHttpServletResponse.getCookies();
-        assertThat(cookies).isNotNull();
-        assertThat(cookies.length).isEqualTo(3);
         assertThat(member.getRefreshToken()).isNull();
-
         verify(redisService, times(1)).saveExpiredData(accessToken, "logout", 3600);
     }
 
@@ -353,8 +335,6 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("소셜 회원 로그아웃")
     void logout_socialMember(){
         // given
-        MockHttpServletResponse mockHttpServletResponse = new MockHttpServletResponse();
-
         ProfileImage profileImage = createProfileImage("memberImage");
         Member member = createSocialTypeMember("member@email.com", profileImage);
 
@@ -363,14 +343,10 @@ public class MemberServiceTest extends MemberTest {
         when(memberRepository.findByNickname(anyString())).thenReturn(Optional.of(member));
 
         // when
-        memberService.logout(mockHttpServletResponse, request, accessToken);
+        memberService.logout(request, accessToken);
 
         // then
-        Cookie[] cookies = mockHttpServletResponse.getCookies();
-        assertThat(cookies).isNotNull();
-        assertThat(cookies.length).isEqualTo(3);
         assertThat(member.getRefreshToken()).isNull();
-
         verify(redisService, times(1)).saveExpiredData(accessToken, "logout", 3600);
     }
 
@@ -378,8 +354,6 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("통합 회원 로그아웃")
     void logout_bothMember(){
         // given
-        MockHttpServletResponse mockHttpServletResponse = new MockHttpServletResponse();
-
         ProfileImage profileImage = createProfileImage("memberImage");
         Member member = createBothTypeMember("member@email.com", profileImage);
 
@@ -388,14 +362,10 @@ public class MemberServiceTest extends MemberTest {
         when(memberRepository.findByNickname(anyString())).thenReturn(Optional.of(member));
 
         // when
-        memberService.logout(mockHttpServletResponse, request, accessToken);
+        memberService.logout(request, accessToken);
 
         // then
-        Cookie[] cookies = mockHttpServletResponse.getCookies();
-        assertThat(cookies).isNotNull();
-        assertThat(cookies.length).isEqualTo(3);
         assertThat(member.getRefreshToken()).isNull();
-
         verify(redisService, times(1)).saveExpiredData(accessToken, "logout", 3600);
     }
 
@@ -403,14 +373,13 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("로그아웃 요청 시 회원 데이터 없어 예외 발생")
     void logout_memberNotFound(){
         // given
-        MockHttpServletResponse mockHttpServletResponse = new MockHttpServletResponse();
         LogoutRequest request = createLogoutRequest("notMember");
 
         when(memberRepository.findByNickname(anyString())).thenReturn(Optional.empty());
 
         // when
         DataNotFoundException fail = assertThrows(DataNotFoundException.class,
-                () -> memberService.logout(mockHttpServletResponse, request, accessToken));
+                () -> memberService.logout(request, accessToken));
 
 
         // then
@@ -1049,9 +1018,6 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("북마크로 등록된 여행지 데이터 조회 - 최신순")
     void getMemberBookmarks_sortNewest(){
         // given
-        ProfileImage profileImage = createProfileImage("memberImage");
-        Member member = createNativeTypeMember("member@email.com", profileImage);
-
         Pageable pageable = PageUtils.bookmarkPageable(1);
         List<TravelPlace> travelPlaces = List.of(place1, place2, place3);
         Page<TravelPlace> travelPlacePage = PageUtils.createPage(travelPlaces, pageable, travelPlaces.size());
@@ -1078,9 +1044,6 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("북마크로 등록된 여행지 데이터 조회 - 이름순")
     void getMemberBookmarks_sortName(){
         // given
-        ProfileImage profileImage = createProfileImage("memberImage");
-        Member member = createNativeTypeMember("member@email.com", profileImage);
-
         Pageable pageable = PageUtils.bookmarkPageable(1);
         List<TravelPlace> travelPlaces = List.of(place1, place2, place3);
         Page<TravelPlace> travelPlacePage = PageUtils.createPage(travelPlaces, pageable, travelPlaces.size());
@@ -1106,9 +1069,6 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("북마크로 등록된 여행지 데이터 조회 시 데이터 없는 경우")
     void getMemberBookmarks_emptyData(){
         // given
-        ProfileImage profileImage = createProfileImage("memberImage");
-        Member member = createNativeTypeMember("member@email.com", profileImage);
-
         Pageable pageable = PageUtils.bookmarkPageable(1);
         Page<TravelPlace> travelPlacePage = PageUtils.createPage(Collections.emptyList(), pageable, 0);
 
@@ -1128,8 +1088,6 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("일반 회원 탈퇴 - 작성자, 참석자 존재하는 경우")
     void deactivateMember_nativeMember1(){
         // given
-        MockHttpServletResponse mockHttpServletResponse = new MockHttpServletResponse();
-
         TravelSchedule schedule1 = createTravelSchedule("테스트1");
         TravelSchedule schedule2 = createTravelSchedule("테스트2");
 
@@ -1148,14 +1106,10 @@ public class MemberServiceTest extends MemberTest {
         when(travelAttendeeRepository.findAllByMember_MemberId(anyLong())).thenReturn(attendees);
 
         // when
-        assertDoesNotThrow(() -> memberService.deactivateMember(mockHttpServletResponse, accessToken, 1L, request));
+        assertDoesNotThrow(() -> memberService.deactivateMember(request, 1L, accessToken));
 
 
         // then
-        Cookie[] cookies = mockHttpServletResponse.getCookies();
-
-        assertThat(cookies).isNotNull();
-        assertThat(cookies.length).isEqualTo(3);
         assertThat(member.getEmail()).isEqualTo(DeactivateValue.DEACTIVATE.name());
         assertThat(member.getPassword()).isEqualTo(DeactivateValue.DEACTIVATE.name());
         assertThat(member.getNickname()).isEqualTo(DeactivateValue.DEACTIVATE.name());
@@ -1168,8 +1122,6 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("일반 회원 탈퇴 - 작성자만 존재하는 경우")
     void deactivateMember_nativeMember2(){
         // given
-        MockHttpServletResponse mockHttpServletResponse = new MockHttpServletResponse();
-
         TravelSchedule schedule1 = createTravelSchedule("테스트1");
         TravelSchedule schedule2 = createTravelSchedule("테스트2");
 
@@ -1189,14 +1141,10 @@ public class MemberServiceTest extends MemberTest {
 
         // when
         assertDoesNotThrow(
-                () -> memberService.deactivateMember(mockHttpServletResponse, accessToken, 1L, request));
+                () -> memberService.deactivateMember(request, 1L, accessToken));
 
 
         // then
-        Cookie[] cookies = mockHttpServletResponse.getCookies();
-
-        assertThat(cookies).isNotNull();
-        assertThat(cookies.length).isEqualTo(3);
         assertThat(member.getEmail()).isEqualTo(DeactivateValue.DEACTIVATE.name());
         assertThat(member.getPassword()).isEqualTo(DeactivateValue.DEACTIVATE.name());
         assertThat(member.getNickname()).isEqualTo(DeactivateValue.DEACTIVATE.name());
@@ -1210,8 +1158,6 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("일반 회원 탈퇴 - 참석자만 존재하는 경우")
     void deactivateMember_nativeMember3(){
         // given
-        MockHttpServletResponse mockHttpServletResponse = new MockHttpServletResponse();
-
         TravelSchedule schedule1 = createTravelSchedule("테스트1");
         TravelSchedule schedule2 = createTravelSchedule("테스트2");
 
@@ -1231,14 +1177,10 @@ public class MemberServiceTest extends MemberTest {
 
         // when
         assertDoesNotThrow(
-                () -> memberService.deactivateMember(mockHttpServletResponse, accessToken, 1L, request));
+                () -> memberService.deactivateMember(request, 1L, accessToken));
 
 
         // then
-        Cookie[] cookies = mockHttpServletResponse.getCookies();
-
-        assertThat(cookies).isNotNull();
-        assertThat(cookies.length).isEqualTo(3);
         assertThat(member.getEmail()).isEqualTo(DeactivateValue.DEACTIVATE.name());
         assertThat(member.getPassword()).isEqualTo(DeactivateValue.DEACTIVATE.name());
         assertThat(member.getNickname()).isEqualTo(DeactivateValue.DEACTIVATE.name());
@@ -1250,8 +1192,6 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("통합 회원 탈퇴")
     void deactivateMember_bothMember(){
         // given
-        MockHttpServletResponse mockHttpServletResponse = new MockHttpServletResponse();
-
         TravelSchedule schedule1 = createTravelSchedule("테스트1");
         TravelSchedule schedule2 = createTravelSchedule("테스트2");
 
@@ -1274,12 +1214,10 @@ public class MemberServiceTest extends MemberTest {
 
         // when
         assertDoesNotThrow(
-                () -> memberService.deactivateMember(mockHttpServletResponse, accessToken, 1L, request));
+                () -> memberService.deactivateMember(request, 1L, accessToken));
 
 
         // then
-        Cookie[] cookies = mockHttpServletResponse.getCookies();
-        assertThat(cookies).isNotNull();
         assertThat(member.getEmail()).isEqualTo(DeactivateValue.DEACTIVATE.name());
         assertThat(member.getPassword()).isEqualTo(DeactivateValue.DEACTIVATE.name());
         assertThat(member.getNickname()).isEqualTo(DeactivateValue.DEACTIVATE.name());
@@ -1293,8 +1231,6 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("회원 탈퇴 시 일정 데이터가 존재하지 않는 경우")
     void deactivateMember_emptySchedule(){
         // given
-        MockHttpServletResponse mockHttpServletResponse = new MockHttpServletResponse();
-
         ProfileImage profileImage = createProfileImage("memberImage");
         Member member = createNativeTypeMember("member@email.com", profileImage);
 
@@ -1306,12 +1242,10 @@ public class MemberServiceTest extends MemberTest {
 
         // when
         assertDoesNotThrow(
-                () -> memberService.deactivateMember(mockHttpServletResponse, accessToken, 1L, request));
+                () -> memberService.deactivateMember(request, 1L, accessToken));
 
 
         // then
-        Cookie[] cookies = mockHttpServletResponse.getCookies();
-        assertThat(cookies).isNotNull();
         assertThat(member.getEmail()).isEqualTo(DeactivateValue.DEACTIVATE.name());
         assertThat(member.getPassword()).isEqualTo(DeactivateValue.DEACTIVATE.name());
         assertThat(member.getNickname()).isEqualTo(DeactivateValue.DEACTIVATE.name());
@@ -1323,15 +1257,13 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("회원 탈퇴 시 회원 데이터가 존재하지 않아 예외 발생")
     void deactivateMember_memberNotFound(){
         // given
-        MockHttpServletResponse mockHttpServletResponse = new MockHttpServletResponse();
-
         DeactivateRequest request = createDeactivateRequest("notMember12!@");
 
         when(memberRepository.findByIdWithSocialMembers(anyLong())).thenReturn(Optional.empty());
 
         // when
         DataNotFoundException fail = assertThrows(DataNotFoundException.class,
-                () -> memberService.deactivateMember(mockHttpServletResponse, accessToken, 1000L, request));
+                () -> memberService.deactivateMember(request, 1000L, accessToken));
 
         // then
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.MEMBER_NOT_FOUND.getStatus());
@@ -1343,8 +1275,6 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("소셜 회원 탈퇴 요청으로 예외 발생")
     void deactivateSocialMember(){
         // given
-        MockHttpServletResponse mockHttpServletResponse = new MockHttpServletResponse();
-
         ProfileImage profileImage = createProfileImage("memberImage");
         Member member = createSocialTypeMember("member@email.com", profileImage);
 
@@ -1357,7 +1287,7 @@ public class MemberServiceTest extends MemberTest {
 
         // when
         UnsupportedSocialMemberException fail = assertThrows(UnsupportedSocialMemberException.class,
-                () -> memberService.deactivateMember(mockHttpServletResponse, accessToken, 1L, request));
+                () -> memberService.deactivateMember(request, 1L, accessToken));
 
         // then
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.SOCIAL_MEMBER_DEACTIVATE_NOT_ALLOWED.getStatus());
@@ -1370,8 +1300,6 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("회원 탈퇴 요청 시 비밀번호가 맞지 않아 예외 발생")
     void deactivateMember_incorrectPassword(){
         // given
-        MockHttpServletResponse mockHttpServletResponse = new MockHttpServletResponse();
-
         ProfileImage profileImage = createProfileImage("memberImage");
         Member member = createNativeTypeMember("member@email.com", profileImage);
 
@@ -1382,7 +1310,7 @@ public class MemberServiceTest extends MemberTest {
 
         // when
         IncorrectPasswordException fail = assertThrows(IncorrectPasswordException.class,
-                () -> memberService.deactivateMember(mockHttpServletResponse, accessToken,1L, request));
+                () -> memberService.deactivateMember(request, 1L, accessToken));
 
         // then
         assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.INCORRECT_PASSWORD.getStatus());

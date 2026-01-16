@@ -1,11 +1,19 @@
 package com.triptune.global.util;
 
 import com.triptune.global.security.CookieType;
+import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpHeaders;
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.mock.web.MockHttpServletResponse;
+
+import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -113,6 +121,63 @@ class CookieUtilsTest {
         assertThat(response).contains("HttpOnly");
         assertThat(response).contains("Secure");
         assertThat(response).contains("SameSite=None");
+    }
+
+    @Test
+    @DisplayName("쿠키에서 refresh token 조회")
+    void getRefreshTokenFromCookie() {
+        // given
+        String refreshTokenValue = "refreshTokenFromCookieTest";
+
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setCookies(new Cookie(CookieType.REFRESH_TOKEN.getKey(), refreshTokenValue));
+
+        // when
+        Optional<String> response = cookieUtils.getRefreshTokenFromCookie(request);
+
+        // then
+        assertThat(response.get()).isEqualTo(refreshTokenValue);
+
+    }
+
+    @Test
+    @DisplayName("쿠키에서 refresh token 조회 결과 없어 null 반환")
+    void getRefreshTokenFromCookie_returnNull() {
+        // given
+        MockHttpServletRequest request = new MockHttpServletRequest();
+
+        // when
+        Optional<String> response = cookieUtils.getRefreshTokenFromCookie(request);
+
+        // then
+        assertThat(response).isEmpty();
+    }
+
+    @Test
+    @DisplayName("전체 쿠키 삭제")
+    void deleteAllCookies() {
+        // given
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        // when
+        cookieUtils.deleteAllCookies(response);
+
+        // then
+        List<String> cookies = response.getHeaders(HttpHeaders.SET_COOKIE);
+        assertThat(cookies).hasSize(3);
+
+        assertThat(cookies).anyMatch(c ->
+                c.startsWith(CookieType.ACCESS_TOKEN.getKey())
+                        && c.contains("Max-Age=0")
+        );
+        assertThat(cookies).anyMatch(c ->
+                c.startsWith(CookieType.REFRESH_TOKEN.getKey())
+                        && c.contains("Max-Age=0")
+        );
+        assertThat(cookies).anyMatch(c ->
+                c.startsWith(CookieType.NICKNAME.getKey())
+                        && c.contains("Max-Age=0")
+        );
     }
 
 
