@@ -3,11 +3,14 @@ package com.triptune.member.controller;
 import com.triptune.bookmark.enums.BookmarkSortType;
 import com.triptune.email.dto.request.EmailRequest;
 import com.triptune.global.response.enums.ErrorCode;
+import com.triptune.global.security.CookieType;
 import com.triptune.global.security.exception.CustomJwtUnAuthorizedException;
 import com.triptune.global.exception.CustomNotValidException;
 import com.triptune.global.response.ApiResponse;
 import com.triptune.global.response.pagination.ApiPageResponse;
 import com.triptune.global.security.jwt.JwtUtils;
+import com.triptune.global.util.CookieUtils;
+import com.triptune.member.dto.LoginResult;
 import com.triptune.member.dto.request.*;
 import com.triptune.member.dto.response.LoginResponse;
 import com.triptune.member.dto.response.MemberInfoResponse;
@@ -30,6 +33,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.stream.Stream;
+
 @Slf4j
 @RestController
 @RequiredArgsConstructor
@@ -37,9 +42,9 @@ import org.springframework.web.bind.annotation.*;
 @Tag(name = "Member", description = "회원 관련 API")
 public class MemberController {
 
-    private static final String REFRESH_TOKEN_NAME = "refreshToken";
     private final MemberService memberService;
     private final JwtUtils jwtUtils;
+    private final CookieUtils cookieUtils;
 
 
     @PostMapping("/join")
@@ -56,10 +61,12 @@ public class MemberController {
 
     @PostMapping("/login")
     @Operation(summary = "로그인", description = "로그인을 실행합니다.")
-    public ApiResponse<LoginResponse> login(@Valid @RequestBody LoginRequest loginRequest,
-                                            HttpServletResponse response){
-        LoginResponse loginResponse = memberService.login(loginRequest, response);
-        return ApiResponse.dataResponse(loginResponse);
+    public ApiResponse<LoginResponse> login(@Valid @RequestBody LoginRequest loginRequest, HttpServletResponse response){
+
+        LoginResult loginResult = memberService.login(loginRequest);
+
+        response.addHeader("Set-Cookie", cookieUtils.createCookie(CookieType.REFRESH_TOKEN, loginResult.refreshToken()));
+        return ApiResponse.dataResponse(LoginResponse.of(loginResult.accessToken(), loginResult.nickname()));
     }
 
 
@@ -69,20 +76,19 @@ public class MemberController {
                                     HttpServletResponse response,
                                     @Valid @RequestBody LogoutRequest logoutRequest){
         String accessToken = jwtUtils.resolveToken(request);
-
-        memberService.logout(response, logoutRequest, accessToken);
+        memberService.logout(logoutRequest, accessToken);
+        cookieUtils.deleteAllCookies(response);
         return ApiResponse.okResponse();
     }
 
     @PostMapping("/refresh")
     @Operation(summary = "토큰 갱신", description = "Refresh Token 을 이용해 만료된 Access Token 을 갱신합니다.")
     public ApiResponse<RefreshTokenResponse> refreshToken(HttpServletRequest request) throws ExpiredJwtException {
-        String refreshToken = getRefreshTokenFromCookie(request);
-
-        if(refreshToken == null){
-            log.error("Cookie 에 Refresh Token 존재하지 않아 갱신 실패");
-            throw new CustomJwtUnAuthorizedException(ErrorCode.MISMATCH_REFRESH_TOKEN);
-        }
+        String refreshToken = cookieUtils.getRefreshTokenFromCookie(request)
+                .orElseThrow(() -> {
+                    log.error("Cookie 에 Refresh Token 존재하지 않아 갱신 실패");
+                    return new CustomJwtUnAuthorizedException(ErrorCode.MISMATCH_REFRESH_TOKEN);
+                });
 
         RefreshTokenResponse refreshTokenResponse = memberService.refreshToken(refreshToken);
         return ApiResponse.dataResponse(refreshTokenResponse);
@@ -166,22 +172,11 @@ public class MemberController {
                                               @AuthenticationPrincipal(expression = "memberId") Long memberId,
                                               @Valid @RequestBody DeactivateRequest deactivateRequest){
         String accessToken = jwtUtils.resolveToken(request);
-        memberService.deactivateMember(response, accessToken, memberId, deactivateRequest);
+        memberService.deactivateMember(deactivateRequest, memberId, accessToken);
+        cookieUtils.deleteAllCookies(response);
+
         return ApiResponse.okResponse();
     }
 
 
-    public String getRefreshTokenFromCookie(HttpServletRequest request){
-        Cookie[] cookies = request.getCookies();
-
-        if(cookies != null){
-            for (Cookie cookie : cookies) {
-                if(cookie.getName().equals(REFRESH_TOKEN_NAME)){
-                    return cookie.getValue();
-                }
-            }
-        }
-
-        return null;
-    }
 }

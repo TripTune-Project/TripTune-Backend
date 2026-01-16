@@ -5,6 +5,7 @@ import com.triptune.bookmark.repository.BookmarkRepository;
 import com.triptune.common.entity.*;
 import com.triptune.common.repository.*;
 import com.triptune.email.dto.request.EmailRequest;
+import com.triptune.global.security.CookieType;
 import com.triptune.member.dto.request.*;
 import com.triptune.member.enums.JoinType;
 import com.triptune.member.enums.SocialType;
@@ -40,6 +41,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
@@ -526,12 +528,13 @@ public class MemberControllerTest extends MemberTest {
                 .andReturn();
 
         // then
-        Cookie[] cookies = result.getResponse().getCookies();
+        List<String> cookies = result.getResponse().getHeaders(HttpHeaders.SET_COOKIE);
+        assertThat(cookies).hasSize(1);
+        assertThat(cookies.get(0))
+                .startsWith(CookieType.REFRESH_TOKEN.getKey() + "=")
+                .contains("Max-Age=" + CookieType.REFRESH_TOKEN.getMaxAgeSeconds())
+                .contains("HttpOnly");
 
-        assertThat(cookies).isNotNull();
-        assertThat(cookies.length).isEqualTo(1);
-        assertThat(cookies[0].getName()).isEqualTo("refreshToken");
-        assertThat(cookies[0].getValue()).isNotNull();
     }
 
     @Test
@@ -558,12 +561,12 @@ public class MemberControllerTest extends MemberTest {
                 .andReturn();
 
         // then
-        Cookie[] cookies = result.getResponse().getCookies();
-
-        assertThat(cookies).isNotNull();
-        assertThat(cookies.length).isEqualTo(1);
-        assertThat(cookies[0].getName()).isEqualTo("refreshToken");
-        assertThat(cookies[0].getValue()).isNotNull();
+        List<String> cookies = result.getResponse().getHeaders(HttpHeaders.SET_COOKIE);
+        assertThat(cookies).hasSize(1);
+        assertThat(cookies.get(0))
+                .startsWith(CookieType.REFRESH_TOKEN.getKey() + "=")
+                .contains("Max-Age=" + CookieType.REFRESH_TOKEN.getMaxAgeSeconds())
+                .contains("HttpOnly");
     }
 
 
@@ -731,10 +734,21 @@ public class MemberControllerTest extends MemberTest {
                 .andReturn();
 
         // then
-        Cookie[] cookies = result.getResponse().getCookies();
+        List<String> cookies = result.getResponse().getHeaders(HttpHeaders.SET_COOKIE);
+        assertThat(cookies).hasSize(3);
 
-        assertThat(cookies).isNotNull();
-        assertThat(cookies.length).isEqualTo(3);
+        assertThat(cookies).anyMatch(c ->
+                c.startsWith(CookieType.ACCESS_TOKEN.getKey() + "=")
+                        && c.contains("Max-Age=0")
+                );
+        assertThat(cookies).anyMatch(c ->
+                c.startsWith(CookieType.REFRESH_TOKEN.getKey() + "=")
+                        && c.contains("Max-Age=0")
+        );
+        assertThat(cookies).anyMatch(c ->
+                c.startsWith(CookieType.NICKNAME.getKey() + "=")
+                        && c.contains("Max-Age=0")
+        );
     }
 
 
@@ -2208,10 +2222,21 @@ public class MemberControllerTest extends MemberTest {
                 .andReturn();
 
         // then
-        Cookie[] cookies = result.getResponse().getCookies();
+        List<String> cookies = result.getResponse().getHeaders(HttpHeaders.SET_COOKIE);
+        assertThat(cookies).hasSize(3);
 
-        assertThat(cookies).isNotNull();
-        assertThat(cookies.length).isEqualTo(3);
+        assertThat(cookies).anyMatch(c ->
+                c.startsWith(CookieType.ACCESS_TOKEN.getKey() + "=")
+                        && c.contains("Max-Age=0")
+        );
+        assertThat(cookies).anyMatch(c ->
+                c.startsWith(CookieType.REFRESH_TOKEN.getKey() + "=")
+                        && c.contains("Max-Age=0")
+        );
+        assertThat(cookies).anyMatch(c ->
+                c.startsWith(CookieType.NICKNAME.getKey() + "=")
+                        && c.contains("Max-Age=0")
+        );
     }
 
     @Test
@@ -2252,10 +2277,21 @@ public class MemberControllerTest extends MemberTest {
                 .andReturn();
 
         // then
-        Cookie[] cookies = result.getResponse().getCookies();
+        List<String> cookies = result.getResponse().getHeaders(HttpHeaders.SET_COOKIE);
+        assertThat(cookies).hasSize(3);
 
-        assertThat(cookies).isNotNull();
-        assertThat(cookies.length).isEqualTo(3);
+        assertThat(cookies).anyMatch(c ->
+                c.startsWith(CookieType.ACCESS_TOKEN.getKey() + "=")
+                        && c.contains("Max-Age=0")
+        );
+        assertThat(cookies).anyMatch(c ->
+                c.startsWith(CookieType.REFRESH_TOKEN.getKey() + "=")
+                        && c.contains("Max-Age=0")
+        );
+        assertThat(cookies).anyMatch(c ->
+                c.startsWith(CookieType.NICKNAME.getKey() + "=")
+                        && c.contains("Max-Age=0")
+        );
     }
 
     @Test
@@ -2296,10 +2332,21 @@ public class MemberControllerTest extends MemberTest {
                 .andReturn();
 
         // then
-        Cookie[] cookies = result.getResponse().getCookies();
+        List<String> cookies = result.getResponse().getHeaders(HttpHeaders.SET_COOKIE);
+        assertThat(cookies).hasSize(3);
 
-        assertThat(cookies).isNotNull();
-        assertThat(cookies.length).isEqualTo(3);
+        assertThat(cookies).anyMatch(c ->
+                c.startsWith(CookieType.ACCESS_TOKEN.getKey() + "=")
+                        && c.contains("Max-Age=0")
+        );
+        assertThat(cookies).anyMatch(c ->
+                c.startsWith(CookieType.REFRESH_TOKEN.getKey() + "=")
+                        && c.contains("Max-Age=0")
+        );
+        assertThat(cookies).anyMatch(c ->
+                c.startsWith(CookieType.NICKNAME.getKey() + "=")
+                        && c.contains("Max-Age=0")
+        );
     }
 
 
@@ -2351,10 +2398,21 @@ public class MemberControllerTest extends MemberTest {
                 .andReturn();
 
         // then
-        Cookie[] cookies = result.getResponse().getCookies();
+        List<String> cookies = result.getResponse().getHeaders(HttpHeaders.SET_COOKIE);
+        assertThat(cookies).hasSize(3);
 
-        assertThat(cookies).isNotNull();
-        assertThat(cookies.length).isEqualTo(3);
+        assertThat(cookies).anyMatch(c ->
+                c.startsWith(CookieType.ACCESS_TOKEN.getKey() + "=")
+                        && c.contains("Max-Age=0")
+        );
+        assertThat(cookies).anyMatch(c ->
+                c.startsWith(CookieType.REFRESH_TOKEN.getKey() + "=")
+                        && c.contains("Max-Age=0")
+        );
+        assertThat(cookies).anyMatch(c ->
+                c.startsWith(CookieType.NICKNAME.getKey() + "=")
+                        && c.contains("Max-Age=0")
+        );
     }
 
 
@@ -2454,10 +2512,21 @@ public class MemberControllerTest extends MemberTest {
 
 
         // then
-        Cookie[] cookies = result.getResponse().getCookies();
+        List<String> cookies = result.getResponse().getHeaders(HttpHeaders.SET_COOKIE);
+        assertThat(cookies).hasSize(3);
 
-        assertThat(cookies).isNotNull();
-        assertThat(cookies.length).isEqualTo(3);
+        assertThat(cookies).anyMatch(c ->
+                c.startsWith(CookieType.ACCESS_TOKEN.getKey() + "=")
+                        && c.contains("Max-Age=0")
+        );
+        assertThat(cookies).anyMatch(c ->
+                c.startsWith(CookieType.REFRESH_TOKEN.getKey() + "=")
+                        && c.contains("Max-Age=0")
+        );
+        assertThat(cookies).anyMatch(c ->
+                c.startsWith(CookieType.NICKNAME.getKey() + "=")
+                        && c.contains("Max-Age=0")
+        );
     }
 
 

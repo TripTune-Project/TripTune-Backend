@@ -18,8 +18,8 @@ import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 
-@Component
 @Slf4j
+@Component
 @RequiredArgsConstructor
 public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
 
@@ -36,16 +36,15 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
 
         String accessToken = jwtUtils.createAccessToken(userDetails.getMemberId());
-        response.addHeader("Set-Cookie", cookieUtils.createCookie(CookieType.ACCESS_TOKEN, accessToken));
+        addCookie(response, CookieType.ACCESS_TOKEN, accessToken);
 
         String encodeNickname = URLEncoder.encode(userDetails.getName(), StandardCharsets.UTF_8);
-        response.addHeader("Set-Cookie", cookieUtils.createCookie(CookieType.NICKNAME, encodeNickname));
+        addCookie(response, CookieType.NICKNAME, encodeNickname);
+        addCookie(response, CookieType.REFRESH_TOKEN, userDetails.getRefreshToken());
 
-        response.addHeader("Set-Cookie", cookieUtils.createCookie(CookieType.REFRESH_TOKEN, userDetails.getRefreshToken()));
-
-        log.info("[Set-Cookie] accessToken   | maxAge={}s | HttpOnly={}",
+        log.info("[Set-Cookie] accessToken | maxAge={}s | HttpOnly={}",
                 CookieType.ACCESS_TOKEN.getMaxAgeSeconds(), CookieType.ACCESS_TOKEN.isHttpOnly());
-        log.info("[Set-Cookie] nickname      | maxAge={}s | HttpOnly={}",
+        log.info("[Set-Cookie] nickname | maxAge={}s | HttpOnly={}",
                 CookieType.NICKNAME.getMaxAgeSeconds(), CookieType.NICKNAME.isHttpOnly());
         log.info("[Set-Cookie] refreshToken | maxAge={}s | HttpOnly={}",
                 CookieType.REFRESH_TOKEN.getMaxAgeSeconds(), CookieType.REFRESH_TOKEN.isHttpOnly());
@@ -54,6 +53,10 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
 
         response.sendRedirect(redirectURL);
         log.info("소셜 로그인 성공");
+    }
+
+    private void addCookie(HttpServletResponse response, CookieType cookieType, String value){
+        response.addHeader("Set-Cookie", cookieUtils.createCookie(cookieType, value));
     }
 
 }

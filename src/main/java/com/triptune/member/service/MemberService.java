@@ -1,22 +1,20 @@
 package com.triptune.member.service;
 
-import com.triptune.global.security.CookieType;
 import com.triptune.bookmark.enums.BookmarkSortType;
 import com.triptune.bookmark.repository.BookmarkRepository;
 import com.triptune.email.dto.request.EmailRequest;
 import com.triptune.email.exception.EmailVerifyException;
 import com.triptune.email.service.EmailService;
-import com.triptune.global.response.enums.ErrorCode;
-import com.triptune.global.redis.eums.RedisKeyType;
-import com.triptune.global.security.exception.CustomJwtUnAuthorizedException;
 import com.triptune.global.exception.DataExistException;
 import com.triptune.global.exception.DataNotFoundException;
-import com.triptune.global.security.jwt.JwtUtils;
-import com.triptune.global.util.CookieUtils;
-import com.triptune.global.util.PageUtils;
 import com.triptune.global.redis.RedisService;
+import com.triptune.global.redis.eums.RedisKeyType;
+import com.triptune.global.response.enums.ErrorCode;
+import com.triptune.global.security.exception.CustomJwtUnAuthorizedException;
+import com.triptune.global.security.jwt.JwtUtils;
+import com.triptune.global.util.PageUtils;
+import com.triptune.member.dto.LoginResult;
 import com.triptune.member.dto.request.*;
-import com.triptune.member.dto.response.LoginResponse;
 import com.triptune.member.dto.response.MemberInfoResponse;
 import com.triptune.member.dto.response.RefreshTokenResponse;
 import com.triptune.member.entity.Member;
@@ -34,7 +32,6 @@ import com.triptune.travel.dto.response.PlaceBookmarkResponse;
 import com.triptune.travel.entity.TravelPlace;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.mail.MessagingException;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -44,7 +41,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.stream.Stream;
 
 @Slf4j
 @Service
@@ -63,7 +59,6 @@ public class MemberService {
     private final TravelScheduleRepository travelScheduleRepository;
     private final ChatMessageRepository chatMessageRepository;
     private final BookmarkRepository bookmarkRepository;
-    private final CookieUtils cookieUtils;
 
 
     @Transactional
@@ -111,7 +106,7 @@ public class MemberService {
 
 
     @Transactional
-    public LoginResponse login(LoginRequest loginRequest, HttpServletResponse response) {
+    public LoginResult login(LoginRequest loginRequest) {
         Member member = memberRepository.findByEmail(loginRequest.getEmail())
                 .orElseThrow(() -> new FailLoginException(ErrorCode.FAILED_LOGIN));
 
@@ -123,20 +118,16 @@ public class MemberService {
         String refreshToken = jwtUtils.createRefreshToken(member.getMemberId());
 
         member.updateRefreshToken(refreshToken);
-
-        response.addHeader("Set-Cookie", cookieUtils.createCookie(CookieType.REFRESH_TOKEN, refreshToken));
-
-        return LoginResponse.of(accessToken, member.getNickname());
+        return new LoginResult(accessToken, refreshToken, member.getNickname());
     }
 
 
     @Transactional
-    public void logout(HttpServletResponse response, LogoutRequest logoutRequest, String accessToken) {
+    public void logout(LogoutRequest logoutRequest, String accessToken) {
         Member member = getMemberByNickname(logoutRequest.getNickname());
         member.logout();
 
         redisService.saveExpiredData(accessToken, "logout", LOGOUT_DURATION);
-        deleteCookies(response);
     }
 
     private Member getMemberByNickname(String nickname){
@@ -240,7 +231,7 @@ public class MemberService {
     }
 
     @Transactional
-    public void deactivateMember(HttpServletResponse response, String accessToken, Long memberId, DeactivateRequest deactivateRequest) {
+    public void deactivateMember(DeactivateRequest deactivateRequest, Long memberId, String accessToken) {
         // 1. 회원 비밀번호 확인
         Member member = getMemberAndSocailMember(memberId);
 
@@ -280,8 +271,6 @@ public class MemberService {
         // 7. 로그아웃
         member.logout();
         redisService.saveExpiredData(accessToken, "logout", LOGOUT_DURATION);
-
-        deleteCookies(response);
     }
 
     public Member getMemberAndSocailMember(Long memberId){
@@ -290,10 +279,6 @@ public class MemberService {
     }
 
 
-    public void deleteCookies(HttpServletResponse response){
-        Stream.of(CookieType.ACCESS_TOKEN, CookieType.REFRESH_TOKEN, CookieType.NICKNAME)
-                .forEach(type -> response.addHeader("Set-Cookie", cookieUtils.deleteCookie(type)));
-    }
 
 
 }
