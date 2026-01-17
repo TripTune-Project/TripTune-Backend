@@ -463,9 +463,7 @@ public class MemberServiceTest extends MemberTest {
                 () -> memberService.refreshToken(notEqualRefreshToken));
 
         // then
-        ErrorCode errorCode = fail.getErrorCode();
-        assertThat(errorCode.getStatus()).isEqualTo(ErrorCode.MISMATCH_REFRESH_TOKEN.getStatus());
-        assertThat(errorCode.getMessage()).isEqualTo(ErrorCode.MISMATCH_REFRESH_TOKEN.getMessage());
+        assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.MISMATCH_REFRESH_TOKEN);
     }
 
     @Test
