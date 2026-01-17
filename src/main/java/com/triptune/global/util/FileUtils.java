@@ -15,7 +15,6 @@ public class FileUtils {
 
     public static String getExtension(String fileName){
         int dotIndex = fileName.lastIndexOf(".");
-        System.out.println(dotIndex);
 
         if(dotIndex > 0 && dotIndex < fileName.length() - 1){
             return fileName.substring(dotIndex + 1);

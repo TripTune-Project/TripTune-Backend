@@ -69,7 +69,7 @@ public class JwtUtils {
     }
 
 
-    public boolean validateToken(String token) {
+    public void validateToken(String token) {
         try {
             Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
 
@@ -78,7 +78,6 @@ public class JwtUtils {
                 throw new CustomJwtUnAuthorizedException(ErrorCode.BLACKLIST_TOKEN);
             }
 
-            return true;
         } catch (ExpiredJwtException e){
             log.error("토큰 유효성 검증 중 만료된 JWT 토큰으로 인증 시도 ", e);
             throw new CustomJwtUnAuthorizedException(ErrorCode.EXPIRED_JWT_TOKEN);
@@ -164,17 +163,6 @@ public class JwtUtils {
                .compact();
    }
 
-
-   public static void writeJwtException(HttpServletRequest request, HttpServletResponse response, HttpStatus httpStatus, String message) throws IOException {
-       response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-       response.setStatus(httpStatus.value());
-       response.setCharacterEncoding(Charset.defaultCharset().name());
-
-       ErrorResponse errorResponse = ErrorResponse.of(httpStatus, request.getRequestURI() + " : " + message);
-       String result = new ObjectMapper().writeValueAsString(errorResponse);
-
-       response.getWriter().write(result);
-   }
 
 
 }

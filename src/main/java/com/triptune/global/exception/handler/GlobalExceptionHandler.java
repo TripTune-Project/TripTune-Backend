@@ -44,7 +44,7 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     public ErrorResponse handleCustomJwtUnAuthorizedException(CustomJwtUnAuthorizedException ex, HttpServletRequest request){
         log.error("CustomJwtUnAuthorizedException at {}: {}", request.getRequestURI(),  ex.getMessage());
-        return ErrorResponse.of(ex.getHttpStatus(), request.getRequestURI() + " : " + ex.getMessage());
+        return ErrorResponse.of(ex.getErrorCode());
     }
 
     @ExceptionHandler(NoHandlerFoundException.class)
