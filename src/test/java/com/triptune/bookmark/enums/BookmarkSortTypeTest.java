@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class BookmarkSortTypeTest {
 
@@ -24,9 +25,11 @@ class BookmarkSortTypeTest {
     @DisplayName("소문자로 들어온 값과 enum 매칭 실패로 예외 발생")
     void determineSortType_Illegal(){
         // given, when, then
-        assertThatThrownBy(() -> BookmarkSortType.determineSortType("fail"))
-                .isInstanceOf(CustomIllegalArgumentException.class)
-                .hasMessage(ErrorCode.ILLEGAL_BOOKMARK_SORT_TYPE.getMessage());
+        CustomIllegalArgumentException fail = assertThrows(CustomIllegalArgumentException.class,
+                () -> BookmarkSortType.determineSortType("fail"));
+
+        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.ILLEGAL_BOOKMARK_SORT_TYPE.getStatus());
+        assertThat(fail.getMessage()).isEqualTo(ErrorCode.ILLEGAL_BOOKMARK_SORT_TYPE.getMessage());
 
     }
 

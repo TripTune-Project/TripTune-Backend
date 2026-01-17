@@ -76,7 +76,7 @@ public class EmailService {
                 "[TripTune] 이메일 인증 코드가 발급되었습니다.",
                 email,
                 Map.of("authCode", authCode),
-                "certificationEmail"
+                "certification-email"
         );
 
         MimeMessage emailForm = createEmailTemplate(templateRequest);
@@ -134,7 +134,7 @@ public class EmailService {
                 "[TripTune] 비밀번호 재설정을 위한 안내 메일입니다.",
                 findPasswordRequest.getEmail(),
                 Map.of("resetPasswordURL", resetPasswordURL),
-                "resetPasswordEmail"
+                "reset-password-email"
         );
 
         MimeMessage emailForm = createEmailTemplate(templateRequest);
