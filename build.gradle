@@ -70,9 +70,6 @@ dependencies {
 	testCompileOnly 'org.projectlombok:lombok'
 	testAnnotationProcessor 'org.projectlombok:lombok'
 
-	// devtools
-	developmentOnly 'org.springframework.boot:spring-boot-devtools'
-
 	// mysql connector
 	runtimeOnly 'com.mysql:mysql-connector-j'
 

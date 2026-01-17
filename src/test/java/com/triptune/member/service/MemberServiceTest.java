@@ -396,7 +396,6 @@ public class MemberServiceTest extends MemberTest {
         Member member = createNativeTypeMemberWithId(1L, "member@email.com", profileImage);
         member.updateRefreshToken(refreshToken);
 
-        when(jwtUtils.validateToken(anyString())).thenReturn(true);
         when(jwtUtils.getMemberIdByToken(anyString())).thenReturn(member.getMemberId());
         when(memberRepository.findById(any())).thenReturn(Optional.of(member));
         when(jwtUtils.createAccessToken(anyLong())).thenReturn(accessToken);
@@ -416,7 +415,6 @@ public class MemberServiceTest extends MemberTest {
         Member member = createSocialTypeMemberWithId(1L, "member@email.com", profileImage);
         member.updateRefreshToken(refreshToken);
 
-        when(jwtUtils.validateToken(anyString())).thenReturn(true);
         when(jwtUtils.getMemberIdByToken(anyString())).thenReturn(member.getMemberId());
         when(memberRepository.findById(any())).thenReturn(Optional.of(member));
         when(jwtUtils.createAccessToken(anyLong())).thenReturn(accessToken);
@@ -436,7 +434,6 @@ public class MemberServiceTest extends MemberTest {
         Member member = createBothTypeMemberWithId(1L, "member@email.com", profileImage);
         member.updateRefreshToken(refreshToken);
 
-        when(jwtUtils.validateToken(anyString())).thenReturn(true);
         when(jwtUtils.getMemberIdByToken(anyString())).thenReturn(member.getMemberId());
         when(memberRepository.findById(any())).thenReturn(Optional.of(member));
         when(jwtUtils.createAccessToken(anyLong())).thenReturn(accessToken);
@@ -458,7 +455,6 @@ public class MemberServiceTest extends MemberTest {
         ProfileImage profileImage = createProfileImage("memberImage");
         Member member = createNativeTypeMember("member@email.com", profileImage);
 
-        when(jwtUtils.validateToken(anyString())).thenReturn(true);
         when(jwtUtils.getMemberIdByToken(anyString())).thenReturn(member.getMemberId());
         when(memberRepository.findById(any())).thenReturn(Optional.of(member));
 
@@ -467,8 +463,9 @@ public class MemberServiceTest extends MemberTest {
                 () -> memberService.refreshToken(notEqualRefreshToken));
 
         // then
-        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.MISMATCH_REFRESH_TOKEN.getStatus());
-        assertThat(fail.getMessage()).isEqualTo(ErrorCode.MISMATCH_REFRESH_TOKEN.getMessage());
+        ErrorCode errorCode = fail.getErrorCode();
+        assertThat(errorCode.getStatus()).isEqualTo(ErrorCode.MISMATCH_REFRESH_TOKEN.getStatus());
+        assertThat(errorCode.getMessage()).isEqualTo(ErrorCode.MISMATCH_REFRESH_TOKEN.getMessage());
     }
 
     @Test

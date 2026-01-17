@@ -6,11 +6,11 @@ import org.springframework.http.HttpStatus;
 
 @Getter
 public class CustomJwtUnAuthorizedException extends RuntimeException{
-    private final HttpStatus httpStatus;
+    private final ErrorCode errorCode;
 
     public CustomJwtUnAuthorizedException(ErrorCode errorCode){
         super(errorCode.getMessage());
-        this.httpStatus = errorCode.getStatus();
+        this.errorCode = errorCode;
     }
 
 
