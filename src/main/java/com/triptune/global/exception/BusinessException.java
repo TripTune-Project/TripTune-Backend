@@ -1,6 +1,6 @@
 package com.triptune.global.exception;
 
-import com.triptune.global.response.enums.ErrorCode;
+import com.triptune.global.message.ErrorCode;
 import lombok.Getter;
 
 @Getter

@@ -5,7 +5,7 @@ import com.triptune.schedule.dto.response.ChatResponse;
 import com.triptune.schedule.exception.chat.BadRequestChatException;
 import com.triptune.schedule.service.ChatMessageService;
 import com.triptune.global.aop.AttendeeCheck;
-import com.triptune.global.response.enums.ErrorCode;
+import com.triptune.global.message.ErrorCode;
 import com.triptune.global.response.pagination.ApiPageResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

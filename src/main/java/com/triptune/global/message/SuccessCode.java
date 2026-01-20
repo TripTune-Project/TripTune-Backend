@@ -1,4 +1,4 @@
-package com.triptune.global.response.enums;
+package com.triptune.global.message;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

@@ -3,7 +3,7 @@ package com.triptune.email.service;
 import com.triptune.email.EmailTest;
 import com.triptune.email.dto.request.VerifyAuthRequest;
 import com.triptune.email.exception.EmailVerifyException;
-import com.triptune.global.response.enums.ErrorCode;
+import com.triptune.global.message.ErrorCode;
 import com.triptune.member.repository.MemberRepository;
 import com.triptune.global.redis.RedisService;
 import org.junit.jupiter.api.DisplayName;

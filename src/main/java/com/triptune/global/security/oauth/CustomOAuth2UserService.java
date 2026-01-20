@@ -1,6 +1,6 @@
 package com.triptune.global.security.oauth;
 
-import com.triptune.global.response.enums.ErrorCode;
+import com.triptune.global.message.ErrorCode;
 import com.triptune.global.exception.DataExistException;
 import com.triptune.global.security.CustomUserDetails;
 import com.triptune.global.security.oauth.exception.OAuth2Exception;
@@ -11,7 +11,6 @@ import com.triptune.global.security.jwt.JwtUtils;
 import com.triptune.global.util.NicknameGenerator;
 import com.triptune.member.entity.Member;
 import com.triptune.member.entity.SocialMember;
-import com.triptune.member.enums.JoinType;
 import com.triptune.member.repository.MemberRepository;
 import com.triptune.member.repository.SocialMemberRepository;
 import com.triptune.profile.entity.ProfileImage;

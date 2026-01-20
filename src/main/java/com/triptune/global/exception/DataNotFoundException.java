@@ -1,8 +1,6 @@
 package com.triptune.global.exception;
 
-import com.triptune.global.response.enums.ErrorCode;
-import lombok.Getter;
-import org.springframework.http.HttpStatus;
+import com.triptune.global.message.ErrorCode;
 
 public class DataNotFoundException extends BusinessException {
     public DataNotFoundException(ErrorCode errorCode) {

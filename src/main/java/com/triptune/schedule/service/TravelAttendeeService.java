@@ -1,6 +1,6 @@
 package com.triptune.schedule.service;
 
-import com.triptune.global.response.enums.ErrorCode;
+import com.triptune.global.message.ErrorCode;
 import com.triptune.global.exception.DataNotFoundException;
 import com.triptune.member.entity.Member;
 import com.triptune.member.repository.MemberRepository;

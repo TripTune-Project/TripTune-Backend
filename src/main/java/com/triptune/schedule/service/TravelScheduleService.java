@@ -20,7 +20,7 @@ import com.triptune.schedule.repository.TravelAttendeeRepository;
 import com.triptune.schedule.repository.TravelScheduleRepository;
 import com.triptune.travel.dto.response.PlaceResponse;
 import com.triptune.travel.repository.TravelPlaceRepository;
-import com.triptune.global.response.enums.ErrorCode;
+import com.triptune.global.message.ErrorCode;
 import com.triptune.global.exception.DataNotFoundException;
 import com.triptune.global.response.pagination.PageResponse;
 import com.triptune.global.response.pagination.SchedulePageResponse;

@@ -1,8 +1,8 @@
 package com.triptune.schedule.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.triptune.global.response.enums.ErrorCode;
-import com.triptune.global.response.enums.SuccessCode;
+import com.triptune.global.message.ErrorCode;
+import com.triptune.global.message.SuccessCode;
 import com.triptune.member.entity.Member;
 import com.triptune.member.repository.MemberRepository;
 import com.triptune.profile.entity.ProfileImage;
@@ -13,7 +13,6 @@ import com.triptune.schedule.dto.request.AttendeeRequest;
 import com.triptune.schedule.entity.TravelAttendee;
 import com.triptune.schedule.entity.TravelSchedule;
 import com.triptune.schedule.enums.AttendeePermission;
-import com.triptune.schedule.enums.AttendeeRole;
 import com.triptune.schedule.repository.TravelAttendeeRepository;
 import com.triptune.schedule.repository.TravelScheduleRepository;
 import org.junit.jupiter.api.BeforeEach;

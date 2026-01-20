@@ -1,7 +1,7 @@
 package com.triptune.travel.service;
 
 import com.triptune.bookmark.repository.BookmarkRepository;
-import com.triptune.global.response.enums.ErrorCode;
+import com.triptune.global.message.ErrorCode;
 import com.triptune.global.exception.DataNotFoundException;
 import com.triptune.global.util.PageUtils;
 import com.triptune.travel.dto.PlaceLocation;

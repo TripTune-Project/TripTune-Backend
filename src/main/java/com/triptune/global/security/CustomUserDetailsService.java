@@ -2,7 +2,7 @@ package com.triptune.global.security;
 
 import com.triptune.member.entity.Member;
 import com.triptune.member.repository.MemberRepository;
-import com.triptune.global.response.enums.ErrorCode;
+import com.triptune.global.message.ErrorCode;
 import com.triptune.global.exception.DataNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;

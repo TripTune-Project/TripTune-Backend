@@ -2,7 +2,7 @@ package com.triptune.member.controller;
 
 import com.triptune.bookmark.enums.BookmarkSortType;
 import com.triptune.email.dto.request.EmailRequest;
-import com.triptune.global.response.enums.ErrorCode;
+import com.triptune.global.message.ErrorCode;
 import com.triptune.global.security.CookieType;
 import com.triptune.global.security.jwt.exception.CustomJwtUnAuthorizedException;
 import com.triptune.global.exception.CustomNotValidException;

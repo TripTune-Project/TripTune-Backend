@@ -10,7 +10,7 @@ import com.triptune.profile.entity.ProfileImage;
 import com.triptune.travel.entity.TravelPlace;
 import com.triptune.travel.enums.ThemeType;
 import com.triptune.travel.repository.TravelPlaceRepository;
-import com.triptune.global.response.enums.ErrorCode;
+import com.triptune.global.message.ErrorCode;
 import com.triptune.global.exception.DataExistException;
 import com.triptune.global.exception.DataNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
