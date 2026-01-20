@@ -28,8 +28,7 @@ class BookmarkSortTypeTest {
         CustomIllegalArgumentException fail = assertThrows(CustomIllegalArgumentException.class,
                 () -> BookmarkSortType.determineSortType("fail"));
 
-        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.ILLEGAL_BOOKMARK_SORT_TYPE.getStatus());
-        assertThat(fail.getMessage()).isEqualTo(ErrorCode.ILLEGAL_BOOKMARK_SORT_TYPE.getMessage());
+        assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.ILLEGAL_BOOKMARK_SORT_TYPE);
 
     }
 

@@ -646,8 +646,7 @@ public class TravelServiceTest extends TravelTest {
                 () -> travelService.getTravelPlaceDetails(1000L, member.getMemberId()));
 
         // then
-        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.DATA_NOT_FOUND.getStatus());
-        assertThat(fail.getMessage()).isEqualTo(ErrorCode.DATA_NOT_FOUND.getMessage());
+        assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.DATA_NOT_FOUND);
     }
 
 

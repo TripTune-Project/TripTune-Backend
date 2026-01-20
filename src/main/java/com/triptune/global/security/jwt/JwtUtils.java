@@ -1,28 +1,21 @@
 package com.triptune.global.security.jwt;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.triptune.global.redis.RedisService;
-import com.triptune.schedule.exception.CustomJwtUnAuthorizedChatException;
+import com.triptune.schedule.exception.chat.CustomJwtUnAuthorizedChatException;
 import com.triptune.global.response.enums.ErrorCode;
-import com.triptune.global.security.exception.CustomJwtUnAuthorizedException;
-import com.triptune.global.response.ErrorResponse;
+import com.triptune.global.security.jwt.exception.CustomJwtUnAuthorizedException;
 import com.triptune.global.security.CustomUserDetailsService;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
-import java.io.IOException;
-import java.nio.charset.Charset;
 import java.security.Key;
 import java.util.Date;
 

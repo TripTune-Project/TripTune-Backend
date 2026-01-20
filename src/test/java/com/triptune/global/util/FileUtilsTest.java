@@ -37,8 +37,7 @@ class FileUtilsTest {
                 () -> FileUtils.getExtension(fileName));
 
         // then
-        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.INVALID_EXTENSION.getStatus());
-        assertThat(fail.getMessage()).isEqualTo(ErrorCode.INVALID_EXTENSION.getMessage());
+        assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.INVALID_EXTENSION);
     }
 
     @ParameterizedTest

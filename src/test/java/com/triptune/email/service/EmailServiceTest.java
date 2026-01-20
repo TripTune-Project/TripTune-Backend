@@ -56,8 +56,7 @@ public class EmailServiceTest extends EmailTest {
         EmailVerifyException fail = assertThrows(EmailVerifyException.class, () -> emailService.verifyAuthCode(request));
 
         // then
-        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.INVALID_VERIFIED_EMAIL.getStatus());
-        assertThat(fail.getMessage()).isEqualTo(ErrorCode.INVALID_VERIFIED_EMAIL.getMessage());
+        assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.INVALID_VERIFIED_EMAIL);
     }
 
     @Test
@@ -72,8 +71,7 @@ public class EmailServiceTest extends EmailTest {
         EmailVerifyException fail = assertThrows(EmailVerifyException.class, () -> emailService.verifyAuthCode(request));
 
         // then
-        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.INCORRECT_VERIFIED_EMAIL.getStatus());
-        assertThat(fail.getMessage()).isEqualTo(ErrorCode.INCORRECT_VERIFIED_EMAIL.getMessage());
+        assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.INCORRECT_VERIFIED_EMAIL);
     }
 
 

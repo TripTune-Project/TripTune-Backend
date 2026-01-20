@@ -11,14 +11,12 @@ import com.triptune.schedule.entity.ChatMessage;
 import com.triptune.schedule.entity.TravelAttendee;
 import com.triptune.schedule.entity.TravelSchedule;
 import com.triptune.schedule.enums.AttendeePermission;
-import com.triptune.schedule.enums.AttendeeRole;
-import com.triptune.schedule.exception.ForbiddenChatException;
+import com.triptune.schedule.exception.chat.ForbiddenChatException;
 import com.triptune.schedule.repository.ChatMessageRepository;
 import com.triptune.schedule.repository.TravelAttendeeRepository;
 import com.triptune.schedule.repository.TravelScheduleRepository;
 import com.triptune.global.response.enums.ErrorCode;
 import com.triptune.global.util.PageUtils;
-import org.assertj.core.groups.Tuple;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -440,8 +438,7 @@ class ChatMessageServiceTest extends ScheduleTest {
         ForbiddenChatException fail = assertThrows(ForbiddenChatException.class, () -> chatMessageService.sendChatMessage(request));
 
         // then
-        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.FORBIDDEN_CHAT_ATTENDEE.getStatus());
-        assertThat(fail.getMessage()).isEqualTo(ErrorCode.FORBIDDEN_CHAT_ATTENDEE.getMessage());
+        assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.FORBIDDEN_CHAT_ATTENDEE);
     }
 
     @Test
@@ -463,8 +460,7 @@ class ChatMessageServiceTest extends ScheduleTest {
         // when
         ForbiddenChatException fail = assertThrows(ForbiddenChatException.class, () -> chatMessageService.sendChatMessage(request));
         // then
-        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.FORBIDDEN_CHAT_ATTENDEE.getStatus());
-        assertThat(fail.getMessage()).isEqualTo(ErrorCode.FORBIDDEN_CHAT_ATTENDEE.getMessage());
+        assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.FORBIDDEN_CHAT_ATTENDEE);
     }
 
 

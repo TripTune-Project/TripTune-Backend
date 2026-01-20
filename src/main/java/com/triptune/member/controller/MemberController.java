@@ -4,7 +4,7 @@ import com.triptune.bookmark.enums.BookmarkSortType;
 import com.triptune.email.dto.request.EmailRequest;
 import com.triptune.global.response.enums.ErrorCode;
 import com.triptune.global.security.CookieType;
-import com.triptune.global.security.exception.CustomJwtUnAuthorizedException;
+import com.triptune.global.security.jwt.exception.CustomJwtUnAuthorizedException;
 import com.triptune.global.exception.CustomNotValidException;
 import com.triptune.global.response.ApiResponse;
 import com.triptune.global.response.pagination.ApiPageResponse;
@@ -23,7 +23,6 @@ import io.jsonwebtoken.ExpiredJwtException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.mail.MessagingException;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -32,8 +31,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.stream.Stream;
 
 @Slf4j
 @RestController

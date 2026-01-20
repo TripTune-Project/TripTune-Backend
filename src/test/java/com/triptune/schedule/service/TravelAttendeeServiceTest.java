@@ -147,8 +147,7 @@ public class TravelAttendeeServiceTest extends ScheduleTest {
         DataNotFoundException fail = assertThrows(DataNotFoundException.class,
                 () ->  travelAttendeeService.createAttendee(1000L, 1L, attendeeRequest));
 
-        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.SCHEDULE_NOT_FOUND.getStatus());
-        assertThat(fail.getMessage()).isEqualTo(ErrorCode.SCHEDULE_NOT_FOUND.getMessage());
+        assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.SCHEDULE_NOT_FOUND);
 
     }
 
@@ -165,8 +164,7 @@ public class TravelAttendeeServiceTest extends ScheduleTest {
         ConflictAttendeeException fail = assertThrows(ConflictAttendeeException.class,
                 () ->  travelAttendeeService.createAttendee(1L, 1L, attendeeRequest));
 
-        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.OVER_ATTENDEE_NUMBER.getStatus());
-        assertThat(fail.getMessage()).isEqualTo(ErrorCode.OVER_ATTENDEE_NUMBER.getMessage());
+        assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.OVER_ATTENDEE_NUMBER);
 
     }
 
@@ -185,8 +183,7 @@ public class TravelAttendeeServiceTest extends ScheduleTest {
         ForbiddenAttendeeException fail = assertThrows(ForbiddenAttendeeException.class,
                 () ->  travelAttendeeService.createAttendee(1L, 1L, attendeeRequest));
 
-        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.FORBIDDEN_SHARE_ATTENDEE.getStatus());
-        assertThat(fail.getMessage()).isEqualTo(ErrorCode.FORBIDDEN_SHARE_ATTENDEE.getMessage());
+        assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.FORBIDDEN_SHARE_ATTENDEE);
 
     }
 
@@ -206,8 +203,7 @@ public class TravelAttendeeServiceTest extends ScheduleTest {
         DataNotFoundException fail = assertThrows(DataNotFoundException.class,
                 () ->  travelAttendeeService.createAttendee(1L, 1L, attendeeRequest));
 
-        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.MEMBER_NOT_FOUND.getStatus());
-        assertThat(fail.getMessage()).isEqualTo(ErrorCode.MEMBER_NOT_FOUND.getMessage());
+        assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.MEMBER_NOT_FOUND);
 
     }
 
@@ -232,8 +228,7 @@ public class TravelAttendeeServiceTest extends ScheduleTest {
         ConflictAttendeeException fail = assertThrows(ConflictAttendeeException.class,
                 () ->  travelAttendeeService.createAttendee(1L, 1L, attendeeRequest));
 
-        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.ALREADY_ATTENDEE.getStatus());
-        assertThat(fail.getMessage()).isEqualTo(ErrorCode.ALREADY_ATTENDEE.getMessage());
+        assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.ALREADY_ATTENDEE);
 
     }
 
@@ -258,8 +253,7 @@ public class TravelAttendeeServiceTest extends ScheduleTest {
                 () -> travelAttendeeService.validateAttendeeCount(1L));
 
         // then
-        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.OVER_ATTENDEE_NUMBER.getStatus());
-        assertThat(fail.getMessage()).isEqualTo(ErrorCode.OVER_ATTENDEE_NUMBER.getMessage());
+        assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.OVER_ATTENDEE_NUMBER);
     }
 
     @Test
@@ -285,8 +279,7 @@ public class TravelAttendeeServiceTest extends ScheduleTest {
                 () -> travelAttendeeService.validateAuthor(1L, 1L, ErrorCode.FORBIDDEN_ACCESS_SCHEDULE));
 
         // then
-        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.FORBIDDEN_ACCESS_SCHEDULE.getStatus());
-        assertThat(fail.getMessage()).isEqualTo(ErrorCode.FORBIDDEN_ACCESS_SCHEDULE.getMessage());
+        assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.FORBIDDEN_ACCESS_SCHEDULE);
     }
 
     @Test
@@ -310,8 +303,7 @@ public class TravelAttendeeServiceTest extends ScheduleTest {
                 () -> travelAttendeeService.validateAttendeeAlreadyExists(1L, 1L));
 
         // then
-        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.ALREADY_ATTENDEE.getStatus());
-        assertThat(fail.getMessage()).isEqualTo(ErrorCode.ALREADY_ATTENDEE.getMessage());
+        assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.ALREADY_ATTENDEE);
     }
 
     @Test
@@ -363,8 +355,7 @@ public class TravelAttendeeServiceTest extends ScheduleTest {
         );
 
         // then
-        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.FORBIDDEN_UPDATE_ATTENDEE_PERMISSION.getStatus());
-        assertThat(fail.getMessage()).isEqualTo(ErrorCode.FORBIDDEN_UPDATE_ATTENDEE_PERMISSION.getMessage());
+        assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.FORBIDDEN_UPDATE_ATTENDEE_PERMISSION);
     }
 
     @Test
@@ -389,8 +380,7 @@ public class TravelAttendeeServiceTest extends ScheduleTest {
         );
 
         // then
-        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.ATTENDEE_NOT_FOUND.getStatus());
-        assertThat(fail.getMessage()).isEqualTo(ErrorCode.ATTENDEE_NOT_FOUND.getMessage());
+        assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.ATTENDEE_NOT_FOUND);
     }
 
 
@@ -419,8 +409,7 @@ public class TravelAttendeeServiceTest extends ScheduleTest {
         );
 
         // then
-        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.FORBIDDEN_UPDATE_AUTHOR_PERMISSION.getStatus());
-        assertThat(fail.getMessage()).isEqualTo(ErrorCode.FORBIDDEN_UPDATE_AUTHOR_PERMISSION.getMessage());
+        assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.FORBIDDEN_UPDATE_AUTHOR_PERMISSION);
     }
 
 
@@ -453,8 +442,7 @@ public class TravelAttendeeServiceTest extends ScheduleTest {
                 () -> travelAttendeeService.leaveAttendee(1L, 1L));
 
         // then
-        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.FORBIDDEN_ACCESS_SCHEDULE.getStatus());
-        assertThat(fail.getMessage()).isEqualTo(ErrorCode.FORBIDDEN_ACCESS_SCHEDULE.getMessage());
+        assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.FORBIDDEN_ACCESS_SCHEDULE);
     }
 
     @Test
@@ -471,8 +459,7 @@ public class TravelAttendeeServiceTest extends ScheduleTest {
                 () -> travelAttendeeService.leaveAttendee(1L, 1L));
 
         // then
-        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.FORBIDDEN_LEAVE_AUTHOR.getStatus());
-        assertThat(fail.getMessage()).isEqualTo(ErrorCode.FORBIDDEN_LEAVE_AUTHOR.getMessage());
+        assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.FORBIDDEN_LEAVE_AUTHOR);
     }
 
     @Test
@@ -513,8 +500,7 @@ public class TravelAttendeeServiceTest extends ScheduleTest {
         );
 
         // then
-        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.FORBIDDEN_REMOVE_ATTENDEE.getStatus());
-        assertThat(fail.getMessage()).isEqualTo(ErrorCode.FORBIDDEN_REMOVE_ATTENDEE.getMessage());
+        assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.FORBIDDEN_REMOVE_ATTENDEE);
     }
 
     @Test
@@ -534,8 +520,7 @@ public class TravelAttendeeServiceTest extends ScheduleTest {
         );
 
         // then
-        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.ATTENDEE_NOT_FOUND.getStatus());
-        assertThat(fail.getMessage()).isEqualTo(ErrorCode.ATTENDEE_NOT_FOUND.getMessage());
+        assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.ATTENDEE_NOT_FOUND);
     }
 
     @Test
@@ -559,8 +544,7 @@ public class TravelAttendeeServiceTest extends ScheduleTest {
         );
 
         // then
-        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.FORBIDDEN_LEAVE_AUTHOR.getStatus());
-        assertThat(fail.getMessage()).isEqualTo(ErrorCode.FORBIDDEN_LEAVE_AUTHOR.getMessage());
+        assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.FORBIDDEN_LEAVE_AUTHOR);
     }
 
 }
