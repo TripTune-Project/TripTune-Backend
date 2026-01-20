@@ -4,7 +4,7 @@ import com.triptune.email.dto.request.EmailRequest;
 import com.triptune.email.dto.request.EmailTemplateRequest;
 import com.triptune.email.dto.request.VerifyAuthRequest;
 import com.triptune.email.exception.EmailVerifyException;
-import com.triptune.global.response.enums.ErrorCode;
+import com.triptune.global.message.ErrorCode;
 import com.triptune.global.exception.DataExistException;
 import com.triptune.member.dto.request.FindPasswordRequest;
 import com.triptune.global.redis.eums.RedisKeyType;

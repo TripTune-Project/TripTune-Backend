@@ -9,7 +9,7 @@ import com.triptune.global.exception.DataExistException;
 import com.triptune.global.exception.DataNotFoundException;
 import com.triptune.global.redis.RedisService;
 import com.triptune.global.redis.eums.RedisKeyType;
-import com.triptune.global.response.enums.ErrorCode;
+import com.triptune.global.message.ErrorCode;
 import com.triptune.global.security.jwt.exception.CustomJwtUnAuthorizedException;
 import com.triptune.global.security.jwt.JwtUtils;
 import com.triptune.global.util.PageUtils;

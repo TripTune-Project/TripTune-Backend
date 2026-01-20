@@ -1,7 +1,7 @@
 package com.triptune.global.util;
 
 import com.amazonaws.services.s3.model.ObjectMetadata;
-import com.triptune.global.response.enums.ErrorCode;
+import com.triptune.global.message.ErrorCode;
 import com.triptune.global.exception.FileBadRequestException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.tika.Tika;

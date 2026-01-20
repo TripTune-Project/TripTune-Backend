@@ -1,6 +1,6 @@
 package com.triptune.global.response;
 
-import com.triptune.global.response.enums.SuccessCode;
+import com.triptune.global.message.SuccessCode;
 import lombok.Getter;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

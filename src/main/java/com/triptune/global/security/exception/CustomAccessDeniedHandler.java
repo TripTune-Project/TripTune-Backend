@@ -1,6 +1,6 @@
 package com.triptune.global.security.exception;
 
-import com.triptune.global.response.enums.ErrorCode;
+import com.triptune.global.message.ErrorCode;
 import com.triptune.global.security.jwt.JwtErrorResponseWriter;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

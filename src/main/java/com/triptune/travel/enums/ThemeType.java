@@ -1,6 +1,6 @@
 package com.triptune.travel.enums;
 
-import com.triptune.global.response.enums.ErrorCode;
+import com.triptune.global.message.ErrorCode;
 import com.triptune.global.exception.CustomIllegalArgumentException;
 import lombok.AllArgsConstructor;
 import lombok.Getter;

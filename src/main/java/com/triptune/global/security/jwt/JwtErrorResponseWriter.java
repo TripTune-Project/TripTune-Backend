@@ -2,7 +2,7 @@ package com.triptune.global.security.jwt;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.triptune.global.response.ErrorResponse;
-import com.triptune.global.response.enums.ErrorCode;
+import com.triptune.global.message.ErrorCode;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;

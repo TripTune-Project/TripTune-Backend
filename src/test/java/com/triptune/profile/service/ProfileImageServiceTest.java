@@ -4,7 +4,7 @@ import com.triptune.member.entity.Member;
 import com.triptune.profile.ProfileImageTest;
 import com.triptune.profile.entity.ProfileImage;
 import com.triptune.profile.repository.ProfileImageRepository;
-import com.triptune.global.response.enums.ErrorCode;
+import com.triptune.global.message.ErrorCode;
 import com.triptune.global.exception.DataNotFoundException;
 import com.triptune.global.exception.FileBadRequestException;
 import com.triptune.profile.properties.DefaultProfileImageProperties;
