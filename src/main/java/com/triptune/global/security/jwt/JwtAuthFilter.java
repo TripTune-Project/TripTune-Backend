@@ -1,7 +1,6 @@
 package com.triptune.global.security.jwt;
 
-import com.triptune.global.security.config.SecurityConstants;
-import com.triptune.global.security.exception.CustomJwtUnAuthorizedException;
+import com.triptune.global.security.jwt.exception.CustomJwtUnAuthorizedException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -44,7 +43,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
         } catch (CustomJwtUnAuthorizedException ex){
             log.error("CustomJwtUnAuthorizedException at {}: {}", request.getRequestURI(),  ex.getMessage());
-            jwtErrorResponseWriter.writeJwtException(request, response, ex.getErrorCode());
+            jwtErrorResponseWriter.write(response, ex.getErrorCode());
         }
 
     }

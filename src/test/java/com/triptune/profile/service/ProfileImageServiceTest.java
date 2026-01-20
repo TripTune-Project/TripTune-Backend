@@ -71,8 +71,7 @@ public class ProfileImageServiceTest extends ProfileImageTest {
                 () -> profileImageService.updateProfileImage(1L, mockMultipartFile));
 
         // then
-        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.INVALID_EXTENSION.getStatus());
-        assertThat(fail.getMessage()).isEqualTo(ErrorCode.INVALID_EXTENSION.getMessage());
+        assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.INVALID_EXTENSION);
     }
 
     @Test
@@ -89,8 +88,7 @@ public class ProfileImageServiceTest extends ProfileImageTest {
                 () -> profileImageService.updateProfileImage(1L, mockMultipartFile));
 
         // then
-        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.PROFILE_IMAGE_NOT_FOUND.getStatus());
-        assertThat(fail.getMessage()).isEqualTo(ErrorCode.PROFILE_IMAGE_NOT_FOUND.getMessage());
+        assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.PROFILE_IMAGE_NOT_FOUND);
     }
 
 

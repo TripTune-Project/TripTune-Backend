@@ -6,11 +6,9 @@ import com.triptune.common.entity.*;
 import com.triptune.email.dto.request.EmailRequest;
 import com.triptune.email.exception.EmailVerifyException;
 import com.triptune.email.service.EmailService;
-import com.triptune.global.util.CookieUtils;
 import com.triptune.member.MemberTest;
 import com.triptune.member.dto.LoginResult;
 import com.triptune.member.dto.request.*;
-import com.triptune.member.dto.response.LoginResponse;
 import com.triptune.member.dto.response.MemberInfoResponse;
 import com.triptune.member.dto.response.RefreshTokenResponse;
 import com.triptune.member.entity.Member;
@@ -32,7 +30,7 @@ import com.triptune.schedule.repository.TravelScheduleRepository;
 import com.triptune.travel.dto.response.PlaceBookmarkResponse;
 import com.triptune.travel.entity.TravelPlace;
 import com.triptune.global.response.enums.ErrorCode;
-import com.triptune.global.security.exception.CustomJwtUnAuthorizedException;
+import com.triptune.global.security.jwt.exception.CustomJwtUnAuthorizedException;
 import com.triptune.global.exception.DataExistException;
 import com.triptune.global.exception.DataNotFoundException;
 import com.triptune.global.security.jwt.JwtUtils;
@@ -40,14 +38,12 @@ import com.triptune.global.util.PageUtils;
 import com.triptune.global.redis.RedisService;
 import com.triptune.travel.enums.ThemeType;
 import jakarta.mail.MessagingException;
-import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -149,8 +145,7 @@ public class MemberServiceTest extends MemberTest {
 
         // then
         verify(memberRepository, times(0)).save(any(Member.class));
-        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.ALREADY_EXISTED_EMAIL.getStatus());
-        assertThat(fail.getMessage()).isEqualTo(ErrorCode.ALREADY_EXISTED_EMAIL.getMessage());
+        assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.ALREADY_EXISTED_EMAIL);
     }
 
     @Test
@@ -172,8 +167,7 @@ public class MemberServiceTest extends MemberTest {
 
         // then
         verify(memberRepository, times(0)).save(any());
-        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.ALREADY_EXISTED_NICKNAME.getStatus());
-        assertThat(fail.getMessage()).isEqualTo(ErrorCode.ALREADY_EXISTED_NICKNAME.getMessage());
+        assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.ALREADY_EXISTED_NICKNAME);
     }
 
 
@@ -197,8 +191,7 @@ public class MemberServiceTest extends MemberTest {
         EmailVerifyException fail = assertThrows(EmailVerifyException.class, () -> memberService.join(request));
 
         // then
-        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.NOT_VERIFIED_EMAIL.getStatus());
-        assertThat(fail.getMessage()).isEqualTo(ErrorCode.NOT_VERIFIED_EMAIL.getMessage());
+        assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.NOT_VERIFIED_EMAIL);
 
     }
 
@@ -222,8 +215,7 @@ public class MemberServiceTest extends MemberTest {
         EmailVerifyException fail = assertThrows(EmailVerifyException.class, () -> memberService.validateVerifiedEmail("member@email.com"));
 
         // then
-        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.NOT_VERIFIED_EMAIL.getStatus());
-        assertThat(fail.getMessage()).isEqualTo(ErrorCode.NOT_VERIFIED_EMAIL.getMessage());
+        assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.NOT_VERIFIED_EMAIL);
     }
 
 
@@ -286,8 +278,7 @@ public class MemberServiceTest extends MemberTest {
                 () -> memberService.login(loginRequest));
 
         // then
-        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.FAILED_LOGIN.getStatus());
-        assertThat(fail.getMessage()).isEqualTo(ErrorCode.FAILED_LOGIN.getMessage());
+        assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.FAILED_LOGIN);
     }
 
     @Test
@@ -307,8 +298,7 @@ public class MemberServiceTest extends MemberTest {
                 () -> memberService.login(loginRequest));
 
         // then
-        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.FAILED_LOGIN.getStatus());
-        assertThat(fail.getMessage()).isEqualTo(ErrorCode.FAILED_LOGIN.getMessage());
+        assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.FAILED_LOGIN);
     }
 
     @Test
@@ -383,8 +373,7 @@ public class MemberServiceTest extends MemberTest {
 
 
         // then
-        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.MEMBER_NOT_FOUND.getStatus());
-        assertThat(fail.getMessage()).isEqualTo(ErrorCode.MEMBER_NOT_FOUND.getMessage());
+        assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.MEMBER_NOT_FOUND);
 
     }
 
@@ -493,8 +482,7 @@ public class MemberServiceTest extends MemberTest {
         DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> memberService.findPassword(findPasswordRequest));
 
         // then
-        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.MEMBER_NOT_FOUND.getStatus());
-        assertThat(fail.getMessage()).isEqualTo(ErrorCode.MEMBER_NOT_FOUND.getMessage());
+        assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.MEMBER_NOT_FOUND);
         verify(emailService, times(0)).sendResetPasswordEmail(findPasswordRequest);
     }
 
@@ -582,8 +570,7 @@ public class MemberServiceTest extends MemberTest {
                 () -> memberService.resetPassword(request));
 
         // then
-        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.INVALID_CHANGE_PASSWORD.getStatus());
-        assertThat(fail.getMessage()).isEqualTo(ErrorCode.INVALID_CHANGE_PASSWORD.getMessage());
+        assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.INVALID_CHANGE_PASSWORD);
     }
 
     @Test
@@ -600,8 +587,7 @@ public class MemberServiceTest extends MemberTest {
                 () -> memberService.resetPassword(request));
 
         // then
-        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.MEMBER_NOT_FOUND.getStatus());
-        assertThat(fail.getMessage()).isEqualTo(ErrorCode.MEMBER_NOT_FOUND.getMessage());
+        assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.MEMBER_NOT_FOUND);
     }
 
 
@@ -666,8 +652,7 @@ public class MemberServiceTest extends MemberTest {
                 () -> memberService.changePassword(1000L, request));
 
         // then
-        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.MEMBER_NOT_FOUND.getStatus());
-        assertThat(fail.getMessage()).isEqualTo(ErrorCode.MEMBER_NOT_FOUND.getMessage());
+        assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.MEMBER_NOT_FOUND);
     }
 
     @Test
@@ -686,8 +671,7 @@ public class MemberServiceTest extends MemberTest {
                 () -> memberService.changePassword(1L, request));
 
         // then
-        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.SOCIAL_MEMBER_PASSWORD_CHANGE_NOT_ALLOWED.getStatus());
-        assertThat(fail.getMessage()).isEqualTo(ErrorCode.SOCIAL_MEMBER_PASSWORD_CHANGE_NOT_ALLOWED.getMessage());
+        assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.SOCIAL_MEMBER_PASSWORD_CHANGE_NOT_ALLOWED);
 
     }
 
@@ -708,8 +692,7 @@ public class MemberServiceTest extends MemberTest {
                 () -> memberService.changePassword(1L, request));
 
         // then
-        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.INCORRECT_PASSWORD.getStatus());
-        assertThat(fail.getMessage()).isEqualTo(ErrorCode.INCORRECT_PASSWORD.getMessage());
+        assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.INCORRECT_PASSWORD);
     }
 
     @Test
@@ -778,8 +761,7 @@ public class MemberServiceTest extends MemberTest {
                 () -> memberService.getMemberInfo(1000L));
 
         // then
-        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.MEMBER_NOT_FOUND.getStatus());
-        assertThat(fail.getMessage()).isEqualTo(ErrorCode.MEMBER_NOT_FOUND.getMessage());
+        assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.MEMBER_NOT_FOUND);
     }
 
     @Test
@@ -858,8 +840,7 @@ public class MemberServiceTest extends MemberTest {
                 () -> memberService.changeNickname(member.getMemberId(), request));
 
         // then
-        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.ALREADY_EXISTED_NICKNAME.getStatus());
-        assertThat(fail.getMessage()).isEqualTo(ErrorCode.ALREADY_EXISTED_NICKNAME.getMessage());
+        assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.ALREADY_EXISTED_NICKNAME);
     }
 
     @Test
@@ -876,8 +857,7 @@ public class MemberServiceTest extends MemberTest {
                 () -> memberService.changeNickname(1000L, request));
 
         // then
-        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.MEMBER_NOT_FOUND.getStatus());
-        assertThat(fail.getMessage()).isEqualTo(ErrorCode.MEMBER_NOT_FOUND.getMessage());
+        assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.MEMBER_NOT_FOUND);
     }
 
 
@@ -895,8 +875,7 @@ public class MemberServiceTest extends MemberTest {
         when(redisService.getEmailData(any(), anyString())).thenReturn("true");
 
         // when
-        assertThatCode(() -> memberService.changeEmail(1L, emailRequest))
-                .doesNotThrowAnyException();
+        assertDoesNotThrow(() -> memberService.changeEmail(1L, emailRequest));
 
         // then
         assertThat(member.getJoinType()).isEqualTo(JoinType.NATIVE);
@@ -963,8 +942,7 @@ public class MemberServiceTest extends MemberTest {
                 () -> memberService.changeEmail(member.getMemberId(), emailRequest));
 
         // then
-        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.ALREADY_EXISTED_EMAIL.getStatus());
-        assertThat(fail.getMessage()).isEqualTo(ErrorCode.ALREADY_EXISTED_EMAIL.getMessage());
+        assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.ALREADY_EXISTED_EMAIL);
 
     }
 
@@ -985,8 +963,7 @@ public class MemberServiceTest extends MemberTest {
                 () -> memberService.changeEmail(member.getMemberId(), emailRequest));
 
         // then
-        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.NOT_VERIFIED_EMAIL.getStatus());
-        assertThat(fail.getMessage()).isEqualTo(ErrorCode.NOT_VERIFIED_EMAIL.getMessage());
+        assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.NOT_VERIFIED_EMAIL);
     }
 
     @Test
@@ -1005,8 +982,7 @@ public class MemberServiceTest extends MemberTest {
                 () -> memberService.changeEmail(1000L, emailRequest));
 
         // then
-        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.MEMBER_NOT_FOUND.getStatus());
-        assertThat(fail.getMessage()).isEqualTo(ErrorCode.MEMBER_NOT_FOUND.getMessage());
+        assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.MEMBER_NOT_FOUND);
     }
 
     @Test
@@ -1261,8 +1237,7 @@ public class MemberServiceTest extends MemberTest {
                 () -> memberService.deactivateMember(request, 1000L, accessToken));
 
         // then
-        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.MEMBER_NOT_FOUND.getStatus());
-        assertThat(fail.getMessage()).isEqualTo(ErrorCode.MEMBER_NOT_FOUND.getMessage());
+        assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.MEMBER_NOT_FOUND);
 
     }
 
@@ -1285,8 +1260,7 @@ public class MemberServiceTest extends MemberTest {
                 () -> memberService.deactivateMember(request, 1L, accessToken));
 
         // then
-        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.SOCIAL_MEMBER_DEACTIVATE_NOT_ALLOWED.getStatus());
-        assertThat(fail.getMessage()).isEqualTo(ErrorCode.SOCIAL_MEMBER_DEACTIVATE_NOT_ALLOWED.getMessage());
+        assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.SOCIAL_MEMBER_DEACTIVATE_NOT_ALLOWED);
 
     }
 
@@ -1308,9 +1282,7 @@ public class MemberServiceTest extends MemberTest {
                 () -> memberService.deactivateMember(request, 1L, accessToken));
 
         // then
-        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.INCORRECT_PASSWORD.getStatus());
-        assertThat(fail.getMessage()).isEqualTo(ErrorCode.INCORRECT_PASSWORD.getMessage());
-
+        assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.INCORRECT_PASSWORD);
     }
 
 

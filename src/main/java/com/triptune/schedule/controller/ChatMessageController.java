@@ -2,7 +2,7 @@ package com.triptune.schedule.controller;
 
 import com.triptune.schedule.dto.request.ChatMessageRequest;
 import com.triptune.schedule.dto.response.ChatResponse;
-import com.triptune.schedule.exception.BadRequestChatException;
+import com.triptune.schedule.exception.chat.BadRequestChatException;
 import com.triptune.schedule.service.ChatMessageService;
 import com.triptune.global.aop.AttendeeCheck;
 import com.triptune.global.response.enums.ErrorCode;

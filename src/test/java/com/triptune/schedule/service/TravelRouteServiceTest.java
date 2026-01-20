@@ -226,8 +226,7 @@ public class TravelRouteServiceTest extends ScheduleTest {
                 () -> travelRouteService.createLastRoute(0L, member1.getMemberId(), request));
 
         // then
-        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.SCHEDULE_NOT_FOUND.getStatus());
-        assertThat(fail.getMessage()).isEqualTo(ErrorCode.SCHEDULE_NOT_FOUND.getMessage());
+        assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.SCHEDULE_NOT_FOUND);
 
     }
 
@@ -247,8 +246,7 @@ public class TravelRouteServiceTest extends ScheduleTest {
                 () -> travelRouteService.createLastRoute(schedule.getScheduleId(), 0L, request));
 
         // then
-        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.ATTENDEE_NOT_FOUND.getStatus());
-        assertThat(fail.getMessage()).isEqualTo(ErrorCode.ATTENDEE_NOT_FOUND.getMessage());
+        assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.ATTENDEE_NOT_FOUND);
 
     }
 
@@ -267,8 +265,7 @@ public class TravelRouteServiceTest extends ScheduleTest {
                 () -> travelRouteService.createLastRoute(1L, 2L, request));
 
         // then
-        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.FORBIDDEN_EDIT_SCHEDULE.getStatus());
-        assertThat(fail.getMessage()).isEqualTo(ErrorCode.FORBIDDEN_EDIT_SCHEDULE.getMessage());
+        assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.FORBIDDEN_EDIT_SCHEDULE);
 
     }
 
@@ -289,8 +286,7 @@ public class TravelRouteServiceTest extends ScheduleTest {
                 () -> travelRouteService.createLastRoute(1L, 1L, request));
 
         // then
-        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.PLACE_NOT_FOUND.getStatus());
-        assertThat(fail.getMessage()).isEqualTo(ErrorCode.PLACE_NOT_FOUND.getMessage());
+        assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.PLACE_NOT_FOUND);
 
     }
 
@@ -346,8 +342,7 @@ public class TravelRouteServiceTest extends ScheduleTest {
                 () -> travelRouteService.updateTravelRouteInSchedule(schedule, routes));
 
         // then
-        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.PLACE_NOT_FOUND.getStatus());
-        assertThat(fail.getMessage()).isEqualTo(ErrorCode.PLACE_NOT_FOUND.getMessage());
+        assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.PLACE_NOT_FOUND);
     }
 
 }

@@ -102,8 +102,7 @@ public class BookmarkServiceTest extends BookmarkTest {
                 () -> bookmarkService.createBookmark(1L, request));
 
         // then
-        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.ALREADY_EXISTED_BOOKMARK.getStatus());
-        assertThat(fail.getMessage()).isEqualTo(ErrorCode.ALREADY_EXISTED_BOOKMARK.getMessage());
+        assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.ALREADY_EXISTED_BOOKMARK);
     }
 
     @Test
@@ -121,8 +120,7 @@ public class BookmarkServiceTest extends BookmarkTest {
                 () -> bookmarkService.createBookmark(1000L, request));
 
         // then
-        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.MEMBER_NOT_FOUND.getStatus());
-        assertThat(fail.getMessage()).isEqualTo(ErrorCode.MEMBER_NOT_FOUND.getMessage());
+        assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.MEMBER_NOT_FOUND);
     }
 
     @Test
@@ -141,8 +139,7 @@ public class BookmarkServiceTest extends BookmarkTest {
                 () -> bookmarkService.createBookmark(1L, request));
 
         // then
-        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.PLACE_NOT_FOUND.getStatus());
-        assertThat(fail.getMessage()).isEqualTo(ErrorCode.PLACE_NOT_FOUND.getMessage());
+        assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.PLACE_NOT_FOUND);
 
     }
 
@@ -174,8 +171,7 @@ public class BookmarkServiceTest extends BookmarkTest {
                 () -> bookmarkService.deleteBookmark(1L, 1L));
 
         // then
-        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.BOOKMARK_NOT_FOUND.getStatus());
-        assertThat(fail.getMessage()).isEqualTo(ErrorCode.BOOKMARK_NOT_FOUND.getMessage());
+        assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.BOOKMARK_NOT_FOUND);
 
     }
 
@@ -191,8 +187,7 @@ public class BookmarkServiceTest extends BookmarkTest {
                 () -> bookmarkService.deleteBookmark(1L, 1000L));
 
         // then
-        assertThat(fail.getHttpStatus()).isEqualTo(ErrorCode.PLACE_NOT_FOUND.getStatus());
-        assertThat(fail.getMessage()).isEqualTo(ErrorCode.PLACE_NOT_FOUND.getMessage());
+        assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.PLACE_NOT_FOUND);
 
     }
 

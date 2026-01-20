@@ -2,12 +2,10 @@ package com.triptune.global.security.exception;
 
 import com.triptune.global.response.enums.ErrorCode;
 import com.triptune.global.security.jwt.JwtErrorResponseWriter;
-import com.triptune.global.security.jwt.JwtUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
@@ -27,7 +25,7 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
         log.error("401 CustomAuthenticationEntryPoint(미인증 접근 시도), URL: {}", request.getRequestURI());
         log.error("Header 의 Authorization {}", request.getHeader("Authorization") != null ? "존재함" : "존재하지 않음");
 
-        jwtErrorResponseWriter.writeJwtException(request, response, ErrorCode.UNAUTHORIZED_ACCESS);
+        jwtErrorResponseWriter.write(response, ErrorCode.UNAUTHORIZED_ACCESS);
 
     }
 }
