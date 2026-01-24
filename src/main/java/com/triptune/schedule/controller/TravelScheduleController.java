@@ -1,5 +1,9 @@
 package com.triptune.schedule.controller;
 
+import com.triptune.global.aop.AttendeeCheck;
+import com.triptune.global.response.ApiResponse;
+import com.triptune.global.response.page.PageResponse;
+import com.triptune.global.response.page.SchedulePageResponse;
 import com.triptune.schedule.dto.request.ScheduleCreateRequest;
 import com.triptune.schedule.dto.request.ScheduleUpdateRequest;
 import com.triptune.schedule.dto.response.OverviewScheduleResponse;
@@ -8,11 +12,6 @@ import com.triptune.schedule.dto.response.ScheduleDetailResponse;
 import com.triptune.schedule.dto.response.ScheduleInfoResponse;
 import com.triptune.schedule.enums.ScheduleSearchType;
 import com.triptune.schedule.service.TravelScheduleService;
-import com.triptune.global.aop.AttendeeCheck;
-import com.triptune.global.response.ApiResponse;
-import com.triptune.global.response.pagination.ApiPageResponse;
-import com.triptune.global.response.pagination.ApiSchedulePageResponse;
-import com.triptune.global.response.pagination.SchedulePageResponse;
 import com.triptune.travel.dto.response.PlaceResponse;
 import com.triptune.travel.service.TravelService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -33,34 +32,34 @@ public class TravelScheduleController {
 
     @GetMapping
     @Operation(summary = "전체 일정 목록 조회", description = "작성한 전체 일정을 조회합니다.")
-    public ApiSchedulePageResponse<ScheduleInfoResponse> getAllSchedules(@AuthenticationPrincipal(expression = "memberId") Long memberId,
+    public ApiResponse<SchedulePageResponse<ScheduleInfoResponse>> getAllSchedules(@AuthenticationPrincipal(expression = "memberId") Long memberId,
                                                                          @RequestParam(name = "page") int page){
         SchedulePageResponse<ScheduleInfoResponse> response = travelScheduleService.getAllSchedules(page, memberId);
 
-        return ApiSchedulePageResponse.dataResponse(response);
+        return ApiResponse.schedulePageResponse(response);
     }
 
     @GetMapping("/shared")
     @Operation(summary = "공유된 일정 목록 조회", description = "작성한 일정 중 공유된 일정을 조회합니다.")
-    public ApiSchedulePageResponse<ScheduleInfoResponse> getSharedSchedules(@AuthenticationPrincipal(expression = "memberId") Long memberId,
+    public ApiResponse<SchedulePageResponse<ScheduleInfoResponse>> getSharedSchedules(@AuthenticationPrincipal(expression = "memberId") Long memberId,
                                                                             @RequestParam(name = "page") int page){
         SchedulePageResponse<ScheduleInfoResponse> response = travelScheduleService.getSharedSchedules(page, memberId);
 
-        return ApiSchedulePageResponse.dataResponse(response);
+        return ApiResponse.schedulePageResponse(response);
     }
 
     @GetMapping("/edit")
     @Operation(summary = "수정 권한 있는 일정 목록 조회", description = "작성한 일정 중 수정 권한이 있는 일정을 필요 데이터로 구성해 조회합니다.")
-    public ApiPageResponse<OverviewScheduleResponse> getEnableEditSchedule(@AuthenticationPrincipal(expression = "memberId") Long memberId,
-                                                                           @RequestParam(name = "page") int page){
+    public ApiResponse<PageResponse<OverviewScheduleResponse>> getEnableEditSchedule(@AuthenticationPrincipal(expression = "memberId") Long memberId,
+                                                                                    @RequestParam(name = "page") int page){
         Page<OverviewScheduleResponse> response = travelScheduleService.getEnableEditSchedule(page, memberId);
 
-        return ApiPageResponse.dataResponse(response);
+        return ApiResponse.pageResponse(response);
     }
 
     @GetMapping("/search")
     @Operation(summary = "일정 검색", description = "작성한 전체 일정 중 검색합니다.")
-    public ApiSchedulePageResponse<ScheduleInfoResponse> searchSchedules(@AuthenticationPrincipal(expression = "memberId") Long memberId,
+    public ApiResponse<SchedulePageResponse<ScheduleInfoResponse>> searchSchedules(@AuthenticationPrincipal(expression = "memberId") Long memberId,
                                                                          @RequestParam(name = "page") int page,
                                                                          @RequestParam(name = "keyword") String keyword,
                                                                          @RequestParam(name = "type") String type){
@@ -71,7 +70,7 @@ public class TravelScheduleController {
                 ? travelScheduleService.searchAllSchedules(page, keyword, memberId)
                 : travelScheduleService.searchSharedSchedules(page, keyword, memberId);
 
-        return ApiSchedulePageResponse.dataResponse(response);
+        return ApiResponse.schedulePageResponse(response);
     }
 
 
@@ -116,22 +115,22 @@ public class TravelScheduleController {
     @AttendeeCheck
     @GetMapping("/{scheduleId}/travels")
     @Operation(summary = "여행지 조회", description = "일정 상세보기 여행지 탭에서 여행지를 제공합니다.")
-    public ApiPageResponse<PlaceResponse> getTravelPlaces(@PathVariable(name = "scheduleId") Long scheduleId,
+    public ApiResponse<PageResponse<PlaceResponse>> getTravelPlaces(@PathVariable(name = "scheduleId") Long scheduleId,
                                                           @RequestParam int page){
         Page<PlaceResponse> response = travelService.getTravelPlacesByJungGu(page);
 
-        return ApiPageResponse.dataResponse(response);
+        return ApiResponse.pageResponse(response);
     }
 
     @AttendeeCheck
     @GetMapping("/{scheduleId}/travels/search")
     @Operation(summary = "여행지 검색", description = "일정 상세보기 여행지 탭에서 여행지를 검색합니다.")
-    public ApiPageResponse<PlaceResponse> searchTravelPlaces(@PathVariable(name = "scheduleId") Long scheduleId,
+    public ApiResponse<PageResponse<PlaceResponse>> searchTravelPlaces(@PathVariable(name = "scheduleId") Long scheduleId,
                                                              @RequestParam(name = "page") int page,
                                                              @RequestParam(name = "keyword") String keyword){
 
         Page<PlaceResponse> response = travelService.searchTravelPlaces(page, keyword);
-        return ApiPageResponse.dataResponse(response);
+        return ApiResponse.pageResponse(response);
     }
 
 }

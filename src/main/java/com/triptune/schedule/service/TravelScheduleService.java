@@ -22,8 +22,8 @@ import com.triptune.travel.dto.response.PlaceResponse;
 import com.triptune.travel.repository.TravelPlaceRepository;
 import com.triptune.global.message.ErrorCode;
 import com.triptune.global.exception.DataNotFoundException;
-import com.triptune.global.response.pagination.PageResponse;
-import com.triptune.global.response.pagination.SchedulePageResponse;
+import com.triptune.global.response.page.PageResponse;
+import com.triptune.global.response.page.SchedulePageResponse;
 import com.triptune.global.util.PageUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -56,7 +56,7 @@ public class TravelScheduleService {
 
         int sharedScheduleCnt = travelScheduleRepository.countSharedTravelSchedules(memberId);
 
-        return SchedulePageResponse.ofAll(pageResult, sharedScheduleCnt);
+        return SchedulePageResponse.ofAllSchedules(pageResult, sharedScheduleCnt);
     }
 
 
@@ -69,7 +69,7 @@ public class TravelScheduleService {
 
         int totalScheduleCnt = travelScheduleRepository.countTravelSchedules(memberId);
 
-        return SchedulePageResponse.ofShared(pageResult, totalScheduleCnt);
+        return SchedulePageResponse.ofSharedSchedules(pageResult, totalScheduleCnt);
     }
 
 

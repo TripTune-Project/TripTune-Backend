@@ -1,12 +1,13 @@
 package com.triptune.schedule.controller;
 
+import com.triptune.global.response.ApiResponse;
+import com.triptune.global.response.page.PageResponse;
 import com.triptune.schedule.dto.request.ChatMessageRequest;
 import com.triptune.schedule.dto.response.ChatResponse;
 import com.triptune.schedule.exception.chat.BadRequestChatException;
 import com.triptune.schedule.service.ChatMessageService;
 import com.triptune.global.aop.AttendeeCheck;
 import com.triptune.global.message.ErrorCode;
-import com.triptune.global.response.pagination.ApiPageResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -28,10 +29,10 @@ public class ChatMessageController {
     @AttendeeCheck
     @GetMapping("/api/schedules/{scheduleId}/chats")
     @Operation(summary = "채팅 조회", description = "채팅 기록을 조회한다.")
-    public ApiPageResponse<ChatResponse> getChatMessages(@PathVariable(name = "scheduleId") Long scheduleId,
-                                                         @RequestParam(name = "page") int page){
+    public ApiResponse<PageResponse<ChatResponse>> getChatMessages(@PathVariable(name = "scheduleId") Long scheduleId,
+                                                                  @RequestParam(name = "page") int page){
         Page<ChatResponse> response = chatMessageService.getChatMessages(page, scheduleId);
-        return ApiPageResponse.dataResponse(response);
+        return ApiResponse.pageResponse(response);
     }
 
     @MessageMapping("/chats")

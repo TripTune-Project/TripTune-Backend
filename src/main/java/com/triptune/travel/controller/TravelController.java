@@ -1,15 +1,15 @@
 package com.triptune.travel.controller;
 
+import com.triptune.global.response.ApiResponse;
+import com.triptune.global.response.page.PageResponse;
 import com.triptune.travel.dto.PlaceLocation;
-import com.triptune.travel.dto.response.PlaceDetailResponse;
 import com.triptune.travel.dto.request.PlaceLocationRequest;
 import com.triptune.travel.dto.request.PlaceSearchRequest;
+import com.triptune.travel.dto.response.PlaceDetailResponse;
 import com.triptune.travel.dto.response.PlaceSimpleResponse;
 import com.triptune.travel.enums.CityType;
 import com.triptune.travel.enums.ThemeType;
 import com.triptune.travel.service.TravelService;
-import com.triptune.global.response.pagination.ApiPageResponse;
-import com.triptune.global.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -32,17 +32,17 @@ public class TravelController {
 
     @PostMapping
     @Operation(summary = "현재 위치와 가까운 여행지 목록 조회", description = "여행지 탐색 메뉴에서 회원의 현재 위치와 가까운 여행지 목록을 제공한다.")
-    public ApiPageResponse<PlaceLocation> getNearByTravelPlaces(@RequestBody @Valid PlaceLocationRequest placeLocationRequest,
-                                                                @RequestParam int page){
+    public ApiResponse<PageResponse<PlaceLocation>> getNearByTravelPlaces(@RequestBody @Valid PlaceLocationRequest placeLocationRequest,
+                                                                         @RequestParam int page){
         Long memberId = getAuthenticateMemberId();
         Page<PlaceLocation> response = travelService.getNearByTravelPlaces(page, memberId, placeLocationRequest);
-        return ApiPageResponse.dataResponse(response);
+        return ApiResponse.pageResponse(response);
     }
 
 
     @PostMapping("/search")
     @Operation(summary = "여행지 검색", description = "여행지 탐색 메뉴에서 여행지를 검색한다.")
-    public ApiPageResponse<PlaceLocation> searchTravelPlaces(@RequestBody @Valid PlaceSearchRequest placeSearchRequest,
+    public ApiResponse<PageResponse<PlaceLocation>> searchTravelPlaces(@RequestBody @Valid PlaceSearchRequest placeSearchRequest,
                                                              @RequestParam int page){
         Long memberId = getAuthenticateMemberId();
         boolean hasLocation = placeSearchRequest.getLatitude() != null && placeSearchRequest.getLongitude() != null;
@@ -51,7 +51,7 @@ public class TravelController {
                 ? travelService.searchTravelPlacesWithLocation(page, memberId, placeSearchRequest)
                 : travelService.searchTravelPlacesWithoutLocation(page, memberId, placeSearchRequest);
 
-        return ApiPageResponse.dataResponse(response);
+        return ApiResponse.pageResponse(response);
     }
 
 
