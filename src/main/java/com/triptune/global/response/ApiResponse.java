@@ -1,22 +1,58 @@
 package com.triptune.global.response;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.triptune.global.message.SuccessCode;
+import com.triptune.global.response.page.PageResponse;
+import com.triptune.global.response.page.SchedulePageResponse;
+import lombok.AccessLevel;
 import lombok.Getter;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import lombok.NoArgsConstructor;
+import org.springframework.data.domain.Page;
 
 @Getter
-public class ApiResponse<T> extends ResponseEntity<SuccessResponse<T>> {
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public class ApiResponse<T> {
+    private boolean success;
+    private String message;
+    private T data;
+
+    private ApiResponse(String message) {
+        this.success = true;
+        this.message = message;
+    }
+
+    private ApiResponse(String message, T data){
+        this.success = true;
+        this.message = message;
+        this.data = data;
+    }
+
     public static <T> ApiResponse<T> okResponse(){
-        return new ApiResponse<>(SuccessResponse.of(), SuccessCode.GENERAL_SUCCESS.getStatus());
+        return new ApiResponse<>(
+                SuccessCode.GENERAL_SUCCESS.getMessage()
+        );
     }
 
-    public static <T> ApiResponse<T> dataResponse(T body){
-        return new ApiResponse<>(SuccessResponse.of(body), SuccessCode.GENERAL_SUCCESS.getStatus());
+    public static <T> ApiResponse<T> dataResponse(T object){
+        return new ApiResponse<>(
+                SuccessCode.GENERAL_SUCCESS.getMessage(),
+                object
+        );
     }
 
-    public ApiResponse(SuccessResponse<T> body, HttpStatus status) {
-        super(body, status);
+    public static <T> ApiResponse<PageResponse<T>> pageResponse(Page<T> object) {
+        return new ApiResponse<PageResponse<T>>(
+                SuccessCode.GENERAL_SUCCESS.getMessage(),
+                PageResponse.of(object)
+        );
+    }
+
+    public static <T> ApiResponse<SchedulePageResponse<T>> schedulePageResponse(SchedulePageResponse<T> object) {
+        return new ApiResponse<SchedulePageResponse<T>>(
+                SuccessCode.GENERAL_SUCCESS.getMessage(),
+                object
+        );
     }
 
 }

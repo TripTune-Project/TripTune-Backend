@@ -2,13 +2,13 @@ package com.triptune.member.controller;
 
 import com.triptune.bookmark.enums.BookmarkSortType;
 import com.triptune.email.dto.request.EmailRequest;
-import com.triptune.global.message.ErrorCode;
-import com.triptune.global.security.CookieType;
-import com.triptune.global.security.jwt.exception.CustomJwtUnAuthorizedException;
 import com.triptune.global.exception.CustomNotValidException;
+import com.triptune.global.message.ErrorCode;
 import com.triptune.global.response.ApiResponse;
-import com.triptune.global.response.pagination.ApiPageResponse;
+import com.triptune.global.response.page.PageResponse;
+import com.triptune.global.security.CookieType;
 import com.triptune.global.security.jwt.JwtUtils;
+import com.triptune.global.security.jwt.exception.CustomJwtUnAuthorizedException;
 import com.triptune.global.util.CookieUtils;
 import com.triptune.member.dto.LoginResult;
 import com.triptune.member.dto.request.*;
@@ -153,13 +153,13 @@ public class MemberController {
 
     @GetMapping("/bookmark")
     @Operation(summary = "회원 북마크 조회", description = "회원이 등록한 북마크를 조회합니다.")
-    public ApiPageResponse<PlaceBookmarkResponse> getMemberBookmarks(@AuthenticationPrincipal(expression = "memberId") Long memberId,
-                                                                     @RequestParam(name = "page") int page,
-                                                                     @RequestParam(name = "sort") String sort){
+    public ApiResponse<PageResponse<PlaceBookmarkResponse>> getMemberBookmarks(@AuthenticationPrincipal(expression = "memberId") Long memberId,
+                                                                              @RequestParam(name = "page") int page,
+                                                                              @RequestParam(name = "sort") String sort){
         BookmarkSortType sortType = BookmarkSortType.determineSortType(sort);
         Page<PlaceBookmarkResponse> PlaceBookmarkResponses = memberService.getMemberBookmarks(page, memberId, sortType);
 
-        return ApiPageResponse.dataResponse(PlaceBookmarkResponses);
+        return ApiResponse.pageResponse(PlaceBookmarkResponses);
     }
 
     @PatchMapping("/deactivate")
