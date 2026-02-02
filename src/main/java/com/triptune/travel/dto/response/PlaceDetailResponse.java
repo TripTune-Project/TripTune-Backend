@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -51,7 +52,7 @@ public class PlaceDetailResponse {
         this.placeName = placeName;
         this.bookmarkStatus = bookmarkStatus;
         this.description = description;
-        this.imageList = imageList;
+        this.imageList = imageList != null ? imageList : new ArrayList<>();
     }
 
 

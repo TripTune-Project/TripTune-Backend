@@ -2,13 +2,17 @@ package com.triptune.travel.service;
 
 import com.triptune.bookmark.repository.BookmarkRepository;
 import com.triptune.common.entity.*;
+import com.triptune.common.fixture.*;
 import com.triptune.global.message.ErrorCode;
 import com.triptune.global.exception.DataNotFoundException;
 import com.triptune.global.util.PageUtils;
 import com.triptune.member.entity.Member;
+import com.triptune.member.fixture.MemberFixture;
 import com.triptune.profile.entity.ProfileImage;
-import com.triptune.travel.TravelTest;
-import com.triptune.travel.dto.PlaceLocation;
+import com.triptune.profile.fixture.ProfileImageFixture;
+import com.triptune.travel.fixture.TravelImageFixture;
+import com.triptune.travel.fixture.TravelPlaceFixture;
+import com.triptune.travel.repository.dto.PlaceLocation;
 import com.triptune.travel.dto.request.PlaceLocationRequest;
 import com.triptune.travel.dto.request.PlaceSearchRequest;
 import com.triptune.travel.dto.response.PlaceDetailResponse;
@@ -40,7 +44,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-public class TravelServiceTest extends TravelTest {
+public class TravelServiceTest  {
 
     @InjectMocks private TravelService travelService;
     @Mock private TravelPlaceRepository travelPlaceRepository;
@@ -60,16 +64,16 @@ public class TravelServiceTest extends TravelTest {
 
     @BeforeEach
     void setUp(){
-        country = createCountry();
-        seoul = createCity(country, "서울");
-        gangnam = createDistrict(seoul, "강남구");
-        apiCategory = createApiCategory();
-        attractionContentType = createApiContentType(ThemeType.ATTRACTIONS);
-        sportsContentType = createApiContentType(ThemeType.SPORTS);
-        lodgingContentType = createApiContentType(ThemeType.LODGING);
+        country = CountryFixture.createCountry();
+        seoul = CityFixture.createCity(country, "서울");
+        gangnam = DistrictFixture.createDistrict(seoul, "강남구");
+        apiCategory = ApiCategoryFixture.createApiCategory();
+        attractionContentType = ApiContentTypeFixture.createApiContentType(ThemeType.ATTRACTIONS);
+        sportsContentType = ApiContentTypeFixture.createApiContentType(ThemeType.SPORTS);
+        lodgingContentType = ApiContentTypeFixture.createApiContentType(ThemeType.LODGING);
 
-        ProfileImage profileImage = createProfileImage("memberImage");
-        member = createNativeTypeMember("member", profileImage);
+        ProfileImage profileImage = ProfileImageFixture.createProfileImage("memberImage");
+        member = MemberFixture.createNativeTypeMember("member", profileImage);
     }
 
 
@@ -77,7 +81,7 @@ public class TravelServiceTest extends TravelTest {
     @DisplayName("회원의 위치를 기반으로 여행지 목록을 조회")
     void getNearByTravelPlaces_member(){
         // given
-        TravelPlace place1 = createTravelPlaceWithId(
+        TravelPlace place1 = TravelPlaceFixture.createTravelPlaceWithId(
                 1L,
                 country,
                 seoul,
@@ -86,10 +90,10 @@ public class TravelServiceTest extends TravelTest {
                 attractionContentType,
                 "여행지1"
         );
-        TravelImage place1Thumbnail = createTravelImage(place1, "test1", true);
-        createTravelImage(place1, "test2", false);
+        TravelImage place1Thumbnail = TravelImageFixture.createTravelImage(place1, "test1", true);
+        TravelImageFixture.createTravelImage(place1, "test2", false);
 
-        TravelPlace place2 = createTravelPlaceWithIdAndLocation(
+        TravelPlace place2 = TravelPlaceFixture.createTravelPlaceWithIdAndLocation(
                 2L,
                 country,
                 seoul,
@@ -101,12 +105,12 @@ public class TravelServiceTest extends TravelTest {
                 160.3333
         );
 
-        PlaceLocationRequest request = createTravelLocationRequest(37.4970465429, 127.0281573537);
+        PlaceLocationRequest request = TravelPlaceFixture.createTravelLocationRequest(37.4970465429, 127.0281573537);
 
         Pageable pageable = PageUtils.defaultPageable(1);
         List<PlaceLocation> locations = List.of(
-                createPlaceLocation(place1, place1Thumbnail.getS3ObjectUrl()),
-                createPlaceLocation(place2, null)
+                TravelPlaceFixture.createPlaceLocation(place1, place1Thumbnail.getS3ObjectUrl()),
+                TravelPlaceFixture.createPlaceLocation(place2, null)
         );
         Page<PlaceLocation> mockResponse = PageUtils.createPage(locations, pageable, locations.size());
 
@@ -134,7 +138,7 @@ public class TravelServiceTest extends TravelTest {
     @DisplayName("회원의 위치를 기반으로 여행지 목록을 조회할 때, 데이터가 없는 경우")
     void getNearByTravelPlaces_member_emptyResult(){
         // given
-        PlaceLocationRequest request = createTravelLocationRequest(0.0, 0.0);
+        PlaceLocationRequest request = TravelPlaceFixture.createTravelLocationRequest(0.0, 0.0);
 
         Pageable pageable = PageUtils.defaultPageable(1);
         Page<PlaceLocation> mockResponse = PageUtils.createPage(Collections.emptyList(), pageable, 0);
@@ -152,7 +156,7 @@ public class TravelServiceTest extends TravelTest {
     @DisplayName("비회원의 위치를 기반으로 여행지 목록을 조회")
     void getNearByTravelPlaces_nonMember(){
         // given
-        TravelPlace place1 = createTravelPlace(
+        TravelPlace place1 = TravelPlaceFixture.createTravelPlace(
                 country,
                 seoul,
                 gangnam,
@@ -160,10 +164,10 @@ public class TravelServiceTest extends TravelTest {
                 attractionContentType,
                 "여행지1"
         );
-        TravelImage place1Thumbnail = createTravelImage(place1, "test1", true);
-        createTravelImage(place1, "test2", false);
+        TravelImage place1Thumbnail = TravelImageFixture.createTravelImage(place1, "test1", true);
+        TravelImageFixture.createTravelImage(place1, "test2", false);
 
-        TravelPlace place2 = createTravelPlaceWithLocation(
+        TravelPlace place2 = TravelPlaceFixture.createTravelPlaceWithLocation(
                 country,
                 seoul,
                 gangnam,
@@ -174,12 +178,12 @@ public class TravelServiceTest extends TravelTest {
                 160.3333
         );
 
-        PlaceLocationRequest request = createTravelLocationRequest(37.4970465429, 127.0281573537);
+        PlaceLocationRequest request = TravelPlaceFixture.createTravelLocationRequest(37.4970465429, 127.0281573537);
 
         Pageable pageable = PageUtils.defaultPageable(1);
         List<PlaceLocation> locations = List.of(
-                createPlaceLocation(place1, place1Thumbnail.getS3ObjectUrl()),
-                createPlaceLocation(place2, null)
+                TravelPlaceFixture.createPlaceLocation(place1, place1Thumbnail.getS3ObjectUrl()),
+                TravelPlaceFixture.createPlaceLocation(place2, null)
         );
         Page<PlaceLocation> mockResponse = PageUtils.createPage(locations, pageable, locations.size());
 
@@ -207,7 +211,7 @@ public class TravelServiceTest extends TravelTest {
     @DisplayName("비회원의 위치를 기반으로 여행지 목록을 조회할 때, 데이터가 없는 경우")
     void getNearByTravelPlaces_nonMember_emptyResult(){
         // given
-        PlaceLocationRequest request = createTravelLocationRequest(0.0, 0.0);
+        PlaceLocationRequest request = TravelPlaceFixture.createTravelLocationRequest(0.0, 0.0);
 
         Pageable pageable = PageUtils.defaultPageable(1);
         Page<PlaceLocation> mockResponse = PageUtils.createPage(Collections.emptyList(), pageable, 0);
@@ -226,7 +230,7 @@ public class TravelServiceTest extends TravelTest {
     @DisplayName("회원의 위치를 기반으로 여행지 검색할 때, 검색 결과가 존재하는 경우")
     void searchTravelPlacesWithLocation_member(){
         // given
-        TravelPlace place1 = createTravelPlaceWithId(
+        TravelPlace place1 = TravelPlaceFixture.createTravelPlaceWithId(
                 1L,
                 country,
                 seoul,
@@ -235,10 +239,10 @@ public class TravelServiceTest extends TravelTest {
                 attractionContentType,
                 "여행지1"
         );
-        TravelImage place1Thumbnail = createTravelImage(place1, "test1", true);
-        createTravelImage(place1, "test2", false);
+        TravelImage place1Thumbnail = TravelImageFixture.createTravelImage(place1, "test1", true);
+        TravelImageFixture.createTravelImage(place1, "test2", false);
 
-        TravelPlace place2 = createTravelPlaceWithIdAndLocation(
+        TravelPlace place2 = TravelPlaceFixture.createTravelPlaceWithIdAndLocation(
                 2L,
                 country,
                 seoul,
@@ -250,12 +254,12 @@ public class TravelServiceTest extends TravelTest {
                 160.3333
         );
 
-        PlaceSearchRequest request = createTravelSearchRequest(37.49, 127.0, "여행지");
+        PlaceSearchRequest request = TravelPlaceFixture.createTravelSearchRequest(37.49, 127.0, "여행지");
 
         Pageable pageable = PageUtils.defaultPageable(1);
         List<PlaceLocation> locations = List.of(
-                createPlaceLocation(place1, place1Thumbnail.getS3ObjectUrl()),
-                createPlaceLocation(place2, null)
+                TravelPlaceFixture.createPlaceLocation(place1, place1Thumbnail.getS3ObjectUrl()),
+                TravelPlaceFixture.createPlaceLocation(place2, null)
         );
         Page<PlaceLocation> mockResponse = PageUtils.createPage(locations, pageable, locations.size());
 
@@ -281,7 +285,7 @@ public class TravelServiceTest extends TravelTest {
     @DisplayName("회원의 위치를 기반으로 여행지 검색할 때, 검색 결과가 존재하지 않는 경우")
     void searchTravelPlacesWithLocation_member_emptyResult(){
         // given
-        PlaceSearchRequest request = createTravelSearchRequest(37.49, 127.0, "ㅁㄴㅇㄹ");
+        PlaceSearchRequest request = TravelPlaceFixture.createTravelSearchRequest(37.49, 127.0, "ㅁㄴㅇㄹ");
 
         Pageable pageable = PageUtils.defaultPageable(1);
         Page<PlaceLocation> mockResponse = PageUtils.createPage(Collections.emptyList(), pageable, 0);
@@ -300,7 +304,7 @@ public class TravelServiceTest extends TravelTest {
     @DisplayName("비회원의 위치를 기반으로 여행지를 검색할 때, 검색 결과가 존재하는 경우")
     void searchTravelPlacesWithLocation_nonMember(){
         // given
-        TravelPlace place1 = createTravelPlace(
+        TravelPlace place1 = TravelPlaceFixture.createTravelPlace(
                 country,
                 seoul,
                 gangnam,
@@ -308,10 +312,10 @@ public class TravelServiceTest extends TravelTest {
                 attractionContentType,
                 "여행지1"
         );
-        TravelImage place1Thumbnail = createTravelImage(place1, "test1", true);
-        createTravelImage(place1, "test2", false);
+        TravelImage place1Thumbnail = TravelImageFixture.createTravelImage(place1, "test1", true);
+        TravelImageFixture.createTravelImage(place1, "test2", false);
 
-        TravelPlace place2 = createTravelPlaceWithLocation(
+        TravelPlace place2 = TravelPlaceFixture.createTravelPlaceWithLocation(
                 country,
                 seoul,
                 gangnam,
@@ -322,12 +326,12 @@ public class TravelServiceTest extends TravelTest {
                 160.3333
         );
 
-        PlaceSearchRequest request = createTravelSearchRequest(37.49, 127.0, "여행지");
+        PlaceSearchRequest request = TravelPlaceFixture.createTravelSearchRequest(37.49, 127.0, "여행지");
 
         Pageable pageable = PageUtils.defaultPageable(1);
         List<PlaceLocation> locations = List.of(
-                createPlaceLocation(place1, place1Thumbnail.getS3ObjectUrl()),
-                createPlaceLocation(place2, null)
+                TravelPlaceFixture.createPlaceLocation(place1, place1Thumbnail.getS3ObjectUrl()),
+                TravelPlaceFixture.createPlaceLocation(place2, null)
         );
         Page<PlaceLocation> mockResponse = PageUtils.createPage(locations, pageable, locations.size());
 
@@ -354,7 +358,7 @@ public class TravelServiceTest extends TravelTest {
     @DisplayName("비회원의 위치를 기반으로 여행지를 검색할 때, 검색 결과가 존재하지 않는 경우")
     void searchTravelPlacesWithLocation_nonMember_emptyResult(){
         // given
-        PlaceSearchRequest request = createTravelSearchRequest(37.49, 127.0, "ㅁㄴㅇㄹ");
+        PlaceSearchRequest request = TravelPlaceFixture.createTravelSearchRequest(37.49, 127.0, "ㅁㄴㅇㄹ");
 
         Pageable pageable = PageUtils.defaultPageable(1);
         Page<PlaceLocation> mockResponse = PageUtils.createPage(Collections.emptyList(), pageable, 0);
@@ -374,7 +378,7 @@ public class TravelServiceTest extends TravelTest {
     @DisplayName("회원의 위치를 기반하지 않고 여행지를 검색할 때, 검색 결과가 존재하는 경우")
     void searchTravelPlacesWithoutLocation_member(){
         // given
-        TravelPlace place1 = createTravelPlaceWithId(
+        TravelPlace place1 = TravelPlaceFixture.createTravelPlaceWithId(
                 1L,
                 country,
                 seoul,
@@ -383,10 +387,10 @@ public class TravelServiceTest extends TravelTest {
                 attractionContentType,
                 "여행지1"
         );
-        TravelImage place1Thumbnail = createTravelImage(place1, "test1", true);
-        createTravelImage(place1, "test2", false);
+        TravelImage place1Thumbnail = TravelImageFixture.createTravelImage(place1, "test1", true);
+        TravelImageFixture.createTravelImage(place1, "test2", false);
 
-        TravelPlace place2 = createTravelPlaceWithIdAndLocation(
+        TravelPlace place2 = TravelPlaceFixture.createTravelPlaceWithIdAndLocation(
                 2L,
                 country,
                 seoul,
@@ -398,12 +402,12 @@ public class TravelServiceTest extends TravelTest {
                 160.3333
         );
 
-        PlaceSearchRequest request = createTravelSearchRequest("여행지");
+        PlaceSearchRequest request = TravelPlaceFixture.createTravelSearchRequest("여행지");
 
         Pageable pageable = PageUtils.defaultPageable(1);
         List<PlaceResponse> locations = List.of(
-                createPlaceResponse(place1, place1Thumbnail.getS3ObjectUrl()),
-                createPlaceResponse(place2, null)
+                TravelPlaceFixture.createPlaceResponse(place1, place1Thumbnail.getS3ObjectUrl()),
+                TravelPlaceFixture.createPlaceResponse(place2, null)
         );
         Page<PlaceResponse> mockResponse = PageUtils.createPage(locations, pageable, locations.size());
 
@@ -427,7 +431,7 @@ public class TravelServiceTest extends TravelTest {
     @DisplayName("회원의 위치를 기반하지 않고 검색할 때, 검색 결과가 존재하지 않는 경우")
     void searchTravelPlacesWithoutLocation_member_emptyResult(){
         // given
-        PlaceSearchRequest request = createTravelSearchRequest("ㅁㄴㅇㄹ");
+        PlaceSearchRequest request = TravelPlaceFixture.createTravelSearchRequest("ㅁㄴㅇㄹ");
 
         Pageable pageable = PageUtils.defaultPageable(1);
         Page<PlaceResponse> mockResponse = PageUtils.createPage(Collections.emptyList(), pageable, 0);
@@ -446,7 +450,7 @@ public class TravelServiceTest extends TravelTest {
     @DisplayName("비회원의 위치를 기반하지 않고 여행지를 검색할 때, 검색 결과가 존재하는 경우")
     void searchTravelPlacesWithoutLocation_nonMember(){
         // given
-        TravelPlace place1 = createTravelPlace(
+        TravelPlace place1 = TravelPlaceFixture.createTravelPlace(
                 country,
                 seoul,
                 gangnam,
@@ -454,10 +458,10 @@ public class TravelServiceTest extends TravelTest {
                 attractionContentType,
                 "여행지1"
         );
-        TravelImage place1Thumbnail = createTravelImage(place1, "test1", true);
-        createTravelImage(place1, "test2", false);
+        TravelImage place1Thumbnail = TravelImageFixture.createTravelImage(place1, "test1", true);
+        TravelImageFixture.createTravelImage(place1, "test2", false);
 
-        TravelPlace place2 = createTravelPlaceWithLocation(
+        TravelPlace place2 = TravelPlaceFixture.createTravelPlaceWithLocation(
                 country,
                 seoul,
                 gangnam,
@@ -468,12 +472,12 @@ public class TravelServiceTest extends TravelTest {
                 160.3333
         );
 
-        PlaceSearchRequest request = createTravelSearchRequest("여행지");
+        PlaceSearchRequest request = TravelPlaceFixture.createTravelSearchRequest("여행지");
 
         Pageable pageable = PageUtils.defaultPageable(1);
         List<PlaceResponse> locations = List.of(
-                createPlaceResponse(place1, place1Thumbnail.getS3ObjectUrl()),
-                createPlaceResponse(place2, null)
+                TravelPlaceFixture.createPlaceResponse(place1, place1Thumbnail.getS3ObjectUrl()),
+                TravelPlaceFixture.createPlaceResponse(place2, null)
         );
         Page<PlaceResponse> mockResponse = PageUtils.createPage(locations, pageable, locations.size());
 
@@ -497,7 +501,7 @@ public class TravelServiceTest extends TravelTest {
     @DisplayName("비회원의 위치를 기반하지 않고 여행지를 검색할 때, 검색 결과가 존재하지 않는 경우")
     void searchTravelPlacesWithoutLocation_nonMember_emptyResult(){
         // given
-        PlaceSearchRequest request = createTravelSearchRequest("ㅁㄴㅇㄹ");
+        PlaceSearchRequest request = TravelPlaceFixture.createTravelSearchRequest("ㅁㄴㅇㄹ");
 
         Pageable pageable = PageUtils.defaultPageable(1);
         Page<PlaceResponse> mockResponse = PageUtils.createPage(Collections.emptyList(), pageable, 0);
@@ -515,7 +519,7 @@ public class TravelServiceTest extends TravelTest {
     @DisplayName("회원의 숙박을 제외한 여행지 상세 조회")
     void getTravelDetails_memberAndExceptLodging(){
         // given
-        TravelPlace attractionPlace = createTravelPlace(
+        TravelPlace attractionPlace = TravelPlaceFixture.createTravelPlace(
                 country,
                 seoul,
                 gangnam,
@@ -523,8 +527,8 @@ public class TravelServiceTest extends TravelTest {
                 attractionContentType,
                 "여행지1"
         );
-        createTravelImage(attractionPlace, "test1", true);
-        createTravelImage(attractionPlace, "test2", false);
+        TravelImageFixture.createTravelImage(attractionPlace, "test1", true);
+        TravelImageFixture.createTravelImage(attractionPlace, "test2", false);
 
         when(travelPlaceRepository.findById(1L)).thenReturn(Optional.of(attractionPlace));
         when(bookmarkRepository.existsByMember_MemberIdAndTravelPlace_PlaceId(1L, 1L)).thenReturn(true);
@@ -545,7 +549,7 @@ public class TravelServiceTest extends TravelTest {
     @DisplayName("비회원의 숙박을 제외한 여행지 상세 조회")
     void getTravelDetails_nonMemberAndExceptLodging(){
         // given
-        TravelPlace attractionPlace = createTravelPlace(
+        TravelPlace attractionPlace = TravelPlaceFixture.createTravelPlace(
                 country,
                 seoul,
                 gangnam,
@@ -553,8 +557,8 @@ public class TravelServiceTest extends TravelTest {
                 attractionContentType,
                 "여행지1"
         );
-        createTravelImage(attractionPlace, "test1", true);
-        createTravelImage(attractionPlace, "test2", false);
+        TravelImageFixture.createTravelImage(attractionPlace, "test1", true);
+        TravelImageFixture.createTravelImage(attractionPlace, "test2", false);
 
         when(travelPlaceRepository.findById(1L)).thenReturn(Optional.of(attractionPlace));
 
@@ -574,7 +578,7 @@ public class TravelServiceTest extends TravelTest {
     @DisplayName("회원의 숙박 여행지 상세 조회")
     void getTravelDetails_memberAndLodging(){
         // given
-        TravelPlace lodgingPlace = createLodgingTravelPlace(
+        TravelPlace lodgingPlace = TravelPlaceFixture.createLodgingTravelPlace(
                 country,
                 seoul,
                 gangnam,
@@ -582,7 +586,7 @@ public class TravelServiceTest extends TravelTest {
                 lodgingContentType,
                 "여행지2"
         );
-        createTravelImage(lodgingPlace, "test1", true);
+        TravelImageFixture.createTravelImage(lodgingPlace, "test1", true);
 
         when(travelPlaceRepository.findById(1L)).thenReturn(Optional.of(lodgingPlace));
         when(bookmarkRepository.existsByMember_MemberIdAndTravelPlace_PlaceId(1L, 1L)).thenReturn(true);
@@ -607,7 +611,7 @@ public class TravelServiceTest extends TravelTest {
     @DisplayName("비회원의 숙박 여행지 상세 조회")
     void getTravelDetails_nonMemberAndLodging(){
         // given
-        TravelPlace lodgingPlace = createLodgingTravelPlace(
+        TravelPlace lodgingPlace = TravelPlaceFixture.createLodgingTravelPlace(
                 country,
                 seoul,
                 gangnam,
@@ -615,7 +619,7 @@ public class TravelServiceTest extends TravelTest {
                 lodgingContentType,
                 "여행지2"
         );
-        createTravelImage(lodgingPlace, "test1", true);
+        TravelImageFixture.createTravelImage(lodgingPlace, "test1", true);
 
         when(travelPlaceRepository.findById(anyLong())).thenReturn(Optional.of(lodgingPlace));
 
@@ -655,7 +659,7 @@ public class TravelServiceTest extends TravelTest {
     @DisplayName("중구 기준 여행지 조회")
     void getTravelPlacesByJungGu(){
         // given
-        TravelPlace place1 = createTravelPlace(
+        TravelPlace place1 = TravelPlaceFixture.createTravelPlace(
                 country,
                 seoul,
                 gangnam,
@@ -663,10 +667,10 @@ public class TravelServiceTest extends TravelTest {
                 attractionContentType,
                 "여행지1"
         );
-        TravelImage place1Thumbnail = createTravelImage(place1, "test1", true);
-        createTravelImage(place1, "test2", false);
+        TravelImage place1Thumbnail = TravelImageFixture.createTravelImage(place1, "test1", true);
+        TravelImageFixture.createTravelImage(place1, "test2", false);
 
-        TravelPlace place2 = createLodgingTravelPlace(
+        TravelPlace place2 = TravelPlaceFixture.createLodgingTravelPlace(
                 country,
                 seoul,
                 gangnam,
@@ -677,8 +681,8 @@ public class TravelServiceTest extends TravelTest {
 
         Pageable pageable = PageUtils.travelPageable(1);
         List<PlaceResponse> mockResponse = List.of(
-                createPlaceResponse(place1, place1Thumbnail.getS3ObjectUrl()),
-                createPlaceResponse(place2, null)
+                TravelPlaceFixture.createPlaceResponse(place1, place1Thumbnail.getS3ObjectUrl()),
+                TravelPlaceFixture.createPlaceResponse(place2, null)
         );
 
         when(travelPlaceRepository.findDefaultTravelPlacesByJungGu(any()))
@@ -720,7 +724,7 @@ public class TravelServiceTest extends TravelTest {
         // given
         String keyword = "여행";
 
-        TravelPlace place1 = createTravelPlace(
+        TravelPlace place1 = TravelPlaceFixture.createTravelPlace(
                 country,
                 seoul,
                 gangnam,
@@ -728,10 +732,10 @@ public class TravelServiceTest extends TravelTest {
                 attractionContentType,
                 "여행지1"
         );
-        TravelImage place1Thumbnail = createTravelImage(place1, "test1", true);
-        createTravelImage(place1, "test2", false);
+        TravelImage place1Thumbnail = TravelImageFixture.createTravelImage(place1, "test1", true);
+        TravelImageFixture.createTravelImage(place1, "test2", false);
 
-        TravelPlace place2 = createLodgingTravelPlace(
+        TravelPlace place2 = TravelPlaceFixture.createLodgingTravelPlace(
                 country,
                 seoul,
                 gangnam,
@@ -742,8 +746,8 @@ public class TravelServiceTest extends TravelTest {
 
         Pageable pageable = PageUtils.travelPageable(1);
         List<PlaceResponse> mockResponse = List.of(
-                createPlaceResponse(place1, place1Thumbnail.getS3ObjectUrl()),
-                createPlaceResponse(place2, null)
+                TravelPlaceFixture.createPlaceResponse(place1, place1Thumbnail.getS3ObjectUrl()),
+                TravelPlaceFixture.createPlaceResponse(place2, null)
         );
 
         when(travelPlaceRepository.searchTravelPlaces(pageable, keyword))
@@ -785,7 +789,7 @@ public class TravelServiceTest extends TravelTest {
     @DisplayName("인기 여행지 조회 - 전체")
     void findPopularTravelPlacesByCity_ALL(){
         // given
-        TravelPlace gangnamPlace1 = createTravelPlace(
+        TravelPlace gangnamPlace1 = TravelPlaceFixture.createTravelPlace(
                 country,
                 seoul,
                 gangnam,
@@ -793,10 +797,10 @@ public class TravelServiceTest extends TravelTest {
                 attractionContentType,
                 "여행지1"
         );
-        TravelImage gangnam1Thumbnail = createTravelImage(gangnamPlace1, "test1", true);
-        createTravelImage(gangnamPlace1, "test2", false);
+        TravelImage gangnam1Thumbnail = TravelImageFixture.createTravelImage(gangnamPlace1, "test1", true);
+        TravelImageFixture.createTravelImage(gangnamPlace1, "test2", false);
 
-        TravelPlace gangnamPlace2 = createLodgingTravelPlace(
+        TravelPlace gangnamPlace2 = TravelPlaceFixture.createLodgingTravelPlace(
                 country,
                 seoul,
                 gangnam,
@@ -805,9 +809,9 @@ public class TravelServiceTest extends TravelTest {
                 "여행지2"
         );
 
-        City busan = createCity(country, "부산");
-        District busanDistrict = createDistrict(busan, "금정구");
-        TravelPlace busanPlace = createTravelPlace(
+        City busan = CityFixture.createCity(country, "부산");
+        District busanDistrict = DistrictFixture.createDistrict(busan, "금정구");
+        TravelPlace busanPlace = TravelPlaceFixture.createTravelPlace(
                 country,
                 busan,
                 busanDistrict,
@@ -815,11 +819,11 @@ public class TravelServiceTest extends TravelTest {
                 attractionContentType,
                 "금정 여행지"
         );
-        TravelImage busanThumbnail = createTravelImage(busanPlace, "부산이미지1", true);
+        TravelImage busanThumbnail = TravelImageFixture.createTravelImage(busanPlace, "부산이미지1", true);
 
-        City jeolla = createCity(country, "전라남도");
-        District jeollaDistrict = createDistrict(busan, "보성구");
-        TravelPlace jeollaPlace = createTravelPlace(
+        City jeolla = CityFixture.createCity(country, "전라남도");
+        District jeollaDistrict = DistrictFixture.createDistrict(busan, "보성구");
+        TravelPlace jeollaPlace = TravelPlaceFixture.createTravelPlace(
                 country,
                 jeolla,
                 jeollaDistrict,
@@ -829,10 +833,10 @@ public class TravelServiceTest extends TravelTest {
         );
 
         List<PlaceSimpleResponse> mockResult = List.of(
-                createPlaceSimpleResponse(jeollaPlace, null),
-                createPlaceSimpleResponse(busanPlace, busanThumbnail.getS3ObjectUrl()),
-                createPlaceSimpleResponse( gangnamPlace1, gangnam1Thumbnail.getS3ObjectUrl()),
-                createPlaceSimpleResponse(gangnamPlace2, null)
+                TravelPlaceFixture.createPlaceSimpleResponse(jeollaPlace, null),
+                TravelPlaceFixture.createPlaceSimpleResponse(busanPlace, busanThumbnail.getS3ObjectUrl()),
+                TravelPlaceFixture.createPlaceSimpleResponse( gangnamPlace1, gangnam1Thumbnail.getS3ObjectUrl()),
+                TravelPlaceFixture.createPlaceSimpleResponse(gangnamPlace2, null)
         );
 
         when(travelPlaceRepository.findPopularTravelPlaces(CityType.ALL)).thenReturn(mockResult);
@@ -856,9 +860,9 @@ public class TravelServiceTest extends TravelTest {
     @DisplayName("인기 여행지 조회 - 전라도")
     void findPopularTravelPlacesByCity_JEOLLA(){
         // given
-        City jeolla1 = createCity(country, "전북특별자치도");
-        District jeolla1District = createDistrict(jeolla1, "고창군");
-        TravelPlace jeollaPlace1 = createTravelPlace(
+        City jeolla1 = CityFixture.createCity(country, "전북특별자치도");
+        District jeolla1District = DistrictFixture.createDistrict(jeolla1, "고창군");
+        TravelPlace jeollaPlace1 = TravelPlaceFixture.createTravelPlace(
                 country,
                 jeolla1,
                 jeolla1District,
@@ -866,11 +870,11 @@ public class TravelServiceTest extends TravelTest {
                 attractionContentType,
                 "고창 여행지"
         );
-        TravelImage jeolla1Thumbnail = createTravelImage(jeollaPlace1, "부산이미지1", true);
+        TravelImage jeolla1Thumbnail = TravelImageFixture.createTravelImage(jeollaPlace1, "부산이미지1", true);
 
-        City jeolla2 = createCity(country, "전라남도");
-        District jeolla2District = createDistrict(jeolla2, "보성구");
-        TravelPlace jeollaPlace2 = createTravelPlace(
+        City jeolla2 = CityFixture.createCity(country, "전라남도");
+        District jeolla2District = DistrictFixture.createDistrict(jeolla2, "보성구");
+        TravelPlace jeollaPlace2 = TravelPlaceFixture.createTravelPlace(
                 country,
                 jeolla2,
                 jeolla2District,
@@ -880,8 +884,8 @@ public class TravelServiceTest extends TravelTest {
         );
 
         List<PlaceSimpleResponse> mockResult = List.of(
-                createPlaceSimpleResponse(jeollaPlace2, null),
-                createPlaceSimpleResponse(jeollaPlace1, jeolla1Thumbnail.getS3ObjectUrl())
+                TravelPlaceFixture.createPlaceSimpleResponse(jeollaPlace2, null),
+                TravelPlaceFixture.createPlaceSimpleResponse(jeollaPlace1, jeolla1Thumbnail.getS3ObjectUrl())
         );
 
         when(travelPlaceRepository.findPopularTravelPlaces(CityType.JEOLLA)).thenReturn(mockResult);
@@ -918,7 +922,7 @@ public class TravelServiceTest extends TravelTest {
     @DisplayName("추천 테마 여행지 조회 - 전체")
     void findRecommendTravelPlacesByTheme_ALL(){
         // given
-        TravelPlace attractionPlace1 = createTravelPlace(
+        TravelPlace attractionPlace1 = TravelPlaceFixture.createTravelPlace(
                 country,
                 seoul,
                 gangnam,
@@ -926,10 +930,10 @@ public class TravelServiceTest extends TravelTest {
                 attractionContentType,
                 "여행지1"
         );
-        TravelImage attraction1Thumbnail = createTravelImage(attractionPlace1, "test1", true);
-        createTravelImage(attractionPlace1, "test2", false);
+        TravelImage attraction1Thumbnail = TravelImageFixture.createTravelImage(attractionPlace1, "test1", true);
+        TravelImageFixture.createTravelImage(attractionPlace1, "test2", false);
 
-        TravelPlace lodgingPlace = createLodgingTravelPlace(
+        TravelPlace lodgingPlace = TravelPlaceFixture.createLodgingTravelPlace(
                 country,
                 seoul,
                 gangnam,
@@ -938,9 +942,9 @@ public class TravelServiceTest extends TravelTest {
                 "여행지2"
         );
 
-        City busan = createCity(country, "부산");
-        District busanDistrict = createDistrict(busan, "금정구");
-        TravelPlace sportsPlace = createTravelPlace(
+        City busan = CityFixture.createCity(country, "부산");
+        District busanDistrict = DistrictFixture.createDistrict(busan, "금정구");
+        TravelPlace sportsPlace = TravelPlaceFixture.createTravelPlace(
                 country,
                 busan,
                 busanDistrict,
@@ -948,11 +952,11 @@ public class TravelServiceTest extends TravelTest {
                 sportsContentType,
                 "부산 여행지"
         );
-        TravelImage sportsThumbnail = createTravelImage(sportsPlace, "부산이미지1", true);
+        TravelImage sportsThumbnail = TravelImageFixture.createTravelImage(sportsPlace, "부산이미지1", true);
 
-        City jeolla = createCity(country, "전라남도");
-        District jeollaDistrict = createDistrict(busan, "보성구");
-        TravelPlace attractionPlace2 = createTravelPlace(
+        City jeolla = CityFixture.createCity(country, "전라남도");
+        District jeollaDistrict = DistrictFixture.createDistrict(busan, "보성구");
+        TravelPlace attractionPlace2 = TravelPlaceFixture.createTravelPlace(
                 country,
                 jeolla,
                 jeollaDistrict,
@@ -962,10 +966,10 @@ public class TravelServiceTest extends TravelTest {
         );
 
         List<PlaceSimpleResponse> mockResult = List.of(
-                createPlaceSimpleResponse(attractionPlace2, null),
-                createPlaceSimpleResponse(sportsPlace, sportsThumbnail.getS3ObjectUrl()),
-                createPlaceSimpleResponse(attractionPlace1, attraction1Thumbnail.getS3ObjectUrl()),
-                createPlaceSimpleResponse(lodgingPlace, null)
+                TravelPlaceFixture.createPlaceSimpleResponse(attractionPlace2, null),
+                TravelPlaceFixture.createPlaceSimpleResponse(sportsPlace, sportsThumbnail.getS3ObjectUrl()),
+                TravelPlaceFixture.createPlaceSimpleResponse(attractionPlace1, attraction1Thumbnail.getS3ObjectUrl()),
+                TravelPlaceFixture.createPlaceSimpleResponse(lodgingPlace, null)
         );
 
         when(travelPlaceRepository.findRecommendTravelPlaces(ThemeType.All)).thenReturn(mockResult);
@@ -991,7 +995,7 @@ public class TravelServiceTest extends TravelTest {
     @DisplayName("추천 테마 여행지 조회 - 관광지")
     void findRecommendTravelPlacesByTheme_ATTRACTIONS(){
         // given
-        TravelPlace attractionPlace1 = createTravelPlace(
+        TravelPlace attractionPlace1 = TravelPlaceFixture.createTravelPlace(
                 country,
                 seoul,
                 gangnam,
@@ -999,12 +1003,12 @@ public class TravelServiceTest extends TravelTest {
                 attractionContentType,
                 "여행지1"
         );
-        TravelImage attraction1Thumbnail = createTravelImage(attractionPlace1, "test1", true);
-        createTravelImage(attractionPlace1, "test2", false);
+        TravelImage attraction1Thumbnail = TravelImageFixture.createTravelImage(attractionPlace1, "test1", true);
+        TravelImageFixture.createTravelImage(attractionPlace1, "test2", false);
 
-        City jeolla2 = createCity(country, "전라남도");
-        District jeolla2District = createDistrict(jeolla2, "보성구");
-        TravelPlace attractionPlace2 = createTravelPlace(
+        City jeolla2 = CityFixture.createCity(country, "전라남도");
+        District jeolla2District = DistrictFixture.createDistrict(jeolla2, "보성구");
+        TravelPlace attractionPlace2 = TravelPlaceFixture.createTravelPlace(
                 country,
                 jeolla2,
                 jeolla2District,
@@ -1014,8 +1018,8 @@ public class TravelServiceTest extends TravelTest {
         );
 
         List<PlaceSimpleResponse> mockResult = List.of(
-                createPlaceSimpleResponse(attractionPlace2, null),
-                createPlaceSimpleResponse(attractionPlace1, attraction1Thumbnail.getS3ObjectUrl())
+                TravelPlaceFixture.createPlaceSimpleResponse(attractionPlace2, null),
+                TravelPlaceFixture.createPlaceSimpleResponse(attractionPlace1, attraction1Thumbnail.getS3ObjectUrl())
         );
 
         when(travelPlaceRepository.findRecommendTravelPlaces(ThemeType.ATTRACTIONS)).thenReturn(mockResult);

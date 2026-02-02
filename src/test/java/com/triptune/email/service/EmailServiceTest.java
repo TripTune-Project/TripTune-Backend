@@ -1,6 +1,6 @@
 package com.triptune.email.service;
 
-import com.triptune.email.EmailTest;
+import com.triptune.email.fixture.EmailFixture;
 import com.triptune.email.dto.request.VerifyAuthRequest;
 import com.triptune.email.exception.EmailVerifyException;
 import com.triptune.global.message.ErrorCode;
@@ -25,7 +25,7 @@ import static org.mockito.Mockito.when;
 
 
 @ExtendWith(MockitoExtension.class)
-public class EmailServiceTest extends EmailTest {
+public class EmailServiceTest {
 
     @InjectMocks private EmailService emailService;
     @Mock private RedisService redisService;
@@ -36,7 +36,7 @@ public class EmailServiceTest extends EmailTest {
     @DisplayName("이메일 인증 코드 검사")
     void verifyAuthCode(){
         // given
-        VerifyAuthRequest request = createVerifyAuthRequest("member@email.com", "Abcd123");
+        VerifyAuthRequest request = EmailFixture.createVerifyAuthRequest("member@email.com", "Abcd123");
 
         when(redisService.getEmailData(any(), anyString())).thenReturn("Abcd123");
 
@@ -48,7 +48,7 @@ public class EmailServiceTest extends EmailTest {
     @DisplayName("이메일 인증 코드 검사 시 인증 시간이 만료된 경우")
     void verifyAuthCode_invalid(){
         // given
-        VerifyAuthRequest request = createVerifyAuthRequest("member@email.com", "Abcd123");
+        VerifyAuthRequest request = EmailFixture.createVerifyAuthRequest("member@email.com", "Abcd123");
 
         when(redisService.getEmailData(any(), anyString())).thenReturn(null);
 
@@ -63,7 +63,7 @@ public class EmailServiceTest extends EmailTest {
     @DisplayName("이메일 인증 코드 검사 시 코드가 틀린 경우")
     void verifyAuthCode_incorrect(){
         // given
-        VerifyAuthRequest request = createVerifyAuthRequest("member@email.com", "Abcd123");
+        VerifyAuthRequest request = EmailFixture.createVerifyAuthRequest("member@email.com", "Abcd123");
 
         when(redisService.getEmailData(any(), anyString())).thenReturn("abcd123");
 

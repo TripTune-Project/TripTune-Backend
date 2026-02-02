@@ -2,10 +2,13 @@ package com.triptune.schedule.repository;
 
 import com.triptune.global.config.QuerydslConfig;
 import com.triptune.member.entity.Member;
+import com.triptune.member.fixture.MemberFixture;
 import com.triptune.member.repository.MemberRepository;
 import com.triptune.profile.entity.ProfileImage;
+import com.triptune.profile.fixture.ProfileImageFixture;
 import com.triptune.profile.repository.ProfileImageRepository;
-import com.triptune.schedule.ScheduleTest;
+import com.triptune.schedule.fixture.ChatMessageFixture;
+import com.triptune.schedule.fixture.TravelScheduleFixture;
 import com.triptune.schedule.entity.ChatMessage;
 import com.triptune.schedule.entity.TravelSchedule;
 import org.junit.jupiter.api.BeforeEach;
@@ -25,7 +28,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Import({QuerydslConfig.class})
 @Transactional
 @ActiveProfiles("mongo")
-public class ChatMessageRepositoryTest extends ScheduleTest {
+public class ChatMessageRepositoryTest {
 
     @Autowired private ChatMessageRepository chatMessageRepository;
     @Autowired private MemberRepository memberRepository;
@@ -37,7 +40,7 @@ public class ChatMessageRepositoryTest extends ScheduleTest {
     @BeforeEach
     void setUp(){
         chatMessageRepository.deleteAll();
-        schedule = travelScheduleRepository.save(createTravelSchedule("테스트"));
+        schedule = travelScheduleRepository.save(TravelScheduleFixture.createTravelSchedule("테스트"));
     }
 
 
@@ -45,13 +48,13 @@ public class ChatMessageRepositoryTest extends ScheduleTest {
     @DisplayName("일정 id를 통해 채팅 목록 조회")
     void findAllByScheduleId(){
         // given
-        ProfileImage profileImage1 = profileImageRepository.save(createProfileImage("member1"));
-        Member member1 = memberRepository.save(createNativeTypeMember("member1@email.com", profileImage1));
-        ProfileImage profileImage2 = profileImageRepository.save(createProfileImage("member2"));
-        Member member2 = memberRepository.save(createNativeTypeMember("member2@email.com", profileImage2));
-        ChatMessage message1 = chatMessageRepository.save(createChatMessage(schedule.getScheduleId(), member1.getMemberId(), "hello1"));
-        ChatMessage message2 = chatMessageRepository.save(createChatMessage(schedule.getScheduleId(), member1.getMemberId(), "hello2"));
-        ChatMessage message3 = chatMessageRepository.save(createChatMessage(schedule.getScheduleId(), member2.getMemberId(), "hello3"));
+        ProfileImage profileImage1 = profileImageRepository.save(ProfileImageFixture.createProfileImage("member1"));
+        Member member1 = memberRepository.save(MemberFixture.createNativeTypeMember("member1@email.com", profileImage1));
+        ProfileImage profileImage2 = profileImageRepository.save(ProfileImageFixture.createProfileImage("member2"));
+        Member member2 = memberRepository.save(MemberFixture.createNativeTypeMember("member2@email.com", profileImage2));
+        ChatMessage message1 = chatMessageRepository.save(ChatMessageFixture.createChatMessage(schedule.getScheduleId(), member1.getMemberId(), "hello1"));
+        ChatMessage message2 = chatMessageRepository.save(ChatMessageFixture.createChatMessage(schedule.getScheduleId(), member1.getMemberId(), "hello2"));
+        ChatMessage message3 = chatMessageRepository.save(ChatMessageFixture.createChatMessage(schedule.getScheduleId(), member2.getMemberId(), "hello3"));
 
         // when
         List<ChatMessage> response = chatMessageRepository.findAllByScheduleId(schedule.getScheduleId());
@@ -77,13 +80,13 @@ public class ChatMessageRepositoryTest extends ScheduleTest {
     @DisplayName("일정 id를 통해 채팅 삭제")
     void deleteAllByScheduleId(){
         // given
-        ProfileImage profileImage1 = profileImageRepository.save(createProfileImage("member1"));
-        Member member1 = memberRepository.save(createNativeTypeMember("member1@email.com", profileImage1));
-        ProfileImage profileImage2 = profileImageRepository.save(createProfileImage("member2"));
-        Member member2 = memberRepository.save(createNativeTypeMember("member2@email.com", profileImage2));
-        chatMessageRepository.save(createChatMessage(schedule.getScheduleId(), member1.getMemberId(), "hello1"));
-        chatMessageRepository.save(createChatMessage(schedule.getScheduleId(), member1.getMemberId(), "hello2"));
-        chatMessageRepository.save(createChatMessage(schedule.getScheduleId(), member2.getMemberId(), "hello3"));
+        ProfileImage profileImage1 = profileImageRepository.save(ProfileImageFixture.createProfileImage("member1"));
+        Member member1 = memberRepository.save(MemberFixture.createNativeTypeMember("member1@email.com", profileImage1));
+        ProfileImage profileImage2 = profileImageRepository.save(ProfileImageFixture.createProfileImage("member2"));
+        Member member2 = memberRepository.save(MemberFixture.createNativeTypeMember("member2@email.com", profileImage2));
+        chatMessageRepository.save(ChatMessageFixture.createChatMessage(schedule.getScheduleId(), member1.getMemberId(), "hello1"));
+        chatMessageRepository.save(ChatMessageFixture.createChatMessage(schedule.getScheduleId(), member1.getMemberId(), "hello2"));
+        chatMessageRepository.save(ChatMessageFixture.createChatMessage(schedule.getScheduleId(), member2.getMemberId(), "hello3"));
 
 
         // when

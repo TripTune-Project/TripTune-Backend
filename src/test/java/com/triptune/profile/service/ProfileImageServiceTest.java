@@ -1,7 +1,8 @@
 package com.triptune.profile.service;
 
 import com.triptune.member.entity.Member;
-import com.triptune.profile.ProfileImageTest;
+import com.triptune.member.fixture.MemberFixture;
+import com.triptune.profile.fixture.ProfileImageFixture;
 import com.triptune.profile.entity.ProfileImage;
 import com.triptune.profile.repository.ProfileImageRepository;
 import com.triptune.global.message.ErrorCode;
@@ -27,7 +28,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-public class ProfileImageServiceTest extends ProfileImageTest {
+public class ProfileImageServiceTest {
 
     @InjectMocks private ProfileImageService profileImageService;
     @Mock private S3Service s3Service;
@@ -39,11 +40,11 @@ public class ProfileImageServiceTest extends ProfileImageTest {
     @DisplayName("프로필 이미지 수정")
     void updateProfileImage() throws IOException {
         // given
-        byte[] content = createTestImage("jpeg");
+        byte[] content = ProfileImageFixture.createByteTypeImage("jpeg");
         MockMultipartFile mockMultipartFile = new MockMultipartFile("newFile", "newFileOriginalName.jpeg", "image/jpeg", content);
 
-        ProfileImage profileImage = createProfileImage("memberImage");
-        Member member = createNativeTypeMember("member@email.com", profileImage);
+        ProfileImage profileImage = ProfileImageFixture.createProfileImage("memberImage");
+        Member member = MemberFixture.createNativeTypeMember("member@email.com", profileImage);
 
         when(profileImageRepository.findByMemberId(any())).thenReturn(Optional.of(profileImage));
         when(imageProperties.getS3ObjectKey()).thenReturn(profileImage.getS3ObjectKey());
@@ -63,7 +64,7 @@ public class ProfileImageServiceTest extends ProfileImageTest {
     @DisplayName("프로필 이미지 수정 시 허용되지 않은 확장자로 예외 발생")
     void updateProfileImage_invalidExtension() throws IOException {
         // given
-        byte[] content = createTestImage("gif");
+        byte[] content = ProfileImageFixture.createByteTypeImage("gif");
         MockMultipartFile mockMultipartFile = new MockMultipartFile("newFile", "newFileOriginalName.gif", "image/gif", content);
 
         // when
@@ -78,7 +79,7 @@ public class ProfileImageServiceTest extends ProfileImageTest {
     @DisplayName("프로필 이미지 수정 시 이미지 데이터 찾을 수 없어 예외 발생")
     void updateProfileImage_profileImageNotFound() throws IOException {
         // given
-        byte[] content = createTestImage("png");
+        byte[] content = ProfileImageFixture.createByteTypeImage("png");
         MockMultipartFile mockMultipartFile = new MockMultipartFile("newFile", "newFileOriginalName.png", "image/png", content);
 
         when(profileImageRepository.findByMemberId(any())).thenReturn(Optional.empty());

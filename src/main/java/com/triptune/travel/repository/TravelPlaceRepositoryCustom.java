@@ -2,7 +2,7 @@ package com.triptune.travel.repository;
 
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.triptune.travel.dto.request.PlaceLocationRequest;
-import com.triptune.travel.dto.PlaceLocation;
+import com.triptune.travel.repository.dto.PlaceLocation;
 import com.triptune.travel.dto.request.PlaceSearchRequest;
 import com.triptune.travel.dto.response.PlaceResponse;
 import com.triptune.travel.dto.response.PlaceSimpleResponse;

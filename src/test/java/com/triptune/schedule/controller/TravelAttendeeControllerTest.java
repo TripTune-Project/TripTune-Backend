@@ -3,11 +3,15 @@ package com.triptune.schedule.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.triptune.global.message.ErrorCode;
 import com.triptune.global.message.SuccessCode;
+import com.triptune.global.security.SecurityTestUtils;
 import com.triptune.member.entity.Member;
+import com.triptune.member.fixture.MemberFixture;
 import com.triptune.member.repository.MemberRepository;
 import com.triptune.profile.entity.ProfileImage;
+import com.triptune.profile.fixture.ProfileImageFixture;
 import com.triptune.profile.repository.ProfileImageRepository;
-import com.triptune.schedule.ScheduleTest;
+import com.triptune.schedule.fixture.TravelAttendeeFixture;
+import com.triptune.schedule.fixture.TravelScheduleFixture;
 import com.triptune.schedule.dto.request.AttendeePermissionRequest;
 import com.triptune.schedule.dto.request.AttendeeRequest;
 import com.triptune.schedule.entity.TravelAttendee;
@@ -31,6 +35,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Optional;
 
+import static com.triptune.schedule.enums.AttendeePermission.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
@@ -43,7 +48,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Transactional
 @AutoConfigureMockMvc
 @ActiveProfiles("h2")
-public class TravelAttendeeControllerTest extends ScheduleTest {
+public class TravelAttendeeControllerTest {
     @Autowired private MockMvc mockMvc;
     @Autowired private ObjectMapper objectMapper;
     @Autowired private TravelScheduleRepository travelScheduleRepository;
@@ -62,28 +67,28 @@ public class TravelAttendeeControllerTest extends ScheduleTest {
 
     @BeforeEach
     void setUp(){
-        ProfileImage profileImage1 = profileImageRepository.save(createProfileImage("member1Image"));
-        member1 = memberRepository.save(createNativeTypeMember("member1@email.com", profileImage1));
+        ProfileImage profileImage1 = profileImageRepository.save(ProfileImageFixture.createProfileImage("member1Image"));
+        member1 = memberRepository.save(MemberFixture.createNativeTypeMember("member1@email.com", profileImage1));
 
-        ProfileImage profileImage2 = profileImageRepository.save(createProfileImage("member2Image"));
-        member2 = memberRepository.save(createNativeTypeMember("member2@email.com", profileImage2));
+        ProfileImage profileImage2 = profileImageRepository.save(ProfileImageFixture.createProfileImage("member2Image"));
+        member2 = memberRepository.save(MemberFixture.createNativeTypeMember("member2@email.com", profileImage2));
 
-        ProfileImage profileImage3 = profileImageRepository.save(createProfileImage("member3Image"));
-        member3 = memberRepository.save(createNativeTypeMember("member3@email.com", profileImage3));
+        ProfileImage profileImage3 = profileImageRepository.save(ProfileImageFixture.createProfileImage("member3Image"));
+        member3 = memberRepository.save(MemberFixture.createNativeTypeMember("member3@email.com", profileImage3));
 
-        schedule1 = travelScheduleRepository.save(createTravelSchedule("테스트1"));
-        schedule2 = travelScheduleRepository.save(createTravelSchedule("테스트2"));
+        schedule1 = travelScheduleRepository.save(TravelScheduleFixture.createTravelSchedule("테스트1"));
+        schedule2 = travelScheduleRepository.save(TravelScheduleFixture.createTravelSchedule("테스트2"));
     }
 
     @Test
     @DisplayName("일정 참석자 조회")
     void getAttendees() throws Exception {
         // given
-        TravelAttendee author = travelAttendeeRepository.save(createAuthorTravelAttendee(schedule1, member1));
-        TravelAttendee guest1 = travelAttendeeRepository.save(createGuestTravelAttendee(schedule1, member2, AttendeePermission.READ));
-        TravelAttendee guest2 = travelAttendeeRepository.save(createGuestTravelAttendee(schedule2, member3, AttendeePermission.ALL));
+        TravelAttendee author = travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorTravelAttendee(schedule1, member1));
+        TravelAttendee guest1 = travelAttendeeRepository.save(TravelAttendeeFixture.createGuestTravelAttendee(schedule1, member2, READ));
+        TravelAttendee guest2 = travelAttendeeRepository.save(TravelAttendeeFixture.createGuestTravelAttendee(schedule2, member3, ALL));
 
-        mockAuthentication(member1);
+        SecurityTestUtils.mockAuthentication(member1);
 
         // when, then
         mockMvc.perform(get("/api/schedules/{scheduleId}/attendees", schedule1.getScheduleId()))
@@ -104,7 +109,7 @@ public class TravelAttendeeControllerTest extends ScheduleTest {
     @DisplayName("일정 참석자 조회 시 일정 데이터 존재하지 않아 예외 발생")
     void getAttendees_scheduleNotFound() throws Exception {
         // given
-        mockAuthentication(member1);
+        SecurityTestUtils.mockAuthentication(member1);
 
         // when, then
         mockMvc.perform(get("/api/schedules/{scheduleId}/attendees", 1000L))
@@ -119,11 +124,11 @@ public class TravelAttendeeControllerTest extends ScheduleTest {
     @DisplayName("일정 참석자 조회 시 접근 권한이 없어 예외 발생")
     void getAttendees_forbiddenAccess() throws Exception {
         // given
-        travelAttendeeRepository.save(createAuthorTravelAttendee(schedule1, member1));
-        travelAttendeeRepository.save(createGuestTravelAttendee(schedule1, member2, AttendeePermission.READ));
-        travelAttendeeRepository.save(createGuestTravelAttendee(schedule2, member3, AttendeePermission.ALL));
+        travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorTravelAttendee(schedule1, member1));
+        travelAttendeeRepository.save(TravelAttendeeFixture.createGuestTravelAttendee(schedule1, member2, READ));
+        travelAttendeeRepository.save(TravelAttendeeFixture.createGuestTravelAttendee(schedule2, member3, ALL));
 
-        mockAuthentication(member1);
+        SecurityTestUtils.mockAuthentication(member1);
 
         // when, then
         mockMvc.perform(get("/api/schedules/{scheduleId}/attendees", schedule2.getScheduleId()))
@@ -138,12 +143,12 @@ public class TravelAttendeeControllerTest extends ScheduleTest {
     @DisplayName("일정 참석자 추가")
     void createAttendee() throws Exception {
         // given
-        travelAttendeeRepository.save(createAuthorTravelAttendee(schedule1, member1));
-        travelAttendeeRepository.save(createGuestTravelAttendee(schedule1, member2, AttendeePermission.READ));
-        travelAttendeeRepository.save(createGuestTravelAttendee(schedule2, member3, AttendeePermission.ALL));
+        travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorTravelAttendee(schedule1, member1));
+        travelAttendeeRepository.save(TravelAttendeeFixture.createGuestTravelAttendee(schedule1, member2, READ));
+        travelAttendeeRepository.save(TravelAttendeeFixture.createGuestTravelAttendee(schedule2, member3, ALL));
 
-        AttendeeRequest request = createAttendeeRequest(member3.getEmail(), AttendeePermission.CHAT);
-        mockAuthentication(member1);
+        AttendeeRequest request = TravelAttendeeFixture.createAttendeeRequest(member3.getEmail(), CHAT);
+        SecurityTestUtils.mockAuthentication(member1);
 
         // when, then
         mockMvc.perform(post("/api/schedules/{scheduleId}/attendees", schedule1.getScheduleId())
@@ -162,8 +167,8 @@ public class TravelAttendeeControllerTest extends ScheduleTest {
     @ValueSource(strings = {"", " "})
     void createAttendee_invalidNotBlankEmail(String input) throws Exception {
         // given
-        AttendeeRequest request = createAttendeeRequest(input, AttendeePermission.CHAT);
-        mockAuthentication(member1);
+        AttendeeRequest request = TravelAttendeeFixture.createAttendeeRequest(input, CHAT);
+        SecurityTestUtils.mockAuthentication(member1);
 
         // when, then
         mockMvc.perform(post("/api/schedules/{scheduleId}/attendees", schedule1.getScheduleId())
@@ -179,8 +184,8 @@ public class TravelAttendeeControllerTest extends ScheduleTest {
     @DisplayName("일정 참석자 추가 시 이메일 null 값이 들어와 예외 발생")
     void createAttendee_invalidNullEmail() throws Exception {
         // given
-        AttendeeRequest request = createAttendeeRequest(null, AttendeePermission.CHAT);
-        mockAuthentication(member1);
+        AttendeeRequest request = TravelAttendeeFixture.createAttendeeRequest(null, CHAT);
+        SecurityTestUtils.mockAuthentication(member1);
 
         // when, then
         mockMvc.perform(post("/api/schedules/{scheduleId}/attendees", schedule1.getScheduleId())
@@ -198,8 +203,8 @@ public class TravelAttendeeControllerTest extends ScheduleTest {
     @ValueSource(strings = {"test", "test@", "test$email.com"})
     void createAttendee_invalidEmail(String input) throws Exception {
         // given
-        AttendeeRequest request = createAttendeeRequest(input, AttendeePermission.CHAT);
-        mockAuthentication(member1);
+        AttendeeRequest request = TravelAttendeeFixture.createAttendeeRequest(input, CHAT);
+        SecurityTestUtils.mockAuthentication(member1);
 
         // when, then
         mockMvc.perform(post("/api/schedules/{scheduleId}/attendees", schedule1.getScheduleId())
@@ -215,8 +220,8 @@ public class TravelAttendeeControllerTest extends ScheduleTest {
     @DisplayName("일정 참석자 추가 시 권한 null 값이 들어와 예외 발생")
     void createAttendee_invalidNullPermission() throws Exception {
         // given
-        AttendeeRequest request = createAttendeeRequest(member3.getEmail(), null);
-        mockAuthentication(member1);
+        AttendeeRequest request = TravelAttendeeFixture.createAttendeeRequest(member3.getEmail(), null);
+        SecurityTestUtils.mockAuthentication(member1);
 
         // when, then
         mockMvc.perform(post("/api/schedules/{scheduleId}/attendees", schedule1.getScheduleId())
@@ -233,8 +238,8 @@ public class TravelAttendeeControllerTest extends ScheduleTest {
     @DisplayName("일정 참석자 추가 시 일정 데이터 존재하지 않아 예외 발생")
     void createAttendee_scheduleNotFound() throws Exception{
         // given
-        AttendeeRequest request = createAttendeeRequest(member3.getEmail(), AttendeePermission.CHAT);
-        mockAuthentication(member1);
+        AttendeeRequest request = TravelAttendeeFixture.createAttendeeRequest(member3.getEmail(), CHAT);
+        SecurityTestUtils.mockAuthentication(member1);
 
         // when, then
         mockMvc.perform(post("/api/schedules/{scheduleId}/attendees", 1000L)
@@ -251,22 +256,22 @@ public class TravelAttendeeControllerTest extends ScheduleTest {
     @DisplayName("일정 참석자 추가 시 일정 참석자 5명 넘어 예외 발생")
     void createAttendee_overFiveAttendees() throws Exception {
         // given
-        ProfileImage profileImage4 = profileImageRepository.save(createProfileImage("test4"));
-        Member member4 = memberRepository.save(createNativeTypeMember("member4@email.com", profileImage4));
-        ProfileImage profileImage5 = profileImageRepository.save(createProfileImage("test5"));
-        Member member5 = memberRepository.save(createNativeTypeMember("member5@email.com", profileImage5));
+        ProfileImage profileImage4 = profileImageRepository.save(ProfileImageFixture.createProfileImage("test4"));
+        Member member4 = memberRepository.save(MemberFixture.createNativeTypeMember("member4@email.com", profileImage4));
+        ProfileImage profileImage5 = profileImageRepository.save(ProfileImageFixture.createProfileImage("test5"));
+        Member member5 = memberRepository.save(MemberFixture.createNativeTypeMember("member5@email.com", profileImage5));
 
         travelAttendeeRepository.saveAll(List.of(
-                createAuthorTravelAttendee(schedule1, member1),
-                createGuestTravelAttendee(schedule1, member2, AttendeePermission.READ),
-                createGuestTravelAttendee(schedule1, member3, AttendeePermission.CHAT),
-                createGuestTravelAttendee(schedule1, member4, AttendeePermission.READ),
-                createGuestTravelAttendee(schedule1, member5, AttendeePermission.ALL)
+                TravelAttendeeFixture.createAuthorTravelAttendee(schedule1, member1),
+                TravelAttendeeFixture.createGuestTravelAttendee(schedule1, member2, READ),
+                TravelAttendeeFixture.createGuestTravelAttendee(schedule1, member3, CHAT),
+                TravelAttendeeFixture.createGuestTravelAttendee(schedule1, member4, READ),
+                TravelAttendeeFixture.createGuestTravelAttendee(schedule1, member5, ALL)
         ));
 
-        AttendeeRequest request = createAttendeeRequest(member3.getEmail(), AttendeePermission.CHAT);
+        AttendeeRequest request = TravelAttendeeFixture.createAttendeeRequest(member3.getEmail(), CHAT);
 
-        mockAuthentication(member1);
+        SecurityTestUtils.mockAuthentication(member1);
 
         // when, then
         mockMvc.perform(post("/api/schedules/{scheduleId}/attendees", schedule1.getScheduleId())
@@ -283,11 +288,11 @@ public class TravelAttendeeControllerTest extends ScheduleTest {
     @DisplayName("일정 참석자 추가 시 요청자가 작성자가 아니여서 예외 발생")
     void createAttendee_forbiddenNotAuthor() throws Exception{
         // given
-        travelAttendeeRepository.save(createAuthorTravelAttendee(schedule1, member1));
-        travelAttendeeRepository.save(createGuestTravelAttendee(schedule1, member2, AttendeePermission.READ));
+        travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorTravelAttendee(schedule1, member1));
+        travelAttendeeRepository.save(TravelAttendeeFixture.createGuestTravelAttendee(schedule1, member2, READ));
 
-        AttendeeRequest request = createAttendeeRequest(member3.getEmail(), AttendeePermission.CHAT);
-        mockAuthentication(member2);
+        AttendeeRequest request = TravelAttendeeFixture.createAttendeeRequest(member3.getEmail(), CHAT);
+        SecurityTestUtils.mockAuthentication(member2);
 
         // when, then
         mockMvc.perform(post("/api/schedules/{scheduleId}/attendees", schedule1.getScheduleId())
@@ -304,11 +309,11 @@ public class TravelAttendeeControllerTest extends ScheduleTest {
     @DisplayName("일정 참석자 추가 시 추가하려는 회원 데이터 존재하지 않아 예외 발생")
     void createAttendee_attendeeNotFound() throws Exception{
         // given
-        travelAttendeeRepository.save(createAuthorTravelAttendee(schedule1, member1));
-        travelAttendeeRepository.save(createGuestTravelAttendee(schedule1, member2, AttendeePermission.READ));
+        travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorTravelAttendee(schedule1, member1));
+        travelAttendeeRepository.save(TravelAttendeeFixture.createGuestTravelAttendee(schedule1, member2, READ));
 
-        AttendeeRequest request = createAttendeeRequest("notMember@email.com", AttendeePermission.CHAT);
-        mockAuthentication(member1);
+        AttendeeRequest request = TravelAttendeeFixture.createAttendeeRequest("notMember@email.com", CHAT);
+        SecurityTestUtils.mockAuthentication(member1);
 
         // when, then
         mockMvc.perform(post("/api/schedules/{scheduleId}/attendees", schedule1.getScheduleId())
@@ -325,11 +330,11 @@ public class TravelAttendeeControllerTest extends ScheduleTest {
     @DisplayName("일정 참석자 추가 시 초대자가 이미 참석자여서 예외 발생")
     void createAttendee_alreadyAttendee() throws Exception{
         // given
-        travelAttendeeRepository.save(createAuthorTravelAttendee(schedule1, member1));
-        travelAttendeeRepository.save(createGuestTravelAttendee(schedule1, member2, AttendeePermission.READ));
+        travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorTravelAttendee(schedule1, member1));
+        travelAttendeeRepository.save(TravelAttendeeFixture.createGuestTravelAttendee(schedule1, member2, READ));
 
-        AttendeeRequest request = createAttendeeRequest(member2.getEmail(), AttendeePermission.CHAT);
-        mockAuthentication(member1);
+        AttendeeRequest request = TravelAttendeeFixture.createAttendeeRequest(member2.getEmail(), CHAT);
+        SecurityTestUtils.mockAuthentication(member1);
 
         // when, then
         mockMvc.perform(post("/api/schedules/{scheduleId}/attendees", schedule1.getScheduleId())
@@ -346,11 +351,11 @@ public class TravelAttendeeControllerTest extends ScheduleTest {
     @DisplayName("일정 참석자 접근 권한 수정")
     void updateAttendeePermission() throws Exception{
         // given
-        travelAttendeeRepository.save(createAuthorTravelAttendee(schedule1, member1));
-        TravelAttendee guest = travelAttendeeRepository.save(createGuestTravelAttendee(schedule1, member2, AttendeePermission.READ));
+        travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorTravelAttendee(schedule1, member1));
+        TravelAttendee guest = travelAttendeeRepository.save(TravelAttendeeFixture.createGuestTravelAttendee(schedule1, member2, READ));
 
-        AttendeePermissionRequest request = createAttendeePermissionRequest(AttendeePermission.CHAT);
-        mockAuthentication(member1);
+        AttendeePermissionRequest request = TravelAttendeeFixture.createAttendeePermissionRequest(CHAT);
+        SecurityTestUtils.mockAuthentication(member1);
 
         // when, then
         mockMvc.perform(patch("/api/schedules/{scheduleId}/attendees/{attendeeId}",
@@ -363,18 +368,18 @@ public class TravelAttendeeControllerTest extends ScheduleTest {
                 .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()));
 
         TravelAttendee savedAttendee = travelAttendeeRepository.findById(guest.getAttendeeId()).get();
-        assertThat(savedAttendee.getPermission()).isEqualTo(AttendeePermission.CHAT);
+        assertThat(savedAttendee.getPermission()).isEqualTo(CHAT);
     }
 
     @Test
     @DisplayName("일정 참석자 접근 권한 수정 시 권한 null 값으로 예외 발생")
     void updateAttendeePermission_invalidNullEmail() throws Exception{
         // given
-        travelAttendeeRepository.save(createAuthorTravelAttendee(schedule1, member1));
-        TravelAttendee guest = travelAttendeeRepository.save(createGuestTravelAttendee(schedule1, member2, AttendeePermission.READ));
+        travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorTravelAttendee(schedule1, member1));
+        TravelAttendee guest = travelAttendeeRepository.save(TravelAttendeeFixture.createGuestTravelAttendee(schedule1, member2, READ));
 
-        AttendeePermissionRequest request = createAttendeePermissionRequest(null);
-        mockAuthentication(member1);
+        AttendeePermissionRequest request = TravelAttendeeFixture.createAttendeePermissionRequest(null);
+        SecurityTestUtils.mockAuthentication(member1);
 
         // when, then
         mockMvc.perform(patch("/api/schedules/{scheduleId}/attendees/{attendeeId}",
@@ -391,11 +396,11 @@ public class TravelAttendeeControllerTest extends ScheduleTest {
     @DisplayName("일정 참석자 접근 권한 수정 시 일정이 존재하지 않아 예외 발생")
     void updateAttendeePermission_scheduleNotFound() throws Exception{
         // given
-        travelAttendeeRepository.save(createAuthorTravelAttendee(schedule1, member1));
-        TravelAttendee guest = travelAttendeeRepository.save(createGuestTravelAttendee(schedule1, member2, AttendeePermission.READ));
+        travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorTravelAttendee(schedule1, member1));
+        TravelAttendee guest = travelAttendeeRepository.save(TravelAttendeeFixture.createGuestTravelAttendee(schedule1, member2, READ));
 
-        AttendeePermissionRequest request = createAttendeePermissionRequest(AttendeePermission.CHAT);
-        mockAuthentication(member1);
+        AttendeePermissionRequest request = TravelAttendeeFixture.createAttendeePermissionRequest(CHAT);
+        SecurityTestUtils.mockAuthentication(member1);
 
         // when, then
         mockMvc.perform(patch("/api/schedules/{scheduleId}/attendees/{attendeeId}",
@@ -413,12 +418,12 @@ public class TravelAttendeeControllerTest extends ScheduleTest {
     @DisplayName("일정 참석자 접근 권한 수정 시 요청자가 작성자가 아니여서 예외 발생")
     void updateAttendeePermission_forbiddenNotAuthor() throws Exception{
         // given
-        travelAttendeeRepository.save(createAuthorTravelAttendee(schedule1, member1));
-        TravelAttendee guest = travelAttendeeRepository.save(createGuestTravelAttendee(schedule1, member2, AttendeePermission.READ));
-        travelAttendeeRepository.save(createGuestTravelAttendee(schedule2, member3, AttendeePermission.ALL));
+        travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorTravelAttendee(schedule1, member1));
+        TravelAttendee guest = travelAttendeeRepository.save(TravelAttendeeFixture.createGuestTravelAttendee(schedule1, member2, READ));
+        travelAttendeeRepository.save(TravelAttendeeFixture.createGuestTravelAttendee(schedule2, member3, ALL));
 
-        AttendeePermissionRequest request = createAttendeePermissionRequest(AttendeePermission.CHAT);
-        mockAuthentication(member2);
+        AttendeePermissionRequest request = TravelAttendeeFixture.createAttendeePermissionRequest(CHAT);
+        SecurityTestUtils.mockAuthentication(member2);
 
         // when, then
         mockMvc.perform(patch("/api/schedules/{scheduleId}/attendees/{attendeeId}",
@@ -435,11 +440,11 @@ public class TravelAttendeeControllerTest extends ScheduleTest {
     @DisplayName("일정 참석자 접근 권한 수정 시 참석자 정보 존재하지 않아 예외 발생")
     void updateAttendeePermission_attendeeNotFound() throws Exception{
         // given
-        travelAttendeeRepository.save(createAuthorTravelAttendee(schedule1, member1));
-        travelAttendeeRepository.save(createGuestTravelAttendee(schedule1, member2, AttendeePermission.READ));
+        travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorTravelAttendee(schedule1, member1));
+        travelAttendeeRepository.save(TravelAttendeeFixture.createGuestTravelAttendee(schedule1, member2, READ));
 
-        AttendeePermissionRequest request = createAttendeePermissionRequest(AttendeePermission.CHAT);
-        mockAuthentication(member1);
+        AttendeePermissionRequest request = TravelAttendeeFixture.createAttendeePermissionRequest(CHAT);
+        SecurityTestUtils.mockAuthentication(member1);
 
         // when, then
         mockMvc.perform(patch("/api/schedules/{scheduleId}/attendees/{attendeeId}",
@@ -457,11 +462,11 @@ public class TravelAttendeeControllerTest extends ScheduleTest {
     @DisplayName("일정 참석자 접근 권한 수정 시 작성자 접근 권한 수정 시도로 예외 발생")
     void updateAttendeePermission_forbiddenUpdateAuthorPermission() throws Exception{
         // given
-        TravelAttendee author = travelAttendeeRepository.save(createAuthorTravelAttendee(schedule1, member1));
-        travelAttendeeRepository.save(createGuestTravelAttendee(schedule1, member2, AttendeePermission.READ));
+        TravelAttendee author = travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorTravelAttendee(schedule1, member1));
+        travelAttendeeRepository.save(TravelAttendeeFixture.createGuestTravelAttendee(schedule1, member2, READ));
 
-        AttendeePermissionRequest request = createAttendeePermissionRequest(AttendeePermission.CHAT);
-        mockAuthentication(member1);
+        AttendeePermissionRequest request = TravelAttendeeFixture.createAttendeePermissionRequest(CHAT);
+        SecurityTestUtils.mockAuthentication(member1);
 
         // when, then
         mockMvc.perform(patch("/api/schedules/{scheduleId}/attendees/{attendeeId}",
@@ -478,10 +483,10 @@ public class TravelAttendeeControllerTest extends ScheduleTest {
     @DisplayName("일정 나가기")
     void leaveAttendee() throws Exception {
         // given
-        travelAttendeeRepository.save(createAuthorTravelAttendee(schedule1, member1));
-        TravelAttendee guest = travelAttendeeRepository.save(createGuestTravelAttendee(schedule1, member2, AttendeePermission.READ));
+        travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorTravelAttendee(schedule1, member1));
+        TravelAttendee guest = travelAttendeeRepository.save(TravelAttendeeFixture.createGuestTravelAttendee(schedule1, member2, READ));
 
-        mockAuthentication(member2);
+        SecurityTestUtils.mockAuthentication(member2);
 
         // when, then
         mockMvc.perform(delete("/api/schedules/{scheduleId}/attendees", schedule1.getScheduleId()))
@@ -498,7 +503,7 @@ public class TravelAttendeeControllerTest extends ScheduleTest {
     @DisplayName("일정 나가기 요청 시 일정 데이터 존재하지 않아 예외 발생")
     void leaveAttendee_scheduleNotFound() throws Exception {
         // given
-        mockAuthentication(member2);
+        SecurityTestUtils.mockAuthentication(member2);
 
         // when, then
         mockMvc.perform(delete("/api/schedules/{scheduleId}/attendees", 1000L))
@@ -513,10 +518,10 @@ public class TravelAttendeeControllerTest extends ScheduleTest {
     @DisplayName("일정 나가기 요청 시 요청자가 작성자여서 예외 발생")
     void leaveAttendee_forbiddenAuthor() throws Exception {
         // given
-        travelAttendeeRepository.save(createAuthorTravelAttendee(schedule1, member1));
-        travelAttendeeRepository.save(createGuestTravelAttendee(schedule1, member2, AttendeePermission.READ));
+        travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorTravelAttendee(schedule1, member1));
+        travelAttendeeRepository.save(TravelAttendeeFixture.createGuestTravelAttendee(schedule1, member2, READ));
 
-        mockAuthentication(member1);
+        SecurityTestUtils.mockAuthentication(member1);
 
         // when, then
         mockMvc.perform(delete("/api/schedules/{scheduleId}/attendees", schedule1.getScheduleId()))
@@ -530,10 +535,10 @@ public class TravelAttendeeControllerTest extends ScheduleTest {
     @DisplayName("일정 나가기 요청 시 일정에 접근 권한이 없어 예외 발생")
     void leaveAttendee_forbiddenSchedule() throws Exception {
         // given
-        travelAttendeeRepository.save(createAuthorTravelAttendee(schedule1, member1));
-        travelAttendeeRepository.save(createGuestTravelAttendee(schedule1, member2, AttendeePermission.READ));
+        travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorTravelAttendee(schedule1, member1));
+        travelAttendeeRepository.save(TravelAttendeeFixture.createGuestTravelAttendee(schedule1, member2, READ));
 
-        mockAuthentication(member1);
+        SecurityTestUtils.mockAuthentication(member1);
 
         // when, then
         mockMvc.perform(delete("/api/schedules/{scheduleId}/attendees", schedule2.getScheduleId()))
@@ -547,10 +552,10 @@ public class TravelAttendeeControllerTest extends ScheduleTest {
     @DisplayName("일정 내보내기")
     void removeAttendee() throws Exception{
         // given
-        travelAttendeeRepository.save(createAuthorTravelAttendee(schedule1, member1));
-        TravelAttendee guest = travelAttendeeRepository.save(createGuestTravelAttendee(schedule1, member2, AttendeePermission.READ));
+        travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorTravelAttendee(schedule1, member1));
+        TravelAttendee guest = travelAttendeeRepository.save(TravelAttendeeFixture.createGuestTravelAttendee(schedule1, member2, READ));
 
-        mockAuthentication(member1);
+        SecurityTestUtils.mockAuthentication(member1);
 
         // when, then
         mockMvc.perform(delete("/api/schedules/{scheduleId}/attendees/{attendeeId}",
@@ -568,10 +573,10 @@ public class TravelAttendeeControllerTest extends ScheduleTest {
     @DisplayName("일정 나가기 요청 시 일정 데이터 존재하지 않아 예외 발생")
     void removeAttendee_scheduleNotFound() throws Exception {
         // given
-        travelAttendeeRepository.save(createAuthorTravelAttendee(schedule1, member1));
-        TravelAttendee guest = travelAttendeeRepository.save(createGuestTravelAttendee(schedule1, member2, AttendeePermission.READ));
+        travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorTravelAttendee(schedule1, member1));
+        TravelAttendee guest = travelAttendeeRepository.save(TravelAttendeeFixture.createGuestTravelAttendee(schedule1, member2, READ));
 
-        mockAuthentication(member1);
+        SecurityTestUtils.mockAuthentication(member1);
 
         // when, then
         mockMvc.perform(delete("/api/schedules/{scheduleId}/attendees/{attendeeId}",
@@ -587,10 +592,10 @@ public class TravelAttendeeControllerTest extends ScheduleTest {
     @DisplayName("일정 내보내기 시 작성자 요청이 아니여서 예외 발생")
     void removeAttendee_forbiddenAttendee() throws Exception{
         // given
-        travelAttendeeRepository.save(createAuthorTravelAttendee(schedule1, member1));
-        TravelAttendee guest = travelAttendeeRepository.save(createGuestTravelAttendee(schedule1, member2, AttendeePermission.READ));
+        travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorTravelAttendee(schedule1, member1));
+        TravelAttendee guest = travelAttendeeRepository.save(TravelAttendeeFixture.createGuestTravelAttendee(schedule1, member2, READ));
 
-        mockAuthentication(member2);
+        SecurityTestUtils.mockAuthentication(member2);
 
         // when, then
         mockMvc.perform(delete("/api/schedules/{scheduleId}/attendees/{attendeeId}",
@@ -605,8 +610,8 @@ public class TravelAttendeeControllerTest extends ScheduleTest {
     @DisplayName("일정 내보내기 시 참석자를 찾을 수 없어 예외 발생")
     void removeAttendee_attendeeNotFound() throws Exception{
         // given
-        travelAttendeeRepository.save(createAuthorTravelAttendee(schedule1, member1));
-        mockAuthentication(member1);
+        travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorTravelAttendee(schedule1, member1));
+        SecurityTestUtils.mockAuthentication(member1);
 
         // when, then
         mockMvc.perform(delete("/api/schedules/{scheduleId}/attendees/{attendeeId}",
@@ -621,11 +626,11 @@ public class TravelAttendeeControllerTest extends ScheduleTest {
     @DisplayName("일정 내보내기 시 작성자 내보내기 시도로 예외 발생")
     void removeAttendee_forbiddenRemoveAuthor() throws Exception{
         // given
-        TravelAttendee author = travelAttendeeRepository.save(createAuthorTravelAttendee(schedule1, member1));
-        travelAttendeeRepository.save(createGuestTravelAttendee(schedule1, member2, AttendeePermission.READ));
-        travelAttendeeRepository.save(createGuestTravelAttendee(schedule2, member3, AttendeePermission.ALL));
+        TravelAttendee author = travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorTravelAttendee(schedule1, member1));
+        travelAttendeeRepository.save(TravelAttendeeFixture.createGuestTravelAttendee(schedule1, member2, READ));
+        travelAttendeeRepository.save(TravelAttendeeFixture.createGuestTravelAttendee(schedule2, member3, ALL));
 
-        mockAuthentication(member1);
+        SecurityTestUtils.mockAuthentication(member1);
 
         // when, then
         mockMvc.perform(delete("/api/schedules/{scheduleId}/attendees/{attendeeId}",

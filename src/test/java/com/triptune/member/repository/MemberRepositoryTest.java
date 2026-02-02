@@ -1,14 +1,16 @@
 package com.triptune.member.repository;
 
-import com.triptune.member.MemberTest;
+import com.triptune.global.config.QuerydslConfig;
 import com.triptune.member.dto.response.MemberProfileResponse;
 import com.triptune.member.entity.Member;
 import com.triptune.member.entity.SocialMember;
 import com.triptune.member.enums.JoinType;
 import com.triptune.member.enums.SocialType;
+import com.triptune.member.fixture.MemberFixture;
+import com.triptune.member.fixture.SocialMemberFixture;
 import com.triptune.profile.entity.ProfileImage;
+import com.triptune.profile.fixture.ProfileImageFixture;
 import com.triptune.profile.repository.ProfileImageRepository;
-import com.triptune.global.config.QuerydslConfig;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,7 +27,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @DataJpaTest
 @Import({QuerydslConfig.class})
 @ActiveProfiles("h2")
-class MemberRepositoryTest extends MemberTest {
+class MemberRepositoryTest  {
 
     @Autowired private MemberRepository memberRepository;
     @Autowired private ProfileImageRepository profileImageRepository;
@@ -36,8 +38,8 @@ class MemberRepositoryTest extends MemberTest {
     @DisplayName("사용자 생성")
     void createMember() {
         // given
-        ProfileImage profileImage = createProfileImage("memberImage");
-        Member member = createNativeTypeMember("member@email.com", profileImage);
+        ProfileImage profileImage = ProfileImageFixture.createProfileImage("memberImage");
+        Member member = MemberFixture.createNativeTypeMember("member@email.com", profileImage);
 
         // when
         memberRepository.save(member);
@@ -52,11 +54,11 @@ class MemberRepositoryTest extends MemberTest {
     @DisplayName("채팅 회원들 프로필 조회")
     void findMembersProfileByMemberId() {
         // given
-        ProfileImage profileImage1 = profileImageRepository.save(createProfileImage("member1Image"));
-        Member member1 = memberRepository.save(createNativeTypeMember("member1@email.com", profileImage1));
+        ProfileImage profileImage1 = profileImageRepository.save(ProfileImageFixture.createProfileImage("member1Image"));
+        Member member1 = memberRepository.save(MemberFixture.createNativeTypeMember("member1@email.com", profileImage1));
 
-        ProfileImage profileImage2 = profileImageRepository.save(createProfileImage("member2Image"));
-        Member member2 = memberRepository.save(createNativeTypeMember("member2@email.com", profileImage2));
+        ProfileImage profileImage2 = profileImageRepository.save(ProfileImageFixture.createProfileImage("member2Image"));
+        Member member2 = memberRepository.save(MemberFixture.createNativeTypeMember("member2@email.com", profileImage2));
 
 
         Set<Long> request = new HashSet<>();
@@ -81,11 +83,11 @@ class MemberRepositoryTest extends MemberTest {
     @DisplayName("회원의 일반 정보와 소셜 정보 조회 - 소셜 회원")
     void findByIdWithSocialMembers_socialMember() {
         // given
-        ProfileImage profileImage = profileImageRepository.save(createProfileImage("memberImage"));
-        Member member = memberRepository.save(createSocialTypeMember("member1@email.com", profileImage));
+        ProfileImage profileImage = profileImageRepository.save(ProfileImageFixture.createProfileImage("memberImage"));
+        Member member = memberRepository.save(MemberFixture.createSocialTypeMember("member1@email.com", profileImage));
 
-        SocialMember socialMember1 = socialMemberRepository.save(createSocialMember(member, SocialType.KAKAO, "kakao"));
-        SocialMember socialMember2 = socialMemberRepository.save(createSocialMember(member, SocialType.NAVER, "naver"));
+        SocialMember socialMember1 = socialMemberRepository.save(SocialMemberFixture.createSocialMember(member, SocialType.KAKAO, "kakao"));
+        SocialMember socialMember2 = socialMemberRepository.save(SocialMemberFixture.createSocialMember(member, SocialType.NAVER, "naver"));
 
         // when
         Member response = memberRepository.findByIdWithSocialMembers(member.getMemberId()).get();
@@ -102,8 +104,8 @@ class MemberRepositoryTest extends MemberTest {
     @DisplayName("회원의 일반 정보와 소셜 정보 조회 - 일반 회원")
     void findByIdWithSocialMembers_nativeMember() {
         // given
-        ProfileImage profileImage = profileImageRepository.save(createProfileImage("memberImage"));
-        Member member = memberRepository.save(createNativeTypeMember("member@email.com", profileImage));
+        ProfileImage profileImage = profileImageRepository.save(ProfileImageFixture.createProfileImage("memberImage"));
+        Member member = memberRepository.save(MemberFixture.createNativeTypeMember("member@email.com", profileImage));
 
         // when
         Member response = memberRepository.findByIdWithSocialMembers(member.getMemberId()).get();
@@ -119,11 +121,11 @@ class MemberRepositoryTest extends MemberTest {
     @DisplayName("회원의 일반 정보와 소셜 정보 조회 - 통합 회원")
     void findByIdWithSocialMembers_bothMember() {
         // given
-        ProfileImage profileImage = profileImageRepository.save(createProfileImage("memberImage"));
-        Member member = memberRepository.save(createBothTypeMember("member@email.com", profileImage));
+        ProfileImage profileImage = profileImageRepository.save(ProfileImageFixture.createProfileImage("memberImage"));
+        Member member = memberRepository.save(MemberFixture.createBothTypeMember("member@email.com", profileImage));
 
-        SocialMember socialMember1 = socialMemberRepository.save(createSocialMember(member, SocialType.KAKAO, "kakao"));
-        SocialMember socialMember2 = socialMemberRepository.save(createSocialMember(member, SocialType.NAVER, "naver"));
+        SocialMember socialMember1 = socialMemberRepository.save(SocialMemberFixture.createSocialMember(member, SocialType.KAKAO, "kakao"));
+        SocialMember socialMember2 = socialMemberRepository.save(SocialMemberFixture.createSocialMember(member, SocialType.NAVER, "naver"));
 
         // when
         Member response = memberRepository.findByIdWithSocialMembers(member.getMemberId()).get();

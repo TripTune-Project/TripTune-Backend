@@ -4,7 +4,7 @@ import com.triptune.bookmark.repository.BookmarkRepository;
 import com.triptune.global.message.ErrorCode;
 import com.triptune.global.exception.DataNotFoundException;
 import com.triptune.global.util.PageUtils;
-import com.triptune.travel.dto.PlaceLocation;
+import com.triptune.travel.repository.dto.PlaceLocation;
 import com.triptune.travel.dto.request.PlaceLocationRequest;
 import com.triptune.travel.dto.request.PlaceSearchRequest;
 import com.triptune.travel.dto.response.PlaceDetailResponse;

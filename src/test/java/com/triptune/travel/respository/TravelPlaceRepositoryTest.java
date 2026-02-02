@@ -1,9 +1,11 @@
 package com.triptune.travel.respository;
 
 import com.triptune.common.entity.*;
+import com.triptune.common.fixture.*;
 import com.triptune.common.repository.*;
-import com.triptune.travel.TravelTest;
-import com.triptune.travel.dto.PlaceLocation;
+import com.triptune.travel.fixture.TravelImageFixture;
+import com.triptune.travel.fixture.TravelPlaceFixture;
+import com.triptune.travel.repository.dto.PlaceLocation;
 import com.triptune.travel.dto.request.PlaceLocationRequest;
 import com.triptune.travel.dto.request.PlaceSearchRequest;
 import com.triptune.travel.dto.response.PlaceResponse;
@@ -34,7 +36,7 @@ import static org.assertj.core.api.Assertions.byLessThan;
 @DataJpaTest
 @Import({QuerydslConfig.class})
 @ActiveProfiles("h2")
-public class TravelPlaceRepositoryTest extends TravelTest {
+public class TravelPlaceRepositoryTest {
     @Autowired private TravelPlaceRepository travelPlaceRepository;
     @Autowired private CityRepository cityRepository;
     @Autowired private CountryRepository countryRepository;
@@ -55,13 +57,13 @@ public class TravelPlaceRepositoryTest extends TravelTest {
 
     @BeforeEach
     void setUp(){
-        country = countryRepository.save(createCountry());
-        city = cityRepository.save(createCity(country, "서울"));
-        gangnam = districtRepository.save(createDistrict(city, "강남구"));
-        junggu = districtRepository.save(createDistrict(city, "중구"));
-        apiCategory = apiCategoryRepository.save(createApiCategory());
-        attractionContentType = apiContentTypeRepository.save(createApiContentType(ThemeType.ATTRACTIONS));
-        sportsContentType = apiContentTypeRepository.save(createApiContentType(ThemeType.SPORTS));
+        country = countryRepository.save(CountryFixture.createCountry());
+        city = cityRepository.save(CityFixture.createCity(country, "서울"));
+        gangnam = districtRepository.save(DistrictFixture.createDistrict(city, "강남구"));
+        junggu = districtRepository.save(DistrictFixture.createDistrict(city, "중구"));
+        apiCategory = apiCategoryRepository.save(ApiCategoryFixture.createApiCategory());
+        attractionContentType = apiContentTypeRepository.save(ApiContentTypeFixture.createApiContentType(ThemeType.ATTRACTIONS));
+        sportsContentType = apiContentTypeRepository.save(ApiContentTypeFixture.createApiContentType(ThemeType.SPORTS));
     }
 
 
@@ -70,7 +72,7 @@ public class TravelPlaceRepositoryTest extends TravelTest {
     void findNearByTravelPlaceList_withData(){
         // given
         TravelPlace gangnamPlace = travelPlaceRepository.save(
-                createTravelPlaceWithLocation(
+                TravelPlaceFixture.createTravelPlaceWithLocation(
                         country,
                         city,
                         gangnam,
@@ -81,11 +83,11 @@ public class TravelPlaceRepositoryTest extends TravelTest {
                         127.0281573537
                 )
         );
-        TravelImage gangnamThumbnail = travelImageRepository.save(createTravelImage(gangnamPlace, "test1", true));
-        travelImageRepository.save(createTravelImage(gangnamPlace, "test2", false));
+        TravelImage gangnamThumbnail = travelImageRepository.save(TravelImageFixture.createTravelImage(gangnamPlace, "test1", true));
+        travelImageRepository.save(TravelImageFixture.createTravelImage(gangnamPlace, "test2", false));
 
         TravelPlace jungguPlace = travelPlaceRepository.save(
-                createTravelPlaceWithLocation(
+                TravelPlaceFixture.createTravelPlaceWithLocation(
                         country,
                         city,
                         junggu,
@@ -98,7 +100,7 @@ public class TravelPlaceRepositoryTest extends TravelTest {
         );
 
         Pageable pageable = PageUtils.defaultPageable(1);
-        PlaceLocationRequest placeLocationRequest = createTravelLocationRequest(37.497, 127.0);
+        PlaceLocationRequest placeLocationRequest = TravelPlaceFixture.createTravelLocationRequest(37.497, 127.0);
         int radius = 5;   // 5km 이내
 
         // when
@@ -123,7 +125,7 @@ public class TravelPlaceRepositoryTest extends TravelTest {
     void findNearByTravelPlaceList_emptyResult(){
         // given
         TravelPlace gangnamPlace = travelPlaceRepository.save(
-                createTravelPlace(
+                TravelPlaceFixture.createTravelPlace(
                         country,
                         city,
                         gangnam,
@@ -132,11 +134,11 @@ public class TravelPlaceRepositoryTest extends TravelTest {
                         "여행지1"
                 )
         );
-        travelImageRepository.save(createTravelImage(gangnamPlace, "test1", true));
-        travelImageRepository.save(createTravelImage(gangnamPlace, "test2", false));
+        travelImageRepository.save(TravelImageFixture.createTravelImage(gangnamPlace, "test1", true));
+        travelImageRepository.save(TravelImageFixture.createTravelImage(gangnamPlace, "test2", false));
 
         travelPlaceRepository.save(
-                createTravelPlace(
+                TravelPlaceFixture.createTravelPlace(
                         country,
                         city,
                         junggu,
@@ -147,7 +149,7 @@ public class TravelPlaceRepositoryTest extends TravelTest {
         );
 
         Pageable pageable = PageUtils.defaultPageable(1);
-        PlaceLocationRequest placeLocationRequest = createTravelLocationRequest(99.999999, 99.999999);
+        PlaceLocationRequest placeLocationRequest = TravelPlaceFixture.createTravelLocationRequest(99.999999, 99.999999);
         int radius = 5;   // 5km 이내
 
         // when
@@ -163,7 +165,7 @@ public class TravelPlaceRepositoryTest extends TravelTest {
     void searchTravelPlacesWithLocation_withData(){
         // given
         TravelPlace gangnamPlace = travelPlaceRepository.save(
-                createTravelPlaceWithLocation(
+                TravelPlaceFixture.createTravelPlaceWithLocation(
                         country,
                         city,
                         gangnam,
@@ -174,11 +176,11 @@ public class TravelPlaceRepositoryTest extends TravelTest {
                         127.0281573537
                 )
         );
-        TravelImage gangnamThumbnail = travelImageRepository.save(createTravelImage(gangnamPlace, "test1", true));
-        travelImageRepository.save(createTravelImage(gangnamPlace, "test2", false));
+        TravelImage gangnamThumbnail = travelImageRepository.save(TravelImageFixture.createTravelImage(gangnamPlace, "test1", true));
+        travelImageRepository.save(TravelImageFixture.createTravelImage(gangnamPlace, "test2", false));
 
         travelPlaceRepository.save(
-                createTravelPlaceWithLocation(
+                TravelPlaceFixture.createTravelPlaceWithLocation(
                         country,
                         city,
                         junggu,
@@ -191,7 +193,7 @@ public class TravelPlaceRepositoryTest extends TravelTest {
         );
 
         Pageable pageable = PageUtils.defaultPageable(1);
-        PlaceSearchRequest request = createTravelSearchRequest(37.4970465429, 127.0281573537, "강남");
+        PlaceSearchRequest request = TravelPlaceFixture.createTravelSearchRequest(37.4970465429, 127.0281573537, "강남");
 
         // when
         Page<PlaceLocation> response = travelPlaceRepository.searchTravelPlacesWithLocation(pageable, request);
@@ -211,7 +213,7 @@ public class TravelPlaceRepositoryTest extends TravelTest {
     void searchTravelPlacesWithLocation_emptyResult(){
         // given
         TravelPlace gangnamPlace = travelPlaceRepository.save(
-                createTravelPlaceWithLocation(
+                TravelPlaceFixture.createTravelPlaceWithLocation(
                         country,
                         city,
                         gangnam,
@@ -222,11 +224,11 @@ public class TravelPlaceRepositoryTest extends TravelTest {
                         127.0281573537
                 )
         );
-        travelImageRepository.save(createTravelImage(gangnamPlace, "test1", true));
-        travelImageRepository.save(createTravelImage(gangnamPlace, "test2", false));
+        travelImageRepository.save(TravelImageFixture.createTravelImage(gangnamPlace, "test1", true));
+        travelImageRepository.save(TravelImageFixture.createTravelImage(gangnamPlace, "test2", false));
 
         travelPlaceRepository.save(
-                createTravelPlaceWithLocation(
+                TravelPlaceFixture.createTravelPlaceWithLocation(
                         country,
                         city,
                         junggu,
@@ -238,7 +240,7 @@ public class TravelPlaceRepositoryTest extends TravelTest {
                 )
         );
         Pageable pageable = PageUtils.defaultPageable(1);
-        PlaceSearchRequest request = createTravelSearchRequest(37.4970465429, 127.0281573537, "ㅁㄴㅇㄹ");
+        PlaceSearchRequest request = TravelPlaceFixture.createTravelSearchRequest(37.4970465429, 127.0281573537, "ㅁㄴㅇㄹ");
 
         // when
         Page<PlaceLocation> response = travelPlaceRepository.searchTravelPlacesWithLocation(pageable, request);
@@ -253,7 +255,7 @@ public class TravelPlaceRepositoryTest extends TravelTest {
     void findDefaultTravelPlacesByJungGu_withData(){
         // given
         TravelPlace gangnamPlace = travelPlaceRepository.save(
-                createTravelPlaceWithLocation(
+                TravelPlaceFixture.createTravelPlaceWithLocation(
                         country,
                         city,
                         gangnam,
@@ -264,11 +266,11 @@ public class TravelPlaceRepositoryTest extends TravelTest {
                         127.02820
                 )
         );
-        TravelImage gangnamThumbnail = travelImageRepository.save(createTravelImage(gangnamPlace, "test1", true));
-        travelImageRepository.save(createTravelImage(gangnamPlace, "test2", false));
+        TravelImage gangnamThumbnail = travelImageRepository.save(TravelImageFixture.createTravelImage(gangnamPlace, "test1", true));
+        travelImageRepository.save(TravelImageFixture.createTravelImage(gangnamPlace, "test2", false));
 
         TravelPlace jungguPlace = travelPlaceRepository.save(
-                createTravelPlaceWithLocation(
+                TravelPlaceFixture.createTravelPlaceWithLocation(
                         country,
                         city,
                         junggu,
@@ -280,10 +282,10 @@ public class TravelPlaceRepositoryTest extends TravelTest {
                 )
         );
 
-        City busan = cityRepository.save(createCity(country, "부산"));
-        District busanDistrict = districtRepository.save(createDistrict(busan, "금정구"));
+        City busan = cityRepository.save(CityFixture.createCity(country, "부산"));
+        District busanDistrict = districtRepository.save(DistrictFixture.createDistrict(busan, "금정구"));
         TravelPlace busanPlace = travelPlaceRepository.save(
-                createTravelPlaceWithLocation(
+                TravelPlaceFixture.createTravelPlaceWithLocation(
                         country,
                         busan,
                         busanDistrict,
@@ -294,8 +296,8 @@ public class TravelPlaceRepositoryTest extends TravelTest {
                         129.06010
                 )
         );
-        TravelImage busanThumbnail = travelImageRepository.save(createTravelImage(busanPlace, "부산이미지1", true));
-        travelImageRepository.save(createTravelImage(busanPlace, "부산이미지2", false));
+        TravelImage busanThumbnail = travelImageRepository.save(TravelImageFixture.createTravelImage(busanPlace, "부산이미지1", true));
+        travelImageRepository.save(TravelImageFixture.createTravelImage(busanPlace, "부산이미지2", false));
 
         Pageable pageable = PageUtils.defaultPageable(1);
 
@@ -338,7 +340,7 @@ public class TravelPlaceRepositoryTest extends TravelTest {
     void searchTravelPlaces_withData(){
         // given
         TravelPlace gangnamPlace = travelPlaceRepository.save(
-                createTravelPlace(
+                TravelPlaceFixture.createTravelPlace(
                         country,
                         city,
                         gangnam,
@@ -347,11 +349,11 @@ public class TravelPlaceRepositoryTest extends TravelTest {
                         "여행지1"
                 )
         );
-        TravelImage gangnamThumbnail = travelImageRepository.save(createTravelImage(gangnamPlace, "test1", true));
-        travelImageRepository.save(createTravelImage(gangnamPlace, "test2", false));
+        TravelImage gangnamThumbnail = travelImageRepository.save(TravelImageFixture.createTravelImage(gangnamPlace, "test1", true));
+        travelImageRepository.save(TravelImageFixture.createTravelImage(gangnamPlace, "test2", false));
 
         travelPlaceRepository.save(
-                createTravelPlace(
+                TravelPlaceFixture.createTravelPlace(
                         country,
                         city,
                         junggu,
@@ -381,7 +383,7 @@ public class TravelPlaceRepositoryTest extends TravelTest {
     void searchTravelPlaces_emptyResult(){
         // given
         TravelPlace gangnamPlace = travelPlaceRepository.save(
-                createTravelPlace(
+                TravelPlaceFixture.createTravelPlace(
                         country,
                         city,
                         gangnam,
@@ -390,11 +392,11 @@ public class TravelPlaceRepositoryTest extends TravelTest {
                         "여행지1"
                 )
         );
-        travelImageRepository.save(createTravelImage(gangnamPlace, "test1", true));
-        travelImageRepository.save(createTravelImage(gangnamPlace, "test2", false));
+        travelImageRepository.save(TravelImageFixture.createTravelImage(gangnamPlace, "test1", true));
+        travelImageRepository.save(TravelImageFixture.createTravelImage(gangnamPlace, "test2", false));
 
         travelPlaceRepository.save(
-                createTravelPlace(
+                TravelPlaceFixture.createTravelPlace(
                         country,
                         city,
                         junggu,
@@ -419,7 +421,7 @@ public class TravelPlaceRepositoryTest extends TravelTest {
     void findPopularTravelPlacesByCity_ALL(){
         // given
         TravelPlace gangnamPlace = travelPlaceRepository.save(
-                createTravelPlaceWithBookmarkCnt(
+                TravelPlaceFixture.createTravelPlaceWithBookmarkCnt(
                         country,
                         city,
                         gangnam,
@@ -429,11 +431,11 @@ public class TravelPlaceRepositoryTest extends TravelTest {
                         1
                 )
         );
-        TravelImage gangnamThumbnail = travelImageRepository.save(createTravelImage(gangnamPlace, "test1", true));
-        travelImageRepository.save(createTravelImage(gangnamPlace, "test2", false));
+        TravelImage gangnamThumbnail = travelImageRepository.save(TravelImageFixture.createTravelImage(gangnamPlace, "test1", true));
+        travelImageRepository.save(TravelImageFixture.createTravelImage(gangnamPlace, "test2", false));
 
         TravelPlace jungguPlace = travelPlaceRepository.save(
-                createTravelPlaceWithBookmarkCnt(
+                TravelPlaceFixture.createTravelPlaceWithBookmarkCnt(
                         country,
                         city,
                         junggu,
@@ -444,10 +446,10 @@ public class TravelPlaceRepositoryTest extends TravelTest {
                 )
         );
 
-        City busan = cityRepository.save(createCity(country, "부산"));
-        District busanDistrict = districtRepository.save(createDistrict(busan, "금정구"));
+        City busan = cityRepository.save(CityFixture.createCity(country, "부산"));
+        District busanDistrict = districtRepository.save(DistrictFixture.createDistrict(busan, "금정구"));
         TravelPlace busanPlace = travelPlaceRepository.save(
-                createTravelPlaceWithBookmarkCnt(
+                TravelPlaceFixture.createTravelPlaceWithBookmarkCnt(
                         country,
                         busan,
                         busanDistrict,
@@ -457,13 +459,13 @@ public class TravelPlaceRepositoryTest extends TravelTest {
                         2
                 )
         );
-        TravelImage busanThumbnail = travelImageRepository.save(createTravelImage(busanPlace, "부산이미지1", true));
-        travelImageRepository.save(createTravelImage(busanPlace, "부산이미지2", false));
+        TravelImage busanThumbnail = travelImageRepository.save(TravelImageFixture.createTravelImage(busanPlace, "부산이미지1", true));
+        travelImageRepository.save(TravelImageFixture.createTravelImage(busanPlace, "부산이미지2", false));
 
-        City jeolla = cityRepository.save(createCity(country, "전라남도"));
-        District jeollaDistrict = districtRepository.save(createDistrict(busan, "보성구"));
+        City jeolla = cityRepository.save(CityFixture.createCity(country, "전라남도"));
+        District jeollaDistrict = districtRepository.save(DistrictFixture.createDistrict(busan, "보성구"));
         TravelPlace jeollaPlace = travelPlaceRepository.save(
-                createTravelPlaceWithBookmarkCnt(
+                TravelPlaceFixture.createTravelPlaceWithBookmarkCnt(
                         country,
                         jeolla,
                         jeollaDistrict,
@@ -495,7 +497,7 @@ public class TravelPlaceRepositoryTest extends TravelTest {
     void findPopularTravelPlacesByCity_JEOLLA(){
         // given
         TravelPlace gangnamPlace = travelPlaceRepository.save(
-                createTravelPlaceWithBookmarkCnt(
+                TravelPlaceFixture.createTravelPlaceWithBookmarkCnt(
                         country,
                         city,
                         gangnam,
@@ -505,11 +507,11 @@ public class TravelPlaceRepositoryTest extends TravelTest {
                         1
                 )
         );
-        travelImageRepository.save(createTravelImage(gangnamPlace, "test1", true));
-        travelImageRepository.save(createTravelImage(gangnamPlace, "test2", false));
+        travelImageRepository.save(TravelImageFixture.createTravelImage(gangnamPlace, "test1", true));
+        travelImageRepository.save(TravelImageFixture.createTravelImage(gangnamPlace, "test2", false));
 
         travelPlaceRepository.save(
-                createTravelPlaceWithBookmarkCnt(
+                TravelPlaceFixture.createTravelPlaceWithBookmarkCnt(
                         country,
                         city,
                         junggu,
@@ -520,10 +522,10 @@ public class TravelPlaceRepositoryTest extends TravelTest {
                 )
         );
 
-        City jeolla1 = cityRepository.save(createCity(country, "전북특별자치도"));
-        District jeolla1District = districtRepository.save(createDistrict(jeolla1, "고창군"));
+        City jeolla1 = cityRepository.save(CityFixture.createCity(country, "전북특별자치도"));
+        District jeolla1District = districtRepository.save(DistrictFixture.createDistrict(jeolla1, "고창군"));
         TravelPlace jeollaPlace1 = travelPlaceRepository.save(
-                createTravelPlaceWithBookmarkCnt(
+                TravelPlaceFixture.createTravelPlaceWithBookmarkCnt(
                         country,
                         jeolla1,
                         jeolla1District,
@@ -532,13 +534,13 @@ public class TravelPlaceRepositoryTest extends TravelTest {
                         1
                 )
         );
-        TravelImage jeolla1Thumbnail = travelImageRepository.save(createTravelImage(jeollaPlace1, "부산이미지1", true));
-        travelImageRepository.save(createTravelImage(jeollaPlace1, "부산이미지2", false));
+        TravelImage jeolla1Thumbnail = travelImageRepository.save(TravelImageFixture.createTravelImage(jeollaPlace1, "부산이미지1", true));
+        travelImageRepository.save(TravelImageFixture.createTravelImage(jeollaPlace1, "부산이미지2", false));
 
-        City jeolla2 = cityRepository.save(createCity(country, "전라남도"));
-        District jeolla2District = districtRepository.save(createDistrict(jeolla2, "보성구"));
+        City jeolla2 = cityRepository.save(CityFixture.createCity(country, "전라남도"));
+        District jeolla2District = districtRepository.save(DistrictFixture.createDistrict(jeolla2, "보성구"));
         TravelPlace jeollaPlace2 = travelPlaceRepository.save(
-                createTravelPlaceWithBookmarkCnt(
+                TravelPlaceFixture.createTravelPlaceWithBookmarkCnt(
                         country,
                         jeolla2,
                         jeolla2District,
@@ -567,7 +569,7 @@ public class TravelPlaceRepositoryTest extends TravelTest {
     void findPopularTravelPlacesByCity_empty(){
         // given
         TravelPlace gangnamPlace = travelPlaceRepository.save(
-                createTravelPlace(
+                TravelPlaceFixture.createTravelPlace(
                         country,
                         city,
                         gangnam,
@@ -576,10 +578,10 @@ public class TravelPlaceRepositoryTest extends TravelTest {
                         "여행지1"
                 )
         );
-        travelImageRepository.save(createTravelImage(gangnamPlace, "test1", true));
-        travelImageRepository.save(createTravelImage(gangnamPlace, "test2", false));
+        travelImageRepository.save(TravelImageFixture.createTravelImage(gangnamPlace, "test1", true));
+        travelImageRepository.save(TravelImageFixture.createTravelImage(gangnamPlace, "test2", false));
 
-        travelPlaceRepository.save(createTravelPlace(country, city, junggu, apiCategory, sportsContentType, "여행지2"));
+        travelPlaceRepository.save(TravelPlaceFixture.createTravelPlace(country, city, junggu, apiCategory, sportsContentType, "여행지2"));
 
         // when
         List<PlaceSimpleResponse> response = travelPlaceRepository.findPopularTravelPlaces(CityType.JEOLLA);
@@ -596,7 +598,7 @@ public class TravelPlaceRepositoryTest extends TravelTest {
     void findRecommendTravelPlacesByTheme_ALL(){
         // given
         TravelPlace gangnamPlace = travelPlaceRepository.save(
-                createTravelPlaceWithBookmarkCnt(
+                TravelPlaceFixture.createTravelPlaceWithBookmarkCnt(
                         country,
                         city,
                         gangnam,
@@ -606,11 +608,11 @@ public class TravelPlaceRepositoryTest extends TravelTest {
                         1
                 )
         );
-        TravelImage gangnamThumbnail = travelImageRepository.save(createTravelImage(gangnamPlace, "test1", true));
-        travelImageRepository.save(createTravelImage(gangnamPlace, "test2", false));
+        TravelImage gangnamThumbnail = travelImageRepository.save(TravelImageFixture.createTravelImage(gangnamPlace, "test1", true));
+        travelImageRepository.save(TravelImageFixture.createTravelImage(gangnamPlace, "test2", false));
 
         TravelPlace jungguPlace = travelPlaceRepository.save(
-                createTravelPlaceWithBookmarkCnt(
+                TravelPlaceFixture.createTravelPlaceWithBookmarkCnt(
                         country,
                         city,
                         junggu,
@@ -621,11 +623,11 @@ public class TravelPlaceRepositoryTest extends TravelTest {
                 )
         );
 
-        City busan = cityRepository.save(createCity(country, "부산"));
-        District busanDistrict = districtRepository.save(createDistrict(busan, "금정구"));
-        ApiContentType cultureContentType = apiContentTypeRepository.save(createApiContentType(ThemeType.CULTURE));
+        City busan = cityRepository.save(CityFixture.createCity(country, "부산"));
+        District busanDistrict = districtRepository.save(DistrictFixture.createDistrict(busan, "금정구"));
+        ApiContentType cultureContentType = apiContentTypeRepository.save(ApiContentTypeFixture.createApiContentType(ThemeType.CULTURE));
         TravelPlace busanPlace = travelPlaceRepository.save(
-                createTravelPlaceWithBookmarkCnt(
+                TravelPlaceFixture.createTravelPlaceWithBookmarkCnt(
                         country,
                         busan,
                         busanDistrict,
@@ -635,13 +637,13 @@ public class TravelPlaceRepositoryTest extends TravelTest {
                         2
                 )
         );
-        TravelImage busanImage1 = travelImageRepository.save(createTravelImage(busanPlace, "부산이미지1", true));
-        travelImageRepository.save(createTravelImage(busanPlace, "부산이미지2", false));
+        TravelImage busanImage1 = travelImageRepository.save(TravelImageFixture.createTravelImage(busanPlace, "부산이미지1", true));
+        travelImageRepository.save(TravelImageFixture.createTravelImage(busanPlace, "부산이미지2", false));
 
-        City jeolla = cityRepository.save(createCity(country, "전라남도"));
-        District jeollaDistrict = districtRepository.save(createDistrict(busan, "보성구"));
+        City jeolla = cityRepository.save(CityFixture.createCity(country, "전라남도"));
+        District jeollaDistrict = districtRepository.save(DistrictFixture.createDistrict(busan, "보성구"));
         TravelPlace jeollaPlace = travelPlaceRepository.save(
-                createTravelPlaceWithBookmarkCnt(
+                TravelPlaceFixture.createTravelPlaceWithBookmarkCnt(
                         country,
                         jeolla,
                         jeollaDistrict,
@@ -672,7 +674,7 @@ public class TravelPlaceRepositoryTest extends TravelTest {
     void findRecommendTravelPlacesByTheme_ATTRACTIONS(){
         // given
         TravelPlace gangnamPlace = travelPlaceRepository.save(
-                createTravelPlaceWithBookmarkCnt(
+                TravelPlaceFixture.createTravelPlaceWithBookmarkCnt(
                         country,
                         city,
                         gangnam,
@@ -682,11 +684,11 @@ public class TravelPlaceRepositoryTest extends TravelTest {
                         0
                 )
         );
-        TravelImage gangnamThumbnail = travelImageRepository.save(createTravelImage(gangnamPlace, "test1", true));
-        travelImageRepository.save(createTravelImage(gangnamPlace, "test2", false));
+        TravelImage gangnamThumbnail = travelImageRepository.save(TravelImageFixture.createTravelImage(gangnamPlace, "test1", true));
+        travelImageRepository.save(TravelImageFixture.createTravelImage(gangnamPlace, "test2", false));
 
         travelPlaceRepository.save(
-                createTravelPlaceWithBookmarkCnt(
+                TravelPlaceFixture.createTravelPlaceWithBookmarkCnt(
                         country,
                         city,
                         junggu,
@@ -695,11 +697,11 @@ public class TravelPlaceRepositoryTest extends TravelTest {
                         "여행지2",
                         1));
 
-        City jeolla1 = cityRepository.save(createCity(country, "전북특별자치도"));
-        District jeolla1District = districtRepository.save(createDistrict(jeolla1, "고창군"));
-        ApiContentType cultureContentType = apiContentTypeRepository.save(createApiContentType(ThemeType.CULTURE));
+        City jeolla1 = cityRepository.save(CityFixture.createCity(country, "전북특별자치도"));
+        District jeolla1District = districtRepository.save(DistrictFixture.createDistrict(jeolla1, "고창군"));
+        ApiContentType cultureContentType = apiContentTypeRepository.save(ApiContentTypeFixture.createApiContentType(ThemeType.CULTURE));
         TravelPlace jeollaPlace1 = travelPlaceRepository.save(
-                createTravelPlaceWithBookmarkCnt(
+                TravelPlaceFixture.createTravelPlaceWithBookmarkCnt(
                         country,
                         jeolla1,
                         jeolla1District,
@@ -709,13 +711,13 @@ public class TravelPlaceRepositoryTest extends TravelTest {
                         2
                 )
         );
-        travelImageRepository.save(createTravelImage(jeollaPlace1, "부산이미지1", true));
-        travelImageRepository.save(createTravelImage(jeollaPlace1, "부산이미지2", false));
+        travelImageRepository.save(TravelImageFixture.createTravelImage(jeollaPlace1, "부산이미지1", true));
+        travelImageRepository.save(TravelImageFixture.createTravelImage(jeollaPlace1, "부산이미지2", false));
 
-        City jeolla2 = cityRepository.save(createCity(country, "전라남도"));
-        District jeolla2District = districtRepository.save(createDistrict(jeolla2, "보성구"));
+        City jeolla2 = cityRepository.save(CityFixture.createCity(country, "전라남도"));
+        District jeolla2District = districtRepository.save(DistrictFixture.createDistrict(jeolla2, "보성구"));
         TravelPlace jellaPlace2 = travelPlaceRepository.save(
-                createTravelPlaceWithBookmarkCnt(
+                TravelPlaceFixture.createTravelPlaceWithBookmarkCnt(
                         country,
                         jeolla2,
                         jeolla2District,
@@ -744,7 +746,7 @@ public class TravelPlaceRepositoryTest extends TravelTest {
     void findRecommendTravelPlacesByTheme_empty(){
         // given
         TravelPlace gangnamPlace = travelPlaceRepository.save(
-                createTravelPlace(
+                TravelPlaceFixture.createTravelPlace(
                         country,
                         city,
                         gangnam,
@@ -753,11 +755,11 @@ public class TravelPlaceRepositoryTest extends TravelTest {
                         "여행지1"
                 )
         );
-        travelImageRepository.save(createTravelImage(gangnamPlace, "test1", true));
-        travelImageRepository.save(createTravelImage(gangnamPlace, "test2", false));
+        travelImageRepository.save(TravelImageFixture.createTravelImage(gangnamPlace, "test1", true));
+        travelImageRepository.save(TravelImageFixture.createTravelImage(gangnamPlace, "test2", false));
 
         travelPlaceRepository.save(
-                createTravelPlace(
+                TravelPlaceFixture.createTravelPlace(
                         country,
                         city,
                         junggu,

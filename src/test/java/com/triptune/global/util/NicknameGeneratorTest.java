@@ -33,7 +33,7 @@ class NicknameGeneratorTest {
         String response = nicknameGenerator.createNickname();
 
         // then
-        log.info("[닉네임] " + response);
+        log.info("닉네임 = {}", response);
         assertThat(response).isNotNull();
         assertThat(response).matches("[가-힣]+[가-힣]+\\d{3}");
     }
@@ -51,7 +51,7 @@ class NicknameGeneratorTest {
         String response = nicknameGenerator.createNickname();
 
         // then
-        log.info("[닉네임] " + response);
+        log.info("닉네임 = {}", response);
         assertThat(response).isNotNull();
         assertThat(response).matches("[가-힣]+[가-힣]+\\d{3}");
 
@@ -66,7 +66,7 @@ class NicknameGeneratorTest {
         String response = NicknameGenerator.generateRandomNickname();
 
         // then
-        log.info("[닉네임] " + response);
+        log.info("닉네임 = {}", response);
         assertThat(response).isNotNull();
         assertThat(response).matches("[가-힣]+[가-힣]+\\d{3}");
     }

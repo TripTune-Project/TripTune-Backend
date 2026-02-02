@@ -1,9 +1,14 @@
 package com.triptune.schedule.service;
 
 import com.triptune.common.entity.*;
+import com.triptune.common.fixture.*;
 import com.triptune.member.entity.Member;
+import com.triptune.member.fixture.MemberFixture;
 import com.triptune.profile.entity.ProfileImage;
-import com.triptune.schedule.ScheduleTest;
+import com.triptune.profile.fixture.ProfileImageFixture;
+import com.triptune.schedule.fixture.TravelAttendeeFixture;
+import com.triptune.schedule.fixture.TravelRouteFixture;
+import com.triptune.schedule.fixture.TravelScheduleFixture;
 import com.triptune.schedule.dto.request.RouteCreateRequest;
 import com.triptune.schedule.dto.request.RouteRequest;
 import com.triptune.schedule.dto.response.RouteResponse;
@@ -17,6 +22,8 @@ import com.triptune.schedule.repository.TravelRouteRepository;
 import com.triptune.schedule.repository.TravelScheduleRepository;
 import com.triptune.travel.entity.TravelPlace;
 import com.triptune.travel.enums.ThemeType;
+import com.triptune.travel.fixture.TravelImageFixture;
+import com.triptune.travel.fixture.TravelPlaceFixture;
 import com.triptune.travel.repository.TravelPlaceRepository;
 import com.triptune.global.message.ErrorCode;
 import com.triptune.global.exception.DataNotFoundException;
@@ -41,7 +48,7 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-public class TravelRouteServiceTest extends ScheduleTest {
+public class TravelRouteServiceTest {
 
     @InjectMocks private TravelRouteService travelRouteService;
     @Mock private TravelRouteRepository travelRouteRepository;
@@ -60,13 +67,13 @@ public class TravelRouteServiceTest extends ScheduleTest {
 
     @BeforeEach
     void setUp(){
-        Country country = createCountry();
-        City city = createCity(country, "서울");
-        District district = createDistrict(city, "중구");
-        ApiCategory apiCategory = createApiCategory();
-        ApiContentType apiContentType = createApiContentType(ThemeType.ATTRACTIONS);
+        Country country = CountryFixture.createCountry();
+        City city = CityFixture.createCity(country, "서울");
+        District district = DistrictFixture.createDistrict(city, "중구");
+        ApiCategory apiCategory = ApiCategoryFixture.createApiCategory();
+        ApiContentType apiContentType = ApiContentTypeFixture.createApiContentType(ThemeType.ATTRACTIONS);
 
-        place1 = createTravelPlaceWithId(
+        place1 = TravelPlaceFixture.createTravelPlaceWithId(
                 1L,
                 country,
                 city,
@@ -75,10 +82,10 @@ public class TravelRouteServiceTest extends ScheduleTest {
                 apiContentType,
                 "여행지1"
         );
-        createTravelImage(place1, "test1", true);
-        createTravelImage(place1, "test2", false);
+        TravelImageFixture.createTravelImage(place1, "test1", true);
+        TravelImageFixture.createTravelImage(place1, "test2", false);
 
-        place2 = createTravelPlaceWithId(
+        place2 = TravelPlaceFixture.createTravelPlaceWithId(
                 2L,
                 country,
                 city,
@@ -87,10 +94,10 @@ public class TravelRouteServiceTest extends ScheduleTest {
                 apiContentType,
                 "여행지2"
         );
-        createTravelImage(place2, "test1", true);
-        createTravelImage(place2, "test2", false);
+        TravelImageFixture.createTravelImage(place2, "test1", true);
+        TravelImageFixture.createTravelImage(place2, "test2", false);
 
-        place3 = createTravelPlaceWithId(
+        place3 = TravelPlaceFixture.createTravelPlaceWithId(
                 3L,
                 country,
                 city,
@@ -100,16 +107,16 @@ public class TravelRouteServiceTest extends ScheduleTest {
                 "여행지3"
         );
 
-        ProfileImage profileImage1 = createProfileImage("member1Image");
-        member1 = createNativeTypeMember("member1@email.com", profileImage1);
+        ProfileImage profileImage1 = ProfileImageFixture.createProfileImage("member1Image");
+        member1 = MemberFixture.createNativeTypeMember("member1@email.com", profileImage1);
 
-        ProfileImage profileImage2 = createProfileImage("member2Image");
-        member2 = createNativeTypeMember("member2@email.com", profileImage2);
+        ProfileImage profileImage2 = ProfileImageFixture.createProfileImage("member2Image");
+        member2 = MemberFixture.createNativeTypeMember("member2@email.com", profileImage2);
 
-        schedule = createTravelScheduleWithId(1L, "테스트1");
+        schedule = TravelScheduleFixture.createTravelScheduleWithId(1L, "테스트1");
 
-        author = createAuthorTravelAttendee(schedule, member1);
-        guest = createGuestTravelAttendee(schedule, member2, AttendeePermission.READ);
+        author = TravelAttendeeFixture.createAuthorTravelAttendee(schedule, member1);
+        guest = TravelAttendeeFixture.createGuestTravelAttendee(schedule, member2, AttendeePermission.READ);
     }
 
 
@@ -118,9 +125,9 @@ public class TravelRouteServiceTest extends ScheduleTest {
     @DisplayName("여행 루트 조회")
     void getTravelRoutes(){
         // given
-        TravelRoute route1 = createTravelRoute(schedule, place1, 1);
-        TravelRoute route2 = createTravelRoute(schedule, place1, 2);
-        TravelRoute route3 = createTravelRoute(schedule, place2, 3);
+        TravelRoute route1 = TravelRouteFixture.createTravelRoute(schedule, place1, 1);
+        TravelRoute route2 = TravelRouteFixture.createTravelRoute(schedule, place1, 2);
+        TravelRoute route3 = TravelRouteFixture.createTravelRoute(schedule, place2, 3);
 
         Pageable pageable = PageUtils.defaultPageable(1);
 
@@ -167,11 +174,11 @@ public class TravelRouteServiceTest extends ScheduleTest {
     @DisplayName("여행 루트 마지막 루트에 여행지 추가")
     void createLastRoute(){
         // given
-        createTravelRoute(schedule, place1, 1);
-        createTravelRoute(schedule, place2, 2);
-        createTravelRoute(schedule, place2, 3);
+        TravelRouteFixture.createTravelRoute(schedule, place1, 1);
+        TravelRouteFixture.createTravelRoute(schedule, place2, 2);
+        TravelRouteFixture.createTravelRoute(schedule, place2, 3);
 
-        RouteCreateRequest request = createRouteCreateRequest(place3.getPlaceId());
+        RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(place3.getPlaceId());
 
         when(travelScheduleRepository.findById(anyLong())).thenReturn(Optional.of(schedule));
         when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_MemberId(anyLong(), anyLong()))
@@ -194,7 +201,7 @@ public class TravelRouteServiceTest extends ScheduleTest {
     @DisplayName("여행 루트 마지막 루트에 여행지 추가 시 저장된 여행 루트가 존재하지 않는 경우")
     void createLastRoute_emptyRoutes(){
         // given
-        RouteCreateRequest request = createRouteCreateRequest(place3.getPlaceId());
+        RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(place3.getPlaceId());
 
         when(travelScheduleRepository.findById(anyLong())).thenReturn(Optional.of(schedule));
         when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_MemberId(anyLong(), anyLong()))
@@ -214,7 +221,7 @@ public class TravelRouteServiceTest extends ScheduleTest {
     @DisplayName("여행 루트 마지막 루트에 여행지 추가 시 일정 데이터 없어 예외 발생")
     void createLastRoute_scheduleNotFound(){
         // given
-        RouteCreateRequest request = createRouteCreateRequest(place3.getPlaceId());
+        RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(place3.getPlaceId());
 
         when(travelScheduleRepository.findById(anyLong())).thenReturn(Optional.empty());
 
@@ -231,7 +238,7 @@ public class TravelRouteServiceTest extends ScheduleTest {
     @DisplayName("여행 루트 마지막 루트에 여행지 추가 시 참석자 정보가 없어 예외 발생")
     void createLastRoute_attendeeNotFound(){
         // given
-        RouteCreateRequest request = createRouteCreateRequest(place3.getPlaceId());
+        RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(place3.getPlaceId());
 
         when(travelScheduleRepository.findById(anyLong())).thenReturn(Optional.of(schedule));
         when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_MemberId(anyLong(), anyLong()))
@@ -251,7 +258,7 @@ public class TravelRouteServiceTest extends ScheduleTest {
     @DisplayName("여행 루트 마지막 루트에 여행지 추가 시 편집 권한이 없어 예외 발생")
     void createLastRoute_forbiddenEdit(){
         // given
-        RouteCreateRequest request = createRouteCreateRequest(place3.getPlaceId());
+        RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(place3.getPlaceId());
 
         when(travelScheduleRepository.findById(anyLong())).thenReturn(Optional.of(schedule));
         when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_MemberId(anyLong(), anyLong()))
@@ -271,7 +278,7 @@ public class TravelRouteServiceTest extends ScheduleTest {
     @DisplayName("여행 루트 마지막 루트에 여행지 추가 시 여행지 데이터 없어 예외 발생")
     void createLastRoute_placeNotFound(){
         // given
-        RouteCreateRequest request = createRouteCreateRequest(place3.getPlaceId());
+        RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(place3.getPlaceId());
 
         when(travelScheduleRepository.findById(anyLong())).thenReturn(Optional.of(schedule));
         when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_MemberId(anyLong(), anyLong()))
@@ -291,12 +298,12 @@ public class TravelRouteServiceTest extends ScheduleTest {
     @Test
     @DisplayName("여행 루트 수정 시 기존에 저장된 여행 루트가 존재하는 경우")
     void updateTravelRoute_existedTravelRoute(){
-        createTravelRoute(schedule, place1, 1);
-        createTravelRoute(schedule, place1, 2);
-        createTravelRoute(schedule, place2, 3);
+        TravelRouteFixture.createTravelRoute(schedule, place1, 1);
+        TravelRouteFixture.createTravelRoute(schedule, place1, 2);
+        TravelRouteFixture.createTravelRoute(schedule, place2, 3);
 
-        RouteRequest routeRequest1 = createRouteRequest(1, place1.getPlaceId());
-        RouteRequest routeRequest2 = createRouteRequest(2, place2.getPlaceId());
+        RouteRequest routeRequest1 = TravelRouteFixture.createRouteRequest(1, place1.getPlaceId());
+        RouteRequest routeRequest2 = TravelRouteFixture.createRouteRequest(2, place2.getPlaceId());
 
         List<RouteRequest> routeRequests = new ArrayList<>(List.of(
                 routeRequest1,
@@ -323,11 +330,11 @@ public class TravelRouteServiceTest extends ScheduleTest {
     @DisplayName("여행 루트에 저장된 여행지 데이터가 없어 예외 발생")
     void updateSchedule_placeNotFoundInTravelRoute(){
         // given
-        TravelSchedule schedule = createTravelSchedule("테스트");
+        TravelSchedule schedule = TravelScheduleFixture.createTravelSchedule("테스트");
 
         List<RouteRequest> routes = new ArrayList<>(List.of(
-                createRouteRequest(1, place1.getPlaceId()),
-                createRouteRequest(2, place2.getPlaceId())
+                TravelRouteFixture.createRouteRequest(1, place1.getPlaceId()),
+                TravelRouteFixture.createRouteRequest(2, place2.getPlaceId())
         ));
 
         when(travelPlaceRepository.findById(anyLong()))

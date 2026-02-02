@@ -1,13 +1,10 @@
 package com.triptune.email.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.triptune.email.EmailTest;
+import com.triptune.email.fixture.EmailFixture;
 import com.triptune.email.dto.request.EmailRequest;
 import com.triptune.email.dto.request.VerifyAuthRequest;
-import com.triptune.global.security.jwt.JwtAuthFilter;
 import com.triptune.global.security.jwt.JwtUtils;
-import com.triptune.member.repository.MemberRepository;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -18,10 +15,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.context.WebApplicationContext;
-import org.springframework.web.filter.CharacterEncodingFilter;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
@@ -34,7 +28,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Transactional
 @AutoConfigureMockMvc
 @ActiveProfiles("h2")
-class EmailControllerTest extends EmailTest {
+class EmailControllerTest {
     @Autowired private MockMvc mockMvc;
     @Autowired private ObjectMapper objectMapper;
     @Autowired private JwtUtils jwtUtils;
@@ -45,7 +39,7 @@ class EmailControllerTest extends EmailTest {
     @ValueSource(strings = {"", " "})
     void verifyRequest_invalidNotBlank(String input) throws Exception{
         // given
-        EmailRequest request = createEmailRequest(input);
+        EmailRequest request = EmailFixture.createEmailRequest(input);
 
         // when, then
         mockMvc.perform(post("/api/emails/verify-request")
@@ -63,7 +57,7 @@ class EmailControllerTest extends EmailTest {
     @DisplayName("이메일 인증 요청 시 null 값이 들어와 예외 발생")
     void verifyRequest_invalidNull() throws Exception{
         // given
-        EmailRequest request = createEmailRequest(null);
+        EmailRequest request = EmailFixture.createEmailRequest(null);
 
         // when, then
         mockMvc.perform(post("/api/emails/verify-request")
@@ -81,7 +75,7 @@ class EmailControllerTest extends EmailTest {
     @ValueSource(strings = {"test", "test@", "test$email.com"})
     void verifyRequest_invalidEmail(String input) throws Exception{
         // given
-        EmailRequest request = createEmailRequest(input);
+        EmailRequest request = EmailFixture.createEmailRequest(input);
 
         // when, then
         mockMvc.perform(post("/api/emails/verify-request")
@@ -100,7 +94,7 @@ class EmailControllerTest extends EmailTest {
     @ValueSource(strings = {"", " "})
     void verify_invalidNotBlankEmail(String input) throws Exception{
         // given
-        VerifyAuthRequest request = createVerifyAuthRequest(input, "authCode");
+        VerifyAuthRequest request = EmailFixture.createVerifyAuthRequest(input, "authCode");
 
         // when, then
         mockMvc.perform(post("/api/emails/verify")
@@ -118,7 +112,7 @@ class EmailControllerTest extends EmailTest {
     @DisplayName("이메일 인증 시 이메일에 null 값이 들어와 예외 발생")
     void verify_invalidNullEmail() throws Exception{
         // given
-        VerifyAuthRequest request = createVerifyAuthRequest(null, "authCode");
+        VerifyAuthRequest request = EmailFixture.createVerifyAuthRequest(null, "authCode");
 
         // when, then
         mockMvc.perform(post("/api/emails/verify")
@@ -136,7 +130,7 @@ class EmailControllerTest extends EmailTest {
     @ValueSource(strings = {"test", "test@", "test$email.com"})
     void verify_invalidEmail(String input) throws Exception{
         // given
-        VerifyAuthRequest request = createVerifyAuthRequest(input, "authCode");
+        VerifyAuthRequest request = EmailFixture.createVerifyAuthRequest(input, "authCode");
 
         // when, then
         mockMvc.perform(post("/api/emails/verify")
@@ -155,7 +149,7 @@ class EmailControllerTest extends EmailTest {
     @ValueSource(strings = {"", " "})
     void verify_invalidNotBlankAuthCode(String input) throws Exception{
         // given
-        VerifyAuthRequest request = createVerifyAuthRequest("member@email.com", input);
+        VerifyAuthRequest request = EmailFixture.createVerifyAuthRequest("member@email.com", input);
 
         // when, then
         mockMvc.perform(post("/api/emails/verify")
@@ -172,7 +166,7 @@ class EmailControllerTest extends EmailTest {
     @DisplayName("이메일 인증 시 인증번호에 null 값이 들어와 예외 발생")
     void verify_invalidNullAuthCode() throws Exception{
         // given
-        VerifyAuthRequest request = createVerifyAuthRequest("member@email.com", null);
+        VerifyAuthRequest request = EmailFixture.createVerifyAuthRequest("member@email.com", null);
 
         // when, then
         mockMvc.perform(post("/api/emails/verify")

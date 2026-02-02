@@ -1,6 +1,7 @@
 package com.triptune.global.service;
 
 import com.triptune.global.s3.S3Service;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -9,6 +10,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@Slf4j
 @ExtendWith(MockitoExtension.class)
 class S3ServiceTest {
 
@@ -27,7 +29,7 @@ class S3ServiceTest {
         String response = s3Service.generateS3FileName(fileTag, extension);
 
         // then
-        System.out.println(response);
+        log.info("response={}", response);
         assertThat(response.contains("_"+ fileTag + "_")).isTrue();
         assertThat(response.contains("." + extension)).isTrue();
     }

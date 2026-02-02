@@ -2,7 +2,7 @@ package com.triptune.travel.controller;
 
 import com.triptune.global.response.ApiResponse;
 import com.triptune.global.response.page.PageResponse;
-import com.triptune.travel.dto.PlaceLocation;
+import com.triptune.travel.repository.dto.PlaceLocation;
 import com.triptune.travel.dto.request.PlaceLocationRequest;
 import com.triptune.travel.dto.request.PlaceSearchRequest;
 import com.triptune.travel.dto.response.PlaceDetailResponse;

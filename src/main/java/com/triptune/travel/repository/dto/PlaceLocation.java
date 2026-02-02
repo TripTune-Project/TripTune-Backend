@@ -1,4 +1,4 @@
-package com.triptune.travel.dto;
+package com.triptune.travel.repository.dto;
 
 import com.triptune.travel.dto.response.PlaceResponse;
 import lombok.Builder;

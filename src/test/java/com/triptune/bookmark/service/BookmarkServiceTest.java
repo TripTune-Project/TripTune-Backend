@@ -1,14 +1,18 @@
 package com.triptune.bookmark.service;
 
-import com.triptune.bookmark.BookmarkTest;
+import com.triptune.bookmark.fixture.BookmarkFixture;
 import com.triptune.bookmark.dto.request.BookmarkRequest;
 import com.triptune.bookmark.repository.BookmarkRepository;
 import com.triptune.common.entity.*;
+import com.triptune.common.fixture.*;
 import com.triptune.member.entity.Member;
+import com.triptune.member.fixture.MemberFixture;
 import com.triptune.member.repository.MemberRepository;
 import com.triptune.profile.entity.ProfileImage;
+import com.triptune.profile.fixture.ProfileImageFixture;
 import com.triptune.travel.entity.TravelPlace;
 import com.triptune.travel.enums.ThemeType;
+import com.triptune.travel.fixture.TravelPlaceFixture;
 import com.triptune.travel.repository.TravelPlaceRepository;
 import com.triptune.global.message.ErrorCode;
 import com.triptune.global.exception.DataExistException;
@@ -30,7 +34,7 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class BookmarkServiceTest extends BookmarkTest {
+public class BookmarkServiceTest  {
 
     @InjectMocks private BookmarkService bookmarkService;
     @Mock private BookmarkRepository bookmarkRepository;
@@ -43,15 +47,15 @@ public class BookmarkServiceTest extends BookmarkTest {
 
     @BeforeEach
     void setUp(){
-        Country country = createCountry();
-        City city = createCity(country, "서울");
-        District district = createDistrict(city, "강남구");
-        ApiCategory apiCategory = createApiCategory();
-        ApiContentType apiContentType = createApiContentType(ThemeType.ATTRACTIONS);
+        Country country = CountryFixture.createCountry();
+        City city = CityFixture.createCity(country, "서울");
+        District district = DistrictFixture.createDistrict(city, "강남구");
+        ApiCategory apiCategory = ApiCategoryFixture.createApiCategory();
+        ApiContentType apiContentType = ApiContentTypeFixture.createApiContentType(ThemeType.ATTRACTIONS);
 
-        ProfileImage profileImage = createProfileImage("memberImage");
-        member = createNativeTypeMember("member@email.com", profileImage);
-        place1 = createTravelPlace(
+        ProfileImage profileImage = ProfileImageFixture.createProfileImage("memberImage");
+        member = MemberFixture.createNativeTypeMember("member@email.com", profileImage);
+        place1 = TravelPlaceFixture.createTravelPlace(
                 country,
                 city,
                 district,
@@ -59,7 +63,7 @@ public class BookmarkServiceTest extends BookmarkTest {
                 apiContentType,
                 "여행지1"
         );
-        place2 = createTravelPlace(
+        place2 = TravelPlaceFixture.createTravelPlace(
                 country,
                 city,
                 district,
@@ -75,7 +79,7 @@ public class BookmarkServiceTest extends BookmarkTest {
     void createBookmark(){
         // given
         Long travelPlace1Id = 1L;
-        BookmarkRequest request = createBookmarkRequest(travelPlace1Id);
+        BookmarkRequest request = BookmarkFixture.createBookmarkRequest(travelPlace1Id);
 
         when(bookmarkRepository.existsByMember_MemberIdAndTravelPlace_PlaceId(anyLong(), anyLong())).thenReturn(false);
         when(memberRepository.findById(anyLong())).thenReturn(Optional.of(member));
@@ -93,7 +97,7 @@ public class BookmarkServiceTest extends BookmarkTest {
     void createBookmark_alreadyBookmarked(){
         // given
         Long travelPlace1Id = 1L;
-        BookmarkRequest request = createBookmarkRequest(travelPlace1Id);
+        BookmarkRequest request = BookmarkFixture.createBookmarkRequest(travelPlace1Id);
 
         when(bookmarkRepository.existsByMember_MemberIdAndTravelPlace_PlaceId(anyLong(), anyLong())).thenReturn(true);
 
@@ -110,7 +114,7 @@ public class BookmarkServiceTest extends BookmarkTest {
     void createBookmark_memberNotFound(){
         // given
         Long travelPlace1Id = 1L;
-        BookmarkRequest request = createBookmarkRequest(travelPlace1Id);
+        BookmarkRequest request = BookmarkFixture.createBookmarkRequest(travelPlace1Id);
 
         when(bookmarkRepository.existsByMember_MemberIdAndTravelPlace_PlaceId(anyLong(), anyLong())).thenReturn(false);
         when(memberRepository.findById(anyLong())).thenReturn(Optional.empty());
@@ -128,7 +132,7 @@ public class BookmarkServiceTest extends BookmarkTest {
     void createBookmark_placeNotFound(){
         // given
         Long travelPlace1Id = 1L;
-        BookmarkRequest request = createBookmarkRequest(travelPlace1Id);
+        BookmarkRequest request = BookmarkFixture.createBookmarkRequest(travelPlace1Id);
 
         when(bookmarkRepository.existsByMember_MemberIdAndTravelPlace_PlaceId(anyLong(), anyLong())).thenReturn(false);
         when(memberRepository.findById(anyLong())).thenReturn(Optional.of(member));

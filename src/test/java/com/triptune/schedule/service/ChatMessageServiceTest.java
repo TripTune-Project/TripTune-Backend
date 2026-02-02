@@ -2,9 +2,13 @@ package com.triptune.schedule.service;
 
 import com.triptune.member.dto.response.MemberProfileResponse;
 import com.triptune.member.entity.Member;
+import com.triptune.member.fixture.MemberFixture;
 import com.triptune.profile.entity.ProfileImage;
 import com.triptune.member.repository.MemberRepository;
-import com.triptune.schedule.ScheduleTest;
+import com.triptune.profile.fixture.ProfileImageFixture;
+import com.triptune.schedule.fixture.ChatMessageFixture;
+import com.triptune.schedule.fixture.TravelAttendeeFixture;
+import com.triptune.schedule.fixture.TravelScheduleFixture;
 import com.triptune.schedule.dto.request.ChatMessageRequest;
 import com.triptune.schedule.dto.response.ChatResponse;
 import com.triptune.schedule.entity.ChatMessage;
@@ -36,7 +40,7 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class ChatMessageServiceTest extends ScheduleTest {
+class ChatMessageServiceTest {
 
     @InjectMocks private ChatMessageService chatMessageService;
     @Mock private ChatMessageRepository chatMessageRepository;
@@ -51,16 +55,16 @@ class ChatMessageServiceTest extends ScheduleTest {
 
     @BeforeEach
     void setUp(){
-        schedule = createTravelSchedule("테스트");
+        schedule = TravelScheduleFixture.createTravelSchedule("테스트");
 
-        ProfileImage profileImage1 = createProfileImage("member1Image");
-        member1 = createNativeTypeMember("member1@email.com", profileImage1);
+        ProfileImage profileImage1 = ProfileImageFixture.createProfileImage("member1Image");
+        member1 = MemberFixture.createNativeTypeMember("member1@email.com", profileImage1);
 
-        ProfileImage profileImage2 = createProfileImage("member2Image");
-        member2 = createNativeTypeMember( "member2@email.com", profileImage2);
+        ProfileImage profileImage2 = ProfileImageFixture.createProfileImage("member2Image");
+        member2 = MemberFixture.createNativeTypeMember( "member2@email.com", profileImage2);
 
-        ProfileImage profileImage3 = createProfileImage("member3Image");
-        member3 = createNativeTypeMember("member3@email.com", profileImage3);
+        ProfileImage profileImage3 = ProfileImageFixture.createProfileImage("member3Image");
+        member3 = MemberFixture.createNativeTypeMember("member3@email.com", profileImage3);
     }
 
     @Test
@@ -69,20 +73,20 @@ class ChatMessageServiceTest extends ScheduleTest {
         // given
         Pageable pageable = PageUtils.chatPageable(1);
 
-        ChatMessage message1 = createChatMessage(1L, 1L, "hello1");
-        ChatMessage message2 = createChatMessage(1L, 1L, "hello2");
-        ChatMessage message3 = createChatMessage(1L, 1L, "hello3");
-        ChatMessage message4 = createChatMessage(1L, 2L, "hello4");
-        ChatMessage message5 = createChatMessage(1L, 3L, "hello5");
-        ChatMessage message6 = createChatMessage(1L, 1L, "hello6");
+        ChatMessage message1 = ChatMessageFixture.createChatMessage(1L, 1L, "hello1");
+        ChatMessage message2 = ChatMessageFixture.createChatMessage(1L, 1L, "hello2");
+        ChatMessage message3 = ChatMessageFixture.createChatMessage(1L, 1L, "hello3");
+        ChatMessage message4 = ChatMessageFixture.createChatMessage(1L, 2L, "hello4");
+        ChatMessage message5 = ChatMessageFixture.createChatMessage(1L, 3L, "hello5");
+        ChatMessage message6 = ChatMessageFixture.createChatMessage(1L, 1L, "hello6");
 
         List<ChatMessage> messages = List.of(message1, message2, message3, message4, message5, message6);
         Page<ChatMessage> chatPage = PageUtils.createPage(messages, pageable, messages.size());
 
         List<MemberProfileResponse> memberProfileResponses = List.of(
-                createMemberProfileResponse(1L, member1.getNickname(), member1.getProfileImage().getS3ObjectUrl()),
-                createMemberProfileResponse(2L, member2.getNickname(), member2.getProfileImage().getS3ObjectUrl()),
-                createMemberProfileResponse(3L, member3.getNickname(), member3.getProfileImage().getS3ObjectUrl())
+                MemberFixture.createMemberProfileResponse(1L, member1.getNickname(), member1.getProfileImage().getS3ObjectUrl()),
+                MemberFixture.createMemberProfileResponse(2L, member2.getNickname(), member2.getProfileImage().getS3ObjectUrl()),
+                MemberFixture.createMemberProfileResponse(3L, member3.getNickname(), member3.getProfileImage().getS3ObjectUrl())
         );
 
         when(chatMessageRepository.findAllByScheduleId(any(Pageable.class), anyLong())).thenReturn(chatPage);
@@ -143,16 +147,16 @@ class ChatMessageServiceTest extends ScheduleTest {
         // given
         Pageable pageable = PageUtils.chatPageable(1);
 
-        ChatMessage message1 = createChatMessage(1L, 1L, "hello1");
-        ChatMessage message2 = createChatMessage(1L, 1L, "hello2");
-        ChatMessage message3 = createChatMessage(1L, 1L, "hello3");
+        ChatMessage message1 = ChatMessageFixture.createChatMessage(1L, 1L, "hello1");
+        ChatMessage message2 = ChatMessageFixture.createChatMessage(1L, 1L, "hello2");
+        ChatMessage message3 = ChatMessageFixture.createChatMessage(1L, 1L, "hello3");
 
         List<ChatMessage> messages = List.of(message1, message2, message3);
         Page<ChatMessage> chatPage = PageUtils.createPage(messages, pageable, messages.size());
 
         List<MemberProfileResponse> memberProfileResponses = List.of(
-                createMemberProfileResponse(1L, member1.getNickname(), member1.getProfileImage().getS3ObjectUrl()),
-                createMemberProfileResponse(2L, member2.getNickname(), member2.getProfileImage().getS3ObjectUrl())
+                MemberFixture.createMemberProfileResponse(1L, member1.getNickname(), member1.getProfileImage().getS3ObjectUrl()),
+                MemberFixture.createMemberProfileResponse(2L, member2.getNickname(), member2.getProfileImage().getS3ObjectUrl())
         );
 
         when(chatMessageRepository.findAllByScheduleId(any(Pageable.class), anyLong())).thenReturn(chatPage);
@@ -195,17 +199,17 @@ class ChatMessageServiceTest extends ScheduleTest {
         // given
         Pageable pageable = PageUtils.chatPageable(1);
 
-        ChatMessage message1 = createChatMessage(1L, 1L, "hello1");
-        ChatMessage message2 = createChatMessage(1L, 2L, "hello2");
-        ChatMessage message3 = createChatMessage(1L, 3L, "hello3");
+        ChatMessage message1 = ChatMessageFixture.createChatMessage(1L, 1L, "hello1");
+        ChatMessage message2 = ChatMessageFixture.createChatMessage(1L, 2L, "hello2");
+        ChatMessage message3 = ChatMessageFixture.createChatMessage(1L, 3L, "hello3");
 
         List<ChatMessage> messages = List.of(message1, message2, message3);
         Page<ChatMessage> chatPage = PageUtils.createPage(messages, pageable, messages.size());
 
         List<MemberProfileResponse> memberProfileResponses = List.of(
-                createMemberProfileResponse(1L, member1.getNickname(), member1.getProfileImage().getS3ObjectUrl()),
-                createMemberProfileResponse(2L, member2.getNickname(), member2.getProfileImage().getS3ObjectUrl()),
-                createMemberProfileResponse(3L, member3.getNickname(), member3.getProfileImage().getS3ObjectUrl())
+                MemberFixture.createMemberProfileResponse(1L, member1.getNickname(), member1.getProfileImage().getS3ObjectUrl()),
+                MemberFixture.createMemberProfileResponse(2L, member2.getNickname(), member2.getProfileImage().getS3ObjectUrl()),
+                MemberFixture.createMemberProfileResponse(3L, member3.getNickname(), member3.getProfileImage().getS3ObjectUrl())
         );
 
         when(chatMessageRepository.findAllByScheduleId(any(Pageable.class), anyLong())).thenReturn(chatPage);
@@ -268,9 +272,9 @@ class ChatMessageServiceTest extends ScheduleTest {
     @DisplayName("채팅 메시지에서 회원 인덱스 추출")
     void extractMemberId(){
         // given
-        ChatMessage message1 = createChatMessage(1L, 1L, "hello1");
-        ChatMessage message2 = createChatMessage(1L, 2L, "hello2");
-        ChatMessage message3 = createChatMessage(1L, 3L, "hello3");
+        ChatMessage message1 = ChatMessageFixture.createChatMessage(1L, 1L, "hello1");
+        ChatMessage message2 = ChatMessageFixture.createChatMessage(1L, 2L, "hello2");
+        ChatMessage message3 = ChatMessageFixture.createChatMessage(1L, 3L, "hello3");
         List<ChatMessage> messages = List.of(message1, message2, message3);
 
         // when
@@ -305,8 +309,8 @@ class ChatMessageServiceTest extends ScheduleTest {
         request.add(2L);
 
         List<MemberProfileResponse> memberProfileResponses = List.of(
-                createMemberProfileResponse(1L, member1.getNickname(), member1.getProfileImage().getS3ObjectUrl()),
-                createMemberProfileResponse(2L, member2.getNickname(), member2.getProfileImage().getS3ObjectUrl())
+                MemberFixture.createMemberProfileResponse(1L, member1.getNickname(), member1.getProfileImage().getS3ObjectUrl()),
+                MemberFixture.createMemberProfileResponse(2L, member2.getNickname(), member2.getProfileImage().getS3ObjectUrl())
         );
 
         when(memberRepository.findMembersProfileByMemberId(request))
@@ -347,14 +351,14 @@ class ChatMessageServiceTest extends ScheduleTest {
     @DisplayName("ChatResponse dto 로 변경")
     void convertChatResponse(){
         // given
-        ChatMessage message1 = createChatMessage(1L, 1L, "메시지1");
-        ChatMessage message2 = createChatMessage(1L, 2L, "메시지2");
-        ChatMessage message3 = createChatMessage(1L, 1L, "메시지3");
+        ChatMessage message1 = ChatMessageFixture.createChatMessage(1L, 1L, "메시지1");
+        ChatMessage message2 = ChatMessageFixture.createChatMessage(1L, 2L, "메시지2");
+        ChatMessage message3 = ChatMessageFixture.createChatMessage(1L, 1L, "메시지3");
 
         List<ChatMessage> chatMessages = List.of(message1, message2, message3);
 
-        MemberProfileResponse response1 = createMemberProfileResponse(1L, member1.getNickname(), member1.getProfileImage().getS3ObjectUrl());
-        MemberProfileResponse response2 = createMemberProfileResponse(2L, member2.getNickname(), member2.getProfileImage().getS3ObjectUrl());
+        MemberProfileResponse response1 = MemberFixture.createMemberProfileResponse(1L, member1.getNickname(), member1.getProfileImage().getS3ObjectUrl());
+        MemberProfileResponse response2 = MemberFixture.createMemberProfileResponse(2L, member2.getNickname(), member2.getProfileImage().getS3ObjectUrl());
 
         Map<Long, MemberProfileResponse> memberProfileMap = new HashMap<>();
         memberProfileMap.put(1L, response1);
@@ -395,13 +399,13 @@ class ChatMessageServiceTest extends ScheduleTest {
     @DisplayName("채팅 메시지 저장")
     void sendChatMessage(){
         // given
-        ProfileImage profileImage = createProfileImage("memberImage");
-        Member member = createNativeTypeMemberWithId(1L, "member@email.com", profileImage);
+        ProfileImage profileImage = ProfileImageFixture.createProfileImage("memberImage");
+        Member member = MemberFixture.createNativeTypeMemberWithId(1L, "member@email.com", profileImage);
 
-        ChatMessageRequest request = createChatMessageRequest(1L, member.getNickname(), "hello1");
-        TravelAttendee author = createAuthorTravelAttendee(schedule, member);
+        ChatMessageRequest request = ChatMessageFixture.createChatMessageRequest(1L, member.getNickname(), "hello1");
+        TravelAttendee author = TravelAttendeeFixture.createAuthorTravelAttendee(schedule, member);
 
-        ChatMessage message = createChatMessage(1L, 1L, request.getMessage());
+        ChatMessage message = ChatMessageFixture.createChatMessage(1L, 1L, request.getMessage());
 
         when(travelScheduleRepository.existsById(anyLong())).thenReturn(true);
         when(memberRepository.findByNickname(anyString())).thenReturn(Optional.of(member));
@@ -423,11 +427,11 @@ class ChatMessageServiceTest extends ScheduleTest {
     @DisplayName("채팅 메시지 저장 시 채팅 권한이 없어 예외 발생")
     void sendChatMessage_ForbiddenChatException1(){
         // given
-        ProfileImage profileImage = createProfileImage("memberImage");
-        Member member = createNativeTypeMemberWithId(1L, "member@email.com", profileImage);
+        ProfileImage profileImage = ProfileImageFixture.createProfileImage("memberImage");
+        Member member = MemberFixture.createNativeTypeMemberWithId(1L, "member@email.com", profileImage);
 
-        ChatMessageRequest request = createChatMessageRequest(1L, member.getNickname(), "hello1");
-        TravelAttendee guest = createGuestTravelAttendee(schedule, member, AttendeePermission.EDIT);
+        ChatMessageRequest request = ChatMessageFixture.createChatMessageRequest(1L, member.getNickname(), "hello1");
+        TravelAttendee guest = TravelAttendeeFixture.createGuestTravelAttendee(schedule, member, AttendeePermission.EDIT);
 
         when(travelScheduleRepository.existsById(anyLong())).thenReturn(true);
         when(memberRepository.findByNickname(anyString())).thenReturn(Optional.of(member));
@@ -445,11 +449,11 @@ class ChatMessageServiceTest extends ScheduleTest {
     @DisplayName("채팅 메시지 저장 시 채팅 권한이 없어 예외 발생")
     void sendChatMessage_ForbiddenChatException2(){
         // given
-        ProfileImage profileImage = createProfileImage("memberImage");
-        Member member = createNativeTypeMemberWithId(1L, "member@email.com", profileImage);
+        ProfileImage profileImage = ProfileImageFixture.createProfileImage("memberImage");
+        Member member = MemberFixture.createNativeTypeMemberWithId(1L, "member@email.com", profileImage);
 
-        ChatMessageRequest request = createChatMessageRequest(1L, member.getNickname(), "hello1");
-        TravelAttendee guest = createGuestTravelAttendee(schedule, member, AttendeePermission.READ);
+        ChatMessageRequest request = ChatMessageFixture.createChatMessageRequest(1L, member.getNickname(), "hello1");
+        TravelAttendee guest = TravelAttendeeFixture.createGuestTravelAttendee(schedule, member, AttendeePermission.READ);
 
         when(travelScheduleRepository.existsById(anyLong())).thenReturn(true);
         when(memberRepository.findByNickname(anyString())).thenReturn(Optional.of(member));
