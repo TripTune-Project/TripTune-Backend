@@ -1,11 +1,13 @@
 package com.triptune.member.repository;
 
 import com.triptune.global.config.QuerydslConfig;
-import com.triptune.member.MemberTest;
+import com.triptune.member.fixture.MemberFixture;
 import com.triptune.member.entity.Member;
 import com.triptune.member.entity.SocialMember;
 import com.triptune.member.enums.SocialType;
+import com.triptune.member.fixture.SocialMemberFixture;
 import com.triptune.profile.entity.ProfileImage;
+import com.triptune.profile.fixture.ProfileImageFixture;
 import com.triptune.profile.repository.ProfileImageRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -19,7 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @DataJpaTest
 @Import({QuerydslConfig.class})
 @ActiveProfiles("h2")
-class SocialMemberRepositoryTest extends MemberTest {
+class SocialMemberRepositoryTest  {
 
     @Autowired private MemberRepository memberRepository;
     @Autowired private ProfileImageRepository profileImageRepository;
@@ -31,10 +33,10 @@ class SocialMemberRepositoryTest extends MemberTest {
     @DisplayName("소셜 사용자 생성")
     void createSocialMember() {
         // given
-        ProfileImage profileImage = profileImageRepository.save(createProfileImage("memberImage"));
-        Member member = memberRepository.save(createNativeTypeMember("member@email.com", profileImage));
+        ProfileImage profileImage = profileImageRepository.save(ProfileImageFixture.createProfileImage("memberImage"));
+        Member member = memberRepository.save(MemberFixture.createNativeTypeMember("member@email.com", profileImage));
 
-        SocialMember socialMember = createSocialMember(member, SocialType.KAKAO, "test");
+        SocialMember socialMember = SocialMemberFixture.createSocialMember(member, SocialType.KAKAO, "test");
 
         // when
         socialMemberRepository.save(socialMember);
@@ -48,10 +50,10 @@ class SocialMemberRepositoryTest extends MemberTest {
     @DisplayName("소셜 정보로 회원 조회")
     void findBySocialInfo() {
         // given
-        ProfileImage profileImage = profileImageRepository.save(createProfileImage("memberImage"));
-        Member member = memberRepository.save(createSocialTypeMember("member@email.com", profileImage));
+        ProfileImage profileImage = profileImageRepository.save(ProfileImageFixture.createProfileImage("memberImage"));
+        Member member = memberRepository.save(MemberFixture.createSocialTypeMember("member@email.com", profileImage));
 
-        SocialMember socialMember = socialMemberRepository.save(createSocialMember(member, SocialType.NAVER, "socialMember"));
+        SocialMember socialMember = socialMemberRepository.save(SocialMemberFixture.createSocialMember(member, SocialType.NAVER, "socialMember"));
 
         // when
         Member response = socialMemberRepository.findBySocialIdAndSocialType(socialMember.getSocialId(), socialMember.getSocialType()).get();

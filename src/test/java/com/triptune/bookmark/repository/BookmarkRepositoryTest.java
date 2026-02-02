@@ -1,18 +1,22 @@
 package com.triptune.bookmark.repository;
 
-import com.triptune.bookmark.BookmarkTest;
+import com.triptune.bookmark.fixture.BookmarkFixture;
 import com.triptune.bookmark.entity.Bookmark;
 import com.triptune.bookmark.enums.BookmarkSortType;
 import com.triptune.common.entity.*;
+import com.triptune.common.fixture.*;
 import com.triptune.common.repository.*;
 import com.triptune.global.config.QuerydslConfig;
 import com.triptune.global.util.PageUtils;
 import com.triptune.member.entity.Member;
+import com.triptune.member.fixture.MemberFixture;
 import com.triptune.member.repository.MemberRepository;
 import com.triptune.profile.entity.ProfileImage;
+import com.triptune.profile.fixture.ProfileImageFixture;
 import com.triptune.profile.repository.ProfileImageRepository;
 import com.triptune.travel.entity.TravelPlace;
 import com.triptune.travel.enums.ThemeType;
+import com.triptune.travel.fixture.TravelPlaceFixture;
 import com.triptune.travel.repository.TravelPlaceRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -30,7 +34,7 @@ import static org.mockito.ArgumentMatchers.any;
 @DataJpaTest
 @Import({QuerydslConfig.class})
 @ActiveProfiles("h2")
-class BookmarkRepositoryTest extends BookmarkTest {
+class BookmarkRepositoryTest {
 
     @Autowired private BookmarkRepository bookmarkRepository;
     @Autowired private MemberRepository memberRepository;
@@ -50,16 +54,16 @@ class BookmarkRepositoryTest extends BookmarkTest {
 
     @BeforeEach
     void setUp(){
-        Country country = countryRepository.save(createCountry());
-        City city = cityRepository.save(createCity(country, "서울"));
-        District district = districtRepository.save(createDistrict(city, "강남구"));
-        ApiCategory apiCategory = apiCategoryRepository.save(createApiCategory());
-        ApiContentType apiContentType = apiContentTypeRepository.save(createApiContentType(ThemeType.ATTRACTIONS));
+        Country country = countryRepository.save(CountryFixture.createCountry());
+        City city = cityRepository.save(CityFixture.createCity(country, "서울"));
+        District district = districtRepository.save(DistrictFixture.createDistrict(city, "강남구"));
+        ApiCategory apiCategory = apiCategoryRepository.save(ApiCategoryFixture.createApiCategory());
+        ApiContentType apiContentType = apiContentTypeRepository.save(ApiContentTypeFixture.createApiContentType(ThemeType.ATTRACTIONS));
 
-        ProfileImage profileImage = profileImageRepository.save(createProfileImage("memberImage"));
-        member = memberRepository.save(createNativeTypeMember("member@email.com", profileImage));
+        ProfileImage profileImage = profileImageRepository.save(ProfileImageFixture.createProfileImage("memberImage"));
+        member = memberRepository.save(MemberFixture.createNativeTypeMember("member@email.com", profileImage));
         place1 = travelPlaceRepository.save(
-                createTravelPlace(
+                TravelPlaceFixture.createTravelPlace(
                         country,
                         city,
                         district,
@@ -69,7 +73,7 @@ class BookmarkRepositoryTest extends BookmarkTest {
                 )
         );
         place2 = travelPlaceRepository.save(
-                createTravelPlace(
+                TravelPlaceFixture.createTravelPlace(
                         country,
                         city,
                         district,
@@ -79,7 +83,7 @@ class BookmarkRepositoryTest extends BookmarkTest {
                 )
         );
         place3 = travelPlaceRepository.save(
-                createTravelPlace(
+                TravelPlaceFixture.createTravelPlace(
                         country,
                         city,
                         district,
@@ -109,11 +113,11 @@ class BookmarkRepositoryTest extends BookmarkTest {
     void getBookmarkTravelPlaces_sortNewest() throws Exception{
         // given
         Pageable pageable = PageUtils.bookmarkPageable(1);
-        bookmarkRepository.save(createBookmark(member, place1));
+        bookmarkRepository.save(BookmarkFixture.createBookmark(member, place1));
         Thread.sleep(10);
-        bookmarkRepository.save(createBookmark(member, place2));
+        bookmarkRepository.save(BookmarkFixture.createBookmark(member, place2));
         Thread.sleep(10);
-        bookmarkRepository.save(createBookmark(member, place3));
+        bookmarkRepository.save(BookmarkFixture.createBookmark(member, place3));
 
         // when
         Page<TravelPlace> response = bookmarkRepository.findSortedMemberBookmarks(
@@ -134,9 +138,9 @@ class BookmarkRepositoryTest extends BookmarkTest {
     void getBookmarkTravelPlaces_sortName(){
         // given
         Pageable pageable = PageUtils.bookmarkPageable(1);
-        bookmarkRepository.save(createBookmark(member, place1));
-        bookmarkRepository.save(createBookmark(member, place2));
-        bookmarkRepository.save(createBookmark(member, place3));
+        bookmarkRepository.save(BookmarkFixture.createBookmark(member, place1));
+        bookmarkRepository.save(BookmarkFixture.createBookmark(member, place2));
+        bookmarkRepository.save(BookmarkFixture.createBookmark(member, place3));
 
         // when
         Page<TravelPlace> response = bookmarkRepository.findSortedMemberBookmarks(member.getMemberId(), pageable, BookmarkSortType.NAME);

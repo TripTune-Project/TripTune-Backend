@@ -1,16 +1,22 @@
 package com.triptune.travel.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.triptune.bookmark.fixture.BookmarkFixture;
 import com.triptune.bookmark.repository.BookmarkRepository;
 import com.triptune.common.entity.*;
+import com.triptune.common.fixture.*;
 import com.triptune.common.repository.*;
 import com.triptune.global.message.ErrorCode;
 import com.triptune.global.message.SuccessCode;
+import com.triptune.global.security.SecurityTestUtils;
 import com.triptune.member.entity.Member;
+import com.triptune.member.fixture.MemberFixture;
 import com.triptune.member.repository.MemberRepository;
 import com.triptune.profile.entity.ProfileImage;
+import com.triptune.profile.fixture.ProfileImageFixture;
 import com.triptune.profile.repository.ProfileImageRepository;
-import com.triptune.travel.TravelTest;
+import com.triptune.travel.fixture.TravelImageFixture;
+import com.triptune.travel.fixture.TravelPlaceFixture;
 import com.triptune.travel.dto.request.PlaceLocationRequest;
 import com.triptune.travel.dto.request.PlaceSearchRequest;
 import com.triptune.travel.entity.TravelImage;
@@ -43,7 +49,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Transactional
 @AutoConfigureMockMvc
 @ActiveProfiles("h2")
-public class TravelControllerTest extends TravelTest {
+public class TravelControllerTest {
     @Autowired private MockMvc mockMvc;
     @Autowired private ObjectMapper objectMapper;
     @Autowired private TravelPlaceRepository travelPlaceRepository;
@@ -70,17 +76,17 @@ public class TravelControllerTest extends TravelTest {
 
     @BeforeEach
     void setUp() {
-        country = countryRepository.save(createCountry());
-        city = cityRepository.save(createCity(country, "서울"));
-        gangnam = districtRepository.save(createDistrict(city, "강남구"));
-        seongdong = districtRepository.save(createDistrict(city, "성동구"));
+        country = countryRepository.save(CountryFixture.createCountry());
+        city = cityRepository.save(CityFixture.createCity(country, "서울"));
+        gangnam = districtRepository.save(DistrictFixture.createDistrict(city, "강남구"));
+        seongdong = districtRepository.save(DistrictFixture.createDistrict(city, "성동구"));
 
-        apiCategory = apiCategoryRepository.save(createApiCategory());
-        attractionContentType = apiContentTypeRepository.save(createApiContentType(ThemeType.ATTRACTIONS));
-        lodgingContentType = apiContentTypeRepository.save(createApiContentType(ThemeType.LODGING));
+        apiCategory = apiCategoryRepository.save(ApiCategoryFixture.createApiCategory());
+        attractionContentType = apiContentTypeRepository.save(ApiContentTypeFixture.createApiContentType(ThemeType.ATTRACTIONS));
+        lodgingContentType = apiContentTypeRepository.save(ApiContentTypeFixture.createApiContentType(ThemeType.LODGING));
 
-        ProfileImage profileImage = profileImageRepository.save(createProfileImage("member1Image"));
-        member = memberRepository.save(createNativeTypeMember("member@email.com", profileImage));
+        ProfileImage profileImage = profileImageRepository.save(ProfileImageFixture.createProfileImage("member1Image"));
+        member = memberRepository.save(MemberFixture.createNativeTypeMember("member@email.com", profileImage));
     }
 
     @Test
@@ -88,7 +94,7 @@ public class TravelControllerTest extends TravelTest {
     void getNearByTravelPlaces_member() throws Exception {
         // given
         TravelPlace gangnamPlace = travelPlaceRepository.save(
-                createTravelPlaceWithLocation(
+                TravelPlaceFixture.createTravelPlaceWithLocation(
                         country,
                         city,
                         gangnam,
@@ -99,11 +105,11 @@ public class TravelControllerTest extends TravelTest {
                         127.0281573537
                 )
         );
-        TravelImage gangnamThumbnail = travelImageRepository.save(createTravelImage(gangnamPlace, "test1", true));
-        travelImageRepository.save(createTravelImage(gangnamPlace, "test2", false));
+        TravelImage gangnamThumbnail = travelImageRepository.save(TravelImageFixture.createTravelImage(gangnamPlace, "test1", true));
+        travelImageRepository.save(TravelImageFixture.createTravelImage(gangnamPlace, "test2", false));
 
         TravelPlace seongdongPlace = travelPlaceRepository.save(
-                createTravelPlaceWithLocation(
+                TravelPlaceFixture.createTravelPlaceWithLocation(
                         country,
                         city,
                         seongdong,
@@ -115,10 +121,10 @@ public class TravelControllerTest extends TravelTest {
                 )
         );
 
-        bookmarkRepository.save(createBookmark(member, gangnamPlace));
-        mockAuthentication(member);
+        bookmarkRepository.save(BookmarkFixture.createBookmark(member, gangnamPlace));
+        SecurityTestUtils.mockAuthentication(member);
 
-        PlaceLocationRequest request = createTravelLocationRequest(37.4970465429, 127.0281573537);
+        PlaceLocationRequest request = TravelPlaceFixture.createTravelLocationRequest(37.4970465429, 127.0281573537);
 
         // when, then
         mockMvc.perform(post("/api/travels")
@@ -142,8 +148,8 @@ public class TravelControllerTest extends TravelTest {
     @DisplayName("위치를 기반으로 여행지 목록을 조회 시 위도에 null 값이 들어와 예외 발생")
     void getNearByTravelPlaces_invalidNullLatitude() throws Exception {
         // given
-        mockAuthentication(member);
-        PlaceLocationRequest request = createTravelLocationRequest(null, 127.0281573537);
+        SecurityTestUtils.mockAuthentication(member);
+        PlaceLocationRequest request = TravelPlaceFixture.createTravelLocationRequest(null, 127.0281573537);
 
         // when, then
         mockMvc.perform(post("/api/travels")
@@ -160,8 +166,8 @@ public class TravelControllerTest extends TravelTest {
     @DisplayName("위치를 기반으로 여행지 목록을 조회 시 경도에 null 값이 들어와 예외 발생")
     void getNearByTravelPlaces_invalidNullLongitude() throws Exception {
         // given
-        mockAuthentication(member);
-        PlaceLocationRequest request = createTravelLocationRequest(37.4970465429, null);
+        SecurityTestUtils.mockAuthentication(member);
+        PlaceLocationRequest request = TravelPlaceFixture.createTravelLocationRequest(37.4970465429, null);
 
         // when, then
         mockMvc.perform(post("/api/travels")
@@ -178,8 +184,8 @@ public class TravelControllerTest extends TravelTest {
     @DisplayName("회원의 위치를 기반으로 여행지 목록을 조회할 때, 데이터가 없는 경우")
     void getNearByTravelPlaces_member_emptyResult() throws Exception {
         // given
-        mockAuthentication(member);
-        PlaceLocationRequest request = createTravelLocationRequest(9999.9999, 9999.9999);
+        SecurityTestUtils.mockAuthentication(member);
+        PlaceLocationRequest request = TravelPlaceFixture.createTravelLocationRequest(9999.9999, 9999.9999);
 
         // when, then
         mockMvc.perform(post("/api/travels")
@@ -199,7 +205,7 @@ public class TravelControllerTest extends TravelTest {
         // given
         // 북마크 존재하지만 비회원이기 때문에 조회 결과 bookmarkStatus 는 false 이여야 함
         TravelPlace gangnamPlace = travelPlaceRepository.save(
-                createTravelPlaceWithLocation(
+                TravelPlaceFixture.createTravelPlaceWithLocation(
                         country,
                         city,
                         gangnam,
@@ -210,11 +216,11 @@ public class TravelControllerTest extends TravelTest {
                         127.0550
                 )
         );
-        TravelImage gangnamThumbnail = travelImageRepository.save(createTravelImage(gangnamPlace, "test1", true));
-        travelImageRepository.save(createTravelImage(gangnamPlace, "test2", false));
+        TravelImage gangnamThumbnail = travelImageRepository.save(TravelImageFixture.createTravelImage(gangnamPlace, "test1", true));
+        travelImageRepository.save(TravelImageFixture.createTravelImage(gangnamPlace, "test2", false));
 
         TravelPlace seongdongPlace = travelPlaceRepository.save(
-                createTravelPlaceWithLocation(
+                TravelPlaceFixture.createTravelPlaceWithLocation(
                         country,
                         city,
                         seongdong,
@@ -225,9 +231,9 @@ public class TravelControllerTest extends TravelTest {
                         127.0000
                 )
         );
-        bookmarkRepository.save(createBookmark(member, gangnamPlace));
+        bookmarkRepository.save(BookmarkFixture.createBookmark(member, gangnamPlace));
 
-        PlaceLocationRequest request = createTravelLocationRequest(37.4970465429, 127.0281573537);
+        PlaceLocationRequest request = TravelPlaceFixture.createTravelLocationRequest(37.4970465429, 127.0281573537);
 
         // when, then
         mockMvc.perform(post("/api/travels")
@@ -252,7 +258,7 @@ public class TravelControllerTest extends TravelTest {
     @DisplayName("비회원의 위치를 기반으로 여행지 목록을 조회할 때, 데이터가 없는 경우")
     void getNearByTravelPlaces_nonMember_emptyResult() throws Exception {
         // given
-        PlaceLocationRequest request = createTravelLocationRequest(9999.9999, 9999.9999);
+        PlaceLocationRequest request = TravelPlaceFixture.createTravelLocationRequest(9999.9999, 9999.9999);
 
         // when, then
         mockMvc.perform(post("/api/travels")
@@ -272,7 +278,7 @@ public class TravelControllerTest extends TravelTest {
     void searchTravelPlacesWithLocation_member() throws Exception {
         // given
         TravelPlace gangnamPlace = travelPlaceRepository.save(
-                createTravelPlaceWithLocation(
+                TravelPlaceFixture.createTravelPlaceWithLocation(
                         country,
                         city,
                         gangnam,
@@ -283,11 +289,11 @@ public class TravelControllerTest extends TravelTest {
                         127.0550
                 )
         );
-        TravelImage gangnamThumbnail = travelImageRepository.save(createTravelImage(gangnamPlace, "test1", true));
-        travelImageRepository.save(createTravelImage(gangnamPlace, "test2", false));
+        TravelImage gangnamThumbnail = travelImageRepository.save(TravelImageFixture.createTravelImage(gangnamPlace, "test1", true));
+        travelImageRepository.save(TravelImageFixture.createTravelImage(gangnamPlace, "test2", false));
 
         travelPlaceRepository.save(
-                createTravelPlaceWithLocation(
+                TravelPlaceFixture.createTravelPlaceWithLocation(
                         country,
                         city,
                         seongdong,
@@ -298,10 +304,10 @@ public class TravelControllerTest extends TravelTest {
                         127.0000
                 )
         );
-        bookmarkRepository.save(createBookmark(member, gangnamPlace));
-        mockAuthentication(member);
+        bookmarkRepository.save(BookmarkFixture.createBookmark(member, gangnamPlace));
+        SecurityTestUtils.mockAuthentication(member);
 
-        PlaceSearchRequest request = createTravelSearchRequest(37.4970465429, 127.0281573537, "강남");
+        PlaceSearchRequest request = TravelPlaceFixture.createTravelSearchRequest(37.4970465429, 127.0281573537, "강남");
 
         // when, then
         mockMvc.perform(post("/api/travels/search")
@@ -322,8 +328,8 @@ public class TravelControllerTest extends TravelTest {
     @DisplayName("회원의 위치를 기반으로 여행지 검색할 때, 검색 결과가 존재하지 않는 경우")
     void searchTravelPlacesWithLocation_member_emptyResult() throws Exception {
         // given
-        mockAuthentication(member);
-        PlaceSearchRequest request = createTravelSearchRequest(9999.9999, 9999.9999, "ㅁㄴㅇㄹ");
+        SecurityTestUtils.mockAuthentication(member);
+        PlaceSearchRequest request = TravelPlaceFixture.createTravelSearchRequest(9999.9999, 9999.9999, "ㅁㄴㅇㄹ");
 
         // when, then
         mockMvc.perform(post("/api/travels/search")
@@ -343,7 +349,7 @@ public class TravelControllerTest extends TravelTest {
         // given
         // 북마크 존재하지만 비회원이기 때문에 조회 결과 bookmarkStatus 는 false 이여야 함
         TravelPlace gangnamPlace = travelPlaceRepository.save(
-                createTravelPlaceWithLocation(
+                TravelPlaceFixture.createTravelPlaceWithLocation(
                         country,
                         city,
                         gangnam,
@@ -354,11 +360,11 @@ public class TravelControllerTest extends TravelTest {
                         127.0550
                 )
         );
-        TravelImage gangnamThumbnail = travelImageRepository.save(createTravelImage(gangnamPlace, "test1", true));
-        travelImageRepository.save(createTravelImage(gangnamPlace, "test2", false));
+        TravelImage gangnamThumbnail = travelImageRepository.save(TravelImageFixture.createTravelImage(gangnamPlace, "test1", true));
+        travelImageRepository.save(TravelImageFixture.createTravelImage(gangnamPlace, "test2", false));
 
         travelPlaceRepository.save(
-                createTravelPlaceWithLocation(
+                TravelPlaceFixture.createTravelPlaceWithLocation(
                         country,
                         city,
                         seongdong,
@@ -369,8 +375,8 @@ public class TravelControllerTest extends TravelTest {
                         127.0000
                 )
         );
-        bookmarkRepository.save(createBookmark(member, gangnamPlace));
-        PlaceSearchRequest request = createTravelSearchRequest(37.4970465429, 127.0281573537, "강남");
+        bookmarkRepository.save(BookmarkFixture.createBookmark(member, gangnamPlace));
+        PlaceSearchRequest request = TravelPlaceFixture.createTravelSearchRequest(37.4970465429, 127.0281573537, "강남");
 
         // when, then
         mockMvc.perform(post("/api/travels/search")
@@ -391,7 +397,7 @@ public class TravelControllerTest extends TravelTest {
     @DisplayName("비회원의 위치를 기반으로 여행지를 검색할 때, 검색 결과가 존재하지 않는 경우")
     void searchTravelPlacesWithLocation_nonMember_emptyResult() throws Exception {
         // given
-        PlaceSearchRequest request = createTravelSearchRequest(9999.9999, 9999.9999, "ㅁㄴㅇㄹ");
+        PlaceSearchRequest request = TravelPlaceFixture.createTravelSearchRequest(9999.9999, 9999.9999, "ㅁㄴㅇㄹ");
 
         // when, then
         mockMvc.perform(post("/api/travels/search")
@@ -411,7 +417,7 @@ public class TravelControllerTest extends TravelTest {
     void searchTravelPlacesWithoutLocation_member() throws Exception {
         // given
         TravelPlace gangnamPlace = travelPlaceRepository.save(
-                createTravelPlace(
+                TravelPlaceFixture.createTravelPlace(
                         country,
                         city,
                         gangnam,
@@ -420,11 +426,11 @@ public class TravelControllerTest extends TravelTest {
                         "여행지1"
                 )
         );
-        TravelImage gangnamThumbnail = travelImageRepository.save(createTravelImage(gangnamPlace, "test1", true));
-        travelImageRepository.save(createTravelImage(gangnamPlace, "test2", false));
+        TravelImage gangnamThumbnail = travelImageRepository.save(TravelImageFixture.createTravelImage(gangnamPlace, "test1", true));
+        travelImageRepository.save(TravelImageFixture.createTravelImage(gangnamPlace, "test2", false));
 
         travelPlaceRepository.save(
-                createTravelPlace(
+                TravelPlaceFixture.createTravelPlace(
                         country,
                         city,
                         seongdong,
@@ -433,10 +439,10 @@ public class TravelControllerTest extends TravelTest {
                         "여행지2"
                     )
         );
-        bookmarkRepository.save(createBookmark(member, gangnamPlace));
-        mockAuthentication(member);
+        bookmarkRepository.save(BookmarkFixture.createBookmark(member, gangnamPlace));
+        SecurityTestUtils.mockAuthentication(member);
 
-        PlaceSearchRequest request = createTravelSearchRequest("강남");
+        PlaceSearchRequest request = TravelPlaceFixture.createTravelSearchRequest("강남");
 
         // when, then
         mockMvc.perform(post("/api/travels/search")
@@ -457,8 +463,8 @@ public class TravelControllerTest extends TravelTest {
     @DisplayName("회원의 위치를 기반하지 않고 검색할 때, 검색 결과가 존재하지 않는 경우")
     void searchTravelPlacesWithoutLocation_member_emptyResult() throws Exception {
         // given
-        mockAuthentication(member);
-        PlaceSearchRequest request = createTravelSearchRequest("ㅁㄴㅇㄹ");
+        SecurityTestUtils.mockAuthentication(member);
+        PlaceSearchRequest request = TravelPlaceFixture.createTravelSearchRequest("ㅁㄴㅇㄹ");
 
         // when, then
         mockMvc.perform(post("/api/travels/search")
@@ -477,7 +483,7 @@ public class TravelControllerTest extends TravelTest {
     void searchTravelPlacesWithoutLocation_nonMember() throws Exception {
         // given
         TravelPlace gangnamPlace = travelPlaceRepository.save(
-                createTravelPlace(
+                TravelPlaceFixture.createTravelPlace(
                         country,
                         city,
                         gangnam,
@@ -486,11 +492,11 @@ public class TravelControllerTest extends TravelTest {
                         "여행지1"
                 )
         );
-        TravelImage gangnamThumbnail = travelImageRepository.save(createTravelImage(gangnamPlace, "test1", true));
-        travelImageRepository.save(createTravelImage(gangnamPlace, "test2", false));
+        TravelImage gangnamThumbnail = travelImageRepository.save(TravelImageFixture.createTravelImage(gangnamPlace, "test1", true));
+        travelImageRepository.save(TravelImageFixture.createTravelImage(gangnamPlace, "test2", false));
 
         travelPlaceRepository.save(
-                createTravelPlace(
+                TravelPlaceFixture.createTravelPlace(
                         country,
                         city,
                         seongdong,
@@ -499,8 +505,8 @@ public class TravelControllerTest extends TravelTest {
                         "여행지2"
                 )
         );
-        bookmarkRepository.save(createBookmark(member, gangnamPlace));
-        PlaceSearchRequest request = createTravelSearchRequest("강남");
+        bookmarkRepository.save(BookmarkFixture.createBookmark(member, gangnamPlace));
+        PlaceSearchRequest request = TravelPlaceFixture.createTravelSearchRequest("강남");
 
         // when, then
         mockMvc.perform(post("/api/travels/search")
@@ -521,7 +527,7 @@ public class TravelControllerTest extends TravelTest {
     @DisplayName("비회원의 위치를 기반하지 않고 여행지를 검색할 때, 검색 결과가 존재하지 않는 경우")
     void searchTravelPlacesWithoutLocation_nonMember_emptyResult() throws Exception {
         // given
-        PlaceSearchRequest request = createTravelSearchRequest("ㅁㄴㅇㄹ");
+        PlaceSearchRequest request = TravelPlaceFixture.createTravelSearchRequest("ㅁㄴㅇㄹ");
 
         // when, then
         mockMvc.perform(post("/api/travels/search")
@@ -541,7 +547,7 @@ public class TravelControllerTest extends TravelTest {
     @ValueSource(strings = {"", " "})
     void searchTravelPlaces_invalidNotBlankKeyword(String input) throws Exception {
         // given
-        PlaceSearchRequest request = createTravelSearchRequest(
+        PlaceSearchRequest request = TravelPlaceFixture.createTravelSearchRequest(
                 37.4970465429,
                 127.0281573537,
                 input
@@ -562,7 +568,7 @@ public class TravelControllerTest extends TravelTest {
     @DisplayName("여행지 검색 시 키워드에 null 값으로 예외 발생")
     void searchTravelPlaces_invalidNullKeyword() throws Exception {
         // given
-        PlaceSearchRequest request = createTravelSearchRequest(
+        PlaceSearchRequest request = TravelPlaceFixture.createTravelSearchRequest(
                 37.4970465429,
                 127.0281573537,
                 null
@@ -584,7 +590,7 @@ public class TravelControllerTest extends TravelTest {
     @ValueSource(strings = {"@강남", "#", "SELECT * FROM MEMBER"})
     void searchTravelPlaces_invalidKeyword(String keyword) throws Exception {
         // given
-        PlaceSearchRequest request = createTravelSearchRequest(
+        PlaceSearchRequest request = TravelPlaceFixture.createTravelSearchRequest(
                 37.4970465429,
                 127.0281573537,
                 keyword
@@ -606,7 +612,7 @@ public class TravelControllerTest extends TravelTest {
     void getTravelDetails_member() throws Exception {
         // given
         TravelPlace place = travelPlaceRepository.save(
-                createTravelPlace(
+                TravelPlaceFixture.createTravelPlace(
                         country,
                         city,
                         gangnam,
@@ -615,11 +621,11 @@ public class TravelControllerTest extends TravelTest {
                         "여행지1"
                 )
         );
-        travelImageRepository.save(createTravelImage(place, "test1", true));
-        travelImageRepository.save(createTravelImage(place, "test2", false));
+        travelImageRepository.save(TravelImageFixture.createTravelImage(place, "test1", true));
+        travelImageRepository.save(TravelImageFixture.createTravelImage(place, "test2", false));
 
-        bookmarkRepository.save(createBookmark(member, place));
-        mockAuthentication(member);
+        bookmarkRepository.save(BookmarkFixture.createBookmark(member, place));
+        SecurityTestUtils.mockAuthentication(member);
 
         // when, then
         mockMvc.perform(get("/api/travels/{placeId}", place.getPlaceId()))
@@ -637,7 +643,7 @@ public class TravelControllerTest extends TravelTest {
     void getTravelDetails_nonMember() throws Exception {
         // given
         TravelPlace place = travelPlaceRepository.save(
-                createTravelPlace(
+                TravelPlaceFixture.createTravelPlace(
                         country,
                         city,
                         gangnam,
@@ -646,10 +652,10 @@ public class TravelControllerTest extends TravelTest {
                         "여행지1"
                 )
         );
-        travelImageRepository.save(createTravelImage(place, "test1", true));
-        travelImageRepository.save(createTravelImage(place, "test2", false));
+        travelImageRepository.save(TravelImageFixture.createTravelImage(place, "test1", true));
+        travelImageRepository.save(TravelImageFixture.createTravelImage(place, "test2", false));
 
-        bookmarkRepository.save(createBookmark(member, place));
+        bookmarkRepository.save(BookmarkFixture.createBookmark(member, place));
 
         // when, then
         mockMvc.perform(get("/api/travels/{placeId}", place.getPlaceId()))
@@ -680,7 +686,7 @@ public class TravelControllerTest extends TravelTest {
     void findPopularTravelPlacesByCity_ALL() throws Exception {
         // given
         TravelPlace gangnamPlace = travelPlaceRepository.save(
-                createTravelPlaceWithBookmarkCnt(
+                TravelPlaceFixture.createTravelPlaceWithBookmarkCnt(
                         country,
                         city,
                         gangnam,
@@ -690,12 +696,12 @@ public class TravelControllerTest extends TravelTest {
                         3
                 )
         );
-        TravelImage gangnamThumbnail = travelImageRepository.save(createTravelImage(gangnamPlace, "test1", true));
-        travelImageRepository.save(createTravelImage(gangnamPlace, "test2", false));
+        TravelImage gangnamThumbnail = travelImageRepository.save(TravelImageFixture.createTravelImage(gangnamPlace, "test1", true));
+        travelImageRepository.save(TravelImageFixture.createTravelImage(gangnamPlace, "test2", false));
 
 
         TravelPlace seongdongPlace = travelPlaceRepository.save(
-                createTravelPlaceWithBookmarkCnt(
+                TravelPlaceFixture.createTravelPlaceWithBookmarkCnt(
                         country,
                         city,
                         seongdong,
@@ -706,10 +712,10 @@ public class TravelControllerTest extends TravelTest {
                 )
         );
 
-        City busan = cityRepository.save(createCity(country, "부산"));
-        District busanDistrict = districtRepository.save(createDistrict(busan, "금정구"));
+        City busan = cityRepository.save(CityFixture.createCity(country, "부산"));
+        District busanDistrict = districtRepository.save(DistrictFixture.createDistrict(busan, "금정구"));
         TravelPlace busanPlace = travelPlaceRepository.save(
-                createTravelPlaceWithBookmarkCnt(
+                TravelPlaceFixture.createTravelPlaceWithBookmarkCnt(
                         country,
                         busan,
                         busanDistrict,
@@ -719,13 +725,13 @@ public class TravelControllerTest extends TravelTest {
                         50
                 )
         );
-        TravelImage busanThumbnail = travelImageRepository.save(createTravelImage(busanPlace, "부산이미지1", true));
-        travelImageRepository.save(createTravelImage(busanPlace, "부산이미지2", false));
+        TravelImage busanThumbnail = travelImageRepository.save(TravelImageFixture.createTravelImage(busanPlace, "부산이미지1", true));
+        travelImageRepository.save(TravelImageFixture.createTravelImage(busanPlace, "부산이미지2", false));
 
-        City jeolla = cityRepository.save(createCity(country, "전라남도"));
-        District jeollaDistrict = districtRepository.save(createDistrict(busan, "보성구"));
+        City jeolla = cityRepository.save(CityFixture.createCity(country, "전라남도"));
+        District jeollaDistrict = districtRepository.save(DistrictFixture.createDistrict(busan, "보성구"));
         TravelPlace jeollaPlace = travelPlaceRepository.save(
-                createTravelPlaceWithBookmarkCnt(
+                TravelPlaceFixture.createTravelPlaceWithBookmarkCnt(
                         country,
                         jeolla,
                         jeollaDistrict,
@@ -760,7 +766,7 @@ public class TravelControllerTest extends TravelTest {
     void findPopularTravelPlacesByCity_GUEONGSANG() throws Exception {
         // given
         TravelPlace gangnamPlace = travelPlaceRepository.save(
-                createTravelPlace(
+                TravelPlaceFixture.createTravelPlace(
                         country,
                         city,
                         gangnam,
@@ -769,11 +775,11 @@ public class TravelControllerTest extends TravelTest {
                         "여행지1"
                 )
         );
-        travelImageRepository.save(createTravelImage(gangnamPlace, "test1", true));
-        travelImageRepository.save(createTravelImage(gangnamPlace, "test2", false));
+        travelImageRepository.save(TravelImageFixture.createTravelImage(gangnamPlace, "test1", true));
+        travelImageRepository.save(TravelImageFixture.createTravelImage(gangnamPlace, "test2", false));
 
         travelPlaceRepository.save(
-                createTravelPlace(
+                TravelPlaceFixture.createTravelPlace(
                         country,
                         city,
                         seongdong,
@@ -783,10 +789,10 @@ public class TravelControllerTest extends TravelTest {
                 )
         );
 
-        City gueongsang1 = cityRepository.save(createCity(country, "경상북도"));
-        District gueongsang1District = districtRepository.save(createDistrict(gueongsang1, "구미시"));
+        City gueongsang1 = cityRepository.save(CityFixture.createCity(country, "경상북도"));
+        District gueongsang1District = districtRepository.save(DistrictFixture.createDistrict(gueongsang1, "구미시"));
         TravelPlace gueongsangPlace1 = travelPlaceRepository.save(
-                createTravelPlace(
+                TravelPlaceFixture.createTravelPlace(
                         country,
                         gueongsang1,
                         gueongsang1District,
@@ -795,13 +801,13 @@ public class TravelControllerTest extends TravelTest {
                         "구미 여행지"
                 )
         );
-        TravelImage gueongsang1Thumbnail = travelImageRepository.save(createTravelImage(gueongsangPlace1, "경상이미지1", true));
-        travelImageRepository.save(createTravelImage(gueongsangPlace1, "경상이미지2", false));
+        TravelImage gueongsang1Thumbnail = travelImageRepository.save(TravelImageFixture.createTravelImage(gueongsangPlace1, "경상이미지1", true));
+        travelImageRepository.save(TravelImageFixture.createTravelImage(gueongsangPlace1, "경상이미지2", false));
 
-        City gueongsang2 = cityRepository.save(createCity(country, "경상남도"));
-        District gueongsang2District = districtRepository.save(createDistrict(gueongsang2, "통영시"));
+        City gueongsang2 = cityRepository.save(CityFixture.createCity(country, "경상남도"));
+        District gueongsang2District = districtRepository.save(DistrictFixture.createDistrict(gueongsang2, "통영시"));
         TravelPlace gueongsangPlace2 = travelPlaceRepository.save(
-                createTravelPlace(
+                TravelPlaceFixture.createTravelPlace(
                         country,
                         gueongsang2,
                         gueongsang2District,
@@ -859,7 +865,7 @@ public class TravelControllerTest extends TravelTest {
     void findRecommendTravelPlacesByTheme_ALL() throws Exception{
         // given
         TravelPlace attractionPlace1 = travelPlaceRepository.save(
-                createTravelPlaceWithBookmarkCnt(
+                TravelPlaceFixture.createTravelPlaceWithBookmarkCnt(
                         country,
                         city,
                         gangnam,
@@ -869,11 +875,11 @@ public class TravelControllerTest extends TravelTest {
                         1
                 )
         );
-        TravelImage attraction1Thumbnail = travelImageRepository.save(createTravelImage(attractionPlace1, "test1", true));
-        travelImageRepository.save(createTravelImage(attractionPlace1, "test2", false));
+        TravelImage attraction1Thumbnail = travelImageRepository.save(TravelImageFixture.createTravelImage(attractionPlace1, "test1", true));
+        travelImageRepository.save(TravelImageFixture.createTravelImage(attractionPlace1, "test2", false));
 
         TravelPlace attractionPlace2 = travelPlaceRepository.save(
-                createTravelPlaceWithBookmarkCnt(
+                TravelPlaceFixture.createTravelPlaceWithBookmarkCnt(
                         country,
                         city,
                         seongdong,
@@ -884,10 +890,10 @@ public class TravelControllerTest extends TravelTest {
                 )
         );
 
-        City busan = cityRepository.save(createCity(country, "부산"));
-        District busanDistrict = districtRepository.save(createDistrict(busan, "금정구"));
+        City busan = cityRepository.save(CityFixture.createCity(country, "부산"));
+        District busanDistrict = districtRepository.save(DistrictFixture.createDistrict(busan, "금정구"));
         TravelPlace lodgingPlace = travelPlaceRepository.save(
-                createLodgingTravelPlace(
+                TravelPlaceFixture.createLodgingTravelPlace(
                         country,
                         busan,
                         busanDistrict,
@@ -896,13 +902,13 @@ public class TravelControllerTest extends TravelTest {
                         "부산 여행지"
                 )
         );
-        TravelImage lodgingThumbnail = travelImageRepository.save(createTravelImage(lodgingPlace, "부산이미지1", true));
-        travelImageRepository.save(createTravelImage(lodgingPlace, "부산이미지2", false));
+        TravelImage lodgingThumbnail = travelImageRepository.save(TravelImageFixture.createTravelImage(lodgingPlace, "부산이미지1", true));
+        travelImageRepository.save(TravelImageFixture.createTravelImage(lodgingPlace, "부산이미지2", false));
 
-        City jeolla = cityRepository.save(createCity(country, "전라남도"));
-        District jeollaDistrict = districtRepository.save(createDistrict(busan, "보성구"));
+        City jeolla = cityRepository.save(CityFixture.createCity(country, "전라남도"));
+        District jeollaDistrict = districtRepository.save(DistrictFixture.createDistrict(busan, "보성구"));
         TravelPlace attractionPlace3 = travelPlaceRepository.save(
-                createTravelPlaceWithBookmarkCnt(
+                TravelPlaceFixture.createTravelPlaceWithBookmarkCnt(
                         country,
                         jeolla,
                         jeollaDistrict,
@@ -937,7 +943,7 @@ public class TravelControllerTest extends TravelTest {
     void findRecommendTravelPlacesByTheme_Lodging() throws Exception {
         // given
         TravelPlace attractionPlace1 = travelPlaceRepository.save(
-                createTravelPlace(
+                TravelPlaceFixture.createTravelPlace(
                         country,
                         city,
                         gangnam,
@@ -946,11 +952,11 @@ public class TravelControllerTest extends TravelTest {
                         "여행지1"
                 )
         );
-        travelImageRepository.save(createTravelImage(attractionPlace1, "test1", true));
-        travelImageRepository.save(createTravelImage(attractionPlace1, "test2", false));
+        travelImageRepository.save(TravelImageFixture.createTravelImage(attractionPlace1, "test1", true));
+        travelImageRepository.save(TravelImageFixture.createTravelImage(attractionPlace1, "test2", false));
 
         travelPlaceRepository.save(
-                createTravelPlace(
+                TravelPlaceFixture.createTravelPlace(
                         country,
                         city,
                         seongdong,
@@ -960,10 +966,10 @@ public class TravelControllerTest extends TravelTest {
                 )
         );
 
-        City busan = cityRepository.save(createCity(country, "부산"));
-        District busanDistrict = districtRepository.save(createDistrict(busan, "금정구"));
+        City busan = cityRepository.save(CityFixture.createCity(country, "부산"));
+        District busanDistrict = districtRepository.save(DistrictFixture.createDistrict(busan, "금정구"));
         TravelPlace lodgingPlace = travelPlaceRepository.save(
-                createLodgingTravelPlace(
+                TravelPlaceFixture.createLodgingTravelPlace(
                         country,
                         busan,
                         busanDistrict,
@@ -972,8 +978,8 @@ public class TravelControllerTest extends TravelTest {
                         "부산 여행지"
                 )
         );
-        TravelImage lodgingThumbnail = travelImageRepository.save(createTravelImage(lodgingPlace, "부산이미지1", true));
-        travelImageRepository.save(createTravelImage(lodgingPlace, "부산이미지2", false));
+        TravelImage lodgingThumbnail = travelImageRepository.save(TravelImageFixture.createTravelImage(lodgingPlace, "부산이미지1", true));
+        travelImageRepository.save(TravelImageFixture.createTravelImage(lodgingPlace, "부산이미지2", false));
 
 
         // when, then

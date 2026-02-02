@@ -1,4 +1,4 @@
-package com.triptune.member.dto;
+package com.triptune.member.service.dto;
 
 public record LoginResult(
         String accessToken,

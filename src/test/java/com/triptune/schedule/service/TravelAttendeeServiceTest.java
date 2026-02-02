@@ -3,9 +3,12 @@ package com.triptune.schedule.service;
 import com.triptune.global.exception.DataNotFoundException;
 import com.triptune.global.message.ErrorCode;
 import com.triptune.member.entity.Member;
+import com.triptune.member.fixture.MemberFixture;
 import com.triptune.member.repository.MemberRepository;
 import com.triptune.profile.entity.ProfileImage;
-import com.triptune.schedule.ScheduleTest;
+import com.triptune.profile.fixture.ProfileImageFixture;
+import com.triptune.schedule.fixture.TravelAttendeeFixture;
+import com.triptune.schedule.fixture.TravelScheduleFixture;
 import com.triptune.schedule.dto.request.AttendeePermissionRequest;
 import com.triptune.schedule.dto.request.AttendeeRequest;
 import com.triptune.schedule.dto.response.AttendeeResponse;
@@ -37,7 +40,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class TravelAttendeeServiceTest extends ScheduleTest {
+public class TravelAttendeeServiceTest {
     @InjectMocks private TravelAttendeeService travelAttendeeService;
     @Mock private TravelAttendeeRepository travelAttendeeRepository;
     @Mock private TravelScheduleRepository travelScheduleRepository;
@@ -51,14 +54,14 @@ public class TravelAttendeeServiceTest extends ScheduleTest {
 
     @BeforeEach
     void setUp(){
-        ProfileImage profileImage1 = createProfileImage("member1Image");
-        member1 = createNativeTypeMember( "member1@email.com", profileImage1);
-        ProfileImage profileImage2 = createProfileImage("member2Image");
-        member2 = createNativeTypeMember("member2@email.com", profileImage2);
-        ProfileImage profileImage3 = createProfileImage("member3Image");
-        member3 = createNativeTypeMember("member3@email.com", profileImage3);
+        ProfileImage profileImage1 = ProfileImageFixture.createProfileImage("member1Image");
+        member1 = MemberFixture.createNativeTypeMember( "member1@email.com", profileImage1);
+        ProfileImage profileImage2 = ProfileImageFixture.createProfileImage("member2Image");
+        member2 = MemberFixture.createNativeTypeMember("member2@email.com", profileImage2);
+        ProfileImage profileImage3 = ProfileImageFixture.createProfileImage("member3Image");
+        member3 = MemberFixture.createNativeTypeMember("member3@email.com", profileImage3);
 
-        schedule = createTravelSchedule("테스트1");
+        schedule = TravelScheduleFixture.createTravelSchedule("테스트1");
     }
 
     @Test
@@ -66,8 +69,8 @@ public class TravelAttendeeServiceTest extends ScheduleTest {
     void getAttendeesByScheduleId(){
         // given
         List<TravelAttendee> travelAttendees = List.of(
-                createAuthorTravelAttendee(schedule, member1),
-                createGuestTravelAttendee(schedule, member2, AttendeePermission.READ)
+                TravelAttendeeFixture.createAuthorTravelAttendee(schedule, member1),
+                TravelAttendeeFixture.createGuestTravelAttendee(schedule, member2, AttendeePermission.READ)
         );
 
         when(travelAttendeeRepository.findAllByTravelSchedule_ScheduleId(anyLong()))
@@ -117,10 +120,10 @@ public class TravelAttendeeServiceTest extends ScheduleTest {
     @DisplayName("일정 참석자 추가")
     void createAttendee(){
         // given
-        ProfileImage profileImage = createProfileImage("newMember");
-        Member newMember = createNativeTypeMemberWithId(1L, "newMember@email.com", profileImage);
+        ProfileImage profileImage = ProfileImageFixture.createProfileImage("newMember");
+        Member newMember = MemberFixture.createNativeTypeMemberWithId(1L, "newMember@email.com", profileImage);
 
-        AttendeeRequest attendeeRequest = createAttendeeRequest(newMember.getEmail(), AttendeePermission.CHAT);
+        AttendeeRequest attendeeRequest = TravelAttendeeFixture.createAttendeeRequest(newMember.getEmail(), AttendeePermission.CHAT);
 
         when(travelScheduleRepository.findById(anyLong())).thenReturn(Optional.of(schedule));
         when(travelAttendeeRepository.existsByTravelSchedule_ScheduleIdAndMember_MemberIdAndRole(anyLong(), anyLong(), any(AttendeeRole.class)))
@@ -139,7 +142,7 @@ public class TravelAttendeeServiceTest extends ScheduleTest {
     @DisplayName("일정 참석자 추가 시 일정 찾을 수 없어 예외 발생")
     void createAttendee_scheduleNotFound(){
         // given
-        AttendeeRequest attendeeRequest = createAttendeeRequest(member3.getEmail(), AttendeePermission.CHAT);
+        AttendeeRequest attendeeRequest = TravelAttendeeFixture.createAttendeeRequest(member3.getEmail(), AttendeePermission.CHAT);
 
         when(travelScheduleRepository.findById(anyLong())).thenReturn(Optional.empty());
 
@@ -155,7 +158,7 @@ public class TravelAttendeeServiceTest extends ScheduleTest {
     @DisplayName("일정 참석자 추가 시 참석자 5명 넘어 예외 발생")
     void createAttendee_overFiveAttendee() {
         // given
-        AttendeeRequest attendeeRequest = createAttendeeRequest(member3.getEmail(), AttendeePermission.CHAT);
+        AttendeeRequest attendeeRequest = TravelAttendeeFixture.createAttendeeRequest(member3.getEmail(), AttendeePermission.CHAT);
 
         when(travelScheduleRepository.findById(anyLong())).thenReturn(Optional.of(schedule));
         when(travelAttendeeRepository.countByTravelSchedule_ScheduleId(anyLong())).thenReturn(5);
@@ -172,7 +175,7 @@ public class TravelAttendeeServiceTest extends ScheduleTest {
     @DisplayName("일정 참석자 추가 시 작성자가 아닌 사람의 요청으로 예외 발생")
     void createAttendee_forbiddenNotAuthor(){
         // given
-        AttendeeRequest attendeeRequest = createAttendeeRequest(member3.getEmail(), AttendeePermission.CHAT);
+        AttendeeRequest attendeeRequest = TravelAttendeeFixture.createAttendeeRequest(member3.getEmail(), AttendeePermission.CHAT);
 
         when(travelScheduleRepository.findById(anyLong())).thenReturn(Optional.of(schedule));
         when(travelAttendeeRepository.countByTravelSchedule_ScheduleId(anyLong())).thenReturn(4);
@@ -191,7 +194,7 @@ public class TravelAttendeeServiceTest extends ScheduleTest {
     @DisplayName("일정 참석자 추가 시 참석자 정보를 찾을 수 없어 예외 발생")
     void createAttendee_forbiddenNotAttendee(){
         // given
-        AttendeeRequest attendeeRequest = createAttendeeRequest(member3.getEmail(), AttendeePermission.CHAT);
+        AttendeeRequest attendeeRequest = TravelAttendeeFixture.createAttendeeRequest(member3.getEmail(), AttendeePermission.CHAT);
 
         when(travelScheduleRepository.findById(anyLong())).thenReturn(Optional.of(schedule));
         when(travelAttendeeRepository.countByTravelSchedule_ScheduleId(anyLong())).thenReturn(4);
@@ -211,10 +214,10 @@ public class TravelAttendeeServiceTest extends ScheduleTest {
     @DisplayName("일정 참석자 추가 시 이미 참석자로 존재해 예외 발생")
     void createAttendee_alreadyAttendee(){
         // given
-        ProfileImage profileImage = createProfileImage("newMember");
-        Member newMember = createNativeTypeMemberWithId(1L, "newMember@email.com", profileImage);
+        ProfileImage profileImage = ProfileImageFixture.createProfileImage("newMember");
+        Member newMember = MemberFixture.createNativeTypeMemberWithId(1L, "newMember@email.com", profileImage);
 
-        AttendeeRequest attendeeRequest = createAttendeeRequest(newMember.getEmail(), AttendeePermission.CHAT);
+        AttendeeRequest attendeeRequest = TravelAttendeeFixture.createAttendeeRequest(newMember.getEmail(), AttendeePermission.CHAT);
 
         when(travelScheduleRepository.findById(anyLong())).thenReturn(Optional.of(schedule));
         when(travelAttendeeRepository.countByTravelSchedule_ScheduleId(anyLong())).thenReturn(4);
@@ -310,9 +313,9 @@ public class TravelAttendeeServiceTest extends ScheduleTest {
     @DisplayName("일정 참석자 접근 권한 수정")
     void updateAttendeePermission(){
         // given
-        TravelAttendee guest = createGuestTravelAttendeeWithId(1L, schedule, member2, AttendeePermission.READ);
+        TravelAttendee guest = TravelAttendeeFixture.createGuestTravelAttendeeWithId(1L, schedule, member2, AttendeePermission.READ);
 
-        AttendeePermissionRequest request = createAttendeePermissionRequest(AttendeePermission.READ);
+        AttendeePermissionRequest request = TravelAttendeeFixture.createAttendeePermissionRequest(AttendeePermission.READ);
 
         when(travelAttendeeRepository.existsByTravelSchedule_ScheduleIdAndMember_MemberIdAndRole(anyLong(), anyLong(), any(AttendeeRole.class)))
                 .thenReturn(true);
@@ -338,9 +341,9 @@ public class TravelAttendeeServiceTest extends ScheduleTest {
     @DisplayName("일정 참석자 허용 권한 수정 시 요청자가 작성자가 아니여서 예외 발생")
     void updateAttendeePermission_forbiddenNotAuthor(){
         // given
-        TravelAttendee guest = createGuestTravelAttendee(schedule, member2, AttendeePermission.READ);
+        TravelAttendee guest = TravelAttendeeFixture.createGuestTravelAttendee(schedule, member2, AttendeePermission.READ);
 
-        AttendeePermissionRequest request = createAttendeePermissionRequest(AttendeePermission.READ);
+        AttendeePermissionRequest request = TravelAttendeeFixture.createAttendeePermissionRequest(AttendeePermission.READ);
 
         when(travelAttendeeRepository.existsByTravelSchedule_ScheduleIdAndMember_MemberIdAndRole(anyLong(), anyLong(), any())).thenReturn(false);
 
@@ -362,7 +365,7 @@ public class TravelAttendeeServiceTest extends ScheduleTest {
     @DisplayName("일정 참석자 접근 권한 수정 시 참석자가 정보가 없어 예외 발생")
     void updateAttendeePermission_attendeeNotFound(){
         // given
-        AttendeePermissionRequest request = createAttendeePermissionRequest(AttendeePermission.READ);
+        AttendeePermissionRequest request = TravelAttendeeFixture.createAttendeePermissionRequest(AttendeePermission.READ);
 
         when(travelAttendeeRepository.existsByTravelSchedule_ScheduleIdAndMember_MemberIdAndRole(anyLong(), anyLong(), any()))
                 .thenReturn(true);
@@ -389,9 +392,9 @@ public class TravelAttendeeServiceTest extends ScheduleTest {
     @DisplayName("일정 참석자 허용 권한 수정 시 작성자의 접근 권한 수정 시도로 예외 발생")
     void updateAttendeePermission_forbiddenUpdateAuthorPermission(){
         // given
-        TravelAttendee author = createAuthorTravelAttendeeWithId(1L, schedule, member1);
+        TravelAttendee author = TravelAttendeeFixture.createAuthorTravelAttendeeWithId(1L, schedule, member1);
 
-        AttendeePermissionRequest request = createAttendeePermissionRequest(AttendeePermission.READ);
+        AttendeePermissionRequest request = TravelAttendeeFixture.createAttendeePermissionRequest(AttendeePermission.READ);
 
         when(travelAttendeeRepository.existsByTravelSchedule_ScheduleIdAndMember_MemberIdAndRole(anyLong(), anyLong(), any()))
                 .thenReturn(true);
@@ -418,7 +421,7 @@ public class TravelAttendeeServiceTest extends ScheduleTest {
     @DisplayName("일정 나가기")
     void leaveAttendee(){
         // given
-        TravelAttendee guest = createGuestTravelAttendee(schedule, member2, AttendeePermission.READ);
+        TravelAttendee guest = TravelAttendeeFixture.createGuestTravelAttendee(schedule, member2, AttendeePermission.READ);
 
         when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_MemberId(anyLong(), anyLong()))
                 .thenReturn(Optional.of(guest));
@@ -449,7 +452,7 @@ public class TravelAttendeeServiceTest extends ScheduleTest {
     @DisplayName("일정 나가기 요청 시 요청자가 작성자여서 예외 발생")
     void leaveAttendee_forbiddenAuthor(){
         // given
-        TravelAttendee author = createAuthorTravelAttendee(schedule, member1);
+        TravelAttendee author = TravelAttendeeFixture.createAuthorTravelAttendee(schedule, member1);
 
         when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_MemberId(anyLong(), anyLong()))
                 .thenReturn(Optional.of(author));
@@ -466,9 +469,9 @@ public class TravelAttendeeServiceTest extends ScheduleTest {
     @DisplayName("일정 내보내기")
     void removeAttendee(){
         // given
-        ProfileImage profileImage = createProfileImage("defaultImage");
-        Member guestMember = createNativeTypeMemberWithId(2L, "guestMember@email.com", profileImage);
-        TravelAttendee guest = createGuestTravelAttendeeWithId(1L, schedule, guestMember, AttendeePermission.READ);
+        ProfileImage profileImage = ProfileImageFixture.createProfileImage("defaultImage");
+        Member guestMember = MemberFixture.createNativeTypeMemberWithId(2L, "guestMember@email.com", profileImage);
+        TravelAttendee guest = TravelAttendeeFixture.createGuestTravelAttendeeWithId(1L, schedule, guestMember, AttendeePermission.READ);
 
         when(travelAttendeeRepository.existsByTravelSchedule_ScheduleIdAndMember_MemberIdAndRole(anyLong(), anyLong(), any()))
                 .thenReturn(true);
@@ -486,7 +489,7 @@ public class TravelAttendeeServiceTest extends ScheduleTest {
     @DisplayName("일정 내보내기 시 작성자 요청이 아니여서 예외 발생")
     void removeAttendee_forbiddenNotAuthor(){
         // given
-        TravelAttendee guest = createGuestTravelAttendee(schedule, member2, AttendeePermission.READ);
+        TravelAttendee guest = TravelAttendeeFixture.createGuestTravelAttendee(schedule, member2, AttendeePermission.READ);
 
         when(travelAttendeeRepository.existsByTravelSchedule_ScheduleIdAndMember_MemberIdAndRole(anyLong(), anyLong(), any()))
                 .thenReturn(false);
@@ -527,9 +530,9 @@ public class TravelAttendeeServiceTest extends ScheduleTest {
     @DisplayName("일정 내보내기 시 작성자 내보내기 시도로 예외 발생")
     void removeAttendee_forbiddenRemoveAuthor(){
         // given
-        ProfileImage profileImage = createProfileImage("removeMember");
-        Member removeMember = createNativeTypeMemberWithId(1L, "removeMember@email.com", profileImage);
-        TravelAttendee author = createAuthorTravelAttendeeWithId(1L, schedule, removeMember);
+        ProfileImage profileImage = ProfileImageFixture.createProfileImage("removeMember");
+        Member removeMember = MemberFixture.createNativeTypeMemberWithId(1L, "removeMember@email.com", profileImage);
+        TravelAttendee author = TravelAttendeeFixture.createAuthorTravelAttendeeWithId(1L, schedule, removeMember);
 
         when(travelAttendeeRepository.existsByTravelSchedule_ScheduleIdAndMember_MemberIdAndRole(anyLong(), anyLong(), any(AttendeeRole.class)))
                 .thenReturn(true);

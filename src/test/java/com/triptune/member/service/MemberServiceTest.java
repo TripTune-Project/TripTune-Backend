@@ -3,11 +3,13 @@ package com.triptune.member.service;
 import com.triptune.bookmark.enums.BookmarkSortType;
 import com.triptune.bookmark.repository.BookmarkRepository;
 import com.triptune.common.entity.*;
+import com.triptune.common.fixture.*;
 import com.triptune.email.dto.request.EmailRequest;
 import com.triptune.email.exception.EmailVerifyException;
 import com.triptune.email.service.EmailService;
-import com.triptune.member.MemberTest;
-import com.triptune.member.dto.LoginResult;
+import com.triptune.member.fixture.MemberFixture;
+import com.triptune.member.fixture.SocialMemberFixture;
+import com.triptune.member.service.dto.LoginResult;
 import com.triptune.member.dto.request.*;
 import com.triptune.member.dto.response.MemberInfoResponse;
 import com.triptune.member.dto.response.RefreshTokenResponse;
@@ -20,10 +22,13 @@ import com.triptune.member.exception.FailLoginException;
 import com.triptune.member.exception.UnsupportedSocialMemberException;
 import com.triptune.member.repository.MemberRepository;
 import com.triptune.profile.entity.ProfileImage;
+import com.triptune.profile.fixture.ProfileImageFixture;
 import com.triptune.profile.service.ProfileImageService;
 import com.triptune.schedule.entity.TravelAttendee;
 import com.triptune.schedule.entity.TravelSchedule;
 import com.triptune.schedule.enums.AttendeePermission;
+import com.triptune.schedule.fixture.TravelAttendeeFixture;
+import com.triptune.schedule.fixture.TravelScheduleFixture;
 import com.triptune.schedule.repository.ChatMessageRepository;
 import com.triptune.schedule.repository.TravelAttendeeRepository;
 import com.triptune.schedule.repository.TravelScheduleRepository;
@@ -37,6 +42,8 @@ import com.triptune.global.security.jwt.JwtUtils;
 import com.triptune.global.util.PageUtils;
 import com.triptune.global.redis.RedisService;
 import com.triptune.travel.enums.ThemeType;
+import com.triptune.travel.fixture.TravelImageFixture;
+import com.triptune.travel.fixture.TravelPlaceFixture;
 import jakarta.mail.MessagingException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -61,7 +68,7 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class MemberServiceTest extends MemberTest {
+public class MemberServiceTest {
 
     @InjectMocks private MemberService memberService;
     @Mock private MemberRepository memberRepository;
@@ -79,26 +86,30 @@ public class MemberServiceTest extends MemberTest {
     private final String refreshToken = "MemberRefreshToken";
     private final String passwordToken = "MemberPasswordToken";
 
+    private ProfileImage profileImage;
+
     private TravelPlace place1;
     private TravelPlace place2;
     private TravelPlace place3;
 
     @BeforeEach
     void setUp() {
-        Country country = createCountry();
-        City city = createCity(country, "서울");
-        District district = createDistrict(city, "강남구");
-        ApiCategory apiCategory = createApiCategory();
-        ApiContentType apiContentType = createApiContentType(ThemeType.ATTRACTIONS);
+        Country country = CountryFixture.createCountry();
+        City city = CityFixture.createCity(country, "서울");
+        District district = DistrictFixture.createDistrict(city, "강남구");
+        ApiCategory apiCategory = ApiCategoryFixture.createApiCategory();
+        ApiContentType apiContentType = ApiContentTypeFixture.createApiContentType(ThemeType.ATTRACTIONS);
 
-        place1 = createTravelPlace(country, city, district, apiCategory, apiContentType, "가장소");
-        createTravelImage(place1, "test", true);
+        profileImage = ProfileImageFixture.createProfileImage("memberImage");
 
-        place2 = createTravelPlace(country, city, district, apiCategory, apiContentType, "나장소");
-        createTravelImage(place2, "test", true);
+        place1 = TravelPlaceFixture.createTravelPlace(country, city, district, apiCategory, apiContentType, "가장소");
+        TravelImageFixture.createTravelImage(place1, "test", true);
 
-        place3 = createTravelPlace(country, city, district, apiCategory, apiContentType, "다장소");
-        createTravelImage(place3, "test", true);
+        place2 = TravelPlaceFixture.createTravelPlace(country, city, district, apiCategory, apiContentType, "나장소");
+        TravelImageFixture.createTravelImage(place2, "test", true);
+
+        place3 = TravelPlaceFixture.createTravelPlace(country, city, district, apiCategory, apiContentType, "다장소");
+        TravelImageFixture.createTravelImage(place3, "test", true);
     }
 
 
@@ -106,7 +117,7 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("회원가입")
     void join(){
         // given
-        JoinRequest request = createMemberRequest(
+        JoinRequest request = MemberFixture.createMemberRequest(
                 "member@email.com",
                 "password12!@",
                 "password12!@",
@@ -117,7 +128,7 @@ public class MemberServiceTest extends MemberTest {
         when(memberRepository.existsByNickname(anyString())).thenReturn(false);
         when(memberRepository.existsByEmail(anyString())).thenReturn(false);
         when(redisService.getEmailData(any(), anyString())).thenReturn("true");
-        when(profileImageService.saveDefaultProfileImage()).thenReturn(createProfileImage("test.jpg"));
+        when(profileImageService.saveDefaultProfileImage()).thenReturn(ProfileImageFixture.createProfileImage("test.jpg"));
 
         // when
         assertDoesNotThrow(() -> memberService.join(request));
@@ -131,7 +142,7 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("회원가입 시 이미 가입한 이메일이 존재해 예외 발생")
     void join_duplicatedEmail(){
         // given
-        JoinRequest request = createMemberRequest(
+        JoinRequest request = MemberFixture.createMemberRequest(
                 "member@email.com",
                 "password12!@",
                 "password12!@",
@@ -152,7 +163,7 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("회원가입 시 이미 가입한 닉네임이 존재해 예외 발생")
     void join_duplicatedNickname(){
         // given
-        JoinRequest request = createMemberRequest(
+        JoinRequest request = MemberFixture.createMemberRequest(
                 "member@email.com",
                 "password12!@",
                 "password12!@",
@@ -176,7 +187,7 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("회원가입 시 인증된 이메일이 아니여서 예외 발생")
     void join_notVerifiedEmail(){
         // given
-        JoinRequest request = createMemberRequest(
+        JoinRequest request = MemberFixture.createMemberRequest(
                 "member@email.com",
                 "password12!@",
                 "password12!@",
@@ -223,10 +234,9 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("일반 회원 로그인")
     void login_nativeMember(){
         // given
-        ProfileImage profileImage = createProfileImage("memberImage");
-        Member member = createNativeTypeMemberWithId(1L, "member@email.com", profileImage);
+        Member member = MemberFixture.createNativeTypeMemberWithId(1L, "member@email.com", profileImage);
 
-        LoginRequest loginRequest = createLoginRequest(member.getEmail(), passwordToken);
+        LoginRequest request = MemberFixture.createLoginRequest(member.getEmail(), passwordToken);
 
         when(memberRepository.findByEmail(anyString())).thenReturn(Optional.of(member));
         when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
@@ -234,7 +244,7 @@ public class MemberServiceTest extends MemberTest {
         when(jwtUtils.createRefreshToken(anyLong())).thenReturn(refreshToken);
 
         // when
-        LoginResult response = memberService.login(loginRequest);
+        LoginResult response = memberService.login(request);
 
         // then
         assertThat(response.nickname()).isEqualTo(member.getNickname());
@@ -246,10 +256,9 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("통합 회원 로그인")
     void login_bothMember(){
         // given
-        ProfileImage profileImage = createProfileImage("memberImage");
-        Member member = createBothTypeMemberWithId(1L, "member@email.com", profileImage);
+        Member member = MemberFixture.createBothTypeMemberWithId(1L, "member@email.com", profileImage);
 
-        LoginRequest loginRequest = createLoginRequest(member.getEmail(), passwordToken);
+        LoginRequest request = MemberFixture.createLoginRequest(member.getEmail(), passwordToken);
 
         when(memberRepository.findByEmail(anyString())).thenReturn(Optional.of(member));
         when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
@@ -257,7 +266,7 @@ public class MemberServiceTest extends MemberTest {
         when(jwtUtils.createRefreshToken(anyLong())).thenReturn(refreshToken);
 
         // when
-        LoginResult response = memberService.login(loginRequest);
+        LoginResult response = memberService.login(request);
 
         // then
         assertThat(response.nickname()).isEqualTo(member.getNickname());
@@ -269,13 +278,13 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("로그인 시 회원 데이터 없어 예외 발생")
     void login_memberNotFound(){
         // given
-        LoginRequest loginRequest = createLoginRequest("notMember@email.com", passwordToken);
+        LoginRequest request = MemberFixture.createLoginRequest("notMember@email.com", passwordToken);
 
         when(memberRepository.findByEmail(anyString())).thenReturn(Optional.empty());
 
         // when
         FailLoginException fail = assertThrows(FailLoginException.class,
-                () -> memberService.login(loginRequest));
+                () -> memberService.login(request));
 
         // then
         assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.FAILED_LOGIN);
@@ -285,17 +294,16 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("로그인 시 비밀번호 맞지 않아 예외 발생")
     void login_mismatchPassword(){
         // given
-        ProfileImage profileImage = createProfileImage("memberImage");
-        Member member = createNativeTypeMember("member@email.com", profileImage);
+        Member member = MemberFixture.createNativeTypeMember("member@email.com", profileImage);
 
-        LoginRequest loginRequest = createLoginRequest(member.getEmail(), passwordToken);
+        LoginRequest request = MemberFixture.createLoginRequest(member.getEmail(), passwordToken);
 
         when(memberRepository.findByEmail(anyString())).thenReturn(Optional.of(member));
         when(passwordEncoder.matches(anyString(), anyString())).thenReturn(false);
 
         // when
         FailLoginException fail = assertThrows(FailLoginException.class,
-                () -> memberService.login(loginRequest));
+                () -> memberService.login(request));
 
         // then
         assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.FAILED_LOGIN);
@@ -305,10 +313,9 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("일반 회원 로그아웃")
     void logout_nativeMember(){
         // given
-        ProfileImage profileImage = createProfileImage("memberImage");
-        Member member = createNativeTypeMember("member@email.com", profileImage);
+        Member member = MemberFixture.createNativeTypeMember("member@email.com", profileImage);
 
-        LogoutRequest request = createLogoutRequest(member.getNickname());
+        LogoutRequest request = MemberFixture.createLogoutRequest(member.getNickname());
 
         when(memberRepository.findByNickname(anyString())).thenReturn(Optional.of(member));
 
@@ -325,10 +332,9 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("소셜 회원 로그아웃")
     void logout_socialMember(){
         // given
-        ProfileImage profileImage = createProfileImage("memberImage");
-        Member member = createSocialTypeMember("member@email.com", profileImage);
+        Member member = MemberFixture.createSocialTypeMember("member@email.com", profileImage);
 
-        LogoutRequest request = createLogoutRequest(member.getNickname());
+        LogoutRequest request = MemberFixture.createLogoutRequest(member.getNickname());
 
         when(memberRepository.findByNickname(anyString())).thenReturn(Optional.of(member));
 
@@ -344,10 +350,9 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("통합 회원 로그아웃")
     void logout_bothMember(){
         // given
-        ProfileImage profileImage = createProfileImage("memberImage");
-        Member member = createBothTypeMember("member@email.com", profileImage);
+        Member member = MemberFixture.createBothTypeMember("member@email.com", profileImage);
 
-        LogoutRequest request = createLogoutRequest(member.getNickname());
+        LogoutRequest request = MemberFixture.createLogoutRequest(member.getNickname());
 
         when(memberRepository.findByNickname(anyString())).thenReturn(Optional.of(member));
 
@@ -363,7 +368,7 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("로그아웃 요청 시 회원 데이터 없어 예외 발생")
     void logout_memberNotFound(){
         // given
-        LogoutRequest request = createLogoutRequest("notMember");
+        LogoutRequest request = MemberFixture.createLogoutRequest("notMember");
 
         when(memberRepository.findByNickname(anyString())).thenReturn(Optional.empty());
 
@@ -381,8 +386,7 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("일반 회원 refresh token 갱신")
     void refreshToken_nativeMember(){
         // given
-        ProfileImage profileImage = createProfileImage("memberImage");
-        Member member = createNativeTypeMemberWithId(1L, "member@email.com", profileImage);
+        Member member = MemberFixture.createNativeTypeMemberWithId(1L, "member@email.com", profileImage);
         member.updateRefreshToken(refreshToken);
 
         when(jwtUtils.getMemberIdByToken(anyString())).thenReturn(member.getMemberId());
@@ -400,8 +404,7 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("소셜 회원 refresh token 갱신")
     void refreshToken_socialMember(){
         // given
-        ProfileImage profileImage = createProfileImage("memberImage");
-        Member member = createSocialTypeMemberWithId(1L, "member@email.com", profileImage);
+        Member member = MemberFixture.createSocialTypeMemberWithId(1L, "member@email.com", profileImage);
         member.updateRefreshToken(refreshToken);
 
         when(jwtUtils.getMemberIdByToken(anyString())).thenReturn(member.getMemberId());
@@ -419,8 +422,7 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("통합 회원 refresh token 갱신")
     void refreshToken_bothMember(){
         // given
-        ProfileImage profileImage = createProfileImage("memberImage");
-        Member member = createBothTypeMemberWithId(1L, "member@email.com", profileImage);
+        Member member = MemberFixture.createBothTypeMemberWithId(1L, "member@email.com", profileImage);
         member.updateRefreshToken(refreshToken);
 
         when(jwtUtils.getMemberIdByToken(anyString())).thenReturn(member.getMemberId());
@@ -441,8 +443,7 @@ public class MemberServiceTest extends MemberTest {
         // given
         String notEqualRefreshToken = "NotEqualRefreshToken";
 
-        ProfileImage profileImage = createProfileImage("memberImage");
-        Member member = createNativeTypeMember("member@email.com", profileImage);
+        Member member = MemberFixture.createNativeTypeMember("member@email.com", profileImage);
 
         when(jwtUtils.getMemberIdByToken(anyString())).thenReturn(member.getMemberId());
         when(memberRepository.findById(any())).thenReturn(Optional.of(member));
@@ -459,31 +460,31 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("비밀번호 찾기 성공")
     void findPassword() throws MessagingException {
         // given
-        FindPasswordRequest findPasswordRequest = createFindPasswordRequest("member@email.com");
+        FindPasswordRequest request = MemberFixture.createFindPasswordRequest("member@email.com");
 
         when(memberRepository.existsByEmail(anyString())).thenReturn(true);
 
         // when
-        assertDoesNotThrow(() -> memberService.findPassword(findPasswordRequest));
+        assertDoesNotThrow(() -> memberService.findPassword(request));
 
         // then
-        verify(emailService, times(1)).sendResetPasswordEmail(findPasswordRequest);
+        verify(emailService, times(1)).sendResetPasswordEmail(request);
     }
 
     @Test
     @DisplayName("비밀번호 찾기 시 회원 정보 존재하지 않아 예외 발생")
     void findPassword_memberNotFound() throws MessagingException {
         // given
-        FindPasswordRequest findPasswordRequest = createFindPasswordRequest("fail@email.com");
+        FindPasswordRequest request = MemberFixture.createFindPasswordRequest("fail@email.com");
 
         when(memberRepository.existsByEmail(anyString())).thenReturn(false);
 
         // when
-        DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> memberService.findPassword(findPasswordRequest));
+        DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> memberService.findPassword(request));
 
         // then
         assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.MEMBER_NOT_FOUND);
-        verify(emailService, times(0)).sendResetPasswordEmail(findPasswordRequest);
+        verify(emailService, times(0)).sendResetPasswordEmail(request);
     }
 
 
@@ -491,10 +492,9 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("일반 회원 비밀번호 초기화")
     void resetPassword_nativeMember(){
         // given
-        ProfileImage profileImage = createProfileImage("memberImage");
-        Member member = createNativeTypeMember("member@email.com", profileImage);
+        Member member = MemberFixture.createNativeTypeMember("member@email.com", profileImage);
 
-        ResetPasswordRequest request = createResetPasswordRequest(passwordToken, "password12!@", "password12!@");
+        ResetPasswordRequest request = MemberFixture.createResetPasswordRequest(passwordToken, "password12!@", "password12!@");
 
         when(redisService.getData(anyString())).thenReturn(member.getEmail());
         when(memberRepository.findByEmail(anyString())).thenReturn(Optional.of(member));
@@ -514,10 +514,9 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("소셜 회원 비밀번호 초기화")
     void resetPassword_socialMember(){
         // given
-        ProfileImage profileImage = createProfileImage("memberImage");
-        Member member = createSocialTypeMember("member@email.com", profileImage);
+        Member member = MemberFixture.createSocialTypeMember("member@email.com", profileImage);
 
-        ResetPasswordRequest request = createResetPasswordRequest(passwordToken, "password12!@", "password12!@");
+        ResetPasswordRequest request = MemberFixture.createResetPasswordRequest(passwordToken, "password12!@", "password12!@");
 
         when(redisService.getData(anyString())).thenReturn(member.getEmail());
         when(memberRepository.findByEmail(anyString())).thenReturn(Optional.of(member));
@@ -537,10 +536,9 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("통합 회원 비밀번호 초기화")
     void resetPassword_bothMember(){
         // given
-        ProfileImage profileImage = createProfileImage("memberImage");
-        Member member = createBothTypeMember("member@email.com", profileImage);
+        Member member = MemberFixture.createBothTypeMember("member@email.com", profileImage);
 
-        ResetPasswordRequest request = createResetPasswordRequest(passwordToken, "password12!@", "password12!@");
+        ResetPasswordRequest request = MemberFixture.createResetPasswordRequest(passwordToken, "password12!@", "password12!@");
 
         when(redisService.getData(anyString())).thenReturn(member.getEmail());
         when(memberRepository.findByEmail(anyString())).thenReturn(Optional.of(member));
@@ -561,7 +559,7 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("비밀번호 초기화 시 비밀번호 토큰 유효 시간이 만료되어 예외 발생")
     void resetPassword_expiredResetPasswordToken(){
         // given
-        ResetPasswordRequest request = createResetPasswordRequest(passwordToken, "password12!@", "password12!@");
+        ResetPasswordRequest request = MemberFixture.createResetPasswordRequest(passwordToken, "password12!@", "password12!@");
 
         when(redisService.getData(anyString())).thenReturn(null);
 
@@ -577,7 +575,7 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("비밀번호 초기화 시 회원 정보를 찾을 수 없어 예외 발생")
     void resetPassword_memberNotFound(){
         // given
-        ResetPasswordRequest request = createResetPasswordRequest(passwordToken, "password12!@", "password12!@");
+        ResetPasswordRequest request = MemberFixture.createResetPasswordRequest(passwordToken, "password12!@", "password12!@");
 
         when(redisService.getData(anyString())).thenReturn("notMember@email.com");
         when(memberRepository.findByEmail(anyString())).thenReturn(Optional.empty());
@@ -597,10 +595,9 @@ public class MemberServiceTest extends MemberTest {
         // given
         String encodedNewPassword = "encodedNewPassword";
 
-        ProfileImage profileImage = createProfileImage("memberImage");
-        Member member = createNativeTypeMember("member@email.com", profileImage);
+        Member member = MemberFixture.createNativeTypeMember("member@email.com", profileImage);
 
-        ChangePasswordRequest request = createChangePasswordRequest(member.getPassword(), "test123!", "test123!");
+        ChangePasswordRequest request = MemberFixture.createChangePasswordRequest(member.getPassword(), "test123!", "test123!");
 
         when(memberRepository.findById(anyLong())).thenReturn(Optional.of(member));
         when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
@@ -621,10 +618,9 @@ public class MemberServiceTest extends MemberTest {
         // given
         String encodedNewPassword = "encodedNewPassword";
 
-        ProfileImage profileImage = createProfileImage("memberImage");
-        Member member = createBothTypeMember("member@email.com", profileImage);
+        Member member = MemberFixture.createBothTypeMember("member@email.com", profileImage);
 
-        ChangePasswordRequest request = createChangePasswordRequest(member.getPassword(), "test123!", "test123!");
+        ChangePasswordRequest request = MemberFixture.createChangePasswordRequest(member.getPassword(), "test123!", "test123!");
 
         when(memberRepository.findById(anyLong())).thenReturn(Optional.of(member));
         when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
@@ -643,7 +639,7 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("비밀번호 변경 시 회원 정보 찾을 수 없어 예외 발생")
     void changePassword_memberNotFound(){
         // given
-        ChangePasswordRequest request = createChangePasswordRequest("test123@", "test123!", "test123!");
+        ChangePasswordRequest request = MemberFixture.createChangePasswordRequest("test123@", "test123!", "test123!");
 
         when(memberRepository.findById(anyLong())).thenReturn(Optional.empty());
 
@@ -659,10 +655,9 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("비밀번호 변경 시 소셜 회원으로 예외 발생")
     void changePassword_socialMember(){
         // given
-        ProfileImage profileImage = createProfileImage("memberImage");
-        Member member = createSocialTypeMember("member@email.com", profileImage);
+        Member member = MemberFixture.createSocialTypeMember("member@email.com", profileImage);
 
-        ChangePasswordRequest request = createChangePasswordRequest("test123@", "test123!", "test123!");
+        ChangePasswordRequest request = MemberFixture.createChangePasswordRequest("test123@", "test123!", "test123!");
 
         when(memberRepository.findById(anyLong())).thenReturn(Optional.of(member));
 
@@ -679,10 +674,9 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("비밀번호 변경 시 저장된 비밀번호와 일치하지 않아 예외 발생")
     void changePassword_incorrectSavedPassword(){
         // given
-        ProfileImage profileImage = createProfileImage("memberImage");
-        Member member = createNativeTypeMember("member@email.com", profileImage);
+        Member member = MemberFixture.createNativeTypeMember("member@email.com", profileImage);
 
-        ChangePasswordRequest request = createChangePasswordRequest("incorrect123@", "test123!", "test123!");
+        ChangePasswordRequest request = MemberFixture.createChangePasswordRequest("incorrect123@", "test123!", "test123!");
 
         when(memberRepository.findById(anyLong())).thenReturn(Optional.of(member));
         when(passwordEncoder.matches(anyString(), anyString())).thenReturn(false);
@@ -699,8 +693,7 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("일반 회원 정보 조회")
     void getMemberInfo_nativeMember(){
         // given
-        ProfileImage profileImage = createProfileImage("memberImage");
-        Member member = createNativeTypeMember("member@email.com", profileImage);
+        Member member = MemberFixture.createNativeTypeMember("member@email.com", profileImage);
 
         when(memberRepository.findById(anyLong())).thenReturn(Optional.of(member));
 
@@ -717,8 +710,7 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("소셜 회원 정보 조회")
     void getMemberInfo_socialMember(){
         // given
-        ProfileImage profileImage = createProfileImage("memberImage");
-        Member member = createSocialTypeMember("member@email.com", profileImage);
+        Member member = MemberFixture.createSocialTypeMember("member@email.com", profileImage);
 
         when(memberRepository.findById(anyLong())).thenReturn(Optional.of(member));
 
@@ -736,8 +728,7 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("통합 회원 정보 조회")
     void getMemberInfo_bothMember(){
         // given
-        ProfileImage profileImage = createProfileImage("memberImage");
-        Member member = createBothTypeMember("member@email.com", profileImage);
+        Member member = MemberFixture.createBothTypeMember("member@email.com", profileImage);
 
         when(memberRepository.findById(anyLong())).thenReturn(Optional.of(member));
 
@@ -768,10 +759,9 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("일반 회원 닉네임 변경")
     void changeNickname_nativeMember(){
         // given
-        ProfileImage profileImage = createProfileImage("memberImage");
-        Member member = createNativeTypeMember("member@email.com", profileImage);
+        Member member = MemberFixture.createNativeTypeMember("member@email.com", profileImage);
 
-        ChangeNicknameRequest request = createChangeNicknameRequest("newNickname");
+        ChangeNicknameRequest request = MemberFixture.createChangeNicknameRequest("newNickname");
 
         when(memberRepository.existsByNickname(request.getNickname())).thenReturn(false);
         when(memberRepository.findById(anyLong())).thenReturn(Optional.of(member));
@@ -788,10 +778,9 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("소셜 회원 닉네임 변경")
     void changeNickname_socialMember(){
         // given
-        ProfileImage profileImage = createProfileImage("memberImage");
-        Member member = createSocialTypeMember("member@email.com", profileImage);
+        Member member = MemberFixture.createSocialTypeMember("member@email.com", profileImage);
 
-        ChangeNicknameRequest request = createChangeNicknameRequest("newNickname");
+        ChangeNicknameRequest request = MemberFixture.createChangeNicknameRequest("newNickname");
 
         when(memberRepository.existsByNickname(request.getNickname())).thenReturn(false);
         when(memberRepository.findById(anyLong())).thenReturn(Optional.of(member));
@@ -808,10 +797,9 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("통합 회원 닉네임 변경")
     void changeNickname_bothMember(){
         // given
-        ProfileImage profileImage = createProfileImage("memberImage");
-        Member member = createBothTypeMember("member@email.com", profileImage);
+        Member member = MemberFixture.createBothTypeMember("member@email.com", profileImage);
 
-        ChangeNicknameRequest request = createChangeNicknameRequest("newNickname");
+        ChangeNicknameRequest request = MemberFixture.createChangeNicknameRequest("newNickname");
 
         when(memberRepository.existsByNickname(request.getNickname())).thenReturn(false);
         when(memberRepository.findById(anyLong())).thenReturn(Optional.of(member));
@@ -828,10 +816,9 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("회원 닉네임 변경 시 이미 존재하는 닉네임으로 예외 발생")
     void changeNickname_duplicatedNickname(){
         // given
-        ProfileImage profileImage = createProfileImage("memberImage");
-        Member member = createNativeTypeMember("member@email.com", profileImage);
+        Member member = MemberFixture.createNativeTypeMember("member@email.com", profileImage);
 
-        ChangeNicknameRequest request = createChangeNicknameRequest("newNickname");
+        ChangeNicknameRequest request = MemberFixture.createChangeNicknameRequest("newNickname");
 
         when(memberRepository.existsByNickname(anyString())).thenReturn(true);
 
@@ -847,7 +834,7 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("회원 닉네임 변경 시 회원 데이터가 없어 예외 발생")
     void changeNickname_memberNotFound(){
         // given
-        ChangeNicknameRequest request = createChangeNicknameRequest("newNickname");
+        ChangeNicknameRequest request = MemberFixture.createChangeNicknameRequest("newNickname");
 
         when(memberRepository.existsByNickname(request.getNickname())).thenReturn(false);
         when(memberRepository.findById(anyLong())).thenReturn(Optional.empty());
@@ -865,81 +852,77 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("일반 회원 이메일 변경")
     void changeEmail_nativeMember(){
         // given
-        ProfileImage profileImage = createProfileImage("memberImage");
-        Member member = createNativeTypeMember("member@email.com", profileImage);
+        Member member = MemberFixture.createNativeTypeMember("member@email.com", profileImage);
 
-        EmailRequest emailRequest = createEmailRequest("changeMember@email.com");
+        EmailRequest request = MemberFixture.createEmailRequest("changeMember@email.com");
 
         when(memberRepository.findById(anyLong())).thenReturn(Optional.of(member));
         when(memberRepository.existsByEmail(anyString())).thenReturn(false);
         when(redisService.getEmailData(any(), anyString())).thenReturn("true");
 
         // when
-        assertDoesNotThrow(() -> memberService.changeEmail(1L, emailRequest));
+        assertDoesNotThrow(() -> memberService.changeEmail(1L, request));
 
         // then
         assertThat(member.getJoinType()).isEqualTo(JoinType.NATIVE);
-        assertThat(member.getEmail()).isEqualTo(emailRequest.getEmail());
+        assertThat(member.getEmail()).isEqualTo(request.getEmail());
     }
 
     @Test
     @DisplayName("소셜 회원 이메일 변경")
     void changeEmail_socialMember(){
         // given
-        ProfileImage profileImage = createProfileImage("memberImage");
-        Member member = createSocialTypeMember("member@email.com", profileImage);
+        Member member = MemberFixture.createSocialTypeMember("member@email.com", profileImage);
 
-        EmailRequest emailRequest = createEmailRequest("changeMember@email.com");
+        EmailRequest request = MemberFixture.createEmailRequest("changeMember@email.com");
 
         when(memberRepository.findById(anyLong())).thenReturn(Optional.of(member));
         when(memberRepository.existsByEmail(anyString())).thenReturn(false);
         when(redisService.getEmailData(any(), anyString())).thenReturn("true");
 
         // when
-        assertThatCode(() -> memberService.changeEmail(1L, emailRequest))
+        assertThatCode(() -> memberService.changeEmail(1L, request))
                 .doesNotThrowAnyException();
 
         // then
         assertThat(member.getJoinType()).isEqualTo(JoinType.SOCIAL);
-        assertThat(member.getEmail()).isEqualTo(emailRequest.getEmail());
+        assertThat(member.getEmail()).isEqualTo(request.getEmail());
     }
 
     @Test
     @DisplayName("통합 회원 이메일 변경")
     void changeEmail_bothMember(){
         // given
-        ProfileImage profileImage = createProfileImage("memberImage");
-        Member member = createBothTypeMember("member@email.com", profileImage);
+        Member member = MemberFixture.createBothTypeMember("member@email.com", profileImage);
 
-        EmailRequest emailRequest = createEmailRequest("changeMember@email.com");
+        EmailRequest request = MemberFixture.createEmailRequest("changeMember@email.com");
 
         when(memberRepository.findById(anyLong())).thenReturn(Optional.of(member));
         when(memberRepository.existsByEmail(anyString())).thenReturn(false);
         when(redisService.getEmailData(any(), anyString())).thenReturn("true");
 
         // when
-        assertThatCode(() -> memberService.changeEmail(1L, emailRequest))
+        assertThatCode(() -> memberService.changeEmail(1L, request))
                 .doesNotThrowAnyException();
 
         // then
         assertThat(member.getJoinType()).isEqualTo(JoinType.BOTH);
-        assertThat(member.getEmail()).isEqualTo(emailRequest.getEmail());
+        assertThat(member.getEmail()).isEqualTo(request.getEmail());
     }
 
     @Test
     @DisplayName("이메일 변경 시 이미 존재하는 이메일로 예외 발생")
     void changeEmail_duplicatedEmail(){
         // given
-        ProfileImage profileImage = createProfileImage("memberImage");
-        Member member = createNativeTypeMember("member@email.com", profileImage);
+        Member member = MemberFixture.createNativeTypeMember("member@email.com", profileImage);
 
-        EmailRequest emailRequest = createEmailRequest("changeMember@email.com");
+        EmailRequest request = MemberFixture.createEmailRequest("changeMember@email.com");
 
         when(memberRepository.existsByEmail(anyString())).thenReturn(true);
 
         // when
         DataExistException fail = assertThrows(DataExistException.class,
-                () -> memberService.changeEmail(member.getMemberId(), emailRequest));
+                () -> memberService.changeEmail(member.getMemberId(), request));
 
         // then
         assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.ALREADY_EXISTED_EMAIL);
@@ -950,17 +933,16 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("이메일 변경 시 인증된 이메일이 아니여서 예외 발생")
     void changeEmail_notVerifiedEmail(){
         // given
-        ProfileImage profileImage = createProfileImage("memberImage");
-        Member member = createNativeTypeMember("member@email.com", profileImage);
+        Member member = MemberFixture.createNativeTypeMember("member@email.com", profileImage);
 
-        EmailRequest emailRequest = createEmailRequest("changeMember@email.com");
+        EmailRequest request = MemberFixture.createEmailRequest("changeMember@email.com");
 
         when(memberRepository.existsByEmail(anyString())).thenReturn(false);
         when(redisService.getEmailData(any(), anyString())).thenReturn(null);
 
         // when
         EmailVerifyException fail = assertThrows(EmailVerifyException.class,
-                () -> memberService.changeEmail(member.getMemberId(), emailRequest));
+                () -> memberService.changeEmail(member.getMemberId(), request));
 
         // then
         assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.NOT_VERIFIED_EMAIL);
@@ -970,7 +952,7 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("이메일 변경 시 회원 데이터 존재하지 않아 예외 발생")
     void changeEmail_memberNotFound(){
         // given
-        EmailRequest emailRequest = createEmailRequest("changeMember@email.com");
+        EmailRequest request = MemberFixture.createEmailRequest("changeMember@email.com");
 
         when(memberRepository.existsByEmail(anyString())).thenReturn(false);
         when(redisService.getEmailData(any(), anyString())).thenReturn("true");
@@ -979,7 +961,7 @@ public class MemberServiceTest extends MemberTest {
 
         // when
         DataNotFoundException fail = assertThrows(DataNotFoundException.class,
-                () -> memberService.changeEmail(1000L, emailRequest));
+                () -> memberService.changeEmail(1000L, request));
 
         // then
         assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.MEMBER_NOT_FOUND);
@@ -1059,18 +1041,17 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("일반 회원 탈퇴 - 작성자, 참석자 존재하는 경우")
     void deactivateMember_nativeMember1(){
         // given
-        TravelSchedule schedule1 = createTravelSchedule("테스트1");
-        TravelSchedule schedule2 = createTravelSchedule("테스트2");
+        TravelSchedule schedule1 = TravelScheduleFixture.createTravelSchedule("테스트1");
+        TravelSchedule schedule2 = TravelScheduleFixture.createTravelSchedule("테스트2");
 
-        ProfileImage profileImage = createProfileImage("memberImage");
-        Member member = createNativeTypeMember("member@email.com", profileImage);
+        Member member = MemberFixture.createNativeTypeMember("member@email.com", profileImage);
 
         List<TravelAttendee> attendees = List.of(
-                createAuthorTravelAttendee(schedule1, member),
-                createGuestTravelAttendee(schedule2, member, AttendeePermission.READ)
+                TravelAttendeeFixture.createAuthorTravelAttendee(schedule1, member),
+                TravelAttendeeFixture.createGuestTravelAttendee(schedule2, member, AttendeePermission.READ)
         );
 
-        DeactivateRequest request = createDeactivateRequest(member.getPassword());
+        DeactivateRequest request = MemberFixture.createDeactivateRequest(member.getPassword());
 
         when(memberRepository.findByIdWithSocialMembers(anyLong())).thenReturn(Optional.of(member));
         when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
@@ -1093,18 +1074,17 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("일반 회원 탈퇴 - 작성자만 존재하는 경우")
     void deactivateMember_nativeMember2(){
         // given
-        TravelSchedule schedule1 = createTravelSchedule("테스트1");
-        TravelSchedule schedule2 = createTravelSchedule("테스트2");
+        TravelSchedule schedule1 = TravelScheduleFixture.createTravelSchedule("테스트1");
+        TravelSchedule schedule2 = TravelScheduleFixture.createTravelSchedule("테스트2");
 
-        ProfileImage profileImage = createProfileImage("memberImage");
-        Member member = createNativeTypeMember("member@email.com", profileImage);
+        Member member = MemberFixture.createNativeTypeMember("member@email.com", profileImage);
 
         List<TravelAttendee> attendees = List.of(
-                createAuthorTravelAttendee(schedule1, member),
-                createAuthorTravelAttendee(schedule2, member)
+                TravelAttendeeFixture.createAuthorTravelAttendee(schedule1, member),
+                TravelAttendeeFixture.createAuthorTravelAttendee(schedule2, member)
         );
 
-        DeactivateRequest request = createDeactivateRequest(member.getPassword());
+        DeactivateRequest request = MemberFixture.createDeactivateRequest(member.getPassword());
 
         when(memberRepository.findByIdWithSocialMembers(anyLong())).thenReturn(Optional.of(member));
         when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
@@ -1129,18 +1109,17 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("일반 회원 탈퇴 - 참석자만 존재하는 경우")
     void deactivateMember_nativeMember3(){
         // given
-        TravelSchedule schedule1 = createTravelSchedule("테스트1");
-        TravelSchedule schedule2 = createTravelSchedule("테스트2");
+        TravelSchedule schedule1 = TravelScheduleFixture.createTravelSchedule("테스트1");
+        TravelSchedule schedule2 = TravelScheduleFixture.createTravelSchedule("테스트2");
 
-        ProfileImage profileImage = createProfileImage("memberImage");
-        Member member = createNativeTypeMember("member@email.com", profileImage);
+        Member member = MemberFixture.createNativeTypeMember("member@email.com", profileImage);
 
         List<TravelAttendee> attendees = List.of(
-                createGuestTravelAttendee(schedule1, member, AttendeePermission.ALL),
-                createGuestTravelAttendee(schedule2, member, AttendeePermission.READ)
+                TravelAttendeeFixture.createGuestTravelAttendee(schedule1, member, AttendeePermission.ALL),
+                TravelAttendeeFixture.createGuestTravelAttendee(schedule2, member, AttendeePermission.READ)
         );
 
-        DeactivateRequest request = createDeactivateRequest(member.getPassword());
+        DeactivateRequest request = MemberFixture.createDeactivateRequest(member.getPassword());
 
         when(memberRepository.findByIdWithSocialMembers(anyLong())).thenReturn(Optional.of(member));
         when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
@@ -1163,21 +1142,20 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("통합 회원 탈퇴")
     void deactivateMember_bothMember(){
         // given
-        TravelSchedule schedule1 = createTravelSchedule("테스트1");
-        TravelSchedule schedule2 = createTravelSchedule("테스트2");
+        TravelSchedule schedule1 = TravelScheduleFixture.createTravelSchedule("테스트1");
+        TravelSchedule schedule2 = TravelScheduleFixture.createTravelSchedule("테스트2");
 
-        ProfileImage profileImage = createProfileImage("memberImage");
-        Member member = createBothTypeMember("member@email.com", profileImage);
+        Member member = MemberFixture.createBothTypeMember("member@email.com", profileImage);
 
-        createSocialMember(member, SocialType.KAKAO, "kakao");
-        createSocialMember(member, SocialType.NAVER, "naver");
+        SocialMemberFixture.createSocialMember(member, SocialType.KAKAO, "kakao");
+        SocialMemberFixture.createSocialMember(member, SocialType.NAVER, "naver");
 
         List<TravelAttendee> attendees = List.of(
-                createAuthorTravelAttendee(schedule1, member),
-                createGuestTravelAttendee(schedule2, member, AttendeePermission.READ)
+                TravelAttendeeFixture.createAuthorTravelAttendee(schedule1, member),
+                TravelAttendeeFixture.createGuestTravelAttendee(schedule2, member, AttendeePermission.READ)
         );
 
-        DeactivateRequest request = createDeactivateRequest(member.getPassword());
+        DeactivateRequest request = MemberFixture.createDeactivateRequest(member.getPassword());
 
         when(memberRepository.findByIdWithSocialMembers(anyLong())).thenReturn(Optional.of(member));
         when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
@@ -1202,10 +1180,9 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("회원 탈퇴 시 일정 데이터가 존재하지 않는 경우")
     void deactivateMember_emptySchedule(){
         // given
-        ProfileImage profileImage = createProfileImage("memberImage");
-        Member member = createNativeTypeMember("member@email.com", profileImage);
+        Member member = MemberFixture.createNativeTypeMember("member@email.com", profileImage);
 
-        DeactivateRequest request = createDeactivateRequest(member.getPassword());
+        DeactivateRequest request = MemberFixture.createDeactivateRequest(member.getPassword());
 
         when(memberRepository.findByIdWithSocialMembers(anyLong())).thenReturn(Optional.of(member));
         when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
@@ -1228,7 +1205,7 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("회원 탈퇴 시 회원 데이터가 존재하지 않아 예외 발생")
     void deactivateMember_memberNotFound(){
         // given
-        DeactivateRequest request = createDeactivateRequest("notMember12!@");
+        DeactivateRequest request = MemberFixture.createDeactivateRequest("notMember12!@");
 
         when(memberRepository.findByIdWithSocialMembers(anyLong())).thenReturn(Optional.empty());
 
@@ -1245,13 +1222,12 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("소셜 회원 탈퇴 요청으로 예외 발생")
     void deactivateSocialMember(){
         // given
-        ProfileImage profileImage = createProfileImage("memberImage");
-        Member member = createSocialTypeMember("member@email.com", profileImage);
+        Member member = MemberFixture.createSocialTypeMember("member@email.com", profileImage);
 
-        createSocialMember(member, SocialType.KAKAO, "kakao");
-        createSocialMember(member, SocialType.NAVER, "naver");
+        SocialMemberFixture.createSocialMember(member, SocialType.KAKAO, "kakao");
+        SocialMemberFixture.createSocialMember(member, SocialType.NAVER, "naver");
 
-        DeactivateRequest request = createDeactivateRequest("incorrect_password");
+        DeactivateRequest request = MemberFixture.createDeactivateRequest("incorrect_password");
 
         when(memberRepository.findByIdWithSocialMembers(anyLong())).thenReturn(Optional.of(member));
 
@@ -1269,10 +1245,9 @@ public class MemberServiceTest extends MemberTest {
     @DisplayName("회원 탈퇴 요청 시 비밀번호가 맞지 않아 예외 발생")
     void deactivateMember_incorrectPassword(){
         // given
-        ProfileImage profileImage = createProfileImage("memberImage");
-        Member member = createNativeTypeMember("member@email.com", profileImage);
+        Member member = MemberFixture.createNativeTypeMember("member@email.com", profileImage);
 
-        DeactivateRequest request = createDeactivateRequest("incorrect_password");
+        DeactivateRequest request = MemberFixture.createDeactivateRequest("incorrect_password");
 
         when(memberRepository.findByIdWithSocialMembers(anyLong())).thenReturn(Optional.of(member));
         when(passwordEncoder.matches(anyString(), anyString())).thenReturn(false);

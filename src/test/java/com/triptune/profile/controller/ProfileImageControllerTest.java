@@ -1,8 +1,10 @@
 package com.triptune.profile.controller;
 
+import com.triptune.global.security.SecurityTestUtils;
 import com.triptune.member.entity.Member;
+import com.triptune.member.fixture.MemberFixture;
 import com.triptune.member.repository.MemberRepository;
-import com.triptune.profile.ProfileImageTest;
+import com.triptune.profile.fixture.ProfileImageFixture;
 import com.triptune.profile.entity.ProfileImage;
 import com.triptune.profile.repository.ProfileImageRepository;
 import com.triptune.global.message.ErrorCode;
@@ -32,7 +34,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Transactional
 @AutoConfigureMockMvc
 @ActiveProfiles("h2")
-class ProfileImageControllerTest extends ProfileImageTest {
+class ProfileImageControllerTest {
     @Autowired private MockMvc mockMvc;
     @Autowired private JwtUtils jwtUtils;
     @Autowired private MemberRepository memberRepository;
@@ -45,13 +47,13 @@ class ProfileImageControllerTest extends ProfileImageTest {
     @DisplayName("프로필 이미지 수정")
     void updateProfileImage() throws Exception{
         // given
-        byte[] content = createTestImage("jpg");
+        byte[] content = ProfileImageFixture.createByteTypeImage("jpg");
         MockMultipartFile mockMultipartFile = new MockMultipartFile("profileImage", "newFileOriginalName.jpg", "image/jpg", content);
 
-        ProfileImage profileImage = profileImageRepository.save(createProfileImage("memberImage"));
-        Member member = memberRepository.save(createNativeTypeMember("member@email.com", profileImage));
+        ProfileImage profileImage = profileImageRepository.save(ProfileImageFixture.createProfileImage("memberImage"));
+        Member member = memberRepository.save(MemberFixture.createNativeTypeMember("member@email.com", profileImage));
 
-        mockAuthentication(member);
+        SecurityTestUtils.mockAuthentication(member);
 
         // when, then
         mockMvc.perform(multipart(HttpMethod.PATCH,"/api/profiles")
@@ -66,13 +68,13 @@ class ProfileImageControllerTest extends ProfileImageTest {
     @DisplayName("프로필 이미지 수정 시 이미지 확장자 예외 발생")
     void updateProfileImage_invalidExtension() throws Exception{
         // given
-        byte[] content = createTestImage("gif");
+        byte[] content = ProfileImageFixture.createByteTypeImage("gif");
         MockMultipartFile mockMultipartFile = new MockMultipartFile("profileImage", "newFileOriginalName.gif", "image/gif", content);
 
-        ProfileImage profileImage = profileImageRepository.save(createProfileImage("memberImage"));
-        Member member = memberRepository.save(createNativeTypeMember( "member@email.com", profileImage));
+        ProfileImage profileImage = profileImageRepository.save(ProfileImageFixture.createProfileImage("memberImage"));
+        Member member = memberRepository.save(MemberFixture.createNativeTypeMember( "member@email.com", profileImage));
 
-        mockAuthentication(member);
+        SecurityTestUtils.mockAuthentication(member);
 
         // when, then
         mockMvc.perform(multipart(HttpMethod.PATCH,"/api/profiles")

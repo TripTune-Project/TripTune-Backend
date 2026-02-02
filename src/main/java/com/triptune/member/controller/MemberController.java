@@ -10,7 +10,7 @@ import com.triptune.global.security.CookieType;
 import com.triptune.global.security.jwt.JwtUtils;
 import com.triptune.global.security.jwt.exception.CustomJwtUnAuthorizedException;
 import com.triptune.global.util.CookieUtils;
-import com.triptune.member.dto.LoginResult;
+import com.triptune.member.service.dto.LoginResult;
 import com.triptune.member.dto.request.*;
 import com.triptune.member.dto.response.LoginResponse;
 import com.triptune.member.dto.response.MemberInfoResponse;

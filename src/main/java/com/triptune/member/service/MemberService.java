@@ -13,7 +13,7 @@ import com.triptune.global.message.ErrorCode;
 import com.triptune.global.security.jwt.exception.CustomJwtUnAuthorizedException;
 import com.triptune.global.security.jwt.JwtUtils;
 import com.triptune.global.util.PageUtils;
-import com.triptune.member.dto.LoginResult;
+import com.triptune.member.service.dto.LoginResult;
 import com.triptune.member.dto.request.*;
 import com.triptune.member.dto.response.MemberInfoResponse;
 import com.triptune.member.dto.response.RefreshTokenResponse;

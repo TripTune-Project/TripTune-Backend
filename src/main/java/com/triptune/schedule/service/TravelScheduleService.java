@@ -2,7 +2,7 @@ package com.triptune.schedule.service;
 
 import com.triptune.member.entity.Member;
 import com.triptune.member.repository.MemberRepository;
-import com.triptune.schedule.dto.AuthorDTO;
+import com.triptune.schedule.service.dto.AuthorDTO;
 import com.triptune.schedule.dto.request.ScheduleCreateRequest;
 import com.triptune.schedule.dto.request.ScheduleUpdateRequest;
 import com.triptune.schedule.dto.response.OverviewScheduleResponse;

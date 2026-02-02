@@ -1,28 +1,38 @@
 package com.triptune.member.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.triptune.bookmark.fixture.BookmarkFixture;
 import com.triptune.bookmark.repository.BookmarkRepository;
 import com.triptune.common.entity.*;
+import com.triptune.common.fixture.*;
 import com.triptune.common.repository.*;
 import com.triptune.email.dto.request.EmailRequest;
 import com.triptune.global.security.CookieType;
+import com.triptune.global.security.SecurityTestUtils;
 import com.triptune.member.dto.request.*;
 import com.triptune.member.enums.JoinType;
 import com.triptune.member.enums.SocialType;
+import com.triptune.member.fixture.SocialMemberFixture;
 import com.triptune.member.repository.SocialMemberRepository;
+import com.triptune.profile.fixture.ProfileImageFixture;
 import com.triptune.schedule.entity.TravelSchedule;
 import com.triptune.schedule.enums.AttendeePermission;
+import com.triptune.schedule.fixture.ChatMessageFixture;
+import com.triptune.schedule.fixture.TravelAttendeeFixture;
+import com.triptune.schedule.fixture.TravelScheduleFixture;
 import com.triptune.schedule.repository.ChatMessageRepository;
 import com.triptune.schedule.repository.TravelAttendeeRepository;
 import com.triptune.schedule.repository.TravelScheduleRepository;
 import com.triptune.travel.entity.TravelImage;
 import com.triptune.travel.entity.TravelPlace;
 import com.triptune.travel.enums.ThemeType;
+import com.triptune.travel.fixture.TravelImageFixture;
+import com.triptune.travel.fixture.TravelPlaceFixture;
 import com.triptune.travel.repository.TravelImageRepository;
 import com.triptune.travel.repository.TravelPlaceRepository;
 import com.triptune.global.s3.S3Service;
 import com.triptune.email.service.EmailService;
-import com.triptune.member.MemberTest;
+import com.triptune.member.fixture.MemberFixture;
 import com.triptune.member.entity.Member;
 import com.triptune.profile.entity.ProfileImage;
 import com.triptune.member.repository.MemberRepository;
@@ -51,6 +61,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+import static com.triptune.member.fixture.MemberFixture.createLoginRequest;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.not;
 import static org.hamcrest.Matchers.containsString;
@@ -68,7 +79,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Transactional
 @AutoConfigureMockMvc
 @ActiveProfiles("mongo")
-public class MemberControllerTest extends MemberTest {
+public class MemberControllerTest {
     @Autowired private MockMvc mockMvc;
     @Autowired private ObjectMapper objectMapper;
     @Autowired private JwtUtils jwtUtils;
@@ -92,6 +103,8 @@ public class MemberControllerTest extends MemberTest {
     @MockBean private EmailService emailService;
     @MockBean private S3Service s3Service;
 
+    private ProfileImage profileImage;
+
     private TravelPlace place1;
     private TravelPlace place2;
     private TravelPlace place3;
@@ -105,14 +118,16 @@ public class MemberControllerTest extends MemberTest {
     void setUp() {
         chatMessageRepository.deleteAll();
 
-        Country country = countryRepository.save(createCountry());
-        City city = cityRepository.save(createCity(country, "서울"));
-        District district = districtRepository.save(createDistrict(city, "강남"));
-        ApiCategory apiCategory = apiCategoryRepository.save(createApiCategory());
-        ApiContentType apiContentType = apiContentTypeRepository.save(createApiContentType(ThemeType.ATTRACTIONS));
+        Country country = countryRepository.save(CountryFixture.createCountry());
+        City city = cityRepository.save(CityFixture.createCity(country, "서울"));
+        District district = districtRepository.save(DistrictFixture.createDistrict(city, "강남"));
+        ApiCategory apiCategory = apiCategoryRepository.save(ApiCategoryFixture.createApiCategory());
+        ApiContentType apiContentType = apiContentTypeRepository.save(ApiContentTypeFixture.createApiContentType(ThemeType.ATTRACTIONS));
+
+        profileImage = profileImageRepository.save(ProfileImageFixture.createProfileImage("memberImage"));
 
         place1 = travelPlaceRepository.save(
-                createTravelPlace(
+                TravelPlaceFixture.createTravelPlace(
                         country,
                         city,
                         district,
@@ -121,10 +136,10 @@ public class MemberControllerTest extends MemberTest {
                         "가장소"
                 )
         );
-        place1Thumbnail = travelImageRepository.save(createTravelImage(place1, "test1", true));
+        place1Thumbnail = travelImageRepository.save(TravelImageFixture.createTravelImage(place1, "test1", true));
 
         place2 = travelPlaceRepository.save(
-                createTravelPlace(
+                TravelPlaceFixture.createTravelPlace(
                         country,
                         city,
                         district,
@@ -133,10 +148,10 @@ public class MemberControllerTest extends MemberTest {
                         "나장소"
                 )
         );
-        place2Thumbnail = travelImageRepository.save(createTravelImage(place2, "test1", true));
+        place2Thumbnail = travelImageRepository.save(TravelImageFixture.createTravelImage(place2, "test1", true));
 
         place3 = travelPlaceRepository.save(
-                createTravelPlace(
+                TravelPlaceFixture.createTravelPlace(
                         country,
                         city,
                         district,
@@ -145,7 +160,7 @@ public class MemberControllerTest extends MemberTest {
                         "다장소"
                 )
         );
-        place3Thumbnail = travelImageRepository.save(createTravelImage(place3, "test1", true));
+        place3Thumbnail = travelImageRepository.save(TravelImageFixture.createTravelImage(place3, "test1", true));
 
     }
 
@@ -155,7 +170,7 @@ public class MemberControllerTest extends MemberTest {
         // given
         when(redisService.getEmailData(any(), anyString())).thenReturn("true");
 
-        JoinRequest request = createMemberRequest(
+        JoinRequest request = MemberFixture.createMemberRequest(
                 "member@email.com",
                 "password12!@",
                 "password12!@",
@@ -178,7 +193,7 @@ public class MemberControllerTest extends MemberTest {
     @ValueSource(strings = {"", " "})
     void join_invalidNotBlankEmail(String input) throws Exception {
         // given
-        JoinRequest request = createMemberRequest(
+        JoinRequest request = MemberFixture.createMemberRequest(
                 input,
                 "password12!@",
                 "password12!@",
@@ -199,7 +214,7 @@ public class MemberControllerTest extends MemberTest {
     @DisplayName("회원가입 시 이메일 null 값이 들어와 예외 발생")
     void join_invalidNullEmail() throws Exception {
         // given
-        JoinRequest request = createMemberRequest(
+        JoinRequest request = MemberFixture.createMemberRequest(
                 null,
                 "password12!@",
                 "password12!@",
@@ -223,7 +238,7 @@ public class MemberControllerTest extends MemberTest {
     @ValueSource(strings = {"test", "test@", "test$email.com"})
     void join_invalidEmail(String input) throws Exception {
         // given
-        JoinRequest request = createMemberRequest(
+        JoinRequest request = MemberFixture.createMemberRequest(
                 input,
                 "password12!@",
                 "password12!@",
@@ -246,7 +261,7 @@ public class MemberControllerTest extends MemberTest {
     @ValueSource(strings = {"", " "})
     void join_invalidNotBlankPassword(String input) throws Exception {
         // given
-        JoinRequest request = createMemberRequest(
+        JoinRequest request = MemberFixture.createMemberRequest(
                 "member@email.com",
                 input,
                 "password12!@",
@@ -267,7 +282,7 @@ public class MemberControllerTest extends MemberTest {
     @DisplayName("회원가입 시 비밀번호 null 값이 들어와 예외 발생")
     void join_invalidNullPassword() throws Exception {
         // given
-        JoinRequest request = createMemberRequest(
+        JoinRequest request = MemberFixture.createMemberRequest(
                 "member@email.com",
                 null,
                 "password12!@",
@@ -289,7 +304,7 @@ public class MemberControllerTest extends MemberTest {
     @ValueSource(strings = {"p", "p1@", "password", "1@", "passworddddddddd", "passworddddddddd!@", "password!@"})
     void join_invalidPassword(String input) throws Exception {
         // given
-        JoinRequest request = createMemberRequest(
+        JoinRequest request = MemberFixture.createMemberRequest(
                 "member@email.com",
                 input,
                 "password12!@",
@@ -311,7 +326,7 @@ public class MemberControllerTest extends MemberTest {
     @ValueSource(strings = {"", " "})
     void join_invalidNotBlankRePassword(String input) throws Exception {
         // given
-        JoinRequest request = createMemberRequest(
+        JoinRequest request = MemberFixture.createMemberRequest(
                 "member@email.com",
                 "password12!@",
                 input,
@@ -332,7 +347,7 @@ public class MemberControllerTest extends MemberTest {
     @DisplayName("회원가입 시 비밀번호 재입력 null 값이 들어와 예외 발생")
     void join_invalidNullRePassword() throws Exception {
         // given
-        JoinRequest request = createMemberRequest(
+        JoinRequest request = MemberFixture.createMemberRequest(
                 "member@email.com",
                 "password12!@",
                 null,
@@ -354,7 +369,7 @@ public class MemberControllerTest extends MemberTest {
     @ValueSource(strings = {"p", "p1@", "password", "1@", "passworddddddddd", "passworddddddddd!@", "password!@"})
     void join_invalidRePassword(String input) throws Exception {
         // given
-        JoinRequest request = createMemberRequest(
+        JoinRequest request = MemberFixture.createMemberRequest(
                 "member@email.com",
                 "password12!@",
                 input,
@@ -377,7 +392,7 @@ public class MemberControllerTest extends MemberTest {
     @ValueSource(strings = {"", " "})
     void join_invalidNotBlankNickname(String input) throws Exception {
         // given
-        JoinRequest request = createMemberRequest(
+        JoinRequest request = MemberFixture.createMemberRequest(
                 "member@email.com",
                 "password12!@",
                 "password12!@",
@@ -398,7 +413,7 @@ public class MemberControllerTest extends MemberTest {
     @DisplayName("회원가입 시 닉네임 null 값이 들어와 예외 발생")
     void join_invalidNullNickname() throws Exception {
         // given
-        JoinRequest request = createMemberRequest(
+        JoinRequest request = MemberFixture.createMemberRequest(
                 "member@email.com",
                 "password12!@",
                 "password12!@",
@@ -420,7 +435,7 @@ public class MemberControllerTest extends MemberTest {
     @ValueSource(strings = {"n", "닉", "1", "1@", "닉네임임임임임임임임임임임임임임", "@@@@@@@@@@@@@@@"})
     void join_invalidNickname(String input) throws Exception {
         // given
-        JoinRequest request = createMemberRequest(
+        JoinRequest request = MemberFixture.createMemberRequest(
                 "member@email.com",
                 "password12!@",
                 "password12!@",
@@ -441,7 +456,7 @@ public class MemberControllerTest extends MemberTest {
     @DisplayName("회원가입 시 비밀번호, 비밀번호 재입력 불일치로 인한 예외 발생")
     void join_incorrectPasswordAndRePassword() throws Exception {
         // given
-        JoinRequest request = createMemberRequest(
+        JoinRequest request = MemberFixture.createMemberRequest(
                 "member@email.com",
                 "password12!@",
                 "repassword12!@",
@@ -462,15 +477,15 @@ public class MemberControllerTest extends MemberTest {
     @DisplayName("회원가입 시 이미 존재하는 이메일로 인해 예외 발생")
     void join_existedEmail() throws Exception {
         // given
-        JoinRequest request = createMemberRequest(
+        JoinRequest request = MemberFixture.createMemberRequest(
                 "member@email.com",
                 "password12!@",
                 "password12!@",
                 "nickname"
         );
 
-        ProfileImage profileImage = profileImageRepository.save(createProfileImage("memberImage"));
-        memberRepository.save(createNativeTypeMember(request.getEmail(), profileImage));
+        ProfileImage profileImage = profileImageRepository.save(ProfileImageFixture.createProfileImage("memberImage"));
+        memberRepository.save(MemberFixture.createNativeTypeMember(request.getEmail(), profileImage));
 
         // when, then
         mockMvc.perform(post("/api/members/join")
@@ -486,7 +501,7 @@ public class MemberControllerTest extends MemberTest {
     @DisplayName("회원가입 시 인증되지 않은 이메일로 예외 발생")
     void join_notVerifiedEmail() throws Exception {
         // given
-        JoinRequest request = createMemberRequest(
+        JoinRequest request = MemberFixture.createMemberRequest(
                 "member@email.com",
                 "password12!@",
                 "password12!@",
@@ -509,9 +524,8 @@ public class MemberControllerTest extends MemberTest {
     @DisplayName("일반 회원 로그인")
     void login() throws Exception {
         // given
-        ProfileImage profileImage = profileImageRepository.save(createProfileImage("memberImage"));
         String encodePassword = passwordEncoder.encode("password12!@");
-        Member member = memberRepository.save(createNativeTypeMember("member@email.com", encodePassword, profileImage));
+        Member member = memberRepository.save(MemberFixture.createNativeTypeMember("member@email.com", encodePassword, profileImage));
 
         LoginRequest request = createLoginRequest("member@email.com", "password12!@");
 
@@ -542,9 +556,8 @@ public class MemberControllerTest extends MemberTest {
     void login_bothMember() throws Exception {
         // given
         String encodePassword = passwordEncoder.encode("password12!@");
-        ProfileImage profileImage = profileImageRepository.save(createProfileImage("memberImage"));
-        Member member = memberRepository.save(createBothTypeMember("member@email.com", encodePassword, profileImage));
-        socialMemberRepository.save(createSocialMember(member, SocialType.NAVER, "member"));
+        Member member = memberRepository.save(MemberFixture.createBothTypeMember("member@email.com", encodePassword, profileImage));
+        socialMemberRepository.save(SocialMemberFixture.createSocialMember(member, SocialType.NAVER, "member"));
 
         LoginRequest request = createLoginRequest("member@email.com", "password12!@");
 
@@ -676,10 +689,9 @@ public class MemberControllerTest extends MemberTest {
     @DisplayName("로그인 시 비밀번호 맞지 않아 예외 발생")
     void login_incorrectPassword() throws Exception {
         // given
-        ProfileImage profileImage = profileImageRepository.save(createProfileImage("memberImage"));
-        memberRepository.save(createNativeTypeMember("member@email.com", profileImage));
+        memberRepository.save(MemberFixture.createNativeTypeMember("member@email.com", profileImage));
 
-        LoginRequest request = createLoginRequest("member@email.com", "fail!@");
+        LoginRequest request = MemberFixture.createLoginRequest("member@email.com", "fail!@");
 
         // when, then
         mockMvc.perform(post("/api/members/login")
@@ -695,9 +707,8 @@ public class MemberControllerTest extends MemberTest {
     @DisplayName("소셜 회원이 자체 로그인 시도해 예외 발생")
     void login_socialMember() throws Exception {
         // given
-        ProfileImage profileImage = profileImageRepository.save(createProfileImage("memberImage"));
-        Member member = memberRepository.save(createSocialTypeMember("member@email.com", profileImage));
-        socialMemberRepository.save(createSocialMember(member, SocialType.NAVER, "member"));
+        Member member = memberRepository.save(MemberFixture.createSocialTypeMember("member@email.com", profileImage));
+        socialMemberRepository.save(SocialMemberFixture.createSocialMember(member, SocialType.NAVER, "member"));
 
         LoginRequest request = createLoginRequest("member@email.com", "fail!@");
 
@@ -716,11 +727,10 @@ public class MemberControllerTest extends MemberTest {
     @DisplayName("로그아웃")
     void logout() throws Exception {
         // given
-        ProfileImage profileImage = profileImageRepository.save(createProfileImage("memberImage"));
-        Member member = memberRepository.save(createNativeTypeMember("member@email.com", profileImage));
+        Member member = memberRepository.save(MemberFixture.createNativeTypeMember("member@email.com", profileImage));
         String accessToken = jwtUtils.createAccessToken(member.getMemberId());
 
-        LogoutRequest request = createLogoutRequest(member.getNickname());
+        LogoutRequest request = MemberFixture.createLogoutRequest(member.getNickname());
 
         // when
         MvcResult result = mockMvc.perform(patch("/api/members/logout")
@@ -757,11 +767,10 @@ public class MemberControllerTest extends MemberTest {
     @ValueSource(strings = {"", " "})
     void logout_invalidNotBlankNickname(String input) throws Exception {
         // given
-        ProfileImage profileImage = profileImageRepository.save(createProfileImage("memberImage"));
-        Member member = memberRepository.save(createNativeTypeMember("member@email.com", profileImage));
+        Member member = memberRepository.save(MemberFixture.createNativeTypeMember("member@email.com", profileImage));
         String accessToken = jwtUtils.createAccessToken(member.getMemberId());
 
-        LogoutRequest request = createLogoutRequest(input);
+        LogoutRequest request = MemberFixture.createLogoutRequest(input);
 
         // when, then
         mockMvc.perform(patch("/api/members/logout")
@@ -779,11 +788,10 @@ public class MemberControllerTest extends MemberTest {
     @DisplayName("로그아웃 시 닉네임 null 값이 들어와 예외 발생")
     void logout_invalidNullNickname() throws Exception {
         // given
-        ProfileImage profileImage = profileImageRepository.save(createProfileImage("memberImage"));
-        Member member = memberRepository.save(createNativeTypeMember("member@email.com", profileImage));
+        Member member = memberRepository.save(MemberFixture.createNativeTypeMember("member@email.com", profileImage));
         String accessToken = jwtUtils.createAccessToken(member.getMemberId());
 
-        LogoutRequest request = createLogoutRequest(null);
+        LogoutRequest request = MemberFixture.createLogoutRequest(null);
 
         // when, then
         mockMvc.perform(patch("/api/members/logout")
@@ -801,11 +809,10 @@ public class MemberControllerTest extends MemberTest {
     @ValueSource(strings = {"n", "닉", "1", "1@", "닉네임임임임임임임임임임임임임임", "@@@@@@@@@@@@@@@", "12345", "행복1"})
     void logout_invalidNickname(String input) throws Exception {
         // given
-        ProfileImage profileImage = profileImageRepository.save(createProfileImage("memberImage"));
-        Member member = memberRepository.save(createNativeTypeMember("member@email.com", profileImage));
+        Member member = memberRepository.save(MemberFixture.createNativeTypeMember("member@email.com", profileImage));
         String accessToken = jwtUtils.createAccessToken(member.getMemberId());
 
-        LogoutRequest request = createLogoutRequest(input);
+        LogoutRequest request = MemberFixture.createLogoutRequest(input);
 
         // when, then
         mockMvc.perform(patch("/api/members/logout")
@@ -823,11 +830,10 @@ public class MemberControllerTest extends MemberTest {
     @DisplayName("로그아웃 시 회원 데이터 없어 예외 발생")
     void logout_memberNotFound() throws Exception {
         // given
-        ProfileImage profileImage = profileImageRepository.save(createProfileImage("memberImage"));
-        Member member = memberRepository.save(createNativeTypeMember("member@email.com", profileImage));
+        Member member = memberRepository.save(MemberFixture.createNativeTypeMember("member@email.com", profileImage));
         String accessToken = jwtUtils.createAccessToken(member.getMemberId());
 
-        LogoutRequest request = createLogoutRequest("notMember");
+        LogoutRequest request = MemberFixture.createLogoutRequest("notMember");
 
         // when, then
         mockMvc.perform(patch("/api/members/logout")
@@ -844,12 +850,11 @@ public class MemberControllerTest extends MemberTest {
     @DisplayName("토큰 갱신")
     void refreshToken() throws Exception {
         // given
-        ProfileImage profileImage = profileImageRepository.save(createProfileImage("memberImage"));
-        Member member = memberRepository.save(createNativeTypeMember("member@email.com", profileImage));
+        Member member = memberRepository.save(MemberFixture.createNativeTypeMember("member@email.com", profileImage));
         String refreshToken = jwtUtils.createRefreshToken(member.getMemberId());
         member.updateRefreshToken(refreshToken);
 
-        Cookie cookie = createRefreshTokenCookie(refreshToken);
+        Cookie cookie = MemberFixture.createRefreshTokenCookie(refreshToken);
 
         // when, then
         mockMvc.perform(post("/api/members/refresh")
@@ -893,7 +898,7 @@ public class MemberControllerTest extends MemberTest {
     void refreshToken_expired() throws Exception {
         // given
         String refreshToken = jwtUtils.createToken("ExpiredRefreshToken", -604800000);
-        Cookie cookie = createRefreshTokenCookie(refreshToken);
+        Cookie cookie = MemberFixture.createRefreshTokenCookie(refreshToken);
 
         // when, then
         mockMvc.perform(post("/api/members/refresh")
@@ -909,7 +914,7 @@ public class MemberControllerTest extends MemberTest {
     void refreshToken_memberNotFound() throws Exception {
         // given
         String refreshToken = jwtUtils.createRefreshToken(0L);
-        Cookie cookie = createRefreshTokenCookie(refreshToken);
+        Cookie cookie = MemberFixture.createRefreshTokenCookie(refreshToken);
 
         // when, then
         mockMvc.perform(post("/api/members/refresh")
@@ -925,11 +930,10 @@ public class MemberControllerTest extends MemberTest {
     @DisplayName("토큰 갱신 시 요청 refreshToken 과 저장된 refresh token 값이 달라 예외 발생")
     void refreshToken_NotEqualsRefreshToken() throws Exception {
         // given
-        ProfileImage profileImage = profileImageRepository.save(createProfileImage("memberImage"));
-        Member member = memberRepository.save(createNativeTypeMember("member@email.com", profileImage));
+        Member member = memberRepository.save(MemberFixture.createNativeTypeMember("member@email.com", profileImage));
         String refreshToken = jwtUtils.createRefreshToken(member.getMemberId());
 
-        Cookie cookie = createRefreshTokenCookie(refreshToken);
+        Cookie cookie = MemberFixture.createRefreshTokenCookie(refreshToken);
 
         // when, then
         mockMvc.perform(post("/api/members/refresh")
@@ -945,11 +949,10 @@ public class MemberControllerTest extends MemberTest {
     @DisplayName("일반 회원 비밀번호 찾기")
     void findPassword_nativeMember() throws Exception {
         // given
-        ProfileImage profileImage = profileImageRepository.save(createProfileImage("memberImage"));
         String encodedPassword = passwordEncoder.encode("password12!@");
-        Member member = memberRepository.save(createNativeTypeMember("member@email.com", encodedPassword, profileImage));
+        Member member = memberRepository.save(MemberFixture.createNativeTypeMember("member@email.com", encodedPassword, profileImage));
 
-        FindPasswordRequest request = createFindPasswordRequest(member.getEmail());
+        FindPasswordRequest request = MemberFixture.createFindPasswordRequest(member.getEmail());
 
         // when, then
         mockMvc.perform(post("/api/members/find-password")
@@ -965,11 +968,10 @@ public class MemberControllerTest extends MemberTest {
     @DisplayName("소셜 회원 비밀번호 찾기")
     void findPassword_socialMember() throws Exception {
         // given
-        ProfileImage profileImage = profileImageRepository.save(createProfileImage("memberImage"));
-        Member member = memberRepository.save(createSocialTypeMember("member@email.com", profileImage));
-        socialMemberRepository.save(createSocialMember(member, SocialType.NAVER, "member"));
+        Member member = memberRepository.save(MemberFixture.createSocialTypeMember("member@email.com", profileImage));
+        socialMemberRepository.save(SocialMemberFixture.createSocialMember(member, SocialType.NAVER, "member"));
 
-        FindPasswordRequest request = createFindPasswordRequest(member.getEmail());
+        FindPasswordRequest request = MemberFixture.createFindPasswordRequest(member.getEmail());
 
         // when, then
         mockMvc.perform(post("/api/members/find-password")
@@ -985,12 +987,11 @@ public class MemberControllerTest extends MemberTest {
     @DisplayName("통합 회원 비밀번호 찾기")
     void findPassword_bothMember() throws Exception {
         // given
-        ProfileImage profileImage = profileImageRepository.save(createProfileImage("memberImage"));
         String encodedPassword = passwordEncoder.encode("password12!@");
-        Member member = memberRepository.save(createBothTypeMember("member@email.com", encodedPassword, profileImage));
-        socialMemberRepository.save(createSocialMember(member, SocialType.NAVER, "member"));
+        Member member = memberRepository.save(MemberFixture.createBothTypeMember("member@email.com", encodedPassword, profileImage));
+        socialMemberRepository.save(SocialMemberFixture.createSocialMember(member, SocialType.NAVER, "member"));
 
-        FindPasswordRequest request = createFindPasswordRequest(member.getEmail());
+        FindPasswordRequest request = MemberFixture.createFindPasswordRequest(member.getEmail());
 
         // when, then
         mockMvc.perform(post("/api/members/find-password")
@@ -1008,7 +1009,7 @@ public class MemberControllerTest extends MemberTest {
     @ValueSource(strings = {"", " "})
     void findPassword_invalidNotBlankEmail(String input) throws Exception {
         // given
-        FindPasswordRequest request = createFindPasswordRequest(input);
+        FindPasswordRequest request = MemberFixture.createFindPasswordRequest(input);
 
         // when, then
         mockMvc.perform(post("/api/members/find-password")
@@ -1024,7 +1025,7 @@ public class MemberControllerTest extends MemberTest {
     @DisplayName("비밀번호 찾기 시 이메일 null 값이 들어와 예외 발생")
     void findPassword_invalidNullEmail() throws Exception {
         // given
-        FindPasswordRequest request = createFindPasswordRequest(null);
+        FindPasswordRequest request = MemberFixture.createFindPasswordRequest(null);
 
         // when, then
         mockMvc.perform(post("/api/members/find-password")
@@ -1042,7 +1043,7 @@ public class MemberControllerTest extends MemberTest {
     @ValueSource(strings = {"test", "test@", "test$email.com"})
     void findPassword_invalidEmail(String input) throws Exception {
         // given
-        FindPasswordRequest request = createFindPasswordRequest(input);
+        FindPasswordRequest request = MemberFixture.createFindPasswordRequest(input);
 
         // when, then
         mockMvc.perform(post("/api/members/find-password")
@@ -1058,7 +1059,7 @@ public class MemberControllerTest extends MemberTest {
     @DisplayName("비밀번호 찾기 시 회원 데이터 존재하지 않아 예외 발생")
     void findPassword_memberNotFound() throws Exception {
         // given
-        FindPasswordRequest request = createFindPasswordRequest("notMember@email.com");
+        FindPasswordRequest request = MemberFixture.createFindPasswordRequest("notMember@email.com");
 
         // when, then
         mockMvc.perform(post("/api/members/find-password")
@@ -1075,11 +1076,10 @@ public class MemberControllerTest extends MemberTest {
     @DisplayName("일반 회원 비밀번호 초기화")
     void resetPassword_nativeMember() throws Exception {
         // given
-        ProfileImage profileImage = profileImageRepository.save(createProfileImage("memberImage"));
         String encodedPassword = passwordEncoder.encode("savedPassword12!@");
-        Member member = memberRepository.save(createNativeTypeMember("member@email.com", encodedPassword, profileImage));
+        Member member = memberRepository.save(MemberFixture.createNativeTypeMember("member@email.com", encodedPassword, profileImage));
 
-        ResetPasswordRequest request = createResetPasswordRequest("changePassword", "password12!@", "password12!@");
+        ResetPasswordRequest request = MemberFixture.createResetPasswordRequest("changePassword", "password12!@", "password12!@");
 
         when(redisService.getData(anyString())).thenReturn(member.getEmail());
 
@@ -1101,11 +1101,10 @@ public class MemberControllerTest extends MemberTest {
     @DisplayName("소셜 회원 비밀번호 초기화")
     void resetPassword_socialMember() throws Exception {
         // given
-        ProfileImage profileImage = profileImageRepository.save(createProfileImage("memberImage"));
-        Member member = memberRepository.save(createSocialTypeMember("member@email.com", profileImage));
-        socialMemberRepository.save(createSocialMember(member, SocialType.NAVER, "member"));
+        Member member = memberRepository.save(MemberFixture.createSocialTypeMember("member@email.com", profileImage));
+        socialMemberRepository.save(SocialMemberFixture.createSocialMember(member, SocialType.NAVER, "member"));
 
-        ResetPasswordRequest request = createResetPasswordRequest("changePassword", "password12!@", "password12!@");
+        ResetPasswordRequest request = MemberFixture.createResetPasswordRequest("changePassword", "password12!@", "password12!@");
 
         when(redisService.getData(anyString())).thenReturn(member.getEmail());
 
@@ -1126,12 +1125,11 @@ public class MemberControllerTest extends MemberTest {
     @DisplayName("통합 회원 비밀번호 초기화")
     void resetPassword_bothMember() throws Exception {
         // given
-        ProfileImage profileImage = profileImageRepository.save(createProfileImage("memberImage"));
         String encodedPassword = passwordEncoder.encode("savedPassword12!@");
-        Member member = memberRepository.save(createBothTypeMember("member@email.com", encodedPassword, profileImage));
-        socialMemberRepository.save(createSocialMember(member, SocialType.NAVER, "member"));
+        Member member = memberRepository.save(MemberFixture.createBothTypeMember("member@email.com", encodedPassword, profileImage));
+        socialMemberRepository.save(SocialMemberFixture.createSocialMember(member, SocialType.NAVER, "member"));
 
-        ResetPasswordRequest request = createResetPasswordRequest("changePassword", "password12!@", "password12!@");
+        ResetPasswordRequest request = MemberFixture.createResetPasswordRequest("changePassword", "password12!@", "password12!@");
 
         when(redisService.getData(anyString())).thenReturn(member.getEmail());
 
@@ -1154,7 +1152,7 @@ public class MemberControllerTest extends MemberTest {
     @ValueSource(strings = {"", " "})
     void resetPassword_invalidNotBlankPasswordToken(String input) throws Exception {
         // given
-        ResetPasswordRequest request = createResetPasswordRequest(input, "password12!@", "password12!@");
+        ResetPasswordRequest request = MemberFixture.createResetPasswordRequest(input, "password12!@", "password12!@");
 
         // when, then
         mockMvc.perform(patch("/api/members/reset-password")
@@ -1170,7 +1168,7 @@ public class MemberControllerTest extends MemberTest {
     @DisplayName("비밀번호 초기화 시 비밀번호 변경 토큰 null 값이 들어와 예외 발생")
     void resetPassword_invalidNullPasswordToken() throws Exception {
         // given
-        ResetPasswordRequest request = createResetPasswordRequest(null, "password12!@", "password12!@");
+        ResetPasswordRequest request = MemberFixture.createResetPasswordRequest(null, "password12!@", "password12!@");
 
         // when, then
         mockMvc.perform(patch("/api/members/reset-password")
@@ -1188,7 +1186,7 @@ public class MemberControllerTest extends MemberTest {
     @ValueSource(strings = {"", " "})
     void resetPassword_invalidNotBlankPassword(String input) throws Exception {
         // given
-        ResetPasswordRequest request = createResetPasswordRequest("changePassword", input, "password12!@");
+        ResetPasswordRequest request = MemberFixture.createResetPasswordRequest("changePassword", input, "password12!@");
 
         // when, then
         mockMvc.perform(patch("/api/members/reset-password")
@@ -1204,7 +1202,7 @@ public class MemberControllerTest extends MemberTest {
     @DisplayName("비밀번호 초기화 시 비밀번호 null 값이 들어와 예외 발생")
     void resetPassword_invalidNullPassword() throws Exception {
         // given
-        ResetPasswordRequest request = createResetPasswordRequest("changePassword", null, "password12!@");
+        ResetPasswordRequest request = MemberFixture.createResetPasswordRequest("changePassword", null, "password12!@");
 
         // when, then
         mockMvc.perform(patch("/api/members/reset-password")
@@ -1221,7 +1219,7 @@ public class MemberControllerTest extends MemberTest {
     @ValueSource(strings = {"p", "p1@", "password", "1@", "passworddddddddd", "passworddddddddd!@", "password!@"})
     void resetPassword_invalidPassword(String input) throws Exception {
         // given
-        ResetPasswordRequest request = createResetPasswordRequest("changePassword", input, "password12!@");
+        ResetPasswordRequest request = MemberFixture.createResetPasswordRequest("changePassword", input, "password12!@");
 
         // when, then
         mockMvc.perform(patch("/api/members/reset-password")
@@ -1238,7 +1236,7 @@ public class MemberControllerTest extends MemberTest {
     @ValueSource(strings = {"", " "})
     void resetPassword_invalidNotBlankRePassword(String input) throws Exception {
         // given
-        ResetPasswordRequest request = createResetPasswordRequest("changePassword", "password12!@", input);
+        ResetPasswordRequest request = MemberFixture.createResetPasswordRequest("changePassword", "password12!@", input);
 
         // when, then
         mockMvc.perform(patch("/api/members/reset-password")
@@ -1254,7 +1252,7 @@ public class MemberControllerTest extends MemberTest {
     @DisplayName("비밀번호 초기화 시 비밀번호 재입력 null 값이 들어와 예외 발생")
     void resetPassword_invalidNullRePassword() throws Exception {
         // given
-        ResetPasswordRequest request = createResetPasswordRequest("changePassword", "password12!@", null);
+        ResetPasswordRequest request = MemberFixture.createResetPasswordRequest("changePassword", "password12!@", null);
 
         // when, then
         mockMvc.perform(patch("/api/members/reset-password")
@@ -1271,7 +1269,7 @@ public class MemberControllerTest extends MemberTest {
     @ValueSource(strings = {"p", "p1@", "password", "1@", "passworddddddddd", "passworddddddddd!@", "password!@"})
     void resetPassword_invalidRePassword(String input) throws Exception {
         // given
-        ResetPasswordRequest request = createResetPasswordRequest("changePassword", "password12!@", input);
+        ResetPasswordRequest request = MemberFixture.createResetPasswordRequest("changePassword", "password12!@", input);
 
         // when, then
         mockMvc.perform(patch("/api/members/reset-password")
@@ -1287,10 +1285,9 @@ public class MemberControllerTest extends MemberTest {
     @DisplayName("비밀번호 초기화 시 비밀번호와 재입력 비밀번호가 달라 예외 발생")
     void resetPassword_notMathPassword() throws Exception {
         // given
-        ProfileImage profileImage = createProfileImage("memberImage");
-        memberRepository.save(createNativeTypeMember("member@email.com", profileImage));
+        memberRepository.save(MemberFixture.createNativeTypeMember("member@email.com", profileImage));
 
-        ResetPasswordRequest request = createResetPasswordRequest("changePassword", "password12!@", "password34!@");
+        ResetPasswordRequest request = MemberFixture.createResetPasswordRequest("changePassword", "password12!@", "password34!@");
 
         // when, then
         mockMvc.perform(patch("/api/members/reset-password")
@@ -1307,10 +1304,9 @@ public class MemberControllerTest extends MemberTest {
     @DisplayName("비밀번호 초기화 시 저장된 비밀번호 변경 토큰이 존재하지 않아 예외 발생")
     void resetPassword_passwordTokenNotFound() throws Exception {
         // given
-        ProfileImage profileImage = createProfileImage("memberImage");
-        memberRepository.save(createNativeTypeMember("member@email.com", profileImage));
+        memberRepository.save(MemberFixture.createNativeTypeMember("member@email.com", profileImage));
 
-        ResetPasswordRequest request = createResetPasswordRequest("changePassword", "password12!@", "password12!@");
+        ResetPasswordRequest request = MemberFixture.createResetPasswordRequest("changePassword", "password12!@", "password12!@");
 
         // when, then
         mockMvc.perform(patch("/api/members/reset-password")
@@ -1327,7 +1323,7 @@ public class MemberControllerTest extends MemberTest {
     @DisplayName("비밀번호 초기화 시 회원 데이터 존재하지 않아 예외 발생")
     void resetPassword_memberNotFound() throws Exception {
         // given
-        ResetPasswordRequest request = createResetPasswordRequest("changePassword", "password12!@", "password12!@");
+        ResetPasswordRequest request = MemberFixture.createResetPasswordRequest("changePassword", "password12!@", "password12!@");
 
         when(redisService.getData(anyString())).thenReturn("noMember@email.com");
 
@@ -1346,13 +1342,12 @@ public class MemberControllerTest extends MemberTest {
     @DisplayName("일반 회원 비밀번호 변경")
     void changePassword_nativeMember() throws Exception {
         // given
-        ProfileImage profileImage = createProfileImage("memberImage");
         String encodePassword = passwordEncoder.encode("test123@");
-        Member member = memberRepository.save(createNativeTypeMember("member@email.com", encodePassword, profileImage));
+        Member member = memberRepository.save(MemberFixture.createNativeTypeMember("member@email.com", encodePassword, profileImage));
 
-        ChangePasswordRequest request = createChangePasswordRequest("test123@", "test123!", "test123!");
+        ChangePasswordRequest request = MemberFixture.createChangePasswordRequest("test123@", "test123!", "test123!");
 
-        mockAuthentication(member);
+        SecurityTestUtils.mockAuthentication(member);
 
         // when, then
         mockMvc.perform(patch("/api/members/change-password")
@@ -1369,13 +1364,12 @@ public class MemberControllerTest extends MemberTest {
     @DisplayName("통합 회원 비밀번호 변경")
     void changePassword_bothMember() throws Exception {
         // given
-        ProfileImage profileImage = createProfileImage("memberImage");
         String encodePassword = passwordEncoder.encode("test123@");
-        Member member = memberRepository.save(createBothTypeMember("member@email.com", encodePassword, profileImage));
+        Member member = memberRepository.save(MemberFixture.createBothTypeMember("member@email.com", encodePassword, profileImage));
 
-        ChangePasswordRequest request = createChangePasswordRequest("test123@", "test123!", "test123!");
+        ChangePasswordRequest request = MemberFixture.createChangePasswordRequest("test123@", "test123!", "test123!");
 
-        mockAuthentication(member);
+        SecurityTestUtils.mockAuthentication(member);
 
         // when, then
         mockMvc.perform(patch("/api/members/change-password")
@@ -1394,12 +1388,11 @@ public class MemberControllerTest extends MemberTest {
     @ValueSource(strings = {"", " "})
     void changePassword_invalidNotBlankNowPassword(String input) throws Exception {
         // given
-        ProfileImage profileImage = createProfileImage("memberImage");
-        Member member = memberRepository.save(createNativeTypeMember("member@email.com", profileImage));
+        Member member = memberRepository.save(MemberFixture.createNativeTypeMember("member@email.com", profileImage));
 
-        ChangePasswordRequest request = createChangePasswordRequest(input, "password12!@", "password12!@");
+        ChangePasswordRequest request = MemberFixture.createChangePasswordRequest(input, "password12!@", "password12!@");
 
-        mockAuthentication(member);
+        SecurityTestUtils.mockAuthentication(member);
 
         // when, then
         mockMvc.perform(patch("/api/members/change-password")
@@ -1415,12 +1408,11 @@ public class MemberControllerTest extends MemberTest {
     @DisplayName("비밀번호 변경 시 현재 비밀번호 null 값이 들어와 예외 발생")
     void changePassword_invalidNullNowPassword() throws Exception {
         // given
-        ProfileImage profileImage = createProfileImage("memberImage");
-        Member member = memberRepository.save(createNativeTypeMember("member@email.com", profileImage));
+        Member member = memberRepository.save(MemberFixture.createNativeTypeMember("member@email.com", profileImage));
 
-        ChangePasswordRequest request = createChangePasswordRequest(null, "password12!@", "password12!@");
+        ChangePasswordRequest request = MemberFixture.createChangePasswordRequest(null, "password12!@", "password12!@");
 
-        mockAuthentication(member);
+        SecurityTestUtils.mockAuthentication(member);
 
         // when, then
         mockMvc.perform(patch("/api/members/change-password")
@@ -1438,12 +1430,11 @@ public class MemberControllerTest extends MemberTest {
     @ValueSource(strings = {"", " "})
     void changePassword_invalidNotBlankPassword(String input) throws Exception {
         // given
-        ProfileImage profileImage = createProfileImage("memberImage");
-        Member member = memberRepository.save(createNativeTypeMember("member@email.com", profileImage));
+        Member member = memberRepository.save(MemberFixture.createNativeTypeMember("member@email.com", profileImage));
 
-        ChangePasswordRequest request = createChangePasswordRequest("password12!@", input, "password12!@");
+        ChangePasswordRequest request = MemberFixture.createChangePasswordRequest("password12!@", input, "password12!@");
 
-        mockAuthentication(member);
+        SecurityTestUtils.mockAuthentication(member);
 
         // when, then
         mockMvc.perform(patch("/api/members/change-password")
@@ -1459,12 +1450,11 @@ public class MemberControllerTest extends MemberTest {
     @DisplayName("비밀번호 변경 시 비밀번호 null 값이 들어와 예외 발생")
     void changePassword_invalidNullPassword() throws Exception {
         // given
-        ProfileImage profileImage = createProfileImage("memberImage");
-        Member member = memberRepository.save(createNativeTypeMember("member@email.com", profileImage));
+        Member member = memberRepository.save(MemberFixture.createNativeTypeMember("member@email.com", profileImage));
 
-        ChangePasswordRequest request = createChangePasswordRequest("password12!@", null, "password12!@");
+        ChangePasswordRequest request = MemberFixture.createChangePasswordRequest("password12!@", null, "password12!@");
 
-        mockAuthentication(member);
+        SecurityTestUtils.mockAuthentication(member);
 
         // when, then
         mockMvc.perform(patch("/api/members/change-password")
@@ -1481,12 +1471,11 @@ public class MemberControllerTest extends MemberTest {
     @ValueSource(strings = {"p", "p1@", "password", "1@", "passworddddddddd", "passworddddddddd!@", "password!@"})
     void changePassword_invalidPassword(String input) throws Exception {
         // given
-        ProfileImage profileImage = createProfileImage("memberImage");
-        Member member = memberRepository.save(createNativeTypeMember("member@email.com", profileImage));
+        Member member = memberRepository.save(MemberFixture.createNativeTypeMember("member@email.com", profileImage));
 
-        ChangePasswordRequest request = createChangePasswordRequest("password12!@", input, "password12!@");
+        ChangePasswordRequest request = MemberFixture.createChangePasswordRequest("password12!@", input, "password12!@");
 
-        mockAuthentication(member);
+        SecurityTestUtils.mockAuthentication(member);
 
         // when, then
         mockMvc.perform(patch("/api/members/change-password")
@@ -1503,12 +1492,11 @@ public class MemberControllerTest extends MemberTest {
     @ValueSource(strings = {"", " "})
     void changePassword_invalidNotBlankRePassword(String input) throws Exception {
         // given
-        ProfileImage profileImage = createProfileImage("memberImage");
-        Member member = memberRepository.save(createNativeTypeMember("member@email.com", profileImage));
+        Member member = memberRepository.save(MemberFixture.createNativeTypeMember("member@email.com", profileImage));
 
-        ChangePasswordRequest request = createChangePasswordRequest("password12!@", "password12!@", input);
+        ChangePasswordRequest request = MemberFixture.createChangePasswordRequest("password12!@", "password12!@", input);
 
-        mockAuthentication(member);
+        SecurityTestUtils.mockAuthentication(member);
 
         // when, then
         mockMvc.perform(patch("/api/members/change-password")
@@ -1524,12 +1512,11 @@ public class MemberControllerTest extends MemberTest {
     @DisplayName("비밀번호 변경 시 비밀번호 재입력 null 값이 들어와 예외 발생")
     void changePassword_invalidNullRePassword() throws Exception {
         // given
-        ProfileImage profileImage = createProfileImage("memberImage");
-        Member member = memberRepository.save(createNativeTypeMember("member@email.com", profileImage));
+        Member member = memberRepository.save(MemberFixture.createNativeTypeMember("member@email.com", profileImage));
 
-        ChangePasswordRequest request = createChangePasswordRequest("password12!@", "password12!@", null);
+        ChangePasswordRequest request = MemberFixture.createChangePasswordRequest("password12!@", "password12!@", null);
 
-        mockAuthentication(member);
+        SecurityTestUtils.mockAuthentication(member);
 
         // when, then
         mockMvc.perform(patch("/api/members/change-password")
@@ -1546,12 +1533,11 @@ public class MemberControllerTest extends MemberTest {
     @ValueSource(strings = {"p", "p1@", "password", "1@", "passworddddddddd", "passworddddddddd!@", "password!@"})
     void changePassword_invalidRePassword(String input) throws Exception {
         // given
-        ProfileImage profileImage = createProfileImage("memberImage");
-        Member member = memberRepository.save(createNativeTypeMember("member@email.com", profileImage));
+        Member member = memberRepository.save(MemberFixture.createNativeTypeMember("member@email.com", profileImage));
 
-        ChangePasswordRequest request = createChangePasswordRequest("password12!@", "password12!@", input);
+        ChangePasswordRequest request = MemberFixture.createChangePasswordRequest("password12!@", "password12!@", input);
 
-        mockAuthentication(member);
+        SecurityTestUtils.mockAuthentication(member);
 
         // when, then
         mockMvc.perform(patch("/api/members/change-password")
@@ -1568,14 +1554,13 @@ public class MemberControllerTest extends MemberTest {
     @DisplayName("비밀번호 변경 시 변경 비밀번호와 재입력 비밀번호가 일치하지 않아 예외 발생")
     void changePassword_inCorrectNewPassword() throws Exception {
         // given
-        ProfileImage profileImage = createProfileImage("memberImage");
-        Member member = memberRepository.save(createNativeTypeMember("member@email.com", profileImage));
+        Member member = memberRepository.save(MemberFixture.createNativeTypeMember("member@email.com", profileImage));
 
-        ChangePasswordRequest request = createChangePasswordRequest(
+        ChangePasswordRequest request = MemberFixture.createChangePasswordRequest(
                 "password12!", "password12!@", "test456!"
         );
 
-        mockAuthentication(member);
+        SecurityTestUtils.mockAuthentication(member);
 
         // when, then
         mockMvc.perform(patch("/api/members/change-password")
@@ -1592,14 +1577,13 @@ public class MemberControllerTest extends MemberTest {
     @DisplayName("비밀번호 변경 시 현재 비밀번호와 변경 비밀번호가 같아 예외 발생")
     void changePassword_correctNowPassword() throws Exception {
         // given
-        ProfileImage profileImage = createProfileImage("memberImage");
-        Member member = memberRepository.save(createNativeTypeMember("member@email.com", profileImage));
+        Member member = memberRepository.save(MemberFixture.createNativeTypeMember("member@email.com", profileImage));
 
-        ChangePasswordRequest request = createChangePasswordRequest(
+        ChangePasswordRequest request = MemberFixture.createChangePasswordRequest(
                 "password12!@", "password12!@", "password12!@"
         );
 
-        mockAuthentication(member);
+        SecurityTestUtils.mockAuthentication(member);
 
         // when, then
         mockMvc.perform(patch("/api/members/change-password")
@@ -1615,12 +1599,11 @@ public class MemberControllerTest extends MemberTest {
     @DisplayName("비밀번호 변경 시 회원 정보를 찾을 수 없어 예외 발생")
     void changePassword_memberNotFound() throws Exception {
         // given
-        ProfileImage profileImage = createProfileImage("memberImage");
-        Member notMember = createNativeTypeMemberWithId(1000L, "member@email.com", profileImage);
+        Member notMember = MemberFixture.createNativeTypeMemberWithId(1000L, "member@email.com", profileImage);
 
-        mockAuthentication(notMember);
+        SecurityTestUtils.mockAuthentication(notMember);
 
-        ChangePasswordRequest request = createChangePasswordRequest(
+        ChangePasswordRequest request = MemberFixture.createChangePasswordRequest(
                 "password12!", "password12!@", "password12!@"
         );
 
@@ -1638,14 +1621,13 @@ public class MemberControllerTest extends MemberTest {
     @DisplayName("비밀번호 변경 시 소셜 회원으로 예외 발생")
     void changePassword_socialMember() throws Exception {
         // given
-        ProfileImage profileImage = profileImageRepository.save(createProfileImage("memberImage"));
-        Member member = memberRepository.save(createSocialTypeMember("member@email.com", profileImage));
+        Member member = memberRepository.save(MemberFixture.createSocialTypeMember("member@email.com", profileImage));
 
-        ChangePasswordRequest request = createChangePasswordRequest(
+        ChangePasswordRequest request = MemberFixture.createChangePasswordRequest(
                 "password12!", "password12!@", "password12!@"
         );
 
-        mockAuthentication(member);
+        SecurityTestUtils.mockAuthentication(member);
 
         // when, then
         mockMvc.perform(patch("/api/members/change-password")
@@ -1661,15 +1643,14 @@ public class MemberControllerTest extends MemberTest {
     @DisplayName("비밀번호 변경 시 저장된 비밀번호와 현재 비밀번호가 일치하지 않아 예외 발생")
     void changePassword_incorrectSavedPassword() throws Exception {
         // given
-        ProfileImage profileImage = profileImageRepository.save(createProfileImage("memberImage"));
         String encodedPassword = passwordEncoder.encode("password12!@");
-        Member member = memberRepository.save(createNativeTypeMember("member@email.com", encodedPassword, profileImage));
+        Member member = memberRepository.save(MemberFixture.createNativeTypeMember("member@email.com", encodedPassword, profileImage));
 
-        ChangePasswordRequest request = createChangePasswordRequest(
+        ChangePasswordRequest request = MemberFixture.createChangePasswordRequest(
                 "password12!", "password12!@", "password12!@"
         );
 
-        mockAuthentication(member);
+        SecurityTestUtils.mockAuthentication(member);
 
         // when, then
         mockMvc.perform(patch("/api/members/change-password")
@@ -1686,11 +1667,10 @@ public class MemberControllerTest extends MemberTest {
     @DisplayName("일반 회원 정보 조회")
     void getMemberInfo_nativeMember() throws Exception {
         // given
-        ProfileImage profileImage = profileImageRepository.save(createProfileImage("memberImage"));
         String encodedPassword = passwordEncoder.encode("password12!@");
-        Member member = memberRepository.save(createNativeTypeMember("member@email.com", encodedPassword, profileImage));
+        Member member = memberRepository.save(MemberFixture.createNativeTypeMember("member@email.com", encodedPassword, profileImage));
 
-        mockAuthentication(member);
+        SecurityTestUtils.mockAuthentication(member);
 
         // when, then
         mockMvc.perform(get("/api/members/info"))
@@ -1705,10 +1685,9 @@ public class MemberControllerTest extends MemberTest {
     @DisplayName("소셜 회원 정보 조회")
     void getMemberInfo_socialMember() throws Exception {
         // given
-        ProfileImage profileImage = profileImageRepository.save(createProfileImage("memberImage"));
-        Member member = memberRepository.save(createSocialTypeMember("member@email.com", profileImage));
+        Member member = memberRepository.save(MemberFixture.createSocialTypeMember("member@email.com", profileImage));
 
-        mockAuthentication(member);
+        SecurityTestUtils.mockAuthentication(member);
 
         // when, then
         mockMvc.perform(get("/api/members/info"))
@@ -1724,11 +1703,10 @@ public class MemberControllerTest extends MemberTest {
     @DisplayName("통합 회원 정보 조회")
     void getMemberInfo_bothMember() throws Exception {
         // given
-        ProfileImage profileImage = profileImageRepository.save(createProfileImage("memberImage"));
         String encodedPassword = passwordEncoder.encode("password12!@");
-        Member member = memberRepository.save(createBothTypeMember("member@email.com", encodedPassword, profileImage));
+        Member member = memberRepository.save(MemberFixture.createBothTypeMember("member@email.com", encodedPassword, profileImage));
 
-        mockAuthentication(member);
+        SecurityTestUtils.mockAuthentication(member);
 
         // when, then
         mockMvc.perform(get("/api/members/info"))
@@ -1743,10 +1721,9 @@ public class MemberControllerTest extends MemberTest {
     @DisplayName("회원 정보 조회 시 회원 데이터 없어 예외 발생")
     void getMemberInfo_memberNotFound() throws Exception {
         // given
-        ProfileImage profileImage = createProfileImage("memberImage");
-        Member notMember = createNativeTypeMemberWithId(1000L, "member@email.com", profileImage);
+        Member notMember = MemberFixture.createNativeTypeMemberWithId(1000L, "member@email.com", profileImage);
 
-        mockAuthentication(notMember);
+        SecurityTestUtils.mockAuthentication(notMember);
 
         // when, then
         mockMvc.perform(get("/api/members/info"))
@@ -1760,12 +1737,11 @@ public class MemberControllerTest extends MemberTest {
     @DisplayName("회원 닉네임 변경")
     void changeNickname() throws Exception {
         // given
-        ProfileImage profileImage = profileImageRepository.save(createProfileImage("memberImage"));
-        Member member = memberRepository.save(createNativeTypeMember("member@email.com", profileImage));
+        Member member = memberRepository.save(MemberFixture.createNativeTypeMember("member@email.com", profileImage));
 
-        ChangeNicknameRequest request = createChangeNicknameRequest("newNickname");
+        ChangeNicknameRequest request = MemberFixture.createChangeNicknameRequest("newNickname");
 
-        mockAuthentication(member);
+        SecurityTestUtils.mockAuthentication(member);
 
         // when, then
         mockMvc.perform(patch("/api/members/change-nickname")
@@ -1784,12 +1760,11 @@ public class MemberControllerTest extends MemberTest {
     @ValueSource(strings = {"", " "})
     void changeNickname_invalidNotBlankNickname(String input) throws Exception {
         // given
-        ProfileImage profileImage = profileImageRepository.save(createProfileImage("memberImage"));
-        Member member = memberRepository.save(createNativeTypeMember("member@email.com", profileImage));
+        Member member = memberRepository.save(MemberFixture.createNativeTypeMember("member@email.com", profileImage));
 
-        ChangeNicknameRequest request = createChangeNicknameRequest(input);
+        ChangeNicknameRequest request = MemberFixture.createChangeNicknameRequest(input);
 
-        mockAuthentication(member);
+        SecurityTestUtils.mockAuthentication(member);
 
         // when, then
         mockMvc.perform(patch("/api/members/change-nickname")
@@ -1805,12 +1780,11 @@ public class MemberControllerTest extends MemberTest {
     @DisplayName("닉네임 변경 시 닉네임 null 값이 들어와 예외 발생")
     void changeNickname_invalidNullNickname() throws Exception {
         // given
-        ProfileImage profileImage = profileImageRepository.save(createProfileImage("memberImage"));
-        Member member = memberRepository.save(createNativeTypeMember("member@email.com", profileImage));
+        Member member = memberRepository.save(MemberFixture.createNativeTypeMember("member@email.com", profileImage));
 
-        ChangeNicknameRequest request = createChangeNicknameRequest(null);
+        ChangeNicknameRequest request = MemberFixture.createChangeNicknameRequest(null);
 
-        mockAuthentication(member);
+        SecurityTestUtils.mockAuthentication(member);
 
         // when, then
         mockMvc.perform(patch("/api/members/change-nickname")
@@ -1827,12 +1801,11 @@ public class MemberControllerTest extends MemberTest {
     @ValueSource(strings = {"n", "닉", "1", "1@", "닉네임임임임임임임임임임임임임임", "@@@@@@@@@@@@@@@"})
     void changeNickname_invalidNickname(String input) throws Exception {
         // given
-        ProfileImage profileImage = profileImageRepository.save(createProfileImage("memberImage"));
-        Member member = memberRepository.save(createNativeTypeMember("member@email.com", profileImage));
+        Member member = memberRepository.save(MemberFixture.createNativeTypeMember("member@email.com", profileImage));
 
-        ChangeNicknameRequest request = createChangeNicknameRequest(input);
+        ChangeNicknameRequest request = MemberFixture.createChangeNicknameRequest(input);
 
-        mockAuthentication(member);
+        SecurityTestUtils.mockAuthentication(member);
 
         // when, then
         mockMvc.perform(patch("/api/members/change-nickname")
@@ -1848,12 +1821,11 @@ public class MemberControllerTest extends MemberTest {
     @DisplayName("닉네임 변경 시 회원 데이터 없어 예외 발생")
     void changeNickname_memberNotFound() throws Exception {
         // given
-        ProfileImage profileImage = createProfileImage("memberImage");
-        Member notMember = createNativeTypeMemberWithId(1000L, "member@email.com", profileImage);
+        Member notMember = MemberFixture.createNativeTypeMemberWithId(1000L, "member@email.com", profileImage);
 
-        mockAuthentication(notMember);
+        ChangeNicknameRequest request = MemberFixture.createChangeNicknameRequest("newNickname");
 
-        ChangeNicknameRequest request = createChangeNicknameRequest("newNickname");
+        SecurityTestUtils.mockAuthentication(notMember);
         // when, then
         mockMvc.perform(patch("/api/members/change-nickname")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -1868,12 +1840,11 @@ public class MemberControllerTest extends MemberTest {
     @DisplayName("회원 닉네임 변경 시 이미 존재하는 닉네임으로 예외 발생")
     void changeNickname_dataExist() throws Exception {
         // given
-        ProfileImage profileImage = profileImageRepository.save(createProfileImage("memberImage"));
-        Member member = memberRepository.save(createNativeTypeMember("member@email.com", profileImage));
+        Member member = memberRepository.save(MemberFixture.createNativeTypeMember("member@email.com", profileImage));
 
-        ChangeNicknameRequest request = createChangeNicknameRequest(member.getNickname());
+        ChangeNicknameRequest request = MemberFixture.createChangeNicknameRequest(member.getNickname());
 
-        mockAuthentication(member);
+        SecurityTestUtils.mockAuthentication(member);
 
         // when, then
         mockMvc.perform(patch("/api/members/change-nickname")
@@ -1890,12 +1861,11 @@ public class MemberControllerTest extends MemberTest {
     @DisplayName("이메일 변경")
     void changeEmail() throws Exception {
         // given
-        ProfileImage profileImage = profileImageRepository.save(createProfileImage("memberImage"));
-        Member member = memberRepository.save(createNativeTypeMember("member@email.com", profileImage));
+        Member member = memberRepository.save(MemberFixture.createNativeTypeMember("member@email.com", profileImage));
 
-        EmailRequest request = createEmailRequest("changeEmail@email.com");
+        EmailRequest request = MemberFixture.createEmailRequest("changeEmail@email.com");
 
-        mockAuthentication(member);
+        SecurityTestUtils.mockAuthentication(member);
         when(redisService.getEmailData(any(), anyString())).thenReturn("true");
 
         // when, then
@@ -1914,12 +1884,11 @@ public class MemberControllerTest extends MemberTest {
     @ValueSource(strings = {"", " "})
     void changeEmail_invalidNotBlankEmail(String input) throws Exception {
         // given
-        ProfileImage profileImage = profileImageRepository.save(createProfileImage("memberImage"));
-        Member member = memberRepository.save(createNativeTypeMember("member@email.com", profileImage));
+        Member member = memberRepository.save(MemberFixture.createNativeTypeMember("member@email.com", profileImage));
 
-        EmailRequest request = createEmailRequest(input);
+        EmailRequest request = MemberFixture.createEmailRequest(input);
 
-        mockAuthentication(member);
+        SecurityTestUtils.mockAuthentication(member);
         when(redisService.getEmailData(any(), anyString())).thenReturn("true");
 
         // when, then
@@ -1936,12 +1905,11 @@ public class MemberControllerTest extends MemberTest {
     @DisplayName("이메일 변경 시 이메일 null 값이 들어와 예외 발생")
     void changeEmail_invalidNullEmail() throws Exception {
         // given
-        ProfileImage profileImage = profileImageRepository.save(createProfileImage("memberImage"));
-        Member member = memberRepository.save(createNativeTypeMember("member@email.com", profileImage));
+        Member member = memberRepository.save(MemberFixture.createNativeTypeMember("member@email.com", profileImage));
 
-        EmailRequest request = createEmailRequest(null);
+        EmailRequest request = MemberFixture.createEmailRequest(null);
 
-        mockAuthentication(member);
+        SecurityTestUtils.mockAuthentication(member);
         when(redisService.getEmailData(any(), anyString())).thenReturn("true");
 
         // when, then
@@ -1960,12 +1928,11 @@ public class MemberControllerTest extends MemberTest {
     @ValueSource(strings = {"test", "test@", "test$email.com"})
     void changeEmail_invalidEmail(String input) throws Exception {
         // given
-        ProfileImage profileImage = profileImageRepository.save(createProfileImage("memberImage"));
-        Member member = memberRepository.save(createNativeTypeMember("member@email.com", profileImage));
+        Member member = memberRepository.save(MemberFixture.createNativeTypeMember("member@email.com", profileImage));
 
-        EmailRequest request = createEmailRequest(input);
+        EmailRequest request = MemberFixture.createEmailRequest(input);
 
-        mockAuthentication(member);
+        SecurityTestUtils.mockAuthentication(member);
         when(redisService.getEmailData(any(), anyString())).thenReturn("true");
 
 
@@ -1983,12 +1950,11 @@ public class MemberControllerTest extends MemberTest {
     @DisplayName("이메일 변경 시 이미 존재하는 이메일로 예외 발생")
     void changeEmail_duplicateEmail() throws Exception {
         // given
-        ProfileImage profileImage = profileImageRepository.save(createProfileImage("memberImage"));
-        Member member = memberRepository.save(createNativeTypeMember("member@email.com", profileImage));
+        Member member = memberRepository.save(MemberFixture.createNativeTypeMember("member@email.com", profileImage));
 
-        EmailRequest request = createEmailRequest("member@email.com");
+        EmailRequest request = MemberFixture.createEmailRequest("member@email.com");
 
-        mockAuthentication(member);
+        SecurityTestUtils.mockAuthentication(member);
 
         // when, then
         mockMvc.perform(patch("/api/members/change-email")
@@ -2005,12 +1971,11 @@ public class MemberControllerTest extends MemberTest {
     @DisplayName("이메일 변경 시 인증되지 않은 이메일로 예외 발생")
     void changeEmail_notVerifiedEmail() throws Exception {
         // given
-        ProfileImage profileImage = profileImageRepository.save(createProfileImage("memberImage"));
-        Member member = memberRepository.save(createNativeTypeMember("member@email.com", profileImage));
+        Member member = memberRepository.save(MemberFixture.createNativeTypeMember("member@email.com", profileImage));
 
-        EmailRequest request = createEmailRequest("changeEmail@email.com");
+        EmailRequest request = MemberFixture.createEmailRequest("changeEmail@email.com");
 
-        mockAuthentication(member);
+        SecurityTestUtils.mockAuthentication(member);
         when(redisService.getEmailData(any(), anyString())).thenReturn(null);
 
         // when, then
@@ -2028,12 +1993,12 @@ public class MemberControllerTest extends MemberTest {
     @DisplayName("이메일 변경 시 회원 데이터 없어 예외 발생")
     void changeEmail_memberNotFound() throws Exception {
         // given
-        ProfileImage profileImage = createProfileImage("memberImage");
-        Member notMember = createNativeTypeMemberWithId(1000L, "member@email.com", profileImage);
+        ProfileImage profileImage = ProfileImageFixture.createProfileImage("memberImage");
+        Member notMember = MemberFixture.createNativeTypeMemberWithId(1000L, "member@email.com", profileImage);
 
-        mockAuthentication(notMember);
+        EmailRequest request = MemberFixture.createEmailRequest("changeEmail@email.com");
 
-        EmailRequest request = createEmailRequest("changeEmail@email.com");
+        SecurityTestUtils.mockAuthentication(notMember);
         when(redisService.getEmailData(any(), anyString())).thenReturn("true");
 
         // when, then
@@ -2051,16 +2016,15 @@ public class MemberControllerTest extends MemberTest {
     @DisplayName("회원 북마크 조회 - 최신순")
     void getMemberBookmarks_sortNewest() throws Exception {
         // given
-        ProfileImage profileImage = profileImageRepository.save(createProfileImage("memberImage"));
-        Member member = memberRepository.save(createNativeTypeMember("member@email.com", profileImage));
+        Member member = memberRepository.save(MemberFixture.createNativeTypeMember("member@email.com", profileImage));
 
-        bookmarkRepository.save(createBookmark(member, place1));
+        bookmarkRepository.save(BookmarkFixture.createBookmark(member, place1));
         Thread.sleep(10);
-        bookmarkRepository.save(createBookmark(member, place2));
+        bookmarkRepository.save(BookmarkFixture.createBookmark(member, place2));
         Thread.sleep(10);
-        bookmarkRepository.save(createBookmark(member, place3));
+        bookmarkRepository.save(BookmarkFixture.createBookmark(member, place3));
 
-        mockAuthentication(member);
+        SecurityTestUtils.mockAuthentication(member);
 
         // when, then
         mockMvc.perform(get("/api/members/bookmark")
@@ -2082,16 +2046,15 @@ public class MemberControllerTest extends MemberTest {
     @DisplayName("회원 북마크 조회 - 오래된순")
     void getMemberBookmarks_sortOldest() throws Exception {
         // given
-        ProfileImage profileImage = profileImageRepository.save(createProfileImage("memberImage"));
-        Member member = memberRepository.save(createNativeTypeMember("member@email.com", profileImage));
+        Member member = memberRepository.save(MemberFixture.createNativeTypeMember("member@email.com", profileImage));
 
-        bookmarkRepository.save(createBookmark(member, place1));
+        bookmarkRepository.save(BookmarkFixture.createBookmark(member, place1));
         Thread.sleep(10);
-        bookmarkRepository.save(createBookmark(member, place2));
+        bookmarkRepository.save(BookmarkFixture.createBookmark(member, place2));
         Thread.sleep(10);
-        bookmarkRepository.save(createBookmark(member, place3));
+        bookmarkRepository.save(BookmarkFixture.createBookmark(member, place3));
 
-        mockAuthentication(member);
+        SecurityTestUtils.mockAuthentication(member);
 
         // when, then
         mockMvc.perform(get("/api/members/bookmark")
@@ -2113,16 +2076,15 @@ public class MemberControllerTest extends MemberTest {
     @DisplayName("회원 북마크 조회 - 이름순")
     void getMemberBookmarks_sortName() throws Exception {
         // given
-        ProfileImage profileImage = profileImageRepository.save(createProfileImage("memberImage"));
-        Member member = memberRepository.save(createNativeTypeMember("member@email.com", profileImage));
+        Member member = memberRepository.save(MemberFixture.createNativeTypeMember("member@email.com", profileImage));
 
         bookmarkRepository.saveAll(List.of(
-                createBookmark(member, place1),
-                createBookmark(member, place2),
-                createBookmark(member, place3)
+                BookmarkFixture.createBookmark(member, place1),
+                BookmarkFixture.createBookmark(member, place2),
+                BookmarkFixture.createBookmark(member, place3)
         ));
 
-        mockAuthentication(member);
+        SecurityTestUtils.mockAuthentication(member);
 
         // when, then
         mockMvc.perform(get("/api/members/bookmark")
@@ -2144,10 +2106,9 @@ public class MemberControllerTest extends MemberTest {
     @DisplayName("회원 북마크 조회 시 데이터 없는 경우")
     void getMemberBookmarks_emptyData() throws Exception {
         // given
-        ProfileImage profileImage = profileImageRepository.save(createProfileImage("memberImage"));
-        Member member = memberRepository.save(createNativeTypeMember("member@email.com", profileImage));
+        Member member = memberRepository.save(MemberFixture.createNativeTypeMember("member@email.com", profileImage));
 
-        mockAuthentication(member);
+        SecurityTestUtils.mockAuthentication(member);
 
         // when, then
         mockMvc.perform(get("/api/members/bookmark")
@@ -2165,10 +2126,9 @@ public class MemberControllerTest extends MemberTest {
     @ValueSource(strings = {"ne", "@n", " ", ""})
     void getMemberBookmarks_IllegalSortType(String input) throws Exception {
         // given
-        ProfileImage profileImage = profileImageRepository.save(createProfileImage("memberImage"));
-        Member member = memberRepository.save(createNativeTypeMember("member@email.com", profileImage));
+        Member member = memberRepository.save(MemberFixture.createNativeTypeMember("member@email.com", profileImage));
 
-        mockAuthentication(member);
+        SecurityTestUtils.mockAuthentication(member);
 
         // when, then
         mockMvc.perform(get("/api/members/bookmark")
@@ -2185,31 +2145,30 @@ public class MemberControllerTest extends MemberTest {
     void deactivateMember_nativeMember1() throws Exception {
         // given
         String password = "password12!@";
-        ProfileImage profileImage = profileImageRepository.save(createProfileImage("memberImage"));
         String encodedPassword = passwordEncoder.encode(password);
-        Member member = memberRepository.save(createNativeTypeMember("member@email.com", encodedPassword, profileImage));
+        Member member = memberRepository.save(MemberFixture.createNativeTypeMember("member@email.com", encodedPassword, profileImage));
 
-        TravelSchedule schedule1 = travelScheduleRepository.save(createTravelSchedule("테스트1"));
-        TravelSchedule schedule2 = travelScheduleRepository.save(createTravelSchedule("테스트2"));
+        TravelSchedule schedule1 = travelScheduleRepository.save(TravelScheduleFixture.createTravelSchedule("테스트1"));
+        TravelSchedule schedule2 = travelScheduleRepository.save(TravelScheduleFixture.createTravelSchedule("테스트2"));
 
         travelAttendeeRepository.saveAll(List.of(
-                createAuthorTravelAttendee(schedule1, member),
-                createGuestTravelAttendee(schedule2, member, AttendeePermission.READ)
+                TravelAttendeeFixture.createAuthorTravelAttendee(schedule1, member),
+                TravelAttendeeFixture.createGuestTravelAttendee(schedule2, member, AttendeePermission.READ)
         ));
 
         chatMessageRepository.saveAll(List.of(
-                createChatMessage(schedule1.getScheduleId(), member.getMemberId(), "테스트1"),
-                createChatMessage(schedule1.getScheduleId(), member.getMemberId(), "테스트2")
+                ChatMessageFixture.createChatMessage(schedule1.getScheduleId(), member.getMemberId(), "테스트1"),
+                ChatMessageFixture.createChatMessage(schedule1.getScheduleId(), member.getMemberId(), "테스트2")
         ));
 
         bookmarkRepository.saveAll(List.of(
-                createBookmark(member, place1),
-                createBookmark(member, place1)
+                BookmarkFixture.createBookmark(member, place1),
+                BookmarkFixture.createBookmark(member, place1)
         ));
 
-        mockAuthentication(member);
+        SecurityTestUtils.mockAuthentication(member);
 
-        DeactivateRequest request = createDeactivateRequest(password);
+        DeactivateRequest request = MemberFixture.createDeactivateRequest(password);
 
         // when
         MvcResult result = mockMvc.perform(patch("/api/members/deactivate")
@@ -2244,27 +2203,26 @@ public class MemberControllerTest extends MemberTest {
     void deactivateMember_nativeMember2() throws Exception {
         // given
         String password = "password12!@";
-        ProfileImage profileImage = profileImageRepository.save(createProfileImage("memberImage"));
         String encodedPassword = passwordEncoder.encode(password);
-        Member member = memberRepository.save(createNativeTypeMember("member@email.com", encodedPassword, profileImage));
+        Member member = memberRepository.save(MemberFixture.createNativeTypeMember("member@email.com", encodedPassword, profileImage));
 
-        TravelSchedule schedule = travelScheduleRepository.save(createTravelSchedule("테스트1"));
+        TravelSchedule schedule = travelScheduleRepository.save(TravelScheduleFixture.createTravelSchedule("테스트1"));
 
-        travelAttendeeRepository.save(createAuthorTravelAttendee(schedule, member));
+        travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorTravelAttendee(schedule, member));
 
         chatMessageRepository.saveAll(List.of(
-                createChatMessage(schedule.getScheduleId(), member.getMemberId(), "테스트1"),
-                createChatMessage(schedule.getScheduleId(), member.getMemberId(), "테스트2")
+                ChatMessageFixture.createChatMessage(schedule.getScheduleId(), member.getMemberId(), "테스트1"),
+                ChatMessageFixture.createChatMessage(schedule.getScheduleId(), member.getMemberId(), "테스트2")
         ));
 
         bookmarkRepository.saveAll(List.of(
-                createBookmark(member, place1),
-                createBookmark(member, place1)
+                BookmarkFixture.createBookmark(member, place1),
+                BookmarkFixture.createBookmark(member, place1)
         ));
 
-        mockAuthentication(member);
+        SecurityTestUtils.mockAuthentication(member);
 
-        DeactivateRequest request = createDeactivateRequest(password);
+        DeactivateRequest request = MemberFixture.createDeactivateRequest(password);
 
         // when
         MvcResult result = mockMvc.perform(patch("/api/members/deactivate")
@@ -2299,27 +2257,26 @@ public class MemberControllerTest extends MemberTest {
     void deactivateMember_nativeMember3() throws Exception {
         // given
         String password = "password12!@";
-        ProfileImage profileImage = profileImageRepository.save(createProfileImage("memberImage"));
         String encodedPassword = passwordEncoder.encode(password);
-        Member member = memberRepository.save(createNativeTypeMember("member@email.com", encodedPassword, profileImage));
+        Member member = memberRepository.save(MemberFixture.createNativeTypeMember("member@email.com", encodedPassword, profileImage));
 
-        TravelSchedule schedule = travelScheduleRepository.save(createTravelSchedule("테스트1"));
+        TravelSchedule schedule = travelScheduleRepository.save(TravelScheduleFixture.createTravelSchedule("테스트1"));
 
-        travelAttendeeRepository.save(createGuestTravelAttendee(schedule, member, AttendeePermission.READ));
+        travelAttendeeRepository.save(TravelAttendeeFixture.createGuestTravelAttendee(schedule, member, AttendeePermission.READ));
 
         chatMessageRepository.saveAll(List.of(
-                createChatMessage(schedule.getScheduleId(), member.getMemberId(), "테스트1"),
-                createChatMessage(schedule.getScheduleId(), member.getMemberId(), "테스트2")
+                ChatMessageFixture.createChatMessage(schedule.getScheduleId(), member.getMemberId(), "테스트1"),
+                ChatMessageFixture.createChatMessage(schedule.getScheduleId(), member.getMemberId(), "테스트2")
         ));
 
         bookmarkRepository.saveAll(List.of(
-                createBookmark(member, place1),
-                createBookmark(member, place1)
+                BookmarkFixture.createBookmark(member, place1),
+                BookmarkFixture.createBookmark(member, place1)
         ));
 
-        mockAuthentication(member);
+        SecurityTestUtils.mockAuthentication(member);
 
-        DeactivateRequest request = createDeactivateRequest(password);
+        DeactivateRequest request = MemberFixture.createDeactivateRequest(password);
 
         // when
         MvcResult result = mockMvc.perform(patch("/api/members/deactivate")
@@ -2356,36 +2313,35 @@ public class MemberControllerTest extends MemberTest {
         // given
         String password = "password12!@";
 
-        ProfileImage profileImage = profileImageRepository.save(createProfileImage("memberImage"));
         String encodedPassword = passwordEncoder.encode(password);
-        Member member = memberRepository.save(createBothTypeMember("member@email.com", encodedPassword, profileImage));
+        Member member = memberRepository.save(MemberFixture.createBothTypeMember("member@email.com", encodedPassword, profileImage));
 
         socialMemberRepository.saveAll(List.of(
-                createSocialMember(member, SocialType.KAKAO, "kakao"),
-                createSocialMember(member, SocialType.NAVER, "naver")
+                SocialMemberFixture.createSocialMember(member, SocialType.KAKAO, "kakao"),
+                SocialMemberFixture.createSocialMember(member, SocialType.NAVER, "naver")
         ));
 
-        TravelSchedule schedule1 = travelScheduleRepository.save(createTravelSchedule("테스트1"));
-        TravelSchedule schedule2 = travelScheduleRepository.save(createTravelSchedule("테스트2"));
+        TravelSchedule schedule1 = travelScheduleRepository.save(TravelScheduleFixture.createTravelSchedule("테스트1"));
+        TravelSchedule schedule2 = travelScheduleRepository.save(TravelScheduleFixture.createTravelSchedule("테스트2"));
 
         travelAttendeeRepository.saveAll(List.of(
-                createAuthorTravelAttendee(schedule1, member),
-                createGuestTravelAttendee(schedule2, member, AttendeePermission.READ)
+                TravelAttendeeFixture.createAuthorTravelAttendee(schedule1, member),
+                TravelAttendeeFixture.createGuestTravelAttendee(schedule2, member, AttendeePermission.READ)
         ));
 
         chatMessageRepository.saveAll(List.of(
-                createChatMessage(schedule1.getScheduleId(), member.getMemberId(), "테스트1"),
-                createChatMessage(schedule1.getScheduleId(), member.getMemberId(), "테스트2")
+                ChatMessageFixture.createChatMessage(schedule1.getScheduleId(), member.getMemberId(), "테스트1"),
+                ChatMessageFixture.createChatMessage(schedule1.getScheduleId(), member.getMemberId(), "테스트2")
         ));
 
         bookmarkRepository.saveAll(List.of(
-                createBookmark(member, place1),
-                createBookmark(member, place1)
+                BookmarkFixture.createBookmark(member, place1),
+                BookmarkFixture.createBookmark(member, place1)
         ));
 
-        mockAuthentication(member);
+        SecurityTestUtils.mockAuthentication(member);
 
-        DeactivateRequest request = createDeactivateRequest(password);
+        DeactivateRequest request = MemberFixture.createDeactivateRequest(password);
 
         // when
         MvcResult result = mockMvc.perform(patch("/api/members/deactivate")
@@ -2421,12 +2377,11 @@ public class MemberControllerTest extends MemberTest {
     @ValueSource(strings = {"", " "})
     void deactivateMember_invalidNotBlankPassword(String input) throws Exception {
         // given
-        ProfileImage profileImage = profileImageRepository.save(createProfileImage("memberImage"));
-        Member member = memberRepository.save(createNativeTypeMember("member@email.com", profileImage));
+        Member member = memberRepository.save(MemberFixture.createNativeTypeMember("member@email.com", profileImage));
 
-        DeactivateRequest request = createDeactivateRequest(input);
+        DeactivateRequest request = MemberFixture.createDeactivateRequest(input);
 
-        mockAuthentication(member);
+        SecurityTestUtils.mockAuthentication(member);
 
         // when, then
         mockMvc.perform(patch("/api/members/deactivate")
@@ -2442,12 +2397,11 @@ public class MemberControllerTest extends MemberTest {
     @DisplayName("회원 탈퇴 시 비밀번호 null 값이 들어와 예외 발생")
     void deactivateMember_invalidNullPassword() throws Exception {
         // given
-        ProfileImage profileImage = profileImageRepository.save(createProfileImage("memberImage"));
-        Member member = memberRepository.save(createNativeTypeMember("member@email.com", profileImage));
+        Member member = memberRepository.save(MemberFixture.createNativeTypeMember("member@email.com", profileImage));
 
-        DeactivateRequest request = createDeactivateRequest(null);
+        DeactivateRequest request = MemberFixture.createDeactivateRequest(null);
 
-        mockAuthentication(member);
+        SecurityTestUtils.mockAuthentication(member);
 
         // when, then
         mockMvc.perform(patch("/api/members/deactivate")
@@ -2464,12 +2418,11 @@ public class MemberControllerTest extends MemberTest {
     @ValueSource(strings = {"p", "p1@", "password", "1@", "passworddddddddd", "passworddddddddd!@", "password!@"})
     void deactivateMember_invalidPassword(String input) throws Exception {
         // given
-        ProfileImage profileImage = profileImageRepository.save(createProfileImage("memberImage"));
-        Member member = memberRepository.save(createNativeTypeMember("member@email.com", profileImage));
+        Member member = memberRepository.save(MemberFixture.createNativeTypeMember("member@email.com", profileImage));
 
-        DeactivateRequest request = createDeactivateRequest(input);
+        DeactivateRequest request = MemberFixture.createDeactivateRequest(input);
 
-        mockAuthentication(member);
+        SecurityTestUtils.mockAuthentication(member);
 
         // when, then
         mockMvc.perform(patch("/api/members/deactivate")
@@ -2487,18 +2440,17 @@ public class MemberControllerTest extends MemberTest {
         // given
         String password = "password12!@";
 
-        ProfileImage profileImage = profileImageRepository.save(createProfileImage("memberImage"));
         String encodedPassword = passwordEncoder.encode(password);
-        Member member = memberRepository.save(createNativeTypeMember("member@email.com", encodedPassword, profileImage));
+        Member member = memberRepository.save(MemberFixture.createNativeTypeMember("member@email.com", encodedPassword, profileImage));
 
         bookmarkRepository.saveAll(List.of(
-                createBookmark(member, place1),
-                createBookmark(member, place1)
+                BookmarkFixture.createBookmark(member, place1),
+                BookmarkFixture.createBookmark(member, place1)
         ));
 
-        mockAuthentication(member);
+        SecurityTestUtils.mockAuthentication(member);
 
-        DeactivateRequest request = createDeactivateRequest(password);
+        DeactivateRequest request = MemberFixture.createDeactivateRequest(password);
 
         // when
         MvcResult result = mockMvc.perform(patch("/api/members/deactivate")
@@ -2534,12 +2486,11 @@ public class MemberControllerTest extends MemberTest {
     @DisplayName("회원 탈퇴 시 회원 데이터를 찾을 수 없는 경우")
     void deactivateMember_memberNotFound() throws Exception {
         // given
-        ProfileImage profileImage = createProfileImage("memberImage");
-        Member notMember = createNativeTypeMemberWithId(1000L, "member@email.com", profileImage);
+        Member notMember = MemberFixture.createNativeTypeMemberWithId(1000L, "member@email.com", profileImage);
 
-        mockAuthentication(notMember);
+        SecurityTestUtils.mockAuthentication(notMember);
 
-        DeactivateRequest request = createDeactivateRequest("test123@");
+        DeactivateRequest request = MemberFixture.createDeactivateRequest("test123@");
 
         // when, then
         mockMvc.perform(patch("/api/members/deactivate")
@@ -2556,17 +2507,16 @@ public class MemberControllerTest extends MemberTest {
     @DisplayName("소셜 회원 탈퇴 요청으로 예외 발생")
     void deactivateMember_socialMember() throws Exception {
         // given
-        ProfileImage profileImage = profileImageRepository.save(createProfileImage("memberImage"));
-        Member member = memberRepository.save(createSocialTypeMember("member@email.com", profileImage));
+        Member member = memberRepository.save(MemberFixture.createSocialTypeMember("member@email.com", profileImage));
 
         socialMemberRepository.saveAll(List.of(
-                createSocialMember(member, SocialType.KAKAO, "kakao"),
-                createSocialMember(member, SocialType.NAVER, "naver")
+                SocialMemberFixture.createSocialMember(member, SocialType.KAKAO, "kakao"),
+                SocialMemberFixture.createSocialMember(member, SocialType.NAVER, "naver")
         ));
 
-        mockAuthentication(member);
+        SecurityTestUtils.mockAuthentication(member);
 
-        DeactivateRequest request = createDeactivateRequest("test123@");
+        DeactivateRequest request = MemberFixture.createDeactivateRequest("test123@");
 
         // when, then
         mockMvc.perform(patch("/api/members/deactivate")
@@ -2585,13 +2535,12 @@ public class MemberControllerTest extends MemberTest {
     @DisplayName("회원 탈퇴 시 비밀번호가 맞지 않아 예외 발생")
     void deactivateMember_incorrectPassword() throws Exception {
         // given
-        ProfileImage profileImage = profileImageRepository.save(createProfileImage("member"));
         String encodedPassword = passwordEncoder.encode("incorrect12!@");
-        Member member = memberRepository.save(createNativeTypeMember("member@email.com", encodedPassword, profileImage));
+        Member member = memberRepository.save(MemberFixture.createNativeTypeMember("member@email.com", encodedPassword, profileImage));
 
-        mockAuthentication(member);
+        SecurityTestUtils.mockAuthentication(member);
 
-        DeactivateRequest request = createDeactivateRequest("test123@");
+        DeactivateRequest request = MemberFixture.createDeactivateRequest("test123@");
 
         // when, then
         mockMvc.perform(patch("/api/members/deactivate")

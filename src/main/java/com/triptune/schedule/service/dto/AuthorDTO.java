@@ -1,4 +1,4 @@
-package com.triptune.schedule.dto;
+package com.triptune.schedule.service.dto;
 
 import lombok.Builder;
 import lombok.Getter;

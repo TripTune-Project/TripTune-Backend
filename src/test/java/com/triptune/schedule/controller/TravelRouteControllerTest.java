@@ -2,12 +2,18 @@ package com.triptune.schedule.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.triptune.common.entity.*;
+import com.triptune.common.fixture.*;
 import com.triptune.common.repository.*;
+import com.triptune.global.security.SecurityTestUtils;
 import com.triptune.member.entity.Member;
+import com.triptune.member.fixture.MemberFixture;
 import com.triptune.member.repository.MemberRepository;
 import com.triptune.profile.entity.ProfileImage;
+import com.triptune.profile.fixture.ProfileImageFixture;
 import com.triptune.profile.repository.ProfileImageRepository;
-import com.triptune.schedule.ScheduleTest;
+import com.triptune.schedule.fixture.TravelAttendeeFixture;
+import com.triptune.schedule.fixture.TravelRouteFixture;
+import com.triptune.schedule.fixture.TravelScheduleFixture;
 import com.triptune.schedule.dto.request.RouteCreateRequest;
 import com.triptune.schedule.entity.TravelRoute;
 import com.triptune.schedule.entity.TravelSchedule;
@@ -17,6 +23,8 @@ import com.triptune.schedule.repository.TravelRouteRepository;
 import com.triptune.schedule.repository.TravelScheduleRepository;
 import com.triptune.travel.entity.TravelPlace;
 import com.triptune.travel.enums.ThemeType;
+import com.triptune.travel.fixture.TravelImageFixture;
+import com.triptune.travel.fixture.TravelPlaceFixture;
 import com.triptune.travel.repository.TravelImageRepository;
 import com.triptune.travel.repository.TravelPlaceRepository;
 import com.triptune.global.message.ErrorCode;
@@ -34,6 +42,8 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
+import static com.triptune.schedule.enums.AttendeePermission.*;
+import static com.triptune.travel.enums.ThemeType.*;
 import static org.hamcrest.Matchers.containsString;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -46,7 +56,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Transactional
 @AutoConfigureMockMvc
 @ActiveProfiles("h2")
-public class TravelRouteControllerTest extends ScheduleTest {
+public class TravelRouteControllerTest {
     @Autowired private MockMvc mockMvc;
     @Autowired private ObjectMapper objectMapper;
     @Autowired private TravelScheduleRepository travelScheduleRepository;
@@ -75,27 +85,27 @@ public class TravelRouteControllerTest extends ScheduleTest {
 
     @BeforeEach
     void setUp(){
-        Country country = countryRepository.save(createCountry());
-        City city = cityRepository.save(createCity(country, "서울"));
-        District district = districtRepository.save(createDistrict(city, "강남구"));
-        ApiCategory apiCategory = apiCategoryRepository.save(createApiCategory());
-        ApiContentType apiContentType = apiContentTypeRepository.save(createApiContentType(ThemeType.ATTRACTIONS));
+        Country country = countryRepository.save(CountryFixture.createCountry());
+        City city = cityRepository.save(CityFixture.createCity(country, "서울"));
+        District district = districtRepository.save(DistrictFixture.createDistrict(city, "강남구"));
+        ApiCategory apiCategory = apiCategoryRepository.save(ApiCategoryFixture.createApiCategory());
+        ApiContentType apiContentType = apiContentTypeRepository.save(ApiContentTypeFixture.createApiContentType(ATTRACTIONS));
 
-        ProfileImage profileImage1 = profileImageRepository.save(createProfileImage("test1"));
-        member1 = memberRepository.save(createNativeTypeMember("member1@email.com", profileImage1));
+        ProfileImage profileImage1 = profileImageRepository.save(ProfileImageFixture.createProfileImage("test1"));
+        member1 = memberRepository.save(MemberFixture.createNativeTypeMember("member1@email.com", profileImage1));
 
-        ProfileImage profileImage2 = profileImageRepository.save(createProfileImage("test2"));
-        member2 = memberRepository.save(createNativeTypeMember("member2@email.com", profileImage2));
+        ProfileImage profileImage2 = profileImageRepository.save(ProfileImageFixture.createProfileImage("test2"));
+        member2 = memberRepository.save(MemberFixture.createNativeTypeMember("member2@email.com", profileImage2));
 
-        schedule1 = travelScheduleRepository.save(createTravelSchedule("테스트1"));
-        schedule2 = travelScheduleRepository.save(createTravelSchedule("테스트2"));
+        schedule1 = travelScheduleRepository.save(TravelScheduleFixture.createTravelSchedule("테스트1"));
+        schedule2 = travelScheduleRepository.save(TravelScheduleFixture.createTravelSchedule("테스트2"));
 
-        travelAttendeeRepository.save(createAuthorTravelAttendee(schedule1, member1));
-        travelAttendeeRepository.save(createGuestTravelAttendee(schedule1, member2, AttendeePermission.READ));
-        travelAttendeeRepository.save(createAuthorTravelAttendee(schedule2, member2));
+        travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorTravelAttendee(schedule1, member1));
+        travelAttendeeRepository.save(TravelAttendeeFixture.createGuestTravelAttendee(schedule1, member2, READ));
+        travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorTravelAttendee(schedule2, member2));
 
         place1 = travelPlaceRepository.save(
-                createTravelPlace(
+                TravelPlaceFixture.createTravelPlace(
                         country,
                         city,
                         district,
@@ -104,11 +114,11 @@ public class TravelRouteControllerTest extends ScheduleTest {
                         "여행지1"
                 )
         );
-        travelImageRepository.save(createTravelImage(place1, "test1", true));
-        travelImageRepository.save(createTravelImage(place1, "test2", false));
+        travelImageRepository.save(TravelImageFixture.createTravelImage(place1, "test1", true));
+        travelImageRepository.save(TravelImageFixture.createTravelImage(place1, "test2", false));
 
         place2 = travelPlaceRepository.save(
-                createTravelPlace(
+                TravelPlaceFixture.createTravelPlace(
                         country,
                         city,
                         district,
@@ -117,11 +127,11 @@ public class TravelRouteControllerTest extends ScheduleTest {
                         "여행지2"
                 )
         );
-        travelImageRepository.save(createTravelImage(place2, "test1", true));
-        travelImageRepository.save(createTravelImage(place2, "test2", false));
+        travelImageRepository.save(TravelImageFixture.createTravelImage(place2, "test1", true));
+        travelImageRepository.save(TravelImageFixture.createTravelImage(place2, "test2", false));
 
         place3 = travelPlaceRepository.save(
-                createTravelPlace(
+                TravelPlaceFixture.createTravelPlace(
                         country,
                         city,
                         district,
@@ -137,11 +147,11 @@ public class TravelRouteControllerTest extends ScheduleTest {
     @DisplayName("여행 루트 조회 성공")
     void getTravelRoutes() throws Exception {
         // given
-        TravelRoute route1 = travelRouteRepository.save(createTravelRoute(schedule1, place1, 1));
-        TravelRoute route2 = travelRouteRepository.save(createTravelRoute(schedule1, place1, 2));
-        TravelRoute route3 = travelRouteRepository.save(createTravelRoute(schedule1, place2, 3));
+        TravelRoute route1 = travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, place1, 1));
+        TravelRoute route2 = travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, place1, 2));
+        TravelRoute route3 = travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, place2, 3));
 
-        mockAuthentication(member1);
+        SecurityTestUtils.mockAuthentication(member1);
 
         // when, then
         mockMvc.perform(get("/api/schedules/{scheduleId}/routes", schedule1.getScheduleId())
@@ -162,7 +172,7 @@ public class TravelRouteControllerTest extends ScheduleTest {
     @DisplayName("여행 루트 조회 시 저장된 여행 루트 데이터 없는 경우")
     void getTravelRoutesWithoutData() throws Exception {
         // given
-        mockAuthentication(member1);
+        SecurityTestUtils.mockAuthentication(member1);
 
         // when, then
         mockMvc.perform(get("/api/schedules/{scheduleId}/routes", schedule1.getScheduleId())
@@ -178,7 +188,7 @@ public class TravelRouteControllerTest extends ScheduleTest {
     @DisplayName("여행 루트 조회 시 일정 데이터 존재하지 않아 예외 발생")
     void getTravelRoutes_scheduleNotFound() throws Exception {
         // given
-        mockAuthentication(member1);
+        SecurityTestUtils.mockAuthentication(member1);
 
         // when, then
         mockMvc.perform(get("/api/schedules/{scheduleId}/routes", 0L)
@@ -193,7 +203,7 @@ public class TravelRouteControllerTest extends ScheduleTest {
     @DisplayName("여행 루트 조회 시 해당 일정에 접근 권한이 없어 예외 발생")
     void getTravelRoutes_forbiddenScheduleAccess() throws Exception {
         // given
-        mockAuthentication(member1);
+        SecurityTestUtils.mockAuthentication(member1);
 
         // when, then
         mockMvc.perform(get("/api/schedules/{scheduleId}/routes", schedule2.getScheduleId())
@@ -208,13 +218,13 @@ public class TravelRouteControllerTest extends ScheduleTest {
     @DisplayName("여행 루트의 마지막 여행지 추가")
     void createLastRoute() throws Exception{
         // given
-        travelRouteRepository.save(createTravelRoute(schedule1, place1, 1));
-        travelRouteRepository.save(createTravelRoute(schedule1, place1, 2));
-        travelRouteRepository.save(createTravelRoute(schedule1, place2, 3));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, place1, 1));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, place1, 2));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, place2, 3));
 
-        mockAuthentication(member1);
+        SecurityTestUtils.mockAuthentication(member1);
 
-        RouteCreateRequest request = createRouteCreateRequest(place3.getPlaceId());
+        RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(place3.getPlaceId());
 
         // when, then
         mockMvc.perform(post("/api/schedules/{scheduleId}/routes", schedule1.getScheduleId())
@@ -231,8 +241,8 @@ public class TravelRouteControllerTest extends ScheduleTest {
     @DisplayName("여행 루트의 마지막 여행지 추가 시 여행지 ID null 값이 들어와 예외 발생")
     void createLastRoute_invalidNullPlaceId() throws Exception {
         // given
-        mockAuthentication(member1);
-        RouteCreateRequest request = createRouteCreateRequest(null);
+        SecurityTestUtils.mockAuthentication(member1);
+        RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(null);
 
         // when, then
         mockMvc.perform(post("/api/schedules/{scheduleId}/routes", schedule1.getScheduleId())
@@ -250,8 +260,8 @@ public class TravelRouteControllerTest extends ScheduleTest {
     @ValueSource(longs = {0L, -1L})
     void createLastRoute_invalidMinPlaceId(Long input) throws Exception {
         // given
-        mockAuthentication(member1);
-        RouteCreateRequest request = createRouteCreateRequest(input);
+        SecurityTestUtils.mockAuthentication(member1);
+        RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(input);
 
         // when, then
         mockMvc.perform(post("/api/schedules/{scheduleId}/routes", schedule1.getScheduleId())
@@ -267,8 +277,8 @@ public class TravelRouteControllerTest extends ScheduleTest {
     @DisplayName("여행 루트의 마지막 여행지 추가 시 저장된 여행 루트가 없는 경우")
     void createLastRoute_emptyRouteList() throws Exception{
         // given
-        mockAuthentication(member1);
-        RouteCreateRequest request = createRouteCreateRequest(place3.getPlaceId());
+        SecurityTestUtils.mockAuthentication(member1);
+        RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(place3.getPlaceId());
 
         // when, then
         mockMvc.perform(post("/api/schedules/{scheduleId}/routes", schedule1.getScheduleId())
@@ -285,8 +295,8 @@ public class TravelRouteControllerTest extends ScheduleTest {
     @DisplayName("여행 루트의 마지막 여행지 추가 시 일정 데이터 존재하지 않아 예외 발생")
     void createLastRoute_scheduleNotFound() throws Exception {
         // given
-        mockAuthentication(member1);
-        RouteCreateRequest request = createRouteCreateRequest(place3.getPlaceId());
+        SecurityTestUtils.mockAuthentication(member1);
+        RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(place3.getPlaceId());
 
         // when, then
         mockMvc.perform(post("/api/schedules/{scheduleId}/routes", 0L)
@@ -303,11 +313,11 @@ public class TravelRouteControllerTest extends ScheduleTest {
     @DisplayName("여행 루트의 마지막 여행지 추가 시 참석자 데이터 존재하지 않아 예외 발생")
     void createLastRoute_attendeeNotFound() throws Exception {
         // given
-        ProfileImage profileImage = createProfileImage("memberImage");
-        Member member = createNativeTypeMemberWithId(1000L, "notMember@email.com", profileImage);
-        mockAuthentication(member);
+        ProfileImage profileImage = ProfileImageFixture.createProfileImage("memberImage");
+        Member member = MemberFixture.createNativeTypeMemberWithId(1000L, "notMember@email.com", profileImage);
+        SecurityTestUtils.mockAuthentication(member);
 
-        RouteCreateRequest request = createRouteCreateRequest(place3.getPlaceId());
+        RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(place3.getPlaceId());
 
         // when, then
         mockMvc.perform(post("/api/schedules/{scheduleId}/routes", schedule1.getScheduleId())
@@ -324,13 +334,13 @@ public class TravelRouteControllerTest extends ScheduleTest {
     @DisplayName("여행 루트의 마지막 여행지 추가 시 편집 권한이 없어서 예외 발생")
     void createLastRoute_forbiddenEdit() throws Exception{
         // given
-        travelRouteRepository.save(createTravelRoute(schedule1, place1, 1));
-        travelRouteRepository.save(createTravelRoute(schedule1, place1, 2));
-        travelRouteRepository.save(createTravelRoute(schedule1, place2, 3));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, place1, 1));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, place1, 2));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, place2, 3));
 
-        mockAuthentication(member2);
+        SecurityTestUtils.mockAuthentication(member2);
 
-        RouteCreateRequest request = createRouteCreateRequest(place3.getPlaceId());
+        RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(place3.getPlaceId());
 
         // when, then
         mockMvc.perform(post("/api/schedules/{scheduleId}/routes", schedule1.getScheduleId())
@@ -347,8 +357,8 @@ public class TravelRouteControllerTest extends ScheduleTest {
     @DisplayName("여행 루트의 마지막 여행지 추가 시 여행지 데이터 존재하지 않아 예외 발생")
     void createLastRoute_placeNotFound() throws Exception {
         // given
-        mockAuthentication(member1);
-        RouteCreateRequest request = createRouteCreateRequest(1000L);
+        SecurityTestUtils.mockAuthentication(member1);
+        RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(1000L);
 
         // when, then
         mockMvc.perform(post("/api/schedules/{scheduleId}/routes", schedule1.getScheduleId())

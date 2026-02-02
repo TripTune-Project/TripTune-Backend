@@ -1,15 +1,18 @@
 package com.triptune.schedule.controller;
 
+import com.triptune.global.security.SecurityTestUtils;
 import com.triptune.member.entity.Member;
+import com.triptune.member.fixture.MemberFixture;
 import com.triptune.profile.entity.ProfileImage;
 import com.triptune.member.repository.MemberRepository;
+import com.triptune.profile.fixture.ProfileImageFixture;
 import com.triptune.profile.repository.ProfileImageRepository;
-import com.triptune.schedule.ScheduleTest;
+import com.triptune.schedule.fixture.ChatMessageFixture;
+import com.triptune.schedule.fixture.TravelAttendeeFixture;
+import com.triptune.schedule.fixture.TravelScheduleFixture;
 import com.triptune.schedule.entity.ChatMessage;
-import com.triptune.schedule.entity.TravelAttendee;
 import com.triptune.schedule.entity.TravelSchedule;
 import com.triptune.schedule.enums.AttendeePermission;
-import com.triptune.schedule.enums.AttendeeRole;
 import com.triptune.schedule.repository.ChatMessageRepository;
 import com.triptune.schedule.repository.TravelAttendeeRepository;
 import com.triptune.schedule.repository.TravelScheduleRepository;
@@ -33,7 +36,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Transactional
 @AutoConfigureMockMvc
 @ActiveProfiles("mongo")
-public class ChatMessageControllerTest extends ScheduleTest {
+public class ChatMessageControllerTest {
     @Autowired private MockMvc mockMvc;
     @Autowired private TravelScheduleRepository travelScheduleRepository;
     @Autowired private MemberRepository memberRepository;
@@ -50,20 +53,20 @@ public class ChatMessageControllerTest extends ScheduleTest {
     void setUp(){
         chatMessageRepository.deleteAll();
 
-        ProfileImage profileImage1 = profileImageRepository.save(createProfileImage("member1Image"));
-        member1 = memberRepository.save(createNativeTypeMember("member1@email.com", profileImage1));
+        ProfileImage profileImage1 = profileImageRepository.save(ProfileImageFixture.createProfileImage("member1Image"));
+        member1 = memberRepository.save(MemberFixture.createNativeTypeMember("member1@email.com", profileImage1));
 
-        ProfileImage profileImage2 = profileImageRepository.save(createProfileImage("member2Image"));
-        member2 = memberRepository.save(createNativeTypeMember("member2@email.com", profileImage2));
+        ProfileImage profileImage2 = profileImageRepository.save(ProfileImageFixture.createProfileImage("member2Image"));
+        member2 = memberRepository.save(MemberFixture.createNativeTypeMember("member2@email.com", profileImage2));
 
-        ProfileImage profileImage3 = profileImageRepository.save(createProfileImage("member3Image"));
-        member3 = memberRepository.save(createNativeTypeMember("member3@email.com", profileImage3));
+        ProfileImage profileImage3 = profileImageRepository.save(ProfileImageFixture.createProfileImage("member3Image"));
+        member3 = memberRepository.save(MemberFixture.createNativeTypeMember("member3@email.com", profileImage3));
 
-        schedule = travelScheduleRepository.save(createTravelSchedule("테스트1"));
+        schedule = travelScheduleRepository.save(TravelScheduleFixture.createTravelSchedule("테스트1"));
 
-        travelAttendeeRepository.save(createAuthorTravelAttendee(schedule, member1));
-        travelAttendeeRepository.save(createGuestTravelAttendee(schedule, member2, AttendeePermission.READ));
-        travelAttendeeRepository.save(createGuestTravelAttendee(schedule, member3, AttendeePermission.CHAT));
+        travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorTravelAttendee(schedule, member1));
+        travelAttendeeRepository.save(TravelAttendeeFixture.createGuestTravelAttendee(schedule, member2, AttendeePermission.READ));
+        travelAttendeeRepository.save(TravelAttendeeFixture.createGuestTravelAttendee(schedule, member3, AttendeePermission.CHAT));
 
     }
 
@@ -71,14 +74,14 @@ public class ChatMessageControllerTest extends ScheduleTest {
     @DisplayName("채팅 내용 조회")
     void getChatMessages() throws Exception {
         // given
-        ChatMessage message1 = chatMessageRepository.save(createChatMessage(schedule.getScheduleId(), member1.getMemberId(), "hello1"));
-        ChatMessage message2 = chatMessageRepository.save(createChatMessage(schedule.getScheduleId(), member1.getMemberId(), "hello2"));
-        ChatMessage message3 = chatMessageRepository.save(createChatMessage(schedule.getScheduleId(), member1.getMemberId(), "hello3"));
-        ChatMessage message4 = chatMessageRepository.save(createChatMessage(schedule.getScheduleId(), member2.getMemberId(), "hello4"));
-        ChatMessage message5 = chatMessageRepository.save(createChatMessage(schedule.getScheduleId(), member3.getMemberId(), "hello5"));
-        ChatMessage message6 = chatMessageRepository.save(createChatMessage(schedule.getScheduleId(), member1.getMemberId(), "hello6"));
+        ChatMessage message1 = chatMessageRepository.save(ChatMessageFixture.createChatMessage(schedule.getScheduleId(), member1.getMemberId(), "hello1"));
+        ChatMessage message2 = chatMessageRepository.save(ChatMessageFixture.createChatMessage(schedule.getScheduleId(), member1.getMemberId(), "hello2"));
+        ChatMessage message3 = chatMessageRepository.save(ChatMessageFixture.createChatMessage(schedule.getScheduleId(), member1.getMemberId(), "hello3"));
+        ChatMessage message4 = chatMessageRepository.save(ChatMessageFixture.createChatMessage(schedule.getScheduleId(), member2.getMemberId(), "hello4"));
+        ChatMessage message5 = chatMessageRepository.save(ChatMessageFixture.createChatMessage(schedule.getScheduleId(), member3.getMemberId(), "hello5"));
+        ChatMessage message6 = chatMessageRepository.save(ChatMessageFixture.createChatMessage(schedule.getScheduleId(), member1.getMemberId(), "hello6"));
 
-        mockAuthentication(member1);
+        SecurityTestUtils.mockAuthentication(member1);
 
         // when, then
         mockMvc.perform(get("/api/schedules/{scheduleId}/chats", schedule.getScheduleId())
@@ -105,7 +108,7 @@ public class ChatMessageControllerTest extends ScheduleTest {
     @DisplayName("채팅 내용 조회 시 데이터가 없는 경우")
     void getChatMessagesNoMessage() throws Exception {
         // given
-        mockAuthentication(member1);
+        SecurityTestUtils.mockAuthentication(member1);
 
         // when, then
         mockMvc.perform(get("/api/schedules/{scheduleId}/chats", schedule.getScheduleId())

@@ -1,6 +1,6 @@
 package com.triptune.travel.dto.response;
 
-import com.triptune.travel.dto.PlaceLocation;
+import com.triptune.travel.repository.dto.PlaceLocation;
 import com.triptune.travel.entity.TravelPlace;
 import lombok.Builder;
 import lombok.Getter;

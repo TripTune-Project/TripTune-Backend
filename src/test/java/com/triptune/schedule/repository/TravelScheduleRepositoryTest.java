@@ -1,20 +1,25 @@
 package com.triptune.schedule.repository;
 
 import com.triptune.common.entity.*;
+import com.triptune.common.fixture.*;
 import com.triptune.common.repository.*;
 import com.triptune.member.entity.Member;
+import com.triptune.member.fixture.MemberFixture;
 import com.triptune.member.repository.MemberRepository;
 import com.triptune.profile.entity.ProfileImage;
+import com.triptune.profile.fixture.ProfileImageFixture;
 import com.triptune.profile.repository.ProfileImageRepository;
-import com.triptune.schedule.ScheduleTest;
+import com.triptune.schedule.fixture.TravelAttendeeFixture;
+import com.triptune.schedule.fixture.TravelRouteFixture;
+import com.triptune.schedule.fixture.TravelScheduleFixture;
 import com.triptune.schedule.entity.TravelAttendee;
 import com.triptune.schedule.entity.TravelRoute;
 import com.triptune.schedule.entity.TravelSchedule;
 import com.triptune.schedule.enums.AttendeePermission;
-import com.triptune.schedule.enums.AttendeeRole;
-import com.triptune.travel.entity.TravelImage;
 import com.triptune.travel.entity.TravelPlace;
 import com.triptune.travel.enums.ThemeType;
+import com.triptune.travel.fixture.TravelImageFixture;
+import com.triptune.travel.fixture.TravelPlaceFixture;
 import com.triptune.travel.repository.TravelImageRepository;
 import com.triptune.travel.repository.TravelPlaceRepository;
 import com.triptune.global.config.QuerydslConfig;
@@ -32,13 +37,14 @@ import org.springframework.test.context.ActiveProfiles;
 import java.util.List;
 import java.util.Optional;
 
+import static com.triptune.schedule.enums.AttendeePermission.*;
 import static java.lang.Thread.sleep;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DataJpaTest
 @Import({QuerydslConfig.class})
 @ActiveProfiles("h2")
-public class TravelScheduleRepositoryTest extends ScheduleTest {
+public class TravelScheduleRepositoryTest {
     @Autowired private TravelScheduleRepository travelScheduleRepository;
     @Autowired private TravelAttendeeRepository travelAttendeeRepository;
     @Autowired private TravelPlaceRepository travelPlaceRepository;
@@ -62,14 +68,14 @@ public class TravelScheduleRepositoryTest extends ScheduleTest {
 
     @BeforeEach
     void setUp(){
-        Country country = countryRepository.save(createCountry());
-        City city = cityRepository.save(createCity(country, "서울"));
-        District district = districtRepository.save(createDistrict(city, "강남구"));
-        ApiCategory apiCategory = apiCategoryRepository.save(createApiCategory());
-        ApiContentType apiContentType = apiContentTypeRepository.save(createApiContentType(ThemeType.ATTRACTIONS));
+        Country country = countryRepository.save(CountryFixture.createCountry());
+        City city = cityRepository.save(CityFixture.createCity(country, "서울"));
+        District district = districtRepository.save(DistrictFixture.createDistrict(city, "강남구"));
+        ApiCategory apiCategory = apiCategoryRepository.save(ApiCategoryFixture.createApiCategory());
+        ApiContentType apiContentType = apiContentTypeRepository.save(ApiContentTypeFixture.createApiContentType(ThemeType.ATTRACTIONS));
 
         placeWithThumbnail1 = travelPlaceRepository.save(
-                createTravelPlace(
+                TravelPlaceFixture.createTravelPlace(
                     country,
                     city,
                     district,
@@ -78,11 +84,11 @@ public class TravelScheduleRepositoryTest extends ScheduleTest {
                     "여행지1"
                 )
         );
-        travelImageRepository.save(createTravelImage(placeWithThumbnail1, "test1", true));
-        travelImageRepository.save(createTravelImage(placeWithThumbnail1, "test2", false));
+        travelImageRepository.save(TravelImageFixture.createTravelImage(placeWithThumbnail1, "test1", true));
+        travelImageRepository.save(TravelImageFixture.createTravelImage(placeWithThumbnail1, "test2", false));
 
         placeWithThumbnail2 = travelPlaceRepository.save(
-                createTravelPlace(
+                TravelPlaceFixture.createTravelPlace(
                     country,
                     city,
                     district,
@@ -91,12 +97,12 @@ public class TravelScheduleRepositoryTest extends ScheduleTest {
                     "여행지3"
                 )
         );
-        travelImageRepository.save(createTravelImage(placeWithThumbnail2, "test1", true));
-        travelImageRepository.save(createTravelImage(placeWithThumbnail2, "test2", false));
+        travelImageRepository.save(TravelImageFixture.createTravelImage(placeWithThumbnail2, "test1", true));
+        travelImageRepository.save(TravelImageFixture.createTravelImage(placeWithThumbnail2, "test2", false));
 
 
         placeWithoutThumbnail = travelPlaceRepository.save(
-                createTravelPlace(
+                TravelPlaceFixture.createTravelPlace(
                     country,
                     city,
                     district,
@@ -107,11 +113,11 @@ public class TravelScheduleRepositoryTest extends ScheduleTest {
         );
 
 
-        ProfileImage profileImage1 = profileImageRepository.save(createProfileImage("member1"));
-        member1 = memberRepository.save(createNativeTypeMember("member1@email.com", profileImage1));
+        ProfileImage profileImage1 = profileImageRepository.save(ProfileImageFixture.createProfileImage("member1"));
+        member1 = memberRepository.save(MemberFixture.createNativeTypeMember("member1@email.com", profileImage1));
 
-        ProfileImage profileImage2 = profileImageRepository.save(createProfileImage("member2"));
-        member2 = memberRepository.save(createNativeTypeMember("member2@email.com", profileImage2));
+        ProfileImage profileImage2 = profileImageRepository.save(ProfileImageFixture.createProfileImage("member2"));
+        member2 = memberRepository.save(MemberFixture.createNativeTypeMember("member2@email.com", profileImage2));
 
     }
 
@@ -119,7 +125,7 @@ public class TravelScheduleRepositoryTest extends ScheduleTest {
     @DisplayName("일정 생성")
     void createTravelSchedule() {
         // given
-        TravelSchedule schedule = createTravelSchedule("테스트 일정");
+        TravelSchedule schedule = TravelScheduleFixture.createTravelSchedule("테스트 일정");
 
         // when
         travelScheduleRepository.save(schedule);
@@ -133,19 +139,19 @@ public class TravelScheduleRepositoryTest extends ScheduleTest {
     @DisplayName("전체 일정 목록 조회")
     void findTravelSchedules() throws Exception{
         // given
-        TravelSchedule schedule1 = travelScheduleRepository.save(createTravelSchedule("테스트1"));
-        travelAttendeeRepository.save(createAuthorTravelAttendee(schedule1, member1));
-        travelAttendeeRepository.save(createGuestTravelAttendee(schedule1, member2, AttendeePermission.READ));
-        travelRouteRepository.save(createTravelRoute(schedule1, placeWithThumbnail1, 1));
-        travelRouteRepository.save(createTravelRoute(schedule1, placeWithoutThumbnail, 2));
-        travelRouteRepository.save(createTravelRoute(schedule1, placeWithThumbnail2, 3));
+        TravelSchedule schedule1 = travelScheduleRepository.save(TravelScheduleFixture.createTravelSchedule("테스트1"));
+        travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorTravelAttendee(schedule1, member1));
+        travelAttendeeRepository.save(TravelAttendeeFixture.createGuestTravelAttendee(schedule1, member2, READ));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, placeWithThumbnail1, 1));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, placeWithoutThumbnail, 2));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, placeWithThumbnail2, 3));
 
-        TravelSchedule schedule2 = travelScheduleRepository.save(createTravelSchedule("테스트2"));
-        travelAttendeeRepository.save(createAuthorTravelAttendee(schedule2, member2));
-        travelAttendeeRepository.save(createGuestTravelAttendee(schedule2, member1, AttendeePermission.CHAT));
+        TravelSchedule schedule2 = travelScheduleRepository.save(TravelScheduleFixture.createTravelSchedule("테스트2"));
+        travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorTravelAttendee(schedule2, member2));
+        travelAttendeeRepository.save(TravelAttendeeFixture.createGuestTravelAttendee(schedule2, member1, CHAT));
 
-        TravelSchedule schedule3 = travelScheduleRepository.save(createTravelSchedule("테스트3"));
-        travelAttendeeRepository.save(createAuthorTravelAttendee(schedule3, member1));
+        TravelSchedule schedule3 = travelScheduleRepository.save(TravelScheduleFixture.createTravelSchedule("테스트3"));
+        travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorTravelAttendee(schedule3, member1));
 
         Pageable pageable = PageUtils.schedulePageable(1);
 
@@ -185,19 +191,19 @@ public class TravelScheduleRepositoryTest extends ScheduleTest {
     @DisplayName("공유된 일정 목록 조회")
     void findSharedTravelSchedules() throws InterruptedException {
         // given
-        TravelSchedule schedule1 = travelScheduleRepository.save(createTravelSchedule("테스트1"));
-        travelAttendeeRepository.save(createAuthorTravelAttendee(schedule1, member1));
-        travelAttendeeRepository.save(createGuestTravelAttendee(schedule1, member2, AttendeePermission.READ));
-        travelRouteRepository.save(createTravelRoute(schedule1, placeWithThumbnail1, 1));
-        travelRouteRepository.save(createTravelRoute(schedule1, placeWithoutThumbnail, 2));
-        travelRouteRepository.save(createTravelRoute(schedule1, placeWithThumbnail2, 3));
+        TravelSchedule schedule1 = travelScheduleRepository.save(TravelScheduleFixture.createTravelSchedule("테스트1"));
+        travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorTravelAttendee(schedule1, member1));
+        travelAttendeeRepository.save(TravelAttendeeFixture.createGuestTravelAttendee(schedule1, member2, READ));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, placeWithThumbnail1, 1));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, placeWithoutThumbnail, 2));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, placeWithThumbnail2, 3));
 
-        TravelSchedule schedule2 = travelScheduleRepository.save(createTravelSchedule("테스트2"));
-        travelAttendeeRepository.save(createAuthorTravelAttendee(schedule2, member2));
-        travelAttendeeRepository.save(createGuestTravelAttendee(schedule2, member1, AttendeePermission.CHAT));
+        TravelSchedule schedule2 = travelScheduleRepository.save(TravelScheduleFixture.createTravelSchedule("테스트2"));
+        travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorTravelAttendee(schedule2, member2));
+        travelAttendeeRepository.save(TravelAttendeeFixture.createGuestTravelAttendee(schedule2, member1, CHAT));
 
-        TravelSchedule schedule3 = travelScheduleRepository.save(createTravelSchedule("테스트3"));
-        travelAttendeeRepository.save(createAuthorTravelAttendee(schedule3, member1));
+        TravelSchedule schedule3 = travelScheduleRepository.save(TravelScheduleFixture.createTravelSchedule("테스트3"));
+        travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorTravelAttendee(schedule3, member1));
 
         Pageable pageable = PageUtils.schedulePageable(1);
 
@@ -236,19 +242,19 @@ public class TravelScheduleRepositoryTest extends ScheduleTest {
     @DisplayName("전체 일정 갯수 조회")
     void countTravelSchedules(){
         // given
-        TravelSchedule schedule1 = travelScheduleRepository.save(createTravelSchedule("테스트1"));
-        travelAttendeeRepository.save(createAuthorTravelAttendee(schedule1, member1));
-        travelAttendeeRepository.save(createGuestTravelAttendee(schedule1, member2, AttendeePermission.READ));
-        travelRouteRepository.save(createTravelRoute(schedule1, placeWithThumbnail1, 1));
-        travelRouteRepository.save(createTravelRoute(schedule1, placeWithoutThumbnail, 2));
-        travelRouteRepository.save(createTravelRoute(schedule1, placeWithThumbnail2, 3));
+        TravelSchedule schedule1 = travelScheduleRepository.save(TravelScheduleFixture.createTravelSchedule("테스트1"));
+        travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorTravelAttendee(schedule1, member1));
+        travelAttendeeRepository.save(TravelAttendeeFixture.createGuestTravelAttendee(schedule1, member2, READ));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, placeWithThumbnail1, 1));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, placeWithoutThumbnail, 2));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, placeWithThumbnail2, 3));
 
-        TravelSchedule schedule2 = travelScheduleRepository.save(createTravelSchedule("테스트2"));
-        travelAttendeeRepository.save(createAuthorTravelAttendee(schedule2, member2));
-        travelAttendeeRepository.save(createGuestTravelAttendee(schedule2, member1, AttendeePermission.CHAT));
+        TravelSchedule schedule2 = travelScheduleRepository.save(TravelScheduleFixture.createTravelSchedule("테스트2"));
+        travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorTravelAttendee(schedule2, member2));
+        travelAttendeeRepository.save(TravelAttendeeFixture.createGuestTravelAttendee(schedule2, member1, CHAT));
 
-        TravelSchedule schedule3 = travelScheduleRepository.save(createTravelSchedule("테스트3"));
-        travelAttendeeRepository.save(createAuthorTravelAttendee(schedule3, member1));
+        TravelSchedule schedule3 = travelScheduleRepository.save(TravelScheduleFixture.createTravelSchedule("테스트3"));
+        travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorTravelAttendee(schedule3, member1));
 
         // when
         Integer response = travelScheduleRepository.countTravelSchedules(member1.getMemberId());
@@ -271,19 +277,19 @@ public class TravelScheduleRepositoryTest extends ScheduleTest {
     @DisplayName("공유된 일정 갯수 조회")
     void countSharedTravelSchedules(){
         // given
-        TravelSchedule schedule1 = travelScheduleRepository.save(createTravelSchedule("테스트1"));
-        travelAttendeeRepository.save(createAuthorTravelAttendee(schedule1, member1));
-        travelAttendeeRepository.save(createGuestTravelAttendee(schedule1, member2, AttendeePermission.READ));
-        travelRouteRepository.save(createTravelRoute(schedule1, placeWithThumbnail1, 1));
-        travelRouteRepository.save(createTravelRoute(schedule1, placeWithoutThumbnail, 2));
-        travelRouteRepository.save(createTravelRoute(schedule1, placeWithThumbnail2, 3));
+        TravelSchedule schedule1 = travelScheduleRepository.save(TravelScheduleFixture.createTravelSchedule("테스트1"));
+        travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorTravelAttendee(schedule1, member1));
+        travelAttendeeRepository.save(TravelAttendeeFixture.createGuestTravelAttendee(schedule1, member2, READ));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, placeWithThumbnail1, 1));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, placeWithoutThumbnail, 2));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, placeWithThumbnail2, 3));
 
-        TravelSchedule schedule2 = travelScheduleRepository.save(createTravelSchedule("테스트2"));
-        travelAttendeeRepository.save(createAuthorTravelAttendee(schedule2, member2));
-        travelAttendeeRepository.save(createGuestTravelAttendee(schedule2, member1, AttendeePermission.CHAT));
+        TravelSchedule schedule2 = travelScheduleRepository.save(TravelScheduleFixture.createTravelSchedule("테스트2"));
+        travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorTravelAttendee(schedule2, member2));
+        travelAttendeeRepository.save(TravelAttendeeFixture.createGuestTravelAttendee(schedule2, member1, CHAT));
 
-        TravelSchedule schedule3 = travelScheduleRepository.save(createTravelSchedule("테스트3"));
-        travelAttendeeRepository.save(createAuthorTravelAttendee(schedule3, member1));
+        TravelSchedule schedule3 = travelScheduleRepository.save(TravelScheduleFixture.createTravelSchedule("테스트3"));
+        travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorTravelAttendee(schedule3, member1));
 
 
         // when
@@ -307,19 +313,19 @@ public class TravelScheduleRepositoryTest extends ScheduleTest {
     @DisplayName("전체 일정 검색")
     void searchTravelSchedules(){
         // given
-        TravelSchedule schedule1 = travelScheduleRepository.save(createTravelSchedule("테스트1"));
-        travelAttendeeRepository.save(createAuthorTravelAttendee(schedule1, member1));
-        travelAttendeeRepository.save(createGuestTravelAttendee(schedule1, member2, AttendeePermission.READ));
-        travelRouteRepository.save(createTravelRoute(schedule1, placeWithThumbnail1, 1));
-        travelRouteRepository.save(createTravelRoute(schedule1, placeWithoutThumbnail, 2));
-        travelRouteRepository.save(createTravelRoute(schedule1, placeWithThumbnail2, 3));
+        TravelSchedule schedule1 = travelScheduleRepository.save(TravelScheduleFixture.createTravelSchedule("테스트1"));
+        travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorTravelAttendee(schedule1, member1));
+        travelAttendeeRepository.save(TravelAttendeeFixture.createGuestTravelAttendee(schedule1, member2, READ));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, placeWithThumbnail1, 1));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, placeWithoutThumbnail, 2));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, placeWithThumbnail2, 3));
 
-        TravelSchedule schedule2 = travelScheduleRepository.save(createTravelSchedule("테스트2"));
-        travelAttendeeRepository.save(createAuthorTravelAttendee(schedule2, member2));
-        travelAttendeeRepository.save(createGuestTravelAttendee(schedule2, member1, AttendeePermission.CHAT));
+        TravelSchedule schedule2 = travelScheduleRepository.save(TravelScheduleFixture.createTravelSchedule("테스트2"));
+        travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorTravelAttendee(schedule2, member2));
+        travelAttendeeRepository.save(TravelAttendeeFixture.createGuestTravelAttendee(schedule2, member1, CHAT));
 
-        TravelSchedule schedule3 = travelScheduleRepository.save(createTravelSchedule("테스트3"));
-        travelAttendeeRepository.save(createAuthorTravelAttendee(schedule3, member1));
+        TravelSchedule schedule3 = travelScheduleRepository.save(TravelScheduleFixture.createTravelSchedule("테스트3"));
+        travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorTravelAttendee(schedule3, member1));
 
 
         Pageable pageable = PageUtils.schedulePageable(1);
@@ -356,19 +362,19 @@ public class TravelScheduleRepositoryTest extends ScheduleTest {
     @DisplayName("공유된 일정 검색")
     void searchSharedTravelSchedules(){
         // given
-        TravelSchedule schedule1 = travelScheduleRepository.save(createTravelSchedule("테스트1"));
-        travelAttendeeRepository.save(createAuthorTravelAttendee(schedule1, member1));
-        travelAttendeeRepository.save(createGuestTravelAttendee(schedule1, member2, AttendeePermission.READ));
-        travelRouteRepository.save(createTravelRoute(schedule1, placeWithThumbnail1, 1));
-        travelRouteRepository.save(createTravelRoute(schedule1, placeWithoutThumbnail, 2));
-        travelRouteRepository.save(createTravelRoute(schedule1, placeWithThumbnail2, 3));
+        TravelSchedule schedule1 = travelScheduleRepository.save(TravelScheduleFixture.createTravelSchedule("테스트1"));
+        travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorTravelAttendee(schedule1, member1));
+        travelAttendeeRepository.save(TravelAttendeeFixture.createGuestTravelAttendee(schedule1, member2, READ));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, placeWithThumbnail1, 1));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, placeWithoutThumbnail, 2));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, placeWithThumbnail2, 3));
 
-        TravelSchedule schedule2 = travelScheduleRepository.save(createTravelSchedule("테스트2"));
-        travelAttendeeRepository.save(createAuthorTravelAttendee(schedule2, member2));
-        travelAttendeeRepository.save(createGuestTravelAttendee(schedule2, member1, AttendeePermission.CHAT));
+        TravelSchedule schedule2 = travelScheduleRepository.save(TravelScheduleFixture.createTravelSchedule("테스트2"));
+        travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorTravelAttendee(schedule2, member2));
+        travelAttendeeRepository.save(TravelAttendeeFixture.createGuestTravelAttendee(schedule2, member1, CHAT));
 
-        TravelSchedule schedule3 = travelScheduleRepository.save(createTravelSchedule("테스트3"));
-        travelAttendeeRepository.save(createAuthorTravelAttendee(schedule3, member1));
+        TravelSchedule schedule3 = travelScheduleRepository.save(TravelScheduleFixture.createTravelSchedule("테스트3"));
+        travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorTravelAttendee(schedule3, member1));
 
         Pageable pageable = PageUtils.schedulePageable(1);
 
@@ -404,14 +410,14 @@ public class TravelScheduleRepositoryTest extends ScheduleTest {
     @DisplayName("일정 삭제")
     void deleteById(){
         // given
-        TravelSchedule schedule = travelScheduleRepository.save(createTravelSchedule("테스트1"));
+        TravelSchedule schedule = travelScheduleRepository.save(TravelScheduleFixture.createTravelSchedule("테스트1"));
 
-        travelAttendeeRepository.save(createAuthorTravelAttendee(schedule, member1));
-        travelAttendeeRepository.save(createGuestTravelAttendee(schedule, member2, AttendeePermission.READ));
+        travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorTravelAttendee(schedule, member1));
+        travelAttendeeRepository.save(TravelAttendeeFixture.createGuestTravelAttendee(schedule, member2, READ));
 
-        travelRouteRepository.save(createTravelRoute(schedule, placeWithThumbnail1, 1));
-        travelRouteRepository.save(createTravelRoute(schedule, placeWithoutThumbnail, 2));
-        travelRouteRepository.save(createTravelRoute(schedule, placeWithThumbnail2, 3));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule, placeWithThumbnail1, 1));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule, placeWithoutThumbnail, 2));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule, placeWithThumbnail2, 3));
 
         // when
         travelScheduleRepository.deleteById(schedule.getScheduleId());
