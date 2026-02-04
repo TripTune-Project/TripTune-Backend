@@ -1,34 +1,26 @@
 package com.triptune.schedule.repository;
 
-import com.querydsl.core.types.OrderSpecifier;
-import com.querydsl.core.types.dsl.CaseBuilder;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.triptune.global.util.PageUtils;
-import com.triptune.schedule.entity.QTravelAttendee;
-import com.triptune.schedule.entity.QTravelSchedule;
 import com.triptune.schedule.entity.TravelSchedule;
 import com.triptune.schedule.enums.AttendeePermission;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
+import static com.triptune.schedule.entity.QTravelAttendee.travelAttendee;
+import static com.triptune.schedule.entity.QTravelSchedule.travelSchedule;
+
 @Repository
+@RequiredArgsConstructor
 public class TravelScheduleRepositoryCustomImpl implements TravelScheduleRepositoryCustom {
 
     private final JPAQueryFactory jpaQueryFactory;
-    private final QTravelSchedule travelSchedule;
-    private final QTravelAttendee travelAttendee;
 
-
-    public TravelScheduleRepositoryCustomImpl(JPAQueryFactory jpaQueryFactory){
-        this.jpaQueryFactory = jpaQueryFactory;
-        this.travelSchedule = QTravelSchedule.travelSchedule;
-        this.travelAttendee = QTravelAttendee.travelAttendee;
-    }
 
     @Override
     public Page<TravelSchedule> findTravelSchedules(Pageable pageable, Long memberId) {

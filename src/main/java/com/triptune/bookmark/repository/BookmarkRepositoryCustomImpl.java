@@ -8,25 +8,21 @@ import com.triptune.bookmark.enums.BookmarkSortType;
 import com.triptune.travel.entity.QTravelPlace;
 import com.triptune.travel.entity.TravelPlace;
 import com.triptune.global.util.PageUtils;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
+import static com.triptune.bookmark.entity.QBookmark.bookmark;
+import static com.triptune.travel.entity.QTravelPlace.travelPlace;
+
 @Repository
+@RequiredArgsConstructor
 public class BookmarkRepositoryCustomImpl implements BookmarkRepositoryCustom {
 
     private final JPAQueryFactory jpaQueryFactory;
-    private final QBookmark bookmark;
-    private final QTravelPlace travelPlace;
-
-
-    public BookmarkRepositoryCustomImpl(JPAQueryFactory jpaQueryFactory) {
-        this.jpaQueryFactory = jpaQueryFactory;
-        this.bookmark = QBookmark.bookmark;
-        this.travelPlace = QTravelPlace.travelPlace;
-    }
 
     @Override
     public Page<TravelPlace> findSortedMemberBookmarks(Long memberId, Pageable pageable, BookmarkSortType sortType) {
