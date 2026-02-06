@@ -36,14 +36,14 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<ErrorResponse> handleBusinessException(BusinessException ex, HttpServletRequest request){
-        log.error("[{}] at {}: {}", ex.getClass().getSimpleName(), request.getRequestURI(), ex.getMessage());
+        log.warn("[{}] at {}: {}", ex.getClass().getSimpleName(), request.getRequestURI(), ex.getMessage());
         return new ResponseEntity<>(ErrorResponse.of(ex.getErrorCode()), ex.getErrorCode().getStatus());
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleMethodArgumentNotValidException(MethodArgumentNotValidException ex, HttpServletRequest request){
-        log.error("MethodArgumentNotValidException at {}: {}", request.getRequestURI(), ex.getMessage());
+        log.warn("[MethodArgumentNotValidException] at {}: {}", request.getRequestURI(), ex.getMessage());
 
         String message = ex.getBindingResult().getAllErrors()
                 .stream()
@@ -55,14 +55,14 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(CustomJwtUnAuthorizedException.class)
     public ResponseEntity<ErrorResponse> handleCustomJwtUnAuthorizedException(CustomJwtUnAuthorizedException ex, HttpServletRequest request){
-        log.error("CustomJwtUnAuthorizedException at {}: {}", request.getRequestURI(),  ex.getMessage());
+        log.warn("[CustomJwtUnAuthorizedException] at {}: {}", request.getRequestURI(),  ex.getMessage());
         return new ResponseEntity<>(ErrorResponse.of(ex.getErrorCode()), ex.getErrorCode().getStatus());
     }
 
     @ExceptionHandler(NoHandlerFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public void handle404(NoHandlerFoundException ex, HttpServletRequest request, HttpServletResponse response) throws IOException {
-        log.error("NoHandlerFoundException at {}: {}", request.getRequestURI(),  ex.getMessage());
+        log.warn("[NoHandlerFoundException] at {}: {}", request.getRequestURI(),  ex.getMessage());
 
         response.sendRedirect(notFoundErrorURL);
     }
@@ -70,7 +70,7 @@ public class GlobalExceptionHandler {
     @MessageExceptionHandler(ChatException.class)
     @SendToUser(destinations = "/queue/errors", broadcast = false)
     public ErrorResponse handleForbiddenChatException(ChatException ex){
-        log.error("[{}]: {}", ex.getClass().getSimpleName(), ex.getMessage());
+        log.warn("[{}]: {}", ex.getClass().getSimpleName(), ex.getMessage());
         return ErrorResponse.of(ex.getErrorCode());
     }
 

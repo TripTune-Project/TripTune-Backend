@@ -144,7 +144,7 @@ public class MemberService {
         validateSavedRefreshToken(member, refreshToken);
 
         String newAccessToken = jwtUtils.createAccessToken(member.getMemberId());
-        log.info("Access Token 재발급 완료 - memberId: {}", member.getMemberId());
+        log.info("access token 재발급 완료 - memberId: {}", member.getMemberId());
         return RefreshTokenResponse.of(newAccessToken);
     }
 

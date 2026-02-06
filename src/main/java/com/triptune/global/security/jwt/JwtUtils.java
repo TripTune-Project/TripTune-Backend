@@ -67,21 +67,16 @@ public class JwtUtils {
             Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
 
             if(redisService.existData(token)){
-                log.error("이미 로그아웃 된 회원의 토큰 유효성 검증 시도");
                 throw new CustomJwtUnAuthorizedException(ErrorCode.BLACKLIST_TOKEN);
             }
 
         } catch (ExpiredJwtException e){
-            log.error("토큰 유효성 검증 중 만료된 JWT 토큰으로 인증 시도 ", e);
             throw new CustomJwtUnAuthorizedException(ErrorCode.EXPIRED_JWT_TOKEN);
         } catch (SecurityException | MalformedJwtException e) {
-            log.error("토큰 유효성 검증 중 잘못된 JWT 토큰으로 인증 시도 ", e);
             throw new CustomJwtUnAuthorizedException(ErrorCode.INVALID_JWT_TOKEN);
         } catch (UnsupportedJwtException e){
-            log.error("토큰 유효성 검증 중 지원하지 않는 JWT 토큰으로 인증 시도 ", e);
             throw new CustomJwtUnAuthorizedException(ErrorCode.UNSUPPORTED_JWT_TOKEN);
         } catch (IllegalArgumentException e){
-            log.error("토큰 유효성 검증 중 비어있는 JWT 클레임으로 인증 시도 ", e);
             throw new CustomJwtUnAuthorizedException(ErrorCode.EMPTY_JWT_CLAIMS);
         }
     }
@@ -91,21 +86,16 @@ public class JwtUtils {
             Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
 
             if(redisService.existData(token)){
-                log.error("채팅 중 이미 로그아웃 된 회원의 토큰 유효성 검증 시도");
                 throw new CustomJwtUnAuthorizedChatException(ErrorCode.BLACKLIST_TOKEN);
             }
 
         } catch (ExpiredJwtException e){
-            log.error("채팅 중 만료된 JWT 토큰으로 인증 시도 ", e);
             throw new CustomJwtUnAuthorizedChatException(ErrorCode.EXPIRED_JWT_TOKEN);
         } catch (SecurityException | MalformedJwtException e) {
-            log.error("채팅 중 잘못된 JWT 토큰으로 인증 시도 ", e);
             throw new CustomJwtUnAuthorizedChatException(ErrorCode.INVALID_JWT_TOKEN);
         } catch (UnsupportedJwtException e){
-            log.error("채팅 중 지원하지 않는 JWT 토큰으로 인증 시도 ", e);
             throw new CustomJwtUnAuthorizedChatException(ErrorCode.UNSUPPORTED_JWT_TOKEN);
         } catch (IllegalArgumentException e){
-            log.error("채팅 중 비어있는 JWT 클레임으로 인증 시도", e);
             throw new CustomJwtUnAuthorizedChatException(ErrorCode.EMPTY_JWT_CLAIMS);
         }
     }

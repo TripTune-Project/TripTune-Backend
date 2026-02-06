@@ -28,7 +28,7 @@ public class CorsConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource(){
         log.info("[cors 설정 시작]");
-        log.info("[allowedOrigins 갯수] : 총 " + allowedOrigins.size() + "개");
+        log.info("[allowedOrigins 갯수] : 총 {} 개", allowedOrigins.size());
 
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(allowedOrigins);

@@ -16,6 +16,7 @@ import com.triptune.travel.entity.QTravelImage;
 import com.triptune.travel.entity.QTravelPlace;
 import com.triptune.travel.enums.CityType;
 import com.triptune.travel.enums.ThemeType;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
@@ -24,20 +25,15 @@ import java.util.List;
 
 import static com.querydsl.core.types.dsl.Expressions.constant;
 import static com.querydsl.core.types.dsl.MathExpressions.*;
+import static com.triptune.travel.entity.QTravelImage.travelImage;
+import static com.triptune.travel.entity.QTravelPlace.travelPlace;
 
 @Repository
+@RequiredArgsConstructor
 public class TravelPlaceRepositoryCustomImpl implements TravelPlaceRepositoryCustom {
     private static final int CAROUSEL_LIMIT = 20;
 
     private final JPAQueryFactory jpaQueryFactory;
-    private final QTravelPlace travelPlace;
-    private final QTravelImage travelImage;
-
-    public TravelPlaceRepositoryCustomImpl(JPAQueryFactory jpaQueryFactory){
-        this.jpaQueryFactory = jpaQueryFactory;
-        this.travelPlace = QTravelPlace.travelPlace;
-        this.travelImage = QTravelImage.travelImage;
-    }
 
 
     @Override

@@ -41,10 +41,10 @@ public class S3Service {
                     metadata
             ).withCannedAcl(CannedAccessControlList.PublicRead));
 
-            log.info("s3 이미지 업로드 성공: {}", s3FileKey);
+            log.info("[s3 이미지 업로드 성공] : {}", s3FileKey);
             return amazonS3Client.getUrl(bucket, s3FileKey).toString();
         } catch (Exception e){
-            log.error("S3 이미지 업로드 실패: {}", s3FileKey, e);
+            log.error("[S3 이미지 업로드 실패] : {}", s3FileKey, e);
             throw new AmazonS3Exception("s3 이미지 업로드 실패");
         }
     }
@@ -63,9 +63,9 @@ public class S3Service {
 
         try{
             amazonS3Client.deleteObject(bucket, s3FileKey);
-            log.info("S3 이미지 삭제 성공 : {}", s3FileKey);
+            log.info("[S3 이미지 삭제 성공] : {}", s3FileKey);
         } catch(Exception e){
-            log.error("S3 이미지 삭제 실패 : {}", e.getMessage());
+            log.error("[S3 이미지 삭제 실패] : {}", s3FileKey, e);
             throw new AmazonS3Exception("s3 이미지 업로드 실패");
         }
 
