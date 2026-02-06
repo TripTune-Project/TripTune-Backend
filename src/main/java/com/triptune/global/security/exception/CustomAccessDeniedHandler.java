@@ -23,7 +23,7 @@ public class CustomAccessDeniedHandler implements AccessDeniedHandler {
 
     @Override
     public void handle(HttpServletRequest request, HttpServletResponse response, AccessDeniedException accessDeniedException) throws IOException, ServletException {
-        log.info("403 CustomAccessDeniedHandler(접근 권한 없음), URL: {}", request.getRequestURI());
+        log.warn("[CustomAccessDeniedHandler(403 접근 권한 없음)] at {}: {}", request.getRequestURI(), accessDeniedException.getMessage());
         jwtErrorResponseWriter.write(response, ErrorCode.FORBIDDEN_ACCESS);
 
     }

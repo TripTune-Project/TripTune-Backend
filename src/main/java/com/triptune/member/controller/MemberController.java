@@ -82,10 +82,7 @@ public class MemberController {
     @Operation(summary = "토큰 갱신", description = "Refresh Token 을 이용해 만료된 Access Token 을 갱신합니다.")
     public ApiResponse<RefreshTokenResponse> refreshToken(HttpServletRequest request) throws ExpiredJwtException {
         String refreshToken = cookieUtils.getRefreshTokenFromCookie(request)
-                .orElseThrow(() -> {
-                    log.error("Cookie 에 Refresh Token 존재하지 않아 갱신 실패");
-                    return new CustomJwtUnAuthorizedException(ErrorCode.MISMATCH_REFRESH_TOKEN);
-                });
+                .orElseThrow(() -> new CustomJwtUnAuthorizedException(ErrorCode.MISMATCH_REFRESH_TOKEN));
 
         RefreshTokenResponse refreshTokenResponse = memberService.refreshToken(refreshToken);
         return ApiResponse.dataResponse(refreshTokenResponse);

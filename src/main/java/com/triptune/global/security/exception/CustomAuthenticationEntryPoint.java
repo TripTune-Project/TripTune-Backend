@@ -22,8 +22,8 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
 
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException {
-        log.error("401 CustomAuthenticationEntryPoint(미인증 접근 시도), URL: {}", request.getRequestURI());
-        log.error("Header 의 Authorization {}", request.getHeader("Authorization") != null ? "존재함" : "존재하지 않음");
+        log.warn("[CustomAuthenticationEntryPoint(401 미인증 접근 시도)] at {}: {}", request.getRequestURI(), authException.getMessage());
+        log.warn("Header 의 Authorization {}", request.getHeader("Authorization") != null ? "존재함" : "존재하지 않음");
 
         jwtErrorResponseWriter.write(response, ErrorCode.UNAUTHORIZED_ACCESS);
 

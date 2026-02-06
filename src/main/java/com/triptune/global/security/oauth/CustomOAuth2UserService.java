@@ -1,7 +1,6 @@
 package com.triptune.global.security.oauth;
 
 import com.triptune.global.message.ErrorCode;
-import com.triptune.global.exception.DataExistException;
 import com.triptune.global.security.CustomUserDetails;
 import com.triptune.global.security.oauth.exception.OAuth2Exception;
 import com.triptune.global.security.oauth.userinfo.KaKaoUserInfo;
@@ -15,6 +14,7 @@ import com.triptune.member.repository.MemberRepository;
 import com.triptune.member.repository.SocialMemberRepository;
 import com.triptune.profile.entity.ProfileImage;
 import com.triptune.profile.service.ProfileImageService;
+import jakarta.annotation.Nonnull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
@@ -42,33 +42,36 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
         log.info("OAuth2 로그인 시도");
 
-        try {
-            // 1. 유저 정보 가져오기
-            Map<String, Object> attributes = super.loadUser(userRequest).getAttributes();
-            log.debug("소셜 로그인 응답 attribute keys: {}", attributes.keySet());
+        // 1. 유저 정보 가져오기
+        Map<String, Object> attributes = super.loadUser(userRequest).getAttributes();
+        log.info("소셜 로그인 응답 attribute keys: {}", attributes.keySet());
 
-            // 2. registrationId 가져오기 (third-party id)
-            String registrationId = userRequest.getClientRegistration().getRegistrationId();
-            log.info("OAuth2 제공자: {}", registrationId);
+        // 2. registrationId 가져오기 (third-party id)
+        String registrationId = userRequest.getClientRegistration().getRegistrationId();
+        log.info("OAuth2 제공자: {}", registrationId);
 
-            // 3. 유저 정보 dto 생성
-            OAuth2UserInfo oAuth2UserInfo = switch (registrationId){
-                case "naver" -> new NaverUserInfo(attributes);
-                case "kakao" -> new KaKaoUserInfo(attributes);
-                default -> throw new OAuth2Exception(ErrorCode.ILLEGAL_REGISTRATION_ID);
-            };
+        // 3. Provider별 사용자 정보 매핑
+        OAuth2UserInfo oAuth2UserInfo = createOAuth2UserInfo(registrationId, attributes);
 
-            // 4. 회원가입 및 로그인
-            Member member = joinOrLogin(oAuth2UserInfo);
-            member.updateRefreshToken(jwtUtils.createRefreshToken(member.getMemberId()));
-            return new CustomUserDetails(member, attributes);
+        // 4. 회원가입 및 로그인
+        Member member = joinOrLogin(oAuth2UserInfo);
+        member.updateRefreshToken(jwtUtils.createRefreshToken(member.getMemberId()));
 
-        } catch (DataExistException ex){
-            throw new OAuth2AuthenticationException(
-                    new OAuth2Error(ex.getMessage()), ex.getMessage()
+        log.info("OAuth2 로그인 성공: memberId={}", member.getMemberId());
+
+        return new CustomUserDetails(member, attributes);
+    }
+
+
+    public OAuth2UserInfo createOAuth2UserInfo(String registrationId, Map<String, Object> attributes) {
+        return switch (registrationId) {
+            case "naver" -> new NaverUserInfo(attributes);
+            case "kakao" -> new KaKaoUserInfo(attributes);
+            default -> throw new OAuth2AuthenticationException(
+                    new OAuth2Error("INVALID_REGISTRATION_ID"),
+                            ErrorCode.ILLEGAL_REGISTRATION_ID.getMessage()
             );
-        }
-
+        };
     }
 
     public Member joinOrLogin(OAuth2UserInfo oAuth2UserInfo){
