@@ -1,6 +1,6 @@
 package com.triptune.travel.dto.response;
 
-import com.triptune.travel.entity.TravelPlace;
+import com.triptune.travel.repository.dto.PlaceQueryDto;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -14,14 +14,14 @@ public class PlaceResponse {
     private String district;
     private String address;
     private String detailAddress;
-    private double latitude;
-    private double longitude;
+    private Double latitude;
+    private Double longitude;
     private String placeName;
     private String thumbnailUrl;
 
 
     @Builder
-    public PlaceResponse(Long placeId, String country, String city, String district, String address, String detailAddress, double latitude, double longitude, String placeName, String thumbnailUrl) {
+    public PlaceResponse(Long placeId, String country, String city, String district, String address, String detailAddress, Double latitude, Double longitude, String placeName, String thumbnailUrl) {
         this.placeId = placeId;
         this.country = country;
         this.city = city;
@@ -34,20 +34,21 @@ public class PlaceResponse {
         this.thumbnailUrl = thumbnailUrl;
     }
 
-    public static PlaceResponse from(TravelPlace travelPlace){
+    public static PlaceResponse of(PlaceQueryDto placeQueryDto, String thumbnailUrl){
         return PlaceResponse.builder()
-                .placeId(travelPlace.getPlaceId())
-                .country(travelPlace.getCountry().getCountryName())
-                .city(travelPlace.getCity().getCityName())
-                .district(travelPlace.getDistrict().getDistrictName())
-                .address(travelPlace.getAddress())
-                .detailAddress(travelPlace.getDetailAddress())
-                .latitude(travelPlace.getLatitude())
-                .longitude(travelPlace.getLongitude())
-                .placeName(travelPlace.getPlaceName())
-                .thumbnailUrl(travelPlace.getThumbnailUrl())
+                .placeId(placeQueryDto.getPlaceId())
+                .country(placeQueryDto.getCountry())
+                .city(placeQueryDto.getCity())
+                .district(placeQueryDto.getDistrict())
+                .address(placeQueryDto.getAddress())
+                .detailAddress(placeQueryDto.getDetailAddress())
+                .latitude(placeQueryDto.getLatitude())
+                .longitude(placeQueryDto.getLongitude())
+                .placeName(placeQueryDto.getPlaceName())
+                .thumbnailUrl(thumbnailUrl)
                 .build();
     }
+
 
 
 }

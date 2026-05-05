@@ -1,6 +1,7 @@
 package com.triptune.travel.entity;
 
 import com.triptune.common.entity.*;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -8,6 +9,7 @@ import lombok.NoArgsConstructor;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Entity
 @Getter
@@ -124,14 +126,6 @@ public class TravelPlace extends BaseTimeEntity {
 
     protected void addTravelImages(TravelImage travelImage){
         travelImages.add(travelImage);
-    }
-
-    public String getThumbnailUrl(){
-        return travelImages.stream()
-                .filter(TravelImage::isThumbnail)
-                .map(TravelImage::getS3ObjectUrl)
-                .findFirst()
-                .orElse(null);
     }
 
     public void increaseBookmarkCnt() {

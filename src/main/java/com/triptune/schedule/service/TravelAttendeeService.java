@@ -2,6 +2,7 @@ package com.triptune.schedule.service;
 
 import com.triptune.global.message.ErrorCode;
 import com.triptune.global.exception.DataNotFoundException;
+import com.triptune.global.s3.S3ObjectManager;
 import com.triptune.member.entity.Member;
 import com.triptune.member.repository.MemberRepository;
 import com.triptune.schedule.dto.request.AttendeePermissionRequest;
@@ -18,8 +19,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @Transactional(readOnly = true)
@@ -30,13 +31,21 @@ public class TravelAttendeeService {
     private final TravelAttendeeRepository travelAttendeeRepository;
     private final TravelScheduleRepository travelScheduleRepository;
     private final MemberRepository memberRepository;
+    private final S3ObjectManager s3ObjectManager;
 
 
     public List<AttendeeResponse> getAttendeesByScheduleId(Long scheduleId) {
-        return travelAttendeeRepository.findAllByTravelSchedule_ScheduleId(scheduleId)
-                .stream()
-                .map(AttendeeResponse::from)
-                .collect(Collectors.toList());
+        List<TravelAttendee> travelAttendees = travelAttendeeRepository.findAllByTravelSchedule_ScheduleId(scheduleId);
+        List<AttendeeResponse> response = new ArrayList<>();
+
+        for (TravelAttendee travelAttendee : travelAttendees) {
+            String profileUrl = s3ObjectManager.generateS3ObjectUrl(travelAttendee.getMember().getProfileImage().getS3ObjectKey());
+            AttendeeResponse attendeeRes = AttendeeResponse.of(travelAttendee, profileUrl);
+            response.add(attendeeRes);
+
+        }
+
+        return response;
     }
 
     @Transactional

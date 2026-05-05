@@ -25,12 +25,12 @@ public class AttendeeResponse {
         this.permission = permission;
     }
 
-    public static AttendeeResponse from(TravelAttendee attendee){
+    public static AttendeeResponse of(TravelAttendee attendee, String profileUrl){
         return AttendeeResponse.builder()
                 .attendeeId(attendee.getAttendeeId())
                 .nickname(attendee.getMember().getNickname())
                 .email(attendee.getMember().getEmail())
-                .profileUrl(attendee.getMember().getProfileImage().getS3ObjectUrl())
+                .profileUrl(profileUrl)
                 .role(attendee.getRole().name())
                 .permission(attendee.getPermission().name())
                 .build();

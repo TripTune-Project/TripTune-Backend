@@ -1,6 +1,7 @@
 package com.triptune.schedule.dto.response;
 
 import com.triptune.schedule.entity.TravelRoute;
+import com.triptune.schedule.repository.dto.RouteQueryDto;
 import com.triptune.travel.entity.TravelPlace;
 import lombok.Builder;
 import lombok.Getter;
@@ -37,21 +38,19 @@ public class RouteResponse {
     }
 
 
-    public static RouteResponse from(TravelRoute travelRoute){
-        TravelPlace travelPlace = travelRoute.getTravelPlace();
-
+    public static RouteResponse of(RouteQueryDto routeQueryDto, String thumbnailUrl){
         return RouteResponse.builder()
-                .routeOrder(travelRoute.getRouteOrder())
-                .placeId(travelPlace.getPlaceId())
-                .country(travelPlace.getCountry().getCountryName())
-                .city(travelPlace.getCity().getCityName())
-                .district(travelPlace.getDistrict().getDistrictName())
-                .address(travelPlace.getAddress())
-                .detailAddress(travelPlace.getDetailAddress())
-                .latitude(travelPlace.getLatitude())
-                .longitude(travelPlace.getLongitude())
-                .placeName(travelPlace.getPlaceName())
-                .thumbnailUrl(travelPlace.getThumbnailUrl())
+                .routeOrder(routeQueryDto.getRouteOrder())
+                .placeId(routeQueryDto.getPlaceId())
+                .country(routeQueryDto.getCountry())
+                .city(routeQueryDto.getCity())
+                .district(routeQueryDto.getDistrict())
+                .address(routeQueryDto.getAddress())
+                .detailAddress(routeQueryDto.getDetailAddress())
+                .latitude(routeQueryDto.getLatitude())
+                .longitude(routeQueryDto.getLongitude())
+                .placeName(routeQueryDto.getPlaceName())
+                .thumbnailUrl(thumbnailUrl)
                 .build();
     }
 }

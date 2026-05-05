@@ -1,13 +1,13 @@
 package com.triptune.travel.fixture;
 
-
 import com.triptune.common.entity.*;
-import com.triptune.travel.repository.dto.PlaceLocation;
 import com.triptune.travel.dto.request.PlaceLocationRequest;
 import com.triptune.travel.dto.request.PlaceSearchRequest;
-import com.triptune.travel.dto.response.PlaceResponse;
 import com.triptune.travel.dto.response.PlaceSimpleResponse;
 import com.triptune.travel.entity.TravelPlace;
+import com.triptune.travel.repository.dto.PlaceDistanceQueryDto;
+import com.triptune.travel.repository.dto.PlaceQueryDto;
+import com.triptune.travel.repository.dto.PlaceSimpleQueryDto;
 import org.springframework.test.util.ReflectionTestUtils;
 
 public class TravelPlaceFixture {
@@ -178,8 +178,9 @@ public class TravelPlaceFixture {
                 .build();
     }
 
-    public static PlaceLocation createPlaceLocation(TravelPlace travelPlace, String thumbnailUrl){
-        return PlaceLocation.builder()
+
+    public static PlaceDistanceQueryDto createPlaceDistanceQueryDto(TravelPlace travelPlace, String thumbnailS3ObjectKey){
+        return PlaceDistanceQueryDto.builder()
                 .placeId(travelPlace.getPlaceId())
                 .country(travelPlace.getCountry().getCountryName())
                 .city(travelPlace.getCity().getCityName())
@@ -189,13 +190,14 @@ public class TravelPlaceFixture {
                 .latitude(travelPlace.getLatitude())
                 .longitude(travelPlace.getLongitude())
                 .placeName(travelPlace.getPlaceName())
-                .thumbnailUrl(thumbnailUrl)
+                .thumbnailS3ObjectKey(thumbnailS3ObjectKey)
                 .distance(0.2345234234)
                 .build();
     }
 
-    public static PlaceResponse createPlaceResponse(TravelPlace travelPlace, String thumbnailUrl){
-        return PlaceResponse.builder()
+
+    public static PlaceQueryDto createPlaceQueryDto(TravelPlace travelPlace, String thumbnailS3ObjectKey){
+        return PlaceQueryDto.builder()
                 .placeId(travelPlace.getPlaceId())
                 .country(travelPlace.getCountry().getCountryName())
                 .city(travelPlace.getCity().getCityName())
@@ -205,19 +207,20 @@ public class TravelPlaceFixture {
                 .latitude(travelPlace.getLatitude())
                 .longitude(travelPlace.getLongitude())
                 .placeName(travelPlace.getPlaceName())
-                .thumbnailUrl(thumbnailUrl)
+                .thumbnailS3ObjectKey(thumbnailS3ObjectKey)
                 .build();
     }
 
-
-    public static PlaceSimpleResponse createPlaceSimpleResponse(TravelPlace travelPlace, String thumbnailUrl){
-        return PlaceSimpleResponse.builder()
+    public static PlaceSimpleQueryDto createPlaceSimpleQueryDto(TravelPlace travelPlace, String thumbnailS3ObjectKey){
+        return PlaceSimpleQueryDto.builder()
                 .placeId(travelPlace.getPlaceId())
                 .address(travelPlace.getAddress())
                 .detailAddress(travelPlace.getDetailAddress())
                 .placeName(travelPlace.getPlaceName())
-                .thumbnailUrl(thumbnailUrl)
+                .thumbnailS3ObjectKey(thumbnailS3ObjectKey)
                 .build();
     }
+
+
 
 }

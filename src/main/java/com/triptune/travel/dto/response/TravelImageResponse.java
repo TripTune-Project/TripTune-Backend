@@ -19,11 +19,11 @@ public class TravelImageResponse {
         this.imageUrl = imageUrl;
     }
 
-    public static TravelImageResponse from(TravelImage travelImage){
+    public static TravelImageResponse of(TravelImage travelImage, String imageUrl){
         return TravelImageResponse.builder()
                 .fileId(travelImage.getTravelImageId())
                 .imageName(travelImage.getFileName())
-                .imageUrl(travelImage.getS3ObjectUrl())
+                .imageUrl(imageUrl)
                 .build();
     }
 }

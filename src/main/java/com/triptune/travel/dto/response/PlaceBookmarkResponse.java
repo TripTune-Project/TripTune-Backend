@@ -1,5 +1,6 @@
 package com.triptune.travel.dto.response;
 
+import com.triptune.bookmark.repository.dto.PlaceBookmarkQueryDto;
 import com.triptune.travel.entity.TravelPlace;
 import lombok.Builder;
 import lombok.Getter;
@@ -29,16 +30,16 @@ public class PlaceBookmarkResponse {
         this.thumbnailUrl = thumbnailUrl;
     }
 
-    public static PlaceBookmarkResponse from(TravelPlace travelPlace){
+    public static PlaceBookmarkResponse of(PlaceBookmarkQueryDto placeBookmark, String thumbnailUrl){
         return PlaceBookmarkResponse.builder()
-                .placeId(travelPlace.getPlaceId())
-                .country(travelPlace.getCountry().getCountryName())
-                .city(travelPlace.getCity().getCityName())
-                .district(travelPlace.getDistrict().getDistrictName())
-                .address(travelPlace.getAddress())
-                .detailAddress(travelPlace.getDetailAddress())
-                .placeName(travelPlace.getPlaceName())
-                .thumbnailUrl(travelPlace.getThumbnailUrl())
+                .placeId(placeBookmark.getPlaceId())
+                .country(placeBookmark.getCountry())
+                .city(placeBookmark.getCity())
+                .district(placeBookmark.getDistrict())
+                .address(placeBookmark.getAddress())
+                .detailAddress(placeBookmark.getDetailAddress())
+                .placeName(placeBookmark.getPlaceName())
+                .thumbnailUrl(thumbnailUrl)
                 .build();
     }
 }

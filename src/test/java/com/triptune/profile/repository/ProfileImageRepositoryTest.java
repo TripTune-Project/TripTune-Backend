@@ -51,7 +51,6 @@ class ProfileImageRepositoryTest {
         // then
         assertThat(response.getProfileImageId()).isEqualTo(profileImage.getProfileImageId());
         assertThat(response.getFileName()).isEqualTo(profileImage.getFileName());
-        assertThat(response.getS3ObjectUrl()).isEqualTo(profileImage.getS3ObjectUrl());
     }
 
 }

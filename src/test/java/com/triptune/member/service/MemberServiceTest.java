@@ -1,12 +1,15 @@
 package com.triptune.member.service;
 
 import com.triptune.bookmark.enums.BookmarkSortType;
+import com.triptune.bookmark.fixture.BookmarkFixture;
 import com.triptune.bookmark.repository.BookmarkRepository;
+import com.triptune.bookmark.repository.dto.PlaceBookmarkQueryDto;
 import com.triptune.common.entity.*;
 import com.triptune.common.fixture.*;
 import com.triptune.email.dto.request.EmailRequest;
 import com.triptune.email.exception.EmailVerifyException;
 import com.triptune.email.service.EmailService;
+import com.triptune.global.s3.S3ObjectManager;
 import com.triptune.member.fixture.MemberFixture;
 import com.triptune.member.fixture.SocialMemberFixture;
 import com.triptune.member.service.dto.LoginResult;
@@ -33,6 +36,7 @@ import com.triptune.schedule.repository.ChatMessageRepository;
 import com.triptune.schedule.repository.TravelAttendeeRepository;
 import com.triptune.schedule.repository.TravelScheduleRepository;
 import com.triptune.travel.dto.response.PlaceBookmarkResponse;
+import com.triptune.travel.entity.TravelImage;
 import com.triptune.travel.entity.TravelPlace;
 import com.triptune.global.message.ErrorCode;
 import com.triptune.global.security.jwt.exception.CustomJwtUnAuthorizedException;
@@ -69,7 +73,6 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class MemberServiceTest {
-
     @InjectMocks private MemberService memberService;
     @Mock private MemberRepository memberRepository;
     @Mock private JwtUtils jwtUtils;
@@ -81,6 +84,7 @@ public class MemberServiceTest {
     @Mock private ChatMessageRepository chatMessageRepository;
     @Mock private TravelScheduleRepository travelScheduleRepository;
     @Mock private BookmarkRepository bookmarkRepository;
+    @Mock private S3ObjectManager s3ObjectManager;
 
     private final String accessToken = "MemberAccessToken";
     private final String refreshToken = "MemberRefreshToken";
@@ -88,9 +92,16 @@ public class MemberServiceTest {
 
     private ProfileImage profileImage;
 
-    private TravelPlace place1;
-    private TravelPlace place2;
-    private TravelPlace place3;
+    private TravelPlace place1WithThumb;
+    private TravelPlace place2WithThumb;
+    private TravelPlace place3WithoutThumb;
+
+    private TravelImage place1Thumb;
+    private TravelImage place2Thumb;
+
+    private String place1ThumbUrl;
+    private String place2ThumbUrl;
+
 
     @BeforeEach
     void setUp() {
@@ -102,14 +113,17 @@ public class MemberServiceTest {
 
         profileImage = ProfileImageFixture.createProfileImage("memberImage");
 
-        place1 = TravelPlaceFixture.createTravelPlace(country, city, district, apiCategory, apiContentType, "가장소");
-        TravelImageFixture.createTravelImage(place1, "test", true);
+        place1WithThumb = TravelPlaceFixture.createTravelPlace(country, city, district, apiCategory, apiContentType, "가장소");
+        place1Thumb = TravelImageFixture.createTravelImage(place1WithThumb, "test", true);
+        TravelImageFixture.createTravelImage(place1WithThumb, "test2", false);
+        place1ThumbUrl = S3Fixture.createS3ObjectUrl(place1Thumb.getS3ObjectKey());
 
-        place2 = TravelPlaceFixture.createTravelPlace(country, city, district, apiCategory, apiContentType, "나장소");
-        TravelImageFixture.createTravelImage(place2, "test", true);
+        place2WithThumb = TravelPlaceFixture.createTravelPlace(country, city, district, apiCategory, apiContentType, "나장소");
+        place2Thumb = TravelImageFixture.createTravelImage(place2WithThumb, "test", true);
+        place2ThumbUrl = S3Fixture.createS3ObjectUrl(place2Thumb.getS3ObjectKey());
 
-        place3 = TravelPlaceFixture.createTravelPlace(country, city, district, apiCategory, apiContentType, "다장소");
-        TravelImageFixture.createTravelImage(place3, "test", true);
+        place3WithoutThumb = TravelPlaceFixture.createTravelPlace(country, city, district, apiCategory, apiContentType, "다장소");
+        TravelImageFixture.createTravelImage(place3WithoutThumb, "test", true);
     }
 
 
@@ -694,8 +708,10 @@ public class MemberServiceTest {
     void getMemberInfo_nativeMember(){
         // given
         Member member = MemberFixture.createNativeTypeMember("member@email.com", profileImage);
+        String profileUrl = S3Fixture.createS3ObjectUrl(profileImage.getS3ObjectKey());
 
         when(memberRepository.findById(anyLong())).thenReturn(Optional.of(member));
+        when(s3ObjectManager.generateS3ObjectUrl(anyString())).thenReturn(profileUrl);
 
         // when
         MemberInfoResponse response = memberService.getMemberInfo(1L);
@@ -703,16 +719,18 @@ public class MemberServiceTest {
         // then
         assertThat(response.getEmail()).isEqualTo(member.getEmail());
         assertThat(response.getNickname()).isEqualTo(member.getNickname());
-        assertThat(response.getProfileImage()).isEqualTo(profileImage.getS3ObjectUrl());
+        assertThat(response.getProfileImage()).isEqualTo(profileUrl);
     }
 
     @Test
     @DisplayName("소셜 회원 정보 조회")
     void getMemberInfo_socialMember(){
         // given
-        Member member = MemberFixture.createSocialTypeMember("member@email.com", profileImage);
+        Member member = MemberFixture.createSocialTypeMember("member@email.com", profileImage);;
+        String profileUrl = S3Fixture.createS3ObjectUrl(profileImage.getS3ObjectKey());
 
         when(memberRepository.findById(anyLong())).thenReturn(Optional.of(member));
+        when(s3ObjectManager.generateS3ObjectUrl(anyString())).thenReturn(profileUrl);
 
         // when
         MemberInfoResponse response = memberService.getMemberInfo(1L);
@@ -720,7 +738,7 @@ public class MemberServiceTest {
         // then
         assertThat(response.getEmail()).isEqualTo(member.getEmail());
         assertThat(response.getNickname()).isEqualTo(member.getNickname());
-        assertThat(response.getProfileImage()).isEqualTo(profileImage.getS3ObjectUrl());
+        assertThat(response.getProfileImage()).isEqualTo(profileUrl);
     }
 
 
@@ -728,9 +746,11 @@ public class MemberServiceTest {
     @DisplayName("통합 회원 정보 조회")
     void getMemberInfo_bothMember(){
         // given
-        Member member = MemberFixture.createBothTypeMember("member@email.com", profileImage);
+        Member member = MemberFixture.createBothTypeMember("member@email.com", profileImage);;
+        String profileUrl = S3Fixture.createS3ObjectUrl(profileImage.getS3ObjectKey());
 
         when(memberRepository.findById(anyLong())).thenReturn(Optional.of(member));
+        when(s3ObjectManager.generateS3ObjectUrl(anyString())).thenReturn(profileUrl);
 
         // when
         MemberInfoResponse response = memberService.getMemberInfo(1L);
@@ -738,7 +758,7 @@ public class MemberServiceTest {
         // then
         assertThat(response.getEmail()).isEqualTo(member.getEmail());
         assertThat(response.getNickname()).isEqualTo(member.getNickname());
-        assertThat(response.getProfileImage()).isEqualTo(profileImage.getS3ObjectUrl());
+        assertThat(response.getProfileImage()).isEqualTo(profileUrl);
     }
 
     @Test
@@ -972,24 +992,30 @@ public class MemberServiceTest {
     void getMemberBookmarks_sortNewest(){
         // given
         Pageable pageable = PageUtils.bookmarkPageable(1);
-        List<TravelPlace> travelPlaces = List.of(place1, place2, place3);
-        Page<TravelPlace> travelPlacePage = PageUtils.createPage(travelPlaces, pageable, travelPlaces.size());
+        List<PlaceBookmarkQueryDto> travelPlaces = List.of(
+                BookmarkFixture.createPlaceBookmarkQueryDto(place1WithThumb, place1Thumb.getS3ObjectKey()),
+                BookmarkFixture.createPlaceBookmarkQueryDto(place2WithThumb, place2Thumb.getS3ObjectKey()),
+                BookmarkFixture.createPlaceBookmarkQueryDto(place3WithoutThumb, null)
+        );
+        Page<PlaceBookmarkQueryDto> travelPlacePage = PageUtils.createPage(travelPlaces, pageable, travelPlaces.size());
 
-        when(bookmarkRepository.findSortedMemberBookmarks(anyLong(), any(), any()))
-                .thenReturn(travelPlacePage);
+        when(bookmarkRepository.findSortedMemberBookmarks(anyLong(), any(), any())).thenReturn(travelPlacePage);
+        when(s3ObjectManager.generateS3ObjectUrl(place1Thumb.getS3ObjectKey())).thenReturn(place1ThumbUrl);
+        when(s3ObjectManager.generateS3ObjectUrl(place2Thumb.getS3ObjectKey())).thenReturn(place2ThumbUrl);
 
         // when
         Page<PlaceBookmarkResponse> response = memberService.getMemberBookmarks(1, 1L, BookmarkSortType.NEWEST);
 
         // then
+
         List<PlaceBookmarkResponse> content = response.getContent();
         assertThat(response.getTotalElements()).isEqualTo(3);
-        assertThat(content.get(0).getPlaceName()).isEqualTo(place1.getPlaceName());
-        assertThat(content.get(0).getAddress()).isEqualTo(place1.getAddress());
-        assertThat(content.get(1).getPlaceName()).isEqualTo(place2.getPlaceName());
-        assertThat(content.get(1).getAddress()).isEqualTo(place2.getAddress());
-        assertThat(content.get(2).getPlaceName()).isEqualTo(place3.getPlaceName());
-        assertThat(content.get(2).getAddress()).isEqualTo(place3.getAddress());
+        assertThat(content.get(0).getPlaceName()).isEqualTo(place1WithThumb.getPlaceName());
+        assertThat(content.get(0).getThumbnailUrl()).isEqualTo(place1ThumbUrl);
+        assertThat(content.get(1).getPlaceName()).isEqualTo(place2WithThumb.getPlaceName());
+        assertThat(content.get(1).getThumbnailUrl()).isEqualTo(place2ThumbUrl);
+        assertThat(content.get(2).getPlaceName()).isEqualTo(place3WithoutThumb.getPlaceName());
+        assertThat(content.get(2).getThumbnailUrl()).isNull();
     }
 
 
@@ -998,24 +1024,31 @@ public class MemberServiceTest {
     void getMemberBookmarks_sortName(){
         // given
         Pageable pageable = PageUtils.bookmarkPageable(1);
-        List<TravelPlace> travelPlaces = List.of(place1, place2, place3);
-        Page<TravelPlace> travelPlacePage = PageUtils.createPage(travelPlaces, pageable, travelPlaces.size());
+        List<PlaceBookmarkQueryDto> travelPlaces = List.of(
+                BookmarkFixture.createPlaceBookmarkQueryDto(place1WithThumb, place1Thumb.getS3ObjectKey()),
+                BookmarkFixture.createPlaceBookmarkQueryDto(place2WithThumb, place2Thumb.getS3ObjectKey()),
+                BookmarkFixture.createPlaceBookmarkQueryDto(place3WithoutThumb, null)
+        );
+        Page<PlaceBookmarkQueryDto> travelPlacePage = PageUtils.createPage(travelPlaces, pageable, travelPlaces.size());
 
-        when(bookmarkRepository.findSortedMemberBookmarks(anyLong(), any(), any()))
-                .thenReturn(travelPlacePage);
+        when(bookmarkRepository.findSortedMemberBookmarks(anyLong(), any(), any())).thenReturn(travelPlacePage);
+        when(s3ObjectManager.generateS3ObjectUrl(place1Thumb.getS3ObjectKey())).thenReturn(place1ThumbUrl);
+        when(s3ObjectManager.generateS3ObjectUrl(place2Thumb.getS3ObjectKey())).thenReturn(place2ThumbUrl);
 
         // when
         Page<PlaceBookmarkResponse> response = memberService.getMemberBookmarks(1, 1L, BookmarkSortType.NAME);
 
         // then
+
+
         List<PlaceBookmarkResponse> content = response.getContent();
         assertThat(response.getTotalElements()).isEqualTo(3);
-        assertThat(content.get(0).getPlaceName()).isEqualTo(place1.getPlaceName());
-        assertThat(content.get(0).getAddress()).isEqualTo(place1.getAddress());
-        assertThat(content.get(1).getPlaceName()).isEqualTo(place2.getPlaceName());
-        assertThat(content.get(1).getAddress()).isEqualTo(place2.getAddress());
-        assertThat(content.get(2).getPlaceName()).isEqualTo(place3.getPlaceName());
-        assertThat(content.get(2).getAddress()).isEqualTo(place3.getAddress());
+        assertThat(content.get(0).getPlaceName()).isEqualTo(place1WithThumb.getPlaceName());
+        assertThat(content.get(0).getThumbnailUrl()).isEqualTo(place1ThumbUrl);
+        assertThat(content.get(1).getPlaceName()).isEqualTo(place2WithThumb.getPlaceName());
+        assertThat(content.get(1).getThumbnailUrl()).isEqualTo(place2ThumbUrl);
+        assertThat(content.get(2).getPlaceName()).isEqualTo(place3WithoutThumb.getPlaceName());
+        assertThat(content.get(2).getThumbnailUrl()).isNull();
     }
 
     @Test
@@ -1023,7 +1056,7 @@ public class MemberServiceTest {
     void getMemberBookmarks_emptyData(){
         // given
         Pageable pageable = PageUtils.bookmarkPageable(1);
-        Page<TravelPlace> travelPlacePage = PageUtils.createPage(Collections.emptyList(), pageable, 0);
+        Page<PlaceBookmarkQueryDto> travelPlacePage = PageUtils.createPage(Collections.emptyList(), pageable, 0);
 
         when(bookmarkRepository.findSortedMemberBookmarks(anyLong(), any(), any()))
                 .thenReturn(travelPlacePage);

@@ -9,13 +9,15 @@ import com.triptune.member.repository.MemberRepository;
 import com.triptune.profile.entity.ProfileImage;
 import com.triptune.profile.fixture.ProfileImageFixture;
 import com.triptune.profile.repository.ProfileImageRepository;
+import com.triptune.schedule.enums.AttendeeRole;
 import com.triptune.schedule.fixture.TravelAttendeeFixture;
 import com.triptune.schedule.fixture.TravelRouteFixture;
 import com.triptune.schedule.fixture.TravelScheduleFixture;
 import com.triptune.schedule.entity.TravelAttendee;
-import com.triptune.schedule.entity.TravelRoute;
 import com.triptune.schedule.entity.TravelSchedule;
-import com.triptune.schedule.enums.AttendeePermission;
+import com.triptune.schedule.repository.dto.RouteQueryDto;
+import com.triptune.schedule.repository.dto.ScheduleInfoQueryDto;
+import com.triptune.travel.entity.TravelImage;
 import com.triptune.travel.entity.TravelPlace;
 import com.triptune.travel.enums.ThemeType;
 import com.triptune.travel.fixture.TravelImageFixture;
@@ -58,9 +60,12 @@ public class TravelScheduleRepositoryTest {
     @Autowired private MemberRepository memberRepository;
     @Autowired private ProfileImageRepository profileImageRepository;
 
-    private TravelPlace placeWithThumbnail1;
-    private TravelPlace placeWithThumbnail2;
-    private TravelPlace placeWithoutThumbnail;
+    private TravelPlace place1WithThumb;
+    private TravelPlace place2WithThumb;
+    private TravelPlace placeWithoutThumb;
+
+    private TravelImage place1Thumb;
+    private TravelImage place2Thumb;
 
     private Member member1;
     private Member member2;
@@ -74,7 +79,7 @@ public class TravelScheduleRepositoryTest {
         ApiCategory apiCategory = apiCategoryRepository.save(ApiCategoryFixture.createApiCategory());
         ApiContentType apiContentType = apiContentTypeRepository.save(ApiContentTypeFixture.createApiContentType(ThemeType.ATTRACTIONS));
 
-        placeWithThumbnail1 = travelPlaceRepository.save(
+        place1WithThumb = travelPlaceRepository.save(
                 TravelPlaceFixture.createTravelPlace(
                     country,
                     city,
@@ -84,10 +89,11 @@ public class TravelScheduleRepositoryTest {
                     "여행지1"
                 )
         );
-        travelImageRepository.save(TravelImageFixture.createTravelImage(placeWithThumbnail1, "test1", true));
-        travelImageRepository.save(TravelImageFixture.createTravelImage(placeWithThumbnail1, "test2", false));
 
-        placeWithThumbnail2 = travelPlaceRepository.save(
+        place1Thumb = travelImageRepository.save(TravelImageFixture.createTravelImage(place1WithThumb, "test1", true));
+        travelImageRepository.save(TravelImageFixture.createTravelImage(place1WithThumb, "test2", false));
+
+        place2WithThumb = travelPlaceRepository.save(
                 TravelPlaceFixture.createTravelPlace(
                     country,
                     city,
@@ -97,11 +103,12 @@ public class TravelScheduleRepositoryTest {
                     "여행지3"
                 )
         );
-        travelImageRepository.save(TravelImageFixture.createTravelImage(placeWithThumbnail2, "test1", true));
-        travelImageRepository.save(TravelImageFixture.createTravelImage(placeWithThumbnail2, "test2", false));
+
+        place2Thumb = travelImageRepository.save(TravelImageFixture.createTravelImage(place2WithThumb, "test1", true));
+        travelImageRepository.save(TravelImageFixture.createTravelImage(place2WithThumb, "test2", false));
 
 
-        placeWithoutThumbnail = travelPlaceRepository.save(
+        placeWithoutThumb = travelPlaceRepository.save(
                 TravelPlaceFixture.createTravelPlace(
                     country,
                     city,
@@ -142,13 +149,14 @@ public class TravelScheduleRepositoryTest {
         TravelSchedule schedule1 = travelScheduleRepository.save(TravelScheduleFixture.createTravelSchedule("테스트1"));
         travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorTravelAttendee(schedule1, member1));
         travelAttendeeRepository.save(TravelAttendeeFixture.createGuestTravelAttendee(schedule1, member2, READ));
-        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, placeWithThumbnail1, 1));
-        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, placeWithoutThumbnail, 2));
-        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, placeWithThumbnail2, 3));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, place1WithThumb, 1));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, placeWithoutThumb, 2));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, place2WithThumb, 3));
 
         TravelSchedule schedule2 = travelScheduleRepository.save(TravelScheduleFixture.createTravelSchedule("테스트2"));
         travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorTravelAttendee(schedule2, member2));
         travelAttendeeRepository.save(TravelAttendeeFixture.createGuestTravelAttendee(schedule2, member1, CHAT));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule2, place2WithThumb, 1));
 
         TravelSchedule schedule3 = travelScheduleRepository.save(TravelScheduleFixture.createTravelSchedule("테스트3"));
         travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorTravelAttendee(schedule3, member1));
@@ -156,21 +164,29 @@ public class TravelScheduleRepositoryTest {
         Pageable pageable = PageUtils.schedulePageable(1);
 
         // when
-        Page<TravelSchedule> response = travelScheduleRepository.findTravelSchedules(pageable, member1.getMemberId());
+        Page<ScheduleInfoQueryDto> response = travelScheduleRepository.findTravelSchedules(pageable, member1.getMemberId());
 
         // then
-        List<TravelSchedule> content = response.getContent();
+        List<ScheduleInfoQueryDto> content = response.getContent();
         assertThat(response.getTotalElements()).isEqualTo(3);
         assertThat(content.get(0).getScheduleName()).isEqualTo(schedule3.getScheduleName());
-        assertThat(content.get(0).getTravelAttendees().size()).isEqualTo(1);
-        assertThat(content.get(0).getTravelRoutes().size()).isEqualTo(0);
+        assertThat(content.get(0).getAttendeeRole()).isEqualTo(AttendeeRole.AUTHOR);
+        assertThat(content.get(0).getThumbnailS3ObjectKey()).isNull();
+        assertThat(content.get(0).getAuthorNickname()).isEqualTo(member1.getNickname());
+        assertThat(content.get(0).getAuthorS3ObjectKey()).isEqualTo(member1.getProfileImage().getS3ObjectKey());
+
         assertThat(content.get(1).getScheduleName()).isEqualTo(schedule2.getScheduleName());
-        assertThat(content.get(1).getTravelAttendees().size()).isEqualTo(2);
-        assertThat(content.get(1).getTravelRoutes().size()).isEqualTo(0);
+        assertThat(content.get(1).getAttendeeRole()).isEqualTo(AttendeeRole.GUEST);
+        assertThat(content.get(1).getThumbnailS3ObjectKey()).isEqualTo(place2Thumb.getS3ObjectKey());
+        assertThat(content.get(1).getAuthorNickname()).isEqualTo(member2.getNickname());
+        assertThat(content.get(1).getAuthorS3ObjectKey()).isEqualTo(member2.getProfileImage().getS3ObjectKey());
+
         assertThat(content.get(2).getScheduleName()).isEqualTo(schedule1.getScheduleName());
-        assertThat(content.get(2).getStartDate()).isNotNull();
-        assertThat(content.get(2).getTravelAttendees().size()).isEqualTo(2);
-        assertThat(content.get(2).getTravelRoutes().size()).isEqualTo(3);
+        assertThat(content.get(2).getAttendeeRole()).isEqualTo(AttendeeRole.AUTHOR);
+        assertThat(content.get(2).getThumbnailS3ObjectKey()).isEqualTo(place1Thumb.getS3ObjectKey());
+        assertThat(content.get(2).getAuthorNickname()).isEqualTo(member1.getNickname());
+        assertThat(content.get(2).getAuthorS3ObjectKey()).isEqualTo(member1.getProfileImage().getS3ObjectKey());
+
     }
 
     @Test
@@ -180,7 +196,7 @@ public class TravelScheduleRepositoryTest {
         Pageable pageable = PageUtils.schedulePageable(1);
 
         // when
-        Page<TravelSchedule> response = travelScheduleRepository.findTravelSchedules(pageable, member1.getMemberId());
+        Page<ScheduleInfoQueryDto> response = travelScheduleRepository.findTravelSchedules(pageable, member1.getMemberId());
 
         // then
         assertThat(response.getTotalElements()).isEqualTo(0);
@@ -189,18 +205,19 @@ public class TravelScheduleRepositoryTest {
 
     @Test
     @DisplayName("공유된 일정 목록 조회")
-    void findSharedTravelSchedules() throws InterruptedException {
+    void findSharedTravelSchedules()  {
         // given
         TravelSchedule schedule1 = travelScheduleRepository.save(TravelScheduleFixture.createTravelSchedule("테스트1"));
         travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorTravelAttendee(schedule1, member1));
         travelAttendeeRepository.save(TravelAttendeeFixture.createGuestTravelAttendee(schedule1, member2, READ));
-        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, placeWithThumbnail1, 1));
-        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, placeWithoutThumbnail, 2));
-        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, placeWithThumbnail2, 3));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, place1WithThumb, 1));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, placeWithoutThumb, 2));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, place2WithThumb, 3));
 
         TravelSchedule schedule2 = travelScheduleRepository.save(TravelScheduleFixture.createTravelSchedule("테스트2"));
         travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorTravelAttendee(schedule2, member2));
         travelAttendeeRepository.save(TravelAttendeeFixture.createGuestTravelAttendee(schedule2, member1, CHAT));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule2, place2WithThumb, 1));
 
         TravelSchedule schedule3 = travelScheduleRepository.save(TravelScheduleFixture.createTravelSchedule("테스트3"));
         travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorTravelAttendee(schedule3, member1));
@@ -208,18 +225,22 @@ public class TravelScheduleRepositoryTest {
         Pageable pageable = PageUtils.schedulePageable(1);
 
         // when
-        Page<TravelSchedule> response = travelScheduleRepository.findSharedTravelSchedules(pageable, member1.getMemberId());
+        Page<ScheduleInfoQueryDto> response = travelScheduleRepository.findSharedTravelSchedules(pageable, member1.getMemberId());
 
         // then
-        List<TravelSchedule> content = response.getContent();
+        List<ScheduleInfoQueryDto> content = response.getContent();
         assertThat(response.getTotalElements()).isEqualTo(2);
         assertThat(content.get(0).getScheduleName()).isEqualTo(schedule2.getScheduleName());
-        assertThat(content.get(0).getTravelAttendees().size()).isEqualTo(2);
-        assertThat(content.get(0).getTravelRoutes().size()).isEqualTo(0);
+        assertThat(content.get(0).getAttendeeRole()).isEqualTo(AttendeeRole.GUEST);
+        assertThat(content.get(0).getThumbnailS3ObjectKey()).isEqualTo(place2Thumb.getS3ObjectKey());
+        assertThat(content.get(0).getAuthorNickname()).isEqualTo(member2.getNickname());
+        assertThat(content.get(0).getAuthorS3ObjectKey()).isEqualTo(member2.getProfileImage().getS3ObjectKey());
+
         assertThat(content.get(1).getScheduleName()).isEqualTo(schedule1.getScheduleName());
-        assertThat(content.get(1).getStartDate()).isNotNull();
-        assertThat(content.get(1).getTravelAttendees().size()).isEqualTo(2);
-        assertThat(content.get(1).getTravelRoutes().size()).isEqualTo(3);
+        assertThat(content.get(1).getAttendeeRole()).isEqualTo(AttendeeRole.AUTHOR);
+        assertThat(content.get(1).getThumbnailS3ObjectKey()).isEqualTo(place1Thumb.getS3ObjectKey());
+        assertThat(content.get(1).getAuthorNickname()).isEqualTo(member1.getNickname());
+        assertThat(content.get(1).getAuthorS3ObjectKey()).isEqualTo(member1.getProfileImage().getS3ObjectKey());
 
     }
 
@@ -230,7 +251,7 @@ public class TravelScheduleRepositoryTest {
         Pageable pageable = PageUtils.schedulePageable(1);
 
         // when
-        Page<TravelSchedule> response = travelScheduleRepository.findTravelSchedules(pageable, member1.getMemberId());
+        Page<ScheduleInfoQueryDto> response = travelScheduleRepository.findTravelSchedules(pageable, member1.getMemberId());
 
         // then
         assertThat(response.getTotalElements()).isEqualTo(0);
@@ -245,9 +266,9 @@ public class TravelScheduleRepositoryTest {
         TravelSchedule schedule1 = travelScheduleRepository.save(TravelScheduleFixture.createTravelSchedule("테스트1"));
         travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorTravelAttendee(schedule1, member1));
         travelAttendeeRepository.save(TravelAttendeeFixture.createGuestTravelAttendee(schedule1, member2, READ));
-        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, placeWithThumbnail1, 1));
-        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, placeWithoutThumbnail, 2));
-        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, placeWithThumbnail2, 3));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, place1WithThumb, 1));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, placeWithoutThumb, 2));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, place2WithThumb, 3));
 
         TravelSchedule schedule2 = travelScheduleRepository.save(TravelScheduleFixture.createTravelSchedule("테스트2"));
         travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorTravelAttendee(schedule2, member2));
@@ -280,9 +301,9 @@ public class TravelScheduleRepositoryTest {
         TravelSchedule schedule1 = travelScheduleRepository.save(TravelScheduleFixture.createTravelSchedule("테스트1"));
         travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorTravelAttendee(schedule1, member1));
         travelAttendeeRepository.save(TravelAttendeeFixture.createGuestTravelAttendee(schedule1, member2, READ));
-        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, placeWithThumbnail1, 1));
-        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, placeWithoutThumbnail, 2));
-        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, placeWithThumbnail2, 3));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, place1WithThumb, 1));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, placeWithoutThumb, 2));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, place2WithThumb, 3));
 
         TravelSchedule schedule2 = travelScheduleRepository.save(TravelScheduleFixture.createTravelSchedule("테스트2"));
         travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorTravelAttendee(schedule2, member2));
@@ -316,9 +337,9 @@ public class TravelScheduleRepositoryTest {
         TravelSchedule schedule1 = travelScheduleRepository.save(TravelScheduleFixture.createTravelSchedule("테스트1"));
         travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorTravelAttendee(schedule1, member1));
         travelAttendeeRepository.save(TravelAttendeeFixture.createGuestTravelAttendee(schedule1, member2, READ));
-        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, placeWithThumbnail1, 1));
-        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, placeWithoutThumbnail, 2));
-        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, placeWithThumbnail2, 3));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, place1WithThumb, 1));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, placeWithoutThumb, 2));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, place2WithThumb, 3));
 
         TravelSchedule schedule2 = travelScheduleRepository.save(TravelScheduleFixture.createTravelSchedule("테스트2"));
         travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorTravelAttendee(schedule2, member2));
@@ -331,16 +352,16 @@ public class TravelScheduleRepositoryTest {
         Pageable pageable = PageUtils.schedulePageable(1);
 
         // when
-        Page<TravelSchedule> response = travelScheduleRepository.searchTravelSchedules(pageable, "1", member1.getMemberId());
+        Page<ScheduleInfoQueryDto> response = travelScheduleRepository.searchTravelSchedules(pageable, "1", member1.getMemberId());
 
         // then
-        List<TravelSchedule> content = response.getContent();
+        List<ScheduleInfoQueryDto> content = response.getContent();
         assertThat(response.getTotalElements()).isEqualTo(1);
         assertThat(content.get(0).getScheduleName()).isEqualTo(schedule1.getScheduleName());
-        assertThat(content.get(0).getStartDate()).isEqualTo(schedule1.getStartDate());
-        assertThat(content.get(0).getTravelAttendees().size()).isEqualTo(2);
-        assertThat(content.get(0).getTravelRoutes().size()).isEqualTo(3);
-
+        assertThat(content.get(0).getAttendeeRole()).isEqualTo(AttendeeRole.AUTHOR);
+        assertThat(content.get(0).getThumbnailS3ObjectKey()).isEqualTo(place1Thumb.getS3ObjectKey());
+        assertThat(content.get(0).getAuthorNickname()).isEqualTo(member1.getNickname());
+        assertThat(content.get(0).getAuthorS3ObjectKey()).isEqualTo(member1.getProfileImage().getS3ObjectKey());
     }
 
     @Test
@@ -350,7 +371,7 @@ public class TravelScheduleRepositoryTest {
         Pageable pageable = PageUtils.schedulePageable(1);
 
         // when
-        Page<TravelSchedule> response = travelScheduleRepository.searchTravelSchedules(pageable, "ㅁㄴㅇㄹ", member1.getMemberId());
+        Page<ScheduleInfoQueryDto> response = travelScheduleRepository.searchTravelSchedules(pageable, "ㅁㄴㅇㄹ", member1.getMemberId());
 
         // then
         assertThat(response.getTotalElements()).isEqualTo(0);
@@ -365,9 +386,9 @@ public class TravelScheduleRepositoryTest {
         TravelSchedule schedule1 = travelScheduleRepository.save(TravelScheduleFixture.createTravelSchedule("테스트1"));
         travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorTravelAttendee(schedule1, member1));
         travelAttendeeRepository.save(TravelAttendeeFixture.createGuestTravelAttendee(schedule1, member2, READ));
-        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, placeWithThumbnail1, 1));
-        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, placeWithoutThumbnail, 2));
-        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, placeWithThumbnail2, 3));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, place1WithThumb, 1));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, placeWithoutThumb, 2));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, place2WithThumb, 3));
 
         TravelSchedule schedule2 = travelScheduleRepository.save(TravelScheduleFixture.createTravelSchedule("테스트2"));
         travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorTravelAttendee(schedule2, member2));
@@ -379,16 +400,16 @@ public class TravelScheduleRepositoryTest {
         Pageable pageable = PageUtils.schedulePageable(1);
 
         // when
-        Page<TravelSchedule> response = travelScheduleRepository.searchSharedTravelSchedules(pageable, "1", member1.getMemberId());
+        Page<ScheduleInfoQueryDto> response = travelScheduleRepository.searchSharedTravelSchedules(pageable, "1", member1.getMemberId());
 
         // then
-        List<TravelSchedule> content = response.getContent();
+        List<ScheduleInfoQueryDto> content = response.getContent();
         assertThat(response.getTotalElements()).isEqualTo(1);
         assertThat(content.get(0).getScheduleName()).isEqualTo(schedule1.getScheduleName());
-        assertThat(content.get(0).getStartDate()).isEqualTo(schedule1.getStartDate());
-        assertThat(content.get(0).getTravelAttendees().size()).isEqualTo(2);
-        assertThat(content.get(0).getTravelRoutes().size()).isEqualTo(3);
-
+        assertThat(content.get(0).getAttendeeRole()).isEqualTo(AttendeeRole.AUTHOR);
+        assertThat(content.get(0).getThumbnailS3ObjectKey()).isEqualTo(place1Thumb.getS3ObjectKey());
+        assertThat(content.get(0).getAuthorNickname()).isEqualTo(member1.getNickname());
+        assertThat(content.get(0).getAuthorS3ObjectKey()).isEqualTo(member1.getProfileImage().getS3ObjectKey());
     }
 
     @Test
@@ -398,7 +419,7 @@ public class TravelScheduleRepositoryTest {
         Pageable pageable = PageUtils.schedulePageable(1);
 
         // when
-        Page<TravelSchedule> response = travelScheduleRepository.searchSharedTravelSchedules(pageable, "ㅁㄴㅇㄹ", member1.getMemberId());
+        Page<ScheduleInfoQueryDto> response = travelScheduleRepository.searchSharedTravelSchedules(pageable, "ㅁㄴㅇㄹ", member1.getMemberId());
 
         // then
         assertThat(response.getTotalElements()).isEqualTo(0);
@@ -415,9 +436,9 @@ public class TravelScheduleRepositoryTest {
         travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorTravelAttendee(schedule, member1));
         travelAttendeeRepository.save(TravelAttendeeFixture.createGuestTravelAttendee(schedule, member2, READ));
 
-        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule, placeWithThumbnail1, 1));
-        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule, placeWithoutThumbnail, 2));
-        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule, placeWithThumbnail2, 3));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule, place1WithThumb, 1));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule, placeWithoutThumb, 2));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule, place2WithThumb, 3));
 
         // when
         travelScheduleRepository.deleteById(schedule.getScheduleId());
@@ -432,7 +453,7 @@ public class TravelScheduleRepositoryTest {
         assertThat(deletedAttendees).isEmpty();
 
         // 해당 일정의 여행 루트 정보 삭제됐는지 확인
-        Page<TravelRoute> deletedRoutes = travelRouteRepository.findAllByTravelSchedule_ScheduleId(PageUtils.defaultPageable(1), schedule.getScheduleId());
+        Page<RouteQueryDto> deletedRoutes = travelRouteRepository.findAllByScheduleId(PageUtils.defaultPageable(1), schedule.getScheduleId());
         assertThat(deletedRoutes.getTotalElements()).isEqualTo(0);
         assertThat(deletedRoutes.getContent()).isEmpty();
 

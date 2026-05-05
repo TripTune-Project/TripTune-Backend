@@ -21,15 +21,14 @@ import com.triptune.schedule.dto.request.RouteRequest;
 import com.triptune.schedule.dto.request.ScheduleUpdateRequest;
 import com.triptune.schedule.entity.TravelRoute;
 import com.triptune.schedule.entity.TravelSchedule;
-import com.triptune.schedule.enums.AttendeePermission;
 import com.triptune.schedule.enums.AttendeeRole;
 import com.triptune.schedule.enums.ScheduleSearchType;
 import com.triptune.schedule.repository.ChatMessageRepository;
 import com.triptune.schedule.repository.TravelAttendeeRepository;
 import com.triptune.schedule.repository.TravelRouteRepository;
 import com.triptune.schedule.repository.TravelScheduleRepository;
+import com.triptune.travel.entity.TravelImage;
 import com.triptune.travel.entity.TravelPlace;
-import com.triptune.travel.enums.ThemeType;
 import com.triptune.travel.fixture.TravelImageFixture;
 import com.triptune.travel.fixture.TravelPlaceFixture;
 import com.triptune.travel.repository.TravelImageRepository;
@@ -41,6 +40,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
@@ -82,13 +82,17 @@ public class TravelScheduleControllerTest {
     @Autowired private ChatMessageRepository chatMessageRepository;
     @Autowired private ApiContentTypeRepository apiContentTypeRepository;
 
+
     private Member member1;
     private Member member2;
     private Member member3;
 
-    private TravelPlace placeWithThumbnail1;
-    private TravelPlace placeWithThumbnail2;
-    private TravelPlace placeWithoutThumbnail;
+    private TravelPlace place1WithThumb;
+    private TravelPlace place2WithThumb;
+    private TravelPlace placeWithoutThumb;
+
+    String place1ThumbUrl;
+    String place2ThumbUrl;
 
     @BeforeEach
     void setUp(){
@@ -110,7 +114,7 @@ public class TravelScheduleControllerTest {
         ApiCategory apiCategory = apiCategoryRepository.save(ApiCategoryFixture.createApiCategory());
         ApiContentType apiContentType = apiContentTypeRepository.save(ApiContentTypeFixture.createApiContentType(ATTRACTIONS));
 
-        placeWithThumbnail1 = travelPlaceRepository.save(
+        place1WithThumb = travelPlaceRepository.save(
                 TravelPlaceFixture.createTravelPlaceWithLocation(
                         country,
                         city,
@@ -122,10 +126,11 @@ public class TravelScheduleControllerTest {
                         127.02820
                 )
         );
-        travelImageRepository.save(TravelImageFixture.createTravelImage(placeWithThumbnail1, "test1", true));
-        travelImageRepository.save(TravelImageFixture.createTravelImage(placeWithThumbnail1, "test2", false));
+        TravelImage place1Thumb = travelImageRepository.save(TravelImageFixture.createTravelImage(place1WithThumb, "test1", true));
+        travelImageRepository.save(TravelImageFixture.createTravelImage(place1WithThumb, "test2", false));
+        place1ThumbUrl = S3Fixture.createS3ObjectUrl(place1Thumb.getS3ObjectKey());
 
-        placeWithThumbnail2 = travelPlaceRepository.save(
+        place2WithThumb = travelPlaceRepository.save(
                 TravelPlaceFixture.createTravelPlaceWithLocation(
                         country,
                         city,
@@ -137,10 +142,11 @@ public class TravelScheduleControllerTest {
                         126.99800
                 )
         );
-        travelImageRepository.save(TravelImageFixture.createTravelImage(placeWithThumbnail2, "test1", true));
-        travelImageRepository.save(TravelImageFixture.createTravelImage(placeWithThumbnail2, "test2", false));
+        TravelImage place2Thumb = travelImageRepository.save(TravelImageFixture.createTravelImage(place2WithThumb, "test1", true));
+        travelImageRepository.save(TravelImageFixture.createTravelImage(place2WithThumb, "test2", false));
+        place2ThumbUrl = S3Fixture.createS3ObjectUrl(place2Thumb.getS3ObjectKey());
 
-        placeWithoutThumbnail = travelPlaceRepository.save(
+        placeWithoutThumb = travelPlaceRepository.save(
                 TravelPlaceFixture.createTravelPlaceWithLocation(
                         country,
                         city,
@@ -162,9 +168,9 @@ public class TravelScheduleControllerTest {
         TravelSchedule schedule1 = travelScheduleRepository.save(TravelScheduleFixture.createTravelSchedule("테스트1"));
         travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorTravelAttendee(schedule1, member1));
         travelAttendeeRepository.save(TravelAttendeeFixture.createGuestTravelAttendee(schedule1, member2, READ));
-        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, placeWithThumbnail1, 1));
-        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, placeWithoutThumbnail, 2));
-        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, placeWithThumbnail2, 3));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, place1WithThumb, 1));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, placeWithoutThumb, 2));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, place2WithThumb, 3));
 
         TravelSchedule schedule2 = travelScheduleRepository.save(TravelScheduleFixture.createTravelSchedule("테스트2"));
         travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorTravelAttendee(schedule2, member2));
@@ -172,7 +178,6 @@ public class TravelScheduleControllerTest {
 
         TravelSchedule schedule3 = travelScheduleRepository.save(TravelScheduleFixture.createTravelSchedule("테스트3"));
         travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorTravelAttendee(schedule3, member1));
-
 
         SecurityTestUtils.mockAuthentication(member1);
 
@@ -195,7 +200,7 @@ public class TravelScheduleControllerTest {
                 .andExpect(jsonPath("$.data.content[2].scheduleName").value(schedule1.getScheduleName()))
                 .andExpect(jsonPath("$.data.content[2].sinceUpdate").exists())
                 .andExpect(jsonPath("$.data.content[2].author.nickname").value(member1.getNickname()))
-                .andExpect(jsonPath("$.data.content[2].thumbnailUrl").value(placeWithThumbnail1.getThumbnailUrl()));
+                .andExpect(jsonPath("$.data.content[2].thumbnailUrl").value(place1ThumbUrl));
     }
 
     @Test
@@ -262,13 +267,13 @@ public class TravelScheduleControllerTest {
         TravelSchedule schedule1 = travelScheduleRepository.save(TravelScheduleFixture.createTravelSchedule("테스트1"));
         travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorTravelAttendee(schedule1, member1));
         travelAttendeeRepository.save(TravelAttendeeFixture.createGuestTravelAttendee(schedule1, member2, READ));
-        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, placeWithThumbnail1, 1));
-        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, placeWithoutThumbnail, 2));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, place1WithThumb, 1));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, placeWithoutThumb, 2));
 
         TravelSchedule schedule2 = travelScheduleRepository.save(TravelScheduleFixture.createTravelSchedule("테스트2"));
         travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorTravelAttendee(schedule2, member2));
         travelAttendeeRepository.save(TravelAttendeeFixture.createGuestTravelAttendee(schedule2, member1, CHAT));
-        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule2, placeWithThumbnail2, 1));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule2, place2WithThumb, 1));
 
         TravelSchedule schedule3 = travelScheduleRepository.save(TravelScheduleFixture.createTravelSchedule("테스트3"));
         travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorTravelAttendee(schedule3, member1));
@@ -286,11 +291,11 @@ public class TravelScheduleControllerTest {
                 .andExpect(jsonPath("$.data.content[0].scheduleName").value(schedule2.getScheduleName()))
                 .andExpect(jsonPath("$.data.content[0].sinceUpdate").exists())
                 .andExpect(jsonPath("$.data.content[0].author.nickname").value(member2.getNickname()))
-                .andExpect(jsonPath("$.data.content[0].thumbnailUrl").value(placeWithThumbnail2.getThumbnailUrl()))
+                .andExpect(jsonPath("$.data.content[0].thumbnailUrl").value(place2ThumbUrl))
                 .andExpect(jsonPath("$.data.content[1].scheduleName").value(schedule1.getScheduleName()))
                 .andExpect(jsonPath("$.data.content[1].sinceUpdate").exists())
                 .andExpect(jsonPath("$.data.content[1].author.nickname").value(member1.getNickname()))
-                .andExpect(jsonPath("$.data.content[1].thumbnailUrl").value(placeWithThumbnail2.getThumbnailUrl()));
+                .andExpect(jsonPath("$.data.content[1].thumbnailUrl").value(place1ThumbUrl));
     }
 
     @Test
@@ -334,12 +339,12 @@ public class TravelScheduleControllerTest {
         // given
         TravelSchedule schedule1 = travelScheduleRepository.save(TravelScheduleFixture.createTravelSchedule("테스트1"));
         travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorTravelAttendee(schedule1, member1));
-        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, placeWithThumbnail1, 1));
-        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, placeWithoutThumbnail, 2));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, place1WithThumb, 1));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, placeWithoutThumb, 2));
 
         TravelSchedule schedule2 = travelScheduleRepository.save(TravelScheduleFixture.createTravelSchedule("테스트2"));
         travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorTravelAttendee(schedule2, member2));
-        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule2, placeWithThumbnail2, 1));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule2, place2WithThumb, 1));
 
         TravelSchedule schedule3 = travelScheduleRepository.save(TravelScheduleFixture.createTravelSchedule("테스트3"));
         travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorTravelAttendee(schedule3, member1));
@@ -382,13 +387,13 @@ public class TravelScheduleControllerTest {
         TravelSchedule schedule1 = travelScheduleRepository.save(TravelScheduleFixture.createTravelSchedule("테스트1"));
         travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorTravelAttendee(schedule1, member1));
         travelAttendeeRepository.save(TravelAttendeeFixture.createGuestTravelAttendee(schedule1, member2, READ));
-        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, placeWithThumbnail1, 1));
-        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, placeWithoutThumbnail, 2));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, place1WithThumb, 1));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, placeWithoutThumb, 2));
 
         TravelSchedule schedule2 = travelScheduleRepository.save(TravelScheduleFixture.createTravelSchedule("테스트2"));
         travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorTravelAttendee(schedule2, member2));
         travelAttendeeRepository.save(TravelAttendeeFixture.createGuestTravelAttendee(schedule2, member1, CHAT));
-        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule2, placeWithThumbnail2, 1));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule2, place2WithThumb, 1));
 
         TravelSchedule schedule3 = travelScheduleRepository.save(TravelScheduleFixture.createTravelSchedule("테스트3"));
         travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorTravelAttendee(schedule3, member1));
@@ -432,9 +437,9 @@ public class TravelScheduleControllerTest {
         TravelSchedule schedule1 = travelScheduleRepository.save(TravelScheduleFixture.createTravelSchedule("테스트1"));
         travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorTravelAttendee(schedule1, member1));
         travelAttendeeRepository.save(TravelAttendeeFixture.createGuestTravelAttendee(schedule1, member2, READ));
-        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, placeWithThumbnail1, 1));
-        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, placeWithoutThumbnail, 2));
-        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, placeWithThumbnail2, 3));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, place1WithThumb, 1));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, placeWithoutThumb, 2));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, place2WithThumb, 3));
 
         TravelSchedule schedule2 = travelScheduleRepository.save(TravelScheduleFixture.createTravelSchedule("테스트2"));
         travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorTravelAttendee(schedule2, member2));
@@ -458,7 +463,7 @@ public class TravelScheduleControllerTest {
                 .andExpect(jsonPath("$.data.content.length()").value(1))
                 .andExpect(jsonPath("$.data.content[0].scheduleName").value(schedule1.getScheduleName()))
                 .andExpect(jsonPath("$.data.content[0].sinceUpdate").exists())
-                .andExpect(jsonPath("$.data.content[0].thumbnailUrl").value(placeWithThumbnail2.getThumbnailUrl()))
+                .andExpect(jsonPath("$.data.content[0].thumbnailUrl").value(place2ThumbUrl))
                 .andExpect(jsonPath("$.data.content[0].author.nickname").value(member1.getNickname()))
                 .andExpect(jsonPath("$.data.content[0].role").value(AttendeeRole.AUTHOR.name()));
     }
@@ -512,9 +517,9 @@ public class TravelScheduleControllerTest {
         // given
         TravelSchedule schedule1 = travelScheduleRepository.save(TravelScheduleFixture.createTravelSchedule("테스트1"));
         travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorTravelAttendee(schedule1, member1));
-        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, placeWithThumbnail1, 1));
-        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, placeWithoutThumbnail, 2));
-        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, placeWithThumbnail2, 3));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, place1WithThumb, 1));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, placeWithoutThumb, 2));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, place2WithThumb, 3));
 
         TravelSchedule schedule2 = travelScheduleRepository.save(TravelScheduleFixture.createTravelSchedule("테스트2"));
         travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorTravelAttendee(schedule2, member2));
@@ -541,7 +546,7 @@ public class TravelScheduleControllerTest {
                 .andExpect(jsonPath("$.data.content[0].role").value(AttendeeRole.AUTHOR.name()))
                 .andExpect(jsonPath("$.data.content[1].scheduleName").value(schedule1.getScheduleName()))
                 .andExpect(jsonPath("$.data.content[1].sinceUpdate").exists())
-                .andExpect(jsonPath("$.data.content[1].thumbnailUrl").value(placeWithThumbnail2.getThumbnailUrl()))
+                .andExpect(jsonPath("$.data.content[1].thumbnailUrl").value(place2ThumbUrl))
                 .andExpect(jsonPath("$.data.content[1].author.nickname").value(member1.getNickname()))
                 .andExpect(jsonPath("$.data.content[1].role").value(AttendeeRole.AUTHOR.name()));
     }
@@ -553,9 +558,9 @@ public class TravelScheduleControllerTest {
         TravelSchedule schedule1 = travelScheduleRepository.save(TravelScheduleFixture.createTravelSchedule("테스트1"));
         travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorTravelAttendee(schedule1, member1));
         travelAttendeeRepository.save(TravelAttendeeFixture.createGuestTravelAttendee(schedule1, member2, READ));
-        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, placeWithThumbnail1, 1));
-        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, placeWithoutThumbnail, 2));
-        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, placeWithThumbnail2, 3));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, place1WithThumb, 1));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, placeWithoutThumb, 2));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, place2WithThumb, 3));
 
         TravelSchedule schedule2 = travelScheduleRepository.save(TravelScheduleFixture.createTravelSchedule("테스트2"));
         travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorTravelAttendee(schedule2, member2));
@@ -586,9 +591,9 @@ public class TravelScheduleControllerTest {
         TravelSchedule schedule1 = travelScheduleRepository.save(TravelScheduleFixture.createTravelSchedule("테스트1"));
         travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorTravelAttendee(schedule1, member1));
         travelAttendeeRepository.save(TravelAttendeeFixture.createGuestTravelAttendee(schedule1, member2, READ));
-        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, placeWithThumbnail1, 1));
-        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, placeWithoutThumbnail, 2));
-        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, placeWithThumbnail2, 3));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, place1WithThumb, 1));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, placeWithoutThumb, 2));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, place2WithThumb, 3));
 
         TravelSchedule schedule2 = travelScheduleRepository.save(TravelScheduleFixture.createTravelSchedule("테스트2"));
         travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorTravelAttendee(schedule2, member2));
@@ -616,7 +621,7 @@ public class TravelScheduleControllerTest {
                 .andExpect(jsonPath("$.data.content[0].role").value(AttendeeRole.GUEST.name()))
                 .andExpect(jsonPath("$.data.content[1].scheduleName").value(schedule1.getScheduleName()))
                 .andExpect(jsonPath("$.data.content[1].sinceUpdate").exists())
-                .andExpect(jsonPath("$.data.content[1].thumbnailUrl").value(placeWithThumbnail2.getThumbnailUrl()))
+                .andExpect(jsonPath("$.data.content[1].thumbnailUrl").value(place2ThumbUrl))
                 .andExpect(jsonPath("$.data.content[1].author.nickname").value(member1.getNickname()))
                 .andExpect(jsonPath("$.data.content[1].role").value(AttendeeRole.AUTHOR.name()));
     }
@@ -668,9 +673,9 @@ public class TravelScheduleControllerTest {
         TravelSchedule schedule1 = travelScheduleRepository.save(TravelScheduleFixture.createTravelSchedule("테스트1"));
         travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorTravelAttendee(schedule1, member1));
         travelAttendeeRepository.save(TravelAttendeeFixture.createGuestTravelAttendee(schedule1, member2, READ));
-        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, placeWithThumbnail1, 1));
-        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, placeWithoutThumbnail, 2));
-        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, placeWithThumbnail2, 3));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, place1WithThumb, 1));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, placeWithoutThumb, 2));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule1, place2WithThumb, 3));
 
         TravelSchedule schedule2 = travelScheduleRepository.save(TravelScheduleFixture.createTravelSchedule("테스트2"));
         travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorTravelAttendee(schedule2, member2));
@@ -891,9 +896,9 @@ public class TravelScheduleControllerTest {
         travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorTravelAttendee(schedule, member1));
         travelAttendeeRepository.save(TravelAttendeeFixture.createGuestTravelAttendee(schedule, member2, READ));
 
-        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule, placeWithThumbnail1, 1));
-        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule, placeWithoutThumbnail, 2));
-        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule, placeWithThumbnail2, 3));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule, place1WithThumb, 1));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule, placeWithoutThumb, 2));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule, place2WithThumb, 3));
 
         SecurityTestUtils.mockAuthentication(member1);
 
@@ -905,11 +910,11 @@ public class TravelScheduleControllerTest {
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.scheduleName").value(schedule.getScheduleName()))
                 .andExpect(jsonPath("$.data.placeList.totalElements").value(3))
-                .andExpect(jsonPath("$.data.placeList.content[0].placeName").value(placeWithThumbnail2.getPlaceName()))
-                .andExpect(jsonPath("$.data.placeList.content[0].thumbnailUrl").value(placeWithThumbnail2.getThumbnailUrl()))
-                .andExpect(jsonPath("$.data.placeList.content[1].placeName").value(placeWithThumbnail1.getPlaceName()))
-                .andExpect(jsonPath("$.data.placeList.content[1].thumbnailUrl").value(placeWithThumbnail1.getThumbnailUrl()))
-                .andExpect(jsonPath("$.data.placeList.content[2].placeName").value(placeWithoutThumbnail.getPlaceName()))
+                .andExpect(jsonPath("$.data.placeList.content[0].placeName").value(place2WithThumb.getPlaceName()))
+                .andExpect(jsonPath("$.data.placeList.content[0].thumbnailUrl").value(place2ThumbUrl))
+                .andExpect(jsonPath("$.data.placeList.content[1].placeName").value(place1WithThumb.getPlaceName()))
+                .andExpect(jsonPath("$.data.placeList.content[1].thumbnailUrl").value(place1ThumbUrl))
+                .andExpect(jsonPath("$.data.placeList.content[2].placeName").value(placeWithoutThumb.getPlaceName()))
                 .andExpect(jsonPath("$.data.placeList.content[2].thumbnailUrl", nullValue()));
     }
 
@@ -982,12 +987,12 @@ public class TravelScheduleControllerTest {
         travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorTravelAttendee(schedule, member1));
         travelAttendeeRepository.save(TravelAttendeeFixture.createGuestTravelAttendee(schedule, member2, READ));
 
-        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule, placeWithThumbnail1, 1));
-        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule, placeWithoutThumbnail, 2));
-        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule, placeWithThumbnail2, 3));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule, place1WithThumb, 1));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule, placeWithoutThumb, 2));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule, place2WithThumb, 3));
 
-        RouteRequest routeRequest1 = TravelRouteFixture.createRouteRequest(1, placeWithThumbnail2.getPlaceId());
-        RouteRequest routeRequest2 = TravelRouteFixture.createRouteRequest(2, placeWithoutThumbnail.getPlaceId());
+        RouteRequest routeRequest1 = TravelRouteFixture.createRouteRequest(1, place2WithThumb.getPlaceId());
+        RouteRequest routeRequest2 = TravelRouteFixture.createRouteRequest(2, placeWithoutThumb.getPlaceId());
 
         ScheduleUpdateRequest request = TravelScheduleFixture.createUpdateScheduleRequest(
                 "수정 테스트",
@@ -1064,15 +1069,15 @@ public class TravelScheduleControllerTest {
         travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorTravelAttendee(schedule, member1));
         travelAttendeeRepository.save(TravelAttendeeFixture.createGuestTravelAttendee(schedule, member2, READ));
 
-        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule, placeWithThumbnail1, 1));
-        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule, placeWithoutThumbnail, 2));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule, place1WithThumb, 1));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule, placeWithoutThumb, 2));
 
         ScheduleUpdateRequest request = TravelScheduleFixture.createUpdateScheduleRequest(
                 input,
                 LocalDate.now(),
                 LocalDate.now().plusDays(1),
-                TravelRouteFixture.createRouteRequest(1, placeWithThumbnail1.getPlaceId()),
-                TravelRouteFixture.createRouteRequest(2, placeWithoutThumbnail.getPlaceId())
+                TravelRouteFixture.createRouteRequest(1, place1WithThumb.getPlaceId()),
+                TravelRouteFixture.createRouteRequest(2, placeWithoutThumb.getPlaceId())
         );
 
         SecurityTestUtils.mockAuthentication(member1);
@@ -1096,15 +1101,15 @@ public class TravelScheduleControllerTest {
         travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorTravelAttendee(schedule, member1));
         travelAttendeeRepository.save(TravelAttendeeFixture.createGuestTravelAttendee(schedule, member2, READ));
 
-        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule, placeWithThumbnail1, 1));
-        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule, placeWithoutThumbnail, 2));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule, place1WithThumb, 1));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule, placeWithoutThumb, 2));
 
         ScheduleUpdateRequest request = TravelScheduleFixture.createUpdateScheduleRequest(
                 null,
                 LocalDate.now(),
                 LocalDate.now().plusDays(1),
-                TravelRouteFixture.createRouteRequest(1, placeWithThumbnail1.getPlaceId()),
-                TravelRouteFixture.createRouteRequest(2, placeWithoutThumbnail.getPlaceId())
+                TravelRouteFixture.createRouteRequest(1, place1WithThumb.getPlaceId()),
+                TravelRouteFixture.createRouteRequest(2, placeWithoutThumb.getPlaceId())
         );
 
         SecurityTestUtils.mockAuthentication(member1);
@@ -1128,15 +1133,15 @@ public class TravelScheduleControllerTest {
         travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorTravelAttendee(schedule, member1));
         travelAttendeeRepository.save(TravelAttendeeFixture.createGuestTravelAttendee(schedule, member2, READ));
         
-        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule, placeWithThumbnail1, 1));
-        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule, placeWithoutThumbnail, 2));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule, place1WithThumb, 1));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule, placeWithoutThumb, 2));
 
         ScheduleUpdateRequest request = TravelScheduleFixture.createUpdateScheduleRequest(
                 "수정 테스트",
                 null,
                 LocalDate.now().plusDays(1),
-                TravelRouteFixture.createRouteRequest(1, placeWithThumbnail1.getPlaceId()),
-                TravelRouteFixture.createRouteRequest(2, placeWithoutThumbnail.getPlaceId())
+                TravelRouteFixture.createRouteRequest(1, place1WithThumb.getPlaceId()),
+                TravelRouteFixture.createRouteRequest(2, placeWithoutThumb.getPlaceId())
         );
 
         SecurityTestUtils.mockAuthentication(member1);
@@ -1161,16 +1166,16 @@ public class TravelScheduleControllerTest {
         travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorTravelAttendee(schedule, member1));
         travelAttendeeRepository.save(TravelAttendeeFixture.createGuestTravelAttendee(schedule, member2, READ));
 
-        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule, placeWithThumbnail1, 1));
-        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule, placeWithoutThumbnail, 2));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule, place1WithThumb, 1));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule, placeWithoutThumb, 2));
 
 
         ScheduleUpdateRequest request = TravelScheduleFixture.createUpdateScheduleRequest(
                 "수정 테스트",
                 LocalDate.now(),
                 null,
-                TravelRouteFixture.createRouteRequest(1, placeWithThumbnail1.getPlaceId()),
-                TravelRouteFixture.createRouteRequest(2, placeWithoutThumbnail.getPlaceId())
+                TravelRouteFixture.createRouteRequest(1, place1WithThumb.getPlaceId()),
+                TravelRouteFixture.createRouteRequest(2, placeWithoutThumb.getPlaceId())
         );
 
         SecurityTestUtils.mockAuthentication(member1);
@@ -1194,15 +1199,15 @@ public class TravelScheduleControllerTest {
         travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorTravelAttendee(schedule, member1));
         travelAttendeeRepository.save(TravelAttendeeFixture.createGuestTravelAttendee(schedule, member2, READ));
 
-        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule, placeWithThumbnail1, 1));
-        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule, placeWithoutThumbnail, 2));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule, place1WithThumb, 1));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule, placeWithoutThumb, 2));
 
         ScheduleUpdateRequest request = TravelScheduleFixture.createUpdateScheduleRequest(
                 "수정 테스트",
                 LocalDate.now().plusDays(1),
                 LocalDate.now(),
-                TravelRouteFixture.createRouteRequest(1, placeWithThumbnail1.getPlaceId()),
-                TravelRouteFixture.createRouteRequest(2, placeWithoutThumbnail.getPlaceId())
+                TravelRouteFixture.createRouteRequest(1, place1WithThumb.getPlaceId()),
+                TravelRouteFixture.createRouteRequest(2, placeWithoutThumb.getPlaceId())
         );
 
         SecurityTestUtils.mockAuthentication(member1);
@@ -1227,10 +1232,10 @@ public class TravelScheduleControllerTest {
         travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorTravelAttendee(schedule, member1));
         travelAttendeeRepository.save(TravelAttendeeFixture.createGuestTravelAttendee(schedule, member2, READ));
 
-        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule, placeWithThumbnail1, 1));
-        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule, placeWithoutThumbnail, 2));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule, place1WithThumb, 1));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule, placeWithoutThumb, 2));
 
-        RouteRequest routeRequest = TravelRouteFixture.createRouteRequest(null, placeWithThumbnail2.getPlaceId());
+        RouteRequest routeRequest = TravelRouteFixture.createRouteRequest(null, place2WithThumb.getPlaceId());
 
         ScheduleUpdateRequest request = TravelScheduleFixture.createUpdateScheduleRequest(
                 "수정 테스트",
@@ -1262,10 +1267,10 @@ public class TravelScheduleControllerTest {
         travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorTravelAttendee(schedule, member1));
         travelAttendeeRepository.save(TravelAttendeeFixture.createGuestTravelAttendee(schedule, member2, READ));
 
-        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule, placeWithThumbnail1, 1));
-        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule, placeWithoutThumbnail, 2));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule, place1WithThumb, 1));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule, placeWithoutThumb, 2));
 
-        RouteRequest routeRequest = TravelRouteFixture.createRouteRequest(input, placeWithThumbnail2.getPlaceId());
+        RouteRequest routeRequest = TravelRouteFixture.createRouteRequest(input, place2WithThumb.getPlaceId());
 
         ScheduleUpdateRequest request = TravelScheduleFixture.createUpdateScheduleRequest(
                 "수정 테스트",
@@ -1295,8 +1300,8 @@ public class TravelScheduleControllerTest {
         travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorTravelAttendee(schedule, member1));
         travelAttendeeRepository.save(TravelAttendeeFixture.createGuestTravelAttendee(schedule, member2, READ));
 
-        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule, placeWithThumbnail1, 1));
-        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule, placeWithThumbnail2, 2));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule, place1WithThumb, 1));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule, place2WithThumb, 2));
 
         RouteRequest routeRequest = TravelRouteFixture.createRouteRequest(1, null);
 
@@ -1330,8 +1335,8 @@ public class TravelScheduleControllerTest {
         travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorTravelAttendee(schedule, member1));
         travelAttendeeRepository.save(TravelAttendeeFixture.createGuestTravelAttendee(schedule, member2, READ));
 
-        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule, placeWithThumbnail1, 1));
-        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule, placeWithoutThumbnail, 2));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule, place1WithThumb, 1));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule, placeWithoutThumb, 2));
 
         RouteRequest routeRequest = TravelRouteFixture.createRouteRequest(1, input);
 
@@ -1367,7 +1372,7 @@ public class TravelScheduleControllerTest {
                 "수정 테스트",
                 LocalDate.now(),
                 LocalDate.now().plusDays(1),
-                TravelRouteFixture.createRouteRequest(1, placeWithThumbnail1.getPlaceId())
+                TravelRouteFixture.createRouteRequest(1, place1WithThumb.getPlaceId())
         );
 
         SecurityTestUtils.mockAuthentication(member3);
@@ -1396,7 +1401,7 @@ public class TravelScheduleControllerTest {
                 "수정 테스트",
                 LocalDate.now(),
                 LocalDate.now().plusDays(1),
-                TravelRouteFixture.createRouteRequest(1, placeWithThumbnail1.getPlaceId())
+                TravelRouteFixture.createRouteRequest(1, place1WithThumb.getPlaceId())
         );
 
         SecurityTestUtils.mockAuthentication(member2);
@@ -1421,8 +1426,8 @@ public class TravelScheduleControllerTest {
         travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorTravelAttendee(schedule, member1));
         travelAttendeeRepository.save(TravelAttendeeFixture.createGuestTravelAttendee(schedule, member2, READ));
 
-        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule, placeWithThumbnail1, 1));
-        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule, placeWithThumbnail2, 2));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule, place1WithThumb, 1));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule, place2WithThumb, 2));
 
         chatMessageRepository.save(ChatMessageFixture.createChatMessage(schedule.getScheduleId(), member1.getMemberId(), "hello1"));
         chatMessageRepository.save(ChatMessageFixture.createChatMessage(schedule.getScheduleId(), member1.getMemberId(), "hello2"));
@@ -1448,8 +1453,8 @@ public class TravelScheduleControllerTest {
         travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorTravelAttendee(schedule, member1));
         travelAttendeeRepository.save(TravelAttendeeFixture.createGuestTravelAttendee(schedule, member2, READ));
 
-        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule, placeWithThumbnail1, 1));
-        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule, placeWithThumbnail2, 2));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule, place1WithThumb, 1));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule, place2WithThumb, 2));
 
         SecurityTestUtils.mockAuthentication(member1);
 
@@ -1471,8 +1476,8 @@ public class TravelScheduleControllerTest {
         travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorTravelAttendee(schedule, member1));
         travelAttendeeRepository.save(TravelAttendeeFixture.createGuestTravelAttendee(schedule, member2, READ));
 
-        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule, placeWithThumbnail1, 1));
-        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule, placeWithThumbnail2, 2));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule, place1WithThumb, 1));
+        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule, place2WithThumb, 2));
 
         SecurityTestUtils.mockAuthentication(member2);
 
@@ -1501,11 +1506,11 @@ public class TravelScheduleControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.totalElements").value(3))
-                .andExpect(jsonPath("$.data.content[0].district").value(placeWithThumbnail2.getDistrict().getDistrictName()))
-                .andExpect(jsonPath("$.data.content[0].placeName").value(placeWithThumbnail2.getPlaceName()))
+                .andExpect(jsonPath("$.data.content[0].district").value(place2WithThumb.getDistrict().getDistrictName()))
+                .andExpect(jsonPath("$.data.content[0].placeName").value(place2WithThumb.getPlaceName()))
                 .andExpect(jsonPath("$.data.content[0].longitude").exists())
                 .andExpect(jsonPath("$.data.content[0].latitude").exists())
-                .andExpect(jsonPath("$.data.content[0].thumbnailUrl").value(placeWithThumbnail2.getThumbnailUrl()));
+                .andExpect(jsonPath("$.data.content[0].thumbnailUrl").value(place2ThumbUrl));
     }
 
     @Test
@@ -1585,16 +1590,16 @@ public class TravelScheduleControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.totalElements").value(2))
-                .andExpect(jsonPath("$.data.content[0].district").value(placeWithoutThumbnail.getDistrict().getDistrictName()))
-                .andExpect(jsonPath("$.data.content[0].placeName").value(placeWithoutThumbnail.getPlaceName()))
+                .andExpect(jsonPath("$.data.content[0].district").value(placeWithoutThumb.getDistrict().getDistrictName()))
+                .andExpect(jsonPath("$.data.content[0].placeName").value(placeWithoutThumb.getPlaceName()))
                 .andExpect(jsonPath("$.data.content[0].longitude").exists())
                 .andExpect(jsonPath("$.data.content[0].latitude").exists())
                 .andExpect(jsonPath("$.data.content[0].thumbnailUrl", nullValue()))
-                .andExpect(jsonPath("$.data.content[1].district").value(placeWithThumbnail1.getDistrict().getDistrictName()))
-                .andExpect(jsonPath("$.data.content[1].placeName").value(placeWithThumbnail1.getPlaceName()))
+                .andExpect(jsonPath("$.data.content[1].district").value(place1WithThumb.getDistrict().getDistrictName()))
+                .andExpect(jsonPath("$.data.content[1].placeName").value(place1WithThumb.getPlaceName()))
                 .andExpect(jsonPath("$.data.content[1].longitude").exists())
                 .andExpect(jsonPath("$.data.content[1].latitude").exists())
-                .andExpect(jsonPath("$.data.content[1].thumbnailUrl").value(placeWithThumbnail1.getThumbnailUrl()))
+                .andExpect(jsonPath("$.data.content[1].thumbnailUrl").value(place1ThumbUrl))
                 ;
     }
 

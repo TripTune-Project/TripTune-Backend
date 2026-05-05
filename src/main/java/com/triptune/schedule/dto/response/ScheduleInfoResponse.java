@@ -1,7 +1,7 @@
 package com.triptune.schedule.dto.response;
 
+import com.triptune.schedule.repository.dto.ScheduleInfoQueryDto;
 import com.triptune.schedule.service.dto.AuthorDTO;
-import com.triptune.schedule.entity.TravelSchedule;
 import com.triptune.schedule.enums.AttendeeRole;
 import com.triptune.global.util.TimeUtils;
 import lombok.Builder;
@@ -9,6 +9,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+
 
 @Getter
 @NoArgsConstructor
@@ -34,29 +35,29 @@ public class ScheduleInfoResponse {
         this.author = author;
     }
 
-    private static String getSinceUpdate(TravelSchedule schedule){
-        String sinceUp = "";
-
-        if (schedule.getUpdatedAt() != null){
-            sinceUp = TimeUtils.timeDuration(schedule.getUpdatedAt());
-        } else if(schedule.getCreatedAt() != null){
-            sinceUp = TimeUtils.timeDuration(schedule.getCreatedAt());
-        }
-
-        return sinceUp;
-    }
-
-    public static ScheduleInfoResponse from(TravelSchedule schedule, AttendeeRole role, String thumbnailUrl, AuthorDTO author){
+    public static ScheduleInfoResponse of(ScheduleInfoQueryDto scheduleInfo, String thumbnailUrl, AuthorDTO author){
         return ScheduleInfoResponse.builder()
-                .scheduleId(schedule.getScheduleId())
-                .role(role)
-                .scheduleName(schedule.getScheduleName())
-                .startDate(schedule.getStartDate())
-                .endDate(schedule.getEndDate())
-                .sinceUpdate(getSinceUpdate(schedule))
+                .scheduleId(scheduleInfo.getScheduleId())
+                .role(scheduleInfo.getAttendeeRole())
+                .scheduleName(scheduleInfo.getScheduleName())
+                .startDate(scheduleInfo.getStartDate())
+                .endDate(scheduleInfo.getEndDate())
+                .sinceUpdate(getSinceUpdate(scheduleInfo))
                 .thumbnailUrl(thumbnailUrl)
                 .author(author)
                 .build();
+    }
+
+    private static String getSinceUpdate(ScheduleInfoQueryDto scheduleInfo){
+        String sinceUp = "";
+
+        if (scheduleInfo.getUpdatedAt() != null){
+            sinceUp = TimeUtils.timeDuration(scheduleInfo.getUpdatedAt());
+        } else if(scheduleInfo.getCreatedAt() != null){
+            sinceUp = TimeUtils.timeDuration(scheduleInfo.getCreatedAt());
+        }
+
+        return sinceUp;
     }
 
 }

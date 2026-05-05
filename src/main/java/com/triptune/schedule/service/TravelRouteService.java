@@ -1,5 +1,6 @@
 package com.triptune.schedule.service;
 
+import com.triptune.global.s3.S3ObjectManager;
 import com.triptune.schedule.dto.request.RouteCreateRequest;
 import com.triptune.schedule.dto.request.RouteRequest;
 import com.triptune.schedule.dto.response.RouteResponse;
@@ -10,6 +11,7 @@ import com.triptune.schedule.exception.ForbiddenScheduleException;
 import com.triptune.schedule.repository.TravelAttendeeRepository;
 import com.triptune.schedule.repository.TravelRouteRepository;
 import com.triptune.schedule.repository.TravelScheduleRepository;
+import com.triptune.schedule.repository.dto.RouteQueryDto;
 import com.triptune.travel.entity.TravelPlace;
 import com.triptune.travel.repository.TravelPlaceRepository;
 import com.triptune.global.message.ErrorCode;
@@ -33,13 +35,19 @@ public class TravelRouteService {
     private final TravelScheduleRepository travelScheduleRepository;
     private final TravelAttendeeRepository travelAttendeeRepository;
     private final TravelPlaceRepository travelPlaceRepository;
-    private final EntityManager em;
+    private final S3ObjectManager s3ObjectManager;
 
     public Page<RouteResponse> getTravelRoutes(Long scheduleId, int page) {
         Pageable pageable = PageUtils.defaultPageable(page);
-        Page<TravelRoute> travelRoutes = travelRouteRepository.findAllByTravelSchedule_ScheduleId(pageable, scheduleId);
+        Page<RouteQueryDto> routePage = travelRouteRepository.findAllByScheduleId(pageable, scheduleId);
 
-        return travelRoutes.map(RouteResponse::from);
+        List<RouteResponse> routeResponses = routePage.getContent().stream()
+                .map(route -> {
+                    String thumbnailUrl = s3ObjectManager.generateS3ObjectUrl(route.getThumbnailS3ObjectKey());
+                    return RouteResponse.of(route, thumbnailUrl);
+                }).toList();
+
+        return PageUtils.createPage(routeResponses, routePage.getPageable(), routePage.getTotalElements());
     }
 
     @Transactional

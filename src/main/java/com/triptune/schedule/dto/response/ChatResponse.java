@@ -7,7 +7,6 @@ import com.triptune.global.util.TimeUtils;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 import java.time.LocalDateTime;
 
@@ -42,11 +41,11 @@ public class ChatResponse {
                 .build();
     }
 
-    public static ChatResponse from(ChatMessage message, Member member){
+    public static ChatResponse of(ChatMessage message, Member member, String profileUrl){
         return ChatResponse.builder()
                 .messageId(message.getMessageId())
                 .nickname(member.getNickname())
-                .profileUrl(member.getProfileImage().getS3ObjectUrl())
+                .profileUrl(profileUrl)
                 .message(message.getMessage())
                 .timestamp(TimeUtils.convertToKST(message.getTimestamp()))
                 .build();

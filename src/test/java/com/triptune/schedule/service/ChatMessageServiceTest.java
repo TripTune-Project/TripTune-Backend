@@ -1,5 +1,7 @@
 package com.triptune.schedule.service;
 
+import com.triptune.common.fixture.S3Fixture;
+import com.triptune.global.s3.S3ObjectManager;
 import com.triptune.member.dto.response.MemberProfileResponse;
 import com.triptune.member.entity.Member;
 import com.triptune.member.fixture.MemberFixture;
@@ -47,24 +49,33 @@ class ChatMessageServiceTest {
     @Mock private MemberRepository memberRepository;
     @Mock private TravelAttendeeRepository travelAttendeeRepository;
     @Mock private TravelScheduleRepository travelScheduleRepository;
+    @Mock private S3ObjectManager s3ObjectManager;
 
     private TravelSchedule schedule;
     private Member member1;
     private Member member2;
     private Member member3;
 
+    private String member1ProfileUrl;
+    private String member2ProfileUrl;
+    private String member3ProfileUrl;
+
+
     @BeforeEach
     void setUp(){
         schedule = TravelScheduleFixture.createTravelSchedule("테스트");
 
         ProfileImage profileImage1 = ProfileImageFixture.createProfileImage("member1Image");
-        member1 = MemberFixture.createNativeTypeMember("member1@email.com", profileImage1);
+        member1 = MemberFixture.createNativeTypeMemberWithId(1L, "member1@email.com", profileImage1);
+        member1ProfileUrl = S3Fixture.createS3ObjectUrl(profileImage1.getS3ObjectKey());
 
         ProfileImage profileImage2 = ProfileImageFixture.createProfileImage("member2Image");
-        member2 = MemberFixture.createNativeTypeMember( "member2@email.com", profileImage2);
+        member2 = MemberFixture.createNativeTypeMemberWithId(2L,  "member2@email.com", profileImage2);
+        member2ProfileUrl = S3Fixture.createS3ObjectUrl(profileImage2.getS3ObjectKey());
 
         ProfileImage profileImage3 = ProfileImageFixture.createProfileImage("member3Image");
-        member3 = MemberFixture.createNativeTypeMember("member3@email.com", profileImage3);
+        member3 = MemberFixture.createNativeTypeMemberWithId(3L, "member3@email.com", profileImage3);
+        member3ProfileUrl = S3Fixture.createS3ObjectUrl(profileImage3.getS3ObjectKey());
     }
 
     @Test
@@ -73,25 +84,25 @@ class ChatMessageServiceTest {
         // given
         Pageable pageable = PageUtils.chatPageable(1);
 
-        ChatMessage message1 = ChatMessageFixture.createChatMessage(1L, 1L, "hello1");
-        ChatMessage message2 = ChatMessageFixture.createChatMessage(1L, 1L, "hello2");
-        ChatMessage message3 = ChatMessageFixture.createChatMessage(1L, 1L, "hello3");
-        ChatMessage message4 = ChatMessageFixture.createChatMessage(1L, 2L, "hello4");
-        ChatMessage message5 = ChatMessageFixture.createChatMessage(1L, 3L, "hello5");
-        ChatMessage message6 = ChatMessageFixture.createChatMessage(1L, 1L, "hello6");
+        ChatMessage message1 = ChatMessageFixture.createChatMessage(1L, member1.getMemberId(), "hello1");
+        ChatMessage message2 = ChatMessageFixture.createChatMessage(1L, member1.getMemberId(), "hello2");
+        ChatMessage message3 = ChatMessageFixture.createChatMessage(1L, member1.getMemberId(), "hello3");
+        ChatMessage message4 = ChatMessageFixture.createChatMessage(1L, member2.getMemberId(), "hello4");
+        ChatMessage message5 = ChatMessageFixture.createChatMessage(1L, member3.getMemberId(), "hello5");
+        ChatMessage message6 = ChatMessageFixture.createChatMessage(1L, member1.getMemberId(), "hello6");
 
         List<ChatMessage> messages = List.of(message1, message2, message3, message4, message5, message6);
         Page<ChatMessage> chatPage = PageUtils.createPage(messages, pageable, messages.size());
-
-        List<MemberProfileResponse> memberProfileResponses = List.of(
-                MemberFixture.createMemberProfileResponse(1L, member1.getNickname(), member1.getProfileImage().getS3ObjectUrl()),
-                MemberFixture.createMemberProfileResponse(2L, member2.getNickname(), member2.getProfileImage().getS3ObjectUrl()),
-                MemberFixture.createMemberProfileResponse(3L, member3.getNickname(), member3.getProfileImage().getS3ObjectUrl())
-        );
+        List<Member> members = new ArrayList<>(List.of(member1, member2, member3));
 
         when(chatMessageRepository.findAllByScheduleId(any(Pageable.class), anyLong())).thenReturn(chatPage);
-        when(memberRepository.findMembersProfileByMemberId(any())).thenReturn(memberProfileResponses);
-
+        when(memberRepository.findByIds(any())).thenReturn(members);
+        when(s3ObjectManager.generateS3ObjectUrl(member1.getProfileImage().getS3ObjectKey()))
+                .thenReturn(member1ProfileUrl);
+        when(s3ObjectManager.generateS3ObjectUrl(member2.getProfileImage().getS3ObjectKey()))
+                .thenReturn(member2ProfileUrl);
+        when(s3ObjectManager.generateS3ObjectUrl(member3.getProfileImage().getS3ObjectKey()))
+                .thenReturn(member3ProfileUrl);
 
         // when
         Page<ChatResponse> response = chatMessageService.getChatMessages(1, 1L);
@@ -109,32 +120,32 @@ class ChatMessageServiceTest {
                 .containsExactly(
                         tuple(
                                 member1.getNickname(),
-                                member1.getProfileImage().getS3ObjectUrl(),
+                                member1ProfileUrl,
                                 message1.getMessage()
                         ),
                         tuple(
                                 member1.getNickname(),
-                                member1.getProfileImage().getS3ObjectUrl(),
+                                member1ProfileUrl,
                                 message2.getMessage()
                         ),
                         tuple(
                                 member1.getNickname(),
-                                member1.getProfileImage().getS3ObjectUrl(),
+                                member1ProfileUrl,
                                 message3.getMessage()
                         ),
                         tuple(
                                 member2.getNickname(),
-                                member2.getProfileImage().getS3ObjectUrl(),
+                                member2ProfileUrl,
                                 message4.getMessage()
                         ),
                         tuple(
                                 member3.getNickname(),
-                                member3.getProfileImage().getS3ObjectUrl(),
+                                member3ProfileUrl,
                                 message5.getMessage()
                         ),
                         tuple(
                                 member1.getNickname(),
-                                member1.getProfileImage().getS3ObjectUrl(),
+                                member1ProfileUrl,
                                 message6.getMessage()
                         )
                 );
@@ -147,20 +158,18 @@ class ChatMessageServiceTest {
         // given
         Pageable pageable = PageUtils.chatPageable(1);
 
-        ChatMessage message1 = ChatMessageFixture.createChatMessage(1L, 1L, "hello1");
-        ChatMessage message2 = ChatMessageFixture.createChatMessage(1L, 1L, "hello2");
-        ChatMessage message3 = ChatMessageFixture.createChatMessage(1L, 1L, "hello3");
+        ChatMessage message1 = ChatMessageFixture.createChatMessage(1L, member1.getMemberId(), "hello1");
+        ChatMessage message2 = ChatMessageFixture.createChatMessage(1L, member1.getMemberId(), "hello2");
+        ChatMessage message3 = ChatMessageFixture.createChatMessage(1L, member1.getMemberId(), "hello3");
 
         List<ChatMessage> messages = List.of(message1, message2, message3);
         Page<ChatMessage> chatPage = PageUtils.createPage(messages, pageable, messages.size());
 
-        List<MemberProfileResponse> memberProfileResponses = List.of(
-                MemberFixture.createMemberProfileResponse(1L, member1.getNickname(), member1.getProfileImage().getS3ObjectUrl()),
-                MemberFixture.createMemberProfileResponse(2L, member2.getNickname(), member2.getProfileImage().getS3ObjectUrl())
-        );
+        List<Member> members = new ArrayList<>(List.of(member1));
 
         when(chatMessageRepository.findAllByScheduleId(any(Pageable.class), anyLong())).thenReturn(chatPage);
-        when(memberRepository.findMembersProfileByMemberId(any())).thenReturn(memberProfileResponses);
+        when(memberRepository.findByIds(any())).thenReturn(members);
+        when(s3ObjectManager.generateS3ObjectUrl(anyString())).thenReturn(member1ProfileUrl);
 
         // when
         Page<ChatResponse> response = chatMessageService.getChatMessages(1, 1L);
@@ -177,17 +186,17 @@ class ChatMessageServiceTest {
                 .containsExactly(
                         tuple(
                                 member1.getNickname(),
-                                member1.getProfileImage().getS3ObjectUrl(),
+                                member1ProfileUrl,
                                 message1.getMessage()
                         ),
                         tuple(
                                 member1.getNickname(),
-                                member1.getProfileImage().getS3ObjectUrl(),
+                                member1ProfileUrl,
                                 message2.getMessage()
                         ),
                         tuple(
                                 member1.getNickname(),
-                                member1.getProfileImage().getS3ObjectUrl(),
+                                member1ProfileUrl,
                                 message3.getMessage()
                         )
                 );
@@ -199,22 +208,23 @@ class ChatMessageServiceTest {
         // given
         Pageable pageable = PageUtils.chatPageable(1);
 
-        ChatMessage message1 = ChatMessageFixture.createChatMessage(1L, 1L, "hello1");
-        ChatMessage message2 = ChatMessageFixture.createChatMessage(1L, 2L, "hello2");
-        ChatMessage message3 = ChatMessageFixture.createChatMessage(1L, 3L, "hello3");
+        ChatMessage message1 = ChatMessageFixture.createChatMessage(1L, member1.getMemberId(), "hello1");
+        ChatMessage message2 = ChatMessageFixture.createChatMessage(1L, member2.getMemberId(), "hello2");
+        ChatMessage message3 = ChatMessageFixture.createChatMessage(1L, member3.getMemberId(), "hello3");
 
         List<ChatMessage> messages = List.of(message1, message2, message3);
         Page<ChatMessage> chatPage = PageUtils.createPage(messages, pageable, messages.size());
 
-        List<MemberProfileResponse> memberProfileResponses = List.of(
-                MemberFixture.createMemberProfileResponse(1L, member1.getNickname(), member1.getProfileImage().getS3ObjectUrl()),
-                MemberFixture.createMemberProfileResponse(2L, member2.getNickname(), member2.getProfileImage().getS3ObjectUrl()),
-                MemberFixture.createMemberProfileResponse(3L, member3.getNickname(), member3.getProfileImage().getS3ObjectUrl())
-        );
+        List<Member> members = new ArrayList<>(List.of(member1, member2, member3));
 
         when(chatMessageRepository.findAllByScheduleId(any(Pageable.class), anyLong())).thenReturn(chatPage);
-        when(memberRepository.findMembersProfileByMemberId(any())).thenReturn(memberProfileResponses);
-
+        when(memberRepository.findByIds(any())).thenReturn(members);
+        when(s3ObjectManager.generateS3ObjectUrl(member1.getProfileImage().getS3ObjectKey()))
+                .thenReturn(member1ProfileUrl);
+        when(s3ObjectManager.generateS3ObjectUrl(member2.getProfileImage().getS3ObjectKey()))
+                .thenReturn(member2ProfileUrl);
+        when(s3ObjectManager.generateS3ObjectUrl(member3.getProfileImage().getS3ObjectKey()))
+                .thenReturn(member3ProfileUrl);
 
         // when
         Page<ChatResponse> response = chatMessageService.getChatMessages(1, 1L);
@@ -231,17 +241,17 @@ class ChatMessageServiceTest {
                 .containsExactly(
                         tuple(
                                 member1.getNickname(),
-                                member1.getProfileImage().getS3ObjectUrl(),
+                                member1ProfileUrl,
                                 message1.getMessage()
                         ),
                         tuple(
                                 member2.getNickname(),
-                                member2.getProfileImage().getS3ObjectUrl(),
+                                member2ProfileUrl,
                                 message2.getMessage()
                         ),
                         tuple(
                                 member3.getNickname(),
-                                member3.getProfileImage().getS3ObjectUrl(),
+                                member3ProfileUrl,
                                 message3.getMessage()
                         )
                 );
@@ -272,9 +282,9 @@ class ChatMessageServiceTest {
     @DisplayName("채팅 메시지에서 회원 인덱스 추출")
     void extractMemberId(){
         // given
-        ChatMessage message1 = ChatMessageFixture.createChatMessage(1L, 1L, "hello1");
-        ChatMessage message2 = ChatMessageFixture.createChatMessage(1L, 2L, "hello2");
-        ChatMessage message3 = ChatMessageFixture.createChatMessage(1L, 3L, "hello3");
+        ChatMessage message1 = ChatMessageFixture.createChatMessage(1L, member1.getMemberId(), "hello1");
+        ChatMessage message2 = ChatMessageFixture.createChatMessage(1L, member2.getMemberId(), "hello2");
+        ChatMessage message3 = ChatMessageFixture.createChatMessage(1L, member3.getMemberId(), "hello3");
         List<ChatMessage> messages = List.of(message1, message2, message3);
 
         // when
@@ -283,7 +293,11 @@ class ChatMessageServiceTest {
         // then
         assertThat(response.size()).isEqualTo(3);
         assertThat(response)
-                .containsExactlyInAnyOrder(1L, 2L, 3L);
+                .containsExactlyInAnyOrder(
+                        member1.getMemberId(),
+                        member2.getMemberId(),
+                        member3.getMemberId()
+                );
     }
 
     @Test
@@ -305,16 +319,16 @@ class ChatMessageServiceTest {
     void getMemberProfiles(){
         // given
         Set<Long> request = new HashSet<>();
-        request.add(1L);
-        request.add(2L);
+        request.add(member1.getMemberId());
+        request.add(member2.getMemberId());
 
-        List<MemberProfileResponse> memberProfileResponses = List.of(
-                MemberFixture.createMemberProfileResponse(1L, member1.getNickname(), member1.getProfileImage().getS3ObjectUrl()),
-                MemberFixture.createMemberProfileResponse(2L, member2.getNickname(), member2.getProfileImage().getS3ObjectUrl())
-        );
+        List<Member> members = new ArrayList<>(List.of(member1, member2));
 
-        when(memberRepository.findMembersProfileByMemberId(request))
-                .thenReturn(memberProfileResponses);
+        when(memberRepository.findByIds(request)).thenReturn(members);
+        when(s3ObjectManager.generateS3ObjectUrl(member1.getProfileImage().getS3ObjectKey()))
+                .thenReturn(member1ProfileUrl);
+        when(s3ObjectManager.generateS3ObjectUrl(member2.getProfileImage().getS3ObjectKey()))
+                .thenReturn(member2ProfileUrl);
 
         // when
         Map<Long, MemberProfileResponse> response = chatMessageService.getMemberProfiles(request);
@@ -327,8 +341,8 @@ class ChatMessageServiceTest {
                         MemberProfileResponse::getProfileUrl
                 )
                 .containsExactly(
-                        tuple(member1.getNickname(), member1.getProfileImage().getS3ObjectUrl()),
-                        tuple(member2.getNickname(), member2.getProfileImage().getS3ObjectUrl())
+                        tuple(member1.getNickname(), member1ProfileUrl),
+                        tuple(member2.getNickname(), member2ProfileUrl)
                 );
     }
 
@@ -338,7 +352,7 @@ class ChatMessageServiceTest {
         // given
         Set<Long> request = new HashSet<>();
 
-        when(memberRepository.findMembersProfileByMemberId(request)).thenReturn(Collections.emptyList());
+        when(memberRepository.findByIds(request)).thenReturn(Collections.emptyList());
 
         // when
         Map<Long, MemberProfileResponse> response = chatMessageService.getMemberProfiles(request);
@@ -351,18 +365,18 @@ class ChatMessageServiceTest {
     @DisplayName("ChatResponse dto 로 변경")
     void convertChatResponse(){
         // given
-        ChatMessage message1 = ChatMessageFixture.createChatMessage(1L, 1L, "메시지1");
-        ChatMessage message2 = ChatMessageFixture.createChatMessage(1L, 2L, "메시지2");
-        ChatMessage message3 = ChatMessageFixture.createChatMessage(1L, 1L, "메시지3");
+        ChatMessage message1 = ChatMessageFixture.createChatMessage(1L, member1.getMemberId(), "메시지1");
+        ChatMessage message2 = ChatMessageFixture.createChatMessage(1L, member2.getMemberId(), "메시지2");
+        ChatMessage message3 = ChatMessageFixture.createChatMessage(1L, member1.getMemberId(), "메시지3");
 
         List<ChatMessage> chatMessages = List.of(message1, message2, message3);
 
-        MemberProfileResponse response1 = MemberFixture.createMemberProfileResponse(1L, member1.getNickname(), member1.getProfileImage().getS3ObjectUrl());
-        MemberProfileResponse response2 = MemberFixture.createMemberProfileResponse(2L, member2.getNickname(), member2.getProfileImage().getS3ObjectUrl());
+        MemberProfileResponse response1 = MemberFixture.createMemberProfileResponse(member1.getMemberId(), member1.getNickname(), member1ProfileUrl);
+        MemberProfileResponse response2 = MemberFixture.createMemberProfileResponse(member2.getMemberId(), member2.getNickname(), member2ProfileUrl);
 
         Map<Long, MemberProfileResponse> memberProfileMap = new HashMap<>();
-        memberProfileMap.put(1L, response1);
-        memberProfileMap.put(2L, response2);
+        memberProfileMap.put(member1.getMemberId(), response1);
+        memberProfileMap.put(member2.getMemberId(), response2);
 
         // when
         List<ChatResponse> response = chatMessageService.convertChatResponse(chatMessages, memberProfileMap);
@@ -378,17 +392,17 @@ class ChatMessageServiceTest {
                 .containsExactly(
                         tuple(
                                 member1.getNickname(),
-                                member1.getProfileImage().getS3ObjectUrl(),
+                                member1ProfileUrl,
                                 message1.getMessage()
                         ),
                         tuple(
                                 member2.getNickname(),
-                                member2.getProfileImage().getS3ObjectUrl(),
+                                member2ProfileUrl,
                                 message2.getMessage()
                         ),
                         tuple(
                                 member1.getNickname(),
-                                member1.getProfileImage().getS3ObjectUrl(),
+                                member1ProfileUrl,
                                 message3.getMessage()
                         )
                 );
@@ -401,17 +415,19 @@ class ChatMessageServiceTest {
         // given
         ProfileImage profileImage = ProfileImageFixture.createProfileImage("memberImage");
         Member member = MemberFixture.createNativeTypeMemberWithId(1L, "member@email.com", profileImage);
+        String memberProfileUrl = S3Fixture.createS3ObjectUrl(profileImage.getS3ObjectKey());
 
         ChatMessageRequest request = ChatMessageFixture.createChatMessageRequest(1L, member.getNickname(), "hello1");
         TravelAttendee author = TravelAttendeeFixture.createAuthorTravelAttendee(schedule, member);
 
-        ChatMessage message = ChatMessageFixture.createChatMessage(1L, 1L, request.getMessage());
+        ChatMessage message = ChatMessageFixture.createChatMessage(1L, member1.getMemberId(), request.getMessage());
 
         when(travelScheduleRepository.existsById(anyLong())).thenReturn(true);
         when(memberRepository.findByNickname(anyString())).thenReturn(Optional.of(member));
         when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_MemberId(anyLong(), anyLong()))
                 .thenReturn(Optional.of(author));
         when(chatMessageRepository.save(any())).thenReturn(message);
+        when(s3ObjectManager.generateS3ObjectUrl(anyString())).thenReturn(memberProfileUrl);
 
 
         // when
@@ -419,7 +435,7 @@ class ChatMessageServiceTest {
 
         // then
         assertThat(response.getNickname()).isEqualTo(member.getNickname());
-        assertThat(response.getProfileUrl()).isEqualTo(member.getProfileImage().getS3ObjectUrl());
+        assertThat(response.getProfileUrl()).isEqualTo(memberProfileUrl);
         assertThat(response.getMessage()).isEqualTo(message.getMessage());
     }
 

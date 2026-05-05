@@ -3,6 +3,7 @@ package com.triptune.global.util;
 import org.springframework.data.domain.*;
 
 import java.util.List;
+import java.util.function.Function;
 
 public class PageUtils {
     private static final int DEFAULT_PAGE = 1;

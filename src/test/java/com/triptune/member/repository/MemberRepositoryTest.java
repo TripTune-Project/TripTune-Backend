@@ -1,7 +1,7 @@
 package com.triptune.member.repository;
 
 import com.triptune.global.config.QuerydslConfig;
-import com.triptune.member.dto.response.MemberProfileResponse;
+import com.triptune.global.s3.S3ObjectManager;
 import com.triptune.member.entity.Member;
 import com.triptune.member.entity.SocialMember;
 import com.triptune.member.enums.JoinType;
@@ -60,23 +60,20 @@ class MemberRepositoryTest  {
         ProfileImage profileImage2 = profileImageRepository.save(ProfileImageFixture.createProfileImage("member2Image"));
         Member member2 = memberRepository.save(MemberFixture.createNativeTypeMember("member2@email.com", profileImage2));
 
-
         Set<Long> request = new HashSet<>();
         request.add(member1.getMemberId());
         request.add(member1.getMemberId());
         request.add(member2.getMemberId());
 
         // when
-        List<MemberProfileResponse> response = memberRepository.findMembersProfileByMemberId(request);
+        List<Member> response = memberRepository.findByIds(request);
 
         // then
         assertThat(response.size()).isEqualTo(2);
         assertThat(response.get(0).getMemberId()).isEqualTo(member1.getMemberId());
         assertThat(response.get(0).getNickname()).isEqualTo(member1.getNickname());
-        assertThat(response.get(0).getProfileUrl()).isEqualTo(profileImage1.getS3ObjectUrl());
         assertThat(response.get(1).getMemberId()).isEqualTo(member2.getMemberId());
         assertThat(response.get(1).getNickname()).isEqualTo(member2.getNickname());
-        assertThat(response.get(1).getProfileUrl()).isEqualTo(profileImage2.getS3ObjectUrl());
     }
 
     @Test

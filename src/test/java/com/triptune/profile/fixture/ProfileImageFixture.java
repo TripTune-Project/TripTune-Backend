@@ -11,8 +11,7 @@ public class ProfileImageFixture {
 
     public static ProfileImage createProfileImage(String fileName){
         return ProfileImage.createProfileImage(
-                "/test/" + fileName + ".jpg",
-                "/img/test/" + fileName + ".jpg",
+                "test/" + fileName + ".jpg",
                 fileName + "_original.jpg",
                 fileName + ".jpg",
                 "jpg",
