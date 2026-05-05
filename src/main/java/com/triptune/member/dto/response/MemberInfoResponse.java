@@ -20,11 +20,11 @@ public class MemberInfoResponse {
         this.profileImage = profileImage;
     }
 
-    public static MemberInfoResponse from(Member member){
+    public static MemberInfoResponse from(Member member, String profileImageUrl){
         return MemberInfoResponse.builder()
                 .email(member.getEmail())
                 .nickname(member.getNickname())
-                .profileImage(member.getProfileImage().getS3ObjectUrl())
+                .profileImage(profileImageUrl)
                 .build();
     }
 }

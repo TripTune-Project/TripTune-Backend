@@ -31,6 +31,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
@@ -62,6 +63,7 @@ public class TravelControllerTest {
     @Autowired private BookmarkRepository bookmarkRepository;
     @Autowired private MemberRepository memberRepository;
     @Autowired private ProfileImageRepository profileImageRepository;
+
 
     private Country country;
     private City city;
@@ -105,8 +107,9 @@ public class TravelControllerTest {
                         127.0281573537
                 )
         );
-        TravelImage gangnamThumbnail = travelImageRepository.save(TravelImageFixture.createTravelImage(gangnamPlace, "test1", true));
+        TravelImage gangnamThumb = travelImageRepository.save(TravelImageFixture.createTravelImage(gangnamPlace, "test1", true));
         travelImageRepository.save(TravelImageFixture.createTravelImage(gangnamPlace, "test2", false));
+        String gangnamThumbUrl = S3Fixture.createS3ObjectUrl(gangnamThumb.getS3ObjectKey());
 
         TravelPlace seongdongPlace = travelPlaceRepository.save(
                 TravelPlaceFixture.createTravelPlaceWithLocation(
@@ -140,7 +143,7 @@ public class TravelControllerTest {
                 .andExpect(jsonPath("$.data.content[0].thumbnailUrl").doesNotExist())
                 .andExpect(jsonPath("$.data.content[0].bookmarkStatus").value(false))
                 .andExpect(jsonPath("$.data.content[1].placeName").value(gangnamPlace.getPlaceName()))
-                .andExpect(jsonPath("$.data.content[1].thumbnailUrl").value(gangnamThumbnail.getS3ObjectUrl()))
+                .andExpect(jsonPath("$.data.content[1].thumbnailUrl").value(gangnamThumbUrl))
                 .andExpect(jsonPath("$.data.content[1].bookmarkStatus").value(true));
     }
 
@@ -216,8 +219,9 @@ public class TravelControllerTest {
                         127.0550
                 )
         );
-        TravelImage gangnamThumbnail = travelImageRepository.save(TravelImageFixture.createTravelImage(gangnamPlace, "test1", true));
+        TravelImage gangnamThumb = travelImageRepository.save(TravelImageFixture.createTravelImage(gangnamPlace, "test1", true));
         travelImageRepository.save(TravelImageFixture.createTravelImage(gangnamPlace, "test2", false));
+        String gangnamThumbUrl = S3Fixture.createS3ObjectUrl(gangnamThumb.getS3ObjectKey());
 
         TravelPlace seongdongPlace = travelPlaceRepository.save(
                 TravelPlaceFixture.createTravelPlaceWithLocation(
@@ -249,7 +253,7 @@ public class TravelControllerTest {
                 .andExpect(jsonPath("$.data.content[0].thumbnailUrl").doesNotExist())
                 .andExpect(jsonPath("$.data.content[0].bookmarkStatus").value(false))
                 .andExpect(jsonPath("$.data.content[1].placeName").value(gangnamPlace.getPlaceName()))
-                .andExpect(jsonPath("$.data.content[1].thumbnailUrl").value(gangnamThumbnail.getS3ObjectUrl()))
+                .andExpect(jsonPath("$.data.content[1].thumbnailUrl").value(gangnamThumbUrl))
                 .andExpect(jsonPath("$.data.content[1].bookmarkStatus").value(false));
     }
 
@@ -289,8 +293,9 @@ public class TravelControllerTest {
                         127.0550
                 )
         );
-        TravelImage gangnamThumbnail = travelImageRepository.save(TravelImageFixture.createTravelImage(gangnamPlace, "test1", true));
+        TravelImage gangnamThumb = travelImageRepository.save(TravelImageFixture.createTravelImage(gangnamPlace, "test1", true));
         travelImageRepository.save(TravelImageFixture.createTravelImage(gangnamPlace, "test2", false));
+        String gangnamThumbUrl = S3Fixture.createS3ObjectUrl(gangnamThumb.getS3ObjectKey());
 
         travelPlaceRepository.save(
                 TravelPlaceFixture.createTravelPlaceWithLocation(
@@ -320,7 +325,7 @@ public class TravelControllerTest {
                 .andExpect(jsonPath("$.data.totalElements").value(1))
                 .andExpect(jsonPath("$.data.content[0].district").value(gangnamPlace.getDistrict().getDistrictName()))
                 .andExpect(jsonPath("$.data.content[0].placeName").value(gangnamPlace.getPlaceName()))
-                .andExpect(jsonPath("$.data.content[0].thumbnailUrl").value(gangnamThumbnail.getS3ObjectUrl()))
+                .andExpect(jsonPath("$.data.content[0].thumbnailUrl").value(gangnamThumbUrl))
                 .andExpect(jsonPath("$.data.content[0].bookmarkStatus").value(true));
     }
 
@@ -360,8 +365,9 @@ public class TravelControllerTest {
                         127.0550
                 )
         );
-        TravelImage gangnamThumbnail = travelImageRepository.save(TravelImageFixture.createTravelImage(gangnamPlace, "test1", true));
+        TravelImage gangnamThumb = travelImageRepository.save(TravelImageFixture.createTravelImage(gangnamPlace, "test1", true));
         travelImageRepository.save(TravelImageFixture.createTravelImage(gangnamPlace, "test2", false));
+        String gangnamThumbUrl = S3Fixture.createS3ObjectUrl(gangnamThumb.getS3ObjectKey());
 
         travelPlaceRepository.save(
                 TravelPlaceFixture.createTravelPlaceWithLocation(
@@ -389,7 +395,7 @@ public class TravelControllerTest {
                 .andExpect(jsonPath("$.data.totalElements").value(1))
                 .andExpect(jsonPath("$.data.content[0].district").value(gangnamPlace.getDistrict().getDistrictName()))
                 .andExpect(jsonPath("$.data.content[0].placeName").value(gangnamPlace.getPlaceName()))
-                .andExpect(jsonPath("$.data.content[0].thumbnailUrl").value(gangnamThumbnail.getS3ObjectUrl()))
+                .andExpect(jsonPath("$.data.content[0].thumbnailUrl").value(gangnamThumbUrl))
                 .andExpect(jsonPath("$.data.content[0].bookmarkStatus").value(false));
     }
 
@@ -426,8 +432,9 @@ public class TravelControllerTest {
                         "여행지1"
                 )
         );
-        TravelImage gangnamThumbnail = travelImageRepository.save(TravelImageFixture.createTravelImage(gangnamPlace, "test1", true));
+        TravelImage gangnamThumb = travelImageRepository.save(TravelImageFixture.createTravelImage(gangnamPlace, "test1", true));
         travelImageRepository.save(TravelImageFixture.createTravelImage(gangnamPlace, "test2", false));
+        String gangnamThumbUrl = S3Fixture.createS3ObjectUrl(gangnamThumb.getS3ObjectKey());
 
         travelPlaceRepository.save(
                 TravelPlaceFixture.createTravelPlace(
@@ -455,7 +462,7 @@ public class TravelControllerTest {
                 .andExpect(jsonPath("$.data.totalElements").value(1))
                 .andExpect(jsonPath("$.data.content[0].district").value(gangnamPlace.getDistrict().getDistrictName()))
                 .andExpect(jsonPath("$.data.content[0].placeName").value(gangnamPlace.getPlaceName()))
-                .andExpect(jsonPath("$.data.content[0].thumbnailUrl").value(gangnamThumbnail.getS3ObjectUrl()))
+                .andExpect(jsonPath("$.data.content[0].thumbnailUrl").value(gangnamThumbUrl))
                 .andExpect(jsonPath("$.data.content[0].bookmarkStatus").value(true));
     }
 
@@ -492,8 +499,9 @@ public class TravelControllerTest {
                         "여행지1"
                 )
         );
-        TravelImage gangnamThumbnail = travelImageRepository.save(TravelImageFixture.createTravelImage(gangnamPlace, "test1", true));
+        TravelImage gangnamThumb = travelImageRepository.save(TravelImageFixture.createTravelImage(gangnamPlace, "test1", true));
         travelImageRepository.save(TravelImageFixture.createTravelImage(gangnamPlace, "test2", false));
+        String gangnamThumbUrl = S3Fixture.createS3ObjectUrl(gangnamThumb.getS3ObjectKey());
 
         travelPlaceRepository.save(
                 TravelPlaceFixture.createTravelPlace(
@@ -519,7 +527,7 @@ public class TravelControllerTest {
                 .andExpect(jsonPath("$.data.totalElements").value(1))
                 .andExpect(jsonPath("$.data.content[0].district").value(gangnamPlace.getDistrict().getDistrictName()))
                 .andExpect(jsonPath("$.data.content[0].placeName").value(gangnamPlace.getPlaceName()))
-                .andExpect(jsonPath("$.data.content[0].thumbnailUrl").value(gangnamThumbnail.getS3ObjectUrl()))
+                .andExpect(jsonPath("$.data.content[0].thumbnailUrl").value(gangnamThumbUrl))
                 .andExpect(jsonPath("$.data.content[0].bookmarkStatus").value(false));
     }
 
@@ -696,9 +704,9 @@ public class TravelControllerTest {
                         3
                 )
         );
-        TravelImage gangnamThumbnail = travelImageRepository.save(TravelImageFixture.createTravelImage(gangnamPlace, "test1", true));
+        TravelImage gangnamThumb = travelImageRepository.save(TravelImageFixture.createTravelImage(gangnamPlace, "test1", true));
         travelImageRepository.save(TravelImageFixture.createTravelImage(gangnamPlace, "test2", false));
-
+        String gangnamThumbUrl = S3Fixture.createS3ObjectUrl(gangnamThumb.getS3ObjectKey());
 
         TravelPlace seongdongPlace = travelPlaceRepository.save(
                 TravelPlaceFixture.createTravelPlaceWithBookmarkCnt(
@@ -725,8 +733,9 @@ public class TravelControllerTest {
                         50
                 )
         );
-        TravelImage busanThumbnail = travelImageRepository.save(TravelImageFixture.createTravelImage(busanPlace, "부산이미지1", true));
+        TravelImage busanThumb = travelImageRepository.save(TravelImageFixture.createTravelImage(busanPlace, "부산이미지1", true));
         travelImageRepository.save(TravelImageFixture.createTravelImage(busanPlace, "부산이미지2", false));
+        String busanThumbUrl = S3Fixture.createS3ObjectUrl(busanThumb.getS3ObjectKey());
 
         City jeolla = cityRepository.save(CityFixture.createCity(country, "전라남도"));
         District jeollaDistrict = districtRepository.save(DistrictFixture.createDistrict(busan, "보성구"));
@@ -753,9 +762,9 @@ public class TravelControllerTest {
                 .andExpect(jsonPath("$.data[0].placeName").value(jeollaPlace.getPlaceName()))
                 .andExpect(jsonPath("$.data[0].thumbnailUrl").isEmpty())
                 .andExpect(jsonPath("$.data[1].placeName").value(busanPlace.getPlaceName()))
-                .andExpect(jsonPath("$.data[1].thumbnailUrl").value(busanThumbnail.getS3ObjectUrl()))
+                .andExpect(jsonPath("$.data[1].thumbnailUrl").value(busanThumbUrl))
                 .andExpect(jsonPath("$.data[2].placeName").value(gangnamPlace.getPlaceName()))
-                .andExpect(jsonPath("$.data[2].thumbnailUrl").value(gangnamThumbnail.getS3ObjectUrl()))
+                .andExpect(jsonPath("$.data[2].thumbnailUrl").value(gangnamThumbUrl))
                 .andExpect(jsonPath("$.data[3].placeName").value(seongdongPlace.getPlaceName()))
                 .andExpect(jsonPath("$.data[3].thumbnailUrl").isEmpty());
 
@@ -801,8 +810,10 @@ public class TravelControllerTest {
                         "구미 여행지"
                 )
         );
-        TravelImage gueongsang1Thumbnail = travelImageRepository.save(TravelImageFixture.createTravelImage(gueongsangPlace1, "경상이미지1", true));
+        TravelImage gueongsang1Thumb = travelImageRepository.save(TravelImageFixture.createTravelImage(gueongsangPlace1, "경상이미지1", true));
         travelImageRepository.save(TravelImageFixture.createTravelImage(gueongsangPlace1, "경상이미지2", false));
+        String gueongsang1ThumbUrl = S3Fixture.createS3ObjectUrl(gueongsang1Thumb.getS3ObjectKey());
+
 
         City gueongsang2 = cityRepository.save(CityFixture.createCity(country, "경상남도"));
         District gueongsang2District = districtRepository.save(DistrictFixture.createDistrict(gueongsang2, "통영시"));
@@ -828,7 +839,7 @@ public class TravelControllerTest {
                 .andExpect(jsonPath("$.data[0].placeName").value(gueongsangPlace2.getPlaceName()))
                 .andExpect(jsonPath("$.data[0].thumbnailUrl").isEmpty())
                 .andExpect(jsonPath("$.data[1].placeName").value(gueongsangPlace1.getPlaceName()))
-                .andExpect(jsonPath("$.data[1].thumbnailUrl").value(gueongsang1Thumbnail.getS3ObjectUrl()));
+                .andExpect(jsonPath("$.data[1].thumbnailUrl").value(gueongsang1ThumbUrl));
 
     }
 
@@ -875,8 +886,9 @@ public class TravelControllerTest {
                         1
                 )
         );
-        TravelImage attraction1Thumbnail = travelImageRepository.save(TravelImageFixture.createTravelImage(attractionPlace1, "test1", true));
+        TravelImage attraction1Thumb = travelImageRepository.save(TravelImageFixture.createTravelImage(attractionPlace1, "test1", true));
         travelImageRepository.save(TravelImageFixture.createTravelImage(attractionPlace1, "test2", false));
+        String attraction1ThumbUrl = S3Fixture.createS3ObjectUrl(attraction1Thumb.getS3ObjectKey());
 
         TravelPlace attractionPlace2 = travelPlaceRepository.save(
                 TravelPlaceFixture.createTravelPlaceWithBookmarkCnt(
@@ -902,8 +914,9 @@ public class TravelControllerTest {
                         "부산 여행지"
                 )
         );
-        TravelImage lodgingThumbnail = travelImageRepository.save(TravelImageFixture.createTravelImage(lodgingPlace, "부산이미지1", true));
+        TravelImage lodgingThumb = travelImageRepository.save(TravelImageFixture.createTravelImage(lodgingPlace, "부산이미지1", true));
         travelImageRepository.save(TravelImageFixture.createTravelImage(lodgingPlace, "부산이미지2", false));
+        String lodgingThumbUrl = S3Fixture.createS3ObjectUrl(lodgingThumb.getS3ObjectKey());
 
         City jeolla = cityRepository.save(CityFixture.createCity(country, "전라남도"));
         District jeollaDistrict = districtRepository.save(DistrictFixture.createDistrict(busan, "보성구"));
@@ -932,9 +945,9 @@ public class TravelControllerTest {
                 .andExpect(jsonPath("$.data[1].placeName").value(attractionPlace2.getPlaceName()))
                 .andExpect(jsonPath("$.data[1].thumbnailUrl").isEmpty())
                 .andExpect(jsonPath("$.data[2].placeName").value(attractionPlace1.getPlaceName()))
-                .andExpect(jsonPath("$.data[2].thumbnailUrl").value(attraction1Thumbnail.getS3ObjectUrl()))
+                .andExpect(jsonPath("$.data[2].thumbnailUrl").value(attraction1ThumbUrl))
                 .andExpect(jsonPath("$.data[3].placeName").value(lodgingPlace.getPlaceName()))
-                .andExpect(jsonPath("$.data[3].thumbnailUrl").value(lodgingThumbnail.getS3ObjectUrl()));
+                .andExpect(jsonPath("$.data[3].thumbnailUrl").value(lodgingThumbUrl));
 
     }
 
@@ -978,9 +991,9 @@ public class TravelControllerTest {
                         "부산 여행지"
                 )
         );
-        TravelImage lodgingThumbnail = travelImageRepository.save(TravelImageFixture.createTravelImage(lodgingPlace, "부산이미지1", true));
+        TravelImage lodgingThumb = travelImageRepository.save(TravelImageFixture.createTravelImage(lodgingPlace, "부산이미지1", true));
         travelImageRepository.save(TravelImageFixture.createTravelImage(lodgingPlace, "부산이미지2", false));
-
+        String lodgingThumbUrl = S3Fixture.createS3ObjectUrl(lodgingThumb.getS3ObjectKey());
 
         // when, then
         mockMvc.perform(get("/api/travels/recommend")
@@ -991,7 +1004,7 @@ public class TravelControllerTest {
                 .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()))
                 .andExpect(jsonPath("$.data.length()").value(1))
                 .andExpect(jsonPath("$.data[0].placeName").value(lodgingPlace.getPlaceName()))
-                .andExpect(jsonPath("$.data[0].thumbnailUrl").value(lodgingThumbnail.getS3ObjectUrl()));
+                .andExpect(jsonPath("$.data[0].thumbnailUrl").value(lodgingThumbUrl));
     }
 
 

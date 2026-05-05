@@ -5,24 +5,25 @@ import com.triptune.common.entity.*;
 import com.triptune.common.fixture.*;
 import com.triptune.global.message.ErrorCode;
 import com.triptune.global.exception.DataNotFoundException;
+import com.triptune.global.s3.S3ObjectManager;
 import com.triptune.global.util.PageUtils;
 import com.triptune.member.entity.Member;
 import com.triptune.member.fixture.MemberFixture;
 import com.triptune.profile.entity.ProfileImage;
 import com.triptune.profile.fixture.ProfileImageFixture;
+import com.triptune.travel.dto.response.*;
 import com.triptune.travel.fixture.TravelImageFixture;
 import com.triptune.travel.fixture.TravelPlaceFixture;
-import com.triptune.travel.repository.dto.PlaceLocation;
 import com.triptune.travel.dto.request.PlaceLocationRequest;
 import com.triptune.travel.dto.request.PlaceSearchRequest;
-import com.triptune.travel.dto.response.PlaceDetailResponse;
-import com.triptune.travel.dto.response.PlaceResponse;
-import com.triptune.travel.dto.response.PlaceSimpleResponse;
 import com.triptune.travel.entity.TravelImage;
 import com.triptune.travel.entity.TravelPlace;
 import com.triptune.travel.enums.CityType;
 import com.triptune.travel.enums.ThemeType;
 import com.triptune.travel.repository.TravelPlaceRepository;
+import com.triptune.travel.repository.dto.PlaceDistanceQueryDto;
+import com.triptune.travel.repository.dto.PlaceQueryDto;
+import com.triptune.travel.repository.dto.PlaceSimpleQueryDto;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -40,15 +41,14 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class TravelServiceTest  {
-
     @InjectMocks private TravelService travelService;
     @Mock private TravelPlaceRepository travelPlaceRepository;
     @Mock private BookmarkRepository bookmarkRepository;
+    @Mock private S3ObjectManager s3ObjectManager;
 
     private Country country;
     private City seoul;
@@ -58,7 +58,6 @@ public class TravelServiceTest  {
     private ApiContentType attractionContentType;
     private ApiContentType sportsContentType;
     private ApiContentType lodgingContentType;
-
 
     private Member member;
 
@@ -81,7 +80,7 @@ public class TravelServiceTest  {
     @DisplayName("회원의 위치를 기반으로 여행지 목록을 조회")
     void getNearByTravelPlaces_member(){
         // given
-        TravelPlace place1 = TravelPlaceFixture.createTravelPlaceWithId(
+        TravelPlace placeWithThumb = TravelPlaceFixture.createTravelPlaceWithId(
                 1L,
                 country,
                 seoul,
@@ -90,10 +89,11 @@ public class TravelServiceTest  {
                 attractionContentType,
                 "여행지1"
         );
-        TravelImage place1Thumbnail = TravelImageFixture.createTravelImage(place1, "test1", true);
-        TravelImageFixture.createTravelImage(place1, "test2", false);
+        TravelImage placeThumb = TravelImageFixture.createTravelImage(placeWithThumb, "test1", true);
+        TravelImageFixture.createTravelImage(placeWithThumb, "test2", false);
+        String placeThumbUrl = S3Fixture.createS3ObjectUrl(placeThumb.getS3ObjectKey());
 
-        TravelPlace place2 = TravelPlaceFixture.createTravelPlaceWithIdAndLocation(
+        TravelPlace placeWithoutThumb = TravelPlaceFixture.createTravelPlaceWithIdAndLocation(
                 2L,
                 country,
                 seoul,
@@ -108,30 +108,38 @@ public class TravelServiceTest  {
         PlaceLocationRequest request = TravelPlaceFixture.createTravelLocationRequest(37.4970465429, 127.0281573537);
 
         Pageable pageable = PageUtils.defaultPageable(1);
-        List<PlaceLocation> locations = List.of(
-                TravelPlaceFixture.createPlaceLocation(place1, place1Thumbnail.getS3ObjectUrl()),
-                TravelPlaceFixture.createPlaceLocation(place2, null)
+        List<PlaceDistanceQueryDto> places = List.of(
+                TravelPlaceFixture.createPlaceDistanceQueryDto(placeWithThumb, placeThumb.getS3ObjectKey()),
+                TravelPlaceFixture.createPlaceDistanceQueryDto(placeWithoutThumb, null)
         );
-        Page<PlaceLocation> mockResponse = PageUtils.createPage(locations, pageable, locations.size());
+        Page<PlaceDistanceQueryDto> mockResponse = PageUtils.createPage(places, pageable, places.size());
 
         when(travelPlaceRepository.findNearByTravelPlaces(pageable, request, 5)).thenReturn(mockResponse);
-        when(bookmarkRepository.existsByMember_MemberIdAndTravelPlace_PlaceId(1L, place1.getPlaceId())).thenReturn(true);
-        when(bookmarkRepository.existsByMember_MemberIdAndTravelPlace_PlaceId(1L, place2.getPlaceId())).thenReturn(false);
+        when(s3ObjectManager.generateS3ObjectUrl(placeThumb.getS3ObjectKey())).thenReturn(placeThumbUrl);
+        when(bookmarkRepository.existsByMember_MemberIdAndTravelPlace_PlaceId(1L, placeWithThumb.getPlaceId())).thenReturn(true);
+        when(bookmarkRepository.existsByMember_MemberIdAndTravelPlace_PlaceId(1L, placeWithoutThumb.getPlaceId())).thenReturn(false);
+
 
         // when
-        Page<PlaceLocation> response = travelService.getNearByTravelPlaces(1, 1L, request);
+        Page<PlaceDistanceResponse> response = travelService.getNearByTravelPlaces(1, 1L, request);
+
 
         // then
-        List<PlaceLocation> content = response.getContent();
+        List<PlaceDistanceResponse> content = response.getContent();
         assertThat(response.getTotalElements()).isEqualTo(2);
-        assertThat(content.get(0).getPlaceName()).isEqualTo(place1.getPlaceName());
-        assertThat(content.get(0).getThumbnailUrl()).isEqualTo(place1Thumbnail.getS3ObjectUrl());
-        assertThat(content.get(0).getDistance()).isNotNull();
-        assertThat(content.get(0).isBookmarkStatus()).isTrue();
-        assertThat(content.get(1).getPlaceName()).isEqualTo(place2.getPlaceName());
-        assertThat(content.get(1).getThumbnailUrl()).isNull();
-        assertThat(content.get(1).getDistance()).isNotNull();
-        assertThat(content.get(1).isBookmarkStatus()).isFalse();
+
+        PlaceDistanceResponse first = content.get(0);
+        PlaceDistanceResponse second = content.get(1);
+
+        assertThat(first.getPlaceName()).isEqualTo(placeWithThumb.getPlaceName());
+        assertThat(first.getThumbnailUrl()).isEqualTo(placeThumbUrl);
+        assertThat(first.getDistance()).isNotNull();
+        assertThat(first.isBookmarkStatus()).isTrue();
+
+        assertThat(second.getPlaceName()).isEqualTo(placeWithoutThumb.getPlaceName());
+        assertThat(second.getThumbnailUrl()).isNull();
+        assertThat(second.getDistance()).isNotNull();
+        assertThat(second.isBookmarkStatus()).isFalse();
     }
 
     @Test
@@ -141,12 +149,12 @@ public class TravelServiceTest  {
         PlaceLocationRequest request = TravelPlaceFixture.createTravelLocationRequest(0.0, 0.0);
 
         Pageable pageable = PageUtils.defaultPageable(1);
-        Page<PlaceLocation> mockResponse = PageUtils.createPage(Collections.emptyList(), pageable, 0);
+        Page<PlaceDistanceQueryDto> mockResponse = PageUtils.createPage(Collections.emptyList(), pageable, 0);
 
         when(travelPlaceRepository.findNearByTravelPlaces(pageable, request, 5)).thenReturn(mockResponse);
 
         // when
-        Page<PlaceLocation> response = travelService.getNearByTravelPlaces(1, member.getMemberId(), request);
+        Page<PlaceDistanceResponse> response = travelService.getNearByTravelPlaces(1, member.getMemberId(), request);
 
         // then
         assertThat(response.getTotalElements()).isEqualTo(0);
@@ -156,7 +164,7 @@ public class TravelServiceTest  {
     @DisplayName("비회원의 위치를 기반으로 여행지 목록을 조회")
     void getNearByTravelPlaces_nonMember(){
         // given
-        TravelPlace place1 = TravelPlaceFixture.createTravelPlace(
+        TravelPlace placeWithThumb = TravelPlaceFixture.createTravelPlace(
                 country,
                 seoul,
                 gangnam,
@@ -164,10 +172,11 @@ public class TravelServiceTest  {
                 attractionContentType,
                 "여행지1"
         );
-        TravelImage place1Thumbnail = TravelImageFixture.createTravelImage(place1, "test1", true);
-        TravelImageFixture.createTravelImage(place1, "test2", false);
+        TravelImage placeThumb = TravelImageFixture.createTravelImage(placeWithThumb, "test1", true);
+        TravelImageFixture.createTravelImage(placeWithThumb, "test2", false);
+        String placeThumbUrl = S3Fixture.createS3ObjectUrl(placeThumb.getS3ObjectKey());
 
-        TravelPlace place2 = TravelPlaceFixture.createTravelPlaceWithLocation(
+        TravelPlace placeWithoutThumb = TravelPlaceFixture.createTravelPlaceWithLocation(
                 country,
                 seoul,
                 gangnam,
@@ -181,25 +190,28 @@ public class TravelServiceTest  {
         PlaceLocationRequest request = TravelPlaceFixture.createTravelLocationRequest(37.4970465429, 127.0281573537);
 
         Pageable pageable = PageUtils.defaultPageable(1);
-        List<PlaceLocation> locations = List.of(
-                TravelPlaceFixture.createPlaceLocation(place1, place1Thumbnail.getS3ObjectUrl()),
-                TravelPlaceFixture.createPlaceLocation(place2, null)
+        List<PlaceDistanceQueryDto> places = List.of(
+                TravelPlaceFixture.createPlaceDistanceQueryDto(placeWithThumb, placeThumb.getS3ObjectKey()),
+                TravelPlaceFixture.createPlaceDistanceQueryDto(placeWithoutThumb, null)
         );
-        Page<PlaceLocation> mockResponse = PageUtils.createPage(locations, pageable, locations.size());
+        Page<PlaceDistanceQueryDto> mockResponse = PageUtils.createPage(places, pageable, places.size());
 
         when(travelPlaceRepository.findNearByTravelPlaces(pageable, request, 5)).thenReturn(mockResponse);
+        when(s3ObjectManager.generateS3ObjectUrl(placeThumb.getS3ObjectKey())).thenReturn(placeThumbUrl);
 
         // when
-        Page<PlaceLocation> response = travelService.getNearByTravelPlaces(1, null, request);
+        Page<PlaceDistanceResponse> response = travelService.getNearByTravelPlaces(1, null, request);
 
         // then
-        List<PlaceLocation> content = response.getContent();
+        List<PlaceDistanceResponse> content = response.getContent();
         assertThat(response.getTotalElements()).isEqualTo(2);
-        assertThat(content.get(0).getPlaceName()).isEqualTo(place1.getPlaceName());
-        assertThat(content.get(0).getThumbnailUrl()).isEqualTo(place1Thumbnail.getS3ObjectUrl());
+
+        assertThat(content.get(0).getPlaceName()).isEqualTo(placeWithThumb.getPlaceName());
+        assertThat(content.get(0).getThumbnailUrl()).isEqualTo(placeThumbUrl);
         assertThat(content.get(0).isBookmarkStatus()).isFalse();
         assertThat(content.get(0).getDistance()).isNotNull();
-        assertThat(content.get(1).getPlaceName()).isEqualTo(place2.getPlaceName());
+
+        assertThat(content.get(1).getPlaceName()).isEqualTo(placeWithoutThumb.getPlaceName());
         assertThat(content.get(1).getThumbnailUrl()).isNull();
         assertThat(content.get(1).isBookmarkStatus()).isFalse();
         assertThat(content.get(1).getDistance()).isNotNull();
@@ -214,12 +226,12 @@ public class TravelServiceTest  {
         PlaceLocationRequest request = TravelPlaceFixture.createTravelLocationRequest(0.0, 0.0);
 
         Pageable pageable = PageUtils.defaultPageable(1);
-        Page<PlaceLocation> mockResponse = PageUtils.createPage(Collections.emptyList(), pageable, 0);
+        Page<PlaceDistanceQueryDto> mockResponse = PageUtils.createPage(Collections.emptyList(), pageable, 0);
 
         when(travelPlaceRepository.findNearByTravelPlaces(pageable, request, 5)).thenReturn(mockResponse);
 
         // when
-        Page<PlaceLocation> response = travelService.getNearByTravelPlaces(1, null, request);
+        Page<PlaceDistanceResponse> response = travelService.getNearByTravelPlaces(1, null, request);
 
         // then
         assertThat(response.getTotalElements()).isEqualTo(0);
@@ -230,7 +242,7 @@ public class TravelServiceTest  {
     @DisplayName("회원의 위치를 기반으로 여행지 검색할 때, 검색 결과가 존재하는 경우")
     void searchTravelPlacesWithLocation_member(){
         // given
-        TravelPlace place1 = TravelPlaceFixture.createTravelPlaceWithId(
+        TravelPlace placeWithThumb = TravelPlaceFixture.createTravelPlaceWithId(
                 1L,
                 country,
                 seoul,
@@ -239,10 +251,11 @@ public class TravelServiceTest  {
                 attractionContentType,
                 "여행지1"
         );
-        TravelImage place1Thumbnail = TravelImageFixture.createTravelImage(place1, "test1", true);
-        TravelImageFixture.createTravelImage(place1, "test2", false);
+        TravelImage placeThumb = TravelImageFixture.createTravelImage(placeWithThumb, "test1", true);
+        TravelImageFixture.createTravelImage(placeWithThumb, "test2", false);
+        String placeThumbUrl = S3Fixture.createS3ObjectUrl(placeThumb.getS3ObjectKey());
 
-        TravelPlace place2 = TravelPlaceFixture.createTravelPlaceWithIdAndLocation(
+        TravelPlace placeWithoutThumb = TravelPlaceFixture.createTravelPlaceWithIdAndLocation(
                 2L,
                 country,
                 seoul,
@@ -257,26 +270,27 @@ public class TravelServiceTest  {
         PlaceSearchRequest request = TravelPlaceFixture.createTravelSearchRequest(37.49, 127.0, "여행지");
 
         Pageable pageable = PageUtils.defaultPageable(1);
-        List<PlaceLocation> locations = List.of(
-                TravelPlaceFixture.createPlaceLocation(place1, place1Thumbnail.getS3ObjectUrl()),
-                TravelPlaceFixture.createPlaceLocation(place2, null)
+        List<PlaceDistanceQueryDto> places = List.of(
+                TravelPlaceFixture.createPlaceDistanceQueryDto(placeWithThumb, placeThumb.getS3ObjectKey()),
+                TravelPlaceFixture.createPlaceDistanceQueryDto(placeWithoutThumb, null)
         );
-        Page<PlaceLocation> mockResponse = PageUtils.createPage(locations, pageable, locations.size());
+        Page<PlaceDistanceQueryDto> mockResponse = PageUtils.createPage(places, pageable, places.size());
 
         when(travelPlaceRepository.searchTravelPlacesWithLocation(pageable, request)).thenReturn(mockResponse);
-        when(bookmarkRepository.existsByMember_MemberIdAndTravelPlace_PlaceId(1L, place1.getPlaceId())).thenReturn(true);
-        when(bookmarkRepository.existsByMember_MemberIdAndTravelPlace_PlaceId(1L, place2.getPlaceId())).thenReturn(false);
+        when(s3ObjectManager.generateS3ObjectUrl(placeThumb.getS3ObjectKey())).thenReturn(placeThumbUrl);
+        when(bookmarkRepository.existsByMember_MemberIdAndTravelPlace_PlaceId(1L, placeWithThumb.getPlaceId())).thenReturn(true);
+        when(bookmarkRepository.existsByMember_MemberIdAndTravelPlace_PlaceId(1L, placeWithoutThumb.getPlaceId())).thenReturn(false);
 
         // when
-        Page<PlaceLocation> response = travelService.searchTravelPlacesWithLocation(1, 1L, request);
+        Page<PlaceDistanceResponse> response = travelService.searchTravelPlacesWithLocation(1, 1L, request);
 
         // then
-        List<PlaceLocation> content = response.getContent();
+        List<PlaceDistanceResponse> content = response.getContent();
         assertThat(response.getTotalElements()).isEqualTo(2);
-        assertThat(content.get(0).getPlaceName()).isEqualTo(place1.getPlaceName());
-        assertThat(content.get(0).getThumbnailUrl()).isEqualTo(place1Thumbnail.getS3ObjectUrl());
+        assertThat(content.get(0).getPlaceName()).isEqualTo(placeWithThumb.getPlaceName());
+        assertThat(content.get(0).getThumbnailUrl()).isEqualTo(placeThumbUrl);
         assertThat(content.get(0).getDistance()).isNotNull();
-        assertThat(content.get(1).getPlaceName()).isEqualTo(place2.getPlaceName());
+        assertThat(content.get(1).getPlaceName()).isEqualTo(placeWithoutThumb.getPlaceName());
         assertThat(content.get(1).getThumbnailUrl()).isNull();
         assertThat(content.get(1).getDistance()).isNotNull();
     }
@@ -288,12 +302,12 @@ public class TravelServiceTest  {
         PlaceSearchRequest request = TravelPlaceFixture.createTravelSearchRequest(37.49, 127.0, "ㅁㄴㅇㄹ");
 
         Pageable pageable = PageUtils.defaultPageable(1);
-        Page<PlaceLocation> mockResponse = PageUtils.createPage(Collections.emptyList(), pageable, 0);
+        Page<PlaceDistanceQueryDto> mockResponse = PageUtils.createPage(Collections.emptyList(), pageable, 0);
 
         when(travelPlaceRepository.searchTravelPlacesWithLocation(pageable, request)).thenReturn(mockResponse);
 
         // when
-        Page<PlaceLocation> response = travelService.searchTravelPlacesWithLocation(1, member.getMemberId(), request);
+        Page<PlaceDistanceResponse> response = travelService.searchTravelPlacesWithLocation(1, member.getMemberId(), request);
 
         // then
         assertThat(response.getTotalElements()).isEqualTo(0);
@@ -304,7 +318,7 @@ public class TravelServiceTest  {
     @DisplayName("비회원의 위치를 기반으로 여행지를 검색할 때, 검색 결과가 존재하는 경우")
     void searchTravelPlacesWithLocation_nonMember(){
         // given
-        TravelPlace place1 = TravelPlaceFixture.createTravelPlace(
+        TravelPlace placeWithThumb = TravelPlaceFixture.createTravelPlace(
                 country,
                 seoul,
                 gangnam,
@@ -312,10 +326,11 @@ public class TravelServiceTest  {
                 attractionContentType,
                 "여행지1"
         );
-        TravelImage place1Thumbnail = TravelImageFixture.createTravelImage(place1, "test1", true);
-        TravelImageFixture.createTravelImage(place1, "test2", false);
+        TravelImage placeThumb = TravelImageFixture.createTravelImage(placeWithThumb, "test1", true);
+        TravelImageFixture.createTravelImage(placeWithThumb, "test2", false);
+        String placeThumbUrl = S3Fixture.createS3ObjectUrl(placeThumb.getS3ObjectKey());
 
-        TravelPlace place2 = TravelPlaceFixture.createTravelPlaceWithLocation(
+        TravelPlace placeWithoutThumb = TravelPlaceFixture.createTravelPlaceWithLocation(
                 country,
                 seoul,
                 gangnam,
@@ -329,25 +344,27 @@ public class TravelServiceTest  {
         PlaceSearchRequest request = TravelPlaceFixture.createTravelSearchRequest(37.49, 127.0, "여행지");
 
         Pageable pageable = PageUtils.defaultPageable(1);
-        List<PlaceLocation> locations = List.of(
-                TravelPlaceFixture.createPlaceLocation(place1, place1Thumbnail.getS3ObjectUrl()),
-                TravelPlaceFixture.createPlaceLocation(place2, null)
+        List<PlaceDistanceQueryDto> locations = List.of(
+                TravelPlaceFixture.createPlaceDistanceQueryDto(placeWithThumb, placeThumb.getS3ObjectKey()),
+                TravelPlaceFixture.createPlaceDistanceQueryDto(placeWithoutThumb, null)
         );
-        Page<PlaceLocation> mockResponse = PageUtils.createPage(locations, pageable, locations.size());
+        Page<PlaceDistanceQueryDto> mockResponse = PageUtils.createPage(locations, pageable, locations.size());
 
         when(travelPlaceRepository.searchTravelPlacesWithLocation(pageable, request)).thenReturn(mockResponse);
+        when(s3ObjectManager.generateS3ObjectUrl(placeThumb.getS3ObjectKey())).thenReturn(placeThumbUrl);
 
         // when
-        Page<PlaceLocation> response = travelService.searchTravelPlacesWithLocation(1, null, request);
+        Page<PlaceDistanceResponse> response = travelService.searchTravelPlacesWithLocation(1, null, request);
 
         // then
-        List<PlaceLocation> content = response.getContent();
+        List<PlaceDistanceResponse> content = response.getContent();
         assertThat(response.getTotalElements()).isEqualTo(2);
-        assertThat(content.get(0).getPlaceName()).isEqualTo(place1.getPlaceName());
-        assertThat(content.get(0).getThumbnailUrl()).isEqualTo(place1Thumbnail.getS3ObjectUrl());
+        assertThat(content.get(0).getPlaceName()).isEqualTo(placeWithThumb.getPlaceName());
+        assertThat(content.get(0).getThumbnailUrl()).isEqualTo(placeThumbUrl);
         assertThat(content.get(0).getDistance()).isNotNull();
         assertThat(content.get(0).isBookmarkStatus()).isFalse();
-        assertThat(content.get(1).getPlaceName()).isEqualTo(place2.getPlaceName());
+
+        assertThat(content.get(1).getPlaceName()).isEqualTo(placeWithoutThumb.getPlaceName());
         assertThat(content.get(1).getThumbnailUrl()).isNull();
         assertThat(content.get(1).isBookmarkStatus()).isFalse();
         assertThat(content.get(1).getDistance()).isNotNull();
@@ -361,12 +378,12 @@ public class TravelServiceTest  {
         PlaceSearchRequest request = TravelPlaceFixture.createTravelSearchRequest(37.49, 127.0, "ㅁㄴㅇㄹ");
 
         Pageable pageable = PageUtils.defaultPageable(1);
-        Page<PlaceLocation> mockResponse = PageUtils.createPage(Collections.emptyList(), pageable, 0);
+        Page<PlaceDistanceQueryDto> mockResponse = PageUtils.createPage(Collections.emptyList(), pageable, 0);
 
         when(travelPlaceRepository.searchTravelPlacesWithLocation(pageable, request)).thenReturn(mockResponse);
 
         // when
-        Page<PlaceLocation> response = travelService.searchTravelPlacesWithLocation(1, null, request);
+        Page<PlaceDistanceResponse> response = travelService.searchTravelPlacesWithLocation(1, null, request);
 
         // then
         assertThat(response.getTotalElements()).isEqualTo(0);
@@ -378,7 +395,7 @@ public class TravelServiceTest  {
     @DisplayName("회원의 위치를 기반하지 않고 여행지를 검색할 때, 검색 결과가 존재하는 경우")
     void searchTravelPlacesWithoutLocation_member(){
         // given
-        TravelPlace place1 = TravelPlaceFixture.createTravelPlaceWithId(
+        TravelPlace placeWithThumb = TravelPlaceFixture.createTravelPlaceWithId(
                 1L,
                 country,
                 seoul,
@@ -387,10 +404,11 @@ public class TravelServiceTest  {
                 attractionContentType,
                 "여행지1"
         );
-        TravelImage place1Thumbnail = TravelImageFixture.createTravelImage(place1, "test1", true);
-        TravelImageFixture.createTravelImage(place1, "test2", false);
+        TravelImage placeThumb = TravelImageFixture.createTravelImage(placeWithThumb, "test1", true);
+        TravelImageFixture.createTravelImage(placeWithThumb, "test2", false);
+        String placeThumbUrl = S3Fixture.createS3ObjectUrl(placeThumb.getS3ObjectKey());
 
-        TravelPlace place2 = TravelPlaceFixture.createTravelPlaceWithIdAndLocation(
+        TravelPlace placeWithoutThumb = TravelPlaceFixture.createTravelPlaceWithIdAndLocation(
                 2L,
                 country,
                 seoul,
@@ -405,25 +423,26 @@ public class TravelServiceTest  {
         PlaceSearchRequest request = TravelPlaceFixture.createTravelSearchRequest("여행지");
 
         Pageable pageable = PageUtils.defaultPageable(1);
-        List<PlaceResponse> locations = List.of(
-                TravelPlaceFixture.createPlaceResponse(place1, place1Thumbnail.getS3ObjectUrl()),
-                TravelPlaceFixture.createPlaceResponse(place2, null)
+        List<PlaceDistanceQueryDto> places = List.of(
+                TravelPlaceFixture.createPlaceDistanceQueryDto(placeWithThumb, placeThumb.getS3ObjectKey()),
+                TravelPlaceFixture.createPlaceDistanceQueryDto(placeWithoutThumb, null)
         );
-        Page<PlaceResponse> mockResponse = PageUtils.createPage(locations, pageable, locations.size());
+        Page<PlaceDistanceQueryDto> mockResponse = PageUtils.createPage(places, pageable, places.size());
 
-        when(travelPlaceRepository.searchTravelPlaces(pageable, request.getKeyword())).thenReturn(mockResponse);
-        when(bookmarkRepository.existsByMember_MemberIdAndTravelPlace_PlaceId(1L, place1.getPlaceId())).thenReturn(true);
-        when(bookmarkRepository.existsByMember_MemberIdAndTravelPlace_PlaceId(1L, place2.getPlaceId())).thenReturn(false);
+        when(travelPlaceRepository.searchTravelPlacesWithoutLocation(pageable, request.getKeyword())).thenReturn(mockResponse);
+        when(s3ObjectManager.generateS3ObjectUrl(placeThumb.getS3ObjectKey())).thenReturn(placeThumbUrl);
+        when(bookmarkRepository.existsByMember_MemberIdAndTravelPlace_PlaceId(1L, placeWithThumb.getPlaceId())).thenReturn(true);
+        when(bookmarkRepository.existsByMember_MemberIdAndTravelPlace_PlaceId(1L, placeWithoutThumb.getPlaceId())).thenReturn(false);
 
         // when
-        Page<PlaceLocation> response = travelService.searchTravelPlacesWithoutLocation(1, 1L, request);
+        Page<PlaceDistanceResponse> response = travelService.searchTravelPlacesWithoutLocation(1, 1L, request);
 
         // then
-        List<PlaceLocation> content = response.getContent();
+        List<PlaceDistanceResponse> content = response.getContent();
         assertThat(response.getTotalElements()).isEqualTo(2);
-        assertThat(content.get(0).getPlaceName()).isEqualTo(place1.getPlaceName());
-        assertThat(content.get(0).getThumbnailUrl()).isEqualTo(place1Thumbnail.getS3ObjectUrl());
-        assertThat(content.get(1).getPlaceName()).isEqualTo(place2.getPlaceName());
+        assertThat(content.get(0).getPlaceName()).isEqualTo(placeWithThumb.getPlaceName());
+        assertThat(content.get(0).getThumbnailUrl()).isEqualTo(placeThumbUrl);
+        assertThat(content.get(1).getPlaceName()).isEqualTo(placeWithoutThumb.getPlaceName());
         assertThat(content.get(1).getThumbnailUrl()).isNull();
     }
 
@@ -434,12 +453,13 @@ public class TravelServiceTest  {
         PlaceSearchRequest request = TravelPlaceFixture.createTravelSearchRequest("ㅁㄴㅇㄹ");
 
         Pageable pageable = PageUtils.defaultPageable(1);
-        Page<PlaceResponse> mockResponse = PageUtils.createPage(Collections.emptyList(), pageable, 0);
+        Page<PlaceDistanceQueryDto> mockResponse = PageUtils.createPage(Collections.emptyList(), pageable, 0);
 
-        when(travelPlaceRepository.searchTravelPlaces(pageable, request.getKeyword())).thenReturn(mockResponse);
+        when(travelPlaceRepository.searchTravelPlacesWithoutLocation(pageable, request.getKeyword())).thenReturn(mockResponse);
+
 
         // when
-        Page<PlaceLocation> response = travelService.searchTravelPlacesWithoutLocation(1, member.getMemberId(), request);
+        Page<PlaceDistanceResponse> response = travelService.searchTravelPlacesWithoutLocation(1, member.getMemberId(), request);
 
         // then
         assertThat(response.getTotalElements()).isEqualTo(0);
@@ -450,7 +470,7 @@ public class TravelServiceTest  {
     @DisplayName("비회원의 위치를 기반하지 않고 여행지를 검색할 때, 검색 결과가 존재하는 경우")
     void searchTravelPlacesWithoutLocation_nonMember(){
         // given
-        TravelPlace place1 = TravelPlaceFixture.createTravelPlace(
+        TravelPlace placeWithThumb = TravelPlaceFixture.createTravelPlace(
                 country,
                 seoul,
                 gangnam,
@@ -458,10 +478,11 @@ public class TravelServiceTest  {
                 attractionContentType,
                 "여행지1"
         );
-        TravelImage place1Thumbnail = TravelImageFixture.createTravelImage(place1, "test1", true);
-        TravelImageFixture.createTravelImage(place1, "test2", false);
+        TravelImage placeThumb = TravelImageFixture.createTravelImage(placeWithThumb, "test1", true);
+        TravelImageFixture.createTravelImage(placeWithThumb, "test2", false);
+        String placeThumbUrl = S3Fixture.createS3ObjectUrl(placeThumb.getS3ObjectKey());
 
-        TravelPlace place2 = TravelPlaceFixture.createTravelPlaceWithLocation(
+        TravelPlace placeWithoutThumb = TravelPlaceFixture.createTravelPlaceWithLocation(
                 country,
                 seoul,
                 gangnam,
@@ -475,24 +496,27 @@ public class TravelServiceTest  {
         PlaceSearchRequest request = TravelPlaceFixture.createTravelSearchRequest("여행지");
 
         Pageable pageable = PageUtils.defaultPageable(1);
-        List<PlaceResponse> locations = List.of(
-                TravelPlaceFixture.createPlaceResponse(place1, place1Thumbnail.getS3ObjectUrl()),
-                TravelPlaceFixture.createPlaceResponse(place2, null)
+        List<PlaceDistanceQueryDto> locations = List.of(
+                TravelPlaceFixture.createPlaceDistanceQueryDto(placeWithThumb, placeThumb.getS3ObjectKey()),
+                TravelPlaceFixture.createPlaceDistanceQueryDto(placeWithoutThumb, null)
         );
-        Page<PlaceResponse> mockResponse = PageUtils.createPage(locations, pageable, locations.size());
+        Page<PlaceDistanceQueryDto> mockResponse = PageUtils.createPage(locations, pageable, locations.size());
 
-        when(travelPlaceRepository.searchTravelPlaces(pageable, request.getKeyword())).thenReturn(mockResponse);
+        when(travelPlaceRepository.searchTravelPlacesWithoutLocation(pageable, request.getKeyword())).thenReturn(mockResponse);
+        when(s3ObjectManager.generateS3ObjectUrl(placeThumb.getS3ObjectKey())).thenReturn(placeThumbUrl);
+        when(s3ObjectManager.generateS3ObjectUrl(null)).thenReturn(null);
+
 
         // when
-        Page<PlaceLocation> response = travelService.searchTravelPlacesWithoutLocation(1, null, request);
+        Page<PlaceDistanceResponse> response = travelService.searchTravelPlacesWithoutLocation(1, null, request);
 
         // then
-        List<PlaceLocation> content = response.getContent();
+        List<PlaceDistanceResponse> content = response.getContent();
         assertThat(response.getTotalElements()).isEqualTo(2);
-        assertThat(content.get(0).getPlaceName()).isEqualTo(place1.getPlaceName());
-        assertThat(content.get(0).getThumbnailUrl()).isEqualTo(place1Thumbnail.getS3ObjectUrl());
+        assertThat(content.get(0).getPlaceName()).isEqualTo(placeWithThumb.getPlaceName());
+        assertThat(content.get(0).getThumbnailUrl()).isEqualTo(placeThumbUrl);
         assertThat(content.get(0).isBookmarkStatus()).isFalse();
-        assertThat(content.get(1).getPlaceName()).isEqualTo(place2.getPlaceName());
+        assertThat(content.get(1).getPlaceName()).isEqualTo(placeWithoutThumb.getPlaceName());
         assertThat(content.get(1).getThumbnailUrl()).isNull();
         assertThat(content.get(1).isBookmarkStatus()).isFalse();
     }
@@ -504,12 +528,12 @@ public class TravelServiceTest  {
         PlaceSearchRequest request = TravelPlaceFixture.createTravelSearchRequest("ㅁㄴㅇㄹ");
 
         Pageable pageable = PageUtils.defaultPageable(1);
-        Page<PlaceResponse> mockResponse = PageUtils.createPage(Collections.emptyList(), pageable, 0);
+        Page<PlaceDistanceQueryDto> mockResponse = PageUtils.createPage(Collections.emptyList(), pageable, 0);
 
-        when(travelPlaceRepository.searchTravelPlaces(pageable, request.getKeyword())).thenReturn(mockResponse);
+        when(travelPlaceRepository.searchTravelPlacesWithoutLocation(pageable, request.getKeyword())).thenReturn(mockResponse);
 
         // when
-        Page<PlaceLocation> response = travelService.searchTravelPlacesWithoutLocation(1, null, request);
+        Page<PlaceDistanceResponse> response = travelService.searchTravelPlacesWithoutLocation(1, null, request);
 
         // then
         assertThat(response.getTotalElements()).isEqualTo(0);
@@ -659,7 +683,7 @@ public class TravelServiceTest  {
     @DisplayName("중구 기준 여행지 조회")
     void getTravelPlacesByJungGu(){
         // given
-        TravelPlace place1 = TravelPlaceFixture.createTravelPlace(
+        TravelPlace placeWithThumb = TravelPlaceFixture.createTravelPlace(
                 country,
                 seoul,
                 gangnam,
@@ -667,10 +691,11 @@ public class TravelServiceTest  {
                 attractionContentType,
                 "여행지1"
         );
-        TravelImage place1Thumbnail = TravelImageFixture.createTravelImage(place1, "test1", true);
-        TravelImageFixture.createTravelImage(place1, "test2", false);
+        TravelImage placeThumb = TravelImageFixture.createTravelImage(placeWithThumb, "test1", true);
+        TravelImageFixture.createTravelImage(placeWithThumb, "test2", false);
+        String placeThumbUrl = S3Fixture.createS3ObjectUrl(placeThumb.getS3ObjectKey());
 
-        TravelPlace place2 = TravelPlaceFixture.createLodgingTravelPlace(
+        TravelPlace placeWithoutThumb = TravelPlaceFixture.createLodgingTravelPlace(
                 country,
                 seoul,
                 gangnam,
@@ -680,13 +705,14 @@ public class TravelServiceTest  {
         );
 
         Pageable pageable = PageUtils.travelPageable(1);
-        List<PlaceResponse> mockResponse = List.of(
-                TravelPlaceFixture.createPlaceResponse(place1, place1Thumbnail.getS3ObjectUrl()),
-                TravelPlaceFixture.createPlaceResponse(place2, null)
+        List<PlaceQueryDto> mockResponse = List.of(
+                TravelPlaceFixture.createPlaceQueryDto(placeWithThumb, placeThumb.getS3ObjectKey()),
+                TravelPlaceFixture.createPlaceQueryDto(placeWithoutThumb, null)
         );
 
-        when(travelPlaceRepository.findDefaultTravelPlacesByJungGu(any()))
+        when(travelPlaceRepository.findNearbyTravelPlacesFromJungGu(any()))
                 .thenReturn(PageUtils.createPage(mockResponse, pageable, mockResponse.size()));
+        when(s3ObjectManager.generateS3ObjectUrl(placeThumb.getS3ObjectKey())).thenReturn(placeThumbUrl);
 
         // when
         Page<PlaceResponse> response = travelService.getTravelPlacesByJungGu(1);
@@ -694,9 +720,9 @@ public class TravelServiceTest  {
         // then
         List<PlaceResponse> content = response.getContent();
         assertThat(response.getTotalElements()).isEqualTo(2);
-        assertThat(content.get(0).getPlaceName()).isEqualTo(place1.getPlaceName());
-        assertThat(content.get(0).getThumbnailUrl()).isEqualTo(place1Thumbnail.getS3ObjectUrl());
-        assertThat(content.get(1).getPlaceName()).isEqualTo(place2.getPlaceName());
+        assertThat(content.get(0).getPlaceName()).isEqualTo(placeWithThumb.getPlaceName());
+        assertThat(content.get(0).getThumbnailUrl()).isEqualTo(placeThumbUrl);
+        assertThat(content.get(1).getPlaceName()).isEqualTo(placeWithoutThumb.getPlaceName());
         assertThat(content.get(1).getThumbnailUrl()).isNull();
     }
 
@@ -706,7 +732,7 @@ public class TravelServiceTest  {
         // given
         Pageable pageable = PageUtils.travelPageable(1);
 
-        when(travelPlaceRepository.findDefaultTravelPlacesByJungGu(any()))
+        when(travelPlaceRepository.findNearbyTravelPlacesFromJungGu(any()))
                 .thenReturn(PageUtils.createPage(Collections.emptyList(), pageable, 0));
 
         // when
@@ -724,7 +750,7 @@ public class TravelServiceTest  {
         // given
         String keyword = "여행";
 
-        TravelPlace place1 = TravelPlaceFixture.createTravelPlace(
+        TravelPlace placeWithThumb = TravelPlaceFixture.createTravelPlace(
                 country,
                 seoul,
                 gangnam,
@@ -732,10 +758,11 @@ public class TravelServiceTest  {
                 attractionContentType,
                 "여행지1"
         );
-        TravelImage place1Thumbnail = TravelImageFixture.createTravelImage(place1, "test1", true);
-        TravelImageFixture.createTravelImage(place1, "test2", false);
+        TravelImage placeThumb = TravelImageFixture.createTravelImage(placeWithThumb, "test1", true);
+        TravelImageFixture.createTravelImage(placeWithThumb, "test2", false);
+        String placeThumbUrl = S3Fixture.createS3ObjectUrl(placeThumb.getS3ObjectKey());
 
-        TravelPlace place2 = TravelPlaceFixture.createLodgingTravelPlace(
+        TravelPlace placeWithoutThumb = TravelPlaceFixture.createLodgingTravelPlace(
                 country,
                 seoul,
                 gangnam,
@@ -745,13 +772,14 @@ public class TravelServiceTest  {
         );
 
         Pageable pageable = PageUtils.travelPageable(1);
-        List<PlaceResponse> mockResponse = List.of(
-                TravelPlaceFixture.createPlaceResponse(place1, place1Thumbnail.getS3ObjectUrl()),
-                TravelPlaceFixture.createPlaceResponse(place2, null)
+        List<PlaceQueryDto> mockResponse = List.of(
+                TravelPlaceFixture.createPlaceQueryDto(placeWithThumb, placeThumb.getS3ObjectKey()),
+                TravelPlaceFixture.createPlaceQueryDto(placeWithoutThumb, null)
         );
 
         when(travelPlaceRepository.searchTravelPlaces(pageable, keyword))
                 .thenReturn(PageUtils.createPage(mockResponse, pageable, mockResponse.size()));
+        when(s3ObjectManager.generateS3ObjectUrl(placeThumb.getS3ObjectKey())).thenReturn(placeThumbUrl);
 
         // when
         Page<PlaceResponse> response = travelService.searchTravelPlaces(1, keyword);
@@ -759,10 +787,10 @@ public class TravelServiceTest  {
         // then
         List<PlaceResponse> content = response.getContent();
         assertThat(response.getTotalElements()).isEqualTo(2);
-        assertThat(content.get(0).getPlaceName()).isEqualTo(place1.getPlaceName());
-        assertThat(content.get(0).getAddress()).isEqualTo(place1.getAddress());
-        assertThat(content.get(0).getThumbnailUrl()).isEqualTo(place1Thumbnail.getS3ObjectUrl());
-        assertThat(content.get(1).getPlaceName()).isEqualTo(place2.getPlaceName());
+        assertThat(content.get(0).getPlaceName()).isEqualTo(placeWithThumb.getPlaceName());
+        assertThat(content.get(0).getAddress()).isEqualTo(placeWithThumb.getAddress());
+        assertThat(content.get(0).getThumbnailUrl()).isEqualTo(placeThumbUrl);
+        assertThat(content.get(1).getPlaceName()).isEqualTo(placeWithoutThumb.getPlaceName());
         assertThat(content.get(1).getThumbnailUrl()).isNull();
     }
 
@@ -797,8 +825,9 @@ public class TravelServiceTest  {
                 attractionContentType,
                 "여행지1"
         );
-        TravelImage gangnam1Thumbnail = TravelImageFixture.createTravelImage(gangnamPlace1, "test1", true);
+        TravelImage gangnam1Thumb = TravelImageFixture.createTravelImage(gangnamPlace1, "test1", true);
         TravelImageFixture.createTravelImage(gangnamPlace1, "test2", false);
+        String gangnam1ThumbUrl = S3Fixture.createS3ObjectUrl(gangnam1Thumb.getS3ObjectKey());
 
         TravelPlace gangnamPlace2 = TravelPlaceFixture.createLodgingTravelPlace(
                 country,
@@ -819,7 +848,8 @@ public class TravelServiceTest  {
                 attractionContentType,
                 "금정 여행지"
         );
-        TravelImage busanThumbnail = TravelImageFixture.createTravelImage(busanPlace, "부산이미지1", true);
+        TravelImage busanThumb = TravelImageFixture.createTravelImage(busanPlace, "부산이미지1", true);
+        String busanThumbUrl = S3Fixture.createS3ObjectUrl(busanThumb.getS3ObjectKey());
 
         City jeolla = CityFixture.createCity(country, "전라남도");
         District jeollaDistrict = DistrictFixture.createDistrict(busan, "보성구");
@@ -832,26 +862,29 @@ public class TravelServiceTest  {
                 "보성 여행지"
         );
 
-        List<PlaceSimpleResponse> mockResult = List.of(
-                TravelPlaceFixture.createPlaceSimpleResponse(jeollaPlace, null),
-                TravelPlaceFixture.createPlaceSimpleResponse(busanPlace, busanThumbnail.getS3ObjectUrl()),
-                TravelPlaceFixture.createPlaceSimpleResponse( gangnamPlace1, gangnam1Thumbnail.getS3ObjectUrl()),
-                TravelPlaceFixture.createPlaceSimpleResponse(gangnamPlace2, null)
+        List<PlaceSimpleQueryDto> mockResult = List.of(
+                TravelPlaceFixture.createPlaceSimpleQueryDto(jeollaPlace, null),
+                TravelPlaceFixture.createPlaceSimpleQueryDto(busanPlace, busanThumb.getS3ObjectKey()),
+                TravelPlaceFixture.createPlaceSimpleQueryDto(gangnamPlace1, gangnam1Thumb.getS3ObjectKey()),
+                TravelPlaceFixture.createPlaceSimpleQueryDto(gangnamPlace2, null)
         );
 
         when(travelPlaceRepository.findPopularTravelPlaces(CityType.ALL)).thenReturn(mockResult);
+        when(s3ObjectManager.generateS3ObjectUrl(busanThumb.getS3ObjectKey())).thenReturn(busanThumbUrl);
+        when(s3ObjectManager.generateS3ObjectUrl(gangnam1Thumb.getS3ObjectKey())).thenReturn(gangnam1ThumbUrl);
+        when(s3ObjectManager.generateS3ObjectUrl(null)).thenReturn(null);
 
         // when
-        List<PlaceSimpleResponse> response = travelPlaceRepository.findPopularTravelPlaces(CityType.ALL);
+        List<PlaceSimpleResponse> response = travelService.getPopularTravelPlacesByCity(CityType.ALL);
 
         // then
         assertThat(response.size()).isEqualTo(4);
         assertThat(response.get(0).getPlaceName()).isEqualTo(jeollaPlace.getPlaceName());
         assertThat(response.get(0).getThumbnailUrl()).isNull();
         assertThat(response.get(1).getPlaceName()).isEqualTo(busanPlace.getPlaceName());
-        assertThat(response.get(1).getThumbnailUrl()).isEqualTo(busanThumbnail.getS3ObjectUrl());
+        assertThat(response.get(1).getThumbnailUrl()).isEqualTo(busanThumbUrl);
         assertThat(response.get(2).getPlaceName()).isEqualTo(gangnamPlace1.getPlaceName());
-        assertThat(response.get(2).getThumbnailUrl()).isEqualTo(gangnam1Thumbnail.getS3ObjectUrl());
+        assertThat(response.get(2).getThumbnailUrl()).isEqualTo(gangnam1ThumbUrl);
         assertThat(response.get(3).getPlaceName()).isEqualTo(gangnamPlace2.getPlaceName());
         assertThat(response.get(3).getThumbnailUrl()).isNull();
     }
@@ -870,7 +903,8 @@ public class TravelServiceTest  {
                 attractionContentType,
                 "고창 여행지"
         );
-        TravelImage jeolla1Thumbnail = TravelImageFixture.createTravelImage(jeollaPlace1, "부산이미지1", true);
+        TravelImage jeolla1Thumb = TravelImageFixture.createTravelImage(jeollaPlace1, "부산이미지1", true);
+        String jeolla1ThumbUrl = S3Fixture.createS3ObjectUrl(jeolla1Thumb.getS3ObjectKey());
 
         City jeolla2 = CityFixture.createCity(country, "전라남도");
         District jeolla2District = DistrictFixture.createDistrict(jeolla2, "보성구");
@@ -883,22 +917,24 @@ public class TravelServiceTest  {
                 "보성 여행지"
         );
 
-        List<PlaceSimpleResponse> mockResult = List.of(
-                TravelPlaceFixture.createPlaceSimpleResponse(jeollaPlace2, null),
-                TravelPlaceFixture.createPlaceSimpleResponse(jeollaPlace1, jeolla1Thumbnail.getS3ObjectUrl())
+        List<PlaceSimpleQueryDto> mockResult = List.of(
+                TravelPlaceFixture.createPlaceSimpleQueryDto(jeollaPlace2, null),
+                TravelPlaceFixture.createPlaceSimpleQueryDto(jeollaPlace1, jeolla1Thumb.getS3ObjectKey())
         );
 
         when(travelPlaceRepository.findPopularTravelPlaces(CityType.JEOLLA)).thenReturn(mockResult);
+        when(s3ObjectManager.generateS3ObjectUrl(jeolla1Thumb.getS3ObjectKey())).thenReturn(jeolla1ThumbUrl);
+        when(s3ObjectManager.generateS3ObjectUrl(null)).thenReturn(null);
 
         // when
-        List<PlaceSimpleResponse> response = travelPlaceRepository.findPopularTravelPlaces(CityType.JEOLLA);
+        List<PlaceSimpleResponse> response = travelService.getPopularTravelPlacesByCity(CityType.JEOLLA);
 
         // then
         assertThat(response.size()).isEqualTo(2);
         assertThat(response.get(0).getPlaceName()).isEqualTo(jeollaPlace2.getPlaceName());
         assertThat(response.get(0).getThumbnailUrl()).isNull();
         assertThat(response.get(1).getPlaceName()).isEqualTo(jeollaPlace1.getPlaceName());
-        assertThat(response.get(1).getThumbnailUrl()).isEqualTo(jeolla1Thumbnail.getS3ObjectUrl());
+        assertThat(response.get(1).getThumbnailUrl()).isEqualTo(jeolla1ThumbUrl);
     }
 
 
@@ -909,7 +945,7 @@ public class TravelServiceTest  {
         when(travelPlaceRepository.findPopularTravelPlaces(CityType.JEOLLA)).thenReturn(Collections.emptyList());
 
         // when
-        List<PlaceSimpleResponse> response = travelPlaceRepository.findPopularTravelPlaces(CityType.JEOLLA);
+        List<PlaceSimpleResponse> response = travelService.getPopularTravelPlacesByCity(CityType.JEOLLA);
 
         // then
         assertThat(response.size()).isEqualTo(0);
@@ -930,8 +966,9 @@ public class TravelServiceTest  {
                 attractionContentType,
                 "여행지1"
         );
-        TravelImage attraction1Thumbnail = TravelImageFixture.createTravelImage(attractionPlace1, "test1", true);
+        TravelImage attraction1Thumb = TravelImageFixture.createTravelImage(attractionPlace1, "test1", true);
         TravelImageFixture.createTravelImage(attractionPlace1, "test2", false);
+        String attraction1ThumbUrl = S3Fixture.createS3ObjectUrl(attraction1Thumb.getS3ObjectKey());
 
         TravelPlace lodgingPlace = TravelPlaceFixture.createLodgingTravelPlace(
                 country,
@@ -952,7 +989,8 @@ public class TravelServiceTest  {
                 sportsContentType,
                 "부산 여행지"
         );
-        TravelImage sportsThumbnail = TravelImageFixture.createTravelImage(sportsPlace, "부산이미지1", true);
+        TravelImage sportsThumb = TravelImageFixture.createTravelImage(sportsPlace, "부산이미지1", true);
+        String sportsThumbUrl = S3Fixture.createS3ObjectUrl(sportsThumb.getS3ObjectKey());
 
         City jeolla = CityFixture.createCity(country, "전라남도");
         District jeollaDistrict = DistrictFixture.createDistrict(busan, "보성구");
@@ -965,27 +1003,29 @@ public class TravelServiceTest  {
                 "전라도 여행지"
         );
 
-        List<PlaceSimpleResponse> mockResult = List.of(
-                TravelPlaceFixture.createPlaceSimpleResponse(attractionPlace2, null),
-                TravelPlaceFixture.createPlaceSimpleResponse(sportsPlace, sportsThumbnail.getS3ObjectUrl()),
-                TravelPlaceFixture.createPlaceSimpleResponse(attractionPlace1, attraction1Thumbnail.getS3ObjectUrl()),
-                TravelPlaceFixture.createPlaceSimpleResponse(lodgingPlace, null)
+        List<PlaceSimpleQueryDto> mockResult = List.of(
+                TravelPlaceFixture.createPlaceSimpleQueryDto(attractionPlace2, null),
+                TravelPlaceFixture.createPlaceSimpleQueryDto(sportsPlace, sportsThumb.getS3ObjectKey()),
+                TravelPlaceFixture.createPlaceSimpleQueryDto(attractionPlace1, attraction1Thumb.getS3ObjectKey()),
+                TravelPlaceFixture.createPlaceSimpleQueryDto(lodgingPlace, null)
         );
 
         when(travelPlaceRepository.findRecommendTravelPlaces(ThemeType.All)).thenReturn(mockResult);
-
+        when(s3ObjectManager.generateS3ObjectUrl(sportsThumb.getS3ObjectKey())).thenReturn(sportsThumbUrl);
+        when(s3ObjectManager.generateS3ObjectUrl(attraction1Thumb.getS3ObjectKey())).thenReturn(attraction1ThumbUrl);
+        when(s3ObjectManager.generateS3ObjectUrl(null)).thenReturn(null);
 
         // when
-        List<PlaceSimpleResponse> response = travelPlaceRepository.findRecommendTravelPlaces(ThemeType.All);
+        List<PlaceSimpleResponse> response = travelService.getRecommendTravelPlacesByTheme(ThemeType.All);
 
         // then
         assertThat(response.size()).isEqualTo(4);
         assertThat(response.get(0).getPlaceName()).isEqualTo(attractionPlace2.getPlaceName());
         assertThat(response.get(0).getThumbnailUrl()).isNull();
         assertThat(response.get(1).getPlaceName()).isEqualTo(sportsPlace.getPlaceName());
-        assertThat(response.get(1).getThumbnailUrl()).isEqualTo(sportsThumbnail.getS3ObjectUrl());
+        assertThat(response.get(1).getThumbnailUrl()).isEqualTo(sportsThumbUrl);
         assertThat(response.get(2).getPlaceName()).isEqualTo(attractionPlace1.getPlaceName());
-        assertThat(response.get(2).getThumbnailUrl()).isEqualTo(attraction1Thumbnail.getS3ObjectUrl());
+        assertThat(response.get(2).getThumbnailUrl()).isEqualTo(attraction1ThumbUrl);
         assertThat(response.get(3).getPlaceName()).isEqualTo(lodgingPlace.getPlaceName());
         assertThat(response.get(3).getThumbnailUrl()).isNull();
 
@@ -1003,8 +1043,9 @@ public class TravelServiceTest  {
                 attractionContentType,
                 "여행지1"
         );
-        TravelImage attraction1Thumbnail = TravelImageFixture.createTravelImage(attractionPlace1, "test1", true);
+        TravelImage attraction1Thumb = TravelImageFixture.createTravelImage(attractionPlace1, "test1", true);
         TravelImageFixture.createTravelImage(attractionPlace1, "test2", false);
+        String attraction1ThumbUrl = S3Fixture.createS3ObjectUrl(attraction1Thumb.getS3ObjectKey());
 
         City jeolla2 = CityFixture.createCity(country, "전라남도");
         District jeolla2District = DistrictFixture.createDistrict(jeolla2, "보성구");
@@ -1017,23 +1058,24 @@ public class TravelServiceTest  {
                 "전라도 여행지"
         );
 
-        List<PlaceSimpleResponse> mockResult = List.of(
-                TravelPlaceFixture.createPlaceSimpleResponse(attractionPlace2, null),
-                TravelPlaceFixture.createPlaceSimpleResponse(attractionPlace1, attraction1Thumbnail.getS3ObjectUrl())
+        List<PlaceSimpleQueryDto> mockResult = List.of(
+                TravelPlaceFixture.createPlaceSimpleQueryDto(attractionPlace2, null),
+                TravelPlaceFixture.createPlaceSimpleQueryDto(attractionPlace1, attraction1Thumb.getS3ObjectKey())
         );
 
         when(travelPlaceRepository.findRecommendTravelPlaces(ThemeType.ATTRACTIONS)).thenReturn(mockResult);
+        when(s3ObjectManager.generateS3ObjectUrl(attraction1Thumb.getS3ObjectKey())).thenReturn(attraction1ThumbUrl);
+        when(s3ObjectManager.generateS3ObjectUrl(null)).thenReturn(null);
 
         // when
-        List<PlaceSimpleResponse> response = travelPlaceRepository.findRecommendTravelPlaces(ThemeType.ATTRACTIONS);
+        List<PlaceSimpleResponse> response = travelService.getRecommendTravelPlacesByTheme(ThemeType.ATTRACTIONS);
 
         // then
         assertThat(response.size()).isEqualTo(2);
         assertThat(response.get(0).getPlaceName()).isEqualTo(attractionPlace2.getPlaceName());
         assertThat(response.get(0).getThumbnailUrl()).isNull();
         assertThat(response.get(1).getPlaceName()).isEqualTo(attractionPlace1.getPlaceName());
-        assertThat(response.get(1).getThumbnailUrl()).isEqualTo(attraction1Thumbnail.getS3ObjectUrl());
-
+        assertThat(response.get(1).getThumbnailUrl()).isEqualTo(attraction1ThumbUrl);
     }
 
 
@@ -1041,7 +1083,7 @@ public class TravelServiceTest  {
     @DisplayName("추천 테마 여행지 조회 시 데이터 없는 경우")
     void findRecommendTravelPlacesByTheme_empty(){
         // given, when
-        List<PlaceSimpleResponse> response = travelPlaceRepository.findRecommendTravelPlaces(ThemeType.FOOD);
+        List<PlaceSimpleResponse> response = travelService.getRecommendTravelPlacesByTheme(ThemeType.FOOD);
 
         // then
         assertThat(response.size()).isEqualTo(0);

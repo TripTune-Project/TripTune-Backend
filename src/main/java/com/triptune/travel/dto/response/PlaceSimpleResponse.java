@@ -1,5 +1,6 @@
 package com.triptune.travel.dto.response;
 
+import com.triptune.travel.repository.dto.PlaceSimpleQueryDto;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -20,6 +21,16 @@ public class PlaceSimpleResponse {
         this.detailAddress = detailAddress;
         this.placeName = placeName;
         this.thumbnailUrl = thumbnailUrl;
+    }
+
+    public static PlaceSimpleResponse of(PlaceSimpleQueryDto simpleQueryDto, String thumbnailUrl){
+        return PlaceSimpleResponse.builder()
+                .placeId(simpleQueryDto.getPlaceId())
+                .address(simpleQueryDto.getAddress())
+                .detailAddress(simpleQueryDto.getDetailAddress())
+                .placeName(simpleQueryDto.getPlaceName())
+                .thumbnailUrl(thumbnailUrl)
+                .build();
     }
 
 }

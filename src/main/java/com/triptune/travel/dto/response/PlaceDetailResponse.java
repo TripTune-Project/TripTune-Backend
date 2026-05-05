@@ -8,7 +8,6 @@ import lombok.NoArgsConstructor;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Getter
 @NoArgsConstructor
@@ -56,7 +55,7 @@ public class PlaceDetailResponse {
     }
 
 
-    public static PlaceDetailResponse from(TravelPlace travelPlace, boolean bookmarkStatus){
+    public static PlaceDetailResponse of(TravelPlace travelPlace, List<TravelImageResponse> imageList, boolean bookmarkStatus){
         return PlaceDetailResponse.builder()
                 .placeId(travelPlace.getPlaceId())
                 .placeType(travelPlace.getApiContentType().getContentTypeName())
@@ -75,9 +74,7 @@ public class PlaceDetailResponse {
                 .placeName(travelPlace.getPlaceName())
                 .bookmarkStatus(bookmarkStatus)
                 .description(travelPlace.getDescription())
-                .imageList(travelPlace.getTravelImages().stream()   // TravelImageFile -> TravelImageResponse 로 변경
-                        .map(TravelImageResponse::from)
-                        .collect(Collectors.toList()))
+                .imageList(imageList)
                 .build();
     }
 

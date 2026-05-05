@@ -1,8 +1,10 @@
 package com.triptune.schedule.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.triptune.common.fixture.S3Fixture;
 import com.triptune.global.message.ErrorCode;
 import com.triptune.global.message.SuccessCode;
+import com.triptune.global.s3.S3ObjectManager;
 import com.triptune.global.security.SecurityTestUtils;
 import com.triptune.member.entity.Member;
 import com.triptune.member.fixture.MemberFixture;
@@ -55,6 +57,7 @@ public class TravelAttendeeControllerTest {
     @Autowired private TravelAttendeeRepository travelAttendeeRepository;
     @Autowired private MemberRepository memberRepository;
     @Autowired private ProfileImageRepository profileImageRepository;
+    @Autowired private S3ObjectManager s3ObjectManager;
 
 
     private TravelSchedule schedule1;
@@ -64,14 +67,19 @@ public class TravelAttendeeControllerTest {
     private Member member2;
     private Member member3;
 
+    private String member1ProfileUrl;
+    private String member2ProfileUrl;
+
 
     @BeforeEach
     void setUp(){
         ProfileImage profileImage1 = profileImageRepository.save(ProfileImageFixture.createProfileImage("member1Image"));
         member1 = memberRepository.save(MemberFixture.createNativeTypeMember("member1@email.com", profileImage1));
+        member1ProfileUrl = S3Fixture.createS3ObjectUrl(profileImage1.getS3ObjectKey());
 
         ProfileImage profileImage2 = profileImageRepository.save(ProfileImageFixture.createProfileImage("member2Image"));
         member2 = memberRepository.save(MemberFixture.createNativeTypeMember("member2@email.com", profileImage2));
+        member2ProfileUrl = S3Fixture.createS3ObjectUrl(profileImage2.getS3ObjectKey());
 
         ProfileImage profileImage3 = profileImageRepository.save(ProfileImageFixture.createProfileImage("member3Image"));
         member3 = memberRepository.save(MemberFixture.createNativeTypeMember("member3@email.com", profileImage3));
@@ -97,10 +105,10 @@ public class TravelAttendeeControllerTest {
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.length()").value(2))
                 .andExpect(jsonPath("$.data[0].nickname").value(member1.getNickname()))
-                .andExpect(jsonPath("$.data[0].profileUrl").value(member1.getProfileImage().getS3ObjectUrl()))
+                .andExpect(jsonPath("$.data[0].profileUrl").value(member1ProfileUrl))
                 .andExpect(jsonPath("$.data[0].permission").value(author.getPermission().name()))
                 .andExpect(jsonPath("$.data[1].nickname").value(member2.getNickname()))
-                .andExpect(jsonPath("$.data[1].profileUrl").value(member2.getProfileImage().getS3ObjectUrl()))
+                .andExpect(jsonPath("$.data[1].profileUrl").value(member2ProfileUrl))
                 .andExpect(jsonPath("$.data[1].permission").value(guest1.getPermission().name()));
 
     }

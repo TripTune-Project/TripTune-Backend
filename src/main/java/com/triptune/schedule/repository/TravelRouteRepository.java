@@ -8,7 +8,6 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface TravelRouteRepository extends JpaRepository<TravelRoute, Long> {
-    Page<TravelRoute> findAllByTravelSchedule_ScheduleId(Pageable pageable, @Param("scheduleId") Long scheduleId);
+public interface TravelRouteRepository extends JpaRepository<TravelRoute, Long>, TravelRouteRepositoryCustom{
     void deleteAllByTravelSchedule_ScheduleId(@Param("scheduleId") Long scheduleId);
 }

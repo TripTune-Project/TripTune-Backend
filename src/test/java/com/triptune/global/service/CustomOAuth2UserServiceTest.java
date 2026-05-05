@@ -1,5 +1,6 @@
 package com.triptune.global.service;
 
+import com.triptune.common.fixture.S3Fixture;
 import com.triptune.member.fixture.MemberFixture;
 import com.triptune.member.fixture.SocialMemberFixture;
 import com.triptune.global.security.oauth.CustomOAuth2UserService;
@@ -68,7 +69,7 @@ class CustomOAuth2UserServiceTest  {
         assertThat(response.getEmail()).isEqualTo(member.getEmail());
         assertThat(response.getPassword()).isNull();
         assertThat(response.getNickname()).isEqualTo(member.getNickname());
-        assertThat(response.getProfileImage().getS3ObjectUrl()).isEqualTo(profileImage.getS3ObjectUrl());
+        assertThat(response.getProfileImage().getS3ObjectKey()).isEqualTo(profileImage.getS3ObjectKey());
         assertThat(response.getJoinType()).isEqualTo(JoinType.SOCIAL);
     }
 
@@ -92,7 +93,7 @@ class CustomOAuth2UserServiceTest  {
         assertThat(response.getEmail()).isEqualTo(member.getEmail());
         assertThat(response.getPassword()).isNull();
         assertThat(response.getNickname()).isEqualTo(member.getNickname());
-        assertThat(response.getProfileImage().getS3ObjectUrl()).isEqualTo(defaultImage.getS3ObjectUrl());
+        assertThat(response.getProfileImage().getS3ObjectKey()).isEqualTo(defaultImage.getS3ObjectKey());
         assertThat(response.getJoinType()).isEqualTo(JoinType.SOCIAL);
     }
 
@@ -116,7 +117,7 @@ class CustomOAuth2UserServiceTest  {
         assertThat(response.getEmail()).isEqualTo(member.getEmail());
         assertThat(response.getPassword()).isEqualTo(member.getPassword());
         assertThat(response.getNickname()).isEqualTo(member.getNickname());
-        assertThat(response.getProfileImage().getS3ObjectUrl()).isEqualTo(defaultImage.getS3ObjectUrl());
+        assertThat(response.getProfileImage().getS3ObjectKey()).isEqualTo(defaultImage.getS3ObjectKey());
         assertThat(response.getJoinType()).isEqualTo(JoinType.SOCIAL);
     }
 
@@ -139,7 +140,7 @@ class CustomOAuth2UserServiceTest  {
         assertThat(response.getEmail()).isEqualTo(member.getEmail());
         assertThat(response.getPassword()).isEqualTo(member.getPassword());
         assertThat(response.getNickname()).isEqualTo(member.getNickname());
-        assertThat(response.getProfileImage().getS3ObjectUrl()).isEqualTo(defaultImage.getS3ObjectUrl());
+        assertThat(response.getProfileImage().getS3ObjectKey()).isEqualTo(defaultImage.getS3ObjectKey());
         assertThat(response.getJoinType()).isEqualTo(JoinType.BOTH);
 
     }
@@ -163,7 +164,7 @@ class CustomOAuth2UserServiceTest  {
         assertThat(response.getEmail()).isEqualTo(member.getEmail());
         assertThat(response.getPassword()).isEqualTo(member.getPassword());
         assertThat(response.getNickname()).isEqualTo(member.getNickname());
-        assertThat(response.getProfileImage().getS3ObjectUrl()).isEqualTo(defaultImage.getS3ObjectUrl());
+        assertThat(response.getProfileImage().getS3ObjectKey()).isEqualTo(defaultImage.getS3ObjectKey());
         assertThat(response.getJoinType()).isEqualTo(JoinType.BOTH);
 
     }
@@ -186,7 +187,7 @@ class CustomOAuth2UserServiceTest  {
         assertThat(response.getEmail()).isEqualTo(member.getEmail());
         assertThat(response.getPassword()).isEqualTo(member.getPassword());
         assertThat(response.getNickname()).isEqualTo(member.getNickname());
-        assertThat(response.getProfileImage().getS3ObjectUrl()).isEqualTo(defaultImage.getS3ObjectUrl());
+        assertThat(response.getProfileImage().getS3ObjectKey()).isEqualTo(defaultImage.getS3ObjectKey());
         assertThat(response.getJoinType()).isEqualTo(JoinType.BOTH);
 
         verify(socialMemberRepository, times(1)).save(any());
@@ -210,7 +211,7 @@ class CustomOAuth2UserServiceTest  {
         assertThat(response.getEmail()).isEqualTo(member.getEmail());
         assertThat(response.getPassword()).isEqualTo(member.getPassword());
         assertThat(response.getNickname()).isEqualTo(member.getNickname());
-        assertThat(response.getProfileImage().getS3ObjectUrl()).isEqualTo(defaultImage.getS3ObjectUrl());
+        assertThat(response.getProfileImage().getS3ObjectKey()).isEqualTo(defaultImage.getS3ObjectKey());
         assertThat(response.getJoinType()).isEqualTo(JoinType.BOTH);
 
         verify(socialMemberRepository, times(1)).save(any());
@@ -234,7 +235,7 @@ class CustomOAuth2UserServiceTest  {
         assertThat(response.getEmail()).isEqualTo(member.getEmail());
         assertThat(response.getPassword()).isNull();
         assertThat(response.getNickname()).isEqualTo(member.getNickname());
-        assertThat(response.getProfileImage().getS3ObjectUrl()).isEqualTo(defaultImage.getS3ObjectUrl());
+        assertThat(response.getProfileImage().getS3ObjectKey()).isEqualTo(defaultImage.getS3ObjectKey());
         assertThat(response.getJoinType()).isEqualTo(JoinType.SOCIAL);
 
         verify(socialMemberRepository, times(1)).save(any());
@@ -258,7 +259,7 @@ class CustomOAuth2UserServiceTest  {
         assertThat(response.getEmail()).isEqualTo(member.getEmail());
         assertThat(response.getPassword()).isEqualTo(member.getPassword());
         assertThat(response.getNickname()).isEqualTo(member.getNickname());
-        assertThat(response.getProfileImage().getS3ObjectUrl()).isEqualTo(defaultImage.getS3ObjectUrl());
+        assertThat(response.getProfileImage().getS3ObjectKey()).isEqualTo(defaultImage.getS3ObjectKey());
         assertThat(response.getJoinType()).isEqualTo(JoinType.BOTH);
 
         verify(socialMemberRepository, times(1)).save(any());
@@ -283,7 +284,7 @@ class CustomOAuth2UserServiceTest  {
         // then
         assertThat(response.getEmail()).isEqualTo(member.getEmail());
         assertThat(response.getPassword()).isNull();
-        assertThat(response.getProfileImage().getS3ObjectUrl()).isEqualTo(defaultImage.getS3ObjectUrl());
+        assertThat(response.getProfileImage().getS3ObjectKey()).isEqualTo(defaultImage.getS3ObjectKey());
         assertThat(response.getJoinType()).isEqualTo(JoinType.SOCIAL);
 
         verify(socialMemberRepository, times(1)).save(any());
@@ -306,7 +307,7 @@ class CustomOAuth2UserServiceTest  {
         // then
         assertThat(response.getEmail()).isEqualTo(member.getEmail());
         assertThat(response.getPassword()).isNull();
-        assertThat(response.getProfileImage().getS3ObjectUrl()).isEqualTo(defaultImage.getS3ObjectUrl());
+        assertThat(response.getProfileImage().getS3ObjectKey()).isEqualTo(defaultImage.getS3ObjectKey());
         assertThat(response.getJoinType()).isEqualTo(JoinType.SOCIAL);
 
         verify(socialMemberRepository, times(1)).save(any());
@@ -329,7 +330,7 @@ class CustomOAuth2UserServiceTest  {
         assertThat(response.getEmail()).isEqualTo(member.getEmail());
         assertThat(response.getPassword()).isEqualTo(member.getPassword());
         assertThat(response.getNickname()).isEqualTo(member.getNickname());
-        assertThat(response.getProfileImage().getS3ObjectUrl()).isEqualTo(defaultImage.getS3ObjectUrl());
+        assertThat(response.getProfileImage().getS3ObjectKey()).isEqualTo(defaultImage.getS3ObjectKey());
         assertThat(response.getJoinType()).isEqualTo(JoinType.BOTH);
 
     }
@@ -351,7 +352,7 @@ class CustomOAuth2UserServiceTest  {
         assertThat(response.getEmail()).isEqualTo(member.getEmail());
         assertThat(response.getPassword()).isEqualTo(member.getPassword());
         assertThat(response.getNickname()).isEqualTo(member.getNickname());
-        assertThat(response.getProfileImage().getS3ObjectUrl()).isEqualTo(defaultImage.getS3ObjectUrl());
+        assertThat(response.getProfileImage().getS3ObjectKey()).isEqualTo(defaultImage.getS3ObjectKey());
         assertThat(response.getJoinType()).isEqualTo(JoinType.BOTH);
     }
 
@@ -372,7 +373,7 @@ class CustomOAuth2UserServiceTest  {
         assertThat(response.getEmail()).isEqualTo(member.getEmail());
         assertThat(response.getPassword()).isNull();
         assertThat(response.getNickname()).isEqualTo(member.getNickname());
-        assertThat(response.getProfileImage().getS3ObjectUrl()).isEqualTo(defaultImage.getS3ObjectUrl());
+        assertThat(response.getProfileImage().getS3ObjectKey()).isEqualTo(defaultImage.getS3ObjectKey());
         assertThat(response.getJoinType()).isEqualTo(JoinType.SOCIAL);
 
     }
@@ -394,7 +395,7 @@ class CustomOAuth2UserServiceTest  {
         assertThat(response.getEmail()).isEqualTo(member.getEmail());
         assertThat(response.getPassword()).isEqualTo(member.getPassword());
         assertThat(response.getNickname()).isEqualTo(member.getNickname());
-        assertThat(response.getProfileImage().getS3ObjectUrl()).isEqualTo(defaultImage.getS3ObjectUrl());
+        assertThat(response.getProfileImage().getS3ObjectKey()).isEqualTo(defaultImage.getS3ObjectKey());
         assertThat(response.getJoinType()).isEqualTo(JoinType.BOTH);
 
     }
@@ -418,7 +419,7 @@ class CustomOAuth2UserServiceTest  {
         // then
         assertThat(response.getEmail()).isEqualTo(member.getEmail());
         assertThat(response.getPassword()).isNull();
-        assertThat(response.getProfileImage().getS3ObjectUrl()).isEqualTo(defaultImage.getS3ObjectUrl());
+        assertThat(response.getProfileImage().getS3ObjectKey()).isEqualTo(defaultImage.getS3ObjectKey());
         assertThat(response.getJoinType()).isEqualTo(JoinType.SOCIAL);
 
         verify(socialMemberRepository, times(1)).save(any());
@@ -443,7 +444,7 @@ class CustomOAuth2UserServiceTest  {
         // then
         assertThat(response.getEmail()).isEqualTo(member.getEmail());
         assertThat(response.getPassword()).isNull();
-        assertThat(response.getProfileImage().getS3ObjectUrl()).isEqualTo(defaultImage.getS3ObjectUrl());
+        assertThat(response.getProfileImage().getS3ObjectKey()).isEqualTo(defaultImage.getS3ObjectKey());
         assertThat(response.getJoinType()).isEqualTo(JoinType.SOCIAL);
 
         verify(socialMemberRepository, times(1)).save(any());
@@ -464,7 +465,7 @@ class CustomOAuth2UserServiceTest  {
         assertThat(response.getEmail()).isEqualTo(member.getEmail());
         assertThat(response.getPassword()).isEqualTo(member.getPassword());
         assertThat(response.getNickname()).isEqualTo(member.getNickname());
-        assertThat(response.getProfileImage().getS3ObjectUrl()).isEqualTo(defaultImage.getS3ObjectUrl());
+        assertThat(response.getProfileImage().getS3ObjectKey()).isEqualTo(defaultImage.getS3ObjectKey());
         assertThat(response.getJoinType()).isEqualTo(JoinType.BOTH);
 
         verify(socialMemberRepository, times(1)).save(any());
@@ -485,7 +486,7 @@ class CustomOAuth2UserServiceTest  {
         assertThat(response.getEmail()).isEqualTo(member.getEmail());
         assertThat(response.getPassword()).isEqualTo(member.getPassword());
         assertThat(response.getNickname()).isEqualTo(member.getNickname());
-        assertThat(response.getProfileImage().getS3ObjectUrl()).isEqualTo(defaultImage.getS3ObjectUrl());
+        assertThat(response.getProfileImage().getS3ObjectKey()).isEqualTo(defaultImage.getS3ObjectKey());
         assertThat(response.getJoinType()).isEqualTo(JoinType.BOTH);
 
         verify(socialMemberRepository, times(1)).save(any());
@@ -506,7 +507,7 @@ class CustomOAuth2UserServiceTest  {
         assertThat(response.getEmail()).isEqualTo(member.getEmail());
         assertThat(response.getPassword()).isNull();
         assertThat(response.getNickname()).isEqualTo(member.getNickname());
-        assertThat(response.getProfileImage().getS3ObjectUrl()).isEqualTo(defaultImage.getS3ObjectUrl());
+        assertThat(response.getProfileImage().getS3ObjectKey()).isEqualTo(defaultImage.getS3ObjectKey());
         assertThat(response.getJoinType()).isEqualTo(JoinType.SOCIAL);
 
         verify(socialMemberRepository, times(1)).save(any());
@@ -527,7 +528,7 @@ class CustomOAuth2UserServiceTest  {
         assertThat(response.getEmail()).isEqualTo(member.getEmail());
         assertThat(response.getPassword()).isEqualTo(member.getPassword());
         assertThat(response.getNickname()).isEqualTo(member.getNickname());
-        assertThat(response.getProfileImage().getS3ObjectUrl()).isEqualTo(defaultImage.getS3ObjectUrl());
+        assertThat(response.getProfileImage().getS3ObjectKey()).isEqualTo(defaultImage.getS3ObjectKey());
         assertThat(response.getJoinType()).isEqualTo(JoinType.BOTH);
 
         verify(socialMemberRepository, times(1)).save(any());
@@ -550,7 +551,7 @@ class CustomOAuth2UserServiceTest  {
         // then
         assertThat(response.getEmail()).isEqualTo(member.getEmail());
         assertThat(response.getPassword()).isNull();
-        assertThat(response.getProfileImage().getS3ObjectUrl()).isEqualTo(defaultImage.getS3ObjectUrl());
+        assertThat(response.getProfileImage().getS3ObjectKey()).isEqualTo(defaultImage.getS3ObjectKey());
         assertThat(response.getJoinType()).isEqualTo(JoinType.SOCIAL);
 
         verify(socialMemberRepository, times(1)).save(any());
@@ -573,7 +574,7 @@ class CustomOAuth2UserServiceTest  {
         // then
         assertThat(response.getEmail()).isEqualTo(member.getEmail());
         assertThat(response.getPassword()).isNull();
-        assertThat(response.getProfileImage().getS3ObjectUrl()).isEqualTo(defaultImage.getS3ObjectUrl());
+        assertThat(response.getProfileImage().getS3ObjectKey()).isEqualTo(defaultImage.getS3ObjectKey());
         assertThat(response.getJoinType()).isEqualTo(JoinType.SOCIAL);
 
         verify(socialMemberRepository, times(1)).save(any());

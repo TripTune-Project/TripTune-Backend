@@ -2,6 +2,7 @@ package com.triptune.schedule.service;
 
 import com.triptune.common.entity.*;
 import com.triptune.common.fixture.*;
+import com.triptune.global.s3.S3ObjectManager;
 import com.triptune.member.entity.Member;
 import com.triptune.member.fixture.MemberFixture;
 import com.triptune.profile.entity.ProfileImage;
@@ -20,6 +21,8 @@ import com.triptune.schedule.exception.ForbiddenScheduleException;
 import com.triptune.schedule.repository.TravelAttendeeRepository;
 import com.triptune.schedule.repository.TravelRouteRepository;
 import com.triptune.schedule.repository.TravelScheduleRepository;
+import com.triptune.schedule.repository.dto.RouteQueryDto;
+import com.triptune.travel.entity.TravelImage;
 import com.triptune.travel.entity.TravelPlace;
 import com.triptune.travel.enums.ThemeType;
 import com.triptune.travel.fixture.TravelImageFixture;
@@ -38,9 +41,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
@@ -49,19 +50,29 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class TravelRouteServiceTest {
-
     @InjectMocks private TravelRouteService travelRouteService;
     @Mock private TravelRouteRepository travelRouteRepository;
     @Mock private TravelScheduleRepository travelScheduleRepository;
     @Mock private TravelPlaceRepository travelPlaceRepository;
     @Mock private TravelAttendeeRepository travelAttendeeRepository;
+    @Mock private S3ObjectManager s3ObjectManager;
 
     private TravelSchedule schedule;
-    private TravelPlace place1;
-    private TravelPlace place2;
-    private TravelPlace place3;
+
+    private TravelPlace place1WithThumb;
+    private TravelPlace place2WithThumb;
+    private TravelPlace place3WithoutThumb;
+
+    private TravelImage place1Thumb;
+    private TravelImage place2Thumb;
+
+    private String place1ThumbUrl;
+    private String place2ThumbUrl;
+
+
     private TravelAttendee author;
     private TravelAttendee guest;
+
     private Member member1;
     private Member member2;
 
@@ -73,7 +84,7 @@ public class TravelRouteServiceTest {
         ApiCategory apiCategory = ApiCategoryFixture.createApiCategory();
         ApiContentType apiContentType = ApiContentTypeFixture.createApiContentType(ThemeType.ATTRACTIONS);
 
-        place1 = TravelPlaceFixture.createTravelPlaceWithId(
+        place1WithThumb = TravelPlaceFixture.createTravelPlaceWithId(
                 1L,
                 country,
                 city,
@@ -82,10 +93,11 @@ public class TravelRouteServiceTest {
                 apiContentType,
                 "여행지1"
         );
-        TravelImageFixture.createTravelImage(place1, "test1", true);
-        TravelImageFixture.createTravelImage(place1, "test2", false);
+        place1Thumb = TravelImageFixture.createTravelImage(place1WithThumb, "test1", true);
+        TravelImageFixture.createTravelImage(place1WithThumb, "test2", false);
+        place1ThumbUrl = S3Fixture.createS3ObjectUrl(place1Thumb.getS3ObjectKey());
 
-        place2 = TravelPlaceFixture.createTravelPlaceWithId(
+        place2WithThumb = TravelPlaceFixture.createTravelPlaceWithId(
                 2L,
                 country,
                 city,
@@ -94,10 +106,11 @@ public class TravelRouteServiceTest {
                 apiContentType,
                 "여행지2"
         );
-        TravelImageFixture.createTravelImage(place2, "test1", true);
-        TravelImageFixture.createTravelImage(place2, "test2", false);
+        place2Thumb = TravelImageFixture.createTravelImage(place2WithThumb, "test1", true);
+        TravelImageFixture.createTravelImage(place2WithThumb, "test2", false);
+        place2ThumbUrl = S3Fixture.createS3ObjectUrl(place1Thumb.getS3ObjectKey());
 
-        place3 = TravelPlaceFixture.createTravelPlaceWithId(
+        place3WithoutThumb = TravelPlaceFixture.createTravelPlaceWithId(
                 3L,
                 country,
                 city,
@@ -120,19 +133,26 @@ public class TravelRouteServiceTest {
     }
 
 
-
     @Test
     @DisplayName("여행 루트 조회")
     void getTravelRoutes(){
         // given
-        TravelRoute route1 = TravelRouteFixture.createTravelRoute(schedule, place1, 1);
-        TravelRoute route2 = TravelRouteFixture.createTravelRoute(schedule, place1, 2);
-        TravelRoute route3 = TravelRouteFixture.createTravelRoute(schedule, place2, 3);
+        TravelRoute route1 = TravelRouteFixture.createTravelRoute(schedule, place1WithThumb, 1);
+        TravelRoute route2 = TravelRouteFixture.createTravelRoute(schedule, place1WithThumb, 2);
+        TravelRoute route3 = TravelRouteFixture.createTravelRoute(schedule, place2WithThumb, 3);
 
         Pageable pageable = PageUtils.defaultPageable(1);
+        List<RouteQueryDto> routes = List.of(
+                TravelRouteFixture.createRouteQueryDto(route1, place1Thumb.getS3ObjectKey()),
+                TravelRouteFixture.createRouteQueryDto(route2, place1Thumb.getS3ObjectKey()),
+                TravelRouteFixture.createRouteQueryDto(route3, place2Thumb.getS3ObjectKey())
+        );
+        Page<RouteQueryDto> routePage = PageUtils.createPage(routes, pageable, routes.size());
 
-        when(travelRouteRepository.findAllByTravelSchedule_ScheduleId(pageable, schedule.getScheduleId()))
-                .thenReturn(PageUtils.createPage(schedule.getTravelRoutes(), pageable, schedule.getTravelRoutes().size()));
+        when(travelRouteRepository.findAllByScheduleId(pageable, schedule.getScheduleId()))
+                .thenReturn(routePage);
+        when(s3ObjectManager.generateS3ObjectUrl(place1Thumb.getS3ObjectKey())).thenReturn(place1ThumbUrl);
+        when(s3ObjectManager.generateS3ObjectUrl(place2Thumb.getS3ObjectKey())).thenReturn(place2ThumbUrl);
 
         // when
         Page<RouteResponse> response = travelRouteService.getTravelRoutes(schedule.getScheduleId(), 1);
@@ -140,7 +160,12 @@ public class TravelRouteServiceTest {
         // then
         List<RouteResponse> content = response.getContent();
         assertThat(response.getTotalElements()).isEqualTo(schedule.getTravelRoutes().size());
-        assertThat(content.get(0).getAddress()).isEqualTo(place1.getAddress());
+        assertThat(content.get(0).getPlaceName()).isEqualTo(route1.getTravelPlace().getPlaceName());
+        assertThat(content.get(0).getThumbnailUrl()).isEqualTo(place1ThumbUrl);
+        assertThat(content.get(1).getPlaceName()).isEqualTo(route2.getTravelPlace().getPlaceName());
+        assertThat(content.get(1).getThumbnailUrl()).isEqualTo(place1ThumbUrl);
+        assertThat(content.get(2).getPlaceName()).isEqualTo(route3.getTravelPlace().getPlaceName());
+        assertThat(content.get(2).getThumbnailUrl()).isEqualTo(place2ThumbUrl);
         assertThat(content)
                 .extracting(RouteResponse::getRouteOrder)
                 .containsExactly(
@@ -148,8 +173,6 @@ public class TravelRouteServiceTest {
                         route2.getRouteOrder(),
                         route3.getRouteOrder()
                 );
-
-
     }
 
     @Test
@@ -158,9 +181,8 @@ public class TravelRouteServiceTest {
         // given
         Pageable pageable = PageUtils.defaultPageable(1);
 
-        when(travelRouteRepository.findAllByTravelSchedule_ScheduleId(pageable, schedule.getScheduleId()))
-                .thenReturn(PageUtils.createPage(new ArrayList<>(), pageable, 0));
-
+        when(travelRouteRepository.findAllByScheduleId(pageable, schedule.getScheduleId()))
+                .thenReturn(PageUtils.createPage(Collections.emptyList(), pageable, 0));
 
         // when
         Page<RouteResponse> response = travelRouteService.getTravelRoutes(schedule.getScheduleId(), 1);
@@ -174,16 +196,16 @@ public class TravelRouteServiceTest {
     @DisplayName("여행 루트 마지막 루트에 여행지 추가")
     void createLastRoute(){
         // given
-        TravelRouteFixture.createTravelRoute(schedule, place1, 1);
-        TravelRouteFixture.createTravelRoute(schedule, place2, 2);
-        TravelRouteFixture.createTravelRoute(schedule, place2, 3);
+        TravelRouteFixture.createTravelRoute(schedule, place1WithThumb, 1);
+        TravelRouteFixture.createTravelRoute(schedule, place2WithThumb, 2);
+        TravelRouteFixture.createTravelRoute(schedule, place2WithThumb, 3);
 
-        RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(place3.getPlaceId());
+        RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(place3WithoutThumb.getPlaceId());
 
         when(travelScheduleRepository.findById(anyLong())).thenReturn(Optional.of(schedule));
         when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_MemberId(anyLong(), anyLong()))
                 .thenReturn(Optional.of(author));
-        when(travelPlaceRepository.findById(anyLong())).thenReturn(Optional.of(place3));
+        when(travelPlaceRepository.findById(anyLong())).thenReturn(Optional.of(place3WithoutThumb));
 
         // when
         assertDoesNotThrow(() -> travelRouteService.createLastRoute(1L, 1L, request));
@@ -193,7 +215,7 @@ public class TravelRouteServiceTest {
 
         assertThat(routes.size()).isEqualTo(4);
         assertThat(routes.get(routes.size() - 1).getTravelPlace().getPlaceName())
-                .isEqualTo(place3.getPlaceName());
+                .isEqualTo(place3WithoutThumb.getPlaceName());
 
     }
 
@@ -201,19 +223,19 @@ public class TravelRouteServiceTest {
     @DisplayName("여행 루트 마지막 루트에 여행지 추가 시 저장된 여행 루트가 존재하지 않는 경우")
     void createLastRoute_emptyRoutes(){
         // given
-        RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(place3.getPlaceId());
+        RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(place3WithoutThumb.getPlaceId());
 
         when(travelScheduleRepository.findById(anyLong())).thenReturn(Optional.of(schedule));
         when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_MemberId(anyLong(), anyLong()))
                 .thenReturn(Optional.of(author));
-        when(travelPlaceRepository.findById(anyLong())).thenReturn(Optional.of(place3));
+        when(travelPlaceRepository.findById(anyLong())).thenReturn(Optional.of(place3WithoutThumb));
 
         // when
         assertDoesNotThrow(() -> travelRouteService.createLastRoute(1L, 1L, request));
 
         // then
         assertThat(schedule.getTravelRoutes().size()).isEqualTo(1);
-        assertThat(schedule.getTravelRoutes().get(0).getTravelPlace().getPlaceName()).isEqualTo(place3.getPlaceName());
+        assertThat(schedule.getTravelRoutes().get(0).getTravelPlace().getPlaceName()).isEqualTo(place3WithoutThumb.getPlaceName());
     }
 
 
@@ -221,7 +243,7 @@ public class TravelRouteServiceTest {
     @DisplayName("여행 루트 마지막 루트에 여행지 추가 시 일정 데이터 없어 예외 발생")
     void createLastRoute_scheduleNotFound(){
         // given
-        RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(place3.getPlaceId());
+        RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(place3WithoutThumb.getPlaceId());
 
         when(travelScheduleRepository.findById(anyLong())).thenReturn(Optional.empty());
 
@@ -238,7 +260,7 @@ public class TravelRouteServiceTest {
     @DisplayName("여행 루트 마지막 루트에 여행지 추가 시 참석자 정보가 없어 예외 발생")
     void createLastRoute_attendeeNotFound(){
         // given
-        RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(place3.getPlaceId());
+        RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(place3WithoutThumb.getPlaceId());
 
         when(travelScheduleRepository.findById(anyLong())).thenReturn(Optional.of(schedule));
         when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_MemberId(anyLong(), anyLong()))
@@ -258,7 +280,7 @@ public class TravelRouteServiceTest {
     @DisplayName("여행 루트 마지막 루트에 여행지 추가 시 편집 권한이 없어 예외 발생")
     void createLastRoute_forbiddenEdit(){
         // given
-        RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(place3.getPlaceId());
+        RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(place3WithoutThumb.getPlaceId());
 
         when(travelScheduleRepository.findById(anyLong())).thenReturn(Optional.of(schedule));
         when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_MemberId(anyLong(), anyLong()))
@@ -278,7 +300,7 @@ public class TravelRouteServiceTest {
     @DisplayName("여행 루트 마지막 루트에 여행지 추가 시 여행지 데이터 없어 예외 발생")
     void createLastRoute_placeNotFound(){
         // given
-        RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(place3.getPlaceId());
+        RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(place3WithoutThumb.getPlaceId());
 
         when(travelScheduleRepository.findById(anyLong())).thenReturn(Optional.of(schedule));
         when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_MemberId(anyLong(), anyLong()))
@@ -298,12 +320,12 @@ public class TravelRouteServiceTest {
     @Test
     @DisplayName("여행 루트 수정 시 기존에 저장된 여행 루트가 존재하는 경우")
     void updateTravelRoute_existedTravelRoute(){
-        TravelRouteFixture.createTravelRoute(schedule, place1, 1);
-        TravelRouteFixture.createTravelRoute(schedule, place1, 2);
-        TravelRouteFixture.createTravelRoute(schedule, place2, 3);
+        TravelRouteFixture.createTravelRoute(schedule, place1WithThumb, 1);
+        TravelRouteFixture.createTravelRoute(schedule, place1WithThumb, 2);
+        TravelRouteFixture.createTravelRoute(schedule, place2WithThumb, 3);
 
-        RouteRequest routeRequest1 = TravelRouteFixture.createRouteRequest(1, place1.getPlaceId());
-        RouteRequest routeRequest2 = TravelRouteFixture.createRouteRequest(2, place2.getPlaceId());
+        RouteRequest routeRequest1 = TravelRouteFixture.createRouteRequest(1, place1WithThumb.getPlaceId());
+        RouteRequest routeRequest2 = TravelRouteFixture.createRouteRequest(2, place2WithThumb.getPlaceId());
 
         List<RouteRequest> routeRequests = new ArrayList<>(List.of(
                 routeRequest1,
@@ -311,8 +333,8 @@ public class TravelRouteServiceTest {
         ));
 
         when(travelPlaceRepository.findById(anyLong()))
-                .thenReturn(Optional.of(place1))
-                .thenReturn(Optional.of(place2));
+                .thenReturn(Optional.of(place1WithThumb))
+                .thenReturn(Optional.of(place2WithThumb));
 
         // when
         assertDoesNotThrow(
@@ -333,12 +355,12 @@ public class TravelRouteServiceTest {
         TravelSchedule schedule = TravelScheduleFixture.createTravelSchedule("테스트");
 
         List<RouteRequest> routes = new ArrayList<>(List.of(
-                TravelRouteFixture.createRouteRequest(1, place1.getPlaceId()),
-                TravelRouteFixture.createRouteRequest(2, place2.getPlaceId())
+                TravelRouteFixture.createRouteRequest(1, place1WithThumb.getPlaceId()),
+                TravelRouteFixture.createRouteRequest(2, place2WithThumb.getPlaceId())
         ));
 
         when(travelPlaceRepository.findById(anyLong()))
-                .thenReturn(Optional.ofNullable(place1))
+                .thenReturn(Optional.ofNullable(place1WithThumb))
                 .thenReturn(Optional.empty());
 
         // when

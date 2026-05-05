@@ -82,7 +82,12 @@ public enum ErrorCode {
     INVALID_EXTENSION(HttpStatus.BAD_REQUEST, "허용되지 않은 파일 형식입니다."),
 
     // 소셜 로그인
-    ILLEGAL_REGISTRATION_ID(HttpStatus.BAD_REQUEST, "지원하지 않는 소셜 로그인입니다.");
+    ILLEGAL_REGISTRATION_ID(HttpStatus.BAD_REQUEST, "지원하지 않는 소셜 로그인입니다."),
+
+    // S3
+    FILE_UPLOAD_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, "파일 업로드를 실패했습니다."),
+    FILE_DELETE_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, "파일 삭제를 실패했습니다.");
+
 
 
     private final HttpStatus status;

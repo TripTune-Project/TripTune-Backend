@@ -7,6 +7,7 @@ import com.triptune.common.entity.*;
 import com.triptune.common.fixture.*;
 import com.triptune.common.repository.*;
 import com.triptune.email.dto.request.EmailRequest;
+import com.triptune.global.s3.S3ObjectManager;
 import com.triptune.global.security.CookieType;
 import com.triptune.global.security.SecurityTestUtils;
 import com.triptune.member.dto.request.*;
@@ -48,6 +49,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -98,10 +100,12 @@ public class MemberControllerTest {
     @Autowired private ChatMessageRepository chatMessageRepository;
     @Autowired private SocialMemberRepository socialMemberRepository;
     @Autowired private ApiContentTypeRepository apiContentTypeRepository;
+    @Autowired private S3ObjectManager s3ObjectManager;
 
     @MockBean private RedisService redisService;
     @MockBean private EmailService emailService;
     @MockBean private S3Service s3Service;
+
 
     private ProfileImage profileImage;
 
@@ -109,9 +113,10 @@ public class MemberControllerTest {
     private TravelPlace place2;
     private TravelPlace place3;
 
-    private TravelImage place1Thumbnail;
-    private TravelImage place2Thumbnail;
-    private TravelImage place3Thumbnail;
+    private String place1ThumbUrl;
+    private String place2ThumbUrl;
+    private String place3ThumbUrl;
+
 
 
     @BeforeEach
@@ -136,7 +141,8 @@ public class MemberControllerTest {
                         "가장소"
                 )
         );
-        place1Thumbnail = travelImageRepository.save(TravelImageFixture.createTravelImage(place1, "test1", true));
+        TravelImage place1Thumb = travelImageRepository.save(TravelImageFixture.createTravelImage(place1, "test1", true));
+        place1ThumbUrl = S3Fixture.createS3ObjectUrl(place1Thumb.getS3ObjectKey());
 
         place2 = travelPlaceRepository.save(
                 TravelPlaceFixture.createTravelPlace(
@@ -148,7 +154,8 @@ public class MemberControllerTest {
                         "나장소"
                 )
         );
-        place2Thumbnail = travelImageRepository.save(TravelImageFixture.createTravelImage(place2, "test1", true));
+        TravelImage place2Thumb = travelImageRepository.save(TravelImageFixture.createTravelImage(place2, "test1", true));
+        place2ThumbUrl = S3Fixture.createS3ObjectUrl(place2Thumb.getS3ObjectKey());
 
         place3 = travelPlaceRepository.save(
                 TravelPlaceFixture.createTravelPlace(
@@ -160,7 +167,8 @@ public class MemberControllerTest {
                         "다장소"
                 )
         );
-        place3Thumbnail = travelImageRepository.save(TravelImageFixture.createTravelImage(place3, "test1", true));
+        TravelImage place3Thumb = travelImageRepository.save(TravelImageFixture.createTravelImage(place3, "test1", true));
+        place3ThumbUrl = S3Fixture.createS3ObjectUrl(place3Thumb.getS3ObjectKey());
 
     }
 
@@ -1669,6 +1677,7 @@ public class MemberControllerTest {
         // given
         String encodedPassword = passwordEncoder.encode("password12!@");
         Member member = memberRepository.save(MemberFixture.createNativeTypeMember("member@email.com", encodedPassword, profileImage));
+        String profileImageUrl = s3ObjectManager.generateS3ObjectUrl(profileImage.getS3ObjectKey());
 
         SecurityTestUtils.mockAuthentication(member);
 
@@ -1678,7 +1687,7 @@ public class MemberControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.email").value(member.getEmail()))
                 .andExpect(jsonPath("$.data.nickname").value(member.getNickname()))
-                .andExpect(jsonPath("$.data.profileImage").value(profileImage.getS3ObjectUrl()));
+                .andExpect(jsonPath("$.data.profileImage").value(profileImageUrl));
     }
 
     @Test
@@ -1686,6 +1695,7 @@ public class MemberControllerTest {
     void getMemberInfo_socialMember() throws Exception {
         // given
         Member member = memberRepository.save(MemberFixture.createSocialTypeMember("member@email.com", profileImage));
+        String profileImageUrl = s3ObjectManager.generateS3ObjectUrl(profileImage.getS3ObjectKey());
 
         SecurityTestUtils.mockAuthentication(member);
 
@@ -1695,7 +1705,7 @@ public class MemberControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.email").value(member.getEmail()))
                 .andExpect(jsonPath("$.data.nickname").value(member.getNickname()))
-                .andExpect(jsonPath("$.data.profileImage").value(profileImage.getS3ObjectUrl()));
+                .andExpect(jsonPath("$.data.profileImage").value(profileImageUrl));
     }
 
 
@@ -1705,6 +1715,7 @@ public class MemberControllerTest {
         // given
         String encodedPassword = passwordEncoder.encode("password12!@");
         Member member = memberRepository.save(MemberFixture.createBothTypeMember("member@email.com", encodedPassword, profileImage));
+        String profileImageUrl = s3ObjectManager.generateS3ObjectUrl(profileImage.getS3ObjectKey());
 
         SecurityTestUtils.mockAuthentication(member);
 
@@ -1714,7 +1725,7 @@ public class MemberControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.email").value(member.getEmail()))
                 .andExpect(jsonPath("$.data.nickname").value(member.getNickname()))
-                .andExpect(jsonPath("$.data.profileImage").value(profileImage.getS3ObjectUrl()));
+                .andExpect(jsonPath("$.data.profileImage").value(profileImageUrl));
     }
 
     @Test
@@ -2035,11 +2046,11 @@ public class MemberControllerTest {
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.totalElements").value(3))
                 .andExpect(jsonPath("$.data.content[0].placeName").value(place3.getPlaceName()))
-                .andExpect(jsonPath("$.data.content[0].thumbnailUrl").value(place3Thumbnail.getS3ObjectUrl()))
+                .andExpect(jsonPath("$.data.content[0].thumbnailUrl").value(place3ThumbUrl))
                 .andExpect(jsonPath("$.data.content[1].placeName").value(place2.getPlaceName()))
-                .andExpect(jsonPath("$.data.content[1].thumbnailUrl").value(place2Thumbnail.getS3ObjectUrl()))
+                .andExpect(jsonPath("$.data.content[1].thumbnailUrl").value(place2ThumbUrl))
                 .andExpect(jsonPath("$.data.content[2].placeName").value(place1.getPlaceName()))
-                .andExpect(jsonPath("$.data.content[2].thumbnailUrl").value(place1Thumbnail.getS3ObjectUrl()));
+                .andExpect(jsonPath("$.data.content[2].thumbnailUrl").value(place1ThumbUrl));
     }
 
     @Test
@@ -2065,11 +2076,11 @@ public class MemberControllerTest {
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.totalElements").value(3))
                 .andExpect(jsonPath("$.data.content[0].placeName").value(place1.getPlaceName()))
-                .andExpect(jsonPath("$.data.content[0].thumbnailUrl").value(place1Thumbnail.getS3ObjectUrl()))
+                .andExpect(jsonPath("$.data.content[0].thumbnailUrl").value(place1ThumbUrl))
                 .andExpect(jsonPath("$.data.content[1].placeName").value(place2.getPlaceName()))
-                .andExpect(jsonPath("$.data.content[1].thumbnailUrl").value(place2Thumbnail.getS3ObjectUrl()))
+                .andExpect(jsonPath("$.data.content[1].thumbnailUrl").value(place2ThumbUrl))
                 .andExpect(jsonPath("$.data.content[2].placeName").value(place3.getPlaceName()))
-                .andExpect(jsonPath("$.data.content[2].thumbnailUrl").value(place3Thumbnail.getS3ObjectUrl()));
+                .andExpect(jsonPath("$.data.content[2].thumbnailUrl").value(place3ThumbUrl));
     }
 
     @Test
@@ -2095,11 +2106,11 @@ public class MemberControllerTest {
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.totalElements").value(3))
                 .andExpect(jsonPath("$.data.content[0].placeName").value(place1.getPlaceName()))
-                .andExpect(jsonPath("$.data.content[0].thumbnailUrl").value(place1Thumbnail.getS3ObjectUrl()))
+                .andExpect(jsonPath("$.data.content[0].thumbnailUrl").value(place1ThumbUrl))
                 .andExpect(jsonPath("$.data.content[1].placeName").value(place2.getPlaceName()))
-                .andExpect(jsonPath("$.data.content[1].thumbnailUrl").value(place2Thumbnail.getS3ObjectUrl()))
+                .andExpect(jsonPath("$.data.content[1].thumbnailUrl").value(place2ThumbUrl))
                 .andExpect(jsonPath("$.data.content[2].placeName").value(place3.getPlaceName()))
-                .andExpect(jsonPath("$.data.content[2].thumbnailUrl").value(place3Thumbnail.getS3ObjectUrl()));
+                .andExpect(jsonPath("$.data.content[2].thumbnailUrl").value(place3ThumbUrl));
     }
 
     @Test

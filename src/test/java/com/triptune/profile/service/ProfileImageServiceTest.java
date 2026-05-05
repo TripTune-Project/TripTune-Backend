@@ -1,5 +1,6 @@
 package com.triptune.profile.service;
 
+import com.triptune.global.s3.S3ObjectManager;
 import com.triptune.member.entity.Member;
 import com.triptune.member.fixture.MemberFixture;
 import com.triptune.profile.fixture.ProfileImageFixture;
@@ -25,6 +26,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -34,6 +36,7 @@ public class ProfileImageServiceTest {
     @Mock private S3Service s3Service;
     @Mock private ProfileImageRepository profileImageRepository;
     @Mock private DefaultProfileImageProperties imageProperties;
+    @Mock private S3ObjectManager s3ObjectManager;
 
 
     @Test
@@ -41,19 +44,26 @@ public class ProfileImageServiceTest {
     void updateProfileImage() throws IOException {
         // given
         byte[] content = ProfileImageFixture.createByteTypeImage("jpeg");
-        MockMultipartFile mockMultipartFile = new MockMultipartFile("newFile", "newFileOriginalName.jpeg", "image/jpeg", content);
+        MockMultipartFile mockMultipartFile = new MockMultipartFile(
+                "newFile",
+                "newFileOriginalName.jpeg",
+                "image/jpeg",
+                content
+        );
 
         ProfileImage profileImage = ProfileImageFixture.createProfileImage("memberImage");
         Member member = MemberFixture.createNativeTypeMember("member@email.com", profileImage);
 
         when(profileImageRepository.findByMemberId(any())).thenReturn(Optional.of(profileImage));
-        when(imageProperties.getS3ObjectKey()).thenReturn(profileImage.getS3ObjectKey());
+        when(s3ObjectManager.generateS3FileName(anyString(), anyString())).thenReturn(mockMultipartFile.getName());
+        when(s3ObjectManager.generateS3ObjectKey(anyString(), anyString())).thenReturn(profileImage.getS3ObjectKey());
+
 
         // when
         assertDoesNotThrow(() -> profileImageService.updateProfileImage(member.getMemberId(), mockMultipartFile));
 
         // then
-        assertThat(profileImage.getFileName()).isNotEqualTo(mockMultipartFile.getName());
+        assertThat(profileImage.getFileName()).isEqualTo(mockMultipartFile.getName());
         assertThat(profileImage.getOriginalName()).isEqualTo(mockMultipartFile.getOriginalFilename());
         assertThat(profileImage.getFileSize()).isEqualTo(mockMultipartFile.getSize());
         assertThat(profileImage.getFileType()).isEqualTo("jpeg");

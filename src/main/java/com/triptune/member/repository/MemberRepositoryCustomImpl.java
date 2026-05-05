@@ -3,6 +3,7 @@ package com.triptune.member.repository;
 import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.triptune.member.dto.response.MemberProfileResponse;
+import com.triptune.member.entity.Member;
 import com.triptune.member.entity.QMember;
 import com.triptune.profile.entity.QProfileImage;
 import lombok.RequiredArgsConstructor;
@@ -21,13 +22,9 @@ public class MemberRepositoryCustomImpl implements MemberRepositoryCustom {
 
 
     @Override
-    public List<MemberProfileResponse> findMembersProfileByMemberId(Set<Long> memberIds) {
+    public List<Member> findByIds(Set<Long> memberIds) {
         return jpaQueryFactory
-                .select(Projections.constructor(MemberProfileResponse.class,
-                                member.memberId,
-                                member.nickname,
-                                member.profileImage.s3ObjectUrl))
-                .from(member)
+                .selectFrom(member)
                 .leftJoin(member.profileImage, profileImage)
                 .where(member.memberId.in(memberIds))
                 .fetch();

@@ -2,6 +2,7 @@ package com.triptune.member.service;
 
 import com.triptune.bookmark.enums.BookmarkSortType;
 import com.triptune.bookmark.repository.BookmarkRepository;
+import com.triptune.bookmark.repository.dto.PlaceBookmarkQueryDto;
 import com.triptune.email.dto.request.EmailRequest;
 import com.triptune.email.exception.EmailVerifyException;
 import com.triptune.email.service.EmailService;
@@ -10,6 +11,7 @@ import com.triptune.global.exception.DataNotFoundException;
 import com.triptune.global.redis.RedisService;
 import com.triptune.global.redis.eums.RedisKeyType;
 import com.triptune.global.message.ErrorCode;
+import com.triptune.global.s3.S3ObjectManager;
 import com.triptune.global.security.jwt.exception.CustomJwtUnAuthorizedException;
 import com.triptune.global.security.jwt.JwtUtils;
 import com.triptune.global.util.PageUtils;
@@ -29,7 +31,6 @@ import com.triptune.schedule.repository.ChatMessageRepository;
 import com.triptune.schedule.repository.TravelAttendeeRepository;
 import com.triptune.schedule.repository.TravelScheduleRepository;
 import com.triptune.travel.dto.response.PlaceBookmarkResponse;
-import com.triptune.travel.entity.TravelPlace;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
@@ -59,6 +60,7 @@ public class MemberService {
     private final TravelScheduleRepository travelScheduleRepository;
     private final ChatMessageRepository chatMessageRepository;
     private final BookmarkRepository bookmarkRepository;
+    private final S3ObjectManager s3ObjectManager;
 
 
     @Transactional
@@ -198,7 +200,8 @@ public class MemberService {
 
     public MemberInfoResponse getMemberInfo(Long memberId) {
         Member member = getMemberById(memberId);
-        return MemberInfoResponse.from(member);
+        String profileImageUrl = s3ObjectManager.generateS3ObjectUrl(member.getProfileImage().getS3ObjectKey());
+        return MemberInfoResponse.from(member, profileImageUrl);
     }
 
     private Member getMemberById(Long memberId){
@@ -225,9 +228,17 @@ public class MemberService {
 
     public Page<PlaceBookmarkResponse> getMemberBookmarks(int page, Long memberId, BookmarkSortType sortType) {
         Pageable pageable = PageUtils.bookmarkPageable(page);
-        Page<TravelPlace> travelPlaces = bookmarkRepository.findSortedMemberBookmarks(memberId, pageable, sortType);
+        Page<PlaceBookmarkQueryDto> travelPlaces = bookmarkRepository.findSortedMemberBookmarks(memberId, pageable, sortType);
 
-        return travelPlaces.map(PlaceBookmarkResponse::from);
+        List<PlaceBookmarkResponse> contents = travelPlaces.getContent()
+                .stream()
+                .map(place -> {
+                    String thumbnailUrl = s3ObjectManager.generateS3ObjectUrl(place.getThumbnailS3ObjectKey());
+                    return PlaceBookmarkResponse.of(place, thumbnailUrl);
+                })
+                .toList();
+
+        return PageUtils.createPage(contents, travelPlaces.getPageable(), travelPlaces.getTotalElements());
     }
 
     @Transactional

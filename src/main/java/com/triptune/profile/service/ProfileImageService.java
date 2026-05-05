@@ -1,5 +1,6 @@
 package com.triptune.profile.service;
 
+import com.triptune.global.s3.S3ObjectManager;
 import com.triptune.member.entity.Member;
 import com.triptune.profile.entity.ProfileImage;
 import com.triptune.profile.repository.ProfileImageRepository;
@@ -18,23 +19,24 @@ import org.springframework.web.multipart.MultipartFile;
 @Service
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
-@EnableConfigurationProperties(DefaultProfileImageProperties.class)
 public class ProfileImageService {
+
     private static final String FILE_TAG = "profileImage";
+    private static final String PROFILE_DIR = "img/profile";
 
     private final DefaultProfileImageProperties profileImageProperties;
     private final ProfileImageRepository profileImageRepository;
     private final S3Service s3Service;
+    private final S3ObjectManager s3ObjectManager;
 
     @Transactional
     public ProfileImage saveDefaultProfileImage() {
         ProfileImage profileImage = ProfileImage.createProfileImage(
-                profileImageProperties.getS3ObjectUrl(),
-                profileImageProperties.getS3ObjectKey(),
-                profileImageProperties.getOriginalName(),
-                profileImageProperties.getFileName(),
-                profileImageProperties.getExtension(),
-                profileImageProperties.getSize()
+                profileImageProperties.s3ObjectKey(),
+                profileImageProperties.originalName(),
+                profileImageProperties.fileName(),
+                profileImageProperties.extension(),
+                profileImageProperties.size()
         );
 
         return profileImageRepository.save(profileImage);
@@ -48,11 +50,11 @@ public class ProfileImageService {
         deleteS3File(profileImage);
 
         String extension = FileUtils.getExtension(profileImageFile.getOriginalFilename());
-        String savedFileName = s3Service.generateS3FileName(FILE_TAG, extension);
-        String s3FileKey = s3Service.generateS3FileKey(savedFileName);
-        String s3ObjectUrl = s3Service.uploadToS3(profileImageFile, s3FileKey);
+        String savedFileName = s3ObjectManager.generateS3FileName(FILE_TAG, extension);
+        String s3ObjectKey = s3ObjectManager.generateS3ObjectKey(PROFILE_DIR, savedFileName);
+        s3Service.uploadToS3(profileImageFile, s3ObjectKey);
 
-        profileImage.updateProfileImage(profileImageFile, s3ObjectUrl, s3FileKey, savedFileName, extension);
+        profileImage.updateProfileImage(profileImageFile, s3ObjectKey, savedFileName, extension);
     }
 
     private void validateFileExtension(MultipartFile profileImageFile){
@@ -75,7 +77,7 @@ public class ProfileImageService {
     }
 
     public void deleteS3File(ProfileImage profileImage){
-        if (!profileImage.isDefaultImage(profileImageProperties.getS3ObjectKey())){
+        if (!profileImage.isDefaultImage(profileImageProperties.s3ObjectKey())){
             s3Service.deleteS3File(profileImage.getS3ObjectKey());
         }
     }

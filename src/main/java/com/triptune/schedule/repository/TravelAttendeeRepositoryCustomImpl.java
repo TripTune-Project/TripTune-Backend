@@ -19,7 +19,8 @@ public class TravelAttendeeRepositoryCustomImpl implements TravelAttendeeReposit
 
     @Override
     public String findAuthorNicknameByScheduleId(Long scheduleId) {
-        return jpaQueryFactory.select(member.nickname)
+        return jpaQueryFactory
+                .select(member.nickname)
                 .from(travelAttendee)
                 .join(travelAttendee.member, member)
                 .where(travelAttendee.travelSchedule.scheduleId.eq(scheduleId)

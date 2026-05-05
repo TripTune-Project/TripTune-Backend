@@ -1,6 +1,7 @@
 package com.triptune.member.repository;
 
 import com.triptune.global.config.QuerydslConfig;
+import com.triptune.global.s3.S3ObjectManager;
 import com.triptune.member.fixture.MemberFixture;
 import com.triptune.member.entity.Member;
 import com.triptune.member.entity.SocialMember;
@@ -61,7 +62,6 @@ class SocialMemberRepositoryTest  {
         // then
         assertThat(response.getEmail()).isEqualTo(member.getEmail());
         assertThat(response.getNickname()).isEqualTo(member.getNickname());
-        assertThat(response.getProfileImage().getS3ObjectUrl()).isEqualTo(profileImage.getS3ObjectUrl());
     }
 
 }

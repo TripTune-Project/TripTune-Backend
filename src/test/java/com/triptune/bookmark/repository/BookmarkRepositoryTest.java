@@ -3,6 +3,7 @@ package com.triptune.bookmark.repository;
 import com.triptune.bookmark.fixture.BookmarkFixture;
 import com.triptune.bookmark.entity.Bookmark;
 import com.triptune.bookmark.enums.BookmarkSortType;
+import com.triptune.bookmark.repository.dto.PlaceBookmarkQueryDto;
 import com.triptune.common.entity.*;
 import com.triptune.common.fixture.*;
 import com.triptune.common.repository.*;
@@ -14,9 +15,12 @@ import com.triptune.member.repository.MemberRepository;
 import com.triptune.profile.entity.ProfileImage;
 import com.triptune.profile.fixture.ProfileImageFixture;
 import com.triptune.profile.repository.ProfileImageRepository;
+import com.triptune.travel.entity.TravelImage;
 import com.triptune.travel.entity.TravelPlace;
 import com.triptune.travel.enums.ThemeType;
+import com.triptune.travel.fixture.TravelImageFixture;
 import com.triptune.travel.fixture.TravelPlaceFixture;
+import com.triptune.travel.repository.TravelImageRepository;
 import com.triptune.travel.repository.TravelPlaceRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -27,6 +31,8 @@ import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.ActiveProfiles;
+
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -45,12 +51,16 @@ class BookmarkRepositoryTest {
     @Autowired private ApiCategoryRepository apiCategoryRepository;
     @Autowired private ApiContentTypeRepository apiContentTypeRepository;
     @Autowired private ProfileImageRepository profileImageRepository;
-
+    @Autowired private TravelImageRepository travelImageRepository;
 
     private Member member;
-    private TravelPlace place1;
-    private TravelPlace place2;
-    private TravelPlace place3;
+
+    private TravelPlace place1WithThumb;
+    private TravelPlace place2WithThumb;
+    private TravelPlace place3WithoutThumb;
+
+    private TravelImage place1Thumb;
+    private TravelImage place2Thumb;
 
     @BeforeEach
     void setUp(){
@@ -62,7 +72,7 @@ class BookmarkRepositoryTest {
 
         ProfileImage profileImage = profileImageRepository.save(ProfileImageFixture.createProfileImage("memberImage"));
         member = memberRepository.save(MemberFixture.createNativeTypeMember("member@email.com", profileImage));
-        place1 = travelPlaceRepository.save(
+        place1WithThumb = travelPlaceRepository.save(
                 TravelPlaceFixture.createTravelPlace(
                         country,
                         city,
@@ -72,7 +82,10 @@ class BookmarkRepositoryTest {
                         "여행지1"
                 )
         );
-        place2 = travelPlaceRepository.save(
+        place1Thumb = travelImageRepository.save(TravelImageFixture.createTravelImage(place1WithThumb, "test1", true));
+        travelImageRepository.save(TravelImageFixture.createTravelImage(place1WithThumb, "test2", false));
+
+        place2WithThumb = travelPlaceRepository.save(
                 TravelPlaceFixture.createTravelPlace(
                         country,
                         city,
@@ -82,7 +95,9 @@ class BookmarkRepositoryTest {
                         "여행지2"
                 )
         );
-        place3 = travelPlaceRepository.save(
+        place2Thumb = travelImageRepository.save(TravelImageFixture.createTravelImage(place2WithThumb, "test1", true));
+
+        place3WithoutThumb = travelPlaceRepository.save(
                 TravelPlaceFixture.createTravelPlace(
                         country,
                         city,
@@ -98,7 +113,7 @@ class BookmarkRepositoryTest {
     @DisplayName("북마크 생성 시 생성일 자동 입력 확인")
     void createBookmark() {
         // given
-        Bookmark bookmark = Bookmark.createBookmark(member, place1);
+        Bookmark bookmark = Bookmark.createBookmark(member, place1WithThumb);
 
         // when
         bookmarkRepository.save(bookmark);
@@ -113,24 +128,28 @@ class BookmarkRepositoryTest {
     void getBookmarkTravelPlaces_sortNewest() throws Exception{
         // given
         Pageable pageable = PageUtils.bookmarkPageable(1);
-        bookmarkRepository.save(BookmarkFixture.createBookmark(member, place1));
+        bookmarkRepository.save(BookmarkFixture.createBookmark(member, place1WithThumb));
         Thread.sleep(10);
-        bookmarkRepository.save(BookmarkFixture.createBookmark(member, place2));
+        bookmarkRepository.save(BookmarkFixture.createBookmark(member, place2WithThumb));
         Thread.sleep(10);
-        bookmarkRepository.save(BookmarkFixture.createBookmark(member, place3));
+        bookmarkRepository.save(BookmarkFixture.createBookmark(member, place3WithoutThumb));
 
         // when
-        Page<TravelPlace> response = bookmarkRepository.findSortedMemberBookmarks(
+        Page<PlaceBookmarkQueryDto> response = bookmarkRepository.findSortedMemberBookmarks(
                 member.getMemberId(),
                 pageable,
                 BookmarkSortType.NEWEST
         );
 
         // then
+        List<PlaceBookmarkQueryDto> content = response.getContent();
         assertThat(response.getTotalElements()).isEqualTo(3);
-        assertThat(response.getContent().get(0)).isEqualTo(place3);
-        assertThat(response.getContent().get(1)).isEqualTo(place2);
-        assertThat(response.getContent().get(2)).isEqualTo(place1);
+        assertThat(content.get(0).getPlaceName()).isEqualTo(place3WithoutThumb.getPlaceName());
+        assertThat(content.get(0).getThumbnailS3ObjectKey()).isEqualTo(null);
+        assertThat(content.get(1).getPlaceName()).isEqualTo(place2WithThumb.getPlaceName());
+        assertThat(content.get(1).getThumbnailS3ObjectKey()).isEqualTo(place2Thumb.getS3ObjectKey());
+        assertThat(content.get(2).getPlaceName()).isEqualTo(place1WithThumb.getPlaceName());
+        assertThat(content.get(2).getThumbnailS3ObjectKey()).isEqualTo(place2Thumb.getS3ObjectKey());
     }
 
     @Test
@@ -138,18 +157,22 @@ class BookmarkRepositoryTest {
     void getBookmarkTravelPlaces_sortName(){
         // given
         Pageable pageable = PageUtils.bookmarkPageable(1);
-        bookmarkRepository.save(BookmarkFixture.createBookmark(member, place1));
-        bookmarkRepository.save(BookmarkFixture.createBookmark(member, place2));
-        bookmarkRepository.save(BookmarkFixture.createBookmark(member, place3));
+        bookmarkRepository.save(BookmarkFixture.createBookmark(member, place1WithThumb));
+        bookmarkRepository.save(BookmarkFixture.createBookmark(member, place2WithThumb));
+        bookmarkRepository.save(BookmarkFixture.createBookmark(member, place3WithoutThumb));
 
         // when
-        Page<TravelPlace> response = bookmarkRepository.findSortedMemberBookmarks(member.getMemberId(), pageable, BookmarkSortType.NAME);
+        Page<PlaceBookmarkQueryDto> response = bookmarkRepository.findSortedMemberBookmarks(member.getMemberId(), pageable, BookmarkSortType.NAME);
 
         // then
+        List<PlaceBookmarkQueryDto> content = response.getContent();
         assertThat(response.getTotalElements()).isEqualTo(3);
-        assertThat(response.getContent().get(0)).isEqualTo(place1);
-        assertThat(response.getContent().get(1)).isEqualTo(place2);
-        assertThat(response.getContent().get(2)).isEqualTo(place3);
+        assertThat(content.get(0).getPlaceName()).isEqualTo(place1WithThumb.getPlaceName());
+        assertThat(content.get(0).getThumbnailS3ObjectKey()).isEqualTo(place1Thumb.getS3ObjectKey());
+        assertThat(content.get(1).getPlaceName()).isEqualTo(place2WithThumb.getPlaceName());
+        assertThat(content.get(1).getThumbnailS3ObjectKey()).isEqualTo(place2Thumb.getS3ObjectKey());
+        assertThat(content.get(2).getPlaceName()).isEqualTo(place3WithoutThumb.getPlaceName());
+        assertThat(content.get(2).getThumbnailS3ObjectKey()).isEqualTo(null);
     }
 
     @Test
@@ -159,7 +182,7 @@ class BookmarkRepositoryTest {
         Pageable pageable = PageUtils.bookmarkPageable(1);
 
         // when
-        Page<TravelPlace> response = bookmarkRepository.findSortedMemberBookmarks(member.getMemberId(), pageable, BookmarkSortType.OLDEST);
+        Page<PlaceBookmarkQueryDto> response = bookmarkRepository.findSortedMemberBookmarks(member.getMemberId(), pageable, BookmarkSortType.OLDEST);
 
         // then
         assertThat(response.getTotalElements()).isEqualTo(0);

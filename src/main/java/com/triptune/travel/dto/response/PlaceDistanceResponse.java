@@ -1,7 +1,6 @@
 package com.triptune.travel.dto.response;
 
-import com.triptune.travel.repository.dto.PlaceLocation;
-import com.triptune.travel.entity.TravelPlace;
+import com.triptune.travel.repository.dto.PlaceDistanceQueryDto;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -15,15 +14,15 @@ public class PlaceDistanceResponse {
     private String district;
     private String address;
     private String detailAddress;
-    private double latitude;
-    private double longitude;
+    private Double latitude;
+    private Double longitude;
     private String placeName;
     private String thumbnailUrl;
     private Double distance;
     private boolean bookmarkStatus;
 
     @Builder
-    public PlaceDistanceResponse(Long placeId, String country, String city, String district, String address, String detailAddress, double latitude, double longitude, String placeName, String thumbnailUrl, Double distance, boolean bookmarkStatus) {
+    public PlaceDistanceResponse(Long placeId, String country, String city, String district, String address, String detailAddress, Double latitude, Double longitude, String placeName, String thumbnailUrl, Double distance, boolean bookmarkStatus) {
         this.placeId = placeId;
         this.country = country;
         this.city = city;
@@ -34,41 +33,30 @@ public class PlaceDistanceResponse {
         this.longitude = longitude;
         this.placeName = placeName;
         this.thumbnailUrl = thumbnailUrl;
-        this.distance = Math.floor(distance * 10) / 10.0;
+        this.distance = distance;
         this.bookmarkStatus = bookmarkStatus;
     }
 
-    public static PlaceDistanceResponse from(TravelPlace travelPlace){
+
+    public static PlaceDistanceResponse of(PlaceDistanceQueryDto placeDistance, String thumbnailUrl){
         return PlaceDistanceResponse.builder()
-                .placeId(travelPlace.getPlaceId())
-                .country(travelPlace.getCountry().getCountryName())
-                .city(travelPlace.getCity().getCityName())
-                .district(travelPlace.getDistrict().getDistrictName())
-                .address(travelPlace.getAddress())
-                .detailAddress(travelPlace.getDetailAddress())
-                .latitude(travelPlace.getLatitude())
-                .longitude(travelPlace.getLongitude())
-                .placeName(travelPlace.getPlaceName())
-                .thumbnailUrl(travelPlace.getThumbnailUrl())
+                .placeId(placeDistance.getPlaceId())
+                .country(placeDistance.getCountry())
+                .city(placeDistance.getCity())
+                .district(placeDistance.getDistrict())
+                .address(placeDistance.getAddress())
+                .detailAddress(placeDistance.getDetailAddress())
+                .latitude(placeDistance.getLatitude())
+                .longitude(placeDistance.getLongitude())
+                .placeName(placeDistance.getPlaceName())
+                .thumbnailUrl(thumbnailUrl)
+                .distance(placeDistance.getDistance())
+                .bookmarkStatus(false)
                 .build();
     }
 
-    public static PlaceDistanceResponse from(PlaceLocation placeLocation){
-        return PlaceDistanceResponse.builder()
-                .placeId(placeLocation.getPlaceId())
-                .country(placeLocation.getCountry())
-                .city(placeLocation.getCity())
-                .district(placeLocation.getDistrict())
-                .address(placeLocation.getAddress())
-                .detailAddress(placeLocation.getDetailAddress())
-                .latitude(placeLocation.getLatitude())
-                .longitude(placeLocation.getLongitude())
-                .placeName(placeLocation.getPlaceName())
-                .thumbnailUrl(placeLocation.getThumbnailUrl())
-                .distance(placeLocation.getDistance())
-                .bookmarkStatus(placeLocation.isBookmarkStatus())
-                .build();
+    public void updateBookmarkStatusTrue(){
+        this.bookmarkStatus = true;
     }
-
 
 }

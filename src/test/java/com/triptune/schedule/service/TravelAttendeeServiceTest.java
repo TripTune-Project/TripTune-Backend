@@ -1,7 +1,9 @@
 package com.triptune.schedule.service;
 
+import com.triptune.common.fixture.S3Fixture;
 import com.triptune.global.exception.DataNotFoundException;
 import com.triptune.global.message.ErrorCode;
+import com.triptune.global.s3.S3ObjectManager;
 import com.triptune.member.entity.Member;
 import com.triptune.member.fixture.MemberFixture;
 import com.triptune.member.repository.MemberRepository;
@@ -45,19 +47,26 @@ public class TravelAttendeeServiceTest {
     @Mock private TravelAttendeeRepository travelAttendeeRepository;
     @Mock private TravelScheduleRepository travelScheduleRepository;
     @Mock private MemberRepository memberRepository;
+    @Mock private S3ObjectManager s3ObjectManager;
 
     private TravelSchedule schedule;
 
     private Member member1;
+    private String member1ProfileUrl;
     private Member member2;
+    private String member2ProfileUrl;
     private Member member3;
 
     @BeforeEach
     void setUp(){
         ProfileImage profileImage1 = ProfileImageFixture.createProfileImage("member1Image");
+        member1ProfileUrl = S3Fixture.createS3ObjectUrl(profileImage1.getS3ObjectKey());
         member1 = MemberFixture.createNativeTypeMember( "member1@email.com", profileImage1);
+
         ProfileImage profileImage2 = ProfileImageFixture.createProfileImage("member2Image");
+        member2ProfileUrl = S3Fixture.createS3ObjectUrl(profileImage2.getS3ObjectKey());
         member2 = MemberFixture.createNativeTypeMember("member2@email.com", profileImage2);
+
         ProfileImage profileImage3 = ProfileImageFixture.createProfileImage("member3Image");
         member3 = MemberFixture.createNativeTypeMember("member3@email.com", profileImage3);
 
@@ -75,6 +84,10 @@ public class TravelAttendeeServiceTest {
 
         when(travelAttendeeRepository.findAllByTravelSchedule_ScheduleId(anyLong()))
                 .thenReturn(travelAttendees);
+        when(s3ObjectManager.generateS3ObjectUrl(member1.getProfileImage().getS3ObjectKey()))
+                .thenReturn(member1ProfileUrl);
+        when(s3ObjectManager.generateS3ObjectUrl(member2.getProfileImage().getS3ObjectKey()))
+                .thenReturn(member2ProfileUrl);
 
         // when
         List<AttendeeResponse> response = travelAttendeeService.getAttendeesByScheduleId(1L);
@@ -91,12 +104,12 @@ public class TravelAttendeeServiceTest {
                         tuple(
                                 member1.getNickname(),
                                 AttendeeRole.AUTHOR.name(),
-                                member1.getProfileImage().getS3ObjectUrl()
+                                member1ProfileUrl
                         ),
                         tuple(
                                 member2.getNickname(),
                                 AttendeeRole.GUEST.name(),
-                                member2.getProfileImage().getS3ObjectUrl()
+                                member2ProfileUrl
                         )
                 );
     }

@@ -1,5 +1,6 @@
 package com.triptune.schedule.service;
 
+import com.triptune.global.s3.S3ObjectManager;
 import com.triptune.member.entity.Member;
 import com.triptune.member.repository.MemberRepository;
 import com.triptune.member.dto.response.MemberProfileResponse;
@@ -21,7 +22,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -33,6 +33,7 @@ public class ChatMessageService {
     private final MemberRepository memberRepository;
     private final TravelAttendeeRepository travelAttendeeRepository;
     private final TravelScheduleRepository travelScheduleRepository;
+    private final S3ObjectManager s3ObjectManager;
 
 
     public Page<ChatResponse> getChatMessages(int page, Long scheduleId) {
@@ -53,9 +54,16 @@ public class ChatMessageService {
     }
 
     public Map<Long, MemberProfileResponse> getMemberProfiles(Set<Long> memberIds){
-        return memberRepository.findMembersProfileByMemberId(memberIds)
-                .stream()
-                .collect(Collectors.toConcurrentMap(MemberProfileResponse::getMemberId, Function.identity()));
+        List<Member> members = memberRepository.findByIds(memberIds);
+        Map<Long, MemberProfileResponse> memberProfileMap = new HashMap<>();
+
+        for (Member member : members) {
+            String profileUrl = s3ObjectManager.generateS3ObjectUrl(member.getProfileImage().getS3ObjectKey());
+            MemberProfileResponse memberProfileRes = MemberProfileResponse.of(member.getMemberId(), member.getNickname(), profileUrl);
+            memberProfileMap.put(member.getMemberId(), memberProfileRes);
+        }
+
+        return memberProfileMap;
 
     }
 
@@ -74,9 +82,7 @@ public class ChatMessageService {
         Member member = getMemberByNickname(chatMessageRequest.getNickname());
         TravelAttendee attendee = getTravelAttendee(chatMessageRequest.getScheduleId(), member.getMemberId());
 
-        if (!attendee.isEnableChat()){
-            throw new ForbiddenChatException(ErrorCode.FORBIDDEN_CHAT_ATTENDEE);
-        }
+        validateEnableChat(attendee);
 
         ChatMessage chatMessage = ChatMessage.createChatMessage(
                 chatMessageRequest.getScheduleId(),
@@ -85,7 +91,16 @@ public class ChatMessageService {
         );
         chatMessageRepository.save(chatMessage);
 
-        return ChatResponse.from(chatMessage, member);
+        String profileUrl = s3ObjectManager.generateS3ObjectUrl(member.getProfileImage().getS3ObjectKey());
+
+        return ChatResponse.of(chatMessage, member, profileUrl);
+    }
+
+
+    private void validateEnableChat(TravelAttendee attendee) {
+        if (!attendee.isEnableChat()){
+            throw new ForbiddenChatException(ErrorCode.FORBIDDEN_CHAT_ATTENDEE);
+        }
     }
 
     public void validateSchedule(Long scheduleId){
