@@ -75,4 +75,3 @@ jobs:
             sudo docker compose up -d ${{ secrets.SPRING_CONTAINER_NAME }}
 
             
-            
