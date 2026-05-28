@@ -738,6 +738,29 @@ public class TravelScheduleControllerTest {
                 .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()));
     }
 
+
+    @Test
+    @DisplayName("일정 생성 시 오늘 이전 날짜 값 입력")
+    void createSchedule_PreviousStartDate() throws Exception {
+        // given
+        ScheduleCreateRequest request = TravelScheduleFixture.createScheduleRequest(
+                "테스트",
+                LocalDate.now().minusDays(15),
+                LocalDate.now().minusDays(10)
+        );
+        SecurityTestUtils.mockAuthentication(member1);
+
+        // when, then
+        mockMvc.perform(post("/api/schedules")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()));
+    }
+
+
     @ParameterizedTest
     @DisplayName("일정 생성 시 일정명 빈 값으로 예외 발생")
     @ValueSource(strings = {"", " "})
@@ -801,28 +824,6 @@ public class TravelScheduleControllerTest {
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value(containsString("일정 시작 날짜는 필수 입력 값입니다.")));
     }
-//
-    @Test
-    @DisplayName("일정 생성 시 일정 시작일 오늘 이전 날짜 값으로 예외 발생")
-    void createSchedule_invalidPreviousStartDate() throws Exception {
-        // given
-        ScheduleCreateRequest request = TravelScheduleFixture.createScheduleRequest(
-                "테스트",
-                LocalDate.now().minusDays(1),
-                LocalDate.now().plusDays(10)
-        );
-        SecurityTestUtils.mockAuthentication(member1);
-
-        // when, then
-        mockMvc.perform(post("/api/schedules")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andDo(print())
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.success").value(false))
-                .andExpect(jsonPath("$.message").value(containsString("오늘 이후 날짜만 입력 가능합니다.")));
-    }
-
 
     @Test
     @DisplayName("일정 생성 시 일정 종료일 null 값이 들어와 예외 발생")
@@ -845,26 +846,6 @@ public class TravelScheduleControllerTest {
                 .andExpect(jsonPath("$.message").value(containsString("일정 종료 날짜는 필수 입력 값입니다.")));
     }
 
-    @Test
-    @DisplayName("일정 생성 시 일정 종료일 오늘 이전 날짜 값으로 예외 발생")
-    void createSchedule_invalidPreviousEndDate() throws Exception {
-        // given
-        ScheduleCreateRequest request = TravelScheduleFixture.createScheduleRequest(
-                "테스트",
-                LocalDate.now(),
-                LocalDate.now().minusDays(1)
-        );
-        SecurityTestUtils.mockAuthentication(member1);
-
-        // when, then
-        mockMvc.perform(post("/api/schedules")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andDo(print())
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.success").value(false))
-                .andExpect(jsonPath("$.message").value(containsString("오늘 이후 날짜만 입력 가능합니다.")));
-    }
 
     @Test
     @DisplayName("일정 생성 시 일정 생성일이 종료일 이후 날짜로 예외 발생")
