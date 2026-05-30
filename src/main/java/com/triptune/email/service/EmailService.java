@@ -112,17 +112,20 @@ public class EmailService {
 
 
     public void verifyAuthCode(VerifyAuthRequest verifyAuthRequest){
-        String savedCode = redisService.getEmailData(RedisKeyType.AUTH_CODE, verifyAuthRequest.getEmail());
-
-        if(savedCode == null){
-            throw new EmailVerifyException(ErrorCode.INVALID_VERIFIED_EMAIL);
+        String savedAuthCode = redisService.getEmailData(RedisKeyType.AUTH_CODE, verifyAuthRequest.getEmail());
+        if(savedAuthCode == null){
+            throw new EmailVerifyException(ErrorCode.INVALID_AUTH_CODE);
         }
 
-        if(!savedCode.equals(verifyAuthRequest.getAuthCode())){
-            throw new EmailVerifyException(ErrorCode.INCORRECT_VERIFIED_EMAIL);
-        }
+        validateAuthCode(verifyAuthRequest.getAuthCode(), savedAuthCode);
 
         redisService.saveEmailData(RedisKeyType.VERIFIED, verifyAuthRequest.getEmail(), "true", verificationDuration);
+    }
+
+    private static void validateAuthCode(String authCode, String savedAuthCode) {
+        if(!savedAuthCode.equals(authCode)){
+            throw new EmailVerifyException(ErrorCode.INCORRECT_AUTH_CODE);
+        }
     }
 
 

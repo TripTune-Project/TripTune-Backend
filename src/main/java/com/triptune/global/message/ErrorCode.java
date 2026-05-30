@@ -28,7 +28,7 @@ public enum ErrorCode {
     // 회원
     MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "회원 정보를 찾을 수 없습니다."),
     FAILED_LOGIN(HttpStatus.BAD_REQUEST, "이메일 또는 비밀번호가 일치하지 않습니다."),
-    INVALID_CHANGE_PASSWORD(HttpStatus.BAD_REQUEST, "잘못된 요청입니다. 비밀번호 찾기를 다시 진행해주세요."),
+    INVALID_CHANGE_PASSWORD_TOKEN(HttpStatus.BAD_REQUEST, "잘못된 요청입니다. 비밀번호 찾기를 다시 진행해주세요."),
 
     // 소셜 회원
     SOCIAL_MEMBER_PASSWORD_CHANGE_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "소셜 회원은 비밀번호를 변경할 수 없습니다."),
@@ -36,8 +36,8 @@ public enum ErrorCode {
 
 
     // 이메일
-    INCORRECT_VERIFIED_EMAIL(HttpStatus.BAD_REQUEST, "인증번호가 일치하지 않습니다. 다시 확인해 주세요."),
-    INVALID_VERIFIED_EMAIL(HttpStatus.BAD_REQUEST, "인증번호가 만료되었거나 요청되지 않았습니다. 새로 인증을 요청해 주세요."),
+    INCORRECT_AUTH_CODE(HttpStatus.BAD_REQUEST, "인증번호가 일치하지 않습니다. 다시 확인해 주세요."),
+    INVALID_AUTH_CODE(HttpStatus.BAD_REQUEST, "인증번호가 만료되었거나 요청되지 않았습니다. 새로 인증을 요청해 주세요."),
     NOT_VERIFIED_EMAIL(HttpStatus.BAD_REQUEST, "인증되지 않은 이메일입니다. 이메일 인증을 다시 진행해주세요."),
 
     // 토큰

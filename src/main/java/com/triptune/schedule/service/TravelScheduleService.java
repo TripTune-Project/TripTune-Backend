@@ -75,14 +75,11 @@ public class TravelScheduleService {
 
         return travelScheduleRepository.findEnableEditTravelSchedules(pageable, memberId)
                 .map(schedule -> {
-                    String author = findAuthorNicknameByScheduleId(schedule.getScheduleId());
-                    return OverviewScheduleResponse.from(schedule, author);
+                    String authorNickname = travelAttendeeRepository.findAuthorNicknameByScheduleId(schedule.getScheduleId());
+                    return OverviewScheduleResponse.from(schedule, authorNickname);
                 });
     }
 
-    public String findAuthorNicknameByScheduleId(Long scheduleId){
-        return travelAttendeeRepository.findAuthorNicknameByScheduleId(scheduleId);
-    }
 
     public SchedulePageResponse<ScheduleInfoResponse> searchAllSchedules(int page, String keyword, Long memberId) {
         Pageable pageable = PageUtils.schedulePageable(page);
@@ -177,6 +174,11 @@ public class TravelScheduleService {
     }
 
 
+    private TravelSchedule getScheduleByScheduleId(Long scheduleId){
+        return travelScheduleRepository.findById(scheduleId)
+                .orElseThrow(() -> new DataNotFoundException(ErrorCode.SCHEDULE_NOT_FOUND));
+    }
+
     private TravelAttendee getAttendeeInfo(TravelSchedule schedule, Long memberId){
         return schedule.getTravelAttendees().stream()
                 .filter(attendee -> attendee.isSameMember(memberId))
@@ -186,12 +188,7 @@ public class TravelScheduleService {
     }
 
 
-    private TravelSchedule getScheduleByScheduleId(Long scheduleId){
-        return travelScheduleRepository.findById(scheduleId)
-                .orElseThrow(() -> new DataNotFoundException(ErrorCode.SCHEDULE_NOT_FOUND));
-    }
-
-    public void checkScheduleEditPermission(TravelAttendee attendee){
+    private void checkScheduleEditPermission(TravelAttendee attendee){
         if (!attendee.getPermission().isEnableEdit()){
             throw new ForbiddenScheduleException(ErrorCode.FORBIDDEN_EDIT_SCHEDULE);
         }
@@ -200,8 +197,7 @@ public class TravelScheduleService {
 
     @Transactional
     public void deleteSchedule(Long scheduleId, Long memberId) {
-        TravelAttendee attendee = travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_MemberId(scheduleId, memberId)
-                .orElseThrow(() -> new ForbiddenScheduleException(ErrorCode.FORBIDDEN_ACCESS_SCHEDULE));
+        TravelAttendee attendee = getAttendeeByScheduleIdAndMemberId(scheduleId, memberId);
 
         if (!attendee.getRole().isAuthor()){
             throw new ForbiddenScheduleException(ErrorCode.FORBIDDEN_DELETE_SCHEDULE);
@@ -209,6 +205,11 @@ public class TravelScheduleService {
 
         travelScheduleRepository.deleteById(scheduleId);
         deleteChatMessageByScheduleId(scheduleId);
+    }
+
+    private TravelAttendee getAttendeeByScheduleIdAndMemberId(Long scheduleId, Long memberId) {
+        return travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_MemberId(scheduleId, memberId)
+                .orElseThrow(() -> new ForbiddenScheduleException(ErrorCode.FORBIDDEN_ACCESS_SCHEDULE));
     }
 
     private void deleteChatMessageByScheduleId(Long scheduleId){

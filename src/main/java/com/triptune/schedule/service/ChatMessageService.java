@@ -47,13 +47,13 @@ public class ChatMessageService {
         return PageUtils.createPage(chatResponses, pageable, chatPage.getTotalElements());
     }
 
-    public Set<Long> extractMemberId(List<ChatMessage> chatMessages){
+    private Set<Long> extractMemberId(List<ChatMessage> chatMessages){
         return chatMessages.stream()
                 .map(ChatMessage::getMemberId)
                 .collect(Collectors.toSet());
     }
 
-    public Map<Long, MemberProfileResponse> getMemberProfiles(Set<Long> memberIds){
+    private Map<Long, MemberProfileResponse> getMemberProfiles(Set<Long> memberIds){
         List<Member> members = memberRepository.findByIds(memberIds);
         Map<Long, MemberProfileResponse> memberProfileMap = new HashMap<>();
 
@@ -67,7 +67,7 @@ public class ChatMessageService {
 
     }
 
-    public List<ChatResponse> convertChatResponse(List<ChatMessage> chatMessages, Map<Long, MemberProfileResponse> memberProfileMap){
+    private List<ChatResponse> convertChatResponse(List<ChatMessage> chatMessages, Map<Long, MemberProfileResponse> memberProfileMap){
         return chatMessages.stream()
                 .map(message -> ChatResponse.from(message, memberProfileMap.get(message.getMemberId())))
                 .sorted(Comparator.comparing(ChatResponse::getTimestamp))
@@ -97,16 +97,8 @@ public class ChatMessageService {
     }
 
 
-    private void validateEnableChat(TravelAttendee attendee) {
-        if (!attendee.isEnableChat()){
-            throw new ForbiddenChatException(ErrorCode.FORBIDDEN_CHAT_ATTENDEE);
-        }
-    }
-
-    public void validateSchedule(Long scheduleId){
-        boolean isExist = travelScheduleRepository.existsById(scheduleId);
-
-        if (!isExist){
+    private void validateSchedule(Long scheduleId){
+        if (!travelScheduleRepository.existsById(scheduleId)){
             throw new DataNotFoundChatException(ErrorCode.SCHEDULE_NOT_FOUND);
         }
     }
@@ -120,6 +112,12 @@ public class ChatMessageService {
     private TravelAttendee getTravelAttendee(Long scheduleId, Long memberId){
         return travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_MemberId(scheduleId, memberId)
                 .orElseThrow(() -> new ForbiddenChatException(ErrorCode.FORBIDDEN_ACCESS_SCHEDULE));
+    }
+
+    private void validateEnableChat(TravelAttendee attendee) {
+        if (!attendee.isEnableChat()){
+            throw new ForbiddenChatException(ErrorCode.FORBIDDEN_CHAT_ATTENDEE);
+        }
     }
 
 }

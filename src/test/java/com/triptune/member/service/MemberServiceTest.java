@@ -10,6 +10,7 @@ import com.triptune.email.dto.request.EmailRequest;
 import com.triptune.email.exception.EmailVerifyException;
 import com.triptune.email.service.EmailService;
 import com.triptune.global.s3.S3ObjectManager;
+import com.triptune.member.exception.InvalidPasswordResetTokenException;
 import com.triptune.member.fixture.MemberFixture;
 import com.triptune.member.fixture.SocialMemberFixture;
 import com.triptune.member.service.dto.LoginResult;
@@ -214,30 +215,6 @@ public class MemberServiceTest {
 
         // when
         EmailVerifyException fail = assertThrows(EmailVerifyException.class, () -> memberService.join(request));
-
-        // then
-        assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.NOT_VERIFIED_EMAIL);
-
-    }
-
-    @Test
-    @DisplayName("인증된 이메일인지 검증")
-    void validateVerifiedEmail(){
-        // given
-        when(redisService.getEmailData(any(), anyString())).thenReturn("true");
-
-        // when
-        assertDoesNotThrow(() -> memberService.validateVerifiedEmail("member@email.com"));
-    }
-
-    @Test
-    @DisplayName("인증된 이메일이 아니여서 예외 발생")
-    void validateVerifiedEmail_notVerifiedEmail(){
-        // given
-        when(redisService.getEmailData(any(), anyString())).thenReturn(null);
-
-        // when
-        EmailVerifyException fail = assertThrows(EmailVerifyException.class, () -> memberService.validateVerifiedEmail("member@email.com"));
 
         // then
         assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.NOT_VERIFIED_EMAIL);
@@ -578,11 +555,11 @@ public class MemberServiceTest {
         when(redisService.getData(anyString())).thenReturn(null);
 
         // when
-        IncorrectPasswordException fail = assertThrows(IncorrectPasswordException.class,
+        InvalidPasswordResetTokenException fail = assertThrows(InvalidPasswordResetTokenException.class,
                 () -> memberService.resetPassword(request));
 
         // then
-        assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.INVALID_CHANGE_PASSWORD);
+        assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.INVALID_CHANGE_PASSWORD_TOKEN);
     }
 
     @Test
