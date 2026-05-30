@@ -135,7 +135,8 @@ public class TravelScheduleRepositoryCustomImpl implements TravelScheduleReposit
                 .where(travelSchedule.scheduleName.contains(keyword))
                 .orderBy(
                         accuracyOrder(keyword),
-                        travelSchedule.updatedAt.desc()
+                        travelSchedule.updatedAt.desc(),
+                        travelSchedule.scheduleId.desc()
                 )
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
@@ -166,7 +167,6 @@ public class TravelScheduleRepositoryCustomImpl implements TravelScheduleReposit
     @Override
     public Page<ScheduleInfoQueryDto> searchSharedTravelSchedules(Pageable pageable, String keyword, Long memberId) {
         QTravelAttendee authorAttendee = new QTravelAttendee("authorAttendee");
-        String orderCaseString = accuracyQuery();
 
         List<ScheduleInfoQueryDto> content = jpaQueryFactory
                 .select(selectScheduleInfo(authorAttendee))
@@ -183,7 +183,8 @@ public class TravelScheduleRepositoryCustomImpl implements TravelScheduleReposit
                 )
                 .orderBy(
                         accuracyOrder(keyword),
-                        travelSchedule.updatedAt.desc()
+                        travelSchedule.updatedAt.desc(),
+                        travelSchedule.scheduleId.desc()
                 )
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())

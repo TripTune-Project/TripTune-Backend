@@ -15,6 +15,7 @@ import com.triptune.global.s3.S3ObjectManager;
 import com.triptune.global.security.jwt.exception.CustomJwtUnAuthorizedException;
 import com.triptune.global.security.jwt.JwtUtils;
 import com.triptune.global.util.PageUtils;
+import com.triptune.member.exception.InvalidPasswordResetTokenException;
 import com.triptune.member.service.dto.LoginResult;
 import com.triptune.member.dto.request.*;
 import com.triptune.member.dto.response.MemberInfoResponse;
@@ -31,7 +32,6 @@ import com.triptune.schedule.repository.ChatMessageRepository;
 import com.triptune.schedule.repository.TravelAttendeeRepository;
 import com.triptune.schedule.repository.TravelScheduleRepository;
 import com.triptune.travel.dto.response.PlaceBookmarkResponse;
-import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -81,40 +81,13 @@ public class MemberService {
     }
 
 
-    public void validateUniqueEmail(String email){
-        if(memberRepository.existsByEmail(email)){
-            throw new DataExistException(ErrorCode.ALREADY_EXISTED_EMAIL);
-        }
-    }
-
-    public void validateUniqueNickname(String nickname){
-        if(isExistNickname(nickname)){
-            throw new DataExistException(ErrorCode.ALREADY_EXISTED_NICKNAME);
-        }
-    }
-
-    private boolean isExistNickname(String nickname){
-        return memberRepository.existsByNickname(nickname);
-    }
-
-
-    public void validateVerifiedEmail(String email){
-        String isVerified = redisService.getEmailData(RedisKeyType.VERIFIED, email);
-
-        if(isVerified == null || !isVerified.equals("true")){
-            throw new EmailVerifyException(ErrorCode.NOT_VERIFIED_EMAIL);
-        }
-    }
-
-
     @Transactional
     public LoginResult login(LoginRequest loginRequest) {
         Member member = memberRepository.findByEmail(loginRequest.getEmail())
                 .orElseThrow(() -> new FailLoginException(ErrorCode.FAILED_LOGIN));
 
-        if (!passwordEncoder.matches(loginRequest.getPassword(), member.getPassword())) {
-            throw new FailLoginException(ErrorCode.FAILED_LOGIN);
-        }
+        validatePassword(loginRequest.getPassword(), member.getPassword(),
+                new FailLoginException(ErrorCode.FAILED_LOGIN));
 
         String accessToken = jwtUtils.createAccessToken(member.getMemberId());
         String refreshToken = jwtUtils.createRefreshToken(member.getMemberId());
@@ -138,7 +111,7 @@ public class MemberService {
     }
 
 
-    public RefreshTokenResponse refreshToken(String refreshToken) throws ExpiredJwtException {
+    public RefreshTokenResponse refreshToken(String refreshToken) {
         jwtUtils.validateToken(refreshToken);
         Long memberId = jwtUtils.getMemberIdByToken(refreshToken);
 
@@ -150,12 +123,8 @@ public class MemberService {
         return RefreshTokenResponse.of(newAccessToken);
     }
 
-    private Member getMemberByEmail(String email){
-        return memberRepository.findByEmail(email)
-                .orElseThrow(() -> new DataNotFoundException(ErrorCode.MEMBER_NOT_FOUND));
-    }
 
-    public void validateSavedRefreshToken(Member member, String refreshToken){
+    private void validateSavedRefreshToken(Member member, String refreshToken){
         if(!member.isMatchRefreshToken(refreshToken)){
             throw new CustomJwtUnAuthorizedException(ErrorCode.MISMATCH_REFRESH_TOKEN);
         }
@@ -175,7 +144,7 @@ public class MemberService {
         String email = redisService.getData(resetPasswordRequest.getPasswordToken());
 
         if (email == null) {
-            throw new IncorrectPasswordException(ErrorCode.INVALID_CHANGE_PASSWORD);
+            throw new InvalidPasswordResetTokenException(ErrorCode.INVALID_CHANGE_PASSWORD_TOKEN);
         }
 
         Member member = getMemberByEmail(email);
@@ -183,20 +152,24 @@ public class MemberService {
         member.resetPassword(encodedPassword);
     }
 
+
+    private Member getMemberByEmail(String email){
+        return memberRepository.findByEmail(email)
+                .orElseThrow(() -> new DataNotFoundException(ErrorCode.MEMBER_NOT_FOUND));
+    }
+
     @Transactional
     public void changePassword(Long memberId, ChangePasswordRequest passwordRequest){
         Member member = getMemberById(memberId);
 
-        if (member.isSocialMember()){
-            throw new UnsupportedSocialMemberException(ErrorCode.SOCIAL_MEMBER_PASSWORD_CHANGE_NOT_ALLOWED);
-        }
-
-        if(!passwordEncoder.matches(passwordRequest.getNowPassword(), member.getPassword())){
-            throw new IncorrectPasswordException(ErrorCode.INCORRECT_PASSWORD);
-        }
+        validateSocialMember(member, ErrorCode.SOCIAL_MEMBER_PASSWORD_CHANGE_NOT_ALLOWED);
+        validatePassword(passwordRequest.getNowPassword(),
+                member.getPassword(),
+                new IncorrectPasswordException(ErrorCode.INCORRECT_PASSWORD));
 
         member.updatePassword(passwordEncoder.encode(passwordRequest.getNewPassword()));
     }
+
 
     public MemberInfoResponse getMemberInfo(Long memberId) {
         Member member = getMemberById(memberId);
@@ -204,10 +177,6 @@ public class MemberService {
         return MemberInfoResponse.from(member, profileImageUrl);
     }
 
-    private Member getMemberById(Long memberId){
-        return memberRepository.findById(memberId)
-                .orElseThrow(() -> new DataNotFoundException(ErrorCode.MEMBER_NOT_FOUND));
-    }
 
     @Transactional
     public void changeNickname(Long memberId, ChangeNicknameRequest changeNicknameRequest) {
@@ -244,16 +213,12 @@ public class MemberService {
     @Transactional
     public void deactivateMember(DeactivateRequest deactivateRequest, Long memberId, String accessToken) {
         // 1. 회원 비밀번호 확인
-        Member member = getMemberAndSocailMember(memberId);
+        Member member = getMemberWithSocialMembers(memberId);
 
-        // 2. 소셜 회원인지 먼저 확인
-        if (member.isSocialMember()){
-            throw new UnsupportedSocialMemberException(ErrorCode.SOCIAL_MEMBER_DEACTIVATE_NOT_ALLOWED);
-        }
-
-        if(!passwordEncoder.matches(deactivateRequest.getPassword(), member.getPassword())){
-            throw new IncorrectPasswordException(ErrorCode.INCORRECT_PASSWORD);
-        }
+        // 2. 소셜 회원인지, 비밀번호 맞는지 먼저 확인
+        validateSocialMember(member, ErrorCode.SOCIAL_MEMBER_DEACTIVATE_NOT_ALLOWED);
+        validatePassword(deactivateRequest.getPassword(), member.getPassword(),
+                new IncorrectPasswordException(ErrorCode.INCORRECT_PASSWORD));
 
         // 3. 프로필 이미지 기본으로 변경
         profileImageService.updateDefaultProfileImage(member);
@@ -284,9 +249,47 @@ public class MemberService {
         redisService.saveExpiredData(accessToken, "logout", LOGOUT_DURATION);
     }
 
-    public Member getMemberAndSocailMember(Long memberId){
+    private void validateSocialMember(Member member, ErrorCode errorCode) {
+        if (member.isSocialMember()){
+            throw new UnsupportedSocialMemberException(errorCode);
+        }
+    }
+
+    private Member getMemberWithSocialMembers(Long memberId){
         return memberRepository.findByIdWithSocialMembers(memberId)
                 .orElseThrow(() -> new DataNotFoundException(ErrorCode.MEMBER_NOT_FOUND));
+    }
+
+
+    private void validateUniqueEmail(String email){
+        if(memberRepository.existsByEmail(email)){
+            throw new DataExistException(ErrorCode.ALREADY_EXISTED_EMAIL);
+        }
+    }
+
+    private void validateUniqueNickname(String nickname){
+        if(memberRepository.existsByNickname(nickname)){
+            throw new DataExistException(ErrorCode.ALREADY_EXISTED_NICKNAME);
+        }
+    }
+
+    private void validateVerifiedEmail(String email){
+        String isVerified = redisService.getEmailData(RedisKeyType.VERIFIED, email);
+
+        if(isVerified == null || !isVerified.equals("true")){
+            throw new EmailVerifyException(ErrorCode.NOT_VERIFIED_EMAIL);
+        }
+    }
+
+    private Member getMemberById(Long memberId){
+        return memberRepository.findById(memberId)
+                .orElseThrow(() -> new DataNotFoundException(ErrorCode.MEMBER_NOT_FOUND));
+    }
+
+    private void validatePassword(String rawPassword, String encodedPassword, RuntimeException exception){
+        if(!passwordEncoder.matches(rawPassword, encodedPassword)){
+            throw exception;
+        }
     }
 
 

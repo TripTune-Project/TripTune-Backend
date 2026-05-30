@@ -62,14 +62,13 @@ public class TravelRouteService {
         travelRouteRepository.save(route);
     }
 
-    public TravelSchedule findTravelScheduleByScheduleId(Long scheduleId){
+    private TravelSchedule findTravelScheduleByScheduleId(Long scheduleId){
         return travelScheduleRepository.findById(scheduleId)
                 .orElseThrow(() -> new DataNotFoundException(ErrorCode.SCHEDULE_NOT_FOUND));
     }
 
-    public void validateEnableEdit(Long scheduleId, Long memberId){
-        TravelAttendee attendee = travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_MemberId(scheduleId, memberId)
-                .orElseThrow(() -> new DataNotFoundException(ErrorCode.ATTENDEE_NOT_FOUND));
+    private void validateEnableEdit(Long scheduleId, Long memberId){
+        TravelAttendee attendee = getAttendeeByScheduleIdAndMemberId(scheduleId, memberId);
 
         if (!attendee.getPermission().isEnableEdit()){
             throw new ForbiddenScheduleException(ErrorCode.FORBIDDEN_EDIT_SCHEDULE);
@@ -77,7 +76,12 @@ public class TravelRouteService {
 
     }
 
-    public TravelPlace findTravelPlaceByPlaceId(Long placeId){
+    private TravelAttendee getAttendeeByScheduleIdAndMemberId(Long scheduleId, Long memberId) {
+        return travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_MemberId(scheduleId, memberId)
+                .orElseThrow(() -> new DataNotFoundException(ErrorCode.ATTENDEE_NOT_FOUND));
+    }
+
+    private TravelPlace findTravelPlaceByPlaceId(Long placeId){
         return travelPlaceRepository.findById(placeId)
                 .orElseThrow(() -> new DataNotFoundException(ErrorCode.PLACE_NOT_FOUND));
     }

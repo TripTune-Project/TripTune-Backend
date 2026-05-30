@@ -248,79 +248,7 @@ public class TravelAttendeeServiceTest {
 
     }
 
-    @Test
-    @DisplayName("일정 참석자 5명 넘는지 확인")
-    void validateAttendeeCount(){
-        // given
-        when(travelAttendeeRepository.countByTravelSchedule_ScheduleId(anyLong())).thenReturn(4);
 
-        // when, then
-        assertDoesNotThrow(() -> travelAttendeeService.validateAttendeeCount(1L));
-    }
-
-    @Test
-    @DisplayName("일정 참석자 5명 넘어 예외 발생")
-    void validateAttendeeCount_overFiveAttendee(){
-        // given
-        when(travelAttendeeRepository.countByTravelSchedule_ScheduleId(anyLong())).thenReturn(5);
-
-        // when
-        ConflictAttendeeException fail = assertThrows(ConflictAttendeeException.class,
-                () -> travelAttendeeService.validateAttendeeCount(1L));
-
-        // then
-        assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.OVER_ATTENDEE_NUMBER);
-    }
-
-    @Test
-    @DisplayName("작성자인지 검증")
-    void validateAuthor(){
-        // given
-        when(travelAttendeeRepository.existsByTravelSchedule_ScheduleIdAndMember_MemberIdAndRole(anyLong(), anyLong(), any(AttendeeRole.class)))
-                .thenReturn(true);
-
-        // when, then
-        assertDoesNotThrow(() -> travelAttendeeService.validateAuthor(1L, 1L, ErrorCode.FORBIDDEN_ACCESS_SCHEDULE));
-    }
-
-    @Test
-    @DisplayName("작성자인지 검증 시 예외 발생")
-    void validateAuthor_forbiddenAttendee(){
-        // given
-        when(travelAttendeeRepository.existsByTravelSchedule_ScheduleIdAndMember_MemberIdAndRole(anyLong(), anyLong(), any(AttendeeRole.class)))
-                .thenReturn(false);
-
-        // when, then
-        ForbiddenAttendeeException fail = assertThrows(ForbiddenAttendeeException.class,
-                () -> travelAttendeeService.validateAuthor(1L, 1L, ErrorCode.FORBIDDEN_ACCESS_SCHEDULE));
-
-        // then
-        assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.FORBIDDEN_ACCESS_SCHEDULE);
-    }
-
-    @Test
-    @DisplayName("기존 참석자인지 검증")
-    void validateAttendeeAlreadyExists(){
-        // given
-        when(travelAttendeeRepository.existsByTravelSchedule_ScheduleIdAndMember_MemberId(anyLong(), anyLong())).thenReturn(false);
-
-        // when, then
-        assertDoesNotThrow(() -> travelAttendeeService.validateAttendeeAlreadyExists(1L, 1L));
-    }
-
-    @Test
-    @DisplayName("기존 참석자인지 검증 시 예외 발생")
-    void validateAttendee_alreadyAttendee(){
-        // given
-        when(travelAttendeeRepository.existsByTravelSchedule_ScheduleIdAndMember_MemberId(anyLong(), anyLong())).thenReturn(true);
-
-        // when, then
-        ConflictAttendeeException fail = assertThrows(ConflictAttendeeException.class,
-                () -> travelAttendeeService.validateAttendeeAlreadyExists(1L, 1L));
-
-        // then
-        assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.ALREADY_ATTENDEE);
-    }
 
     @Test
     @DisplayName("일정 참석자 접근 권한 수정")

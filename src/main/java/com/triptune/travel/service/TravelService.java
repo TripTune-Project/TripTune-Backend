@@ -68,13 +68,13 @@ public class TravelService {
     }
 
 
-    public void markBookmarkedTravelPlaces(List<PlaceDistanceResponse> placeResponses, Long memberId){
+    private void markBookmarkedTravelPlaces(List<PlaceDistanceResponse> placeResponses, Long memberId){
         if (memberId != null){
             placeResponses.forEach(placeResponse -> markBookmarkedPlace(memberId, placeResponse));
         }
     }
 
-    public void markBookmarkedPlace(Long memberId, PlaceDistanceResponse placeResponse){
+    private void markBookmarkedPlace(Long memberId, PlaceDistanceResponse placeResponse){
         boolean isBookmark = bookmarkRepository.existsByMember_MemberIdAndTravelPlace_PlaceId(memberId, placeResponse.getPlaceId());
 
         if (isBookmark){
@@ -83,8 +83,7 @@ public class TravelService {
     }
 
     public PlaceDetailResponse getTravelPlaceDetails(Long placeId, Long memberId) {
-        TravelPlace travelPlace = travelPlaceRepository.findById(placeId)
-                .orElseThrow(()-> new DataNotFoundException(ErrorCode.DATA_NOT_FOUND));
+        TravelPlace travelPlace = getTravelPlaceById(placeId);
 
         boolean isBookmark = false;
 
@@ -99,6 +98,11 @@ public class TravelService {
                 }).toList();
 
         return PlaceDetailResponse.of(travelPlace, travelImageResponses, isBookmark);
+    }
+
+    private TravelPlace getTravelPlaceById(Long placeId) {
+        return travelPlaceRepository.findById(placeId)
+                .orElseThrow(() -> new DataNotFoundException(ErrorCode.DATA_NOT_FOUND));
     }
 
     public Page<PlaceResponse> getTravelPlacesByJungGu(int page) {
