@@ -36,7 +36,7 @@ public class S3Service {
                     s3ObjectKey,
                     uploadFile.getInputStream(),
                     metadata
-            ).withCannedAcl(CannedAccessControlList.PublicRead));
+            ));
 
             log.info("[s3 이미지 업로드 성공] : {}", s3ObjectKey);
 
