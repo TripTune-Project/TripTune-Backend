@@ -119,5 +119,4 @@ public class ChatMessageControllerTest {
                 .andExpect(jsonPath("$.data.totalElements").value(0))
                 .andExpect(jsonPath("$.data.content").isEmpty());
     }
-
 }

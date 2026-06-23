@@ -10,6 +10,7 @@ import com.triptune.global.aop.AttendeeCheck;
 import com.triptune.global.message.ErrorCode;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -37,7 +38,7 @@ public class ChatMessageController {
 
     @MessageMapping("/chats")
     @Operation(summary = "채팅 보내기", description = "메시지를 저장하고 채팅 참가자들에게 메시지를 보낸다.")
-    public void sendChatMessage(@Payload ChatMessageRequest chatMessageRequest){
+    public void sendChatMessage(@Valid @Payload ChatMessageRequest chatMessageRequest){
         if (chatMessageRequest.getMessage().length() > MAX_MESSAGE_LENGTH){
             throw new BadRequestChatException(ErrorCode.CHAT_MESSAGE_TOO_LONG);
         }
