@@ -92,6 +92,10 @@ dependencies {
 	// tika
 	implementation 'org.apache.tika:tika-core:2.8.0'
 
+	// actuator
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+	runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
+
 
 	// 테스트용 DB
 	testImplementation 'com.h2database:h2'
