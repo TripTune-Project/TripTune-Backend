@@ -33,7 +33,6 @@ class TravelRouteRepositoryTest  {
     @Autowired private CityRepository cityRepository;
     @Autowired private DistrictRepository districtRepository;
     @Autowired private TravelPlaceRepository travelPlaceRepository;
-    @Autowired private ApiCategoryRepository apiCategoryRepository;
     @Autowired private ApiContentTypeRepository apiContentTypeRepository;
 
 
@@ -45,14 +44,12 @@ class TravelRouteRepositoryTest  {
         Country country = countryRepository.save(CountryFixture.createCountry());
         City city = cityRepository.save(CityFixture.createCity(country, "서울"));
         District district = districtRepository.save(DistrictFixture.createDistrict(city, "부암동"));
-        ApiCategory apiCategory = apiCategoryRepository.save(ApiCategoryFixture.createApiCategory());
         ApiContentType apiContentType = apiContentTypeRepository.save(ApiContentTypeFixture.createApiContentType(ATTRACTIONS));
         TravelPlace place = travelPlaceRepository.save(
                 TravelPlaceFixture.createTravelPlace(
                         country,
                         city,
                         district,
-                        apiCategory,
                         apiContentType,
                         "여행지"
                 )

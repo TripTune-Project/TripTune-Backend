@@ -40,7 +40,6 @@ public class TravelPlaceRepositoryTest {
     @Autowired private CityRepository cityRepository;
     @Autowired private CountryRepository countryRepository;
     @Autowired private DistrictRepository districtRepository;
-    @Autowired private ApiCategoryRepository apiCategoryRepository;
     @Autowired private TravelImageRepository travelImageRepository;
     @Autowired private ApiContentTypeRepository apiContentTypeRepository;
 
@@ -48,7 +47,6 @@ public class TravelPlaceRepositoryTest {
     private City city;
     private District gangnam;
     private District junggu;
-    private ApiCategory apiCategory;
     private ApiContentType attractionContentType;
     private ApiContentType sportsContentType;
 
@@ -59,7 +57,6 @@ public class TravelPlaceRepositoryTest {
         city = cityRepository.save(CityFixture.createCity(country, "서울"));
         gangnam = districtRepository.save(DistrictFixture.createDistrict(city, "강남구"));
         junggu = districtRepository.save(DistrictFixture.createDistrict(city, "중구"));
-        apiCategory = apiCategoryRepository.save(ApiCategoryFixture.createApiCategory());
         attractionContentType = apiContentTypeRepository.save(ApiContentTypeFixture.createApiContentType(ThemeType.ATTRACTIONS));
         sportsContentType = apiContentTypeRepository.save(ApiContentTypeFixture.createApiContentType(ThemeType.SPORTS));
     }
@@ -74,7 +71,6 @@ public class TravelPlaceRepositoryTest {
                         country,
                         city,
                         gangnam,
-                        apiCategory,
                         attractionContentType,
                         "여행지1",
                         37.5,
@@ -89,7 +85,6 @@ public class TravelPlaceRepositoryTest {
                         country,
                         city,
                         junggu,
-                        apiCategory,
                         sportsContentType,
                         "여행지2",
                         37.477,
@@ -127,7 +122,6 @@ public class TravelPlaceRepositoryTest {
                         country,
                         city,
                         gangnam,
-                        apiCategory,
                         attractionContentType,
                         "여행지1"
                 )
@@ -140,7 +134,6 @@ public class TravelPlaceRepositoryTest {
                         country,
                         city,
                         junggu,
-                        apiCategory,
                         sportsContentType,
                         "여행지2"
                 )
@@ -167,7 +160,6 @@ public class TravelPlaceRepositoryTest {
                         country,
                         city,
                         gangnam,
-                        apiCategory,
                         attractionContentType,
                         "여행지1",
                         37.49,
@@ -182,7 +174,6 @@ public class TravelPlaceRepositoryTest {
                         country,
                         city,
                         junggu,
-                        apiCategory,
                         sportsContentType,
                         "여행지2",
                         37.477,
@@ -215,7 +206,6 @@ public class TravelPlaceRepositoryTest {
                         country,
                         city,
                         gangnam,
-                        apiCategory,
                         attractionContentType,
                         "여행지1",
                         37.49,
@@ -230,7 +220,6 @@ public class TravelPlaceRepositoryTest {
                         country,
                         city,
                         junggu,
-                        apiCategory,
                         sportsContentType,
                         "여행지2",
                         37.477,
@@ -257,7 +246,6 @@ public class TravelPlaceRepositoryTest {
                         country,
                         city,
                         gangnam,
-                        apiCategory,
                         attractionContentType,
                         "여행지1",
                         37.49850,
@@ -272,7 +260,6 @@ public class TravelPlaceRepositoryTest {
                         country,
                         city,
                         junggu,
-                        apiCategory,
                         sportsContentType,
                         "여행지2",
                         37.56420,
@@ -287,7 +274,6 @@ public class TravelPlaceRepositoryTest {
                         country,
                         busan,
                         busanDistrict,
-                        apiCategory,
                         attractionContentType,
                         "부산 여행지",
                         35.15830,
@@ -342,7 +328,6 @@ public class TravelPlaceRepositoryTest {
                         country,
                         city,
                         gangnam,
-                        apiCategory,
                         attractionContentType,
                         "여행지1"
                 )
@@ -355,7 +340,6 @@ public class TravelPlaceRepositoryTest {
                         country,
                         city,
                         junggu,
-                        apiCategory,
                         sportsContentType,
                         "여행지2"
                 )
@@ -385,7 +369,6 @@ public class TravelPlaceRepositoryTest {
                         country,
                         city,
                         gangnam,
-                        apiCategory,
                         attractionContentType,
                         "여행지1"
                 )
@@ -398,7 +381,6 @@ public class TravelPlaceRepositoryTest {
                         country,
                         city,
                         junggu,
-                        apiCategory,
                         sportsContentType,
                         "여행지2"
                 )
@@ -423,7 +405,6 @@ public class TravelPlaceRepositoryTest {
                         country,
                         city,
                         gangnam,
-                        apiCategory,
                         attractionContentType,
                         "여행지1",
                         1
@@ -437,7 +418,6 @@ public class TravelPlaceRepositoryTest {
                         country,
                         city,
                         junggu,
-                        apiCategory,
                         sportsContentType,
                         "여행지2",
                         0
@@ -451,7 +431,6 @@ public class TravelPlaceRepositoryTest {
                         country,
                         busan,
                         busanDistrict,
-                        apiCategory,
                         attractionContentType,
                         "부산 여행지",
                         2
@@ -467,7 +446,6 @@ public class TravelPlaceRepositoryTest {
                         country,
                         jeolla,
                         jeollaDistrict,
-                        apiCategory,
                         attractionContentType,
                         "전라 여행지",
                         3
@@ -499,7 +477,6 @@ public class TravelPlaceRepositoryTest {
                         country,
                         city,
                         gangnam,
-                        apiCategory,
                         attractionContentType,
                         "여행지1",
                         1
@@ -513,7 +490,6 @@ public class TravelPlaceRepositoryTest {
                         country,
                         city,
                         junggu,
-                        apiCategory,
                         sportsContentType,
                         "여행지2",
                         0
@@ -527,7 +503,7 @@ public class TravelPlaceRepositoryTest {
                         country,
                         jeolla1,
                         jeolla1District,
-                        apiCategory, attractionContentType,
+                        attractionContentType,
                         "고창 여행지",
                         1
                 )
@@ -542,7 +518,6 @@ public class TravelPlaceRepositoryTest {
                         country,
                         jeolla2,
                         jeolla2District,
-                        apiCategory,
                         sportsContentType,
                         "보성 여행지",
                         2
@@ -571,7 +546,6 @@ public class TravelPlaceRepositoryTest {
                         country,
                         city,
                         gangnam,
-                        apiCategory,
                         attractionContentType,
                         "여행지1"
                 )
@@ -579,7 +553,7 @@ public class TravelPlaceRepositoryTest {
         travelImageRepository.save(TravelImageFixture.createTravelImage(gangnamPlace, "test1", true));
         travelImageRepository.save(TravelImageFixture.createTravelImage(gangnamPlace, "test2", false));
 
-        travelPlaceRepository.save(TravelPlaceFixture.createTravelPlace(country, city, junggu, apiCategory, sportsContentType, "여행지2"));
+        travelPlaceRepository.save(TravelPlaceFixture.createTravelPlace(country, city, junggu, sportsContentType, "여행지2"));
 
         // when
         List<PlaceSimpleQueryDto> response = travelPlaceRepository.findPopularTravelPlaces(CityType.JEOLLA);
@@ -600,7 +574,6 @@ public class TravelPlaceRepositoryTest {
                         country,
                         city,
                         gangnam,
-                        apiCategory,
                         attractionContentType,
                         "여행지1",
                         1
@@ -614,7 +587,6 @@ public class TravelPlaceRepositoryTest {
                         country,
                         city,
                         junggu,
-                        apiCategory,
                         sportsContentType,
                         "여행지2",
                         0
@@ -629,7 +601,6 @@ public class TravelPlaceRepositoryTest {
                         country,
                         busan,
                         busanDistrict,
-                        apiCategory,
                         cultureContentType,
                         "여행지3",
                         2
@@ -645,7 +616,6 @@ public class TravelPlaceRepositoryTest {
                         country,
                         jeolla,
                         jeollaDistrict,
-                        apiCategory,
                         attractionContentType,
                         "여행지4",
                         3
@@ -676,7 +646,6 @@ public class TravelPlaceRepositoryTest {
                         country,
                         city,
                         gangnam,
-                        apiCategory,
                         attractionContentType,
                         "여행지1",
                         0
@@ -690,7 +659,6 @@ public class TravelPlaceRepositoryTest {
                         country,
                         city,
                         junggu,
-                        apiCategory,
                         sportsContentType,
                         "여행지2",
                         1));
@@ -703,7 +671,6 @@ public class TravelPlaceRepositoryTest {
                         country,
                         jeolla1,
                         jeolla1District,
-                        apiCategory,
                         cultureContentType,
                         "여행지3",
                         2
@@ -719,7 +686,6 @@ public class TravelPlaceRepositoryTest {
                         country,
                         jeolla2,
                         jeolla2District,
-                        apiCategory,
                         attractionContentType,
                         "여행지4",
                         3
@@ -748,7 +714,6 @@ public class TravelPlaceRepositoryTest {
                         country,
                         city,
                         gangnam,
-                        apiCategory,
                         attractionContentType,
                         "여행지1"
                 )
@@ -761,7 +726,6 @@ public class TravelPlaceRepositoryTest {
                         country,
                         city,
                         junggu,
-                        apiCategory,
                         sportsContentType,
                         "여행지2"
                 )

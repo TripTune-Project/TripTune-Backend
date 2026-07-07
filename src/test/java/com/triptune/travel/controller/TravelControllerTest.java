@@ -57,7 +57,6 @@ public class TravelControllerTest {
     @Autowired private CountryRepository countryRepository;
     @Autowired private CityRepository cityRepository;
     @Autowired private DistrictRepository districtRepository;
-    @Autowired private ApiCategoryRepository apiCategoryRepository;
     @Autowired private TravelImageRepository travelImageRepository;
     @Autowired private ApiContentTypeRepository apiContentTypeRepository;
     @Autowired private BookmarkRepository bookmarkRepository;
@@ -69,7 +68,6 @@ public class TravelControllerTest {
     private City city;
     private District gangnam;
     private District seongdong;
-    private ApiCategory apiCategory;
     private ApiContentType attractionContentType;
     private ApiContentType lodgingContentType;
 
@@ -83,7 +81,6 @@ public class TravelControllerTest {
         gangnam = districtRepository.save(DistrictFixture.createDistrict(city, "강남구"));
         seongdong = districtRepository.save(DistrictFixture.createDistrict(city, "성동구"));
 
-        apiCategory = apiCategoryRepository.save(ApiCategoryFixture.createApiCategory());
         attractionContentType = apiContentTypeRepository.save(ApiContentTypeFixture.createApiContentType(ThemeType.ATTRACTIONS));
         lodgingContentType = apiContentTypeRepository.save(ApiContentTypeFixture.createApiContentType(ThemeType.LODGING));
 
@@ -100,7 +97,6 @@ public class TravelControllerTest {
                         country,
                         city,
                         gangnam,
-                        apiCategory,
                         attractionContentType,
                         "여행지1",
                         37.49,
@@ -116,7 +112,6 @@ public class TravelControllerTest {
                         country,
                         city,
                         seongdong,
-                        apiCategory,
                         attractionContentType,
                         "여행지2",
                         37.4920,
@@ -212,7 +207,6 @@ public class TravelControllerTest {
                         country,
                         city,
                         gangnam,
-                        apiCategory,
                         attractionContentType,
                         "여행지1",
                         37.5250,
@@ -228,7 +222,6 @@ public class TravelControllerTest {
                         country,
                         city,
                         seongdong,
-                        apiCategory,
                         attractionContentType,
                         "여행지2",
                         37.4700,
@@ -286,7 +279,6 @@ public class TravelControllerTest {
                         country,
                         city,
                         gangnam,
-                        apiCategory,
                         attractionContentType,
                         "여행지1",
                         37.5250,
@@ -302,7 +294,6 @@ public class TravelControllerTest {
                         country,
                         city,
                         seongdong,
-                        apiCategory,
                         attractionContentType,
                         "여행지2",
                         37.4700,
@@ -358,7 +349,6 @@ public class TravelControllerTest {
                         country,
                         city,
                         gangnam,
-                        apiCategory,
                         attractionContentType,
                         "여행지1",
                         37.5250,
@@ -374,7 +364,6 @@ public class TravelControllerTest {
                         country,
                         city,
                         seongdong,
-                        apiCategory,
                         attractionContentType,
                         "여행지2",
                         37.4700,
@@ -427,7 +416,6 @@ public class TravelControllerTest {
                         country,
                         city,
                         gangnam,
-                        apiCategory,
                         attractionContentType,
                         "여행지1"
                 )
@@ -441,7 +429,6 @@ public class TravelControllerTest {
                         country,
                         city,
                         seongdong,
-                        apiCategory,
                         attractionContentType,
                         "여행지2"
                     )
@@ -494,7 +481,6 @@ public class TravelControllerTest {
                         country,
                         city,
                         gangnam,
-                        apiCategory,
                         attractionContentType,
                         "여행지1"
                 )
@@ -508,7 +494,6 @@ public class TravelControllerTest {
                         country,
                         city,
                         seongdong,
-                        apiCategory,
                         attractionContentType,
                         "여행지2"
                 )
@@ -624,7 +609,6 @@ public class TravelControllerTest {
                         country,
                         city,
                         gangnam,
-                        apiCategory,
                         attractionContentType,
                         "여행지1"
                 )
@@ -655,7 +639,6 @@ public class TravelControllerTest {
                         country,
                         city,
                         gangnam,
-                        apiCategory,
                         attractionContentType,
                         "여행지1"
                 )
@@ -698,7 +681,6 @@ public class TravelControllerTest {
                         country,
                         city,
                         gangnam,
-                        apiCategory,
                         attractionContentType,
                         "여행지1",
                         3
@@ -713,7 +695,6 @@ public class TravelControllerTest {
                         country,
                         city,
                         seongdong,
-                        apiCategory,
                         attractionContentType,
                         "여행지2",
                         1
@@ -727,7 +708,6 @@ public class TravelControllerTest {
                         country,
                         busan,
                         busanDistrict,
-                        apiCategory,
                         attractionContentType,
                         "금정 여행지",
                         50
@@ -744,7 +724,6 @@ public class TravelControllerTest {
                         country,
                         jeolla,
                         jeollaDistrict,
-                        apiCategory,
                         attractionContentType,
                         "보성 여행지",
                         300
@@ -779,7 +758,6 @@ public class TravelControllerTest {
                         country,
                         city,
                         gangnam,
-                        apiCategory,
                         attractionContentType,
                         "여행지1"
                 )
@@ -792,7 +770,6 @@ public class TravelControllerTest {
                         country,
                         city,
                         seongdong,
-                        apiCategory,
                         attractionContentType,
                         "여행지2"
                 )
@@ -805,7 +782,6 @@ public class TravelControllerTest {
                         country,
                         gueongsang1,
                         gueongsang1District,
-                        apiCategory,
                         attractionContentType,
                         "구미 여행지"
                 )
@@ -822,7 +798,6 @@ public class TravelControllerTest {
                         country,
                         gueongsang2,
                         gueongsang2District,
-                        apiCategory,
                         attractionContentType,
                         "통영 여행지"
                 )
@@ -880,7 +855,6 @@ public class TravelControllerTest {
                         country,
                         city,
                         gangnam,
-                        apiCategory,
                         attractionContentType,
                         "여행지1",
                         1
@@ -895,7 +869,6 @@ public class TravelControllerTest {
                         country,
                         city,
                         seongdong,
-                        apiCategory,
                         attractionContentType,
                         "여행지2",
                         2
@@ -909,7 +882,6 @@ public class TravelControllerTest {
                         country,
                         busan,
                         busanDistrict,
-                        apiCategory,
                         lodgingContentType,
                         "부산 여행지"
                 )
@@ -925,7 +897,6 @@ public class TravelControllerTest {
                         country,
                         jeolla,
                         jeollaDistrict,
-                        apiCategory,
                         attractionContentType,
                         "전라도 여행지",
                         3
@@ -960,7 +931,6 @@ public class TravelControllerTest {
                         country,
                         city,
                         gangnam,
-                        apiCategory,
                         attractionContentType,
                         "여행지1"
                 )
@@ -973,7 +943,6 @@ public class TravelControllerTest {
                         country,
                         city,
                         seongdong,
-                        apiCategory,
                         attractionContentType,
                         "여행지2"
                 )
@@ -986,7 +955,6 @@ public class TravelControllerTest {
                         country,
                         busan,
                         busanDistrict,
-                        apiCategory,
                         lodgingContentType,
                         "부산 여행지"
                 )

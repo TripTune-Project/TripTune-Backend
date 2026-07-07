@@ -48,7 +48,6 @@ class BookmarkRepositoryTest {
     @Autowired private CountryRepository countryRepository;
     @Autowired private CityRepository cityRepository;
     @Autowired private DistrictRepository districtRepository;
-    @Autowired private ApiCategoryRepository apiCategoryRepository;
     @Autowired private ApiContentTypeRepository apiContentTypeRepository;
     @Autowired private ProfileImageRepository profileImageRepository;
     @Autowired private TravelImageRepository travelImageRepository;
@@ -67,7 +66,6 @@ class BookmarkRepositoryTest {
         Country country = countryRepository.save(CountryFixture.createCountry());
         City city = cityRepository.save(CityFixture.createCity(country, "서울"));
         District district = districtRepository.save(DistrictFixture.createDistrict(city, "강남구"));
-        ApiCategory apiCategory = apiCategoryRepository.save(ApiCategoryFixture.createApiCategory());
         ApiContentType apiContentType = apiContentTypeRepository.save(ApiContentTypeFixture.createApiContentType(ThemeType.ATTRACTIONS));
 
         ProfileImage profileImage = profileImageRepository.save(ProfileImageFixture.createProfileImage("memberImage"));
@@ -77,7 +75,6 @@ class BookmarkRepositoryTest {
                         country,
                         city,
                         district,
-                        apiCategory,
                         apiContentType,
                         "여행지1"
                 )
@@ -90,7 +87,6 @@ class BookmarkRepositoryTest {
                         country,
                         city,
                         district,
-                        apiCategory,
                         apiContentType,
                         "여행지2"
                 )
@@ -102,7 +98,6 @@ class BookmarkRepositoryTest {
                         country,
                         city,
                         district,
-                        apiCategory,
                         apiContentType,
                         "여행지3"
                 )

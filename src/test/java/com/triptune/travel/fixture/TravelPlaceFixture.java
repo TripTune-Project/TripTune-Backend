@@ -13,12 +13,11 @@ import org.springframework.test.util.ReflectionTestUtils;
 public class TravelPlaceFixture {
     
     // 숙박(checkInTime, checkOutTime not null / userTime null)
-    public static TravelPlace createLodgingTravelPlace(Country country, City city, District district, ApiCategory apiCategory, ApiContentType apiContentType, String placeName){
+    public static TravelPlace createLodgingTravelPlace(Country country, City city, District district, ApiContentType apiContentType, String placeName){
         return TravelPlace.createTravelPlace(
                 country,
                 city,
                 district,
-                apiCategory,
                 apiContentType,
                 placeName,
                 placeName + " 테스트 주소",
@@ -36,12 +35,11 @@ public class TravelPlaceFixture {
     }
 
     // 숙박 외(checkInTime, checkOutTime null / userTime not null)
-    public static TravelPlace createTravelPlace(Country country, City city, District district, ApiCategory apiCategory, ApiContentType apiContentType, String placeName){
+    public static TravelPlace createTravelPlace(Country country, City city, District district, ApiContentType apiContentType, String placeName){
         return TravelPlace.createTravelPlace(
                 country,
                 city,
                 district,
-                apiCategory,
                 apiContentType,
                 placeName,
                 placeName + " 테스트 주소",
@@ -58,12 +56,11 @@ public class TravelPlaceFixture {
         );
     }
 
-    public static TravelPlace createTravelPlaceWithId(Long placeId, Country country, City city, District district, ApiCategory apiCategory, ApiContentType apiContentType, String placeName){
+    public static TravelPlace createTravelPlaceWithId(Long placeId, Country country, City city, District district, ApiContentType apiContentType, String placeName){
         TravelPlace travelPlace = TravelPlace.createTravelPlace(
                 country,
                 city,
                 district,
-                apiCategory,
                 apiContentType,
                 placeName,
                 placeName + " 테스트 주소",
@@ -84,12 +81,11 @@ public class TravelPlaceFixture {
     }
 
     // 위도, 경도 지정
-    public static TravelPlace createTravelPlaceWithLocation(Country country, City city, District district, ApiCategory apiCategory, ApiContentType apiContentType, String placeName, double latitude, double longitude){
+    public static TravelPlace createTravelPlaceWithLocation(Country country, City city, District district, ApiContentType apiContentType, String placeName, double latitude, double longitude){
         return TravelPlace.createTravelPlace(
                 country,
                 city,
                 district,
-                apiCategory,
                 apiContentType,
                 placeName,
                 placeName + " 테스트 주소",
@@ -107,12 +103,11 @@ public class TravelPlaceFixture {
     }
 
 
-    public static TravelPlace createTravelPlaceWithIdAndLocation(Long placeId, Country country, City city, District district, ApiCategory apiCategory, ApiContentType apiContentType, String placeName, double latitude, double longitude){
+    public static TravelPlace createTravelPlaceWithIdAndLocation(Long placeId, Country country, City city, District district, ApiContentType apiContentType, String placeName, double latitude, double longitude){
         TravelPlace travelPlace = TravelPlace.createTravelPlace(
                 country,
                 city,
                 district,
-                apiCategory,
                 apiContentType,
                 placeName,
                 placeName + " 테스트 주소",
@@ -134,12 +129,11 @@ public class TravelPlaceFixture {
 
 
     // 북마크 횟수 지정
-    public static TravelPlace createTravelPlaceWithBookmarkCnt(Country country, City city, District district, ApiCategory apiCategory, ApiContentType apiContentType, String placeName, int bookmarkCnt){
+    public static TravelPlace createTravelPlaceWithBookmarkCnt(Country country, City city, District district, ApiContentType apiContentType, String placeName, int bookmarkCnt){
         return TravelPlace.createTravelPlace(
                 country,
                 city,
                 district,
-                apiCategory,
                 apiContentType,
                 placeName,
                 placeName + " 테스트 주소",

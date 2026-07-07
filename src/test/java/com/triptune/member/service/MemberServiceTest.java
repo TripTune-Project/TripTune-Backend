@@ -109,21 +109,20 @@ public class MemberServiceTest {
         Country country = CountryFixture.createCountry();
         City city = CityFixture.createCity(country, "서울");
         District district = DistrictFixture.createDistrict(city, "강남구");
-        ApiCategory apiCategory = ApiCategoryFixture.createApiCategory();
         ApiContentType apiContentType = ApiContentTypeFixture.createApiContentType(ThemeType.ATTRACTIONS);
 
         profileImage = ProfileImageFixture.createProfileImage("memberImage");
 
-        place1WithThumb = TravelPlaceFixture.createTravelPlace(country, city, district, apiCategory, apiContentType, "가장소");
+        place1WithThumb = TravelPlaceFixture.createTravelPlace(country, city, district, apiContentType, "가장소");
         place1Thumb = TravelImageFixture.createTravelImage(place1WithThumb, "test", true);
         TravelImageFixture.createTravelImage(place1WithThumb, "test2", false);
         place1ThumbUrl = S3Fixture.createS3ObjectUrl(place1Thumb.getS3ObjectKey());
 
-        place2WithThumb = TravelPlaceFixture.createTravelPlace(country, city, district, apiCategory, apiContentType, "나장소");
+        place2WithThumb = TravelPlaceFixture.createTravelPlace(country, city, district, apiContentType, "나장소");
         place2Thumb = TravelImageFixture.createTravelImage(place2WithThumb, "test", true);
         place2ThumbUrl = S3Fixture.createS3ObjectUrl(place2Thumb.getS3ObjectKey());
 
-        place3WithoutThumb = TravelPlaceFixture.createTravelPlace(country, city, district, apiCategory, apiContentType, "다장소");
+        place3WithoutThumb = TravelPlaceFixture.createTravelPlace(country, city, district, apiContentType, "다장소");
         TravelImageFixture.createTravelImage(place3WithoutThumb, "test", true);
     }
 

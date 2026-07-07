@@ -81,7 +81,6 @@ public class TravelRouteServiceTest {
         Country country = CountryFixture.createCountry();
         City city = CityFixture.createCity(country, "서울");
         District district = DistrictFixture.createDistrict(city, "중구");
-        ApiCategory apiCategory = ApiCategoryFixture.createApiCategory();
         ApiContentType apiContentType = ApiContentTypeFixture.createApiContentType(ThemeType.ATTRACTIONS);
 
         place1WithThumb = TravelPlaceFixture.createTravelPlaceWithId(
@@ -89,7 +88,6 @@ public class TravelRouteServiceTest {
                 country,
                 city,
                 district,
-                apiCategory,
                 apiContentType,
                 "여행지1"
         );
@@ -102,7 +100,6 @@ public class TravelRouteServiceTest {
                 country,
                 city,
                 district,
-                apiCategory,
                 apiContentType,
                 "여행지2"
         );
@@ -115,7 +112,6 @@ public class TravelRouteServiceTest {
                 country,
                 city,
                 district,
-                apiCategory,
                 apiContentType,
                 "여행지3"
         );

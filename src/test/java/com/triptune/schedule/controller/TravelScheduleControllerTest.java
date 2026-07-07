@@ -75,7 +75,6 @@ public class TravelScheduleControllerTest {
     @Autowired private CountryRepository countryRepository;
     @Autowired private CityRepository cityRepository;
     @Autowired private DistrictRepository districtRepository;
-    @Autowired private ApiCategoryRepository apiCategoryRepository;
     @Autowired private TravelImageRepository travelImageRepository;
     @Autowired private TravelRouteRepository travelRouteRepository;
     @Autowired private ProfileImageRepository profileImageRepository;
@@ -111,7 +110,6 @@ public class TravelScheduleControllerTest {
         City city = cityRepository.save(CityFixture.createCity(country, "서울"));
         District gangnam = districtRepository.save(DistrictFixture.createDistrict(city, "강남구"));
         District jungGu = districtRepository.save(DistrictFixture.createDistrict(city, "중구"));
-        ApiCategory apiCategory = apiCategoryRepository.save(ApiCategoryFixture.createApiCategory());
         ApiContentType apiContentType = apiContentTypeRepository.save(ApiContentTypeFixture.createApiContentType(ATTRACTIONS));
 
         place1WithThumb = travelPlaceRepository.save(
@@ -119,7 +117,6 @@ public class TravelScheduleControllerTest {
                         country,
                         city,
                         gangnam,
-                        apiCategory,
                         apiContentType,
                         "여행지1",
                         37.49850,
@@ -135,7 +132,6 @@ public class TravelScheduleControllerTest {
                         country,
                         city,
                         jungGu,
-                        apiCategory,
                         apiContentType,
                         "여행지2",
                         37.56420,
@@ -151,7 +147,6 @@ public class TravelScheduleControllerTest {
                         country,
                         city,
                         gangnam,
-                        apiCategory,
                         apiContentType,
                         "여행지3",
                         37.49790,
