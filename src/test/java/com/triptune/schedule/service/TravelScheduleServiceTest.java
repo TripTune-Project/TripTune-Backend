@@ -91,7 +91,6 @@ public class TravelScheduleServiceTest {
         Country country = CountryFixture.createCountry();
         City city = CityFixture.createCity(country, "서울");
         District district = DistrictFixture.createDistrict(city, "중구");
-        ApiCategory apiCategory = ApiCategoryFixture.createApiCategory();
         ApiContentType apiContentType = ApiContentTypeFixture.createApiContentType(ThemeType.ATTRACTIONS);
 
         ProfileImage profileImage1 = ProfileImageFixture.createProfileImage("member1Image");
@@ -105,7 +104,6 @@ public class TravelScheduleServiceTest {
                 country,
                 city,
                 district,
-                apiCategory,
                 apiContentType,
                 "여행지1"
         );
@@ -117,7 +115,6 @@ public class TravelScheduleServiceTest {
                 country,
                 city,
                 district,
-                apiCategory,
                 apiContentType,
                 "여행지3"
         );
@@ -128,7 +125,6 @@ public class TravelScheduleServiceTest {
                 country,
                 city,
                 district,
-                apiCategory,
                 apiContentType,
                 "여행지2"
         );

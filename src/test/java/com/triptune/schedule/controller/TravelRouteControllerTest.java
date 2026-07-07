@@ -66,7 +66,6 @@ public class TravelRouteControllerTest {
     @Autowired private CountryRepository countryRepository;
     @Autowired private CityRepository cityRepository;
     @Autowired private DistrictRepository districtRepository;
-    @Autowired private ApiCategoryRepository apiCategoryRepository;
     @Autowired private TravelImageRepository travelImageRepository;
     @Autowired private TravelRouteRepository travelRouteRepository;
     @Autowired private ApiContentTypeRepository apiContentTypeRepository;
@@ -88,7 +87,6 @@ public class TravelRouteControllerTest {
         Country country = countryRepository.save(CountryFixture.createCountry());
         City city = cityRepository.save(CityFixture.createCity(country, "서울"));
         District district = districtRepository.save(DistrictFixture.createDistrict(city, "강남구"));
-        ApiCategory apiCategory = apiCategoryRepository.save(ApiCategoryFixture.createApiCategory());
         ApiContentType apiContentType = apiContentTypeRepository.save(ApiContentTypeFixture.createApiContentType(ATTRACTIONS));
 
         ProfileImage profileImage1 = profileImageRepository.save(ProfileImageFixture.createProfileImage("test1"));
@@ -109,7 +107,6 @@ public class TravelRouteControllerTest {
                         country,
                         city,
                         district,
-                        apiCategory,
                         apiContentType,
                         "여행지1"
                 )
@@ -122,7 +119,6 @@ public class TravelRouteControllerTest {
                         country,
                         city,
                         district,
-                        apiCategory,
                         apiContentType,
                         "여행지2"
                 )
@@ -135,7 +131,6 @@ public class TravelRouteControllerTest {
                         country,
                         city,
                         district,
-                        apiCategory,
                         apiContentType,
                         "여행지3"
                 )

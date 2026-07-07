@@ -53,7 +53,6 @@ public class TravelServiceTest  {
     private Country country;
     private City seoul;
     private District gangnam;
-    private ApiCategory apiCategory;
 
     private ApiContentType attractionContentType;
     private ApiContentType sportsContentType;
@@ -66,7 +65,6 @@ public class TravelServiceTest  {
         country = CountryFixture.createCountry();
         seoul = CityFixture.createCity(country, "서울");
         gangnam = DistrictFixture.createDistrict(seoul, "강남구");
-        apiCategory = ApiCategoryFixture.createApiCategory();
         attractionContentType = ApiContentTypeFixture.createApiContentType(ThemeType.ATTRACTIONS);
         sportsContentType = ApiContentTypeFixture.createApiContentType(ThemeType.SPORTS);
         lodgingContentType = ApiContentTypeFixture.createApiContentType(ThemeType.LODGING);
@@ -85,7 +83,6 @@ public class TravelServiceTest  {
                 country,
                 seoul,
                 gangnam,
-                apiCategory,
                 attractionContentType,
                 "여행지1"
         );
@@ -98,7 +95,6 @@ public class TravelServiceTest  {
                 country,
                 seoul,
                 gangnam,
-                apiCategory,
                 sportsContentType,
                 "여행지2",
                 12.333,
@@ -168,7 +164,6 @@ public class TravelServiceTest  {
                 country,
                 seoul,
                 gangnam,
-                apiCategory,
                 attractionContentType,
                 "여행지1"
         );
@@ -180,7 +175,6 @@ public class TravelServiceTest  {
                 country,
                 seoul,
                 gangnam,
-                apiCategory,
                 sportsContentType,
                 "여행지2",
                 12.333,
@@ -247,7 +241,6 @@ public class TravelServiceTest  {
                 country,
                 seoul,
                 gangnam,
-                apiCategory,
                 attractionContentType,
                 "여행지1"
         );
@@ -260,7 +253,6 @@ public class TravelServiceTest  {
                 country,
                 seoul,
                 gangnam,
-                apiCategory,
                 sportsContentType,
                 "여행지2",
                 12.333,
@@ -322,7 +314,6 @@ public class TravelServiceTest  {
                 country,
                 seoul,
                 gangnam,
-                apiCategory,
                 attractionContentType,
                 "여행지1"
         );
@@ -334,7 +325,6 @@ public class TravelServiceTest  {
                 country,
                 seoul,
                 gangnam,
-                apiCategory,
                 sportsContentType,
                 "여행지2",
                 12.333,
@@ -400,7 +390,6 @@ public class TravelServiceTest  {
                 country,
                 seoul,
                 gangnam,
-                apiCategory,
                 attractionContentType,
                 "여행지1"
         );
@@ -413,7 +402,6 @@ public class TravelServiceTest  {
                 country,
                 seoul,
                 gangnam,
-                apiCategory,
                 sportsContentType,
                 "여행지2",
                 12.333,
@@ -474,7 +462,6 @@ public class TravelServiceTest  {
                 country,
                 seoul,
                 gangnam,
-                apiCategory,
                 attractionContentType,
                 "여행지1"
         );
@@ -486,7 +473,6 @@ public class TravelServiceTest  {
                 country,
                 seoul,
                 gangnam,
-                apiCategory,
                 sportsContentType,
                 "여행지2",
                 12.333,
@@ -547,7 +533,6 @@ public class TravelServiceTest  {
                 country,
                 seoul,
                 gangnam,
-                apiCategory,
                 attractionContentType,
                 "여행지1"
         );
@@ -577,7 +562,6 @@ public class TravelServiceTest  {
                 country,
                 seoul,
                 gangnam,
-                apiCategory,
                 attractionContentType,
                 "여행지1"
         );
@@ -606,7 +590,6 @@ public class TravelServiceTest  {
                 country,
                 seoul,
                 gangnam,
-                apiCategory,
                 lodgingContentType,
                 "여행지2"
         );
@@ -639,7 +622,6 @@ public class TravelServiceTest  {
                 country,
                 seoul,
                 gangnam,
-                apiCategory,
                 lodgingContentType,
                 "여행지2"
         );
@@ -687,7 +669,6 @@ public class TravelServiceTest  {
                 country,
                 seoul,
                 gangnam,
-                apiCategory,
                 attractionContentType,
                 "여행지1"
         );
@@ -699,7 +680,6 @@ public class TravelServiceTest  {
                 country,
                 seoul,
                 gangnam,
-                apiCategory,
                 lodgingContentType,
                 "여행지2"
         );
@@ -754,7 +734,6 @@ public class TravelServiceTest  {
                 country,
                 seoul,
                 gangnam,
-                apiCategory,
                 attractionContentType,
                 "여행지1"
         );
@@ -766,7 +745,6 @@ public class TravelServiceTest  {
                 country,
                 seoul,
                 gangnam,
-                apiCategory,
                 lodgingContentType,
                 "여행지2"
         );
@@ -821,7 +799,6 @@ public class TravelServiceTest  {
                 country,
                 seoul,
                 gangnam,
-                apiCategory,
                 attractionContentType,
                 "여행지1"
         );
@@ -833,7 +810,6 @@ public class TravelServiceTest  {
                 country,
                 seoul,
                 gangnam,
-                apiCategory,
                 lodgingContentType,
                 "여행지2"
         );
@@ -844,7 +820,6 @@ public class TravelServiceTest  {
                 country,
                 busan,
                 busanDistrict,
-                apiCategory,
                 attractionContentType,
                 "금정 여행지"
         );
@@ -857,7 +832,6 @@ public class TravelServiceTest  {
                 country,
                 jeolla,
                 jeollaDistrict,
-                apiCategory,
                 attractionContentType,
                 "보성 여행지"
         );
@@ -899,7 +873,6 @@ public class TravelServiceTest  {
                 country,
                 jeolla1,
                 jeolla1District,
-                apiCategory,
                 attractionContentType,
                 "고창 여행지"
         );
@@ -912,7 +885,6 @@ public class TravelServiceTest  {
                 country,
                 jeolla2,
                 jeolla2District,
-                apiCategory,
                 attractionContentType,
                 "보성 여행지"
         );
@@ -962,7 +934,6 @@ public class TravelServiceTest  {
                 country,
                 seoul,
                 gangnam,
-                apiCategory,
                 attractionContentType,
                 "여행지1"
         );
@@ -974,7 +945,6 @@ public class TravelServiceTest  {
                 country,
                 seoul,
                 gangnam,
-                apiCategory,
                 lodgingContentType,
                 "여행지2"
         );
@@ -985,7 +955,6 @@ public class TravelServiceTest  {
                 country,
                 busan,
                 busanDistrict,
-                apiCategory,
                 sportsContentType,
                 "부산 여행지"
         );
@@ -998,7 +967,6 @@ public class TravelServiceTest  {
                 country,
                 jeolla,
                 jeollaDistrict,
-                apiCategory,
                 attractionContentType,
                 "전라도 여행지"
         );
@@ -1039,7 +1007,6 @@ public class TravelServiceTest  {
                 country,
                 seoul,
                 gangnam,
-                apiCategory,
                 attractionContentType,
                 "여행지1"
         );
@@ -1053,7 +1020,6 @@ public class TravelServiceTest  {
                 country,
                 jeolla2,
                 jeolla2District,
-                apiCategory,
                 attractionContentType,
                 "전라도 여행지"
         );

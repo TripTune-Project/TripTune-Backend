@@ -34,10 +34,6 @@ public class TravelPlace extends BaseTimeEntity {
     private District district;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "category_code")
-    private ApiCategory apiCategory;
-
-    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "content_type_id")
     private ApiContentType apiContentType;
 
@@ -80,11 +76,10 @@ public class TravelPlace extends BaseTimeEntity {
     @OneToMany(mappedBy = "travelPlace", fetch = FetchType.LAZY)
     private List<TravelImage> travelImages = new ArrayList<>();
 
-    private TravelPlace(Country country, City city, District district, ApiCategory apiCategory, ApiContentType apiContentType, String placeName, String address, String detailAddress, String useTime, String checkInTime, String checkOutTime, String homepage, String phoneNumber, double latitude, double longitude, String description, int bookmarkCnt) {
+    private TravelPlace(Country country, City city, District district, ApiContentType apiContentType, String placeName, String address, String detailAddress, String useTime, String checkInTime, String checkOutTime, String homepage, String phoneNumber, double latitude, double longitude, String description, int bookmarkCnt) {
         this.country = country;
         this.city = city;
         this.district = district;
-        this.apiCategory = apiCategory;
         this.apiContentType = apiContentType;
         this.placeName = placeName;
         this.address = address;
@@ -101,12 +96,11 @@ public class TravelPlace extends BaseTimeEntity {
     }
 
 
-    public static TravelPlace createTravelPlace(Country country, City city, District district, ApiCategory apiCategory, ApiContentType apiContentType, String placeName, String address, String detailAddress, String useTime, String checkInTime, String checkOutTime, String homepage, String phoneNumber, double latitude, double longitude, String description, int bookmarkCnt) {
+    public static TravelPlace createTravelPlace(Country country, City city, District district, ApiContentType apiContentType, String placeName, String address, String detailAddress, String useTime, String checkInTime, String checkOutTime, String homepage, String phoneNumber, double latitude, double longitude, String description, int bookmarkCnt) {
         return new TravelPlace(
                 country,
                 city,
                 district,
-                apiCategory,
                 apiContentType,
                 placeName,
                 address,

@@ -92,7 +92,6 @@ public class MemberControllerTest {
     @Autowired private CityRepository cityRepository;
     @Autowired private DistrictRepository districtRepository;
     @Autowired private TravelImageRepository travelImageRepository;
-    @Autowired private ApiCategoryRepository apiCategoryRepository;
     @Autowired private BookmarkRepository bookmarkRepository;
     @Autowired private TravelAttendeeRepository travelAttendeeRepository;
     @Autowired private TravelScheduleRepository travelScheduleRepository;
@@ -125,7 +124,6 @@ public class MemberControllerTest {
         Country country = countryRepository.save(CountryFixture.createCountry());
         City city = cityRepository.save(CityFixture.createCity(country, "서울"));
         District district = districtRepository.save(DistrictFixture.createDistrict(city, "강남"));
-        ApiCategory apiCategory = apiCategoryRepository.save(ApiCategoryFixture.createApiCategory());
         ApiContentType apiContentType = apiContentTypeRepository.save(ApiContentTypeFixture.createApiContentType(ThemeType.ATTRACTIONS));
 
         profileImage = profileImageRepository.save(ProfileImageFixture.createProfileImage("memberImage"));
@@ -135,7 +133,6 @@ public class MemberControllerTest {
                         country,
                         city,
                         district,
-                        apiCategory,
                         apiContentType,
                         "가장소"
                 )
@@ -148,7 +145,6 @@ public class MemberControllerTest {
                         country,
                         city,
                         district,
-                        apiCategory,
                         apiContentType,
                         "나장소"
                 )
@@ -161,7 +157,6 @@ public class MemberControllerTest {
                         country,
                         city,
                         district,
-                        apiCategory,
                         apiContentType,
                         "다장소"
                 )

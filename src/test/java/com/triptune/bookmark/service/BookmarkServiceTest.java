@@ -50,7 +50,6 @@ public class BookmarkServiceTest  {
         Country country = CountryFixture.createCountry();
         City city = CityFixture.createCity(country, "서울");
         District district = DistrictFixture.createDistrict(city, "강남구");
-        ApiCategory apiCategory = ApiCategoryFixture.createApiCategory();
         ApiContentType apiContentType = ApiContentTypeFixture.createApiContentType(ThemeType.ATTRACTIONS);
 
         ProfileImage profileImage = ProfileImageFixture.createProfileImage("memberImage");
@@ -59,7 +58,6 @@ public class BookmarkServiceTest  {
                 country,
                 city,
                 district,
-                apiCategory,
                 apiContentType,
                 "여행지1"
         );
@@ -67,7 +65,6 @@ public class BookmarkServiceTest  {
                 country,
                 city,
                 district,
-                apiCategory,
                 apiContentType,
                 "여행지2"
         );
