@@ -9,6 +9,7 @@ build/
 *.yml
 application.properties
 generated/
+k6/scripts/
 
 ### STS ###
 .apt_generated

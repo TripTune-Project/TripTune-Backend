@@ -50,9 +50,9 @@ public class TravelScheduleController {
 
     @GetMapping("/edit")
     @Operation(summary = "수정 권한 있는 일정 목록 조회", description = "작성한 일정 중 수정 권한이 있는 일정을 필요 데이터로 구성해 조회합니다.")
-    public ApiResponse<PageResponse<OverviewScheduleResponse>> getEnableEditSchedule(@AuthenticationPrincipal(expression = "memberId") Long memberId,
-                                                                                    @RequestParam(name = "page") int page){
-        Page<OverviewScheduleResponse> response = travelScheduleService.getEnableEditSchedule(page, memberId);
+    public ApiResponse<PageResponse<OverviewScheduleResponse>> getEnableEditSchedules(@AuthenticationPrincipal(expression = "memberId") Long memberId,
+                                                                                      @RequestParam(name = "page") int page){
+        Page<OverviewScheduleResponse> response = travelScheduleService.getEnableEditSchedules(page, memberId);
 
         return ApiResponse.pageResponse(response);
     }

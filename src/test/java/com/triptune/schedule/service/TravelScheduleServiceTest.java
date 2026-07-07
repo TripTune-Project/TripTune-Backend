@@ -575,7 +575,7 @@ public class TravelScheduleServiceTest {
 
     @Test
     @DisplayName("수정 권한 있는 내 일정 목록 조회")
-    void getEnableEditSchedule(){
+    void getEnableEditSchedules(){
         // given
         TravelSchedule schedule1 = TravelScheduleFixture.createTravelScheduleWithId(1L, "당일 여행");
         TravelAttendeeFixture.createAuthorTravelAttendee(schedule1, member1);
@@ -599,7 +599,7 @@ public class TravelScheduleServiceTest {
         when(travelAttendeeRepository.findAuthorNicknameByScheduleId(anyLong())).thenReturn(member1.getNickname());
 
         // when
-        Page<OverviewScheduleResponse> response = travelScheduleService.getEnableEditSchedule(1, 1L);
+        Page<OverviewScheduleResponse> response = travelScheduleService.getEnableEditSchedules(1, 1L);
 
         // then
         List<OverviewScheduleResponse> content = response.getContent();
@@ -611,7 +611,7 @@ public class TravelScheduleServiceTest {
 
     @Test
     @DisplayName("수정 권한 있는 내 일정 목록 조회 시 일정 데이터 존재하지 않는 경우")
-    void getEnableEditSchedule_noScheduleData(){
+    void getEnableEditSchedule_noSchedulesData(){
         // given
         TravelSchedule schedule1 = TravelScheduleFixture.createTravelSchedule("당일 여행");
         TravelAttendeeFixture.createAuthorTravelAttendee(schedule1, member1);
@@ -633,7 +633,7 @@ public class TravelScheduleServiceTest {
         when(travelScheduleRepository.findEnableEditTravelSchedules(any(), anyLong())).thenReturn(schedulePage);
 
         // when
-        Page<OverviewScheduleResponse> response = travelScheduleService.getEnableEditSchedule(1, 1L);
+        Page<OverviewScheduleResponse> response = travelScheduleService.getEnableEditSchedules(1, 1L);
 
         // then
         assertThat(response.getTotalElements()).isZero();
