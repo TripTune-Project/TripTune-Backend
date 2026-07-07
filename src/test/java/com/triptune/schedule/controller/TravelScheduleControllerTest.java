@@ -382,7 +382,7 @@ public class TravelScheduleControllerTest {
 
     @Test
     @DisplayName("수정 권한 있는 내 일정 조회")
-    void getEnableEditSchedule() throws Exception {
+    void getEnableEditSchedules() throws Exception {
         // given
         TravelSchedule schedule1 = travelScheduleRepository.save(TravelScheduleFixture.createTravelSchedule("테스트1"));
         travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorTravelAttendee(schedule1, member1));
@@ -415,7 +415,7 @@ public class TravelScheduleControllerTest {
 
     @Test
     @DisplayName("수정 권한 있는 일정 조회 시 일정 데이터가 없는 경우")
-    void getEnableEditSchedule_emptyResult() throws Exception {
+    void getEnableEditSchedules_emptyResult() throws Exception {
         // given
         SecurityTestUtils.mockAuthentication(member1);
 

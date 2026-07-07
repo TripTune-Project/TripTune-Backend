@@ -70,7 +70,7 @@ public class TravelScheduleService {
     }
 
 
-    public Page<OverviewScheduleResponse> getEnableEditSchedule(int page, Long memberId) {
+    public Page<OverviewScheduleResponse> getEnableEditSchedules(int page, Long memberId) {
         Pageable pageable = PageUtils.scheduleModalPageable(page);
 
         return travelScheduleRepository.findEnableEditTravelSchedules(pageable, memberId)
