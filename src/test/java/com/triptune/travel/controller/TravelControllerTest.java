@@ -77,7 +77,7 @@ public class TravelControllerTest {
     @BeforeEach
     void setUp() {
         country = countryRepository.save(CountryFixture.createCountry());
-        city = cityRepository.save(CityFixture.createCity(country, "서울"));
+        city = cityRepository.save(CityFixture.createSeoul(country));
         gangnam = districtRepository.save(DistrictFixture.createDistrict(city, "강남구"));
         seongdong = districtRepository.save(DistrictFixture.createDistrict(city, "성동구"));
 
@@ -701,7 +701,7 @@ public class TravelControllerTest {
                 )
         );
 
-        City busan = cityRepository.save(CityFixture.createCity(country, "부산"));
+        City busan = cityRepository.save(CityFixture.createBusan(country));
         District busanDistrict = districtRepository.save(DistrictFixture.createDistrict(busan, "금정구"));
         TravelPlace busanPlace = travelPlaceRepository.save(
                 TravelPlaceFixture.createTravelPlaceWithBookmarkCnt(
@@ -717,7 +717,7 @@ public class TravelControllerTest {
         travelImageRepository.save(TravelImageFixture.createTravelImage(busanPlace, "부산이미지2", false));
         String busanThumbUrl = S3Fixture.createS3ObjectUrl(busanThumb.getS3ObjectKey());
 
-        City jeolla = cityRepository.save(CityFixture.createCity(country, "전라남도"));
+        City jeolla = cityRepository.save(CityFixture.createCity(country, "전남광주통합특별시"));
         District jeollaDistrict = districtRepository.save(DistrictFixture.createDistrict(busan, "보성구"));
         TravelPlace jeollaPlace = travelPlaceRepository.save(
                 TravelPlaceFixture.createTravelPlaceWithBookmarkCnt(
@@ -875,7 +875,7 @@ public class TravelControllerTest {
                 )
         );
 
-        City busan = cityRepository.save(CityFixture.createCity(country, "부산"));
+        City busan = cityRepository.save(CityFixture.createBusan(country));
         District busanDistrict = districtRepository.save(DistrictFixture.createDistrict(busan, "금정구"));
         TravelPlace lodgingPlace = travelPlaceRepository.save(
                 TravelPlaceFixture.createLodgingTravelPlace(
@@ -948,7 +948,7 @@ public class TravelControllerTest {
                 )
         );
 
-        City busan = cityRepository.save(CityFixture.createCity(country, "부산"));
+        City busan = cityRepository.save(CityFixture.createBusan(country));
         District busanDistrict = districtRepository.save(DistrictFixture.createDistrict(busan, "금정구"));
         TravelPlace lodgingPlace = travelPlaceRepository.save(
                 TravelPlaceFixture.createLodgingTravelPlace(

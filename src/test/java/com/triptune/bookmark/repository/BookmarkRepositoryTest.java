@@ -64,7 +64,7 @@ class BookmarkRepositoryTest {
     @BeforeEach
     void setUp(){
         Country country = countryRepository.save(CountryFixture.createCountry());
-        City city = cityRepository.save(CityFixture.createCity(country, "서울"));
+        City city = cityRepository.save(CityFixture.createSeoul(country));
         District district = districtRepository.save(DistrictFixture.createDistrict(city, "강남구"));
         ApiContentType apiContentType = apiContentTypeRepository.save(ApiContentTypeFixture.createApiContentType(ThemeType.ATTRACTIONS));
 

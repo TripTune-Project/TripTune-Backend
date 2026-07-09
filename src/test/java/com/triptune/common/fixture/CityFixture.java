@@ -9,4 +9,12 @@ public class CityFixture {
         return City.createCity(country, cityName);
     }
 
+    public static City createSeoul(Country country){
+        return City.createCity(country, "서울특별시");
+    }
+
+    public static City createBusan(Country country){
+        return City.createCity(country, "부산광역시");
+    }
+
 }

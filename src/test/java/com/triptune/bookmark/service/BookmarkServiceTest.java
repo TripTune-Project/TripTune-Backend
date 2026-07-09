@@ -48,7 +48,7 @@ public class BookmarkServiceTest  {
     @BeforeEach
     void setUp(){
         Country country = CountryFixture.createCountry();
-        City city = CityFixture.createCity(country, "서울");
+        City city = CityFixture.createSeoul(country);
         District district = DistrictFixture.createDistrict(city, "강남구");
         ApiContentType apiContentType = ApiContentTypeFixture.createApiContentType(ThemeType.ATTRACTIONS);
 

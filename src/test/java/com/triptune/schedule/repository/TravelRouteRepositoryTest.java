@@ -42,7 +42,7 @@ class TravelRouteRepositoryTest  {
         // given
         TravelSchedule schedule = travelScheduleRepository.save(TravelScheduleFixture.createTravelSchedule("테스트"));
         Country country = countryRepository.save(CountryFixture.createCountry());
-        City city = cityRepository.save(CityFixture.createCity(country, "서울"));
+        City city = cityRepository.save(CityFixture.createSeoul(country));
         District district = districtRepository.save(DistrictFixture.createDistrict(city, "부암동"));
         ApiContentType apiContentType = apiContentTypeRepository.save(ApiContentTypeFixture.createApiContentType(ATTRACTIONS));
         TravelPlace place = travelPlaceRepository.save(

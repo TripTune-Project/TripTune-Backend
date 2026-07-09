@@ -54,7 +54,7 @@ public class TravelPlaceRepositoryTest {
     @BeforeEach
     void setUp(){
         country = countryRepository.save(CountryFixture.createCountry());
-        city = cityRepository.save(CityFixture.createCity(country, "서울"));
+        city = cityRepository.save(CityFixture.createSeoul(country));
         gangnam = districtRepository.save(DistrictFixture.createDistrict(city, "강남구"));
         junggu = districtRepository.save(DistrictFixture.createDistrict(city, "중구"));
         attractionContentType = apiContentTypeRepository.save(ApiContentTypeFixture.createApiContentType(ThemeType.ATTRACTIONS));
@@ -267,7 +267,7 @@ public class TravelPlaceRepositoryTest {
                 )
         );
 
-        City busan = cityRepository.save(CityFixture.createCity(country, "부산"));
+        City busan = cityRepository.save(CityFixture.createBusan(country));
         District busanDistrict = districtRepository.save(DistrictFixture.createDistrict(busan, "금정구"));
         TravelPlace busanPlace = travelPlaceRepository.save(
                 TravelPlaceFixture.createTravelPlaceWithLocation(
@@ -424,7 +424,7 @@ public class TravelPlaceRepositoryTest {
                 )
         );
 
-        City busan = cityRepository.save(CityFixture.createCity(country, "부산"));
+        City busan = cityRepository.save(CityFixture.createCity(country, "부산광역시"));
         District busanDistrict = districtRepository.save(DistrictFixture.createDistrict(busan, "금정구"));
         TravelPlace busanPlace = travelPlaceRepository.save(
                 TravelPlaceFixture.createTravelPlaceWithBookmarkCnt(
@@ -439,7 +439,7 @@ public class TravelPlaceRepositoryTest {
         TravelImage busanThumb = travelImageRepository.save(TravelImageFixture.createTravelImage(busanPlace, "부산이미지1", true));
         travelImageRepository.save(TravelImageFixture.createTravelImage(busanPlace, "부산이미지2", false));
 
-        City jeolla = cityRepository.save(CityFixture.createCity(country, "전라남도"));
+        City jeolla = cityRepository.save(CityFixture.createCity(country, "전남광주통합특별시"));
         District jeollaDistrict = districtRepository.save(DistrictFixture.createDistrict(busan, "보성구"));
         TravelPlace jeollaPlace = travelPlaceRepository.save(
                 TravelPlaceFixture.createTravelPlaceWithBookmarkCnt(
@@ -511,7 +511,7 @@ public class TravelPlaceRepositoryTest {
         TravelImage jeolla1Thumbnail = travelImageRepository.save(TravelImageFixture.createTravelImage(jeollaPlace1, "부산이미지1", true));
         travelImageRepository.save(TravelImageFixture.createTravelImage(jeollaPlace1, "부산이미지2", false));
 
-        City jeolla2 = cityRepository.save(CityFixture.createCity(country, "전라남도"));
+        City jeolla2 = cityRepository.save(CityFixture.createCity(country, "전남광주통합특별시"));
         District jeolla2District = districtRepository.save(DistrictFixture.createDistrict(jeolla2, "보성구"));
         TravelPlace jeollaPlace2 = travelPlaceRepository.save(
                 TravelPlaceFixture.createTravelPlaceWithBookmarkCnt(
@@ -593,7 +593,7 @@ public class TravelPlaceRepositoryTest {
                 )
         );
 
-        City busan = cityRepository.save(CityFixture.createCity(country, "부산"));
+        City busan = cityRepository.save(CityFixture.createBusan(country));
         District busanDistrict = districtRepository.save(DistrictFixture.createDistrict(busan, "금정구"));
         ApiContentType cultureContentType = apiContentTypeRepository.save(ApiContentTypeFixture.createApiContentType(ThemeType.CULTURE));
         TravelPlace busanPlace = travelPlaceRepository.save(
