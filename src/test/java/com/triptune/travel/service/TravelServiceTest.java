@@ -63,7 +63,7 @@ public class TravelServiceTest  {
     @BeforeEach
     void setUp(){
         country = CountryFixture.createCountry();
-        seoul = CityFixture.createCity(country, "서울");
+        seoul = CityFixture.createSeoul(country);
         gangnam = DistrictFixture.createDistrict(seoul, "강남구");
         attractionContentType = ApiContentTypeFixture.createApiContentType(ThemeType.ATTRACTIONS);
         sportsContentType = ApiContentTypeFixture.createApiContentType(ThemeType.SPORTS);
@@ -814,7 +814,7 @@ public class TravelServiceTest  {
                 "여행지2"
         );
 
-        City busan = CityFixture.createCity(country, "부산");
+        City busan = CityFixture.createBusan(country);
         District busanDistrict = DistrictFixture.createDistrict(busan, "금정구");
         TravelPlace busanPlace = TravelPlaceFixture.createTravelPlace(
                 country,
@@ -949,7 +949,7 @@ public class TravelServiceTest  {
                 "여행지2"
         );
 
-        City busan = CityFixture.createCity(country, "부산");
+        City busan = CityFixture.createBusan(country);
         District busanDistrict = DistrictFixture.createDistrict(busan, "금정구");
         TravelPlace sportsPlace = TravelPlaceFixture.createTravelPlace(
                 country,

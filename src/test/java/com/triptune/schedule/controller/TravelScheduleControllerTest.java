@@ -107,7 +107,7 @@ public class TravelScheduleControllerTest {
         member3 = memberRepository.save(MemberFixture.createNativeTypeMember("member3@email.com", profileImage3));
 
         Country country = countryRepository.save(CountryFixture.createCountry());
-        City city = cityRepository.save(CityFixture.createCity(country, "서울"));
+        City city = cityRepository.save(CityFixture.createSeoul(country));
         District gangnam = districtRepository.save(DistrictFixture.createDistrict(city, "강남구"));
         District jungGu = districtRepository.save(DistrictFixture.createDistrict(city, "중구"));
         ApiContentType apiContentType = apiContentTypeRepository.save(ApiContentTypeFixture.createApiContentType(ATTRACTIONS));
