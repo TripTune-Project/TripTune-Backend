@@ -6,7 +6,6 @@ build/
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
 !**/src/test/**/build/
-*.yml
 application.properties
 generated/
 k6/scripts/

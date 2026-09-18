@@ -1,0 +1,34 @@
+spring:
+  config:
+    activate:
+      on-profile: mongo
+  datasource:
+    url: jdbc:h2:mem:testdb;MODE=MYSQL
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    database-platform: org.hibernate.dialect.MySQL57Dialect
+    hibernate:
+      ddl-auto: create
+    properties:
+      hibernate:
+        format_sql: true
+  h2:
+    console:
+      enabled: true
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/testdb
+
+cloud:
+  aws:
+    s3:
+      bucket: my-bucket
+      base-url: http://test.com
+
+logging:
+  level:
+    org:
+      hibernate:
+        SQL: debug
