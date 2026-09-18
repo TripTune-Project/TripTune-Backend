@@ -21,6 +21,10 @@ spring:
     mongodb:
       uri: mongodb://localhost:27017/testdb
 
+  mail:
+    username: test
+    password: test
+
 cloud:
   aws:
     s3:
