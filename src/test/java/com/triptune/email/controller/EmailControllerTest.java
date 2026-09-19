@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.triptune.email.fixture.EmailFixture;
 import com.triptune.email.dto.request.EmailRequest;
 import com.triptune.email.dto.request.VerifyAuthRequest;
+import com.triptune.email.service.EmailService;
+import com.triptune.global.security.jwt.JwtAuthFilter;
 import com.triptune.global.security.jwt.JwtUtils;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -11,7 +13,9 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
@@ -24,18 +28,19 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest
-@Transactional
-@AutoConfigureMockMvc
-@ActiveProfiles("h2")
+@WebMvcTest(EmailController.class)
+@AutoConfigureMockMvc(addFilters = false)
 class EmailControllerTest {
+
     @Autowired private MockMvc mockMvc;
     @Autowired private ObjectMapper objectMapper;
-    @Autowired private JwtUtils jwtUtils;
+
+    @MockBean private EmailService emailService;
+    @MockBean private JwtAuthFilter jwtAuthFilter;
 
 
     @ParameterizedTest
-    @DisplayName("이메일 인증 요청 시 값이 들어오지 않아 예외 발생")
+    @DisplayName("이메일 인증 요청 시 값이 들어오지 않아 400 반환")
     @ValueSource(strings = {"", " "})
     void verifyRequest_invalidNotBlank(String input) throws Exception{
         // given
@@ -54,7 +59,7 @@ class EmailControllerTest {
 
 
     @Test
-    @DisplayName("이메일 인증 요청 시 null 값이 들어와 예외 발생")
+    @DisplayName("이메일 인증 요청 시 null 값이 들어와 400 반환")
     void verifyRequest_invalidNull() throws Exception{
         // given
         EmailRequest request = EmailFixture.createEmailRequest(null);
@@ -71,7 +76,7 @@ class EmailControllerTest {
     }
 
     @ParameterizedTest
-    @DisplayName("이메일 인증 요청 시 이메일 형식에 맞지 않아 예외 발생")
+    @DisplayName("이메일 인증 요청 시 이메일 형식에 맞지 않아 400 반환")
     @ValueSource(strings = {"test", "test@", "test$email.com"})
     void verifyRequest_invalidEmail(String input) throws Exception{
         // given
@@ -90,7 +95,7 @@ class EmailControllerTest {
 
 
     @ParameterizedTest
-    @DisplayName("이메일 인증 시 이메일에 값이 들어오지 않아 예외 발생")
+    @DisplayName("이메일 인증 시 이메일에 값이 들어오지 않아 400 반환")
     @ValueSource(strings = {"", " "})
     void verify_invalidNotBlankEmail(String input) throws Exception{
         // given
@@ -109,7 +114,7 @@ class EmailControllerTest {
 
 
     @Test
-    @DisplayName("이메일 인증 시 이메일에 null 값이 들어와 예외 발생")
+    @DisplayName("이메일 인증 시 이메일에 null 값이 들어와 400 반환")
     void verify_invalidNullEmail() throws Exception{
         // given
         VerifyAuthRequest request = EmailFixture.createVerifyAuthRequest(null, "authCode");
@@ -126,7 +131,7 @@ class EmailControllerTest {
     }
 
     @ParameterizedTest
-    @DisplayName("이메일 인증 시 이메일 형식에 맞지 않아 예외 발생")
+    @DisplayName("이메일 인증 시 이메일 형식에 맞지 않아 400 반환")
     @ValueSource(strings = {"test", "test@", "test$email.com"})
     void verify_invalidEmail(String input) throws Exception{
         // given
@@ -145,7 +150,7 @@ class EmailControllerTest {
 
 
     @ParameterizedTest
-    @DisplayName("이메일 인증 시 인증번호 값이 들어오지 않아 예외 발생")
+    @DisplayName("이메일 인증 시 인증번호 값이 들어오지 않아 400 반환")
     @ValueSource(strings = {"", " "})
     void verify_invalidNotBlankAuthCode(String input) throws Exception{
         // given
@@ -163,7 +168,7 @@ class EmailControllerTest {
 
 
     @Test
-    @DisplayName("이메일 인증 시 인증번호에 null 값이 들어와 예외 발생")
+    @DisplayName("이메일 인증 시 인증번호에 null 값이 들어와 400 반환")
     void verify_invalidNullAuthCode() throws Exception{
         // given
         VerifyAuthRequest request = EmailFixture.createVerifyAuthRequest("member@email.com", null);
