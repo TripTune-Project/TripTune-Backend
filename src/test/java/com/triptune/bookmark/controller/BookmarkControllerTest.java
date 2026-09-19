@@ -117,7 +117,7 @@ class BookmarkControllerTest{
         BookmarkRequest request = BookmarkFixture.createBookmarkRequest(1L);
 
         willThrow(new DataExistException(ErrorCode.ALREADY_EXISTED_BOOKMARK))
-                .given(bookmarkService).createBookmark(any(), any());
+                .given(bookmarkService).createBookmark(anyLong(), any());
 
         // when, then
         mockMvc.perform(post("/api/bookmarks")
@@ -137,7 +137,7 @@ class BookmarkControllerTest{
         BookmarkRequest request = BookmarkFixture.createBookmarkRequest(1L);
 
         willThrow(new DataNotFoundException(ErrorCode.MEMBER_NOT_FOUND))
-                .given(bookmarkService).createBookmark(any(), any());
+                .given(bookmarkService).createBookmark(anyLong(), any());
 
         // when, then
         mockMvc.perform(post("/api/bookmarks")
@@ -156,7 +156,7 @@ class BookmarkControllerTest{
         BookmarkRequest request = BookmarkFixture.createBookmarkRequest(1000L);
 
         willThrow( new DataNotFoundException(ErrorCode.PLACE_NOT_FOUND))
-                .given(bookmarkService).createBookmark(any(), any());
+                .given(bookmarkService).createBookmark(anyLong(), any());
 
         // when, then
         mockMvc.perform(post("/api/bookmarks")
@@ -179,7 +179,7 @@ class BookmarkControllerTest{
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()));
 
-        verify(bookmarkService).deleteBookmark(member.getMemberId(), anyLong());
+        verify(bookmarkService).deleteBookmark(anyLong(), anyLong());
     }
 
 
@@ -188,7 +188,7 @@ class BookmarkControllerTest{
     void deleteBookmark_bookmarkNotFound() throws Exception{
         // given
         willThrow(new DataNotFoundException(ErrorCode.BOOKMARK_NOT_FOUND))
-                .given(bookmarkService).deleteBookmark(any(), any());
+                .given(bookmarkService).deleteBookmark(anyLong(), anyLong());
 
         // when, then
         mockMvc.perform(delete("/api/bookmarks/{placeId}", 1000L))
