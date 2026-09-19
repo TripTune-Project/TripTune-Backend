@@ -3,6 +3,7 @@ package com.triptune.schedule.repository;
 import com.triptune.common.entity.*;
 import com.triptune.common.fixture.*;
 import com.triptune.common.repository.*;
+import com.triptune.global.config.JpaConfig;
 import com.triptune.global.config.QuerydslConfig;
 import com.triptune.schedule.fixture.TravelRouteFixture;
 import com.triptune.schedule.fixture.TravelScheduleFixture;
@@ -23,7 +24,7 @@ import static com.triptune.travel.enums.ThemeType.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DataJpaTest
-@Import({QuerydslConfig.class})
+@Import({QuerydslConfig.class, JpaConfig.class})
 @ActiveProfiles("h2")
 class TravelRouteRepositoryTest  {
 

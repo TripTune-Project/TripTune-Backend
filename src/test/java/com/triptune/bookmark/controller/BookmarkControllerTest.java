@@ -3,24 +3,16 @@ package com.triptune.bookmark.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.triptune.bookmark.dto.request.BookmarkRequest;
 import com.triptune.bookmark.fixture.BookmarkFixture;
-import com.triptune.bookmark.repository.BookmarkRepository;
-import com.triptune.common.entity.*;
-import com.triptune.common.fixture.*;
-import com.triptune.common.repository.*;
+import com.triptune.bookmark.service.BookmarkService;
+import com.triptune.global.exception.DataExistException;
+import com.triptune.global.exception.DataNotFoundException;
 import com.triptune.global.message.ErrorCode;
 import com.triptune.global.message.SuccessCode;
 import com.triptune.global.security.SecurityTestUtils;
-import com.triptune.global.security.jwt.JwtUtils;
+import com.triptune.global.security.jwt.JwtAuthFilter;
 import com.triptune.member.entity.Member;
 import com.triptune.member.fixture.MemberFixture;
-import com.triptune.member.repository.MemberRepository;
-import com.triptune.profile.entity.ProfileImage;
 import com.triptune.profile.fixture.ProfileImageFixture;
-import com.triptune.profile.repository.ProfileImageRepository;
-import com.triptune.travel.entity.TravelPlace;
-import com.triptune.travel.enums.ThemeType;
-import com.triptune.travel.fixture.TravelPlaceFixture;
-import com.triptune.travel.repository.TravelPlaceRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -28,68 +20,48 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.transaction.annotation.Transactional;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.BDDMockito.willThrow;
+import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest
-@Transactional
-@AutoConfigureMockMvc
-@ActiveProfiles("h2")
+@WebMvcTest(BookmarkController.class)
+@AutoConfigureMockMvc(addFilters = false)
 class BookmarkControllerTest{
 
     @Autowired private MockMvc mockMvc;
     @Autowired private ObjectMapper objectMapper;
-    @Autowired private JwtUtils jwtUtils;
-    @Autowired private BookmarkRepository bookmarkRepository;
-    @Autowired private MemberRepository memberRepository;
-    @Autowired private TravelPlaceRepository travelPlaceRepository;
-    @Autowired private CountryRepository countryRepository;
-    @Autowired private CityRepository cityRepository;
-    @Autowired private DistrictRepository districtRepository;
-    @Autowired private ApiContentTypeRepository apiContentTypeRepository;
-    @Autowired private ProfileImageRepository profileImageRepository;
 
-    private TravelPlace place;
-    private ProfileImage defaultImage;
+    @MockBean private BookmarkService bookmarkService;
+    @MockBean private JwtAuthFilter jwtAuthFilter;
+
+    private Member member;
 
     @BeforeEach
     void setUp(){
-        Country country = countryRepository.save(CountryFixture.createCountry());
-        City city = cityRepository.save(CityFixture.createSeoul(country));
-        District district = districtRepository.save(DistrictFixture.createDistrict(city, "강남구"));
-        ApiContentType apiContentType = apiContentTypeRepository.save(ApiContentTypeFixture.createApiContentType(ThemeType.ATTRACTIONS));
-        place = travelPlaceRepository.save(
-                TravelPlaceFixture.createTravelPlace(
-                        country,
-                        city,
-                        district,
-                        apiContentType,
-                        "여행지"
-                )
+         member = MemberFixture.createNativeTypeMemberWithId(
+                1L,
+                "member@email.com",
+                ProfileImageFixture.createProfileImage("memberImage")
         );
-
-        defaultImage = profileImageRepository.save(ProfileImageFixture.createProfileImage("memberImage"));
+        SecurityTestUtils.mockAuthentication(member);
     }
 
     @Test
     @DisplayName("북마크 추가")
     void createBookmark() throws Exception{
         // given
-        Member member = memberRepository.save(MemberFixture.createNativeTypeMember("member@email.com", defaultImage));
-        SecurityTestUtils.mockAuthentication(member);
-
-        BookmarkRequest request = BookmarkFixture.createBookmarkRequest(place.getPlaceId());
+        BookmarkRequest request = BookmarkFixture.createBookmarkRequest(1L);
 
         // when, then
         mockMvc.perform(post("/api/bookmarks")
@@ -100,17 +72,14 @@ class BookmarkControllerTest{
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()));
 
-        assertThat(place.getBookmarkCnt()).isEqualTo(1);
+        verify(bookmarkService).createBookmark(anyLong(), any());
     }
 
     @ParameterizedTest
-    @DisplayName("북마크 생성 시 1보다 작은 값 입력으로 에러 발생")
+    @DisplayName("북마크 생성 시 1보다 작은 값 입력으로 400 반환")
     @ValueSource(longs = {0L, -1L, Long.MIN_VALUE})
     void createBookmark_invalidMinPlaceId(Long input) throws Exception {
         // given
-        Member member = memberRepository.save(MemberFixture.createNativeTypeMember("member@email.com", defaultImage));
-        SecurityTestUtils.mockAuthentication(member);
-
         BookmarkRequest request = BookmarkFixture.createBookmarkRequest(input);
 
         // when,  then
@@ -124,12 +93,9 @@ class BookmarkControllerTest{
     }
 
     @Test
-    @DisplayName("북마크 생성 시 placeId 값이 null 로 에러 발생")
+    @DisplayName("북마크 생성 시 placeId 값이 null 로 400 반환")
     void createBookmark_invalidNullPlaceId() throws Exception{
         // given
-        Member member = memberRepository.save(MemberFixture.createNativeTypeMember("member@email.com", defaultImage));
-        SecurityTestUtils.mockAuthentication(member);
-
         BookmarkRequest request = BookmarkFixture.createBookmarkRequest(null);
 
         // when, then
@@ -145,15 +111,13 @@ class BookmarkControllerTest{
 
 
     @Test
-    @DisplayName("북마크 추가 시 이미 북마크로 등록되어 있어 예외 발생")
+    @DisplayName("북마크 추가 시 이미 북마크로 등록되어 있어 409 반환")
     void createBookmark_alreadyBookmarked() throws Exception{
         // given
-        Member member = memberRepository.save(MemberFixture.createNativeTypeMember("member@email.com", defaultImage));
-        bookmarkRepository.save(BookmarkFixture.createBookmark(member, place));
+        BookmarkRequest request = BookmarkFixture.createBookmarkRequest(1L);
 
-        SecurityTestUtils.mockAuthentication(member);
-
-        BookmarkRequest request = BookmarkFixture.createBookmarkRequest(place.getPlaceId());
+        willThrow(new DataExistException(ErrorCode.ALREADY_EXISTED_BOOKMARK))
+                .given(bookmarkService).createBookmark(any(), any());
 
         // when, then
         mockMvc.perform(post("/api/bookmarks")
@@ -167,14 +131,13 @@ class BookmarkControllerTest{
 
 
     @Test
-    @DisplayName("북마크 추가 시 회원 데이터 없어 예외 발생")
+    @DisplayName("북마크 추가 시 회원 데이터 없어 404 반환")
     void createBookmark_memberNotFound() throws Exception{
         // given
-        Member member = MemberFixture.createNativeTypeMemberWithId(1000L, "member@email.com", defaultImage);
-        SecurityTestUtils.mockAuthentication(member);
+        BookmarkRequest request = BookmarkFixture.createBookmarkRequest(1L);
 
-        Long placeId = 1L;
-        BookmarkRequest request = BookmarkFixture.createBookmarkRequest(placeId);
+        willThrow(new DataNotFoundException(ErrorCode.MEMBER_NOT_FOUND))
+                .given(bookmarkService).createBookmark(any(), any());
 
         // when, then
         mockMvc.perform(post("/api/bookmarks")
@@ -187,13 +150,13 @@ class BookmarkControllerTest{
     }
 
     @Test
-    @DisplayName("북마크 추가 시 여행지 데이터 없어 예외 발생")
+    @DisplayName("북마크 추가 시 여행지 데이터 없어 404 반환")
     void createBookmark_placeNotFound() throws Exception{
         // given
-        Member member = memberRepository.save(MemberFixture.createNativeTypeMember("member@email.com", defaultImage));
-        SecurityTestUtils.mockAuthentication(member);
-
         BookmarkRequest request = BookmarkFixture.createBookmarkRequest(1000L);
+
+        willThrow( new DataNotFoundException(ErrorCode.PLACE_NOT_FOUND))
+                .given(bookmarkService).createBookmark(any(), any());
 
         // when, then
         mockMvc.perform(post("/api/bookmarks")
@@ -209,36 +172,26 @@ class BookmarkControllerTest{
     @DisplayName("북마크 삭제")
     void deleteBookmark() throws Exception{
         // given
-        Member member = memberRepository.save(MemberFixture.createNativeTypeMember("member@email.com", defaultImage));
-
-        bookmarkRepository.save(BookmarkFixture.createBookmark(member, place));
-        place.increaseBookmarkCnt();
-
-        SecurityTestUtils.mockAuthentication(member);
-
         // when, then
-        mockMvc.perform(delete("/api/bookmarks/{placeId}", place.getPlaceId()))
+        mockMvc.perform(delete("/api/bookmarks/{placeId}", 1L))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()));
 
-        assertThat(bookmarkRepository.existsByMember_MemberIdAndTravelPlace_PlaceId(member.getMemberId(), place.getPlaceId())).isFalse();
-        assertThat(place.getBookmarkCnt()).isEqualTo(0);
+        verify(bookmarkService).deleteBookmark(member.getMemberId(), anyLong());
     }
 
 
     @Test
-    @DisplayName("북마크 삭제 시 북마크 데이터가 없는 경우")
+    @DisplayName("북마크 삭제 시 북마크 데이터가 없어 404 반환")
     void deleteBookmark_bookmarkNotFound() throws Exception{
         // given
-        Member member = memberRepository.save(MemberFixture.createNativeTypeMember("member@email.com", defaultImage));
-        SecurityTestUtils.mockAuthentication(member);
-
-        Long placeId = 1L;
+        willThrow(new DataNotFoundException(ErrorCode.BOOKMARK_NOT_FOUND))
+                .given(bookmarkService).deleteBookmark(any(), any());
 
         // when, then
-        mockMvc.perform(delete("/api/bookmarks/{placeId}", placeId))
+        mockMvc.perform(delete("/api/bookmarks/{placeId}", 1000L))
                 .andDo(print())
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.success").value(false))
