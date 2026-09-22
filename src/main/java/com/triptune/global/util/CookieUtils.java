@@ -32,18 +32,6 @@ public class CookieUtils {
                 .toString();
     }
 
-    public String deleteCookie(CookieType cookieType){
-        return ResponseCookie.from(cookieType.getKey(), "")
-                .httpOnly(true)
-                .maxAge(0)
-                .domain("." + domainPath)
-                .secure(true)
-                .path("/")
-                .sameSite("None")
-                .build()
-                .toString();
-    }
-
 
     public Optional<String> getRefreshTokenFromCookie(HttpServletRequest request){
         if (request.getCookies() == null){
@@ -61,4 +49,18 @@ public class CookieUtils {
         Stream.of(CookieType.ACCESS_TOKEN, CookieType.REFRESH_TOKEN, CookieType.NICKNAME)
                 .forEach(type -> response.addHeader("Set-Cookie", deleteCookie(type)));
     }
+
+
+    public String deleteCookie(CookieType cookieType){
+        return ResponseCookie.from(cookieType.getKey(), "")
+                .httpOnly(true)
+                .maxAge(0)
+                .domain("." + domainPath)
+                .secure(true)
+                .path("/")
+                .sameSite("None")
+                .build()
+                .toString();
+    }
+
 }

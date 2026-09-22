@@ -30,8 +30,10 @@ import com.triptune.profile.service.ProfileImageService;
 import com.triptune.schedule.entity.TravelAttendee;
 import com.triptune.schedule.repository.ChatMessageRepository;
 import com.triptune.schedule.repository.TravelAttendeeRepository;
+import com.triptune.schedule.repository.TravelRouteRepository;
 import com.triptune.schedule.repository.TravelScheduleRepository;
 import com.triptune.travel.dto.response.PlaceBookmarkResponse;
+import jakarta.annotation.Nonnull;
 import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -56,6 +58,7 @@ public class MemberService {
     private final JwtUtils jwtUtils;
     private final RedisService redisService;
     private final ProfileImageService profileImageService;
+    private final TravelRouteRepository travelRouteRepository;
     private final TravelAttendeeRepository travelAttendeeRepository;
     private final TravelScheduleRepository travelScheduleRepository;
     private final ChatMessageRepository chatMessageRepository;
@@ -120,6 +123,7 @@ public class MemberService {
 
         String newAccessToken = jwtUtils.createAccessToken(member.getMemberId());
         log.info("access token 재발급 완료 - memberId: {}", member.getMemberId());
+
         return RefreshTokenResponse.of(newAccessToken);
     }
 
@@ -195,6 +199,20 @@ public class MemberService {
         member.updateEmail(emailRequest.getEmail());
     }
 
+    private void validateUniqueEmail(String email){
+        if(memberRepository.existsByEmail(email)){
+            throw new DataExistException(ErrorCode.ALREADY_EXISTED_EMAIL);
+        }
+    }
+
+    private void validateVerifiedEmail(String email){
+        String isVerified = redisService.getEmailData(RedisKeyType.VERIFIED, email);
+
+        if(isVerified == null || !isVerified.equals("true")){
+            throw new EmailVerifyException(ErrorCode.NOT_VERIFIED_EMAIL);
+        }
+    }
+
     public Page<PlaceBookmarkResponse> getMemberBookmarks(int page, Long memberId, BookmarkSortType sortType) {
         Pageable pageable = PageUtils.bookmarkPageable(page);
         Page<PlaceBookmarkQueryDto> travelPlaces = bookmarkRepository.findSortedMemberBookmarks(memberId, pageable, sortType);
@@ -211,7 +229,7 @@ public class MemberService {
     }
 
     @Transactional
-    public void deactivateMember(DeactivateRequest deactivateRequest, Long memberId, String accessToken) {
+    public void deactivateMember(Long memberId, String accessToken, DeactivateRequest deactivateRequest) {
         // 1. 회원 비밀번호 확인
         Member member = getMemberWithSocialMembers(memberId);
 
@@ -227,15 +245,13 @@ public class MemberService {
         // 4-2. 참석자인 경우 참석자 삭제
         List<TravelAttendee> attendees = travelAttendeeRepository.findAllByMember_MemberId(memberId);
 
-        for (TravelAttendee attendee : attendees) {
-            if (attendee.getRole().isAuthor()) {
-                Long scheduleId = attendee.getTravelSchedule().getScheduleId();
+        List<Long> authorScheduleIds = extractAuthorScheduleId(attendees);
+        travelAttendeeRepository.deleteAll(attendees);
 
-                chatMessageRepository.deleteAllByScheduleId(scheduleId);
-                travelScheduleRepository.deleteById(scheduleId);
-            } else{
-                travelAttendeeRepository.delete(attendee);
-            }
+        for (Long scheduleId : authorScheduleIds) {
+            chatMessageRepository.deleteAllByScheduleId(scheduleId);
+            travelRouteRepository.deleteAllByTravelSchedule_ScheduleId(scheduleId);
+            travelScheduleRepository.deleteById(scheduleId);
         }
 
         // 5. 북마크 삭제
@@ -247,6 +263,14 @@ public class MemberService {
         // 7. 로그아웃
         member.logout();
         redisService.saveExpiredData(accessToken, "logout", LOGOUT_DURATION);
+    }
+
+    @Nonnull
+    private static List<Long> extractAuthorScheduleId(List<TravelAttendee> attendees) {
+        return attendees.stream()
+                .filter(attendee -> attendee.getRole().isAuthor())
+                .map(attendee -> attendee.getTravelSchedule().getScheduleId())
+                .toList();
     }
 
     private void validateSocialMember(Member member, ErrorCode errorCode) {
@@ -261,25 +285,12 @@ public class MemberService {
     }
 
 
-    private void validateUniqueEmail(String email){
-        if(memberRepository.existsByEmail(email)){
-            throw new DataExistException(ErrorCode.ALREADY_EXISTED_EMAIL);
-        }
-    }
-
     private void validateUniqueNickname(String nickname){
         if(memberRepository.existsByNickname(nickname)){
             throw new DataExistException(ErrorCode.ALREADY_EXISTED_NICKNAME);
         }
     }
 
-    private void validateVerifiedEmail(String email){
-        String isVerified = redisService.getEmailData(RedisKeyType.VERIFIED, email);
-
-        if(isVerified == null || !isVerified.equals("true")){
-            throw new EmailVerifyException(ErrorCode.NOT_VERIFIED_EMAIL);
-        }
-    }
 
     private Member getMemberById(Long memberId){
         return memberRepository.findById(memberId)
