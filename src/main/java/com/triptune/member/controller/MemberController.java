@@ -59,7 +59,6 @@ public class MemberController {
     @PostMapping("/login")
     @Operation(summary = "로그인", description = "로그인을 실행합니다.")
     public ApiResponse<LoginResponse> login(@Valid @RequestBody LoginRequest loginRequest, HttpServletResponse response){
-
         LoginResult loginResult = memberService.login(loginRequest);
 
         response.addHeader("Set-Cookie", cookieUtils.createCookie(CookieType.REFRESH_TOKEN, loginResult.refreshToken()));
@@ -166,7 +165,7 @@ public class MemberController {
                                               @AuthenticationPrincipal(expression = "memberId") Long memberId,
                                               @Valid @RequestBody DeactivateRequest deactivateRequest){
         String accessToken = jwtUtils.resolveToken(request);
-        memberService.deactivateMember(deactivateRequest, memberId, accessToken);
+        memberService.deactivateMember(memberId, accessToken, deactivateRequest);
         cookieUtils.deleteAllCookies(response);
 
         return ApiResponse.okResponse();

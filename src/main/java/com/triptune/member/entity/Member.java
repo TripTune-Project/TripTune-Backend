@@ -1,8 +1,6 @@
 package com.triptune.member.entity;
 
 import com.triptune.common.entity.BaseTimeEntity;
-import com.triptune.global.security.oauth.userinfo.OAuth2UserInfo;
-import com.triptune.member.dto.request.JoinRequest;
 import com.triptune.member.enums.DeactivateValue;
 import com.triptune.member.enums.JoinType;
 import com.triptune.profile.entity.ProfileImage;

@@ -35,6 +35,7 @@ import com.triptune.schedule.fixture.TravelAttendeeFixture;
 import com.triptune.schedule.fixture.TravelScheduleFixture;
 import com.triptune.schedule.repository.ChatMessageRepository;
 import com.triptune.schedule.repository.TravelAttendeeRepository;
+import com.triptune.schedule.repository.TravelRouteRepository;
 import com.triptune.schedule.repository.TravelScheduleRepository;
 import com.triptune.travel.dto.response.PlaceBookmarkResponse;
 import com.triptune.travel.entity.TravelImage;
@@ -82,6 +83,7 @@ public class MemberServiceTest {
     @Mock private PasswordEncoder passwordEncoder;
     @Mock private ProfileImageService profileImageService;
     @Mock private TravelAttendeeRepository travelAttendeeRepository;
+    @Mock private TravelRouteRepository travelRouteRepository;
     @Mock private ChatMessageRepository chatMessageRepository;
     @Mock private TravelScheduleRepository travelScheduleRepository;
     @Mock private BookmarkRepository bookmarkRepository;
@@ -1067,7 +1069,7 @@ public class MemberServiceTest {
         when(travelAttendeeRepository.findAllByMember_MemberId(anyLong())).thenReturn(attendees);
 
         // when
-        assertDoesNotThrow(() -> memberService.deactivateMember(request, 1L, accessToken));
+        assertDoesNotThrow(() -> memberService.deactivateMember(1L, accessToken, request));
 
 
         // then
@@ -1101,7 +1103,7 @@ public class MemberServiceTest {
 
         // when
         assertDoesNotThrow(
-                () -> memberService.deactivateMember(request, 1L, accessToken));
+                () -> memberService.deactivateMember(1L, accessToken, request));
 
 
         // then
@@ -1136,7 +1138,7 @@ public class MemberServiceTest {
 
         // when
         assertDoesNotThrow(
-                () -> memberService.deactivateMember(request, 1L, accessToken));
+                () -> memberService.deactivateMember(1L, accessToken, request));
 
 
         // then
@@ -1172,7 +1174,7 @@ public class MemberServiceTest {
 
         // when
         assertDoesNotThrow(
-                () -> memberService.deactivateMember(request, 1L, accessToken));
+                () -> memberService.deactivateMember(1L, accessToken, request));
 
 
         // then
@@ -1199,7 +1201,7 @@ public class MemberServiceTest {
 
         // when
         assertDoesNotThrow(
-                () -> memberService.deactivateMember(request, 1L, accessToken));
+                () -> memberService.deactivateMember(1L, accessToken, request));
 
 
         // then
@@ -1220,7 +1222,7 @@ public class MemberServiceTest {
 
         // when
         DataNotFoundException fail = assertThrows(DataNotFoundException.class,
-                () -> memberService.deactivateMember(request, 1000L, accessToken));
+                () -> memberService.deactivateMember(1000L, accessToken, request));
 
         // then
         assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.MEMBER_NOT_FOUND);
@@ -1242,7 +1244,7 @@ public class MemberServiceTest {
 
         // when
         UnsupportedSocialMemberException fail = assertThrows(UnsupportedSocialMemberException.class,
-                () -> memberService.deactivateMember(request, 1L, accessToken));
+                () -> memberService.deactivateMember(1L, accessToken, request));
 
         // then
         assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.SOCIAL_MEMBER_DEACTIVATE_NOT_ALLOWED);
@@ -1263,7 +1265,7 @@ public class MemberServiceTest {
 
         // when
         IncorrectPasswordException fail = assertThrows(IncorrectPasswordException.class,
-                () -> memberService.deactivateMember(request, 1L, accessToken));
+                () -> memberService.deactivateMember(1L, accessToken, request));
 
         // then
         assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.INCORRECT_PASSWORD);

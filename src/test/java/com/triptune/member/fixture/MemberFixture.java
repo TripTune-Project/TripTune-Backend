@@ -2,8 +2,11 @@ package com.triptune.member.fixture;
 
 import com.triptune.email.dto.request.EmailRequest;
 import com.triptune.member.dto.request.*;
+import com.triptune.member.dto.response.MemberInfoResponse;
 import com.triptune.member.dto.response.MemberProfileResponse;
+import com.triptune.member.dto.response.RefreshTokenResponse;
 import com.triptune.member.entity.Member;
+import com.triptune.member.service.dto.LoginResult;
 import com.triptune.profile.entity.ProfileImage;
 import jakarta.servlet.http.Cookie;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -162,6 +165,23 @@ public class MemberFixture {
                 .build();
     }
 
+    public static LoginResult createLoginResult(String accessToken, String refreshToken, String nickname){
+        return new LoginResult(accessToken, refreshToken, nickname);
+    }
+
+    public static RefreshTokenResponse createRefreshTokenResponse(String accessToken){
+        return RefreshTokenResponse.builder()
+                .accessToken(accessToken)
+                .build();
+    }
+
+    public static MemberInfoResponse createMemberInfoResponse(Member member, String profileImage) {
+        return MemberInfoResponse.builder()
+                .email(member.getEmail())
+                .nickname(member.getNickname())
+                .profileImage(profileImage)
+                .build();
+    }
 
     public static MemberProfileResponse createMemberProfileResponse(Long memberId, String nickname, String profileUrl){
         return MemberProfileResponse.builder()

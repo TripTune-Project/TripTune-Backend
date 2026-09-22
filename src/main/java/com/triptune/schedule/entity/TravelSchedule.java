@@ -28,10 +28,10 @@ public class TravelSchedule extends BaseTimeEntity {
     @Column(name = "end_date")
     private LocalDate endDate;
 
-    @OneToMany(mappedBy = "travelSchedule", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "travelSchedule", fetch = FetchType.LAZY)
     private List<TravelAttendee> travelAttendees = new ArrayList<>();
 
-    @OneToMany(mappedBy = "travelSchedule", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "travelSchedule", fetch = FetchType.LAZY)
     private List<TravelRoute> travelRoutes = new ArrayList<>();
 
     private TravelSchedule(String scheduleName, LocalDate startDate, LocalDate endDate) {

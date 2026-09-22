@@ -422,40 +422,4 @@ public class TravelScheduleRepositoryTest {
     }
 
 
-    @Test
-    @DisplayName("일정 삭제")
-    void deleteById(){
-        // given
-        TravelSchedule schedule = travelScheduleRepository.save(TravelScheduleFixture.createTravelSchedule("테스트1"));
-
-        travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorTravelAttendee(schedule, member1));
-        travelAttendeeRepository.save(TravelAttendeeFixture.createGuestTravelAttendee(schedule, member2, READ));
-
-        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule, place1WithThumb, 1));
-        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule, placeWithoutThumb, 2));
-        travelRouteRepository.save(TravelRouteFixture.createTravelRoute(schedule, place2WithThumb, 3));
-
-        // when
-        travelScheduleRepository.deleteById(schedule.getScheduleId());
-
-        // then
-        // 일정 삭제됐는지 확인
-        Optional<TravelSchedule> deletedSchedule = travelScheduleRepository.findById(schedule.getScheduleId());
-        assertThat(deletedSchedule).isEmpty();
-
-        // 해당 일정의 참석자 정보 삭제됐는지 확인
-        List<TravelAttendee> deletedAttendees = travelAttendeeRepository.findAllByTravelSchedule_ScheduleId(schedule.getScheduleId());
-        assertThat(deletedAttendees).isEmpty();
-
-        // 해당 일정의 여행 루트 정보 삭제됐는지 확인
-        Page<RouteQueryDto> deletedRoutes = travelRouteRepository.findAllByScheduleId(PageUtils.defaultPageable(1), schedule.getScheduleId());
-        assertThat(deletedRoutes.getTotalElements()).isEqualTo(0);
-        assertThat(deletedRoutes.getContent()).isEmpty();
-
-        // 회원 정보 삭제 안됐는지 확인
-        Optional<Member> savedMember = memberRepository.findByEmail(member1.getEmail());
-        assertThat(savedMember).isNotEmpty();
-    }
-
-
 }
