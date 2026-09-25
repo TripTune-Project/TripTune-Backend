@@ -3,6 +3,7 @@ package com.triptune.travel.fixture;
 import com.triptune.common.entity.*;
 import com.triptune.travel.dto.request.PlaceLocationRequest;
 import com.triptune.travel.dto.request.PlaceSearchRequest;
+import com.triptune.travel.dto.response.PlaceResponse;
 import com.triptune.travel.dto.response.PlaceSimpleResponse;
 import com.triptune.travel.entity.TravelPlace;
 import com.triptune.travel.repository.dto.PlaceDistanceQueryDto;
@@ -216,5 +217,17 @@ public class TravelPlaceFixture {
     }
 
 
-
+    public static PlaceResponse createPlaceResponse(TravelPlace place, String thumbnailUrl) {
+        return PlaceResponse.builder()
+                .placeId(place.getPlaceId())
+                .country(place.getCountry().getCountryName())
+                .city(place.getCity().getCityName())
+                .district(place.getDistrict().getDistrictName())
+                .detailAddress(place.getDetailAddress())
+                .latitude(place.getLatitude())
+                .longitude(place.getLongitude())
+                .placeName(place.getPlaceName())
+                .thumbnailUrl(thumbnailUrl)
+                .build();
+    }
 }

@@ -2,6 +2,7 @@ package com.triptune.schedule.fixture;
 
 import com.triptune.schedule.dto.request.RouteCreateRequest;
 import com.triptune.schedule.dto.request.RouteRequest;
+import com.triptune.schedule.dto.response.RouteResponse;
 import com.triptune.schedule.entity.TravelRoute;
 import com.triptune.schedule.entity.TravelSchedule;
 import com.triptune.schedule.repository.dto.RouteQueryDto;
@@ -9,7 +10,7 @@ import com.triptune.travel.entity.TravelPlace;
 
 public class TravelRouteFixture {
 
-    public static TravelRoute createTravelRoute(TravelSchedule schedule, TravelPlace travelPlace, int routeOrder){
+    public static TravelRoute createRoute(TravelSchedule schedule, TravelPlace travelPlace, int routeOrder){
         return TravelRoute.createTravelRoute(
                 schedule,
                 travelPlace,
@@ -42,5 +43,22 @@ public class TravelRouteFixture {
                 .placeName(place.getPlaceName())
                 .thumbnailS3ObjectKey(thumbnailS3ObjectKey)
                 .build();
+    }
+
+    public static RouteResponse createRouteResponse(int routeOrder, TravelPlace place, String thumbnailUrl) {
+        return RouteResponse.builder()
+                .routeOrder(routeOrder)
+                .placeId(place.getPlaceId())
+                .country(place.getCountry().getCountryName())
+                .city(place.getCity().getCityName())
+                .district(place.getDistrict().getDistrictName())
+                .address(place.getAddress())
+                .detailAddress(place.getDetailAddress())
+                .latitude(place.getLatitude())
+                .longitude(place.getLongitude())
+                .placeName(place.getPlaceName())
+                .thumbnailUrl(thumbnailUrl)
+                .build();
+
     }
 }

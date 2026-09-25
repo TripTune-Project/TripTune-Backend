@@ -54,17 +54,6 @@ public class TravelSchedule extends BaseTimeEntity {
         this.endDate = request.getEndDate();
     }
 
-    public void removeTravelRoutes(TravelRoute travelRoute){
-        travelRoutes.remove(travelRoute);
-        travelRoute.detachTravelSchedule();
-    }
-
-    public void clearTravelRoutes() {
-        for (TravelRoute travelRoute : new ArrayList<>(travelRoutes)) {
-            removeTravelRoutes(travelRoute);
-        }
-    }
-
     public void addTravelRoutes(TravelRoute travelRoute) {
         travelRoutes.add(travelRoute);
     }

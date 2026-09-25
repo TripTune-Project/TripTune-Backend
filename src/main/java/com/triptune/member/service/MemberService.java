@@ -250,7 +250,7 @@ public class MemberService {
 
         for (Long scheduleId : authorScheduleIds) {
             chatMessageRepository.deleteAllByScheduleId(scheduleId);
-            travelRouteRepository.deleteAllByTravelSchedule_ScheduleId(scheduleId);
+            travelRouteRepository.deleteAllByScheduleId(scheduleId);
             travelScheduleRepository.deleteById(scheduleId);
         }
 

@@ -2,7 +2,6 @@ package com.triptune.schedule.service;
 
 import com.triptune.common.fixture.S3Fixture;
 import com.triptune.global.s3.S3ObjectManager;
-import com.triptune.member.dto.response.MemberProfileResponse;
 import com.triptune.member.entity.Member;
 import com.triptune.member.fixture.MemberFixture;
 import com.triptune.profile.entity.ProfileImage;
@@ -63,7 +62,7 @@ class ChatMessageServiceTest {
 
     @BeforeEach
     void setUp(){
-        schedule = TravelScheduleFixture.createTravelSchedule("테스트");
+        schedule = TravelScheduleFixture.createSchedule("테스트");
 
         ProfileImage profileImage1 = ProfileImageFixture.createProfileImage("member1Image");
         member1 = MemberFixture.createNativeTypeMemberWithId(1L, "member1@email.com", profileImage1);
@@ -287,7 +286,7 @@ class ChatMessageServiceTest {
         String memberProfileUrl = S3Fixture.createS3ObjectUrl(profileImage.getS3ObjectKey());
 
         ChatMessageRequest request = ChatMessageFixture.createChatMessageRequest(1L, member.getNickname(), "hello1");
-        TravelAttendee author = TravelAttendeeFixture.createAuthorTravelAttendee(schedule, member);
+        TravelAttendee author = TravelAttendeeFixture.createAuthorAttendee(schedule, member);
 
         ChatMessage message = ChatMessageFixture.createChatMessage(1L, member1.getMemberId(), request.getMessage());
 
@@ -316,7 +315,7 @@ class ChatMessageServiceTest {
         Member member = MemberFixture.createNativeTypeMemberWithId(1L, "member@email.com", profileImage);
 
         ChatMessageRequest request = ChatMessageFixture.createChatMessageRequest(1L, member.getNickname(), "hello1");
-        TravelAttendee guest = TravelAttendeeFixture.createGuestTravelAttendee(schedule, member, AttendeePermission.EDIT);
+        TravelAttendee guest = TravelAttendeeFixture.createGuestAttendee(schedule, member, AttendeePermission.EDIT);
 
         when(travelScheduleRepository.existsById(anyLong())).thenReturn(true);
         when(memberRepository.findByNickname(anyString())).thenReturn(Optional.of(member));
@@ -338,7 +337,7 @@ class ChatMessageServiceTest {
         Member member = MemberFixture.createNativeTypeMemberWithId(1L, "member@email.com", profileImage);
 
         ChatMessageRequest request = ChatMessageFixture.createChatMessageRequest(1L, member.getNickname(), "hello1");
-        TravelAttendee guest = TravelAttendeeFixture.createGuestTravelAttendee(schedule, member, AttendeePermission.READ);
+        TravelAttendee guest = TravelAttendeeFixture.createGuestAttendee(schedule, member, AttendeePermission.READ);
 
         when(travelScheduleRepository.existsById(anyLong())).thenReturn(true);
         when(memberRepository.findByNickname(anyString())).thenReturn(Optional.of(member));

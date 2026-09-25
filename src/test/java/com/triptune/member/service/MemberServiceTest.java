@@ -1052,14 +1052,14 @@ public class MemberServiceTest {
     @DisplayName("일반 회원 탈퇴 - 작성자, 참석자 존재하는 경우")
     void deactivateMember_nativeMember1(){
         // given
-        TravelSchedule schedule1 = TravelScheduleFixture.createTravelSchedule("테스트1");
-        TravelSchedule schedule2 = TravelScheduleFixture.createTravelSchedule("테스트2");
+        TravelSchedule schedule1 = TravelScheduleFixture.createSchedule("테스트1");
+        TravelSchedule schedule2 = TravelScheduleFixture.createSchedule("테스트2");
 
         Member member = MemberFixture.createNativeTypeMember("member@email.com", profileImage);
 
         List<TravelAttendee> attendees = List.of(
-                TravelAttendeeFixture.createAuthorTravelAttendee(schedule1, member),
-                TravelAttendeeFixture.createGuestTravelAttendee(schedule2, member, AttendeePermission.READ)
+                TravelAttendeeFixture.createAuthorAttendee(schedule1, member),
+                TravelAttendeeFixture.createGuestAttendee(schedule2, member, AttendeePermission.READ)
         );
 
         DeactivateRequest request = MemberFixture.createDeactivateRequest(member.getPassword());
@@ -1085,14 +1085,14 @@ public class MemberServiceTest {
     @DisplayName("일반 회원 탈퇴 - 작성자만 존재하는 경우")
     void deactivateMember_nativeMember2(){
         // given
-        TravelSchedule schedule1 = TravelScheduleFixture.createTravelSchedule("테스트1");
-        TravelSchedule schedule2 = TravelScheduleFixture.createTravelSchedule("테스트2");
+        TravelSchedule schedule1 = TravelScheduleFixture.createSchedule("테스트1");
+        TravelSchedule schedule2 = TravelScheduleFixture.createSchedule("테스트2");
 
         Member member = MemberFixture.createNativeTypeMember("member@email.com", profileImage);
 
         List<TravelAttendee> attendees = List.of(
-                TravelAttendeeFixture.createAuthorTravelAttendee(schedule1, member),
-                TravelAttendeeFixture.createAuthorTravelAttendee(schedule2, member)
+                TravelAttendeeFixture.createAuthorAttendee(schedule1, member),
+                TravelAttendeeFixture.createAuthorAttendee(schedule2, member)
         );
 
         DeactivateRequest request = MemberFixture.createDeactivateRequest(member.getPassword());
@@ -1120,14 +1120,14 @@ public class MemberServiceTest {
     @DisplayName("일반 회원 탈퇴 - 참석자만 존재하는 경우")
     void deactivateMember_nativeMember3(){
         // given
-        TravelSchedule schedule1 = TravelScheduleFixture.createTravelSchedule("테스트1");
-        TravelSchedule schedule2 = TravelScheduleFixture.createTravelSchedule("테스트2");
+        TravelSchedule schedule1 = TravelScheduleFixture.createSchedule("테스트1");
+        TravelSchedule schedule2 = TravelScheduleFixture.createSchedule("테스트2");
 
         Member member = MemberFixture.createNativeTypeMember("member@email.com", profileImage);
 
         List<TravelAttendee> attendees = List.of(
-                TravelAttendeeFixture.createGuestTravelAttendee(schedule1, member, AttendeePermission.ALL),
-                TravelAttendeeFixture.createGuestTravelAttendee(schedule2, member, AttendeePermission.READ)
+                TravelAttendeeFixture.createGuestAttendee(schedule1, member, AttendeePermission.ALL),
+                TravelAttendeeFixture.createGuestAttendee(schedule2, member, AttendeePermission.READ)
         );
 
         DeactivateRequest request = MemberFixture.createDeactivateRequest(member.getPassword());
@@ -1153,8 +1153,8 @@ public class MemberServiceTest {
     @DisplayName("통합 회원 탈퇴")
     void deactivateMember_bothMember(){
         // given
-        TravelSchedule schedule1 = TravelScheduleFixture.createTravelSchedule("테스트1");
-        TravelSchedule schedule2 = TravelScheduleFixture.createTravelSchedule("테스트2");
+        TravelSchedule schedule1 = TravelScheduleFixture.createSchedule("테스트1");
+        TravelSchedule schedule2 = TravelScheduleFixture.createSchedule("테스트2");
 
         Member member = MemberFixture.createBothTypeMember("member@email.com", profileImage);
 
@@ -1162,8 +1162,8 @@ public class MemberServiceTest {
         SocialMemberFixture.createSocialMember(member, SocialType.NAVER, "naver");
 
         List<TravelAttendee> attendees = List.of(
-                TravelAttendeeFixture.createAuthorTravelAttendee(schedule1, member),
-                TravelAttendeeFixture.createGuestTravelAttendee(schedule2, member, AttendeePermission.READ)
+                TravelAttendeeFixture.createAuthorAttendee(schedule1, member),
+                TravelAttendeeFixture.createGuestAttendee(schedule2, member, AttendeePermission.READ)
         );
 
         DeactivateRequest request = MemberFixture.createDeactivateRequest(member.getPassword());

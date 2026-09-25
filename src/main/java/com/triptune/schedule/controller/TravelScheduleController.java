@@ -33,18 +33,16 @@ public class TravelScheduleController {
     @GetMapping
     @Operation(summary = "전체 일정 목록 조회", description = "작성한 전체 일정을 조회합니다.")
     public ApiResponse<SchedulePageResponse<ScheduleInfoResponse>> getAllSchedules(@AuthenticationPrincipal(expression = "memberId") Long memberId,
-                                                                         @RequestParam(name = "page") int page){
+                                                                                   @RequestParam(name = "page") int page){
         SchedulePageResponse<ScheduleInfoResponse> response = travelScheduleService.getAllSchedules(page, memberId);
-
         return ApiResponse.schedulePageResponse(response);
     }
 
     @GetMapping("/shared")
     @Operation(summary = "공유된 일정 목록 조회", description = "작성한 일정 중 공유된 일정을 조회합니다.")
     public ApiResponse<SchedulePageResponse<ScheduleInfoResponse>> getSharedSchedules(@AuthenticationPrincipal(expression = "memberId") Long memberId,
-                                                                            @RequestParam(name = "page") int page){
+                                                                                      @RequestParam(name = "page") int page){
         SchedulePageResponse<ScheduleInfoResponse> response = travelScheduleService.getSharedSchedules(page, memberId);
-
         return ApiResponse.schedulePageResponse(response);
     }
 
@@ -60,9 +58,9 @@ public class TravelScheduleController {
     @GetMapping("/search")
     @Operation(summary = "일정 검색", description = "작성한 전체 일정 중 검색합니다.")
     public ApiResponse<SchedulePageResponse<ScheduleInfoResponse>> searchSchedules(@AuthenticationPrincipal(expression = "memberId") Long memberId,
-                                                                         @RequestParam(name = "page") int page,
-                                                                         @RequestParam(name = "keyword") String keyword,
-                                                                         @RequestParam(name = "type") String type){
+                                                                                   @RequestParam(name = "page") int page,
+                                                                                   @RequestParam(name = "keyword") String keyword,
+                                                                                   @RequestParam(name = "type") String type){
         ScheduleSearchType searchType = ScheduleSearchType.from(type);
 
         SchedulePageResponse<ScheduleInfoResponse> response =
@@ -116,7 +114,7 @@ public class TravelScheduleController {
     @GetMapping("/{scheduleId}/travels")
     @Operation(summary = "여행지 조회", description = "일정 상세보기 여행지 탭에서 여행지를 제공합니다.")
     public ApiResponse<PageResponse<PlaceResponse>> getTravelPlaces(@PathVariable(name = "scheduleId") Long scheduleId,
-                                                          @RequestParam int page){
+                                                                    @RequestParam int page){
         Page<PlaceResponse> response = travelService.getTravelPlacesByJungGu(page);
 
         return ApiResponse.pageResponse(response);
@@ -126,8 +124,8 @@ public class TravelScheduleController {
     @GetMapping("/{scheduleId}/travels/search")
     @Operation(summary = "여행지 검색", description = "일정 상세보기 여행지 탭에서 여행지를 검색합니다.")
     public ApiResponse<PageResponse<PlaceResponse>> searchTravelPlaces(@PathVariable(name = "scheduleId") Long scheduleId,
-                                                             @RequestParam(name = "page") int page,
-                                                             @RequestParam(name = "keyword") String keyword){
+                                                                       @RequestParam(name = "page") int page,
+                                                                       @RequestParam(name = "keyword") String keyword){
 
         Page<PlaceResponse> response = travelService.searchTravelPlaces(page, keyword);
         return ApiResponse.pageResponse(response);

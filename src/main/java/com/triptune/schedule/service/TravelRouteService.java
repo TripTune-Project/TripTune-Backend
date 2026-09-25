@@ -17,7 +17,6 @@ import com.triptune.travel.repository.TravelPlaceRepository;
 import com.triptune.global.message.ErrorCode;
 import com.triptune.global.exception.DataNotFoundException;
 import com.triptune.global.util.PageUtils;
-import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -37,7 +36,7 @@ public class TravelRouteService {
     private final TravelPlaceRepository travelPlaceRepository;
     private final S3ObjectManager s3ObjectManager;
 
-    public Page<RouteResponse> getTravelRoutes(Long scheduleId, int page) {
+    public Page<RouteResponse> getRoutes(Long scheduleId, int page) {
         Pageable pageable = PageUtils.defaultPageable(page);
         Page<RouteQueryDto> routePage = travelRouteRepository.findAllByScheduleId(pageable, scheduleId);
 
@@ -52,23 +51,23 @@ public class TravelRouteService {
 
     @Transactional
     public void createLastRoute(Long scheduleId, Long memberId, RouteCreateRequest routeCreateRequest) {
-        TravelSchedule schedule = findTravelScheduleByScheduleId(scheduleId);
+        TravelSchedule schedule = getSchedule(scheduleId);
 
         validateEnableEdit(scheduleId, memberId);
 
-        TravelPlace place = findTravelPlaceByPlaceId(routeCreateRequest.getPlaceId());
+        TravelPlace place = getPlace(routeCreateRequest.getPlaceId());
         TravelRoute route = TravelRoute.createTravelRoute(schedule, place, schedule.getTravelRoutes().size() + 1);
 
         travelRouteRepository.save(route);
     }
 
-    private TravelSchedule findTravelScheduleByScheduleId(Long scheduleId){
+    private TravelSchedule getSchedule(Long scheduleId){
         return travelScheduleRepository.findById(scheduleId)
                 .orElseThrow(() -> new DataNotFoundException(ErrorCode.SCHEDULE_NOT_FOUND));
     }
 
     private void validateEnableEdit(Long scheduleId, Long memberId){
-        TravelAttendee attendee = getAttendeeByScheduleIdAndMemberId(scheduleId, memberId);
+        TravelAttendee attendee = getAttendee(scheduleId, memberId);
 
         if (!attendee.getPermission().isEnableEdit()){
             throw new ForbiddenScheduleException(ErrorCode.FORBIDDEN_EDIT_SCHEDULE);
@@ -76,28 +75,30 @@ public class TravelRouteService {
 
     }
 
-    private TravelAttendee getAttendeeByScheduleIdAndMemberId(Long scheduleId, Long memberId) {
+    private TravelAttendee getAttendee(Long scheduleId, Long memberId) {
         return travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_MemberId(scheduleId, memberId)
                 .orElseThrow(() -> new DataNotFoundException(ErrorCode.ATTENDEE_NOT_FOUND));
     }
 
-    private TravelPlace findTravelPlaceByPlaceId(Long placeId){
+    private TravelPlace getPlace(Long placeId){
         return travelPlaceRepository.findById(placeId)
                 .orElseThrow(() -> new DataNotFoundException(ErrorCode.PLACE_NOT_FOUND));
     }
 
     @Transactional
-    public void updateTravelRouteInSchedule(TravelSchedule schedule, List<RouteRequest> routeRequests){
-        travelRouteRepository.deleteAllByTravelSchedule_ScheduleId(schedule.getScheduleId());
-        schedule.clearTravelRoutes();
+    public void updateRouteInSchedule(TravelSchedule schedule, List<RouteRequest> routeRequests){
+        travelRouteRepository.deleteAllByScheduleId(schedule.getScheduleId());
+        schedule.getTravelRoutes().clear();
 
-        // TODO: 추후 수정
-        if (routeRequests != null && !routeRequests.isEmpty()){
-            for(RouteRequest routeRequest : routeRequests){
-                TravelPlace place = findTravelPlaceByPlaceId(routeRequest.getPlaceId());
-                TravelRoute route = TravelRoute.createTravelRoute(schedule, place, routeRequest.getRouteOrder());
-                travelRouteRepository.save(route);
-            }
+        if(routeRequests == null || routeRequests.isEmpty()){
+            return;
+        }
+
+        // TODO : 추후 수정
+        for(RouteRequest routeRequest : routeRequests){
+            TravelPlace place = getPlace(routeRequest.getPlaceId());
+            TravelRoute route = TravelRoute.createTravelRoute(schedule, place, routeRequest.getRouteOrder());
+            travelRouteRepository.save(route);
         }
     }
 
