@@ -9,6 +9,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 
 @Getter
@@ -42,19 +43,19 @@ public class ScheduleInfoResponse {
                 .scheduleName(scheduleInfo.getScheduleName())
                 .startDate(scheduleInfo.getStartDate())
                 .endDate(scheduleInfo.getEndDate())
-                .sinceUpdate(getSinceUpdate(scheduleInfo))
+                .sinceUpdate(getSinceUpdate(scheduleInfo.getUpdatedAt(), scheduleInfo.getCreatedAt()))
                 .thumbnailUrl(thumbnailUrl)
                 .author(author)
                 .build();
     }
 
-    private static String getSinceUpdate(ScheduleInfoQueryDto scheduleInfo){
+    private static String getSinceUpdate(LocalDateTime updatedAt, LocalDateTime createdAt){
         String sinceUp = "";
 
-        if (scheduleInfo.getUpdatedAt() != null){
-            sinceUp = TimeUtils.timeDuration(scheduleInfo.getUpdatedAt());
-        } else if(scheduleInfo.getCreatedAt() != null){
-            sinceUp = TimeUtils.timeDuration(scheduleInfo.getCreatedAt());
+        if (updatedAt != null){
+            sinceUp = TimeUtils.timeDuration(updatedAt);
+        } else if(createdAt != null){
+            sinceUp = TimeUtils.timeDuration(createdAt);
         }
 
         return sinceUp;

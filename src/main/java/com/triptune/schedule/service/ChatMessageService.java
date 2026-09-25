@@ -79,8 +79,8 @@ public class ChatMessageService {
     public ChatResponse sendChatMessage(ChatMessageRequest chatMessageRequest) {
         validateSchedule(chatMessageRequest.getScheduleId());
 
-        Member member = getMemberByNickname(chatMessageRequest.getNickname());
-        TravelAttendee attendee = getTravelAttendee(chatMessageRequest.getScheduleId(), member.getMemberId());
+        Member member = getMember(chatMessageRequest.getNickname());
+        TravelAttendee attendee = getAttendee(chatMessageRequest.getScheduleId(), member.getMemberId());
 
         validateEnableChat(attendee);
 
@@ -103,13 +103,13 @@ public class ChatMessageService {
         }
     }
 
-    private Member getMemberByNickname(String nickname){
+    private Member getMember(String nickname){
         return memberRepository.findByNickname(nickname)
                 .orElseThrow(() -> new DataNotFoundChatException(ErrorCode.MEMBER_NOT_FOUND));
 
     }
 
-    private TravelAttendee getTravelAttendee(Long scheduleId, Long memberId){
+    private TravelAttendee getAttendee(Long scheduleId, Long memberId){
         return travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_MemberId(scheduleId, memberId)
                 .orElseThrow(() -> new ForbiddenChatException(ErrorCode.FORBIDDEN_ACCESS_SCHEDULE));
     }

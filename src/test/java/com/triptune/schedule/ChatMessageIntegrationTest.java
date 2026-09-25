@@ -1,4 +1,4 @@
-package com.triptune.schedule.controller;
+package com.triptune.schedule;
 
 import com.triptune.global.security.SecurityTestUtils;
 import com.triptune.member.entity.Member;
@@ -36,7 +36,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Transactional
 @AutoConfigureMockMvc
 @ActiveProfiles("mongo")
-public class ChatMessageControllerTest {
+public class ChatMessageIntegrationTest {
     @Autowired private MockMvc mockMvc;
     @Autowired private TravelScheduleRepository travelScheduleRepository;
     @Autowired private MemberRepository memberRepository;
@@ -62,11 +62,11 @@ public class ChatMessageControllerTest {
         ProfileImage profileImage3 = profileImageRepository.save(ProfileImageFixture.createProfileImage("member3Image"));
         member3 = memberRepository.save(MemberFixture.createNativeTypeMember("member3@email.com", profileImage3));
 
-        schedule = travelScheduleRepository.save(TravelScheduleFixture.createTravelSchedule("테스트1"));
+        schedule = travelScheduleRepository.save(TravelScheduleFixture.createSchedule("테스트1"));
 
-        travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorTravelAttendee(schedule, member1));
-        travelAttendeeRepository.save(TravelAttendeeFixture.createGuestTravelAttendee(schedule, member2, AttendeePermission.READ));
-        travelAttendeeRepository.save(TravelAttendeeFixture.createGuestTravelAttendee(schedule, member3, AttendeePermission.CHAT));
+        travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorAttendee(schedule, member1));
+        travelAttendeeRepository.save(TravelAttendeeFixture.createGuestAttendee(schedule, member2, AttendeePermission.READ));
+        travelAttendeeRepository.save(TravelAttendeeFixture.createGuestAttendee(schedule, member3, AttendeePermission.CHAT));
 
     }
 

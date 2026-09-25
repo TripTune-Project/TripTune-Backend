@@ -40,7 +40,7 @@ public class ChatMessageRepositoryTest {
     @BeforeEach
     void setUp(){
         chatMessageRepository.deleteAll();
-        schedule = travelScheduleRepository.save(TravelScheduleFixture.createTravelSchedule("테스트"));
+        schedule = travelScheduleRepository.save(TravelScheduleFixture.createSchedule("테스트"));
     }
 
 

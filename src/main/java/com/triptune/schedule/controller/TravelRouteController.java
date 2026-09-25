@@ -27,7 +27,7 @@ public class TravelRouteController {
     @Operation(summary = "여행 루트 조회", description = "저장되어 있는 여행 루트를 조회한다.")
     public ApiResponse<PageResponse<RouteResponse>> getTravelRoutes(@PathVariable(name = "scheduleId") Long scheduleId,
                                                                    @RequestParam(name = "page") int page){
-        Page<RouteResponse> response = travelRouteService.getTravelRoutes(scheduleId, page);
+        Page<RouteResponse> response = travelRouteService.getRoutes(scheduleId, page);
 
         return ApiResponse.pageResponse(response);
     }

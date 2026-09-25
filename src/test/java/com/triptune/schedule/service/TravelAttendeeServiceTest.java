@@ -70,7 +70,7 @@ public class TravelAttendeeServiceTest {
         ProfileImage profileImage3 = ProfileImageFixture.createProfileImage("member3Image");
         member3 = MemberFixture.createNativeTypeMember("member3@email.com", profileImage3);
 
-        schedule = TravelScheduleFixture.createTravelSchedule("테스트1");
+        schedule = TravelScheduleFixture.createSchedule("테스트1");
     }
 
     @Test
@@ -78,8 +78,8 @@ public class TravelAttendeeServiceTest {
     void getAttendeesByScheduleId(){
         // given
         List<TravelAttendee> travelAttendees = List.of(
-                TravelAttendeeFixture.createAuthorTravelAttendee(schedule, member1),
-                TravelAttendeeFixture.createGuestTravelAttendee(schedule, member2, AttendeePermission.READ)
+                TravelAttendeeFixture.createAuthorAttendee(schedule, member1),
+                TravelAttendeeFixture.createGuestAttendee(schedule, member2, AttendeePermission.READ)
         );
 
         when(travelAttendeeRepository.findAllByTravelSchedule_ScheduleId(anyLong()))
@@ -254,7 +254,7 @@ public class TravelAttendeeServiceTest {
     @DisplayName("일정 참석자 접근 권한 수정")
     void updateAttendeePermission(){
         // given
-        TravelAttendee guest = TravelAttendeeFixture.createGuestTravelAttendeeWithId(1L, schedule, member2, AttendeePermission.READ);
+        TravelAttendee guest = TravelAttendeeFixture.createGuestAttendeeWithId(1L, schedule, member2, AttendeePermission.READ);
 
         AttendeePermissionRequest request = TravelAttendeeFixture.createAttendeePermissionRequest(AttendeePermission.READ);
 
@@ -282,7 +282,7 @@ public class TravelAttendeeServiceTest {
     @DisplayName("일정 참석자 허용 권한 수정 시 요청자가 작성자가 아니여서 예외 발생")
     void updateAttendeePermission_forbiddenNotAuthor(){
         // given
-        TravelAttendee guest = TravelAttendeeFixture.createGuestTravelAttendee(schedule, member2, AttendeePermission.READ);
+        TravelAttendee guest = TravelAttendeeFixture.createGuestAttendee(schedule, member2, AttendeePermission.READ);
 
         AttendeePermissionRequest request = TravelAttendeeFixture.createAttendeePermissionRequest(AttendeePermission.READ);
 
@@ -333,7 +333,7 @@ public class TravelAttendeeServiceTest {
     @DisplayName("일정 참석자 허용 권한 수정 시 작성자의 접근 권한 수정 시도로 예외 발생")
     void updateAttendeePermission_forbiddenUpdateAuthorPermission(){
         // given
-        TravelAttendee author = TravelAttendeeFixture.createAuthorTravelAttendeeWithId(1L, schedule, member1);
+        TravelAttendee author = TravelAttendeeFixture.createAuthorAttendeeWithId(1L, schedule, member1);
 
         AttendeePermissionRequest request = TravelAttendeeFixture.createAttendeePermissionRequest(AttendeePermission.READ);
 
@@ -362,7 +362,7 @@ public class TravelAttendeeServiceTest {
     @DisplayName("일정 나가기")
     void leaveAttendee(){
         // given
-        TravelAttendee guest = TravelAttendeeFixture.createGuestTravelAttendee(schedule, member2, AttendeePermission.READ);
+        TravelAttendee guest = TravelAttendeeFixture.createGuestAttendee(schedule, member2, AttendeePermission.READ);
 
         when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_MemberId(anyLong(), anyLong()))
                 .thenReturn(Optional.of(guest));
@@ -393,7 +393,7 @@ public class TravelAttendeeServiceTest {
     @DisplayName("일정 나가기 요청 시 요청자가 작성자여서 예외 발생")
     void leaveAttendee_forbiddenAuthor(){
         // given
-        TravelAttendee author = TravelAttendeeFixture.createAuthorTravelAttendee(schedule, member1);
+        TravelAttendee author = TravelAttendeeFixture.createAuthorAttendee(schedule, member1);
 
         when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_MemberId(anyLong(), anyLong()))
                 .thenReturn(Optional.of(author));
@@ -412,7 +412,7 @@ public class TravelAttendeeServiceTest {
         // given
         ProfileImage profileImage = ProfileImageFixture.createProfileImage("defaultImage");
         Member guestMember = MemberFixture.createNativeTypeMemberWithId(2L, "guestMember@email.com", profileImage);
-        TravelAttendee guest = TravelAttendeeFixture.createGuestTravelAttendeeWithId(1L, schedule, guestMember, AttendeePermission.READ);
+        TravelAttendee guest = TravelAttendeeFixture.createGuestAttendeeWithId(1L, schedule, guestMember, AttendeePermission.READ);
 
         when(travelAttendeeRepository.existsByTravelSchedule_ScheduleIdAndMember_MemberIdAndRole(anyLong(), anyLong(), any()))
                 .thenReturn(true);
@@ -430,7 +430,7 @@ public class TravelAttendeeServiceTest {
     @DisplayName("일정 내보내기 시 작성자 요청이 아니여서 예외 발생")
     void removeAttendee_forbiddenNotAuthor(){
         // given
-        TravelAttendee guest = TravelAttendeeFixture.createGuestTravelAttendee(schedule, member2, AttendeePermission.READ);
+        TravelAttendee guest = TravelAttendeeFixture.createGuestAttendee(schedule, member2, AttendeePermission.READ);
 
         when(travelAttendeeRepository.existsByTravelSchedule_ScheduleIdAndMember_MemberIdAndRole(anyLong(), anyLong(), any()))
                 .thenReturn(false);
@@ -473,7 +473,7 @@ public class TravelAttendeeServiceTest {
         // given
         ProfileImage profileImage = ProfileImageFixture.createProfileImage("removeMember");
         Member removeMember = MemberFixture.createNativeTypeMemberWithId(1L, "removeMember@email.com", profileImage);
-        TravelAttendee author = TravelAttendeeFixture.createAuthorTravelAttendeeWithId(1L, schedule, removeMember);
+        TravelAttendee author = TravelAttendeeFixture.createAuthorAttendeeWithId(1L, schedule, removeMember);
 
         when(travelAttendeeRepository.existsByTravelSchedule_ScheduleIdAndMember_MemberIdAndRole(anyLong(), anyLong(), any(AttendeeRole.class)))
                 .thenReturn(true);

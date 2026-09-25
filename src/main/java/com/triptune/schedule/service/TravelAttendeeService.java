@@ -50,17 +50,17 @@ public class TravelAttendeeService {
 
     @Transactional
     public void createAttendee(Long scheduleId, Long memberId, AttendeeRequest attendeeRequest) {
-        TravelSchedule schedule = getScheduleByScheduleId(scheduleId);
+        TravelSchedule schedule = getSchedule(scheduleId);
         validateAttendeeAddition(scheduleId, memberId);
 
-        Member guest = getMemberByEmail(attendeeRequest.getEmail());
+        Member guest = getMember(attendeeRequest.getEmail());
         validateAttendeeAlreadyExists(scheduleId, guest.getMemberId());
 
         TravelAttendee travelAttendee = TravelAttendee.createGuest(schedule, guest, attendeeRequest.getPermission());
         travelAttendeeRepository.save(travelAttendee);
     }
 
-    private TravelSchedule getScheduleByScheduleId(Long scheduleId){
+    private TravelSchedule getSchedule(Long scheduleId){
         return travelScheduleRepository.findById(scheduleId)
                 .orElseThrow(() -> new DataNotFoundException(ErrorCode.SCHEDULE_NOT_FOUND));
     }
@@ -79,7 +79,7 @@ public class TravelAttendeeService {
     }
 
 
-    private Member getMemberByEmail(String email){
+    private Member getMember(String email){
         return memberRepository.findByEmail(email)
                 .orElseThrow(() -> new DataNotFoundException(ErrorCode.MEMBER_NOT_FOUND));
     }

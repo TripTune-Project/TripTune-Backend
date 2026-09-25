@@ -11,7 +11,6 @@ import com.triptune.profile.properties.DefaultProfileImageProperties;
 import com.triptune.global.s3.S3Service;
 import com.triptune.global.util.FileUtils;
 import lombok.RequiredArgsConstructor;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -46,7 +45,7 @@ public class ProfileImageService {
     public void updateProfileImage(Long memberId, MultipartFile profileImageFile) {
         validateFileExtension(profileImageFile);
 
-        ProfileImage profileImage = getProfileImageByMemberId(memberId);
+        ProfileImage profileImage = getProfileImage(memberId);
         deleteS3File(profileImage);
 
         String extension = FileUtils.getExtension(profileImageFile.getOriginalFilename());
@@ -63,7 +62,7 @@ public class ProfileImageService {
         }
     }
 
-    private ProfileImage getProfileImageByMemberId(Long memberId){
+    private ProfileImage getProfileImage(Long memberId){
         return profileImageRepository.findByMemberId(memberId)
                 .orElseThrow(() -> new DataNotFoundException(ErrorCode.PROFILE_IMAGE_NOT_FOUND));
     }

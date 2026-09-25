@@ -122,20 +122,20 @@ public class TravelRouteServiceTest {
         ProfileImage profileImage2 = ProfileImageFixture.createProfileImage("member2Image");
         member2 = MemberFixture.createNativeTypeMember("member2@email.com", profileImage2);
 
-        schedule = TravelScheduleFixture.createTravelScheduleWithId(1L, "테스트1");
+        schedule = TravelScheduleFixture.createScheduleWithId(1L, "테스트1");
 
-        author = TravelAttendeeFixture.createAuthorTravelAttendee(schedule, member1);
-        guest = TravelAttendeeFixture.createGuestTravelAttendee(schedule, member2, AttendeePermission.READ);
+        author = TravelAttendeeFixture.createAuthorAttendee(schedule, member1);
+        guest = TravelAttendeeFixture.createGuestAttendee(schedule, member2, AttendeePermission.READ);
     }
 
 
     @Test
     @DisplayName("여행 루트 조회")
-    void getTravelRoutes(){
+    void getRoutes(){
         // given
-        TravelRoute route1 = TravelRouteFixture.createTravelRoute(schedule, place1WithThumb, 1);
-        TravelRoute route2 = TravelRouteFixture.createTravelRoute(schedule, place1WithThumb, 2);
-        TravelRoute route3 = TravelRouteFixture.createTravelRoute(schedule, place2WithThumb, 3);
+        TravelRoute route1 = TravelRouteFixture.createRoute(schedule, place1WithThumb, 1);
+        TravelRoute route2 = TravelRouteFixture.createRoute(schedule, place1WithThumb, 2);
+        TravelRoute route3 = TravelRouteFixture.createRoute(schedule, place2WithThumb, 3);
 
         Pageable pageable = PageUtils.defaultPageable(1);
         List<RouteQueryDto> routes = List.of(
@@ -151,7 +151,7 @@ public class TravelRouteServiceTest {
         when(s3ObjectManager.generateS3ObjectUrl(place2Thumb.getS3ObjectKey())).thenReturn(place2ThumbUrl);
 
         // when
-        Page<RouteResponse> response = travelRouteService.getTravelRoutes(schedule.getScheduleId(), 1);
+        Page<RouteResponse> response = travelRouteService.getRoutes(schedule.getScheduleId(), 1);
 
         // then
         List<RouteResponse> content = response.getContent();
@@ -173,7 +173,7 @@ public class TravelRouteServiceTest {
 
     @Test
     @DisplayName("여행 루트 조회 시 저장된 여행 루트 데이터 없는 경우")
-    void getTravelRoutesWithoutData(){
+    void getRoutesWithoutData(){
         // given
         Pageable pageable = PageUtils.defaultPageable(1);
 
@@ -181,7 +181,7 @@ public class TravelRouteServiceTest {
                 .thenReturn(PageUtils.createPage(Collections.emptyList(), pageable, 0));
 
         // when
-        Page<RouteResponse> response = travelRouteService.getTravelRoutes(schedule.getScheduleId(), 1);
+        Page<RouteResponse> response = travelRouteService.getRoutes(schedule.getScheduleId(), 1);
 
         // then
         assertThat(response.getTotalElements()).isEqualTo(0);
@@ -192,9 +192,9 @@ public class TravelRouteServiceTest {
     @DisplayName("여행 루트 마지막 루트에 여행지 추가")
     void createLastRoute(){
         // given
-        TravelRouteFixture.createTravelRoute(schedule, place1WithThumb, 1);
-        TravelRouteFixture.createTravelRoute(schedule, place2WithThumb, 2);
-        TravelRouteFixture.createTravelRoute(schedule, place2WithThumb, 3);
+        TravelRouteFixture.createRoute(schedule, place1WithThumb, 1);
+        TravelRouteFixture.createRoute(schedule, place2WithThumb, 2);
+        TravelRouteFixture.createRoute(schedule, place2WithThumb, 3);
 
         RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(place3WithoutThumb.getPlaceId());
 
@@ -316,9 +316,9 @@ public class TravelRouteServiceTest {
     @Test
     @DisplayName("여행 루트 수정 시 기존에 저장된 여행 루트가 존재하는 경우")
     void updateTravelRoute_existedTravelRoute(){
-        TravelRouteFixture.createTravelRoute(schedule, place1WithThumb, 1);
-        TravelRouteFixture.createTravelRoute(schedule, place1WithThumb, 2);
-        TravelRouteFixture.createTravelRoute(schedule, place2WithThumb, 3);
+        TravelRouteFixture.createRoute(schedule, place1WithThumb, 1);
+        TravelRouteFixture.createRoute(schedule, place1WithThumb, 2);
+        TravelRouteFixture.createRoute(schedule, place2WithThumb, 3);
 
         RouteRequest routeRequest1 = TravelRouteFixture.createRouteRequest(1, place1WithThumb.getPlaceId());
         RouteRequest routeRequest2 = TravelRouteFixture.createRouteRequest(2, place2WithThumb.getPlaceId());
@@ -333,8 +333,7 @@ public class TravelRouteServiceTest {
                 .thenReturn(Optional.of(place2WithThumb));
 
         // when
-        assertDoesNotThrow(
-                () -> travelRouteService.updateTravelRouteInSchedule(schedule, routeRequests));
+        assertDoesNotThrow(() -> travelRouteService.updateRouteInSchedule(schedule, routeRequests));
 
         // then
         assertThat(schedule.getTravelRoutes()).hasSize(2);
@@ -348,7 +347,7 @@ public class TravelRouteServiceTest {
     @DisplayName("여행 루트에 저장된 여행지 데이터가 없어 예외 발생")
     void updateSchedule_placeNotFoundInTravelRoute(){
         // given
-        TravelSchedule schedule = TravelScheduleFixture.createTravelSchedule("테스트");
+        TravelSchedule schedule = TravelScheduleFixture.createSchedule("테스트");
 
         List<RouteRequest> routes = new ArrayList<>(List.of(
                 TravelRouteFixture.createRouteRequest(1, place1WithThumb.getPlaceId()),
@@ -361,7 +360,7 @@ public class TravelRouteServiceTest {
 
         // when
         DataNotFoundException fail = assertThrows(DataNotFoundException.class,
-                () -> travelRouteService.updateTravelRouteInSchedule(schedule, routes));
+                () -> travelRouteService.updateRouteInSchedule(schedule, routes));
 
         // then
         assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.PLACE_NOT_FOUND);

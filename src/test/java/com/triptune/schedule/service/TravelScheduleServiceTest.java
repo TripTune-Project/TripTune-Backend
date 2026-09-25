@@ -139,21 +139,21 @@ public class TravelScheduleServiceTest {
         Member guestMember = MemberFixture.createNativeTypeMemberWithId(2L, "guestMember@email.com", defaultImage);
 
         // [schedule1] 작성자 = currentMember
-        TravelSchedule schedule1 = TravelScheduleFixture.createTravelSchedule("당일 여행");
-        TravelAttendee schedule1Author = TravelAttendeeFixture.createAuthorTravelAttendee(schedule1, currentMember);
-        TravelAttendeeFixture.createGuestTravelAttendee(schedule1, guestMember, AttendeePermission.READ);
-        TravelRouteFixture.createTravelRoute(schedule1, place1WithThumb, 1);
-        TravelRouteFixture.createTravelRoute(schedule1, placeWithoutThumb, 2);
-        TravelRouteFixture.createTravelRoute(schedule1, place2WithThumb, 3);
+        TravelSchedule schedule1 = TravelScheduleFixture.createSchedule("당일 여행");
+        TravelAttendee schedule1Author = TravelAttendeeFixture.createAuthorAttendee(schedule1, currentMember);
+        TravelAttendeeFixture.createGuestAttendee(schedule1, guestMember, AttendeePermission.READ);
+        TravelRouteFixture.createRoute(schedule1, place1WithThumb, 1);
+        TravelRouteFixture.createRoute(schedule1, placeWithoutThumb, 2);
+        TravelRouteFixture.createRoute(schedule1, place2WithThumb, 3);
 
         // [schedule2] 작성자 = guestMember
-        TravelSchedule schedule2 = TravelScheduleFixture.createTravelSchedule("도보 여행");
-        TravelAttendee schedule2Author = TravelAttendeeFixture.createAuthorTravelAttendee(schedule2, guestMember);
-        TravelAttendee schedule2Current = TravelAttendeeFixture.createGuestTravelAttendee(schedule2, currentMember, AttendeePermission.CHAT);
+        TravelSchedule schedule2 = TravelScheduleFixture.createSchedule("도보 여행");
+        TravelAttendee schedule2Author = TravelAttendeeFixture.createAuthorAttendee(schedule2, guestMember);
+        TravelAttendee schedule2Current = TravelAttendeeFixture.createGuestAttendee(schedule2, currentMember, AttendeePermission.CHAT);
 
         // [schedule3] 작성자 = currentMember
-        TravelSchedule schedule3 = TravelScheduleFixture.createTravelSchedule("역사 여행");
-        TravelAttendee schedule3Author = TravelAttendeeFixture.createAuthorTravelAttendee(schedule3, currentMember);
+        TravelSchedule schedule3 = TravelScheduleFixture.createSchedule("역사 여행");
+        TravelAttendee schedule3Author = TravelAttendeeFixture.createAuthorAttendee(schedule3, currentMember);
 
         Pageable pageable = PageUtils.schedulePageable(1);
         List<ScheduleInfoQueryDto> schedules = List.of(
@@ -207,8 +207,8 @@ public class TravelScheduleServiceTest {
         // given
         Member currentMember = MemberFixture.createNativeTypeMemberWithId(1L, "currentMember@email.com", defaultImage);
 
-        TravelSchedule schedule = TravelScheduleFixture.createTravelSchedule("역사 여행");
-        TravelAttendee author = TravelAttendeeFixture.createAuthorTravelAttendee(schedule, currentMember);
+        TravelSchedule schedule = TravelScheduleFixture.createSchedule("역사 여행");
+        TravelAttendee author = TravelAttendeeFixture.createAuthorAttendee(schedule, currentMember);
 
         Pageable pageable = PageUtils.schedulePageable(1);
         List<ScheduleInfoQueryDto> schedules = List.of(TravelScheduleFixture.createScheduleInfoQueryDto(schedule, author, author, null));
@@ -258,18 +258,18 @@ public class TravelScheduleServiceTest {
         Member currentMember = MemberFixture.createNativeTypeMemberWithId(1L, "currentMember@email.com", defaultImage);
         Member guestMember = MemberFixture.createNativeTypeMemberWithId(2L, "guestMember@email.com", defaultImage);
 
-        TravelSchedule schedule1 = TravelScheduleFixture.createTravelSchedule("당일 여행");
-        TravelAttendee schedule1Author = TravelAttendeeFixture.createAuthorTravelAttendee(schedule1, currentMember);
-        TravelAttendeeFixture.createGuestTravelAttendee(schedule1, guestMember, AttendeePermission.READ);
-        TravelRouteFixture.createTravelRoute(schedule1, placeWithoutThumb, 1);
+        TravelSchedule schedule1 = TravelScheduleFixture.createSchedule("당일 여행");
+        TravelAttendee schedule1Author = TravelAttendeeFixture.createAuthorAttendee(schedule1, currentMember);
+        TravelAttendeeFixture.createGuestAttendee(schedule1, guestMember, AttendeePermission.READ);
+        TravelRouteFixture.createRoute(schedule1, placeWithoutThumb, 1);
 
-        TravelSchedule schedule2 = TravelScheduleFixture.createTravelSchedule("도보 여행");
-        TravelAttendee schedule2Author = TravelAttendeeFixture.createAuthorTravelAttendee(schedule2, guestMember);
-        TravelAttendee schedule2Current = TravelAttendeeFixture.createGuestTravelAttendee(schedule2, currentMember, AttendeePermission.CHAT);
-        TravelRouteFixture.createTravelRoute(schedule2, placeWithoutThumb, 1);
+        TravelSchedule schedule2 = TravelScheduleFixture.createSchedule("도보 여행");
+        TravelAttendee schedule2Author = TravelAttendeeFixture.createAuthorAttendee(schedule2, guestMember);
+        TravelAttendee schedule2Current = TravelAttendeeFixture.createGuestAttendee(schedule2, currentMember, AttendeePermission.CHAT);
+        TravelRouteFixture.createRoute(schedule2, placeWithoutThumb, 1);
 
-        TravelSchedule schedule3 = TravelScheduleFixture.createTravelSchedule("역사 여행");
-        TravelAttendee schedule3Author = TravelAttendeeFixture.createAuthorTravelAttendee(schedule3, currentMember);
+        TravelSchedule schedule3 = TravelScheduleFixture.createSchedule("역사 여행");
+        TravelAttendee schedule3Author = TravelAttendeeFixture.createAuthorAttendee(schedule3, currentMember);
 
 
         Pageable pageable = PageUtils.schedulePageable(1);
@@ -325,16 +325,16 @@ public class TravelScheduleServiceTest {
         Member currentMember = MemberFixture.createNativeTypeMemberWithId(1L, "currentMember@email.com", defaultImage);
         Member guestMember = MemberFixture.createNativeTypeMemberWithId(2L, "guestMember@email.com", defaultImage);
 
-        TravelSchedule schedule1 = TravelScheduleFixture.createTravelSchedule("당일 여행");
-        TravelAttendee schedule1Author = TravelAttendeeFixture.createAuthorTravelAttendee(schedule1, currentMember);
-        TravelAttendeeFixture.createGuestTravelAttendee(schedule1, guestMember, AttendeePermission.READ);
+        TravelSchedule schedule1 = TravelScheduleFixture.createSchedule("당일 여행");
+        TravelAttendee schedule1Author = TravelAttendeeFixture.createAuthorAttendee(schedule1, currentMember);
+        TravelAttendeeFixture.createGuestAttendee(schedule1, guestMember, AttendeePermission.READ);
 
-        TravelSchedule schedule2 = TravelScheduleFixture.createTravelSchedule("도보 여행");
-        TravelAttendee schedule2Author = TravelAttendeeFixture.createAuthorTravelAttendee(schedule2, guestMember);
-        TravelAttendee schedule2Current = TravelAttendeeFixture.createGuestTravelAttendee(schedule2, currentMember, AttendeePermission.CHAT);
+        TravelSchedule schedule2 = TravelScheduleFixture.createSchedule("도보 여행");
+        TravelAttendee schedule2Author = TravelAttendeeFixture.createAuthorAttendee(schedule2, guestMember);
+        TravelAttendee schedule2Current = TravelAttendeeFixture.createGuestAttendee(schedule2, currentMember, AttendeePermission.CHAT);
 
-        TravelSchedule schedule3 = TravelScheduleFixture.createTravelSchedule("역사 여행");
-        TravelAttendee schedule3Author = TravelAttendeeFixture.createAuthorTravelAttendee(schedule3, currentMember);
+        TravelSchedule schedule3 = TravelScheduleFixture.createSchedule("역사 여행");
+        TravelAttendee schedule3Author = TravelAttendeeFixture.createAuthorAttendee(schedule3, currentMember);
 
         Pageable pageable = PageUtils.schedulePageable(1);
 
@@ -389,19 +389,19 @@ public class TravelScheduleServiceTest {
         Member currentMember = MemberFixture.createNativeTypeMemberWithId(1L, "currentMember@email.com", defaultImage);
         Member guestMember = MemberFixture.createNativeTypeMemberWithId(2L, "guestMember@email.com", defaultImage);
 
-        TravelSchedule schedule1 = TravelScheduleFixture.createTravelSchedule("당일 여행");
-        TravelAttendee schedule1Author = TravelAttendeeFixture.createAuthorTravelAttendee(schedule1, currentMember);
-        TravelAttendeeFixture.createGuestTravelAttendee(schedule1, guestMember, AttendeePermission.READ);
-        TravelRouteFixture.createTravelRoute(schedule1, place1WithThumb, 1);
-        TravelRouteFixture.createTravelRoute(schedule1, placeWithoutThumb, 2);
-        TravelRouteFixture.createTravelRoute(schedule1, place2WithThumb, 3);
+        TravelSchedule schedule1 = TravelScheduleFixture.createSchedule("당일 여행");
+        TravelAttendee schedule1Author = TravelAttendeeFixture.createAuthorAttendee(schedule1, currentMember);
+        TravelAttendeeFixture.createGuestAttendee(schedule1, guestMember, AttendeePermission.READ);
+        TravelRouteFixture.createRoute(schedule1, place1WithThumb, 1);
+        TravelRouteFixture.createRoute(schedule1, placeWithoutThumb, 2);
+        TravelRouteFixture.createRoute(schedule1, place2WithThumb, 3);
 
-        TravelSchedule schedule2 = TravelScheduleFixture.createTravelSchedule("도보 여행");
-        TravelAttendee schedule2Author = TravelAttendeeFixture.createAuthorTravelAttendee(schedule2, guestMember);
-        TravelAttendee schedule2Current = TravelAttendeeFixture.createGuestTravelAttendee(schedule2, currentMember, AttendeePermission.CHAT);
+        TravelSchedule schedule2 = TravelScheduleFixture.createSchedule("도보 여행");
+        TravelAttendee schedule2Author = TravelAttendeeFixture.createAuthorAttendee(schedule2, guestMember);
+        TravelAttendee schedule2Current = TravelAttendeeFixture.createGuestAttendee(schedule2, currentMember, AttendeePermission.CHAT);
 
-        TravelSchedule schedule3 = TravelScheduleFixture.createTravelSchedule("역사 여행");
-        TravelAttendee schedule3Author = TravelAttendeeFixture.createAuthorTravelAttendee(schedule3, currentMember);
+        TravelSchedule schedule3 = TravelScheduleFixture.createSchedule("역사 여행");
+        TravelAttendee schedule3Author = TravelAttendeeFixture.createAuthorAttendee(schedule3, currentMember);
 
 
         Pageable pageable = PageUtils.schedulePageable(1);
@@ -469,15 +469,15 @@ public class TravelScheduleServiceTest {
         Member currentMember = MemberFixture.createNativeTypeMemberWithId(1L, "currentMember@email.com", defaultImage);
         Member guestMember = MemberFixture.createNativeTypeMemberWithId(2L, "guestMember@email.com", defaultImage);
 
-        TravelSchedule schedule1 = TravelScheduleFixture.createTravelSchedule("당일 여행");
-        TravelAttendee schedule1Author = TravelAttendeeFixture.createAuthorTravelAttendee(schedule1, currentMember);
-        TravelAttendeeFixture.createGuestTravelAttendee(schedule1, guestMember, AttendeePermission.READ);
-        TravelRouteFixture.createTravelRoute(schedule1, placeWithoutThumb, 1);
+        TravelSchedule schedule1 = TravelScheduleFixture.createSchedule("당일 여행");
+        TravelAttendee schedule1Author = TravelAttendeeFixture.createAuthorAttendee(schedule1, currentMember);
+        TravelAttendeeFixture.createGuestAttendee(schedule1, guestMember, AttendeePermission.READ);
+        TravelRouteFixture.createRoute(schedule1, placeWithoutThumb, 1);
 
-        TravelSchedule schedule2 = TravelScheduleFixture.createTravelSchedule("도보 여행");
-        TravelAttendee schedule2Author = TravelAttendeeFixture.createAuthorTravelAttendee(schedule2, guestMember);
-        TravelAttendee schedule2Current = TravelAttendeeFixture.createGuestTravelAttendee(schedule2, currentMember, AttendeePermission.CHAT);
-        TravelRouteFixture.createTravelRoute(schedule2, placeWithoutThumb, 1);
+        TravelSchedule schedule2 = TravelScheduleFixture.createSchedule("도보 여행");
+        TravelAttendee schedule2Author = TravelAttendeeFixture.createAuthorAttendee(schedule2, guestMember);
+        TravelAttendee schedule2Current = TravelAttendeeFixture.createGuestAttendee(schedule2, currentMember, AttendeePermission.CHAT);
+        TravelRouteFixture.createRoute(schedule2, placeWithoutThumb, 1);
 
         Pageable pageable = PageUtils.schedulePageable(1);
         List<ScheduleInfoQueryDto> schedules = List.of(
@@ -523,13 +523,13 @@ public class TravelScheduleServiceTest {
         Member currentMember = MemberFixture.createNativeTypeMemberWithId(1L, "currentMember@email.com", defaultImage);
         Member guestMember = MemberFixture.createNativeTypeMemberWithId(2L, "guestMember@email.com", defaultImage);
 
-        TravelSchedule schedule1 = TravelScheduleFixture.createTravelSchedule("당일 여행");
-        TravelAttendee schedule1Author = TravelAttendeeFixture.createAuthorTravelAttendee(schedule1, currentMember);
-        TravelAttendeeFixture.createGuestTravelAttendee(schedule1, guestMember, AttendeePermission.READ);
+        TravelSchedule schedule1 = TravelScheduleFixture.createSchedule("당일 여행");
+        TravelAttendee schedule1Author = TravelAttendeeFixture.createAuthorAttendee(schedule1, currentMember);
+        TravelAttendeeFixture.createGuestAttendee(schedule1, guestMember, AttendeePermission.READ);
 
-        TravelSchedule schedule2 = TravelScheduleFixture.createTravelSchedule("도보 여행");
-        TravelAttendee schedule2Author = TravelAttendeeFixture.createAuthorTravelAttendee(schedule2, guestMember);
-        TravelAttendee schedule2Current = TravelAttendeeFixture.createGuestTravelAttendee(schedule2, currentMember, AttendeePermission.CHAT);
+        TravelSchedule schedule2 = TravelScheduleFixture.createSchedule("도보 여행");
+        TravelAttendee schedule2Author = TravelAttendeeFixture.createAuthorAttendee(schedule2, guestMember);
+        TravelAttendee schedule2Current = TravelAttendeeFixture.createGuestAttendee(schedule2, currentMember, AttendeePermission.CHAT);
 
 
         Pageable pageable = PageUtils.schedulePageable(1);
@@ -573,19 +573,19 @@ public class TravelScheduleServiceTest {
     @DisplayName("수정 권한 있는 내 일정 목록 조회")
     void getEnableEditSchedules(){
         // given
-        TravelSchedule schedule1 = TravelScheduleFixture.createTravelScheduleWithId(1L, "당일 여행");
-        TravelAttendeeFixture.createAuthorTravelAttendee(schedule1, member1);
-        TravelAttendeeFixture.createGuestTravelAttendee(schedule1, member2, AttendeePermission.READ);
-        TravelRouteFixture.createTravelRoute(schedule1, place1WithThumb, 1);
-        TravelRouteFixture.createTravelRoute(schedule1, placeWithoutThumb, 2);
-        TravelRouteFixture.createTravelRoute(schedule1, place2WithThumb, 3);
+        TravelSchedule schedule1 = TravelScheduleFixture.createScheduleWithId(1L, "당일 여행");
+        TravelAttendeeFixture.createAuthorAttendee(schedule1, member1);
+        TravelAttendeeFixture.createGuestAttendee(schedule1, member2, AttendeePermission.READ);
+        TravelRouteFixture.createRoute(schedule1, place1WithThumb, 1);
+        TravelRouteFixture.createRoute(schedule1, placeWithoutThumb, 2);
+        TravelRouteFixture.createRoute(schedule1, place2WithThumb, 3);
 
-        TravelSchedule schedule2 = TravelScheduleFixture.createTravelScheduleWithId(2L, "도보 여행");
-        TravelAttendeeFixture.createAuthorTravelAttendee(schedule2, member2);
-        TravelAttendeeFixture.createGuestTravelAttendee(schedule2, member1, AttendeePermission.CHAT);
+        TravelSchedule schedule2 = TravelScheduleFixture.createScheduleWithId(2L, "도보 여행");
+        TravelAttendeeFixture.createAuthorAttendee(schedule2, member2);
+        TravelAttendeeFixture.createGuestAttendee(schedule2, member1, AttendeePermission.CHAT);
 
-        TravelSchedule schedule3 = TravelScheduleFixture.createTravelScheduleWithId(3L, "역사 여행");
-        TravelAttendeeFixture.createAuthorTravelAttendee(schedule3, member1);
+        TravelSchedule schedule3 = TravelScheduleFixture.createScheduleWithId(3L, "역사 여행");
+        TravelAttendeeFixture.createAuthorAttendee(schedule3, member1);
 
         Pageable pageable = PageUtils.scheduleModalPageable(1);
         List<TravelSchedule> schedules = List.of(schedule1);
@@ -609,19 +609,19 @@ public class TravelScheduleServiceTest {
     @DisplayName("수정 권한 있는 내 일정 목록 조회 시 일정 데이터 존재하지 않는 경우")
     void getEnableEditSchedule_noSchedulesData(){
         // given
-        TravelSchedule schedule1 = TravelScheduleFixture.createTravelSchedule("당일 여행");
-        TravelAttendeeFixture.createAuthorTravelAttendee(schedule1, member1);
-        TravelAttendeeFixture.createGuestTravelAttendee(schedule1, member2, AttendeePermission.READ);
-        TravelRouteFixture.createTravelRoute(schedule1, place1WithThumb, 1);
-        TravelRouteFixture.createTravelRoute(schedule1, placeWithoutThumb, 2);
-        TravelRouteFixture.createTravelRoute(schedule1, place2WithThumb, 3);
+        TravelSchedule schedule1 = TravelScheduleFixture.createSchedule("당일 여행");
+        TravelAttendeeFixture.createAuthorAttendee(schedule1, member1);
+        TravelAttendeeFixture.createGuestAttendee(schedule1, member2, AttendeePermission.READ);
+        TravelRouteFixture.createRoute(schedule1, place1WithThumb, 1);
+        TravelRouteFixture.createRoute(schedule1, placeWithoutThumb, 2);
+        TravelRouteFixture.createRoute(schedule1, place2WithThumb, 3);
 
-        TravelSchedule schedule2 = TravelScheduleFixture.createTravelSchedule("도보 여행");
-        TravelAttendeeFixture.createAuthorTravelAttendee(schedule2, member2);
-        TravelAttendeeFixture.createGuestTravelAttendee(schedule2, member1, AttendeePermission.CHAT);
+        TravelSchedule schedule2 = TravelScheduleFixture.createSchedule("도보 여행");
+        TravelAttendeeFixture.createAuthorAttendee(schedule2, member2);
+        TravelAttendeeFixture.createGuestAttendee(schedule2, member1, AttendeePermission.CHAT);
 
-        TravelSchedule schedule3 = TravelScheduleFixture.createTravelSchedule("역사 여행");
-        TravelAttendeeFixture.createAuthorTravelAttendee(schedule3, member1);
+        TravelSchedule schedule3 = TravelScheduleFixture.createSchedule("역사 여행");
+        TravelAttendeeFixture.createAuthorAttendee(schedule3, member1);
 
         Pageable pageable = PageUtils.scheduleModalPageable(1);
         Page<TravelSchedule> schedulePage = PageUtils.createPage(Collections.emptyList(), pageable, 0);
@@ -643,12 +643,12 @@ public class TravelScheduleServiceTest {
         Member currentMember = MemberFixture.createNativeTypeMemberWithId(1L, "currentMember@email.com", defaultImage);
         Member guestMember = MemberFixture.createNativeTypeMemberWithId(2L, "guestMember@email.com", defaultImage);
 
-        TravelSchedule schedule1 = TravelScheduleFixture.createTravelSchedule("당일 여행");
-        TravelAttendee schedule1Author = TravelAttendeeFixture.createAuthorTravelAttendee(schedule1, currentMember);
-        TravelAttendeeFixture.createGuestTravelAttendee(schedule1, guestMember, AttendeePermission.READ);
-        TravelRouteFixture.createTravelRoute(schedule1, place1WithThumb, 1);
-        TravelRouteFixture.createTravelRoute(schedule1, placeWithoutThumb, 2);
-        TravelRouteFixture.createTravelRoute(schedule1, place2WithThumb, 3);
+        TravelSchedule schedule1 = TravelScheduleFixture.createSchedule("당일 여행");
+        TravelAttendee schedule1Author = TravelAttendeeFixture.createAuthorAttendee(schedule1, currentMember);
+        TravelAttendeeFixture.createGuestAttendee(schedule1, guestMember, AttendeePermission.READ);
+        TravelRouteFixture.createRoute(schedule1, place1WithThumb, 1);
+        TravelRouteFixture.createRoute(schedule1, placeWithoutThumb, 2);
+        TravelRouteFixture.createRoute(schedule1, place2WithThumb, 3);
 
         String keyword = "서울";
 
@@ -692,11 +692,11 @@ public class TravelScheduleServiceTest {
         // given
         Member currentMember = MemberFixture.createNativeTypeMemberWithId(1L, "currentMember@email.com", defaultImage);
 
-        TravelSchedule schedule1 = TravelScheduleFixture.createTravelSchedule("당일 여행");
-        TravelAttendee schedule1Author = TravelAttendeeFixture.createAuthorTravelAttendee(schedule1, currentMember);
-        TravelRouteFixture.createTravelRoute(schedule1, place1WithThumb, 1);
-        TravelRouteFixture.createTravelRoute(schedule1, placeWithoutThumb, 2);
-        TravelRouteFixture.createTravelRoute(schedule1, place2WithThumb, 3);
+        TravelSchedule schedule1 = TravelScheduleFixture.createSchedule("당일 여행");
+        TravelAttendee schedule1Author = TravelAttendeeFixture.createAuthorAttendee(schedule1, currentMember);
+        TravelRouteFixture.createRoute(schedule1, place1WithThumb, 1);
+        TravelRouteFixture.createRoute(schedule1, placeWithoutThumb, 2);
+        TravelRouteFixture.createRoute(schedule1, place2WithThumb, 3);
 
         String keyword = "서울";
 
@@ -754,15 +754,15 @@ public class TravelScheduleServiceTest {
         Member currentMember = MemberFixture.createNativeTypeMemberWithId(1L, "currentMember@email.com", defaultImage);
         Member guestMember = MemberFixture.createNativeTypeMemberWithId(2L, "guestMember@email.com", defaultImage);
 
-        TravelSchedule schedule1 = TravelScheduleFixture.createTravelSchedule("당일 여행");
-        TravelAttendee schedule1Author = TravelAttendeeFixture.createAuthorTravelAttendee(schedule1, currentMember);
-        TravelAttendeeFixture.createGuestTravelAttendee(schedule1, guestMember, AttendeePermission.READ);
-        TravelRouteFixture.createTravelRoute(schedule1, placeWithoutThumb, 1);
+        TravelSchedule schedule1 = TravelScheduleFixture.createSchedule("당일 여행");
+        TravelAttendee schedule1Author = TravelAttendeeFixture.createAuthorAttendee(schedule1, currentMember);
+        TravelAttendeeFixture.createGuestAttendee(schedule1, guestMember, AttendeePermission.READ);
+        TravelRouteFixture.createRoute(schedule1, placeWithoutThumb, 1);
 
-        TravelSchedule schedule2 = TravelScheduleFixture.createTravelSchedule("도보 여행");
-        TravelAttendee schedule2Author = TravelAttendeeFixture.createAuthorTravelAttendee(schedule2, guestMember);
-        TravelAttendee schedule2Current = TravelAttendeeFixture.createGuestTravelAttendee(schedule2, currentMember, AttendeePermission.CHAT);
-        TravelRouteFixture.createTravelRoute(schedule2, placeWithoutThumb, 1);
+        TravelSchedule schedule2 = TravelScheduleFixture.createSchedule("도보 여행");
+        TravelAttendee schedule2Author = TravelAttendeeFixture.createAuthorAttendee(schedule2, guestMember);
+        TravelAttendee schedule2Current = TravelAttendeeFixture.createGuestAttendee(schedule2, currentMember, AttendeePermission.CHAT);
+        TravelRouteFixture.createRoute(schedule2, placeWithoutThumb, 1);
 
         String keyword = "여행";
 
@@ -813,9 +813,9 @@ public class TravelScheduleServiceTest {
         Member currentMember = MemberFixture.createNativeTypeMemberWithId(1L, "currentMember@email.com", defaultImage);
         Member guestMember = MemberFixture.createNativeTypeMemberWithId(2L, "guestMember@email.com", defaultImage);
 
-        TravelSchedule schedule1 = TravelScheduleFixture.createTravelSchedule( "당일 여행");
-        TravelAttendee schedule1Author = TravelAttendeeFixture.createAuthorTravelAttendee(schedule1, currentMember);
-        TravelAttendeeFixture.createGuestTravelAttendee(schedule1, guestMember, AttendeePermission.READ);
+        TravelSchedule schedule1 = TravelScheduleFixture.createSchedule( "당일 여행");
+        TravelAttendee schedule1Author = TravelAttendeeFixture.createAuthorAttendee(schedule1, currentMember);
+        TravelAttendeeFixture.createGuestAttendee(schedule1, guestMember, AttendeePermission.READ);
 
         String keyword = "서울";
 
@@ -851,16 +851,16 @@ public class TravelScheduleServiceTest {
         Member currentMember = MemberFixture.createNativeTypeMemberWithId(1L, "currentMember@email.com", defaultImage);
         Member guestMember = MemberFixture.createNativeTypeMemberWithId(2L, "guestMember@email.com", defaultImage);
 
-        TravelSchedule schedule1 = TravelScheduleFixture.createTravelSchedule("당일 여행");
-        TravelAttendee schedule1Author = TravelAttendeeFixture.createAuthorTravelAttendee(schedule1, currentMember);
-        TravelAttendeeFixture.createGuestTravelAttendee(schedule1, guestMember, AttendeePermission.READ);
-        TravelRouteFixture.createTravelRoute(schedule1, place1WithThumb, 1);
-        TravelRouteFixture.createTravelRoute(schedule1, placeWithoutThumb, 2);
-        TravelRouteFixture.createTravelRoute(schedule1, place2WithThumb, 3);
+        TravelSchedule schedule1 = TravelScheduleFixture.createSchedule("당일 여행");
+        TravelAttendee schedule1Author = TravelAttendeeFixture.createAuthorAttendee(schedule1, currentMember);
+        TravelAttendeeFixture.createGuestAttendee(schedule1, guestMember, AttendeePermission.READ);
+        TravelRouteFixture.createRoute(schedule1, place1WithThumb, 1);
+        TravelRouteFixture.createRoute(schedule1, placeWithoutThumb, 2);
+        TravelRouteFixture.createRoute(schedule1, place2WithThumb, 3);
 
-        TravelSchedule schedule2 = TravelScheduleFixture.createTravelSchedule("도보 여행");
-        TravelAttendee schedule2Author = TravelAttendeeFixture.createAuthorTravelAttendee(schedule2, guestMember);
-        TravelAttendee schedule2Current = TravelAttendeeFixture.createGuestTravelAttendee(schedule2, currentMember, AttendeePermission.CHAT);
+        TravelSchedule schedule2 = TravelScheduleFixture.createSchedule("도보 여행");
+        TravelAttendee schedule2Author = TravelAttendeeFixture.createAuthorAttendee(schedule2, guestMember);
+        TravelAttendee schedule2Current = TravelAttendeeFixture.createGuestAttendee(schedule2, currentMember, AttendeePermission.CHAT);
 
         String keyword = "여행";
 
@@ -931,15 +931,15 @@ public class TravelScheduleServiceTest {
         Member currentMember = MemberFixture.createNativeTypeMemberWithId(1L, "currentMember@email.com", defaultImage);
         Member guestMember = MemberFixture.createNativeTypeMemberWithId(2L, "guestMember@email.com", defaultImage);
 
-        TravelSchedule schedule1 = TravelScheduleFixture.createTravelSchedule("당일 여행");
-        TravelAttendee schedule1Author = TravelAttendeeFixture.createAuthorTravelAttendee(schedule1, currentMember);
-        TravelAttendeeFixture.createGuestTravelAttendee(schedule1, guestMember, AttendeePermission.READ);
-        TravelRouteFixture.createTravelRoute(schedule1, placeWithoutThumb, 1);
+        TravelSchedule schedule1 = TravelScheduleFixture.createSchedule("당일 여행");
+        TravelAttendee schedule1Author = TravelAttendeeFixture.createAuthorAttendee(schedule1, currentMember);
+        TravelAttendeeFixture.createGuestAttendee(schedule1, guestMember, AttendeePermission.READ);
+        TravelRouteFixture.createRoute(schedule1, placeWithoutThumb, 1);
 
-        TravelSchedule schedule2 = TravelScheduleFixture.createTravelSchedule("도보 여행");
-        TravelAttendee schedule2Author = TravelAttendeeFixture.createAuthorTravelAttendee(schedule2, guestMember);
-        TravelAttendee schedule2Current = TravelAttendeeFixture.createGuestTravelAttendee(schedule2, currentMember, AttendeePermission.CHAT);
-        TravelRouteFixture.createTravelRoute(schedule2, placeWithoutThumb, 1);
+        TravelSchedule schedule2 = TravelScheduleFixture.createSchedule("도보 여행");
+        TravelAttendee schedule2Author = TravelAttendeeFixture.createAuthorAttendee(schedule2, guestMember);
+        TravelAttendee schedule2Current = TravelAttendeeFixture.createGuestAttendee(schedule2, currentMember, AttendeePermission.CHAT);
+        TravelRouteFixture.createRoute(schedule2, placeWithoutThumb, 1);
 
         String keyword = "여행";
 
@@ -990,9 +990,9 @@ public class TravelScheduleServiceTest {
         Member currentMember = MemberFixture.createNativeTypeMemberWithId(1L, "currentMember@email.com", defaultImage);
         Member guestMember = MemberFixture.createNativeTypeMemberWithId(2L, "guestMember@email.com", defaultImage);
 
-        TravelSchedule schedule1 = TravelScheduleFixture.createTravelSchedule("당일 여행");
-        TravelAttendee schedule1Author = TravelAttendeeFixture.createAuthorTravelAttendee(schedule1, currentMember);
-        TravelAttendeeFixture.createGuestTravelAttendee(schedule1, guestMember, AttendeePermission.READ);
+        TravelSchedule schedule1 = TravelScheduleFixture.createSchedule("당일 여행");
+        TravelAttendee schedule1Author = TravelAttendeeFixture.createAuthorAttendee(schedule1, currentMember);
+        TravelAttendeeFixture.createGuestAttendee(schedule1, guestMember, AttendeePermission.READ);
 
         String keyword = "여행";
 
@@ -1027,8 +1027,8 @@ public class TravelScheduleServiceTest {
     @DisplayName("일정 생성")
     void createSchedule(){
         // given
-        TravelSchedule schedule = TravelScheduleFixture.createTravelSchedule("당일 여행");
-        TravelAttendeeFixture.createAuthorTravelAttendee(schedule, member1);
+        TravelSchedule schedule = TravelScheduleFixture.createSchedule("당일 여행");
+        TravelAttendeeFixture.createAuthorAttendee(schedule, member1);
 
         ScheduleCreateRequest request = TravelScheduleFixture.createScheduleRequest(
                 "테스트",
@@ -1072,14 +1072,14 @@ public class TravelScheduleServiceTest {
     @DisplayName("일정 상세 조회")
     void getScheduleDetail(){
         // given
-        TravelSchedule schedule = TravelScheduleFixture.createTravelSchedule("당일 여행");
+        TravelSchedule schedule = TravelScheduleFixture.createSchedule("당일 여행");
 
-        TravelAttendeeFixture.createAuthorTravelAttendee(schedule, member1);
-        TravelAttendeeFixture.createGuestTravelAttendee(schedule, member2, AttendeePermission.READ);
+        TravelAttendeeFixture.createAuthorAttendee(schedule, member1);
+        TravelAttendeeFixture.createGuestAttendee(schedule, member2, AttendeePermission.READ);
 
-        TravelRouteFixture.createTravelRoute(schedule, place1WithThumb, 1);
-        TravelRouteFixture.createTravelRoute(schedule, placeWithoutThumb, 2);
-        TravelRouteFixture.createTravelRoute(schedule, place2WithThumb, 3);
+        TravelRouteFixture.createRoute(schedule, place1WithThumb, 1);
+        TravelRouteFixture.createRoute(schedule, placeWithoutThumb, 2);
+        TravelRouteFixture.createRoute(schedule, place2WithThumb, 3);
 
         List<PlaceQueryDto> places = List.of(
                 TravelPlaceFixture.createPlaceQueryDto(place1WithThumb, place1Thumb.getS3ObjectKey()),
@@ -1107,14 +1107,14 @@ public class TravelScheduleServiceTest {
     @DisplayName("일정 상세 조회 시 여행지 데이터 없는 경우")
     void getScheduleDetail_emptyResult(){
         // given
-        TravelSchedule schedule = TravelScheduleFixture.createTravelSchedule( "당일 여행");
+        TravelSchedule schedule = TravelScheduleFixture.createSchedule( "당일 여행");
 
-        TravelAttendeeFixture.createAuthorTravelAttendee(schedule, member1);
-        TravelAttendeeFixture.createGuestTravelAttendee(schedule, member2, AttendeePermission.READ);
+        TravelAttendeeFixture.createAuthorAttendee(schedule, member1);
+        TravelAttendeeFixture.createGuestAttendee(schedule, member2, AttendeePermission.READ);
 
-        TravelRouteFixture.createTravelRoute(schedule, place1WithThumb, 1);
-        TravelRouteFixture.createTravelRoute(schedule, placeWithoutThumb, 2);
-        TravelRouteFixture.createTravelRoute(schedule, place2WithThumb, 3);
+        TravelRouteFixture.createRoute(schedule, place1WithThumb, 1);
+        TravelRouteFixture.createRoute(schedule, placeWithoutThumb, 2);
+        TravelRouteFixture.createRoute(schedule, place2WithThumb, 3);
 
         Pageable pageable = PageUtils.defaultPageable(1);
 
@@ -1134,7 +1134,7 @@ public class TravelScheduleServiceTest {
 
     @Test
     @DisplayName("일정 상세 조회 시 일정을 찾을 수 없어 예외 발생")
-    void getScheduleDetail_scheduleNotFound(){
+    void getScheduleDetail_Travel_scheduleNotFound(){
         // given
         when(travelScheduleRepository.findById(any())).thenReturn(Optional.empty());
 
@@ -1153,14 +1153,14 @@ public class TravelScheduleServiceTest {
         Member authorMember = MemberFixture.createNativeTypeMemberWithId(1L, "authorMember@email.com", defaultImage);
         Member guestMember = MemberFixture.createNativeTypeMemberWithId(2L, "guestMember@email.com", defaultImage);
 
-        TravelSchedule schedule = TravelScheduleFixture.createTravelScheduleWithId(1L, "당일 여행");
+        TravelSchedule schedule = TravelScheduleFixture.createScheduleWithId(1L, "당일 여행");
 
-        TravelAttendeeFixture.createAuthorTravelAttendee(schedule, authorMember);
-        TravelAttendeeFixture.createGuestTravelAttendee(schedule, guestMember, AttendeePermission.READ);
+        TravelAttendeeFixture.createAuthorAttendee(schedule, authorMember);
+        TravelAttendeeFixture.createGuestAttendee(schedule, guestMember, AttendeePermission.READ);
 
-        TravelRouteFixture.createTravelRoute(schedule, place1WithThumb, 1);
-        TravelRouteFixture.createTravelRoute(schedule, placeWithoutThumb, 2);
-        TravelRouteFixture.createTravelRoute(schedule, place2WithThumb, 3);
+        TravelRouteFixture.createRoute(schedule, place1WithThumb, 1);
+        TravelRouteFixture.createRoute(schedule, placeWithoutThumb, 2);
+        TravelRouteFixture.createRoute(schedule, place2WithThumb, 3);
 
         RouteRequest routeRequest1 = TravelRouteFixture.createRouteRequest(1, place2WithThumb.getPlaceId());
         RouteRequest routeRequest2 = TravelRouteFixture.createRouteRequest(2, placeWithoutThumb.getPlaceId());
@@ -1184,7 +1184,7 @@ public class TravelScheduleServiceTest {
         assertThat(schedule.getScheduleName()).isEqualTo(request.getScheduleName());
         assertThat(schedule.getStartDate()).isEqualTo(request.getStartDate());
         assertThat(schedule.getEndDate()).isEqualTo(request.getEndDate());
-        verify(travelRouteService).updateTravelRouteInSchedule(eq(schedule), eq(request.getTravelRoutes()));
+        verify(travelRouteService).updateRouteInSchedule(eq(schedule), eq(request.getTravelRoutes()));
 
     }
 
@@ -1194,14 +1194,14 @@ public class TravelScheduleServiceTest {
         Member authorMember = MemberFixture.createNativeTypeMemberWithId(1L, "authorMember@email.com", defaultImage);
         Member guestMember = MemberFixture.createNativeTypeMemberWithId(2L, "guestMember@email.com", defaultImage);
 
-        TravelSchedule schedule = TravelScheduleFixture.createTravelScheduleWithId(1L, "당일 여행");
+        TravelSchedule schedule = TravelScheduleFixture.createScheduleWithId(1L, "당일 여행");
 
-        TravelAttendeeFixture.createAuthorTravelAttendee(schedule, authorMember);
-        TravelAttendeeFixture.createGuestTravelAttendee(schedule, guestMember, AttendeePermission.READ);
+        TravelAttendeeFixture.createAuthorAttendee(schedule, authorMember);
+        TravelAttendeeFixture.createGuestAttendee(schedule, guestMember, AttendeePermission.READ);
 
-        TravelRouteFixture.createTravelRoute(schedule, place1WithThumb, 1);
-        TravelRouteFixture.createTravelRoute(schedule, placeWithoutThumb, 2);
-        TravelRouteFixture.createTravelRoute(schedule, place2WithThumb, 3);
+        TravelRouteFixture.createRoute(schedule, place1WithThumb, 1);
+        TravelRouteFixture.createRoute(schedule, placeWithoutThumb, 2);
+        TravelRouteFixture.createRoute(schedule, place2WithThumb, 3);
 
         ScheduleUpdateRequest request = TravelScheduleFixture.createUpdateScheduleRequest(
                 "수정 테스트",
@@ -1219,20 +1219,20 @@ public class TravelScheduleServiceTest {
         assertThat(schedule.getScheduleName()).isEqualTo(request.getScheduleName());
         assertThat(schedule.getStartDate()).isEqualTo(request.getStartDate());
         assertThat(schedule.getEndDate()).isEqualTo(request.getEndDate());
-        verify(travelRouteService).updateTravelRouteInSchedule(eq(schedule), eq(request.getTravelRoutes()));
+        verify(travelRouteService).updateRouteInSchedule(eq(schedule), eq(request.getTravelRoutes()));
     }
 
     @Test
     @DisplayName("일정 수정 중 여행 루트 삭제에서 기존에 저장된 여행 루트가 없을 경우")
-    void updateSchedule_noSavedTravelRouteList(){
+    void updateTravelSchedule_noSavedRouteList(){
         // given
         Member authorMember = MemberFixture.createNativeTypeMemberWithId(1L, "authorMember@email.com", defaultImage);
         Member guestMember = MemberFixture.createNativeTypeMemberWithId(2L, "guestMember@email.com", defaultImage);
 
-        TravelSchedule schedule = TravelScheduleFixture.createTravelScheduleWithId(1L, "당일 여행");
+        TravelSchedule schedule = TravelScheduleFixture.createScheduleWithId(1L, "당일 여행");
 
-        TravelAttendeeFixture.createAuthorTravelAttendee(schedule, authorMember);
-        TravelAttendeeFixture.createGuestTravelAttendee(schedule, guestMember, AttendeePermission.READ);
+        TravelAttendeeFixture.createAuthorAttendee(schedule, authorMember);
+        TravelAttendeeFixture.createGuestAttendee(schedule, guestMember, AttendeePermission.READ);
 
         RouteRequest routeRequest1 = TravelRouteFixture.createRouteRequest(1, place1WithThumb.getPlaceId());
         RouteRequest routeRequest2 = TravelRouteFixture.createRouteRequest(2, place2WithThumb.getPlaceId());
@@ -1254,13 +1254,13 @@ public class TravelScheduleServiceTest {
         // then
         assertThat(schedule.getScheduleName()).isEqualTo(request.getScheduleName());
         assertThat(schedule.getStartDate()).isEqualTo(request.getStartDate());
-        verify(travelRouteService).updateTravelRouteInSchedule(eq(schedule), eq(request.getTravelRoutes()));
+        verify(travelRouteService).updateRouteInSchedule(eq(schedule), eq(request.getTravelRoutes()));
     }
 
 
     @Test
     @DisplayName("일정 수정 시 일정 데이터 없어 예외 발생")
-    void updateSchedule_scheduleNotFound(){
+    void updateSchedule_Travel_scheduleNotFound(){
         // given
         RouteRequest routeRequest1 = TravelRouteFixture.createRouteRequest(1, place1WithThumb.getPlaceId());
         RouteRequest routeRequest2 = TravelRouteFixture.createRouteRequest(2, place2WithThumb.getPlaceId());
@@ -1286,15 +1286,15 @@ public class TravelScheduleServiceTest {
 
     @Test
     @DisplayName("일정 수정 시 요청 회원에게 접근 권한이 없어 예외 발생")
-    void updateSchedule_forbiddenSchedule(){
+    void updateSchedule_forbiddenTravelSchedule(){
         // given
-        TravelSchedule schedule = TravelScheduleFixture.createTravelScheduleWithId(1L, "당일 여행");
+        TravelSchedule schedule = TravelScheduleFixture.createScheduleWithId(1L, "당일 여행");
 
-        TravelAttendeeFixture.createAuthorTravelAttendee(schedule, member1);
+        TravelAttendeeFixture.createAuthorAttendee(schedule, member1);
 
-        TravelRouteFixture.createTravelRoute(schedule, place1WithThumb, 1);
-        TravelRouteFixture.createTravelRoute(schedule, placeWithoutThumb, 2);
-        TravelRouteFixture.createTravelRoute(schedule, place2WithThumb, 3);
+        TravelRouteFixture.createRoute(schedule, place1WithThumb, 1);
+        TravelRouteFixture.createRoute(schedule, placeWithoutThumb, 2);
+        TravelRouteFixture.createRoute(schedule, place2WithThumb, 3);
 
         RouteRequest routeRequest1 = TravelRouteFixture.createRouteRequest(1, place1WithThumb.getPlaceId());
         RouteRequest routeRequest2 = TravelRouteFixture.createRouteRequest(2, place2WithThumb.getPlaceId());
@@ -1325,14 +1325,14 @@ public class TravelScheduleServiceTest {
         Member authorMember = MemberFixture.createNativeTypeMemberWithId(1L, "authorMember@email.com", defaultImage);
         Member guestMember = MemberFixture.createNativeTypeMemberWithId(2L, "guestMember@email.com", defaultImage);
 
-        TravelSchedule schedule = TravelScheduleFixture.createTravelScheduleWithId(1L, "당일 여행");
+        TravelSchedule schedule = TravelScheduleFixture.createScheduleWithId(1L, "당일 여행");
 
-        TravelAttendeeFixture.createAuthorTravelAttendee(schedule, authorMember);
-        TravelAttendeeFixture.createGuestTravelAttendee(schedule, guestMember, AttendeePermission.READ);
+        TravelAttendeeFixture.createAuthorAttendee(schedule, authorMember);
+        TravelAttendeeFixture.createGuestAttendee(schedule, guestMember, AttendeePermission.READ);
 
-        TravelRouteFixture.createTravelRoute(schedule, place1WithThumb, 1);
-        TravelRouteFixture.createTravelRoute(schedule, placeWithoutThumb, 2);
-        TravelRouteFixture.createTravelRoute(schedule, place2WithThumb, 3);
+        TravelRouteFixture.createRoute(schedule, place1WithThumb, 1);
+        TravelRouteFixture.createRoute(schedule, placeWithoutThumb, 2);
+        TravelRouteFixture.createRoute(schedule, place2WithThumb, 3);
 
         RouteRequest routeRequest1 = TravelRouteFixture.createRouteRequest(1, place1WithThumb.getPlaceId());
         RouteRequest routeRequest2 = TravelRouteFixture.createRouteRequest(2, place2WithThumb.getPlaceId());
@@ -1361,14 +1361,14 @@ public class TravelScheduleServiceTest {
     @DisplayName("일정 삭제")
     void deleteSchedule(){
         // given
-        TravelSchedule schedule = TravelScheduleFixture.createTravelScheduleWithId(1L, "당일 여행");
+        TravelSchedule schedule = TravelScheduleFixture.createScheduleWithId(1L, "당일 여행");
 
-        TravelAttendee author = TravelAttendeeFixture.createAuthorTravelAttendee(schedule, member1);
-        TravelAttendeeFixture.createGuestTravelAttendee(schedule, member2, AttendeePermission.READ);
+        TravelAttendee author = TravelAttendeeFixture.createAuthorAttendee(schedule, member1);
+        TravelAttendeeFixture.createGuestAttendee(schedule, member2, AttendeePermission.READ);
 
-        TravelRouteFixture.createTravelRoute(schedule, place1WithThumb, 1);
-        TravelRouteFixture.createTravelRoute(schedule, placeWithoutThumb, 2);
-        TravelRouteFixture.createTravelRoute(schedule, place2WithThumb, 3);
+        TravelRouteFixture.createRoute(schedule, place1WithThumb, 1);
+        TravelRouteFixture.createRoute(schedule, placeWithoutThumb, 2);
+        TravelRouteFixture.createRoute(schedule, place2WithThumb, 3);
 
         ChatMessage message1 = ChatMessageFixture.createChatMessage(1L, 1L, "hello1");
         ChatMessage message2 = ChatMessageFixture.createChatMessage(1L, 1L, "hello2");
@@ -1390,14 +1390,14 @@ public class TravelScheduleServiceTest {
     @DisplayName("일정 삭제 시 채팅 메시지 없는 경우")
     void deleteSchedule_noChatMessageData(){
         // given
-        TravelSchedule schedule = TravelScheduleFixture.createTravelScheduleWithId(1L, "당일 여행");
+        TravelSchedule schedule = TravelScheduleFixture.createScheduleWithId(1L, "당일 여행");
 
-        TravelAttendee author = TravelAttendeeFixture.createAuthorTravelAttendee(schedule, member1);
-        TravelAttendeeFixture.createGuestTravelAttendee(schedule, member2, AttendeePermission.READ);
+        TravelAttendee author = TravelAttendeeFixture.createAuthorAttendee(schedule, member1);
+        TravelAttendeeFixture.createGuestAttendee(schedule, member2, AttendeePermission.READ);
 
-        TravelRouteFixture.createTravelRoute(schedule, place1WithThumb, 1);
-        TravelRouteFixture.createTravelRoute(schedule, placeWithoutThumb, 2);
-        TravelRouteFixture.createTravelRoute(schedule, place2WithThumb, 3);
+        TravelRouteFixture.createRoute(schedule, place1WithThumb, 1);
+        TravelRouteFixture.createRoute(schedule, placeWithoutThumb, 2);
+        TravelRouteFixture.createRoute(schedule, place2WithThumb, 3);
 
         when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_MemberId(anyLong(), anyLong()))
                 .thenReturn(Optional.of(author));
@@ -1412,16 +1412,16 @@ public class TravelScheduleServiceTest {
 
     @Test
     @DisplayName("일정 삭제 시 작성자가 아닌 회원의 삭제 요청으로 인해 예외 발생")
-    void deleteSchedule_notAuthor_forbiddenSchedule(){
+    void deleteSchedule_notAuthor_forbiddenTravelSchedule(){
         // given
-        TravelSchedule schedule = TravelScheduleFixture.createTravelScheduleWithId(1L, "당일 여행");
+        TravelSchedule schedule = TravelScheduleFixture.createScheduleWithId(1L, "당일 여행");
 
-        TravelAttendeeFixture.createAuthorTravelAttendee(schedule, member1);
-        TravelAttendee guest = TravelAttendeeFixture.createGuestTravelAttendee(schedule, member2, AttendeePermission.READ);
+        TravelAttendeeFixture.createAuthorAttendee(schedule, member1);
+        TravelAttendee guest = TravelAttendeeFixture.createGuestAttendee(schedule, member2, AttendeePermission.READ);
 
-        TravelRouteFixture.createTravelRoute(schedule, place1WithThumb, 1);
-        TravelRouteFixture.createTravelRoute(schedule, placeWithoutThumb, 2);
-        TravelRouteFixture.createTravelRoute(schedule, place2WithThumb, 3);
+        TravelRouteFixture.createRoute(schedule, place1WithThumb, 1);
+        TravelRouteFixture.createRoute(schedule, placeWithoutThumb, 2);
+        TravelRouteFixture.createRoute(schedule, place2WithThumb, 3);
 
         when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_MemberId(anyLong(), anyLong()))
                 .thenReturn(Optional.of(guest));

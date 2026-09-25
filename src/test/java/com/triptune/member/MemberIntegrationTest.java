@@ -821,17 +821,17 @@ public class MemberIntegrationTest {
         ));
         Long memberId = member.getMemberId();
 
-        TravelSchedule schedule1 = travelScheduleRepository.save(TravelScheduleFixture.createTravelSchedule("테스트1"));
-        TravelSchedule schedule2 = travelScheduleRepository.save(TravelScheduleFixture.createTravelSchedule("테스트2"));
+        TravelSchedule schedule1 = travelScheduleRepository.save(TravelScheduleFixture.createSchedule("테스트1"));
+        TravelSchedule schedule2 = travelScheduleRepository.save(TravelScheduleFixture.createSchedule("테스트2"));
 
         travelRouteRepository.saveAll(List.of(
-                TravelRouteFixture.createTravelRoute(schedule1, place1, 1),
-                TravelRouteFixture.createTravelRoute(schedule1, place2, 2)
+                TravelRouteFixture.createRoute(schedule1, place1, 1),
+                TravelRouteFixture.createRoute(schedule1, place2, 2)
         ));
 
         travelAttendeeRepository.saveAll(List.of(
-                TravelAttendeeFixture.createAuthorTravelAttendee(schedule1, member),
-                TravelAttendeeFixture.createGuestTravelAttendee(schedule2, member, AttendeePermission.READ)
+                TravelAttendeeFixture.createAuthorAttendee(schedule1, member),
+                TravelAttendeeFixture.createGuestAttendee(schedule2, member, AttendeePermission.READ)
         ));
 
         chatMessageRepository.saveAll(List.of(
@@ -911,15 +911,15 @@ public class MemberIntegrationTest {
         ));
         Long memberId = member.getMemberId();
 
-        TravelSchedule schedule = travelScheduleRepository.save(TravelScheduleFixture.createTravelSchedule("테스트1"));
+        TravelSchedule schedule = travelScheduleRepository.save(TravelScheduleFixture.createSchedule("테스트1"));
 
         travelRouteRepository.saveAll(List.of(
-                TravelRouteFixture.createTravelRoute(schedule, place1, 1),
-                TravelRouteFixture.createTravelRoute(schedule, place2, 2)
+                TravelRouteFixture.createRoute(schedule, place1, 1),
+                TravelRouteFixture.createRoute(schedule, place2, 2)
         ));
 
         travelAttendeeRepository.save(
-                TravelAttendeeFixture.createAuthorTravelAttendee(schedule, member)
+                TravelAttendeeFixture.createAuthorAttendee(schedule, member)
         );
 
         chatMessageRepository.saveAll(List.of(
@@ -997,15 +997,15 @@ public class MemberIntegrationTest {
         ));
         Long memberId = member.getMemberId();
 
-        TravelSchedule schedule = travelScheduleRepository.save(TravelScheduleFixture.createTravelSchedule("테스트1"));
+        TravelSchedule schedule = travelScheduleRepository.save(TravelScheduleFixture.createSchedule("테스트1"));
 
         travelRouteRepository.saveAll(List.of(
-                TravelRouteFixture.createTravelRoute(schedule, place1, 1),
-                TravelRouteFixture.createTravelRoute(schedule, place2, 2)
+                TravelRouteFixture.createRoute(schedule, place1, 1),
+                TravelRouteFixture.createRoute(schedule, place2, 2)
         ));
 
         travelAttendeeRepository.save(
-                TravelAttendeeFixture.createGuestTravelAttendee(schedule, member, AttendeePermission.READ)
+                TravelAttendeeFixture.createGuestAttendee(schedule, member, AttendeePermission.READ)
         );
 
         chatMessageRepository.saveAll(List.of(
@@ -1095,17 +1095,17 @@ public class MemberIntegrationTest {
                 SocialMemberFixture.createSocialMember(member, SocialType.NAVER, "naver")
         ));
 
-        TravelSchedule schedule1 = travelScheduleRepository.save(TravelScheduleFixture.createTravelSchedule("테스트1"));
-        TravelSchedule schedule2 = travelScheduleRepository.save(TravelScheduleFixture.createTravelSchedule("테스트2"));
+        TravelSchedule schedule1 = travelScheduleRepository.save(TravelScheduleFixture.createSchedule("테스트1"));
+        TravelSchedule schedule2 = travelScheduleRepository.save(TravelScheduleFixture.createSchedule("테스트2"));
 
         travelRouteRepository.saveAll(List.of(
-                TravelRouteFixture.createTravelRoute(schedule1, place1, 1),
-                TravelRouteFixture.createTravelRoute(schedule1, place2, 2)
+                TravelRouteFixture.createRoute(schedule1, place1, 1),
+                TravelRouteFixture.createRoute(schedule1, place2, 2)
         ));
 
         travelAttendeeRepository.saveAll(List.of(
-                TravelAttendeeFixture.createAuthorTravelAttendee(schedule1, member),
-                TravelAttendeeFixture.createGuestTravelAttendee(schedule2, member, AttendeePermission.READ)
+                TravelAttendeeFixture.createAuthorAttendee(schedule1, member),
+                TravelAttendeeFixture.createGuestAttendee(schedule2, member, AttendeePermission.READ)
         ));
 
         chatMessageRepository.saveAll(List.of(

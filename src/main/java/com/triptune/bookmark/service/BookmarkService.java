@@ -29,8 +29,8 @@ public class BookmarkService {
             throw new DataExistException(ErrorCode.ALREADY_EXISTED_BOOKMARK);
         }
 
-        Member member = getMemberByMemberId(memberId);
-        TravelPlace travelPlace = findTravelPlaceByPlaceId(bookmarkRequest.getPlaceId());
+        Member member = getMember(memberId);
+        TravelPlace travelPlace = getPlace(bookmarkRequest.getPlaceId());
 
         Bookmark bookmark = Bookmark.createBookmark(member, travelPlace);
         bookmarkRepository.save(bookmark);
@@ -39,14 +39,9 @@ public class BookmarkService {
     }
 
 
-    private Member getMemberByMemberId(Long memberId){
+    private Member getMember(Long memberId){
         return memberRepository.findById(memberId)
                 .orElseThrow(() -> new DataNotFoundException(ErrorCode.MEMBER_NOT_FOUND));
-    }
-
-    private TravelPlace findTravelPlaceByPlaceId(Long placeId){
-        return travelPlaceRepository.findById(placeId)
-                .orElseThrow(() -> new DataNotFoundException(ErrorCode.PLACE_NOT_FOUND));
     }
 
     @Transactional
@@ -57,9 +52,15 @@ public class BookmarkService {
 
         bookmarkRepository.deleteByMember_MemberIdAndTravelPlace_PlaceId(memberId, placeId);
 
-        TravelPlace travelPlace = findTravelPlaceByPlaceId(placeId);
+        TravelPlace travelPlace = getPlace(placeId);
         travelPlace.decreaseBookmarkCnt();
     }
+
+    private TravelPlace getPlace(Long placeId){
+        return travelPlaceRepository.findById(placeId)
+                .orElseThrow(() -> new DataNotFoundException(ErrorCode.PLACE_NOT_FOUND));
+    }
+
 
     private boolean isExistBookmark(Long memberId, Long placeId){
         return bookmarkRepository.existsByMember_MemberIdAndTravelPlace_PlaceId(memberId, placeId);
