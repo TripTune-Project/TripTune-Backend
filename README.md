@@ -1,4 +1,4 @@
-# TripTune - Backend
+# 🌱 TripTune - Backend
 
 TripTune-Backend는 여러 사용자가 함께 여행계획을 작성하고 여행지 정보를 얻을 수 있도록 지원하는 웹 서비스의 백엔드입니다.
 
