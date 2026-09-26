@@ -121,7 +121,6 @@ public class TravelScheduleRepositoryCustomImpl implements TravelScheduleReposit
     @Override
     public Page<ScheduleInfoQueryDto> searchTravelSchedules(Pageable pageable, String keyword, Long memberId) {
         QTravelAttendee authorAttendee = new QTravelAttendee("authorAttendee");
-        String orderCaseString = accuracyQuery();
 
         List<ScheduleInfoQueryDto> content = jpaQueryFactory
                 .select(selectScheduleInfo(authorAttendee))

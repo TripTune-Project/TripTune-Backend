@@ -13,13 +13,20 @@ import java.util.Optional;
 
 @Repository
 public interface TravelAttendeeRepository extends JpaRepository<TravelAttendee, Long>, TravelAttendeeRepositoryCustom {
-    List<TravelAttendee> findAllByTravelSchedule_ScheduleId(@Param("scheduleId") Long scheduleId);
     boolean existsByTravelSchedule_ScheduleIdAndMember_MemberId(@Param("scheduleId") Long scheduleId, @Param("memberId") Long memberId);
     Optional<TravelAttendee> findByTravelSchedule_ScheduleIdAndMember_MemberId(@Param("scheduleId") Long scheduleId, @Param("memberId") Long memberId);
     boolean existsByTravelSchedule_ScheduleIdAndMember_MemberIdAndRole(@Param("scheduleId") Long scheduleId, @Param("memberId") Long memberId, @Param("role") AttendeeRole role);
     int countByTravelSchedule_ScheduleId(@Param("scheduleId") Long scheduleId);
     Optional<TravelAttendee> findByTravelSchedule_ScheduleIdAndAttendeeId(@Param("scheduleId") Long scheduleId, @Param("attendeeId") Long attendeeId);
-    List<TravelAttendee> findAllByMember_MemberId(@Param("memberId") Long memberId);
+
+
+    @Modifying
+    @Query("select a from TravelAttendee a where a.travelSchedule.scheduleId = :scheduleId")
+    List<TravelAttendee> findAllByScheduleId(@Param("scheduleId") Long scheduleId);
+
+    @Modifying
+    @Query("select a from TravelAttendee a where a.member.memberId = :memberId")
+    List<TravelAttendee> findAllByMemberId(@Param("memberId") Long memberId);
 
     @Modifying
     @Query("delete from TravelAttendee a where a.travelSchedule.scheduleId = :scheduleId")

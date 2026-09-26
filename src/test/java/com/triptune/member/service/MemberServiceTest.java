@@ -1066,7 +1066,7 @@ public class MemberServiceTest {
 
         when(memberRepository.findByIdWithSocialMembers(anyLong())).thenReturn(Optional.of(member));
         when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
-        when(travelAttendeeRepository.findAllByMember_MemberId(anyLong())).thenReturn(attendees);
+        when(travelAttendeeRepository.findAllByMemberId(anyLong())).thenReturn(attendees);
 
         // when
         assertDoesNotThrow(() -> memberService.deactivateMember(1L, accessToken, request));
@@ -1099,7 +1099,7 @@ public class MemberServiceTest {
 
         when(memberRepository.findByIdWithSocialMembers(anyLong())).thenReturn(Optional.of(member));
         when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
-        when(travelAttendeeRepository.findAllByMember_MemberId(anyLong())).thenReturn(attendees);
+        when(travelAttendeeRepository.findAllByMemberId(anyLong())).thenReturn(attendees);
 
         // when
         assertDoesNotThrow(
@@ -1134,7 +1134,7 @@ public class MemberServiceTest {
 
         when(memberRepository.findByIdWithSocialMembers(anyLong())).thenReturn(Optional.of(member));
         when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
-        when(travelAttendeeRepository.findAllByMember_MemberId(anyLong())).thenReturn(attendees);
+        when(travelAttendeeRepository.findAllByMemberId(anyLong())).thenReturn(attendees);
 
         // when
         assertDoesNotThrow(
@@ -1170,7 +1170,7 @@ public class MemberServiceTest {
 
         when(memberRepository.findByIdWithSocialMembers(anyLong())).thenReturn(Optional.of(member));
         when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
-        when(travelAttendeeRepository.findAllByMember_MemberId(anyLong())).thenReturn(attendees);
+        when(travelAttendeeRepository.findAllByMemberId(anyLong())).thenReturn(attendees);
 
         // when
         assertDoesNotThrow(
@@ -1197,7 +1197,7 @@ public class MemberServiceTest {
 
         when(memberRepository.findByIdWithSocialMembers(anyLong())).thenReturn(Optional.of(member));
         when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
-        when(travelAttendeeRepository.findAllByMember_MemberId(anyLong())).thenReturn(new ArrayList<>());
+        when(travelAttendeeRepository.findAllByMemberId(anyLong())).thenReturn(new ArrayList<>());
 
         // when
         assertDoesNotThrow(

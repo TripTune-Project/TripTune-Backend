@@ -25,8 +25,6 @@ import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -40,7 +38,6 @@ import java.util.Optional;
 
 import static com.triptune.schedule.enums.AttendeePermission.*;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.Matchers.containsString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -169,7 +166,7 @@ public class TravelAttendeeIntegrationTest {
         em.flush();
         em.clear();
 
-        List<TravelAttendee> travelAttendees = travelAttendeeRepository.findAllByTravelSchedule_ScheduleId(schedule1.getScheduleId());
+        List<TravelAttendee> travelAttendees = travelAttendeeRepository.findAllByScheduleId(schedule1.getScheduleId());
         assertThat(travelAttendees).hasSize(3);
 
         TravelAttendee createdAttendee = travelAttendees.stream()
