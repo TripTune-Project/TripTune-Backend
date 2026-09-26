@@ -8,7 +8,8 @@ TripTune-Backend는 여러 사용자가 함께 여행계획을 작성하고 여�
 - **Framework**: Spring Boot 3.1.11
 - **Library**: Spring Data JPA, QueryDSL, Actuator
 - **Database**: MySQL, Redis, MongoDB
-- **Testing**: JUnit, K6
+- **Testing**: JUnit, Mockito
+- **Load Testing**: K6
 - **Monitoring**: Prometheus, Grafana
 - **Infra**: AWS EC2, S3, Docker, GitHub Actions
 
