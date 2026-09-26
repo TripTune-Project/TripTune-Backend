@@ -81,10 +81,12 @@ TripTune-Backend
 ---
 ## 🏗️ 서비스 아키텍처
 
-
+<img width="1451" height="1246" alt="Image" src="https://github.com/user-attachments/assets/f83fd861-4741-487b-9780-a1088f1320e7" />
 
 ---
 ## 📊 ERD 설계
+
+<img width="2432" height="1343" alt="Image" src="https://github.com/user-attachments/assets/e326ef9b-1e1d-4913-819e-785395dde958" />
 
 ---
 ## 🔐 환경 변수
@@ -154,3 +156,5 @@ gradlew.bat bootRun --args="--spring.profiles.active=prod"
 
 ---
 ## 🔄 CI/CD 파이프라인
+
+<img width="1462" height="618" alt="Image" src="https://github.com/user-attachments/assets/b5dc11f2-296e-4202-97ed-c44c5e208cb0" />
