@@ -157,7 +157,7 @@ public class BookmarkServiceTest  {
         assertDoesNotThrow(() -> bookmarkService.deleteBookmark(1L, 2L));
 
         // then
-        verify(bookmarkRepository, times(1)).deleteByMember_MemberIdAndTravelPlace_PlaceId(anyLong(), anyLong());
+        verify(bookmarkRepository, times(1)).deleteByMemberIdAndPlaceId(anyLong(), anyLong());
         assertThat(place2.getBookmarkCnt()).isEqualTo(beforeBookmarkCnt-1);
     }
 

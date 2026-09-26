@@ -79,7 +79,7 @@ public class BookmarkRepositoryCustomImpl implements BookmarkRepositoryCustom {
         return totalElements.intValue();
     }
 
-    public OrderSpecifier<?>[] getOrderBySortType(BookmarkSortType sortType){
+    private OrderSpecifier<?>[] getOrderBySortType(BookmarkSortType sortType){
         return switch (sortType) {
             case NEWEST -> new OrderSpecifier[] {
                     bookmark.createdAt.desc(),
