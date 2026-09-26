@@ -133,8 +133,8 @@ public class TravelAttendeeRepositoryTest {
         // then
         assertThat(response.get(0).getTravelSchedule().getScheduleId()).isEqualTo(schedule1.getScheduleId());
         assertThat(response.get(0).getAttendeeId()).isEqualTo(attendee1.getAttendeeId());
-        assertThat(response.get(1).getTravelSchedule().getScheduleId()).isEqualTo(schedule2.getScheduleId());
-        assertThat(response.get(1).getRole()).isEqualTo(AttendeeRole.GUEST);
+        assertThat(response.get(1).getTravelSchedule().getScheduleId()).isEqualTo(schedule1.getScheduleId());
+        assertThat(response.get(1).getAttendeeId()).isEqualTo(attendee2.getAttendeeId());
     }
 
     @Test
