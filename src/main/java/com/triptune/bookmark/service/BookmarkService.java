@@ -50,7 +50,7 @@ public class BookmarkService {
             throw new DataNotFoundException(ErrorCode.BOOKMARK_NOT_FOUND);
         }
 
-        bookmarkRepository.deleteByMember_MemberIdAndTravelPlace_PlaceId(memberId, placeId);
+        bookmarkRepository.deleteByMemberIdAndPlaceId(memberId, placeId);
 
         TravelPlace travelPlace = getPlace(placeId);
         travelPlace.decreaseBookmarkCnt();

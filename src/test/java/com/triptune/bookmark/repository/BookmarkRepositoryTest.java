@@ -23,6 +23,7 @@ import com.triptune.travel.fixture.TravelImageFixture;
 import com.triptune.travel.fixture.TravelPlaceFixture;
 import com.triptune.travel.repository.TravelImageRepository;
 import com.triptune.travel.repository.TravelPlaceRepository;
+import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -33,6 +34,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.ActiveProfiles;
 
+import java.awt.print.Book;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -52,6 +55,7 @@ class BookmarkRepositoryTest {
     @Autowired private ApiContentTypeRepository apiContentTypeRepository;
     @Autowired private ProfileImageRepository profileImageRepository;
     @Autowired private TravelImageRepository travelImageRepository;
+    @Autowired private EntityManager em;
 
     private Member member;
 
@@ -121,14 +125,25 @@ class BookmarkRepositoryTest {
 
     @Test
     @DisplayName("북마크로 등록된 여행지 데이터 조회 - 최신순")
-    void getBookmarkTravelPlaces_sortNewest() throws Exception{
+    void getBookmarkTravelPlaces_sortNewest() {
         // given
         Pageable pageable = PageUtils.bookmarkPageable(1);
-        bookmarkRepository.save(BookmarkFixture.createBookmark(member, place1WithThumb));
-        Thread.sleep(10);
-        bookmarkRepository.save(BookmarkFixture.createBookmark(member, place2WithThumb));
-        Thread.sleep(10);
-        bookmarkRepository.save(BookmarkFixture.createBookmark(member, place3WithoutThumb));
+
+        bookmarkRepository.save(BookmarkFixture.createBookmark(
+                member,
+                place1WithThumb,
+                LocalDateTime.now().minusDays(3)
+        ));
+        bookmarkRepository.save(BookmarkFixture.createBookmark(
+                member,
+                place2WithThumb,
+                LocalDateTime.now().minusDays(2)
+        ));
+        bookmarkRepository.save(BookmarkFixture.createBookmark(
+                member,
+                place3WithoutThumb,
+                LocalDateTime.now()
+        ));
 
         // when
         Page<PlaceBookmarkQueryDto> response = bookmarkRepository.findSortedMemberBookmarks(
@@ -185,5 +200,40 @@ class BookmarkRepositoryTest {
         assertThat(response.getContent()).isEmpty();
     }
 
+
+    @Test
+    @DisplayName("사용자 id와 여행지 id 기준 북마크 삭제")
+    void deleteByMemberIdAndPlaceId() {
+        // given
+        Bookmark bookmark = bookmarkRepository.save(BookmarkFixture.createBookmark(member, place1WithThumb));
+
+        // when
+        bookmarkRepository.deleteByMemberIdAndPlaceId(member.getMemberId(), place1WithThumb.getPlaceId());
+
+        // then
+        em.flush();
+        em.clear();
+
+        assertThat(bookmarkRepository.findById(bookmark.getBookmarkId()))
+                .isEmpty();
+    }
+
+    @Test
+    @DisplayName("사용자 id 기준 북마크 전체 삭제")
+    void deleteAllByMemberId() {
+        // given
+        bookmarkRepository.save(BookmarkFixture.createBookmark(member, place1WithThumb));
+        bookmarkRepository.save(BookmarkFixture.createBookmark(member, place2WithThumb));
+        bookmarkRepository.save(BookmarkFixture.createBookmark(member, place3WithoutThumb));
+
+        // when
+        bookmarkRepository.deleteAllByMemberId(member.getMemberId());
+
+        // then
+        em.flush();
+        em.clear();
+
+        assertThat(bookmarkRepository.findAll()).isEmpty();
+    }
 
 }

@@ -255,7 +255,7 @@ public class MemberService {
         }
 
         // 5. 북마크 삭제
-        bookmarkRepository.deleteAllByMember_MemberId(memberId);
+        bookmarkRepository.deleteAllByMemberId(memberId);
 
         // 6. 익명 데이터로 변경 (닉네임, 아이디, 비밀번호, 리프레시 토큰, 이메일)
         member.deactivate();
