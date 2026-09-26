@@ -6,6 +6,7 @@ import com.triptune.member.repository.MemberRepository;
 import com.triptune.profile.entity.ProfileImage;
 import com.triptune.profile.fixture.ProfileImageFixture;
 import com.triptune.profile.repository.ProfileImageRepository;
+import com.triptune.schedule.enums.AttendeeRole;
 import com.triptune.schedule.fixture.TravelAttendeeFixture;
 import com.triptune.schedule.fixture.TravelScheduleFixture;
 import com.triptune.schedule.entity.TravelAttendee;
@@ -120,6 +121,41 @@ public class TravelAttendeeRepositoryTest {
     }
 
     @Test
+    @DisplayName("일정 id 기준으로 참석자들 조회")
+    void findAllByScheduleId(){
+        // given
+        TravelAttendee attendee1 = travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorAttendee(schedule1, member1));
+        TravelAttendee attendee2 = travelAttendeeRepository.save(TravelAttendeeFixture.createGuestAttendee(schedule1, member2, READ));
+
+        // when
+        List<TravelAttendee> response = travelAttendeeRepository.findAllByScheduleId(schedule1.getScheduleId());
+
+        // then
+        assertThat(response.get(0).getTravelSchedule().getScheduleId()).isEqualTo(schedule1.getScheduleId());
+        assertThat(response.get(0).getAttendeeId()).isEqualTo(attendee1.getAttendeeId());
+        assertThat(response.get(1).getTravelSchedule().getScheduleId()).isEqualTo(schedule1.getScheduleId());
+        assertThat(response.get(1).getAttendeeId()).isEqualTo(attendee2.getAttendeeId());
+    }
+
+    @Test
+    @DisplayName("사용자 id 기준으로 참석자들 조회")
+    void findAllByMemberId(){
+        // given
+        TravelAttendee attendee1 = travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorAttendee(schedule1, member1));
+        TravelAttendee attendee2 = travelAttendeeRepository.save(TravelAttendeeFixture.createGuestAttendee(schedule2, member1, READ));
+
+        // when
+        List<TravelAttendee> response = travelAttendeeRepository.findAllByMemberId(member1.getMemberId());
+
+        // then
+        assertThat(response.get(0).getMember().getMemberId()).isEqualTo(member1.getMemberId());
+        assertThat(response.get(0).getAttendeeId()).isEqualTo(attendee1.getAttendeeId());
+        assertThat(response.get(1).getMember().getMemberId()).isEqualTo(member1.getMemberId());
+        assertThat(response.get(1).getAttendeeId()).isEqualTo(attendee2.getAttendeeId());
+    }
+
+
+    @Test
     @DisplayName("일정에 참석자 모두 삭제")
     void deleteAllByScheduleId() {
         // given
@@ -135,10 +171,10 @@ public class TravelAttendeeRepositoryTest {
         em.flush();
         em.clear();
 
-        List<TravelAttendee> deletedAttendees = travelAttendeeRepository.findAllByTravelSchedule_ScheduleId(schedule1.getScheduleId());
+        List<TravelAttendee> deletedAttendees = travelAttendeeRepository.findAllByScheduleId(schedule1.getScheduleId());
         assertThat(deletedAttendees).isEmpty();
 
-        List<TravelAttendee> schedule2Attendees = travelAttendeeRepository.findAllByTravelSchedule_ScheduleId(schedule2.getScheduleId());
+        List<TravelAttendee> schedule2Attendees = travelAttendeeRepository.findAllByScheduleId(schedule2.getScheduleId());
         assertThat(schedule2Attendees).hasSize(1);
         assertThat(schedule2Attendees.get(0).getAttendeeId()).isEqualTo(otherAttendee.getAttendeeId());
     }

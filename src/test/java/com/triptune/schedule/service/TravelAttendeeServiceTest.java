@@ -82,7 +82,7 @@ public class TravelAttendeeServiceTest {
                 TravelAttendeeFixture.createGuestAttendee(schedule, member2, AttendeePermission.READ)
         );
 
-        when(travelAttendeeRepository.findAllByTravelSchedule_ScheduleId(anyLong()))
+        when(travelAttendeeRepository.findAllByScheduleId(anyLong()))
                 .thenReturn(travelAttendees);
         when(s3ObjectManager.generateS3ObjectUrl(member1.getProfileImage().getS3ObjectKey()))
                 .thenReturn(member1ProfileUrl);
@@ -118,7 +118,7 @@ public class TravelAttendeeServiceTest {
     @DisplayName("일정 참석자 조회 시 데이터 없는 경우")
     void getAttendeesByScheduleId_emptyResult(){
         // given
-        when(travelAttendeeRepository.findAllByTravelSchedule_ScheduleId(anyLong()))
+        when(travelAttendeeRepository.findAllByScheduleId(anyLong()))
                 .thenReturn(Collections.emptyList());
 
         // when

@@ -35,7 +35,7 @@ public class TravelAttendeeService {
 
 
     public List<AttendeeResponse> getAttendeesByScheduleId(Long scheduleId) {
-        List<TravelAttendee> travelAttendees = travelAttendeeRepository.findAllByTravelSchedule_ScheduleId(scheduleId);
+        List<TravelAttendee> travelAttendees = travelAttendeeRepository.findAllByScheduleId(scheduleId);
         List<AttendeeResponse> response = new ArrayList<>();
 
         for (TravelAttendee travelAttendee : travelAttendees) {

@@ -243,7 +243,7 @@ public class MemberService {
 
         // 4-1. 작성자인 경우 참석자, 일정, 채팅방 삭제
         // 4-2. 참석자인 경우 참석자 삭제
-        List<TravelAttendee> attendees = travelAttendeeRepository.findAllByMember_MemberId(memberId);
+        List<TravelAttendee> attendees = travelAttendeeRepository.findAllByMemberId(memberId);
 
         List<Long> authorScheduleIds = extractAuthorScheduleId(attendees);
         travelAttendeeRepository.deleteAll(attendees);
