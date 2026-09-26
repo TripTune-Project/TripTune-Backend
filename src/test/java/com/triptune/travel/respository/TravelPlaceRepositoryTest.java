@@ -623,7 +623,7 @@ public class TravelPlaceRepositoryTest {
         );
 
         // when
-        List<PlaceSimpleQueryDto> response = travelPlaceRepository.findRecommendTravelPlaces(ThemeType.All);
+        List<PlaceSimpleQueryDto> response = travelPlaceRepository.findRecommendTravelPlaces(ThemeType.ALL);
 
         // then
         assertThat(response.size()).isEqualTo(4);

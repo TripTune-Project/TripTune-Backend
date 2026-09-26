@@ -978,13 +978,13 @@ public class TravelServiceTest  {
                 TravelPlaceFixture.createPlaceSimpleQueryDto(lodgingPlace, null)
         );
 
-        when(travelPlaceRepository.findRecommendTravelPlaces(ThemeType.All)).thenReturn(mockResult);
+        when(travelPlaceRepository.findRecommendTravelPlaces(ThemeType.ALL)).thenReturn(mockResult);
         when(s3ObjectManager.generateS3ObjectUrl(sportsThumb.getS3ObjectKey())).thenReturn(sportsThumbUrl);
         when(s3ObjectManager.generateS3ObjectUrl(attraction1Thumb.getS3ObjectKey())).thenReturn(attraction1ThumbUrl);
         when(s3ObjectManager.generateS3ObjectUrl(null)).thenReturn(null);
 
         // when
-        List<PlaceSimpleResponse> response = travelService.getRecommendTravelPlacesByTheme(ThemeType.All);
+        List<PlaceSimpleResponse> response = travelService.getRecommendTravelPlacesByTheme(ThemeType.ALL);
 
         // then
         assertThat(response.size()).isEqualTo(4);

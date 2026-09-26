@@ -1,5 +1,6 @@
 package com.triptune.travel.fixture;
 
+import com.triptune.travel.dto.response.TravelImageResponse;
 import com.triptune.travel.entity.TravelImage;
 import com.triptune.travel.entity.TravelPlace;
 
@@ -15,5 +16,9 @@ public class TravelImageFixture {
                 20,
                 isThumbnail
         );
+    }
+
+    public static TravelImageResponse createTravelImageResponse(TravelImage travelImage, String imageUrl) {
+        return TravelImageResponse.of(travelImage, imageUrl);
     }
 }

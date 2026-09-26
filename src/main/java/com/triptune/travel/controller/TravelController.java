@@ -43,7 +43,7 @@ public class TravelController {
     @PostMapping("/search")
     @Operation(summary = "여행지 검색", description = "여행지 탐색 메뉴에서 여행지를 검색한다.")
     public ApiResponse<PageResponse<PlaceDistanceResponse>> searchTravelPlaces(@RequestBody @Valid PlaceSearchRequest placeSearchRequest,
-                                                             @RequestParam int page){
+                                                                                @RequestParam int page){
         Long memberId = getAuthenticateMemberId();
         boolean hasLocation = placeSearchRequest.getLatitude() != null && placeSearchRequest.getLongitude() != null;
 
@@ -72,7 +72,7 @@ public class TravelController {
     }
 
     @GetMapping("/recommend")
-    @Operation(summary = "추천 테마별 여행지 조회", description = "여행 테마에 따른 여행지 목록을 조회한다.")
+    @Operation(summary = "테마별 추천 여행지 조회", description = "여행 테마에 따른 여행지 목록을 조회한다.")
     public ApiResponse<List<PlaceSimpleResponse>> getRecommendTravelPlacesByTheme(@RequestParam("theme") String theme){
         ThemeType themeType = ThemeType.from(theme);
         List<PlaceSimpleResponse> response = travelService.getRecommendTravelPlacesByTheme(themeType);
