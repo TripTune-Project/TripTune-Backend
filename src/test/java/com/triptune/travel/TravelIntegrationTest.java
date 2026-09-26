@@ -1,0 +1,773 @@
+package com.triptune.travel;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.triptune.bookmark.fixture.BookmarkFixture;
+import com.triptune.bookmark.repository.BookmarkRepository;
+import com.triptune.common.entity.ApiContentType;
+import com.triptune.common.entity.City;
+import com.triptune.common.entity.Country;
+import com.triptune.common.entity.District;
+import com.triptune.common.fixture.*;
+import com.triptune.common.repository.ApiContentTypeRepository;
+import com.triptune.common.repository.CityRepository;
+import com.triptune.common.repository.CountryRepository;
+import com.triptune.common.repository.DistrictRepository;
+import com.triptune.global.message.ErrorCode;
+import com.triptune.global.message.SuccessCode;
+import com.triptune.global.security.SecurityTestUtils;
+import com.triptune.member.entity.Member;
+import com.triptune.member.fixture.MemberFixture;
+import com.triptune.member.repository.MemberRepository;
+import com.triptune.profile.entity.ProfileImage;
+import com.triptune.profile.fixture.ProfileImageFixture;
+import com.triptune.profile.repository.ProfileImageRepository;
+import com.triptune.travel.dto.request.PlaceLocationRequest;
+import com.triptune.travel.dto.request.PlaceSearchRequest;
+import com.triptune.travel.entity.TravelImage;
+import com.triptune.travel.entity.TravelPlace;
+import com.triptune.travel.enums.CityType;
+import com.triptune.travel.enums.ThemeType;
+import com.triptune.travel.fixture.TravelImageFixture;
+import com.triptune.travel.fixture.TravelPlaceFixture;
+import com.triptune.travel.repository.TravelImageRepository;
+import com.triptune.travel.repository.TravelPlaceRepository;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.annotation.Transactional;
+
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.nullValue;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+@SpringBootTest
+@Transactional
+@AutoConfigureMockMvc
+@ActiveProfiles("h2")
+public class TravelIntegrationTest {
+
+    @Autowired private MockMvc mockMvc;
+    @Autowired private ObjectMapper objectMapper;
+    @Autowired private TravelPlaceRepository travelPlaceRepository;
+    @Autowired private CountryRepository countryRepository;
+    @Autowired private CityRepository cityRepository;
+    @Autowired private DistrictRepository districtRepository;
+    @Autowired private TravelImageRepository travelImageRepository;
+    @Autowired private ApiContentTypeRepository apiContentTypeRepository;
+    @Autowired private BookmarkRepository bookmarkRepository;
+    @Autowired private MemberRepository memberRepository;
+    @Autowired private ProfileImageRepository profileImageRepository;
+
+
+    private Country country;
+    private City city;
+    private District gangnam;
+    private District seongdong;
+    private ApiContentType attractionContentType;
+    private ApiContentType lodgingContentType;
+
+    private Member member;
+
+
+    @BeforeEach
+    void setUp() {
+        country = countryRepository.save(CountryFixture.createCountry());
+        city = cityRepository.save(CityFixture.createSeoul(country));
+        gangnam = districtRepository.save(DistrictFixture.createDistrict(city, "강남구"));
+        seongdong = districtRepository.save(DistrictFixture.createDistrict(city, "성동구"));
+
+        attractionContentType = apiContentTypeRepository.save(ApiContentTypeFixture.createApiContentType(ThemeType.ATTRACTIONS));
+        lodgingContentType = apiContentTypeRepository.save(ApiContentTypeFixture.createApiContentType(ThemeType.LODGING));
+
+        ProfileImage profileImage = profileImageRepository.save(ProfileImageFixture.createProfileImage("member1Image"));
+        member = memberRepository.save(MemberFixture.createNativeTypeMember("member@email.com", profileImage));
+    }
+
+    @Test
+    @DisplayName("회원의 위치를 기반으로 여행지 목록을 조회")
+    void getNearByTravelPlaces_member() throws Exception {
+        // given
+        TravelPlace gangnamPlace = travelPlaceRepository.save(
+                TravelPlaceFixture.createTravelPlaceWithLocation(
+                        country,
+                        city,
+                        gangnam,
+                        attractionContentType,
+                        "여행지1",
+                        37.49,
+                        127.0281573537
+                )
+        );
+        TravelImage gangnamThumb = travelImageRepository.save(TravelImageFixture.createTravelImage(gangnamPlace, "test1", true));
+        travelImageRepository.save(TravelImageFixture.createTravelImage(gangnamPlace, "test2", false));
+        String gangnamThumbUrl = S3Fixture.createS3ObjectUrl(gangnamThumb.getS3ObjectKey());
+
+        TravelPlace seongdongPlace = travelPlaceRepository.save(
+                TravelPlaceFixture.createTravelPlaceWithLocation(
+                        country,
+                        city,
+                        seongdong,
+                        attractionContentType,
+                        "여행지2",
+                        37.4920,
+                        127.0250
+                )
+        );
+
+        bookmarkRepository.save(BookmarkFixture.createBookmark(member, gangnamPlace));
+        SecurityTestUtils.mockAuthentication(member);
+
+        PlaceLocationRequest request = TravelPlaceFixture.createTravelLocationRequest(37.4970465429, 127.0281573537);
+
+        // when, then
+        mockMvc.perform(post("/api/travels")
+                        .param("page", "1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.totalElements").value(2))
+                .andExpect(jsonPath("$.data.content[0].district").value(seongdongPlace.getDistrict().getDistrictName()))
+                .andExpect(jsonPath("$.data.content[0].placeName").value(seongdongPlace.getPlaceName()))
+                .andExpect(jsonPath("$.data.content[0].thumbnailUrl", nullValue()))
+                .andExpect(jsonPath("$.data.content[0].bookmarkStatus").value(false))
+                .andExpect(jsonPath("$.data.content[1].placeName").value(gangnamPlace.getPlaceName()))
+                .andExpect(jsonPath("$.data.content[1].thumbnailUrl").value(gangnamThumbUrl))
+                .andExpect(jsonPath("$.data.content[1].bookmarkStatus").value(true));
+    }
+
+    @Test
+    @DisplayName("비회원의 위치를 기반으로 여행지 목록을 조회")
+    void getNearByTravelPlaces_nonMember() throws Exception {
+        // given
+        // 북마크 존재하지만 비회원이기 때문에 조회 결과 bookmarkStatus 는 false 이여야 함
+        TravelPlace gangnamPlace = travelPlaceRepository.save(
+                TravelPlaceFixture.createTravelPlaceWithLocation(
+                        country,
+                        city,
+                        gangnam,
+                        attractionContentType,
+                        "여행지1",
+                        37.5250,
+                        127.0550
+                )
+        );
+        TravelImage gangnamThumb = travelImageRepository.save(TravelImageFixture.createTravelImage(gangnamPlace, "test1", true));
+        travelImageRepository.save(TravelImageFixture.createTravelImage(gangnamPlace, "test2", false));
+        String gangnamThumbUrl = S3Fixture.createS3ObjectUrl(gangnamThumb.getS3ObjectKey());
+
+        TravelPlace seongdongPlace = travelPlaceRepository.save(
+                TravelPlaceFixture.createTravelPlaceWithLocation(
+                        country,
+                        city,
+                        seongdong,
+                        attractionContentType,
+                        "여행지2",
+                        37.4700,
+                        127.0000
+                )
+        );
+        bookmarkRepository.save(BookmarkFixture.createBookmark(member, gangnamPlace));
+
+        PlaceLocationRequest request = TravelPlaceFixture.createTravelLocationRequest(37.4970465429, 127.0281573537);
+
+        // when, then
+        mockMvc.perform(post("/api/travels")
+                        .param("page", "1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.totalElements").value(2))
+                .andExpect(jsonPath("$.data.content[0].district").value(seongdongPlace.getDistrict().getDistrictName()))
+                .andExpect(jsonPath("$.data.content[0].placeName").value(seongdongPlace.getPlaceName()))
+                .andExpect(jsonPath("$.data.content[0].thumbnailUrl", nullValue()))
+                .andExpect(jsonPath("$.data.content[0].bookmarkStatus").value(false))
+                .andExpect(jsonPath("$.data.content[1].placeName").value(gangnamPlace.getPlaceName()))
+                .andExpect(jsonPath("$.data.content[1].thumbnailUrl").value(gangnamThumbUrl))
+                .andExpect(jsonPath("$.data.content[1].bookmarkStatus").value(false));
+    }
+
+
+    @Test
+    @DisplayName("회원의 위치를 기반으로 여행지 검색할 때, 검색 결과가 존재하는 경우")
+    void searchTravelPlacesWithLocation_member() throws Exception {
+        // given
+        TravelPlace gangnamPlace = travelPlaceRepository.save(
+                TravelPlaceFixture.createTravelPlaceWithLocation(
+                        country,
+                        city,
+                        gangnam,
+                        attractionContentType,
+                        "여행지1",
+                        37.5250,
+                        127.0550
+                )
+        );
+        TravelImage gangnamThumb = travelImageRepository.save(TravelImageFixture.createTravelImage(gangnamPlace, "test1", true));
+        travelImageRepository.save(TravelImageFixture.createTravelImage(gangnamPlace, "test2", false));
+        String gangnamThumbUrl = S3Fixture.createS3ObjectUrl(gangnamThumb.getS3ObjectKey());
+
+        travelPlaceRepository.save(
+                TravelPlaceFixture.createTravelPlaceWithLocation(
+                        country,
+                        city,
+                        seongdong,
+                        attractionContentType,
+                        "여행지2",
+                        37.4700,
+                        127.0000
+                )
+        );
+        bookmarkRepository.save(BookmarkFixture.createBookmark(member, gangnamPlace));
+        SecurityTestUtils.mockAuthentication(member);
+
+        PlaceSearchRequest request = TravelPlaceFixture.createTravelSearchRequest(37.4970465429, 127.0281573537, "강남");
+
+        // when, then
+        mockMvc.perform(post("/api/travels/search")
+                        .param("page", "1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.totalElements").value(1))
+                .andExpect(jsonPath("$.data.content[0].district").value(gangnamPlace.getDistrict().getDistrictName()))
+                .andExpect(jsonPath("$.data.content[0].placeName").value(gangnamPlace.getPlaceName()))
+                .andExpect(jsonPath("$.data.content[0].thumbnailUrl").value(gangnamThumbUrl))
+                .andExpect(jsonPath("$.data.content[0].bookmarkStatus").value(true));
+    }
+
+    @Test
+    @DisplayName("비회원의 위치를 기반으로 여행지를 검색할 때, 검색 결과가 존재하는 경우")
+    void searchTravelPlacesWithLocation_nonMember() throws Exception {
+        // given
+        // 북마크 존재하지만 비회원이기 때문에 조회 결과 bookmarkStatus 는 false 이여야 함
+        TravelPlace gangnamPlace = travelPlaceRepository.save(
+                TravelPlaceFixture.createTravelPlaceWithLocation(
+                        country,
+                        city,
+                        gangnam,
+                        attractionContentType,
+                        "여행지1",
+                        37.5250,
+                        127.0550
+                )
+        );
+        TravelImage gangnamThumb = travelImageRepository.save(TravelImageFixture.createTravelImage(gangnamPlace, "test1", true));
+        travelImageRepository.save(TravelImageFixture.createTravelImage(gangnamPlace, "test2", false));
+        String gangnamThumbUrl = S3Fixture.createS3ObjectUrl(gangnamThumb.getS3ObjectKey());
+
+        travelPlaceRepository.save(
+                TravelPlaceFixture.createTravelPlaceWithLocation(
+                        country,
+                        city,
+                        seongdong,
+                        attractionContentType,
+                        "여행지2",
+                        37.4700,
+                        127.0000
+                )
+        );
+        bookmarkRepository.save(BookmarkFixture.createBookmark(member, gangnamPlace));
+        PlaceSearchRequest request = TravelPlaceFixture.createTravelSearchRequest(37.4970465429, 127.0281573537, "강남");
+
+        // when, then
+        mockMvc.perform(post("/api/travels/search")
+                        .param("page", "1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.totalElements").value(1))
+                .andExpect(jsonPath("$.data.content[0].district").value(gangnamPlace.getDistrict().getDistrictName()))
+                .andExpect(jsonPath("$.data.content[0].placeName").value(gangnamPlace.getPlaceName()))
+                .andExpect(jsonPath("$.data.content[0].thumbnailUrl").value(gangnamThumbUrl))
+                .andExpect(jsonPath("$.data.content[0].bookmarkStatus").value(false));
+    }
+
+    @Test
+    @DisplayName("회원의 위치를 기반하지 않고 여행지를 검색할 때, 검색 결과가 존재하는 경우")
+    void searchTravelPlacesWithoutLocation_member() throws Exception {
+        // given
+        TravelPlace gangnamPlace = travelPlaceRepository.save(
+                TravelPlaceFixture.createTravelPlace(
+                        country,
+                        city,
+                        gangnam,
+                        attractionContentType,
+                        "여행지1"
+                )
+        );
+        TravelImage gangnamThumb = travelImageRepository.save(TravelImageFixture.createTravelImage(gangnamPlace, "test1", true));
+        travelImageRepository.save(TravelImageFixture.createTravelImage(gangnamPlace, "test2", false));
+        String gangnamThumbUrl = S3Fixture.createS3ObjectUrl(gangnamThumb.getS3ObjectKey());
+
+        travelPlaceRepository.save(
+                TravelPlaceFixture.createTravelPlace(
+                        country,
+                        city,
+                        seongdong,
+                        attractionContentType,
+                        "여행지2"
+                    )
+        );
+        bookmarkRepository.save(BookmarkFixture.createBookmark(member, gangnamPlace));
+        SecurityTestUtils.mockAuthentication(member);
+
+        PlaceSearchRequest request = TravelPlaceFixture.createTravelSearchRequest("강남");
+
+        // when, then
+        mockMvc.perform(post("/api/travels/search")
+                        .param("page", "1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.totalElements").value(1))
+                .andExpect(jsonPath("$.data.content[0].district").value(gangnamPlace.getDistrict().getDistrictName()))
+                .andExpect(jsonPath("$.data.content[0].placeName").value(gangnamPlace.getPlaceName()))
+                .andExpect(jsonPath("$.data.content[0].thumbnailUrl").value(gangnamThumbUrl))
+                .andExpect(jsonPath("$.data.content[0].bookmarkStatus").value(true));
+    }
+
+    @Test
+    @DisplayName("비회원의 위치를 기반하지 않고 여행지를 검색할 때, 검색 결과가 존재하는 경우")
+    void searchTravelPlacesWithoutLocation_nonMember() throws Exception {
+        // given
+        TravelPlace gangnamPlace = travelPlaceRepository.save(
+                TravelPlaceFixture.createTravelPlace(
+                        country,
+                        city,
+                        gangnam,
+                        attractionContentType,
+                        "여행지1"
+                )
+        );
+        TravelImage gangnamThumb = travelImageRepository.save(TravelImageFixture.createTravelImage(gangnamPlace, "test1", true));
+        travelImageRepository.save(TravelImageFixture.createTravelImage(gangnamPlace, "test2", false));
+        String gangnamThumbUrl = S3Fixture.createS3ObjectUrl(gangnamThumb.getS3ObjectKey());
+
+        travelPlaceRepository.save(
+                TravelPlaceFixture.createTravelPlace(
+                        country,
+                        city,
+                        seongdong,
+                        attractionContentType,
+                        "여행지2"
+                )
+        );
+        bookmarkRepository.save(BookmarkFixture.createBookmark(member, gangnamPlace));
+        PlaceSearchRequest request = TravelPlaceFixture.createTravelSearchRequest("강남");
+
+        // when, then
+        mockMvc.perform(post("/api/travels/search")
+                        .param("page", "1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.totalElements").value(1))
+                .andExpect(jsonPath("$.data.content[0].district").value(gangnamPlace.getDistrict().getDistrictName()))
+                .andExpect(jsonPath("$.data.content[0].placeName").value(gangnamPlace.getPlaceName()))
+                .andExpect(jsonPath("$.data.content[0].thumbnailUrl").value(gangnamThumbUrl))
+                .andExpect(jsonPath("$.data.content[0].bookmarkStatus").value(false));
+    }
+
+    @Test
+    @DisplayName("회원의 여행지 상세정보 조회")
+    void getTravelDetails_member() throws Exception {
+        // given
+        TravelPlace place = travelPlaceRepository.save(
+                TravelPlaceFixture.createTravelPlace(
+                        country,
+                        city,
+                        gangnam,
+                        attractionContentType,
+                        "여행지1"
+                )
+        );
+        travelImageRepository.save(TravelImageFixture.createTravelImage(place, "test1", true));
+        travelImageRepository.save(TravelImageFixture.createTravelImage(place, "test2", false));
+
+        bookmarkRepository.save(BookmarkFixture.createBookmark(member, place));
+        SecurityTestUtils.mockAuthentication(member);
+
+        // when, then
+        mockMvc.perform(get("/api/travels/{placeId}", place.getPlaceId()))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.placeName").value(place.getPlaceName()))
+                .andExpect(jsonPath("$.data.placeName").exists())
+                .andExpect(jsonPath("$.data.imageList").isNotEmpty())
+                .andExpect(jsonPath("$.data.bookmarkStatus").value(true));
+    }
+
+    @Test
+    @DisplayName("비회원의 여행지 상세정보 조회")
+    void getTravelDetails_nonMember() throws Exception {
+        // given
+        TravelPlace place = travelPlaceRepository.save(
+                TravelPlaceFixture.createTravelPlace(
+                        country,
+                        city,
+                        gangnam,
+                        attractionContentType,
+                        "여행지1"
+                )
+        );
+        travelImageRepository.save(TravelImageFixture.createTravelImage(place, "test1", true));
+        travelImageRepository.save(TravelImageFixture.createTravelImage(place, "test2", false));
+
+        bookmarkRepository.save(BookmarkFixture.createBookmark(member, place));
+
+        // when, then
+        mockMvc.perform(get("/api/travels/{placeId}", place.getPlaceId()))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.placeName").value(place.getPlaceName()))
+                .andExpect(jsonPath("$.data.placeName").exists())
+                .andExpect(jsonPath("$.data.imageList").isNotEmpty())
+                .andExpect(jsonPath("$.data.bookmarkStatus").value(false));
+    }
+
+    @Test
+    @DisplayName("여행지 상세정보 조회 시 데이터 존재하지 않아 예외 발생")
+    void getTravelDetails_placeNotFound() throws Exception {
+        // given, when, then
+        mockMvc.perform(get("/api/travels/{placeId}", 0L))
+                .andDo(print())
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.errorCode").value(ErrorCode.DATA_NOT_FOUND.getStatus().value()))
+                .andExpect(jsonPath("$.message").value(ErrorCode.DATA_NOT_FOUND.getMessage()));
+    }
+
+
+    @Test
+    @DisplayName("인기 여행지 조회 - 전체")
+    void findPopularTravelPlacesByCity_ALL() throws Exception {
+        // given
+        TravelPlace gangnamPlace = travelPlaceRepository.save(
+                TravelPlaceFixture.createTravelPlaceWithBookmarkCnt(
+                        country,
+                        city,
+                        gangnam,
+                        attractionContentType,
+                        "여행지1",
+                        3
+                )
+        );
+        TravelImage gangnamThumb = travelImageRepository.save(TravelImageFixture.createTravelImage(gangnamPlace, "test1", true));
+        travelImageRepository.save(TravelImageFixture.createTravelImage(gangnamPlace, "test2", false));
+        String gangnamThumbUrl = S3Fixture.createS3ObjectUrl(gangnamThumb.getS3ObjectKey());
+
+        TravelPlace seongdongPlace = travelPlaceRepository.save(
+                TravelPlaceFixture.createTravelPlaceWithBookmarkCnt(
+                        country,
+                        city,
+                        seongdong,
+                        attractionContentType,
+                        "여행지2",
+                        1
+                )
+        );
+
+        City busan = cityRepository.save(CityFixture.createBusan(country));
+        District busanDistrict = districtRepository.save(DistrictFixture.createDistrict(busan, "금정구"));
+        TravelPlace busanPlace = travelPlaceRepository.save(
+                TravelPlaceFixture.createTravelPlaceWithBookmarkCnt(
+                        country,
+                        busan,
+                        busanDistrict,
+                        attractionContentType,
+                        "금정 여행지",
+                        50
+                )
+        );
+        TravelImage busanThumb = travelImageRepository.save(TravelImageFixture.createTravelImage(busanPlace, "부산이미지1", true));
+        travelImageRepository.save(TravelImageFixture.createTravelImage(busanPlace, "부산이미지2", false));
+        String busanThumbUrl = S3Fixture.createS3ObjectUrl(busanThumb.getS3ObjectKey());
+
+        City jeolla = cityRepository.save(CityFixture.createCity(country, "전남광주통합특별시"));
+        District jeollaDistrict = districtRepository.save(DistrictFixture.createDistrict(busan, "보성구"));
+        TravelPlace jeollaPlace = travelPlaceRepository.save(
+                TravelPlaceFixture.createTravelPlaceWithBookmarkCnt(
+                        country,
+                        jeolla,
+                        jeollaDistrict,
+                        attractionContentType,
+                        "보성 여행지",
+                        300
+                )
+        );
+
+        // when, then
+        mockMvc.perform(get("/api/travels/popular")
+                        .param("city", CityType.ALL.getValue()))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()))
+                .andExpect(jsonPath("$.data.length()").value(4))
+                .andExpect(jsonPath("$.data[0].placeName").value(jeollaPlace.getPlaceName()))
+                .andExpect(jsonPath("$.data[0].thumbnailUrl", nullValue()))
+                .andExpect(jsonPath("$.data[1].placeName").value(busanPlace.getPlaceName()))
+                .andExpect(jsonPath("$.data[1].thumbnailUrl").value(busanThumbUrl))
+                .andExpect(jsonPath("$.data[2].placeName").value(gangnamPlace.getPlaceName()))
+                .andExpect(jsonPath("$.data[2].thumbnailUrl").value(gangnamThumbUrl))
+                .andExpect(jsonPath("$.data[3].placeName").value(seongdongPlace.getPlaceName()))
+                .andExpect(jsonPath("$.data[3].thumbnailUrl", nullValue()));
+
+    }
+
+    @Test
+    @DisplayName("인기 여행지 조회 - 경상도")
+    void findPopularTravelPlacesByCity_GUEONGSANG() throws Exception {
+        // given
+        TravelPlace gangnamPlace = travelPlaceRepository.save(
+                TravelPlaceFixture.createTravelPlace(
+                        country,
+                        city,
+                        gangnam,
+                        attractionContentType,
+                        "여행지1"
+                )
+        );
+        travelImageRepository.save(TravelImageFixture.createTravelImage(gangnamPlace, "test1", true));
+        travelImageRepository.save(TravelImageFixture.createTravelImage(gangnamPlace, "test2", false));
+
+        travelPlaceRepository.save(
+                TravelPlaceFixture.createTravelPlace(
+                        country,
+                        city,
+                        seongdong,
+                        attractionContentType,
+                        "여행지2"
+                )
+        );
+
+        City gueongsang1 = cityRepository.save(CityFixture.createCity(country, "경상북도"));
+        District gueongsang1District = districtRepository.save(DistrictFixture.createDistrict(gueongsang1, "구미시"));
+        TravelPlace gueongsangPlace1 = travelPlaceRepository.save(
+                TravelPlaceFixture.createTravelPlace(
+                        country,
+                        gueongsang1,
+                        gueongsang1District,
+                        attractionContentType,
+                        "구미 여행지"
+                )
+        );
+        TravelImage gueongsang1Thumb = travelImageRepository.save(TravelImageFixture.createTravelImage(gueongsangPlace1, "경상이미지1", true));
+        travelImageRepository.save(TravelImageFixture.createTravelImage(gueongsangPlace1, "경상이미지2", false));
+        String gueongsang1ThumbUrl = S3Fixture.createS3ObjectUrl(gueongsang1Thumb.getS3ObjectKey());
+
+
+        City gueongsang2 = cityRepository.save(CityFixture.createCity(country, "경상남도"));
+        District gueongsang2District = districtRepository.save(DistrictFixture.createDistrict(gueongsang2, "통영시"));
+        TravelPlace gueongsangPlace2 = travelPlaceRepository.save(
+                TravelPlaceFixture.createTravelPlace(
+                        country,
+                        gueongsang2,
+                        gueongsang2District,
+                        attractionContentType,
+                        "통영 여행지"
+                )
+        );
+
+        // when, then
+        mockMvc.perform(get("/api/travels/popular")
+                        .param("city", CityType.GYEONGSANG.getValue()))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()))
+                .andExpect(jsonPath("$.data.length()").value(2))
+                .andExpect(jsonPath("$.data[0].placeName").value(gueongsangPlace2.getPlaceName()))
+                .andExpect(jsonPath("$.data[0].thumbnailUrl", nullValue()))
+                .andExpect(jsonPath("$.data[1].placeName").value(gueongsangPlace1.getPlaceName()))
+                .andExpect(jsonPath("$.data[1].thumbnailUrl").value(gueongsang1ThumbUrl));
+
+    }
+
+
+    @Test
+    @DisplayName("인기 여행지 조회 시 데이터 없는 경우")
+    void findPopularTravelPlacesByCity_empty() throws Exception {
+        // given, when, then
+        mockMvc.perform(get("/api/travels/popular")
+                        .param("city", CityType.GYEONGSANG.getValue()))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()))
+                .andExpect(jsonPath("$.data.length()").value(0))
+                .andExpect(jsonPath("$.data").isEmpty());
+    }
+
+    @Test
+    @DisplayName("추천 테마 여행지 조회 - 전체")
+    void findRecommendTravelPlacesByTheme_ALL() throws Exception{
+        // given
+        TravelPlace attractionPlace1 = travelPlaceRepository.save(
+                TravelPlaceFixture.createTravelPlaceWithBookmarkCnt(
+                        country,
+                        city,
+                        gangnam,
+                        attractionContentType,
+                        "여행지1",
+                        1
+                )
+        );
+        TravelImage attraction1Thumb = travelImageRepository.save(TravelImageFixture.createTravelImage(attractionPlace1, "test1", true));
+        travelImageRepository.save(TravelImageFixture.createTravelImage(attractionPlace1, "test2", false));
+        String attraction1ThumbUrl = S3Fixture.createS3ObjectUrl(attraction1Thumb.getS3ObjectKey());
+
+        TravelPlace attractionPlace2 = travelPlaceRepository.save(
+                TravelPlaceFixture.createTravelPlaceWithBookmarkCnt(
+                        country,
+                        city,
+                        seongdong,
+                        attractionContentType,
+                        "여행지2",
+                        2
+                )
+        );
+
+        City busan = cityRepository.save(CityFixture.createBusan(country));
+        District busanDistrict = districtRepository.save(DistrictFixture.createDistrict(busan, "금정구"));
+        TravelPlace lodgingPlace = travelPlaceRepository.save(
+                TravelPlaceFixture.createLodgingTravelPlace(
+                        country,
+                        busan,
+                        busanDistrict,
+                        lodgingContentType,
+                        "부산 여행지"
+                )
+        );
+        TravelImage lodgingThumb = travelImageRepository.save(TravelImageFixture.createTravelImage(lodgingPlace, "부산이미지1", true));
+        travelImageRepository.save(TravelImageFixture.createTravelImage(lodgingPlace, "부산이미지2", false));
+        String lodgingThumbUrl = S3Fixture.createS3ObjectUrl(lodgingThumb.getS3ObjectKey());
+
+        City jeolla = cityRepository.save(CityFixture.createCity(country, "전라남도"));
+        District jeollaDistrict = districtRepository.save(DistrictFixture.createDistrict(busan, "보성구"));
+        TravelPlace attractionPlace3 = travelPlaceRepository.save(
+                TravelPlaceFixture.createTravelPlaceWithBookmarkCnt(
+                        country,
+                        jeolla,
+                        jeollaDistrict,
+                        attractionContentType,
+                        "전라도 여행지",
+                        3
+                )
+        );
+
+        // when, then
+        mockMvc.perform(get("/api/travels/recommend")
+                        .param("theme", ThemeType.ALL.getValue()))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()))
+                .andExpect(jsonPath("$.data.length()").value(4))
+                .andExpect(jsonPath("$.data[0].placeName").value(attractionPlace3.getPlaceName()))
+                .andExpect(jsonPath("$.data[0].thumbnailUrl", nullValue()))
+                .andExpect(jsonPath("$.data[1].placeName").value(attractionPlace2.getPlaceName()))
+                .andExpect(jsonPath("$.data[1].thumbnailUrl", nullValue()))
+                .andExpect(jsonPath("$.data[2].placeName").value(attractionPlace1.getPlaceName()))
+                .andExpect(jsonPath("$.data[2].thumbnailUrl").value(attraction1ThumbUrl))
+                .andExpect(jsonPath("$.data[3].placeName").value(lodgingPlace.getPlaceName()))
+                .andExpect(jsonPath("$.data[3].thumbnailUrl").value(lodgingThumbUrl));
+
+    }
+
+    @Test
+    @DisplayName("추천 테마 여행지 조회 - 숙박")
+    void findRecommendTravelPlacesByTheme_Lodging() throws Exception {
+        // given
+        TravelPlace attractionPlace1 = travelPlaceRepository.save(
+                TravelPlaceFixture.createTravelPlace(
+                        country,
+                        city,
+                        gangnam,
+                        attractionContentType,
+                        "여행지1"
+                )
+        );
+        travelImageRepository.save(TravelImageFixture.createTravelImage(attractionPlace1, "test1", true));
+        travelImageRepository.save(TravelImageFixture.createTravelImage(attractionPlace1, "test2", false));
+
+        travelPlaceRepository.save(
+                TravelPlaceFixture.createTravelPlace(
+                        country,
+                        city,
+                        seongdong,
+                        attractionContentType,
+                        "여행지2"
+                )
+        );
+
+        City busan = cityRepository.save(CityFixture.createBusan(country));
+        District busanDistrict = districtRepository.save(DistrictFixture.createDistrict(busan, "금정구"));
+        TravelPlace lodgingPlace = travelPlaceRepository.save(
+                TravelPlaceFixture.createLodgingTravelPlace(
+                        country,
+                        busan,
+                        busanDistrict,
+                        lodgingContentType,
+                        "부산 여행지"
+                )
+        );
+        TravelImage lodgingThumb = travelImageRepository.save(TravelImageFixture.createTravelImage(lodgingPlace, "부산이미지1", true));
+        travelImageRepository.save(TravelImageFixture.createTravelImage(lodgingPlace, "부산이미지2", false));
+        String lodgingThumbUrl = S3Fixture.createS3ObjectUrl(lodgingThumb.getS3ObjectKey());
+
+        // when, then
+        mockMvc.perform(get("/api/travels/recommend")
+                        .param("theme", ThemeType.LODGING.getValue()))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()))
+                .andExpect(jsonPath("$.data.length()").value(1))
+                .andExpect(jsonPath("$.data[0].placeName").value(lodgingPlace.getPlaceName()))
+                .andExpect(jsonPath("$.data[0].thumbnailUrl").value(lodgingThumbUrl));
+    }
+
+
+    @Test
+    @DisplayName("추천 테마 여행지 조회 시 데이터 없는 경우")
+    void findRecommendTravelPlacesByTheme_empty() throws Exception {
+        // given, when, then
+        mockMvc.perform(get("/api/travels/recommend")
+                        .param("theme", ThemeType.FOOD.getValue()))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()))
+                .andExpect(jsonPath("$.data.length()").value(0))
+                .andExpect(jsonPath("$.data").isEmpty());
+
+    }
+
+}

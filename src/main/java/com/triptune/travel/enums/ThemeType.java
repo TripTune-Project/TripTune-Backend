@@ -10,7 +10,7 @@ import java.util.Arrays;
 @Getter
 @AllArgsConstructor
 public enum ThemeType {
-    All("all", null,  null),
+    ALL("all", null,  null),
     ATTRACTIONS("attractions", "관광지", 12),
     CULTURE("culture", "문화시설", 14),
     SPORTS("sports", "레포츠",28),

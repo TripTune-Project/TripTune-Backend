@@ -11,8 +11,6 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.triptune.global.util.PageUtils;
 import com.triptune.travel.dto.request.PlaceLocationRequest;
 import com.triptune.travel.dto.request.PlaceSearchRequest;
-import com.triptune.travel.dto.response.PlaceResponse;
-import com.triptune.travel.dto.response.PlaceSimpleResponse;
 import com.triptune.travel.enums.CityType;
 import com.triptune.travel.enums.ThemeType;
 import com.triptune.travel.repository.dto.PlaceDistanceQueryDto;
@@ -27,7 +25,6 @@ import java.util.List;
 
 import static com.querydsl.core.types.dsl.Expressions.constant;
 import static com.querydsl.core.types.dsl.MathExpressions.*;
-import static com.triptune.schedule.entity.QTravelSchedule.travelSchedule;
 import static com.triptune.travel.entity.QTravelImage.travelImage;
 import static com.triptune.travel.entity.QTravelPlace.travelPlace;
 
@@ -307,7 +304,7 @@ public class TravelPlaceRepositoryCustomImpl implements TravelPlaceRepositoryCus
 
 
     private BooleanExpression themeTypeCondition(ThemeType themeType){
-        if (themeType == ThemeType.All){
+        if (themeType == ThemeType.ALL){
             return null;
         }
 

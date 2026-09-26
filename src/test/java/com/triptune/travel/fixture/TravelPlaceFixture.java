@@ -3,13 +3,14 @@ package com.triptune.travel.fixture;
 import com.triptune.common.entity.*;
 import com.triptune.travel.dto.request.PlaceLocationRequest;
 import com.triptune.travel.dto.request.PlaceSearchRequest;
-import com.triptune.travel.dto.response.PlaceResponse;
-import com.triptune.travel.dto.response.PlaceSimpleResponse;
+import com.triptune.travel.dto.response.*;
 import com.triptune.travel.entity.TravelPlace;
 import com.triptune.travel.repository.dto.PlaceDistanceQueryDto;
 import com.triptune.travel.repository.dto.PlaceQueryDto;
 import com.triptune.travel.repository.dto.PlaceSimpleQueryDto;
 import org.springframework.test.util.ReflectionTestUtils;
+
+import java.util.List;
 
 public class TravelPlaceFixture {
     
@@ -229,5 +230,38 @@ public class TravelPlaceFixture {
                 .placeName(place.getPlaceName())
                 .thumbnailUrl(thumbnailUrl)
                 .build();
+    }
+
+    public static PlaceDistanceResponse createPlaceDistanceResponse(TravelPlace place, String thumbnailUrl, Double distance, boolean bookmarkStatus) {
+        return PlaceDistanceResponse.builder()
+                .placeId(place.getPlaceId())
+                .country(place.getCountry().getCountryName())
+                .city(place.getCity().getCityName())
+                .district(place.getDistrict().getDistrictName())
+                .address(place.getAddress())
+                .detailAddress(place.getDetailAddress())
+                .latitude(place.getLatitude())
+                .longitude(place.getLongitude())
+                .placeName(place.getPlaceName())
+                .thumbnailUrl(thumbnailUrl)
+                .distance(distance)
+                .bookmarkStatus(bookmarkStatus)
+                .build();
+
+    }
+
+    public static PlaceDetailResponse createPlaceDetailResponse(TravelPlace place, List<TravelImageResponse> images, boolean bookmarkStatus) {
+        return PlaceDetailResponse.of(place, images, bookmarkStatus);
+    }
+
+    public static PlaceSimpleResponse createPlaceSimpleResponse(TravelPlace place, String thumbnailUrl) {
+        return PlaceSimpleResponse.builder()
+                .placeId(place.getPlaceId())
+                .address(place.getAddress())
+                .detailAddress(place.getDetailAddress())
+                .placeName(place.getPlaceName())
+                .thumbnailUrl(thumbnailUrl)
+                .build();
+
     }
 }
