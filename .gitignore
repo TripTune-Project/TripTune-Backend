@@ -9,6 +9,7 @@ build/
 application.properties
 generated/
 k6/scripts/
+websocket-test/
 
 ### STS ###
 .apt_generated
