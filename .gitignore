@@ -9,6 +9,7 @@ build/
 application.properties
 generated/
 k6/scripts/
+k6/data/
 websocket-test/
 
 ### STS ###
