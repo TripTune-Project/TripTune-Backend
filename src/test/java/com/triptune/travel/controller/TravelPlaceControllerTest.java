@@ -31,7 +31,7 @@ import com.triptune.travel.enums.CityType;
 import com.triptune.travel.enums.ThemeType;
 import com.triptune.travel.fixture.TravelImageFixture;
 import com.triptune.travel.fixture.TravelPlaceFixture;
-import com.triptune.travel.service.TravelService;
+import com.triptune.travel.service.TravelPlaceService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -59,9 +59,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(TravelController.class)
+@WebMvcTest(TravelPlaceController.class)
 @AutoConfigureMockMvc(addFilters = false)
-public class TravelControllerTest {
+public class TravelPlaceControllerTest {
 
     private static final String BASE_URL = "http://test.com/";
 
@@ -69,7 +69,7 @@ public class TravelControllerTest {
     @Autowired private ObjectMapper objectMapper;
 
     @MockBean private JwtAuthFilter jwtAuthFilter;
-    @MockBean private TravelService travelService;
+    @MockBean private TravelPlaceService travelPlaceService;
 
 
     private Country country;
@@ -137,7 +137,7 @@ public class TravelControllerTest {
                 placeDistances.size()
         );
 
-        given(travelService.getNearByTravelPlaces(anyInt(), anyLong(), any(PlaceLocationRequest.class)))
+        given(travelPlaceService.getNearByTravelPlaces(anyInt(), anyLong(), any(PlaceLocationRequest.class)))
                 .willReturn(response);
 
 
@@ -208,7 +208,7 @@ public class TravelControllerTest {
                 0
         );
 
-        given(travelService.getNearByTravelPlaces(anyInt(), anyLong(), any(PlaceLocationRequest.class)))
+        given(travelPlaceService.getNearByTravelPlaces(anyInt(), anyLong(), any(PlaceLocationRequest.class)))
                 .willReturn(response);
 
         // when, then
@@ -262,7 +262,7 @@ public class TravelControllerTest {
                 placeDistances.size()
         );
 
-        given(travelService.getNearByTravelPlaces(anyInt(), isNull(), any(PlaceLocationRequest.class)))
+        given(travelPlaceService.getNearByTravelPlaces(anyInt(), isNull(), any(PlaceLocationRequest.class)))
                 .willReturn(response);
 
         // when, then
@@ -296,7 +296,7 @@ public class TravelControllerTest {
                 0
         );
 
-        given(travelService.getNearByTravelPlaces(anyInt(), isNull(), any(PlaceLocationRequest.class)))
+        given(travelPlaceService.getNearByTravelPlaces(anyInt(), isNull(), any(PlaceLocationRequest.class)))
                 .willReturn(response);
 
         // when, then
@@ -341,7 +341,7 @@ public class TravelControllerTest {
 
         PlaceSearchRequest request = TravelPlaceFixture.createTravelSearchRequest(37.4970465429, 127.0281573537, "강남");
 
-        given(travelService.searchTravelPlacesWithLocation(anyInt(), anyLong(), any(PlaceSearchRequest.class)))
+        given(travelPlaceService.searchTravelPlacesWithLocation(anyInt(), anyLong(), any(PlaceSearchRequest.class)))
                 .willReturn(response);
 
         // when, then
@@ -373,7 +373,7 @@ public class TravelControllerTest {
 
         PlaceSearchRequest request = TravelPlaceFixture.createTravelSearchRequest(9999.9999, 9999.9999, "ㅁㄴㅇㄹ");
 
-        given(travelService.searchTravelPlacesWithLocation(anyInt(), anyLong(), any(PlaceSearchRequest.class)))
+        given(travelPlaceService.searchTravelPlacesWithLocation(anyInt(), anyLong(), any(PlaceSearchRequest.class)))
                 .willReturn(response);
 
         // when, then
@@ -415,7 +415,7 @@ public class TravelControllerTest {
 
         PlaceSearchRequest request = TravelPlaceFixture.createTravelSearchRequest(37.4970465429, 127.0281573537, "강남");
 
-        given(travelService.searchTravelPlacesWithLocation(anyInt(), isNull(), any(PlaceSearchRequest.class)))
+        given(travelPlaceService.searchTravelPlacesWithLocation(anyInt(), isNull(), any(PlaceSearchRequest.class)))
                 .willReturn(response);
 
         // when, then
@@ -445,7 +445,7 @@ public class TravelControllerTest {
 
         PlaceSearchRequest request = TravelPlaceFixture.createTravelSearchRequest(9999.9999, 9999.9999, "ㅁㄴㅇㄹ");
 
-        given(travelService.searchTravelPlacesWithLocation(anyInt(), isNull(), any(PlaceSearchRequest.class)))
+        given(travelPlaceService.searchTravelPlacesWithLocation(anyInt(), isNull(), any(PlaceSearchRequest.class)))
                 .willReturn(response);
         // when, then
         mockMvc.perform(post("/api/travels/search")
@@ -489,7 +489,7 @@ public class TravelControllerTest {
 
         PlaceSearchRequest request = TravelPlaceFixture.createTravelSearchRequest("강남");
 
-        given(travelService.searchTravelPlacesWithoutLocation(anyInt(), anyLong(), any(PlaceSearchRequest.class)))
+        given(travelPlaceService.searchTravelPlacesWithoutLocation(anyInt(), anyLong(), any(PlaceSearchRequest.class)))
                 .willReturn(response);
 
         // when, then
@@ -521,7 +521,7 @@ public class TravelControllerTest {
 
         PlaceSearchRequest request = TravelPlaceFixture.createTravelSearchRequest("ㅁㄴㅇㄹ");
 
-        given(travelService.searchTravelPlacesWithoutLocation(anyInt(), anyLong(), any(PlaceSearchRequest.class)))
+        given(travelPlaceService.searchTravelPlacesWithoutLocation(anyInt(), anyLong(), any(PlaceSearchRequest.class)))
                 .willReturn(response);
 
         // when, then
@@ -563,7 +563,7 @@ public class TravelControllerTest {
 
         PlaceSearchRequest request = TravelPlaceFixture.createTravelSearchRequest("강남");
 
-        given(travelService.searchTravelPlacesWithoutLocation(anyInt(), isNull(), any(PlaceSearchRequest.class)))
+        given(travelPlaceService.searchTravelPlacesWithoutLocation(anyInt(), isNull(), any(PlaceSearchRequest.class)))
                 .willReturn(response);
 
         // when, then
@@ -593,7 +593,7 @@ public class TravelControllerTest {
 
         PlaceSearchRequest request = TravelPlaceFixture.createTravelSearchRequest("ㅁㄴㅇㄹ");
 
-        given(travelService.searchTravelPlacesWithoutLocation(anyInt(), isNull(), any(PlaceSearchRequest.class)))
+        given(travelPlaceService.searchTravelPlacesWithoutLocation(anyInt(), isNull(), any(PlaceSearchRequest.class)))
                 .willReturn(response);
 
         // when, then
@@ -698,7 +698,7 @@ public class TravelControllerTest {
 
         PlaceDetailResponse response = TravelPlaceFixture.createPlaceDetailResponse(place, travelImages, true);
 
-        given(travelService.getTravelPlaceDetails(anyLong(), anyLong()))
+        given(travelPlaceService.getTravelPlaceDetails(anyLong(), anyLong()))
                 .willReturn(response);
 
         // when, then
@@ -737,7 +737,7 @@ public class TravelControllerTest {
                 false
         );
 
-        given(travelService.getTravelPlaceDetails(anyLong(), isNull()))
+        given(travelPlaceService.getTravelPlaceDetails(anyLong(), isNull()))
                 .willReturn(response);
 
         // when, then
@@ -756,7 +756,7 @@ public class TravelControllerTest {
     void getTravelDetails_placeNotFound() throws Exception {
         // given
         willThrow(new DataNotFoundException(ErrorCode.DATA_NOT_FOUND))
-                .given(travelService).getTravelPlaceDetails(eq(1000L), isNull());
+                .given(travelPlaceService).getTravelPlaceDetails(eq(1000L), isNull());
 
         // when, then
         mockMvc.perform(get("/api/travels/{placeId}", 1000L))
@@ -824,7 +824,7 @@ public class TravelControllerTest {
                 TravelPlaceFixture.createPlaceSimpleResponse(seongdongPlace, null)
         );
 
-        given(travelService.getPopularTravelPlacesByCity(eq(CityType.ALL)))
+        given(travelPlaceService.getPopularTravelPlacesByCity(eq(CityType.ALL)))
                 .willReturn(response);
 
 
@@ -852,7 +852,7 @@ public class TravelControllerTest {
     @DisplayName("지역별 인기 여행지 조회 시 데이터 없는 경우")
     void findPopularTravelPlacesByCity_empty() throws Exception {
         // given
-        given(travelService.getPopularTravelPlacesByCity(eq(CityType.GYEONGSANG)))
+        given(travelPlaceService.getPopularTravelPlacesByCity(eq(CityType.GYEONGSANG)))
                 .willReturn(Collections.emptyList());
 
         // when, then
@@ -933,7 +933,7 @@ public class TravelControllerTest {
                 TravelPlaceFixture.createPlaceSimpleResponse(lodgingPlace, lodgingThumbUrl)
         );
 
-        given(travelService.getRecommendTravelPlacesByTheme(eq(ThemeType.ALL)))
+        given(travelPlaceService.getRecommendTravelPlacesByTheme(eq(ThemeType.ALL)))
                 .willReturn(response);
 
         // when, then
@@ -959,7 +959,7 @@ public class TravelControllerTest {
     @DisplayName("테마별 추천 여행지 조회 시 데이터 없는 경우")
     void findRecommendTravelPlacesByTheme_empty() throws Exception {
         // given
-        given(travelService.getRecommendTravelPlacesByTheme(eq(ThemeType.FOOD)))
+        given(travelPlaceService.getRecommendTravelPlacesByTheme(eq(ThemeType.FOOD)))
                 .willReturn(Collections.emptyList());
 
         // when, then
