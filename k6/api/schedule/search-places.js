@@ -7,14 +7,14 @@ const PASSWORD = __ENV.PASSWORD;
 
 export const options = {
     stages: [
-      { duration: '30s', target: 3 },
-      { duration: '30s', target: 30 },
-      { duration: '3m', target: 30 },
-      { duration: '30s', target: 0 },
+        { duration: '30s', target: 10 },
+        { duration: '30s', target: 100 },
+        { duration: '3m', target: 100 },
+        { duration: '30s', target: 0 },
     ],
     thresholds: {
-      http_req_failed: ['rate<0.01'],
-      http_req_duration: ['p(95)<500'],
+        http_req_failed: ['rate<0.01'],
+        http_req_duration: ['p(95)<500'],
     },
 };
 
@@ -26,9 +26,7 @@ export function setup(){
             password: PASSWORD,
         }),
         {
-            headers: {
-                "Content-Type": "application/json",
-            },
+            headers: { "Content-Type": "application/json" }
         }
     );
 
@@ -42,18 +40,22 @@ export function setup(){
 }
 
 export default function(data) {
+    const keyword = encodeURIComponent('여행');
+
     const res = http.get(
-        `${BASE_URL}/api/schedules/42?page=1`,
+        `${BASE_URL}/api/schedules/42/travels/search?page=1&keyword=${keyword}`,
         {
-            headers: {
-                Authorization: `Bearer ${data.accessToken}`,
-            },
+            headers: { Authorization: `Bearer ${data.accessToken}` }
         }
     );
 
     check(res, {
-        '일정 상세 조회 성공': (r) => r.status === 200,
+        '일정 내 여행지 검색 성공': (r) => r.status === 200,
     });
+
+    if (res.status !== 200) {
+        console.log(`status: ${res.status}, body: ${res.body}`);
+    }
 
     sleep(1);
 }
