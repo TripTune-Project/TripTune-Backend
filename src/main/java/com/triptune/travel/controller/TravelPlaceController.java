@@ -10,15 +10,12 @@ import com.triptune.travel.dto.response.PlaceDistanceResponse;
 import com.triptune.travel.dto.response.PlaceSimpleResponse;
 import com.triptune.travel.enums.CityType;
 import com.triptune.travel.enums.ThemeType;
-import com.triptune.travel.service.TravelService;
+import com.triptune.travel.service.TravelPlaceService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.security.authentication.AnonymousAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -27,16 +24,16 @@ import java.util.List;
 @RequestMapping("/api/travels")
 @Tag(name = "Travel Place", description = "여행지 탐색 관련 API")
 @RequiredArgsConstructor
-public class TravelController {
+public class TravelPlaceController {
 
-    private final TravelService travelService;
+    private final TravelPlaceService travelPlaceService;
 
     @PostMapping
     @Operation(summary = "현재 위치와 가까운 여행지 목록 조회", description = "여행지 탐색 메뉴에서 회원의 현재 위치와 가까운 여행지 목록을 제공한다.")
     public ApiResponse<PageResponse<PlaceDistanceResponse>> getNearByTravelPlaces(@RequestBody @Valid PlaceLocationRequest placeLocationRequest,
                                                                          @RequestParam int page){
         Long memberId = SecurityUtils.getAuthenticateMemberId();
-        Page<PlaceDistanceResponse> response = travelService.getNearByTravelPlaces(page, memberId, placeLocationRequest);
+        Page<PlaceDistanceResponse> response = travelPlaceService.getNearByTravelPlaces(page, memberId, placeLocationRequest);
         return ApiResponse.pageResponse(response);
     }
 
@@ -49,8 +46,8 @@ public class TravelController {
         boolean hasLocation = placeSearchRequest.getLatitude() != null && placeSearchRequest.getLongitude() != null;
 
         Page<PlaceDistanceResponse> response = hasLocation
-                ? travelService.searchTravelPlacesWithLocation(page, memberId, placeSearchRequest)
-                : travelService.searchTravelPlacesWithoutLocation(page, memberId, placeSearchRequest);
+                ? travelPlaceService.searchTravelPlacesWithLocation(page, memberId, placeSearchRequest)
+                : travelPlaceService.searchTravelPlacesWithoutLocation(page, memberId, placeSearchRequest);
 
         return ApiResponse.pageResponse(response);
     }
@@ -60,7 +57,7 @@ public class TravelController {
     @Operation(summary = "여행지 상세조회", description = "여행지에 대한 자세한 정보를 조회한다.")
     public ApiResponse<PlaceDetailResponse> getTravelPlaceDetails(@PathVariable("placeId") Long placeId){
         Long memberId = SecurityUtils.getAuthenticateMemberId();
-        PlaceDetailResponse response = travelService.getTravelPlaceDetails(placeId, memberId);
+        PlaceDetailResponse response = travelPlaceService.getTravelPlaceDetails(placeId, memberId);
         return ApiResponse.dataResponse(response);
     }
 
@@ -68,7 +65,7 @@ public class TravelController {
     @Operation(summary = "지역별 인기 여행지 조회", description = "지역에 따른 인기 여행지 목록을 조회한다.")
     public ApiResponse<List<PlaceSimpleResponse>> getPopularTravelPlacesByCity(@RequestParam("city") String city){
         CityType cityType = CityType.from(city);
-        List<PlaceSimpleResponse> response = travelService.getPopularTravelPlacesByCity(cityType);
+        List<PlaceSimpleResponse> response = travelPlaceService.getPopularTravelPlacesByCity(cityType);
         return ApiResponse.dataResponse(response);
     }
 
@@ -76,7 +73,7 @@ public class TravelController {
     @Operation(summary = "테마별 추천 여행지 조회", description = "여행 테마에 따른 여행지 목록을 조회한다.")
     public ApiResponse<List<PlaceSimpleResponse>> getRecommendTravelPlacesByTheme(@RequestParam("theme") String theme){
         ThemeType themeType = ThemeType.from(theme);
-        List<PlaceSimpleResponse> response = travelService.getRecommendTravelPlacesByTheme(themeType);
+        List<PlaceSimpleResponse> response = travelPlaceService.getRecommendTravelPlacesByTheme(themeType);
         return ApiResponse.dataResponse(response);
     }
 

@@ -26,7 +26,7 @@ import java.util.List;
 @Service
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
-public class TravelService {
+public class TravelPlaceService {
     private static final int RADIUS_SIZE = 5;
 
     private final TravelPlaceRepository travelPlaceRepository;

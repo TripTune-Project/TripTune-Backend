@@ -13,7 +13,7 @@ import com.triptune.schedule.dto.response.ScheduleInfoResponse;
 import com.triptune.schedule.enums.ScheduleSearchType;
 import com.triptune.schedule.service.TravelScheduleService;
 import com.triptune.travel.dto.response.PlaceResponse;
-import com.triptune.travel.service.TravelService;
+import com.triptune.travel.service.TravelPlaceService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -28,7 +28,7 @@ import org.springframework.web.bind.annotation.*;
 @Tag(name = "Schedule", description = "일정 만들기 관련 API")
 public class TravelScheduleController {
     private final TravelScheduleService travelScheduleService;
-    private final TravelService travelService;
+    private final TravelPlaceService travelPlaceService;
 
     @GetMapping
     @Operation(summary = "전체 일정 목록 조회", description = "작성한 전체 일정을 조회합니다.")
@@ -115,7 +115,7 @@ public class TravelScheduleController {
     @Operation(summary = "여행지 조회", description = "일정 상세보기 여행지 탭에서 여행지를 제공합니다.")
     public ApiResponse<PageResponse<PlaceResponse>> getTravelPlaces(@PathVariable(name = "scheduleId") Long scheduleId,
                                                                     @RequestParam int page){
-        Page<PlaceResponse> response = travelService.getTravelPlacesByJungGu(page);
+        Page<PlaceResponse> response = travelPlaceService.getTravelPlacesByJungGu(page);
 
         return ApiResponse.pageResponse(response);
     }
@@ -127,7 +127,7 @@ public class TravelScheduleController {
                                                                        @RequestParam(name = "page") int page,
                                                                        @RequestParam(name = "keyword") String keyword){
 
-        Page<PlaceResponse> response = travelService.searchTravelPlaces(page, keyword);
+        Page<PlaceResponse> response = travelPlaceService.searchTravelPlaces(page, keyword);
         return ApiResponse.pageResponse(response);
     }
 

@@ -39,7 +39,7 @@ import com.triptune.travel.entity.TravelImage;
 import com.triptune.travel.entity.TravelPlace;
 import com.triptune.travel.fixture.TravelImageFixture;
 import com.triptune.travel.fixture.TravelPlaceFixture;
-import com.triptune.travel.service.TravelService;
+import com.triptune.travel.service.TravelPlaceService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -80,7 +80,7 @@ public class TravelScheduleControllerTest {
 
     @MockBean private JwtAuthFilter jwtAuthFilter;
     @MockBean private TravelScheduleService travelScheduleService;
-    @MockBean private TravelService travelService;
+    @MockBean private TravelPlaceService travelPlaceService;
 
 
     private Member member1;
@@ -1042,7 +1042,7 @@ public class TravelScheduleControllerTest {
                 placeResponses.size()
         );
 
-        given(travelService.getTravelPlacesByJungGu(anyInt()))
+        given(travelPlaceService.getTravelPlacesByJungGu(anyInt()))
                 .willReturn(response);
 
         // when, then
@@ -1072,7 +1072,7 @@ public class TravelScheduleControllerTest {
                 0
         );
 
-        given(travelService.getTravelPlacesByJungGu(anyInt()))
+        given(travelPlaceService.getTravelPlacesByJungGu(anyInt()))
                 .willReturn(response);
 
         // when, then
@@ -1101,7 +1101,7 @@ public class TravelScheduleControllerTest {
                 placeResponses.size()
         );
 
-        given(travelService.searchTravelPlaces(anyInt(), eq("강남")))
+        given(travelPlaceService.searchTravelPlaces(anyInt(), eq("강남")))
                 .willReturn(response);
 
         // when, then
@@ -1132,7 +1132,7 @@ public class TravelScheduleControllerTest {
                 0
         );
 
-        given(travelService.searchTravelPlaces(anyInt(), eq("ㅁㄴㅇㄹ")))
+        given(travelPlaceService.searchTravelPlaces(anyInt(), eq("ㅁㄴㅇㄹ")))
                 .willReturn(response);
 
         // when, then

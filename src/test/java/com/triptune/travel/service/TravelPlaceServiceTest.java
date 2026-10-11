@@ -44,8 +44,8 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-public class TravelServiceTest  {
-    @InjectMocks private TravelService travelService;
+public class TravelPlaceServiceTest {
+    @InjectMocks private TravelPlaceService travelPlaceService;
     @Mock private TravelPlaceRepository travelPlaceRepository;
     @Mock private BookmarkRepository bookmarkRepository;
     @Mock private S3ObjectManager s3ObjectManager;
@@ -117,7 +117,7 @@ public class TravelServiceTest  {
 
 
         // when
-        Page<PlaceDistanceResponse> response = travelService.getNearByTravelPlaces(1, 1L, request);
+        Page<PlaceDistanceResponse> response = travelPlaceService.getNearByTravelPlaces(1, 1L, request);
 
 
         // then
@@ -150,7 +150,7 @@ public class TravelServiceTest  {
         when(travelPlaceRepository.findNearByTravelPlaces(pageable, request, 5)).thenReturn(mockResponse);
 
         // when
-        Page<PlaceDistanceResponse> response = travelService.getNearByTravelPlaces(1, member.getMemberId(), request);
+        Page<PlaceDistanceResponse> response = travelPlaceService.getNearByTravelPlaces(1, member.getMemberId(), request);
 
         // then
         assertThat(response.getTotalElements()).isEqualTo(0);
@@ -194,7 +194,7 @@ public class TravelServiceTest  {
         when(s3ObjectManager.generateS3ObjectUrl(placeThumb.getS3ObjectKey())).thenReturn(placeThumbUrl);
 
         // when
-        Page<PlaceDistanceResponse> response = travelService.getNearByTravelPlaces(1, null, request);
+        Page<PlaceDistanceResponse> response = travelPlaceService.getNearByTravelPlaces(1, null, request);
 
         // then
         List<PlaceDistanceResponse> content = response.getContent();
@@ -225,7 +225,7 @@ public class TravelServiceTest  {
         when(travelPlaceRepository.findNearByTravelPlaces(pageable, request, 5)).thenReturn(mockResponse);
 
         // when
-        Page<PlaceDistanceResponse> response = travelService.getNearByTravelPlaces(1, null, request);
+        Page<PlaceDistanceResponse> response = travelPlaceService.getNearByTravelPlaces(1, null, request);
 
         // then
         assertThat(response.getTotalElements()).isEqualTo(0);
@@ -274,7 +274,7 @@ public class TravelServiceTest  {
         when(bookmarkRepository.existsByMember_MemberIdAndTravelPlace_PlaceId(1L, placeWithoutThumb.getPlaceId())).thenReturn(false);
 
         // when
-        Page<PlaceDistanceResponse> response = travelService.searchTravelPlacesWithLocation(1, 1L, request);
+        Page<PlaceDistanceResponse> response = travelPlaceService.searchTravelPlacesWithLocation(1, 1L, request);
 
         // then
         List<PlaceDistanceResponse> content = response.getContent();
@@ -299,7 +299,7 @@ public class TravelServiceTest  {
         when(travelPlaceRepository.searchTravelPlacesWithLocation(pageable, request)).thenReturn(mockResponse);
 
         // when
-        Page<PlaceDistanceResponse> response = travelService.searchTravelPlacesWithLocation(1, member.getMemberId(), request);
+        Page<PlaceDistanceResponse> response = travelPlaceService.searchTravelPlacesWithLocation(1, member.getMemberId(), request);
 
         // then
         assertThat(response.getTotalElements()).isEqualTo(0);
@@ -344,7 +344,7 @@ public class TravelServiceTest  {
         when(s3ObjectManager.generateS3ObjectUrl(placeThumb.getS3ObjectKey())).thenReturn(placeThumbUrl);
 
         // when
-        Page<PlaceDistanceResponse> response = travelService.searchTravelPlacesWithLocation(1, null, request);
+        Page<PlaceDistanceResponse> response = travelPlaceService.searchTravelPlacesWithLocation(1, null, request);
 
         // then
         List<PlaceDistanceResponse> content = response.getContent();
@@ -373,7 +373,7 @@ public class TravelServiceTest  {
         when(travelPlaceRepository.searchTravelPlacesWithLocation(pageable, request)).thenReturn(mockResponse);
 
         // when
-        Page<PlaceDistanceResponse> response = travelService.searchTravelPlacesWithLocation(1, null, request);
+        Page<PlaceDistanceResponse> response = travelPlaceService.searchTravelPlacesWithLocation(1, null, request);
 
         // then
         assertThat(response.getTotalElements()).isEqualTo(0);
@@ -423,7 +423,7 @@ public class TravelServiceTest  {
         when(bookmarkRepository.existsByMember_MemberIdAndTravelPlace_PlaceId(1L, placeWithoutThumb.getPlaceId())).thenReturn(false);
 
         // when
-        Page<PlaceDistanceResponse> response = travelService.searchTravelPlacesWithoutLocation(1, 1L, request);
+        Page<PlaceDistanceResponse> response = travelPlaceService.searchTravelPlacesWithoutLocation(1, 1L, request);
 
         // then
         List<PlaceDistanceResponse> content = response.getContent();
@@ -447,7 +447,7 @@ public class TravelServiceTest  {
 
 
         // when
-        Page<PlaceDistanceResponse> response = travelService.searchTravelPlacesWithoutLocation(1, member.getMemberId(), request);
+        Page<PlaceDistanceResponse> response = travelPlaceService.searchTravelPlacesWithoutLocation(1, member.getMemberId(), request);
 
         // then
         assertThat(response.getTotalElements()).isEqualTo(0);
@@ -494,7 +494,7 @@ public class TravelServiceTest  {
 
 
         // when
-        Page<PlaceDistanceResponse> response = travelService.searchTravelPlacesWithoutLocation(1, null, request);
+        Page<PlaceDistanceResponse> response = travelPlaceService.searchTravelPlacesWithoutLocation(1, null, request);
 
         // then
         List<PlaceDistanceResponse> content = response.getContent();
@@ -519,7 +519,7 @@ public class TravelServiceTest  {
         when(travelPlaceRepository.searchTravelPlacesWithoutLocation(pageable, request.getKeyword())).thenReturn(mockResponse);
 
         // when
-        Page<PlaceDistanceResponse> response = travelService.searchTravelPlacesWithoutLocation(1, null, request);
+        Page<PlaceDistanceResponse> response = travelPlaceService.searchTravelPlacesWithoutLocation(1, null, request);
 
         // then
         assertThat(response.getTotalElements()).isEqualTo(0);
@@ -543,7 +543,7 @@ public class TravelServiceTest  {
         when(bookmarkRepository.existsByMember_MemberIdAndTravelPlace_PlaceId(1L, 1L)).thenReturn(true);
 
         // when
-        PlaceDetailResponse response = travelService.getTravelPlaceDetails(1L, 1L);
+        PlaceDetailResponse response = travelPlaceService.getTravelPlaceDetails(1L, 1L);
 
         // then
         assertThat(response.getPlaceName()).isEqualTo(attractionPlace.getPlaceName());
@@ -571,7 +571,7 @@ public class TravelServiceTest  {
         when(travelPlaceRepository.findById(1L)).thenReturn(Optional.of(attractionPlace));
 
         // when
-        PlaceDetailResponse response = travelService.getTravelPlaceDetails(1L, null);
+        PlaceDetailResponse response = travelPlaceService.getTravelPlaceDetails(1L, null);
 
         // then
         assertThat(response.getPlaceName()).isEqualTo(attractionPlace.getPlaceName());
@@ -600,7 +600,7 @@ public class TravelServiceTest  {
 
 
         // when
-        PlaceDetailResponse response = travelService.getTravelPlaceDetails(1L, 1L);
+        PlaceDetailResponse response = travelPlaceService.getTravelPlaceDetails(1L, 1L);
 
         // then
         assertThat(response.getPlaceName()).isEqualTo(lodgingPlace.getPlaceName());
@@ -631,7 +631,7 @@ public class TravelServiceTest  {
 
 
         // when
-        PlaceDetailResponse response = travelService.getTravelPlaceDetails(2L, member.getMemberId());
+        PlaceDetailResponse response = travelPlaceService.getTravelPlaceDetails(2L, member.getMemberId());
 
         // then
         assertThat(response.getPlaceName()).isEqualTo(lodgingPlace.getPlaceName());
@@ -653,7 +653,7 @@ public class TravelServiceTest  {
 
         // when
         DataNotFoundException fail = assertThrows(DataNotFoundException.class,
-                () -> travelService.getTravelPlaceDetails(1000L, member.getMemberId()));
+                () -> travelPlaceService.getTravelPlaceDetails(1000L, member.getMemberId()));
 
         // then
         assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.DATA_NOT_FOUND);
@@ -695,7 +695,7 @@ public class TravelServiceTest  {
         when(s3ObjectManager.generateS3ObjectUrl(placeThumb.getS3ObjectKey())).thenReturn(placeThumbUrl);
 
         // when
-        Page<PlaceResponse> response = travelService.getTravelPlacesByJungGu(1);
+        Page<PlaceResponse> response = travelPlaceService.getTravelPlacesByJungGu(1);
 
         // then
         List<PlaceResponse> content = response.getContent();
@@ -716,7 +716,7 @@ public class TravelServiceTest  {
                 .thenReturn(PageUtils.createPage(Collections.emptyList(), pageable, 0));
 
         // when
-        Page<PlaceResponse> response = travelService.getTravelPlacesByJungGu(1);
+        Page<PlaceResponse> response = travelPlaceService.getTravelPlacesByJungGu(1);
 
         // then
         assertThat(response.getTotalElements()).isEqualTo(0);
@@ -760,7 +760,7 @@ public class TravelServiceTest  {
         when(s3ObjectManager.generateS3ObjectUrl(placeThumb.getS3ObjectKey())).thenReturn(placeThumbUrl);
 
         // when
-        Page<PlaceResponse> response = travelService.searchTravelPlaces(1, keyword);
+        Page<PlaceResponse> response = travelPlaceService.searchTravelPlaces(1, keyword);
 
         // then
         List<PlaceResponse> content = response.getContent();
@@ -783,7 +783,7 @@ public class TravelServiceTest  {
                 .thenReturn(PageUtils.createPage(Collections.emptyList(), pageable, 0));
 
         // when
-        Page<PlaceResponse> response = travelService.searchTravelPlaces(1, keyword);
+        Page<PlaceResponse> response = travelPlaceService.searchTravelPlaces(1, keyword);
 
         // then
         assertThat(response.getTotalElements()).isEqualTo(0);
@@ -849,7 +849,7 @@ public class TravelServiceTest  {
         when(s3ObjectManager.generateS3ObjectUrl(null)).thenReturn(null);
 
         // when
-        List<PlaceSimpleResponse> response = travelService.getPopularTravelPlacesByCity(CityType.ALL);
+        List<PlaceSimpleResponse> response = travelPlaceService.getPopularTravelPlacesByCity(CityType.ALL);
 
         // then
         assertThat(response.size()).isEqualTo(4);
@@ -899,7 +899,7 @@ public class TravelServiceTest  {
         when(s3ObjectManager.generateS3ObjectUrl(null)).thenReturn(null);
 
         // when
-        List<PlaceSimpleResponse> response = travelService.getPopularTravelPlacesByCity(CityType.JEOLLA);
+        List<PlaceSimpleResponse> response = travelPlaceService.getPopularTravelPlacesByCity(CityType.JEOLLA);
 
         // then
         assertThat(response.size()).isEqualTo(2);
@@ -917,7 +917,7 @@ public class TravelServiceTest  {
         when(travelPlaceRepository.findPopularTravelPlaces(CityType.JEOLLA)).thenReturn(Collections.emptyList());
 
         // when
-        List<PlaceSimpleResponse> response = travelService.getPopularTravelPlacesByCity(CityType.JEOLLA);
+        List<PlaceSimpleResponse> response = travelPlaceService.getPopularTravelPlacesByCity(CityType.JEOLLA);
 
         // then
         assertThat(response.size()).isEqualTo(0);
@@ -984,7 +984,7 @@ public class TravelServiceTest  {
         when(s3ObjectManager.generateS3ObjectUrl(null)).thenReturn(null);
 
         // when
-        List<PlaceSimpleResponse> response = travelService.getRecommendTravelPlacesByTheme(ThemeType.ALL);
+        List<PlaceSimpleResponse> response = travelPlaceService.getRecommendTravelPlacesByTheme(ThemeType.ALL);
 
         // then
         assertThat(response.size()).isEqualTo(4);
@@ -1034,7 +1034,7 @@ public class TravelServiceTest  {
         when(s3ObjectManager.generateS3ObjectUrl(null)).thenReturn(null);
 
         // when
-        List<PlaceSimpleResponse> response = travelService.getRecommendTravelPlacesByTheme(ThemeType.ATTRACTIONS);
+        List<PlaceSimpleResponse> response = travelPlaceService.getRecommendTravelPlacesByTheme(ThemeType.ATTRACTIONS);
 
         // then
         assertThat(response.size()).isEqualTo(2);
@@ -1049,7 +1049,7 @@ public class TravelServiceTest  {
     @DisplayName("추천 테마 여행지 조회 시 데이터 없는 경우")
     void findRecommendTravelPlacesByTheme_empty(){
         // given, when
-        List<PlaceSimpleResponse> response = travelService.getRecommendTravelPlacesByTheme(ThemeType.FOOD);
+        List<PlaceSimpleResponse> response = travelPlaceService.getRecommendTravelPlacesByTheme(ThemeType.FOOD);
 
         // then
         assertThat(response.size()).isEqualTo(0);
