@@ -21,8 +21,7 @@ public class SecurityConstants {
             "/api/members/find-id",
             "/api/members/find-password",
             "/api/members/reset-password",
-            "/api/emails/**",
-            "/api/travels/**"
+            "/api/emails/**"
     };
 
     private SecurityConstants() {}
