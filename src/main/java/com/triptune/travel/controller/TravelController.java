@@ -2,6 +2,7 @@ package com.triptune.travel.controller;
 
 import com.triptune.global.response.ApiResponse;
 import com.triptune.global.response.page.PageResponse;
+import com.triptune.global.util.SecurityUtils;
 import com.triptune.travel.dto.request.PlaceLocationRequest;
 import com.triptune.travel.dto.request.PlaceSearchRequest;
 import com.triptune.travel.dto.response.PlaceDetailResponse;
@@ -34,7 +35,7 @@ public class TravelController {
     @Operation(summary = "현재 위치와 가까운 여행지 목록 조회", description = "여행지 탐색 메뉴에서 회원의 현재 위치와 가까운 여행지 목록을 제공한다.")
     public ApiResponse<PageResponse<PlaceDistanceResponse>> getNearByTravelPlaces(@RequestBody @Valid PlaceLocationRequest placeLocationRequest,
                                                                          @RequestParam int page){
-        Long memberId = getAuthenticateMemberId();
+        Long memberId = SecurityUtils.getAuthenticateMemberId();
         Page<PlaceDistanceResponse> response = travelService.getNearByTravelPlaces(page, memberId, placeLocationRequest);
         return ApiResponse.pageResponse(response);
     }
@@ -44,7 +45,7 @@ public class TravelController {
     @Operation(summary = "여행지 검색", description = "여행지 탐색 메뉴에서 여행지를 검색한다.")
     public ApiResponse<PageResponse<PlaceDistanceResponse>> searchTravelPlaces(@RequestBody @Valid PlaceSearchRequest placeSearchRequest,
                                                                                 @RequestParam int page){
-        Long memberId = getAuthenticateMemberId();
+        Long memberId = SecurityUtils.getAuthenticateMemberId();
         boolean hasLocation = placeSearchRequest.getLatitude() != null && placeSearchRequest.getLongitude() != null;
 
         Page<PlaceDistanceResponse> response = hasLocation
@@ -58,7 +59,7 @@ public class TravelController {
     @GetMapping("/{placeId}")
     @Operation(summary = "여행지 상세조회", description = "여행지에 대한 자세한 정보를 조회한다.")
     public ApiResponse<PlaceDetailResponse> getTravelPlaceDetails(@PathVariable("placeId") Long placeId){
-        Long memberId = getAuthenticateMemberId();
+        Long memberId = SecurityUtils.getAuthenticateMemberId();
         PlaceDetailResponse response = travelService.getTravelPlaceDetails(placeId, memberId);
         return ApiResponse.dataResponse(response);
     }
@@ -79,13 +80,6 @@ public class TravelController {
         return ApiResponse.dataResponse(response);
     }
 
-    public Long getAuthenticateMemberId(){
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null && authentication.isAuthenticated() && !(authentication instanceof AnonymousAuthenticationToken)){
-            return Long.parseLong(authentication.getName());
-        }
 
-        return null;
-    }
 
 }
