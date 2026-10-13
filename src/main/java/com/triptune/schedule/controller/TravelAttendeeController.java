@@ -39,6 +39,7 @@ public class TravelAttendeeController {
                                             @PathVariable(name = "scheduleId") Long scheduleId,
                                             @Valid @RequestBody AttendeeRequest attendeeRequest){
         travelAttendeeService.createAttendee(scheduleId, memberId, attendeeRequest);
+
         return ApiResponse.okResponse();
     }
 
@@ -50,7 +51,6 @@ public class TravelAttendeeController {
                                                       @PathVariable(name = "attendeeId") Long attendeeId,
                                                       @Valid @RequestBody AttendeePermissionRequest attendeePermissionRequest){
         travelAttendeeService.updateAttendeePermission(attendeePermissionRequest, scheduleId, memberId, attendeeId);
-
         return ApiResponse.okResponse();
     }
 

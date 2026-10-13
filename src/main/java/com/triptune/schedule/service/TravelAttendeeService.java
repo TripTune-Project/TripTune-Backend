@@ -1,21 +1,28 @@
 package com.triptune.schedule.service;
 
-import com.triptune.global.message.ErrorCode;
 import com.triptune.global.exception.DataNotFoundException;
+import com.triptune.global.message.ErrorCode;
 import com.triptune.global.s3.S3ObjectManager;
 import com.triptune.member.entity.Member;
 import com.triptune.member.repository.MemberRepository;
+import com.triptune.profile.repository.ProfileImageRepository;
 import com.triptune.schedule.dto.request.AttendeePermissionRequest;
 import com.triptune.schedule.dto.request.AttendeeRequest;
 import com.triptune.schedule.dto.response.AttendeeResponse;
 import com.triptune.schedule.entity.TravelAttendee;
 import com.triptune.schedule.entity.TravelSchedule;
 import com.triptune.schedule.enums.AttendeeRole;
+import com.triptune.schedule.event.ScheduleEvent;
+import com.triptune.schedule.event.ScheduleEventType;
+import com.triptune.schedule.event.dto.AttendeeCreatedResponse;
+import com.triptune.schedule.event.dto.AttendeePermissionResponse;
+import com.triptune.schedule.event.dto.AttendeeRemovalResponse;
 import com.triptune.schedule.exception.ConflictAttendeeException;
 import com.triptune.schedule.exception.ForbiddenAttendeeException;
 import com.triptune.schedule.repository.TravelAttendeeRepository;
 import com.triptune.schedule.repository.TravelScheduleRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,17 +37,19 @@ public class TravelAttendeeService {
 
     private final TravelAttendeeRepository travelAttendeeRepository;
     private final TravelScheduleRepository travelScheduleRepository;
+    private final ProfileImageRepository profileImageRepository;
+    private final ApplicationEventPublisher publisher;
     private final MemberRepository memberRepository;
     private final S3ObjectManager s3ObjectManager;
 
 
     public List<AttendeeResponse> getAttendeesByScheduleId(Long scheduleId) {
-        List<TravelAttendee> travelAttendees = travelAttendeeRepository.findAllByScheduleId(scheduleId);
+        List<TravelAttendee> attendees = travelAttendeeRepository.findAllByScheduleId(scheduleId);
         List<AttendeeResponse> response = new ArrayList<>();
 
-        for (TravelAttendee travelAttendee : travelAttendees) {
-            String profileUrl = s3ObjectManager.generateS3ObjectUrl(travelAttendee.getMember().getProfileImage().getS3ObjectKey());
-            AttendeeResponse attendeeRes = AttendeeResponse.of(travelAttendee, profileUrl);
+        for (TravelAttendee attendee : attendees) {
+            String profileUrl = s3ObjectManager.generateS3ObjectUrl(attendee.getMember().getProfileImage().getS3ObjectKey());
+            AttendeeResponse attendeeRes = AttendeeResponse.of(attendee, profileUrl);
             response.add(attendeeRes);
 
         }
@@ -49,25 +58,42 @@ public class TravelAttendeeService {
     }
 
     @Transactional
-    public void createAttendee(Long scheduleId, Long memberId, AttendeeRequest attendeeRequest) {
+    public void createAttendee(Long scheduleId, Long authorId, AttendeeRequest attendeeRequest) {
+        validateAttendeeAddition(scheduleId, authorId);
         TravelSchedule schedule = getSchedule(scheduleId);
-        validateAttendeeAddition(scheduleId, memberId);
 
         Member guest = getMember(attendeeRequest.getEmail());
         validateAttendeeAlreadyExists(scheduleId, guest.getMemberId());
 
-        TravelAttendee travelAttendee = TravelAttendee.createGuest(schedule, guest, attendeeRequest.getPermission());
-        travelAttendeeRepository.save(travelAttendee);
+        TravelAttendee attendee = TravelAttendee.createGuest(schedule, guest, attendeeRequest.getPermission());
+        travelAttendeeRepository.save(attendee);
+
+        String profileUrl = getProfileUrl(guest.getMemberId());
+
+        publisher.publishEvent(new ScheduleEvent<>(
+                scheduleId,
+                ScheduleEventType.ATTENDEE_ADDED,
+                ScheduleEventType.ATTENDEE_ADDED.format(guest.getNickname()),
+                AttendeeCreatedResponse.of(attendee, profileUrl)
+            )
+        );
+
     }
+
 
     private TravelSchedule getSchedule(Long scheduleId){
         return travelScheduleRepository.findById(scheduleId)
                 .orElseThrow(() -> new DataNotFoundException(ErrorCode.SCHEDULE_NOT_FOUND));
     }
 
-    private void validateAttendeeAddition(Long scheduleId, Long memberId){
+    private void validateAttendeeAddition(Long scheduleId, Long authorId){
         validateAttendeeCount(scheduleId);
-        validateAuthor(scheduleId, memberId, ErrorCode.FORBIDDEN_SHARE_ATTENDEE);
+        validateAuthor(scheduleId, authorId, ErrorCode.FORBIDDEN_SHARE_ATTENDEE);
+    }
+
+    private String getProfileUrl(Long memberId) {
+        String s3ObjectKey = profileImageRepository.findS3ObjectKeyByMemberId(memberId);
+        return s3ObjectManager.generateS3ObjectUrl(s3ObjectKey);
     }
 
     private void validateAttendeeCount(Long scheduleId){
@@ -94,25 +120,30 @@ public class TravelAttendeeService {
     }
 
     @Transactional
-    public void updateAttendeePermission(AttendeePermissionRequest attendeePermissionRequest,
+    public void updateAttendeePermission(AttendeePermissionRequest permissionRequest,
                                          Long scheduleId,
-                                         Long memberId,
+                                         Long authorId,
                                          Long attendeeId) {
-        validateAuthor(scheduleId, memberId, ErrorCode.FORBIDDEN_UPDATE_ATTENDEE_PERMISSION);
+        validateAuthor(scheduleId, authorId, ErrorCode.FORBIDDEN_UPDATE_ATTENDEE_PERMISSION);
 
         TravelAttendee attendee = getAttendeeByScheduleIdAndAttendeeId(scheduleId, attendeeId);
-
         if (attendee.getRole().isAuthor()){
             throw new ForbiddenAttendeeException(ErrorCode.FORBIDDEN_UPDATE_AUTHOR_PERMISSION);
         }
 
-        attendee.updatePermission(attendeePermissionRequest.getPermission());
+        attendee.updatePermission(permissionRequest.getPermission());
+
+        publisher.publishEvent(new ScheduleEvent<>(
+                scheduleId,
+                ScheduleEventType.ATTENDEE_PERMISSION_UPDATED,
+                ScheduleEventType.ATTENDEE_PERMISSION_UPDATED.format(
+                        attendee.getMember().getNickname(),
+                        permissionRequest.getPermission()),
+                new AttendeePermissionResponse(attendee.getAttendeeId(), permissionRequest.getPermission())
+            )
+        );
     }
 
-    private TravelAttendee getAttendeeByScheduleIdAndAttendeeId(Long scheduleId, Long attendeeId) {
-        return travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndAttendeeId(scheduleId, attendeeId)
-                .orElseThrow(() -> new DataNotFoundException(ErrorCode.ATTENDEE_NOT_FOUND));
-    }
 
     @Transactional
     public void leaveAttendee(Long scheduleId, Long memberId) {
@@ -122,7 +153,17 @@ public class TravelAttendeeService {
             throw new ForbiddenAttendeeException(ErrorCode.FORBIDDEN_LEAVE_AUTHOR);
         }
 
-        travelAttendeeRepository.deleteById(attendee.getAttendeeId());
+        Long attendeeId = attendee.getAttendeeId();
+        String nickname = attendee.getMember().getNickname();
+        travelAttendeeRepository.deleteById(attendeeId);
+
+        publisher.publishEvent(new ScheduleEvent<>(
+                scheduleId,
+                ScheduleEventType.ATTENDEE_LEFT,
+                ScheduleEventType.ATTENDEE_LEFT.format(nickname),
+                new AttendeeRemovalResponse(attendeeId)
+            )
+        );
     }
 
     private TravelAttendee getAttendeeByScheduleIdAndMemberId(Long scheduleId, Long memberId) {
@@ -131,30 +172,43 @@ public class TravelAttendeeService {
     }
 
     @Transactional
-    public void removeAttendee(Long scheduleId, Long memberId, Long attendeeId) {
-        validateAuthor(scheduleId, memberId, ErrorCode.FORBIDDEN_REMOVE_ATTENDEE);
+    public void removeAttendee(Long scheduleId, Long authorId, Long attendeeId) {
+        validateAuthor(scheduleId, authorId, ErrorCode.FORBIDDEN_REMOVE_ATTENDEE);
 
-        TravelAttendee attendee = getAttendeeById(attendeeId);
+        TravelAttendee attendee = getAttendeeByScheduleIdAndAttendeeId(scheduleId, attendeeId);
+        validateAuthorCannotLeave(authorId, attendee);
 
-        if (attendee.getMember().getMemberId().equals(memberId)){
-            throw new ForbiddenAttendeeException(ErrorCode.FORBIDDEN_LEAVE_AUTHOR);
-        }
-
+        String nickname = attendee.getMember().getNickname();
         travelAttendeeRepository.delete(attendee);
+
+        publisher.publishEvent(new ScheduleEvent<>(
+                scheduleId,
+                ScheduleEventType.ATTENDEE_REMOVED,
+                ScheduleEventType.ATTENDEE_REMOVED.format(nickname),
+                new AttendeeRemovalResponse(attendeeId)
+            )
+        );
     }
 
-    private TravelAttendee getAttendeeById(Long attendeeId) {
-        return travelAttendeeRepository.findById(attendeeId)
+
+    private void validateAuthor(Long scheduleId, Long authorId, ErrorCode errorCode){
+        boolean isAuthor =  travelAttendeeRepository
+                .existsByTravelSchedule_ScheduleIdAndMember_MemberIdAndRole(scheduleId, authorId, AttendeeRole.AUTHOR);
+
+        if(!isAuthor){
+            throw new ForbiddenAttendeeException(errorCode);
+        }
+    }
+
+    private TravelAttendee getAttendeeByScheduleIdAndAttendeeId(Long scheduleId, Long attendeeId) {
+        return travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndAttendeeId(scheduleId, attendeeId)
                 .orElseThrow(() -> new DataNotFoundException(ErrorCode.ATTENDEE_NOT_FOUND));
     }
 
 
-    private void validateAuthor(Long scheduleId, Long memberId, ErrorCode errorCode){
-        boolean isAuthor =  travelAttendeeRepository
-                .existsByTravelSchedule_ScheduleIdAndMember_MemberIdAndRole(scheduleId, memberId, AttendeeRole.AUTHOR);
-
-        if(!isAuthor){
-            throw new ForbiddenAttendeeException(errorCode);
+    private static void validateAuthorCannotLeave(Long authorId, TravelAttendee attendee) {
+        if (attendee.getMember().getMemberId().equals(authorId)){
+            throw new ForbiddenAttendeeException(ErrorCode.FORBIDDEN_LEAVE_AUTHOR);
         }
     }
 }

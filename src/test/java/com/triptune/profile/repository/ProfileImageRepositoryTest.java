@@ -53,4 +53,18 @@ class ProfileImageRepositoryTest {
         assertThat(response.getFileName()).isEqualTo(profileImage.getFileName());
     }
 
+    @Test
+    @DisplayName("회원 아이디 이용해 s3ObjectKey 조회")
+    void findS3ObjectKeyByMemberId() {
+        // given
+        ProfileImage profileImage = profileImageRepository.save(ProfileImageFixture.createProfileImage("member1Image"));
+        Member member = memberRepository.save(MemberFixture.createNativeTypeMember("member1@email.com", profileImage));
+
+        // when
+        String response = profileImageRepository.findS3ObjectKeyByMemberId(member.getMemberId());
+
+        // then
+        assertThat(response).isEqualTo(profileImage.getS3ObjectKey());
+    }
+
 }
