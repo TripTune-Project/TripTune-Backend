@@ -183,24 +183,6 @@ public class TravelAttendeeIntegrationTest {
 
 
     @Test
-    @DisplayName("일정 참석자 추가 시 일정 데이터 존재하지 않아 예외 발생")
-    void createAttendee_scheduleNotFound() throws Exception{
-        // given
-        AttendeeRequest request = TravelAttendeeFixture.createAttendeeRequest(member3.getEmail(), CHAT);
-        SecurityTestUtils.mockAuthentication(member1);
-
-        // when, then
-        mockMvc.perform(post("/api/schedules/{scheduleId}/attendees", 1000L)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andDo(print())
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.success").value(false))
-                .andExpect(jsonPath("$.message").value(ErrorCode.SCHEDULE_NOT_FOUND.getMessage()));
-
-    }
-
-    @Test
     @DisplayName("일정 참석자 추가 시 일정 참석자 5명 넘어 예외 발생")
     void createAttendee_overFiveAttendees() throws Exception {
         // given

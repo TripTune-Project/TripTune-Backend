@@ -1,6 +1,8 @@
 package com.triptune.schedule.dto.response;
 
 import com.triptune.schedule.entity.TravelAttendee;
+import com.triptune.schedule.enums.AttendeePermission;
+import com.triptune.schedule.enums.AttendeeRole;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -12,11 +14,11 @@ public class AttendeeResponse {
     private String nickname;
     private String email;
     private String profileUrl;
-    private String role;
-    private String permission;
+    private AttendeeRole role;
+    private AttendeePermission permission;
 
     @Builder
-    public AttendeeResponse(Long attendeeId, String nickname, String email, String profileUrl, String role, String permission) {
+    public AttendeeResponse(Long attendeeId, String nickname, String email, String profileUrl, AttendeeRole role, AttendeePermission permission) {
         this.attendeeId = attendeeId;
         this.nickname = nickname;
         this.email = email;
@@ -31,10 +33,8 @@ public class AttendeeResponse {
                 .nickname(attendee.getMember().getNickname())
                 .email(attendee.getMember().getEmail())
                 .profileUrl(profileUrl)
-                .role(attendee.getRole().name())
-                .permission(attendee.getPermission().name())
+                .role(attendee.getRole())
+                .permission(attendee.getPermission())
                 .build();
-
-
     }
 }

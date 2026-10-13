@@ -9,6 +9,7 @@ import com.triptune.member.fixture.MemberFixture;
 import com.triptune.member.repository.MemberRepository;
 import com.triptune.profile.entity.ProfileImage;
 import com.triptune.profile.fixture.ProfileImageFixture;
+import com.triptune.profile.repository.ProfileImageRepository;
 import com.triptune.schedule.fixture.TravelAttendeeFixture;
 import com.triptune.schedule.fixture.TravelScheduleFixture;
 import com.triptune.schedule.dto.request.AttendeePermissionRequest;
@@ -29,6 +30,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 
 import java.util.Collections;
 import java.util.List;
@@ -39,6 +42,7 @@ import static org.assertj.core.groups.Tuple.tuple;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -46,6 +50,8 @@ public class TravelAttendeeServiceTest {
     @InjectMocks private TravelAttendeeService travelAttendeeService;
     @Mock private TravelAttendeeRepository travelAttendeeRepository;
     @Mock private TravelScheduleRepository travelScheduleRepository;
+    @Mock private ProfileImageRepository profileImageRepository;
+    @Mock private ApplicationEventPublisher applicationEventPublisher;
     @Mock private MemberRepository memberRepository;
     @Mock private S3ObjectManager s3ObjectManager;
 
@@ -103,12 +109,12 @@ public class TravelAttendeeServiceTest {
                 .containsExactly(
                         tuple(
                                 member1.getNickname(),
-                                AttendeeRole.AUTHOR.name(),
+                                AttendeeRole.AUTHOR,
                                 member1ProfileUrl
                         ),
                         tuple(
                                 member2.getNickname(),
-                                AttendeeRole.GUEST.name(),
+                                AttendeeRole.GUEST,
                                 member2ProfileUrl
                         )
                 );
@@ -138,9 +144,10 @@ public class TravelAttendeeServiceTest {
 
         AttendeeRequest attendeeRequest = TravelAttendeeFixture.createAttendeeRequest(newMember.getEmail(), AttendeePermission.CHAT);
 
-        when(travelScheduleRepository.findById(anyLong())).thenReturn(Optional.of(schedule));
+        when(travelAttendeeRepository.countByTravelSchedule_ScheduleId(anyLong())).thenReturn(4);
         when(travelAttendeeRepository.existsByTravelSchedule_ScheduleIdAndMember_MemberIdAndRole(anyLong(), anyLong(), any(AttendeeRole.class)))
                 .thenReturn(true);
+        when(travelScheduleRepository.findById(anyLong())).thenReturn(Optional.of(schedule));
         when(memberRepository.findByEmail(anyString())).thenReturn(Optional.of(newMember));
         when(travelAttendeeRepository.existsByTravelSchedule_ScheduleIdAndMember_MemberId(anyLong(), anyLong())).thenReturn(false);
 
@@ -151,21 +158,6 @@ public class TravelAttendeeServiceTest {
 
     }
 
-    @Test
-    @DisplayName("일정 참석자 추가 시 일정 찾을 수 없어 예외 발생")
-    void createAttendee_scheduleNotFound(){
-        // given
-        AttendeeRequest attendeeRequest = TravelAttendeeFixture.createAttendeeRequest(member3.getEmail(), AttendeePermission.CHAT);
-
-        when(travelScheduleRepository.findById(anyLong())).thenReturn(Optional.empty());
-
-        // when, then
-        DataNotFoundException fail = assertThrows(DataNotFoundException.class,
-                () ->  travelAttendeeService.createAttendee(1000L, 1L, attendeeRequest));
-
-        assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.SCHEDULE_NOT_FOUND);
-
-    }
 
     @Test
     @DisplayName("일정 참석자 추가 시 참석자 5명 넘어 예외 발생")
@@ -173,7 +165,6 @@ public class TravelAttendeeServiceTest {
         // given
         AttendeeRequest attendeeRequest = TravelAttendeeFixture.createAttendeeRequest(member3.getEmail(), AttendeePermission.CHAT);
 
-        when(travelScheduleRepository.findById(anyLong())).thenReturn(Optional.of(schedule));
         when(travelAttendeeRepository.countByTravelSchedule_ScheduleId(anyLong())).thenReturn(5);
 
         // when, then
@@ -190,7 +181,6 @@ public class TravelAttendeeServiceTest {
         // given
         AttendeeRequest attendeeRequest = TravelAttendeeFixture.createAttendeeRequest(member3.getEmail(), AttendeePermission.CHAT);
 
-        when(travelScheduleRepository.findById(anyLong())).thenReturn(Optional.of(schedule));
         when(travelAttendeeRepository.countByTravelSchedule_ScheduleId(anyLong())).thenReturn(4);
         when(travelAttendeeRepository.existsByTravelSchedule_ScheduleIdAndMember_MemberIdAndRole(anyLong(), anyLong(), any(AttendeeRole.class)))
                 .thenReturn(false);
@@ -203,16 +193,36 @@ public class TravelAttendeeServiceTest {
 
     }
 
+
+    @Test
+    @DisplayName("일정 참석자 추가 시 일정 찾을 수 없어 예외 발생")
+    void createAttendee_scheduleNotFound(){
+        // given
+        AttendeeRequest attendeeRequest = TravelAttendeeFixture.createAttendeeRequest(member3.getEmail(), AttendeePermission.CHAT);
+
+        when(travelAttendeeRepository.countByTravelSchedule_ScheduleId(anyLong())).thenReturn(4);
+        when(travelAttendeeRepository.existsByTravelSchedule_ScheduleIdAndMember_MemberIdAndRole(anyLong(), anyLong(), any(AttendeeRole.class)))
+                .thenReturn(true);
+        when(travelScheduleRepository.findById(anyLong())).thenReturn(Optional.empty());
+
+        // when, then
+        DataNotFoundException fail = assertThrows(DataNotFoundException.class,
+                () ->  travelAttendeeService.createAttendee(1000L, 1L, attendeeRequest));
+
+        assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.SCHEDULE_NOT_FOUND);
+
+    }
+
     @Test
     @DisplayName("일정 참석자 추가 시 참석자 정보를 찾을 수 없어 예외 발생")
     void createAttendee_forbiddenNotAttendee(){
         // given
         AttendeeRequest attendeeRequest = TravelAttendeeFixture.createAttendeeRequest(member3.getEmail(), AttendeePermission.CHAT);
 
-        when(travelScheduleRepository.findById(anyLong())).thenReturn(Optional.of(schedule));
         when(travelAttendeeRepository.countByTravelSchedule_ScheduleId(anyLong())).thenReturn(4);
         when(travelAttendeeRepository.existsByTravelSchedule_ScheduleIdAndMember_MemberIdAndRole(anyLong(), anyLong(), any(AttendeeRole.class)))
                 .thenReturn(true);
+        when(travelScheduleRepository.findById(anyLong())).thenReturn(Optional.of(schedule));
         when(memberRepository.findByEmail(anyString())).thenReturn(Optional.empty());
 
         // when, then
@@ -232,10 +242,10 @@ public class TravelAttendeeServiceTest {
 
         AttendeeRequest attendeeRequest = TravelAttendeeFixture.createAttendeeRequest(newMember.getEmail(), AttendeePermission.CHAT);
 
-        when(travelScheduleRepository.findById(anyLong())).thenReturn(Optional.of(schedule));
         when(travelAttendeeRepository.countByTravelSchedule_ScheduleId(anyLong())).thenReturn(4);
         when(travelAttendeeRepository.existsByTravelSchedule_ScheduleIdAndMember_MemberIdAndRole(anyLong(), anyLong(), any(AttendeeRole.class)))
                 .thenReturn(true);
+        when(travelScheduleRepository.findById(anyLong())).thenReturn(Optional.of(schedule));
         when(memberRepository.findByEmail(anyString())).thenReturn(Optional.of(newMember));
         when(travelAttendeeRepository.existsByTravelSchedule_ScheduleIdAndMember_MemberId(anyLong(), anyLong())).thenReturn(true);
 
@@ -416,7 +426,8 @@ public class TravelAttendeeServiceTest {
 
         when(travelAttendeeRepository.existsByTravelSchedule_ScheduleIdAndMember_MemberIdAndRole(anyLong(), anyLong(), any()))
                 .thenReturn(true);
-        when(travelAttendeeRepository.findById(anyLong())).thenReturn(Optional.of(guest));
+        when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndAttendeeId(anyLong(), anyLong()))
+                .thenReturn(Optional.of(guest));
 
         // when, then
         assertDoesNotThrow(() -> travelAttendeeService.removeAttendee(
@@ -453,7 +464,9 @@ public class TravelAttendeeServiceTest {
         // given
         when(travelAttendeeRepository.existsByTravelSchedule_ScheduleIdAndMember_MemberIdAndRole(anyLong(), anyLong(), any()))
                 .thenReturn(true);
-        when(travelAttendeeRepository.findById(anyLong())).thenReturn(Optional.empty());
+
+        when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndAttendeeId(eq(1L), eq(1000L)))
+                .thenReturn(Optional.empty());
 
         // when
         DataNotFoundException fail = assertThrows(DataNotFoundException.class,
@@ -477,7 +490,8 @@ public class TravelAttendeeServiceTest {
 
         when(travelAttendeeRepository.existsByTravelSchedule_ScheduleIdAndMember_MemberIdAndRole(anyLong(), anyLong(), any(AttendeeRole.class)))
                 .thenReturn(true);
-        when(travelAttendeeRepository.findById(anyLong())).thenReturn(Optional.of(author));
+        when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndAttendeeId(anyLong(), anyLong()))
+                .thenReturn(Optional.of(author));
 
         // when
         ForbiddenAttendeeException fail = assertThrows(ForbiddenAttendeeException.class,

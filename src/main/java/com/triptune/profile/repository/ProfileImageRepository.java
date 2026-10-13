@@ -12,5 +12,8 @@ import java.util.Optional;
 public interface ProfileImageRepository extends JpaRepository<ProfileImage, Long> {
     @Query("select p from ProfileImage p join fetch p.member where p.member.memberId = :memberId")
     Optional<ProfileImage> findByMemberId(@Param("memberId") Long memberId);
+
+    @Query("select p.s3ObjectKey from ProfileImage p where p.member.memberId = :memberId")
+    String findS3ObjectKeyByMemberId(@Param("memberId") Long memberId);
 }
 

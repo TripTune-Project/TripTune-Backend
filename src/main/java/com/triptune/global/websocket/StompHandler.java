@@ -21,15 +21,23 @@ public class StompHandler implements ChannelInterceptor {
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
         StompHeaderAccessor accessor = StompHeaderAccessor.wrap(message);
 
-        if (StompCommand.CONNECT == accessor.getCommand()) {
-            log.info("WebSocket 연결 요청: {}", accessor.getSessionId());
+        try {
+            if (StompCommand.CONNECT == accessor.getCommand()) {
+                log.info("WebSocket 연결 요청: {}", accessor.getSessionId());
 
-            String token = jwtUtils.resolveBearerToken(accessor.getFirstNativeHeader("Authorization"));
-            jwtUtils.validateChatToken(token);
+                String token = jwtUtils.resolveBearerToken(
+                        accessor.getFirstNativeHeader("Authorization")
+                );
+                jwtUtils.validateChatToken(token);
 
-            log.info("WebSocket 연결 완료: {}", accessor.getSessionId());
+                log.info("WebSocket 연결 완료: {}", accessor.getSessionId());
+            }
+
+            return message;
+        } catch (Exception e) {
+            log.error("STOMP 메시지 처리 실패. command={}, sessionId={}",
+                    accessor.getCommand(), accessor.getSessionId(), e);
+            throw e;
         }
-
-        return message;
     }
 }

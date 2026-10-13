@@ -20,4 +20,8 @@ public enum AttendeePermission {
     public boolean isEnableEdit(){
         return this.equals(ALL) || this.equals(EDIT);
     }
+
+    public String getPermission(){
+        return permission;
+    }
 }
