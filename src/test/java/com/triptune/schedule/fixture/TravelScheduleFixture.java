@@ -3,18 +3,18 @@ package com.triptune.schedule.fixture;
 
 import com.triptune.global.response.page.PageResponse;
 import com.triptune.member.entity.Member;
-import com.triptune.schedule.dto.request.RouteRequest;
+import com.triptune.route.dto.request.RouteRequest;
 import com.triptune.schedule.dto.request.ScheduleCreateRequest;
 import com.triptune.schedule.dto.request.ScheduleUpdateRequest;
-import com.triptune.schedule.dto.response.OverviewScheduleResponse;
+import com.triptune.schedule.dto.response.ScheduleOverviewResponse;
 import com.triptune.schedule.dto.response.ScheduleCreateResponse;
 import com.triptune.schedule.dto.response.ScheduleDetailResponse;
 import com.triptune.schedule.dto.response.ScheduleInfoResponse;
-import com.triptune.schedule.entity.TravelAttendee;
+import com.triptune.attendee.entity.TravelAttendee;
 import com.triptune.schedule.entity.TravelSchedule;
-import com.triptune.schedule.enums.AttendeeRole;
+import com.triptune.attendee.enums.AttendeeRole;
 import com.triptune.schedule.repository.dto.ScheduleInfoQueryDto;
-import com.triptune.schedule.service.dto.AuthorDTO;
+import com.triptune.attendee.service.dto.AuthorDTO;
 import com.triptune.travel.dto.response.PlaceResponse;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -100,8 +100,8 @@ public class TravelScheduleFixture {
                 .build();
     }
 
-    public static OverviewScheduleResponse createOverviewScheduleResponse(TravelSchedule schedule, String author) {
-        return OverviewScheduleResponse
+    public static ScheduleOverviewResponse createOverviewScheduleResponse(TravelSchedule schedule, String author) {
+        return ScheduleOverviewResponse
                 .builder()
                 .scheduleId(schedule.getScheduleId())
                 .scheduleName(schedule.getScheduleName())

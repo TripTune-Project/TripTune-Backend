@@ -1,0 +1,106 @@
+package com.triptune.route.service;
+
+import com.triptune.global.s3.S3ObjectManager;
+import com.triptune.route.dto.request.RouteCreateRequest;
+import com.triptune.route.dto.request.RouteRequest;
+import com.triptune.route.dto.response.RouteResponse;
+import com.triptune.attendee.entity.TravelAttendee;
+import com.triptune.route.entity.TravelRoute;
+import com.triptune.schedule.entity.TravelSchedule;
+import com.triptune.schedule.exception.ForbiddenScheduleException;
+import com.triptune.attendee.repository.TravelAttendeeRepository;
+import com.triptune.route.repository.TravelRouteRepository;
+import com.triptune.schedule.repository.TravelScheduleRepository;
+import com.triptune.route.repository.dto.RouteQueryDto;
+import com.triptune.travel.entity.TravelPlace;
+import com.triptune.travel.repository.TravelPlaceRepository;
+import com.triptune.global.message.ErrorCode;
+import com.triptune.global.exception.DataNotFoundException;
+import com.triptune.global.util.PageUtils;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+
+@Service
+@Transactional(readOnly = true)
+@RequiredArgsConstructor
+public class TravelRouteService {
+
+    private final TravelRouteRepository travelRouteRepository;
+    private final TravelScheduleRepository travelScheduleRepository;
+    private final TravelAttendeeRepository travelAttendeeRepository;
+    private final TravelPlaceRepository travelPlaceRepository;
+    private final S3ObjectManager s3ObjectManager;
+
+    public Page<RouteResponse> getRoutes(Long scheduleId, int page) {
+        Pageable pageable = PageUtils.defaultPageable(page);
+        Page<RouteQueryDto> routePage = travelRouteRepository.findAllByScheduleId(pageable, scheduleId);
+
+        List<RouteResponse> routeResponses = routePage.getContent().stream()
+                .map(route -> {
+                    String thumbnailUrl = s3ObjectManager.generateS3ObjectUrl(route.getThumbnailS3ObjectKey());
+                    return RouteResponse.of(route, thumbnailUrl);
+                }).toList();
+
+        return PageUtils.createPage(routeResponses, routePage.getPageable(), routePage.getTotalElements());
+    }
+
+    @Transactional
+    public void createLastRoute(Long scheduleId, Long memberId, RouteCreateRequest routeCreateRequest) {
+        TravelSchedule schedule = getSchedule(scheduleId);
+
+        validateEnableEdit(scheduleId, memberId);
+
+        TravelPlace place = getPlace(routeCreateRequest.getPlaceId());
+        TravelRoute route = TravelRoute.createTravelRoute(schedule, place, schedule.getTravelRoutes().size() + 1);
+
+        travelRouteRepository.save(route);
+    }
+
+    private TravelSchedule getSchedule(Long scheduleId){
+        return travelScheduleRepository.findById(scheduleId)
+                .orElseThrow(() -> new DataNotFoundException(ErrorCode.SCHEDULE_NOT_FOUND));
+    }
+
+    private void validateEnableEdit(Long scheduleId, Long memberId){
+        TravelAttendee attendee = getAttendee(scheduleId, memberId);
+
+        if (!attendee.getPermission().isEnableEdit()){
+            throw new ForbiddenScheduleException(ErrorCode.FORBIDDEN_EDIT_SCHEDULE);
+        }
+
+    }
+
+    private TravelAttendee getAttendee(Long scheduleId, Long memberId) {
+        return travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_MemberId(scheduleId, memberId)
+                .orElseThrow(() -> new DataNotFoundException(ErrorCode.ATTENDEE_NOT_FOUND));
+    }
+
+    private TravelPlace getPlace(Long placeId){
+        return travelPlaceRepository.findById(placeId)
+                .orElseThrow(() -> new DataNotFoundException(ErrorCode.PLACE_NOT_FOUND));
+    }
+
+    @Transactional
+    public void updateRouteInSchedule(TravelSchedule schedule, List<RouteRequest> routeRequests){
+        travelRouteRepository.deleteAllByScheduleId(schedule.getScheduleId());
+        schedule.getTravelRoutes().clear();
+
+        if(routeRequests == null || routeRequests.isEmpty()){
+            return;
+        }
+
+        // TODO : 추후 수정
+        for(RouteRequest routeRequest : routeRequests){
+            TravelPlace place = getPlace(routeRequest.getPlaceId());
+            TravelRoute route = TravelRoute.createTravelRoute(schedule, place, routeRequest.getRouteOrder());
+            travelRouteRepository.save(route);
+        }
+    }
+
+
+}

@@ -1,8 +1,8 @@
 package com.triptune.schedule.dto.response;
 
 import com.triptune.schedule.repository.dto.ScheduleInfoQueryDto;
-import com.triptune.schedule.service.dto.AuthorDTO;
-import com.triptune.schedule.enums.AttendeeRole;
+import com.triptune.attendee.service.dto.AuthorDTO;
+import com.triptune.attendee.enums.AttendeeRole;
 import com.triptune.global.util.TimeUtils;
 import lombok.Builder;
 import lombok.Getter;

@@ -3,21 +3,22 @@ package com.triptune.schedule.service;
 import com.triptune.global.s3.S3ObjectManager;
 import com.triptune.member.entity.Member;
 import com.triptune.member.repository.MemberRepository;
-import com.triptune.schedule.repository.TravelRouteRepository;
+import com.triptune.route.repository.TravelRouteRepository;
+import com.triptune.route.service.TravelRouteService;
 import com.triptune.schedule.repository.dto.ScheduleInfoQueryDto;
-import com.triptune.schedule.service.dto.AuthorDTO;
+import com.triptune.attendee.service.dto.AuthorDTO;
 import com.triptune.schedule.dto.request.ScheduleCreateRequest;
 import com.triptune.schedule.dto.request.ScheduleUpdateRequest;
-import com.triptune.schedule.dto.response.OverviewScheduleResponse;
+import com.triptune.schedule.dto.response.ScheduleOverviewResponse;
 import com.triptune.schedule.dto.response.ScheduleCreateResponse;
 import com.triptune.schedule.dto.response.ScheduleDetailResponse;
 import com.triptune.schedule.dto.response.ScheduleInfoResponse;
-import com.triptune.schedule.entity.ChatMessage;
-import com.triptune.schedule.entity.TravelAttendee;
+import com.triptune.chat.entity.ChatMessage;
+import com.triptune.attendee.entity.TravelAttendee;
 import com.triptune.schedule.entity.TravelSchedule;
 import com.triptune.schedule.exception.ForbiddenScheduleException;
-import com.triptune.schedule.repository.ChatMessageRepository;
-import com.triptune.schedule.repository.TravelAttendeeRepository;
+import com.triptune.chat.repository.ChatMessageRepository;
+import com.triptune.attendee.repository.TravelAttendeeRepository;
 import com.triptune.schedule.repository.TravelScheduleRepository;
 import com.triptune.travel.dto.response.PlaceResponse;
 import com.triptune.travel.repository.TravelPlaceRepository;
@@ -72,13 +73,13 @@ public class TravelScheduleService {
     }
 
 
-    public Page<OverviewScheduleResponse> getEnableEditSchedules(int page, Long memberId) {
+    public Page<ScheduleOverviewResponse> getEnableEditSchedules(int page, Long memberId) {
         Pageable pageable = PageUtils.scheduleModalPageable(page);
 
         return travelScheduleRepository.findEnableEditTravelSchedules(pageable, memberId)
                 .map(schedule -> {
                     String authorNickname = travelAttendeeRepository.findAuthorNicknameByScheduleId(schedule.getScheduleId());
-                    return OverviewScheduleResponse.from(schedule, authorNickname);
+                    return ScheduleOverviewResponse.from(schedule, authorNickname);
                 });
     }
 

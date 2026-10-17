@@ -8,10 +8,10 @@ import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.JPQLQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.triptune.global.util.PageUtils;
-import com.triptune.schedule.entity.QTravelAttendee;
+import com.triptune.attendee.entity.QTravelAttendee;
 import com.triptune.schedule.entity.TravelSchedule;
-import com.triptune.schedule.enums.AttendeePermission;
-import com.triptune.schedule.enums.AttendeeRole;
+import com.triptune.attendee.enums.AttendeePermission;
+import com.triptune.attendee.enums.AttendeeRole;
 import com.triptune.schedule.repository.dto.ScheduleInfoQueryDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -20,8 +20,8 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
-import static com.triptune.schedule.entity.QTravelAttendee.travelAttendee;
-import static com.triptune.schedule.entity.QTravelRoute.travelRoute;
+import static com.triptune.attendee.entity.QTravelAttendee.travelAttendee;
+import static com.triptune.route.entity.QTravelRoute.travelRoute;
 import static com.triptune.schedule.entity.QTravelSchedule.travelSchedule;
 import static com.triptune.travel.entity.QTravelImage.travelImage;
 

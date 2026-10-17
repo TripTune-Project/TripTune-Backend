@@ -1,6 +1,8 @@
 package com.triptune.schedule.entity;
 
+import com.triptune.attendee.entity.TravelAttendee;
 import com.triptune.common.entity.BaseTimeEntity;
+import com.triptune.route.entity.TravelRoute;
 import com.triptune.schedule.dto.request.ScheduleUpdateRequest;
 import jakarta.persistence.*;
 import lombok.*;

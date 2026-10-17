@@ -1,6 +1,6 @@
 package com.triptune.schedule.event;
 
-import com.triptune.schedule.enums.AttendeePermission;
+import com.triptune.attendee.enums.AttendeePermission;
 import lombok.AllArgsConstructor;
 
 @AllArgsConstructor

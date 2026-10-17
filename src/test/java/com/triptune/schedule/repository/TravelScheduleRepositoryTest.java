@@ -1,5 +1,6 @@
 package com.triptune.schedule.repository;
 
+import com.triptune.attendee.repository.TravelAttendeeRepository;
 import com.triptune.common.entity.*;
 import com.triptune.common.fixture.*;
 import com.triptune.common.repository.*;
@@ -9,9 +10,10 @@ import com.triptune.member.repository.MemberRepository;
 import com.triptune.profile.entity.ProfileImage;
 import com.triptune.profile.fixture.ProfileImageFixture;
 import com.triptune.profile.repository.ProfileImageRepository;
-import com.triptune.schedule.enums.AttendeeRole;
-import com.triptune.schedule.fixture.TravelAttendeeFixture;
-import com.triptune.schedule.fixture.TravelRouteFixture;
+import com.triptune.attendee.enums.AttendeeRole;
+import com.triptune.route.repository.TravelRouteRepository;
+import com.triptune.attendee.fixture.TravelAttendeeFixture;
+import com.triptune.route.fixture.TravelRouteFixture;
 import com.triptune.schedule.fixture.TravelScheduleFixture;
 import com.triptune.schedule.entity.TravelSchedule;
 import com.triptune.schedule.repository.dto.ScheduleInfoQueryDto;
@@ -36,7 +38,7 @@ import org.springframework.test.context.ActiveProfiles;
 
 import java.util.List;
 
-import static com.triptune.schedule.enums.AttendeePermission.*;
+import static com.triptune.attendee.enums.AttendeePermission.*;
 import static java.lang.Thread.sleep;
 import static org.assertj.core.api.Assertions.assertThat;
 

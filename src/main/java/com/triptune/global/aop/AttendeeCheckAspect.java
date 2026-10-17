@@ -1,7 +1,7 @@
 package com.triptune.global.aop;
 
 import com.triptune.schedule.exception.ForbiddenScheduleException;
-import com.triptune.schedule.repository.TravelAttendeeRepository;
+import com.triptune.attendee.repository.TravelAttendeeRepository;
 import com.triptune.schedule.repository.TravelScheduleRepository;
 import com.triptune.global.message.ErrorCode;
 import com.triptune.global.exception.DataNotFoundException;

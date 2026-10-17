@@ -8,27 +8,28 @@ import com.triptune.member.fixture.MemberFixture;
 import com.triptune.profile.entity.ProfileImage;
 import com.triptune.member.repository.MemberRepository;
 import com.triptune.profile.fixture.ProfileImageFixture;
-import com.triptune.schedule.fixture.ChatMessageFixture;
-import com.triptune.schedule.fixture.TravelAttendeeFixture;
-import com.triptune.schedule.fixture.TravelRouteFixture;
+import com.triptune.route.service.TravelRouteService;
+import com.triptune.chat.fixture.ChatMessageFixture;
+import com.triptune.attendee.fixture.TravelAttendeeFixture;
+import com.triptune.route.fixture.TravelRouteFixture;
 import com.triptune.schedule.fixture.TravelScheduleFixture;
 import com.triptune.schedule.repository.dto.ScheduleInfoQueryDto;
 import com.triptune.schedule.dto.request.ScheduleCreateRequest;
-import com.triptune.schedule.dto.request.RouteRequest;
+import com.triptune.route.dto.request.RouteRequest;
 import com.triptune.schedule.dto.request.ScheduleUpdateRequest;
-import com.triptune.schedule.dto.response.OverviewScheduleResponse;
+import com.triptune.schedule.dto.response.ScheduleOverviewResponse;
 import com.triptune.schedule.dto.response.ScheduleCreateResponse;
 import com.triptune.schedule.dto.response.ScheduleDetailResponse;
 import com.triptune.schedule.dto.response.ScheduleInfoResponse;
-import com.triptune.schedule.entity.ChatMessage;
-import com.triptune.schedule.entity.TravelAttendee;
+import com.triptune.chat.entity.ChatMessage;
+import com.triptune.attendee.entity.TravelAttendee;
 import com.triptune.schedule.entity.TravelSchedule;
-import com.triptune.schedule.enums.AttendeePermission;
-import com.triptune.schedule.enums.AttendeeRole;
+import com.triptune.attendee.enums.AttendeePermission;
+import com.triptune.attendee.enums.AttendeeRole;
 import com.triptune.schedule.exception.ForbiddenScheduleException;
-import com.triptune.schedule.repository.ChatMessageRepository;
-import com.triptune.schedule.repository.TravelAttendeeRepository;
-import com.triptune.schedule.repository.TravelRouteRepository;
+import com.triptune.chat.repository.ChatMessageRepository;
+import com.triptune.attendee.repository.TravelAttendeeRepository;
+import com.triptune.route.repository.TravelRouteRepository;
 import com.triptune.schedule.repository.TravelScheduleRepository;
 import com.triptune.travel.entity.TravelImage;
 import com.triptune.travel.entity.TravelPlace;
@@ -595,10 +596,10 @@ public class TravelScheduleServiceTest {
         when(travelAttendeeRepository.findAuthorNicknameByScheduleId(anyLong())).thenReturn(member1.getNickname());
 
         // when
-        Page<OverviewScheduleResponse> response = travelScheduleService.getEnableEditSchedules(1, 1L);
+        Page<ScheduleOverviewResponse> response = travelScheduleService.getEnableEditSchedules(1, 1L);
 
         // then
-        List<OverviewScheduleResponse> content = response.getContent();
+        List<ScheduleOverviewResponse> content = response.getContent();
         assertThat(response.getTotalElements()).isEqualTo(1);
         assertThat(content.get(0).getScheduleName()).isEqualTo(schedule1.getScheduleName());
         assertThat(content.get(0).getStartDate()).isEqualTo(schedule1.getStartDate());
@@ -629,7 +630,7 @@ public class TravelScheduleServiceTest {
         when(travelScheduleRepository.findEnableEditTravelSchedules(any(), anyLong())).thenReturn(schedulePage);
 
         // when
-        Page<OverviewScheduleResponse> response = travelScheduleService.getEnableEditSchedules(1, 1L);
+        Page<ScheduleOverviewResponse> response = travelScheduleService.getEnableEditSchedules(1, 1L);
 
         // then
         assertThat(response.getTotalElements()).isZero();
