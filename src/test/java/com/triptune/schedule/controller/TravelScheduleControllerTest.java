@@ -20,18 +20,18 @@ import com.triptune.member.entity.Member;
 import com.triptune.member.fixture.MemberFixture;
 import com.triptune.profile.entity.ProfileImage;
 import com.triptune.profile.fixture.ProfileImageFixture;
-import com.triptune.schedule.dto.request.RouteRequest;
+import com.triptune.route.dto.request.RouteRequest;
 import com.triptune.schedule.dto.request.ScheduleCreateRequest;
 import com.triptune.schedule.dto.request.ScheduleUpdateRequest;
-import com.triptune.schedule.dto.response.OverviewScheduleResponse;
+import com.triptune.schedule.dto.response.ScheduleOverviewResponse;
 import com.triptune.schedule.dto.response.ScheduleCreateResponse;
 import com.triptune.schedule.dto.response.ScheduleDetailResponse;
 import com.triptune.schedule.dto.response.ScheduleInfoResponse;
 import com.triptune.schedule.entity.TravelSchedule;
 import com.triptune.schedule.enums.ScheduleSearchType;
-import com.triptune.schedule.exception.ForbiddenAttendeeException;
+import com.triptune.attendee.exception.ForbiddenAttendeeException;
 import com.triptune.schedule.exception.ForbiddenScheduleException;
-import com.triptune.schedule.fixture.TravelRouteFixture;
+import com.triptune.route.fixture.TravelRouteFixture;
 import com.triptune.schedule.fixture.TravelScheduleFixture;
 import com.triptune.schedule.service.TravelScheduleService;
 import com.triptune.travel.dto.response.PlaceResponse;
@@ -57,8 +57,8 @@ import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
 
-import static com.triptune.schedule.enums.AttendeeRole.AUTHOR;
-import static com.triptune.schedule.enums.AttendeeRole.GUEST;
+import static com.triptune.attendee.enums.AttendeeRole.AUTHOR;
+import static com.triptune.attendee.enums.AttendeeRole.GUEST;
 import static com.triptune.travel.enums.ThemeType.ATTRACTIONS;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.nullValue;
@@ -293,12 +293,12 @@ public class TravelScheduleControllerTest {
         TravelSchedule schedule1 = TravelScheduleFixture.createSchedule("테스트1");
         TravelSchedule schedule2 = TravelScheduleFixture.createSchedule("테스트2");
 
-        List<OverviewScheduleResponse> overviewResponse = List.of(
+        List<ScheduleOverviewResponse> overviewResponse = List.of(
                 TravelScheduleFixture.createOverviewScheduleResponse(schedule2, member2.getNickname()),
                 TravelScheduleFixture.createOverviewScheduleResponse(schedule1, member1.getNickname())
         );
 
-        Page<OverviewScheduleResponse> response = PageUtils.createPage(
+        Page<ScheduleOverviewResponse> response = PageUtils.createPage(
                 overviewResponse,
                 PageUtils.schedulePageable(1),
                 overviewResponse.size()
@@ -326,7 +326,7 @@ public class TravelScheduleControllerTest {
         // given
         SecurityTestUtils.mockAuthentication(member1);
 
-        Page<OverviewScheduleResponse> response = PageUtils.createPage(
+        Page<ScheduleOverviewResponse> response = PageUtils.createPage(
                 Collections.emptyList(),
                 PageUtils.schedulePageable(1),
                 0

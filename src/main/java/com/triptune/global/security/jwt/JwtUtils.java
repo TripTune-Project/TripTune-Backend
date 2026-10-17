@@ -1,7 +1,7 @@
 package com.triptune.global.security.jwt;
 
 import com.triptune.global.redis.RedisService;
-import com.triptune.schedule.exception.chat.CustomJwtUnAuthorizedChatException;
+import com.triptune.chat.exception.CustomJwtUnAuthorizedChatException;
 import com.triptune.global.message.ErrorCode;
 import com.triptune.global.security.jwt.exception.CustomJwtUnAuthorizedException;
 import com.triptune.global.security.CustomUserDetailsService;

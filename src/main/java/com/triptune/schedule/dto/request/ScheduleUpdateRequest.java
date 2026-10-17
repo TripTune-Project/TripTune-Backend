@@ -1,6 +1,7 @@
 package com.triptune.schedule.dto.request;
 
 import com.triptune.global.validation.ValidScheduleDate;
+import com.triptune.route.dto.request.RouteRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

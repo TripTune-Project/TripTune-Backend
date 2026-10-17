@@ -6,7 +6,7 @@ import com.triptune.global.response.page.PageResponse;
 import com.triptune.global.response.page.SchedulePageResponse;
 import com.triptune.schedule.dto.request.ScheduleCreateRequest;
 import com.triptune.schedule.dto.request.ScheduleUpdateRequest;
-import com.triptune.schedule.dto.response.OverviewScheduleResponse;
+import com.triptune.schedule.dto.response.ScheduleOverviewResponse;
 import com.triptune.schedule.dto.response.ScheduleCreateResponse;
 import com.triptune.schedule.dto.response.ScheduleDetailResponse;
 import com.triptune.schedule.dto.response.ScheduleInfoResponse;
@@ -48,9 +48,9 @@ public class TravelScheduleController {
 
     @GetMapping("/edit")
     @Operation(summary = "수정 권한 있는 일정 목록 조회", description = "작성한 일정 중 수정 권한이 있는 일정을 필요 데이터로 구성해 조회합니다.")
-    public ApiResponse<PageResponse<OverviewScheduleResponse>> getEnableEditSchedules(@AuthenticationPrincipal(expression = "memberId") Long memberId,
+    public ApiResponse<PageResponse<ScheduleOverviewResponse>> getEnableEditSchedules(@AuthenticationPrincipal(expression = "memberId") Long memberId,
                                                                                       @RequestParam(name = "page") int page){
-        Page<OverviewScheduleResponse> response = travelScheduleService.getEnableEditSchedules(page, memberId);
+        Page<ScheduleOverviewResponse> response = travelScheduleService.getEnableEditSchedules(page, memberId);
 
         return ApiResponse.pageResponse(response);
     }

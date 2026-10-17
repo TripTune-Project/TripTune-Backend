@@ -1,6 +1,6 @@
 package com.triptune.schedule.repository.dto;
 
-import com.triptune.schedule.enums.AttendeeRole;
+import com.triptune.attendee.enums.AttendeeRole;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
