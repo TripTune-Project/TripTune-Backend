@@ -5,14 +5,11 @@ import com.triptune.member.entity.Member;
 import com.triptune.member.repository.MemberRepository;
 import com.triptune.route.repository.TravelRouteRepository;
 import com.triptune.route.service.TravelRouteService;
+import com.triptune.schedule.dto.response.*;
 import com.triptune.schedule.repository.dto.ScheduleInfoQueryDto;
 import com.triptune.attendee.service.dto.AuthorDTO;
 import com.triptune.schedule.dto.request.ScheduleCreateRequest;
 import com.triptune.schedule.dto.request.ScheduleUpdateRequest;
-import com.triptune.schedule.dto.response.ScheduleOverviewResponse;
-import com.triptune.schedule.dto.response.ScheduleCreateResponse;
-import com.triptune.schedule.dto.response.ScheduleDetailResponse;
-import com.triptune.schedule.dto.response.ScheduleInfoResponse;
 import com.triptune.chat.entity.ChatMessage;
 import com.triptune.attendee.entity.TravelAttendee;
 import com.triptune.schedule.entity.TravelSchedule;
@@ -28,6 +25,7 @@ import com.triptune.global.response.page.PageResponse;
 import com.triptune.global.response.page.SchedulePageResponse;
 import com.triptune.global.util.PageUtils;
 import com.triptune.travel.repository.dto.PlaceQueryDto;
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -50,6 +48,7 @@ public class TravelScheduleService {
     private final ChatMessageRepository chatMessageRepository;
     private final TravelRouteService travelRouteService;
     private final S3ObjectManager s3ObjectManager;
+    private final EntityManager em;
 
     public SchedulePageResponse<ScheduleInfoResponse> getAllSchedules(int page, Long memberId) {
         Pageable pageable = PageUtils.schedulePageable(page);
@@ -167,13 +166,18 @@ public class TravelScheduleService {
 
 
     @Transactional
-    public void updateSchedule(ScheduleUpdateRequest scheduleUpdateRequest, Long memberId, Long scheduleId) {
+    public ScheduleUpdateResponse updateSchedule(ScheduleUpdateRequest scheduleUpdateRequest, Long memberId, Long scheduleId) {
         TravelSchedule schedule = getSchedule(scheduleId);
         TravelAttendee attendee = getAttendeeInfo(schedule, memberId);
         validateEditPermission(attendee);
 
-        schedule.updateSchedule(scheduleUpdateRequest);
-        travelRouteService.updateRouteInSchedule(schedule, scheduleUpdateRequest.getTravelRoutes());
+        schedule.updateSchedule(
+                scheduleUpdateRequest.getScheduleName(),
+                scheduleUpdateRequest.getStartDate(),
+                scheduleUpdateRequest.getEndDate()
+        );
+
+        return ScheduleUpdateResponse.of(schedule.getScheduleVersion());
     }
 
 

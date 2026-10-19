@@ -3,13 +3,9 @@ package com.triptune.schedule.fixture;
 
 import com.triptune.global.response.page.PageResponse;
 import com.triptune.member.entity.Member;
-import com.triptune.route.dto.request.RouteRequest;
 import com.triptune.schedule.dto.request.ScheduleCreateRequest;
 import com.triptune.schedule.dto.request.ScheduleUpdateRequest;
-import com.triptune.schedule.dto.response.ScheduleOverviewResponse;
-import com.triptune.schedule.dto.response.ScheduleCreateResponse;
-import com.triptune.schedule.dto.response.ScheduleDetailResponse;
-import com.triptune.schedule.dto.response.ScheduleInfoResponse;
+import com.triptune.schedule.dto.response.*;
 import com.triptune.attendee.entity.TravelAttendee;
 import com.triptune.schedule.entity.TravelSchedule;
 import com.triptune.attendee.enums.AttendeeRole;
@@ -19,7 +15,6 @@ import com.triptune.travel.dto.response.PlaceResponse;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDate;
-import java.util.List;
 
 public class TravelScheduleFixture {
     
@@ -43,8 +38,22 @@ public class TravelScheduleFixture {
         return travelSchedule;
     }
 
+    public static TravelSchedule createScheduleWithIdAndVersion(Long scheduleId, String scheduleName, Integer scheduleVersion, Integer routeVersion){
+        TravelSchedule travelSchedule = TravelSchedule.createTravelSchedule(
+                scheduleName,
+                LocalDate.now(),
+                LocalDate.now()
+        );
 
-    public static ScheduleCreateRequest createScheduleRequest(String scheduleName, LocalDate startDate, LocalDate endDate) {
+        ReflectionTestUtils.setField(travelSchedule, "scheduleId", scheduleId);
+        ReflectionTestUtils.setField(travelSchedule, "scheduleVersion", scheduleVersion);
+        ReflectionTestUtils.setField(travelSchedule, "routeVersion", routeVersion);
+
+        return travelSchedule;
+    }
+
+
+    public static ScheduleCreateRequest createScheduleCreateRequest(String scheduleName, LocalDate startDate, LocalDate endDate) {
         return ScheduleCreateRequest.builder()
                 .scheduleName(scheduleName)
                 .startDate(startDate)
@@ -52,12 +61,18 @@ public class TravelScheduleFixture {
                 .build();
     }
 
-    public static ScheduleUpdateRequest createUpdateScheduleRequest(String scheduleName, LocalDate startDate, LocalDate endDate, RouteRequest... routeRequest){
+    public static ScheduleUpdateRequest createScheduleUpdateRequest(String scheduleName, LocalDate startDate, LocalDate endDate, Integer scheduleVersion){
         return ScheduleUpdateRequest.builder()
                 .scheduleName(scheduleName)
                 .startDate(startDate)
                 .endDate(endDate)
-                .travelRoutes(List.of(routeRequest))
+                .scheduleVersion(scheduleVersion)
+                .build();
+    }
+
+    public static ScheduleUpdateResponse createScheduleUpdateResponse(Integer scheduleVersion){
+        return ScheduleUpdateResponse.builder()
+                .scheduleVersion(scheduleVersion)
                 .build();
     }
 
@@ -112,7 +127,7 @@ public class TravelScheduleFixture {
     }
 
     public static ScheduleCreateResponse createScheduleCreateResponse(Long scheduleId) {
-        return ScheduleCreateResponse.builder().scheduleId(scheduleId).build();
+        return ScheduleCreateResponse.builder().scheduleId(scheduleId).scheduleVersion(0).build();
 
     }
 

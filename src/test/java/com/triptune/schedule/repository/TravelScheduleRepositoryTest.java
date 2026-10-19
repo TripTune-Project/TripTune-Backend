@@ -10,10 +10,10 @@ import com.triptune.member.repository.MemberRepository;
 import com.triptune.profile.entity.ProfileImage;
 import com.triptune.profile.fixture.ProfileImageFixture;
 import com.triptune.profile.repository.ProfileImageRepository;
-import com.triptune.attendee.enums.AttendeeRole;
 import com.triptune.route.repository.TravelRouteRepository;
 import com.triptune.attendee.fixture.TravelAttendeeFixture;
 import com.triptune.route.fixture.TravelRouteFixture;
+import com.triptune.schedule.dto.request.ScheduleUpdateRequest;
 import com.triptune.schedule.fixture.TravelScheduleFixture;
 import com.triptune.schedule.entity.TravelSchedule;
 import com.triptune.schedule.repository.dto.ScheduleInfoQueryDto;
@@ -26,6 +26,7 @@ import com.triptune.travel.repository.TravelImageRepository;
 import com.triptune.travel.repository.TravelPlaceRepository;
 import com.triptune.global.config.QuerydslConfig;
 import com.triptune.global.util.PageUtils;
+import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -39,8 +40,10 @@ import org.springframework.test.context.ActiveProfiles;
 import java.util.List;
 
 import static com.triptune.attendee.enums.AttendeePermission.*;
+import static com.triptune.attendee.enums.AttendeeRole.*;
 import static java.lang.Thread.sleep;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
 
 @DataJpaTest
 @Import({QuerydslConfig.class})
@@ -57,6 +60,7 @@ public class TravelScheduleRepositoryTest {
     @Autowired private ApiContentTypeRepository apiContentTypeRepository;
     @Autowired private MemberRepository memberRepository;
     @Autowired private ProfileImageRepository profileImageRepository;
+    @Autowired private EntityManager em;
 
     private TravelPlace place1WithThumb;
     private TravelPlace place2WithThumb;
@@ -102,7 +106,6 @@ public class TravelScheduleRepositoryTest {
         place2Thumb = travelImageRepository.save(TravelImageFixture.createTravelImage(place2WithThumb, "test1", true));
         travelImageRepository.save(TravelImageFixture.createTravelImage(place2WithThumb, "test2", false));
 
-
         placeWithoutThumb = travelPlaceRepository.save(
                 TravelPlaceFixture.createTravelPlace(
                     country,
@@ -122,23 +125,10 @@ public class TravelScheduleRepositoryTest {
 
     }
 
-    @Test
-    @DisplayName("일정 생성")
-    void createTravelSchedule() {
-        // given
-        TravelSchedule schedule = TravelScheduleFixture.createSchedule("테스트 일정");
-
-        // when
-        travelScheduleRepository.save(schedule);
-
-        // then
-        assertThat(schedule.getScheduleId()).isNotNull();
-        assertThat(schedule.getCreatedAt()).isEqualTo(schedule.getUpdatedAt());
-    }
 
     @Test
     @DisplayName("전체 일정 목록 조회")
-    void findTravelSchedules() throws Exception{
+    void findTravelSchedules() {
         // given
         TravelSchedule schedule1 = travelScheduleRepository.save(TravelScheduleFixture.createSchedule("테스트1"));
         travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorAttendee(schedule1, member1));
@@ -161,25 +151,22 @@ public class TravelScheduleRepositoryTest {
         Page<ScheduleInfoQueryDto> response = travelScheduleRepository.findTravelSchedules(pageable, member1.getMemberId());
 
         // then
-        List<ScheduleInfoQueryDto> content = response.getContent();
         assertThat(response.getTotalElements()).isEqualTo(3);
-        assertThat(content.get(0).getScheduleName()).isEqualTo(schedule3.getScheduleName());
-        assertThat(content.get(0).getAttendeeRole()).isEqualTo(AttendeeRole.AUTHOR);
-        assertThat(content.get(0).getThumbnailS3ObjectKey()).isNull();
-        assertThat(content.get(0).getAuthorNickname()).isEqualTo(member1.getNickname());
-        assertThat(content.get(0).getAuthorS3ObjectKey()).isEqualTo(member1.getProfileImage().getS3ObjectKey());
-
-        assertThat(content.get(1).getScheduleName()).isEqualTo(schedule2.getScheduleName());
-        assertThat(content.get(1).getAttendeeRole()).isEqualTo(AttendeeRole.GUEST);
-        assertThat(content.get(1).getThumbnailS3ObjectKey()).isEqualTo(place2Thumb.getS3ObjectKey());
-        assertThat(content.get(1).getAuthorNickname()).isEqualTo(member2.getNickname());
-        assertThat(content.get(1).getAuthorS3ObjectKey()).isEqualTo(member2.getProfileImage().getS3ObjectKey());
-
-        assertThat(content.get(2).getScheduleName()).isEqualTo(schedule1.getScheduleName());
-        assertThat(content.get(2).getAttendeeRole()).isEqualTo(AttendeeRole.AUTHOR);
-        assertThat(content.get(2).getThumbnailS3ObjectKey()).isEqualTo(place1Thumb.getS3ObjectKey());
-        assertThat(content.get(2).getAuthorNickname()).isEqualTo(member1.getNickname());
-        assertThat(content.get(2).getAuthorS3ObjectKey()).isEqualTo(member1.getProfileImage().getS3ObjectKey());
+        assertThat(response.getContent())
+                .extracting(
+                        ScheduleInfoQueryDto::getScheduleName,
+                        ScheduleInfoQueryDto::getAttendeeRole,
+                        ScheduleInfoQueryDto::getThumbnailS3ObjectKey,
+                        ScheduleInfoQueryDto::getAuthorNickname,
+                        ScheduleInfoQueryDto::getAuthorS3ObjectKey)
+                .containsExactly(
+                        tuple(schedule3.getScheduleName(), AUTHOR, null,
+                                member1.getNickname(), member1.getProfileImage().getS3ObjectKey()),
+                        tuple(schedule2.getScheduleName(), GUEST, place2Thumb.getS3ObjectKey(),
+                                member2.getNickname(), member2.getProfileImage().getS3ObjectKey()),
+                        tuple(schedule1.getScheduleName(), AUTHOR, place1Thumb.getS3ObjectKey(),
+                                member1.getNickname(), member1.getProfileImage().getS3ObjectKey())
+                );
 
     }
 
@@ -222,19 +209,21 @@ public class TravelScheduleRepositoryTest {
         Page<ScheduleInfoQueryDto> response = travelScheduleRepository.findSharedTravelSchedules(pageable, member1.getMemberId());
 
         // then
-        List<ScheduleInfoQueryDto> content = response.getContent();
         assertThat(response.getTotalElements()).isEqualTo(2);
-        assertThat(content.get(0).getScheduleName()).isEqualTo(schedule2.getScheduleName());
-        assertThat(content.get(0).getAttendeeRole()).isEqualTo(AttendeeRole.GUEST);
-        assertThat(content.get(0).getThumbnailS3ObjectKey()).isEqualTo(place2Thumb.getS3ObjectKey());
-        assertThat(content.get(0).getAuthorNickname()).isEqualTo(member2.getNickname());
-        assertThat(content.get(0).getAuthorS3ObjectKey()).isEqualTo(member2.getProfileImage().getS3ObjectKey());
+        assertThat(response.getContent())
+                .extracting(
+                        ScheduleInfoQueryDto::getScheduleName,
+                        ScheduleInfoQueryDto::getAttendeeRole,
+                        ScheduleInfoQueryDto::getThumbnailS3ObjectKey,
+                        ScheduleInfoQueryDto::getAuthorNickname,
+                        ScheduleInfoQueryDto::getAuthorS3ObjectKey)
+                .containsExactly(
+                        tuple(schedule2.getScheduleName(), GUEST, place2Thumb.getS3ObjectKey(),
+                                member2.getNickname(), member2.getProfileImage().getS3ObjectKey()),
+                        tuple(schedule1.getScheduleName(), AUTHOR, place1Thumb.getS3ObjectKey(),
+                                member1.getNickname(), member1.getProfileImage().getS3ObjectKey())
+                );
 
-        assertThat(content.get(1).getScheduleName()).isEqualTo(schedule1.getScheduleName());
-        assertThat(content.get(1).getAttendeeRole()).isEqualTo(AttendeeRole.AUTHOR);
-        assertThat(content.get(1).getThumbnailS3ObjectKey()).isEqualTo(place1Thumb.getS3ObjectKey());
-        assertThat(content.get(1).getAuthorNickname()).isEqualTo(member1.getNickname());
-        assertThat(content.get(1).getAuthorS3ObjectKey()).isEqualTo(member1.getProfileImage().getS3ObjectKey());
 
     }
 
@@ -352,7 +341,7 @@ public class TravelScheduleRepositoryTest {
         List<ScheduleInfoQueryDto> content = response.getContent();
         assertThat(response.getTotalElements()).isEqualTo(1);
         assertThat(content.get(0).getScheduleName()).isEqualTo(schedule1.getScheduleName());
-        assertThat(content.get(0).getAttendeeRole()).isEqualTo(AttendeeRole.AUTHOR);
+        assertThat(content.get(0).getAttendeeRole()).isEqualTo(AUTHOR);
         assertThat(content.get(0).getThumbnailS3ObjectKey()).isEqualTo(place1Thumb.getS3ObjectKey());
         assertThat(content.get(0).getAuthorNickname()).isEqualTo(member1.getNickname());
         assertThat(content.get(0).getAuthorS3ObjectKey()).isEqualTo(member1.getProfileImage().getS3ObjectKey());
@@ -400,7 +389,7 @@ public class TravelScheduleRepositoryTest {
         List<ScheduleInfoQueryDto> content = response.getContent();
         assertThat(response.getTotalElements()).isEqualTo(1);
         assertThat(content.get(0).getScheduleName()).isEqualTo(schedule1.getScheduleName());
-        assertThat(content.get(0).getAttendeeRole()).isEqualTo(AttendeeRole.AUTHOR);
+        assertThat(content.get(0).getAttendeeRole()).isEqualTo(AUTHOR);
         assertThat(content.get(0).getThumbnailS3ObjectKey()).isEqualTo(place1Thumb.getS3ObjectKey());
         assertThat(content.get(0).getAuthorNickname()).isEqualTo(member1.getNickname());
         assertThat(content.get(0).getAuthorS3ObjectKey()).isEqualTo(member1.getProfileImage().getS3ObjectKey());
@@ -418,6 +407,76 @@ public class TravelScheduleRepositoryTest {
         // then
         assertThat(response.getTotalElements()).isEqualTo(0);
         assertThat(response.getContent().isEmpty()).isTrue();
+    }
+
+    @Test
+    @DisplayName("일정 생성")
+    void createTravelSchedule() {
+        // given
+        TravelSchedule schedule = TravelScheduleFixture.createSchedule("테스트 일정");
+
+        // when
+        TravelSchedule savedSchedule = travelScheduleRepository.save(schedule);
+
+        // then
+        em.flush();
+        em.clear();
+
+        TravelSchedule findSchedule = travelScheduleRepository.findById(savedSchedule.getScheduleId()).orElseThrow();
+
+        assertThat(findSchedule.getScheduleId()).isEqualTo(savedSchedule.getScheduleId());
+        assertThat(findSchedule.getScheduleVersion()).isZero();
+        assertThat(findSchedule.getRouteVersion()).isZero();
+        assertThat(findSchedule.getCreatedAt()).isEqualTo(findSchedule.getUpdatedAt());
+    }
+
+    @Test
+    @DisplayName("일정 수정")
+    void updateTravelSchedule() {
+        // given
+        TravelSchedule savedSchedule = travelScheduleRepository.save(
+                TravelScheduleFixture.createSchedule("테스트 일정")
+        );
+
+        ScheduleUpdateRequest request = TravelScheduleFixture.createScheduleUpdateRequest(
+                "수정 테스트",
+                savedSchedule.getStartDate(),
+                savedSchedule.getEndDate(),
+                savedSchedule.getScheduleVersion()
+        );
+
+        // when
+        savedSchedule.updateSchedule(
+                request.getScheduleName(),
+                request.getStartDate(),
+                request.getEndDate()
+        );
+
+        // then
+        em.flush();
+        em.clear();
+
+        TravelSchedule findSchedule = travelScheduleRepository.findById(savedSchedule.getScheduleId()).orElseThrow();
+
+        assertThat(findSchedule.getScheduleName()).isEqualTo("수정 테스트");
+        assertThat(findSchedule.getScheduleVersion()).isEqualTo(1);
+        assertThat(findSchedule.getRouteVersion()).isZero();
+    }
+
+    @Test
+    @DisplayName("routeVersion 조회")
+    void findRouteVersionById() {
+        // given
+        TravelSchedule savedSchedule = travelScheduleRepository.save(
+                TravelScheduleFixture.createSchedule("테스트 일정")
+        );
+
+        // when
+        Integer routeVersion = travelScheduleRepository.findRouteVersionById(savedSchedule.getScheduleId())
+                .orElseThrow();
+
+        // then
+        assertThat(routeVersion).isZero();
     }
 
 

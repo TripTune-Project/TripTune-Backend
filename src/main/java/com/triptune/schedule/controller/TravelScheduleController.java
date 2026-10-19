@@ -6,10 +6,7 @@ import com.triptune.global.response.page.PageResponse;
 import com.triptune.global.response.page.SchedulePageResponse;
 import com.triptune.schedule.dto.request.ScheduleCreateRequest;
 import com.triptune.schedule.dto.request.ScheduleUpdateRequest;
-import com.triptune.schedule.dto.response.ScheduleOverviewResponse;
-import com.triptune.schedule.dto.response.ScheduleCreateResponse;
-import com.triptune.schedule.dto.response.ScheduleDetailResponse;
-import com.triptune.schedule.dto.response.ScheduleInfoResponse;
+import com.triptune.schedule.dto.response.*;
 import com.triptune.schedule.enums.ScheduleSearchType;
 import com.triptune.schedule.service.TravelScheduleService;
 import com.triptune.travel.dto.response.PlaceResponse;
@@ -94,11 +91,11 @@ public class TravelScheduleController {
     @AttendeeCheck
     @PatchMapping("/{scheduleId}")
     @Operation(summary = "일정 수정", description = "일정 상세 화면에서 저장 버튼을 누르면 해당 일정이 수정됩니다. 회원은 저장 작업으로 보지만, 실제로는 일정 수정 작업입니다.")
-    public ApiResponse<?> updateSchedule(@Valid @RequestBody ScheduleUpdateRequest scheduleUpdateRequest,
-                                         @AuthenticationPrincipal(expression = "memberId") Long memberId,
-                                         @PathVariable(name = "scheduleId") Long scheduleId){
-        travelScheduleService.updateSchedule(scheduleUpdateRequest, memberId, scheduleId);
-        return ApiResponse.okResponse();
+    public ApiResponse<ScheduleUpdateResponse> updateSchedule(@Valid @RequestBody ScheduleUpdateRequest scheduleUpdateRequest,
+                                                            @AuthenticationPrincipal(expression = "memberId") Long memberId,
+                                                            @PathVariable(name = "scheduleId") Long scheduleId){
+        ScheduleUpdateResponse response = travelScheduleService.updateSchedule(scheduleUpdateRequest, memberId, scheduleId);
+        return ApiResponse.dataResponse(response);
     }
 
     @AttendeeCheck

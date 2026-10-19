@@ -2,6 +2,7 @@ package com.triptune.route.fixture;
 
 import com.triptune.route.dto.request.RouteCreateRequest;
 import com.triptune.route.dto.request.RouteRequest;
+import com.triptune.route.dto.response.RouteCreateResponse;
 import com.triptune.route.dto.response.RouteResponse;
 import com.triptune.route.entity.TravelRoute;
 import com.triptune.schedule.entity.TravelSchedule;
@@ -23,8 +24,8 @@ public class TravelRouteFixture {
     }
 
 
-    public static RouteCreateRequest createRouteCreateRequest(Long placeId){
-        return RouteCreateRequest.builder().placeId(placeId).build();
+    public static RouteCreateRequest createRouteCreateRequest(Long placeId, Integer routeVersion){
+        return RouteCreateRequest.builder().placeId(placeId).routeVersion(routeVersion).build();
     }
 
     public static RouteQueryDto createRouteQueryDto(TravelRoute route, String thumbnailS3ObjectKey) {
@@ -60,5 +61,11 @@ public class TravelRouteFixture {
                 .thumbnailUrl(thumbnailUrl)
                 .build();
 
+    }
+
+    public static RouteCreateResponse createRouteCreateResponse(int routeVersion) {
+        return RouteCreateResponse.builder()
+                .routeVersion(routeVersion)
+                .build();
     }
 }

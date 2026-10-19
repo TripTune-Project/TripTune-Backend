@@ -1,8 +1,10 @@
 package com.triptune.route.service;
 
+import com.triptune.global.response.page.RoutePageResponse;
 import com.triptune.global.s3.S3ObjectManager;
 import com.triptune.route.dto.request.RouteCreateRequest;
 import com.triptune.route.dto.request.RouteRequest;
+import com.triptune.route.dto.response.RouteCreateResponse;
 import com.triptune.route.dto.response.RouteResponse;
 import com.triptune.attendee.entity.TravelAttendee;
 import com.triptune.route.entity.TravelRoute;
@@ -36,29 +38,38 @@ public class TravelRouteService {
     private final TravelPlaceRepository travelPlaceRepository;
     private final S3ObjectManager s3ObjectManager;
 
-    public Page<RouteResponse> getRoutes(Long scheduleId, int page) {
+    public RoutePageResponse<RouteResponse> getTravelRoutes(Long scheduleId, int page) {
+        Integer routeVersion = travelScheduleRepository.findRouteVersionById(scheduleId)
+                .orElseThrow(() -> new DataNotFoundException(ErrorCode.SCHEDULE_NOT_FOUND));
+
         Pageable pageable = PageUtils.defaultPageable(page);
         Page<RouteQueryDto> routePage = travelRouteRepository.findAllByScheduleId(pageable, scheduleId);
 
-        List<RouteResponse> routeResponses = routePage.getContent().stream()
-                .map(route -> {
+        Page<RouteResponse> pageResponse = routePage.map(route -> {
                     String thumbnailUrl = s3ObjectManager.generateS3ObjectUrl(route.getThumbnailS3ObjectKey());
                     return RouteResponse.of(route, thumbnailUrl);
-                }).toList();
+        });
 
-        return PageUtils.createPage(routeResponses, routePage.getPageable(), routePage.getTotalElements());
+        return RoutePageResponse.of(routeVersion, pageResponse);
     }
 
     @Transactional
-    public void createLastRoute(Long scheduleId, Long memberId, RouteCreateRequest routeCreateRequest) {
+    public RouteCreateResponse createLastTravelRoute(Long scheduleId, Long memberId, RouteCreateRequest routeCreateRequest) {
         TravelSchedule schedule = getSchedule(scheduleId);
 
         validateEnableEdit(scheduleId, memberId);
 
         TravelPlace place = getPlace(routeCreateRequest.getPlaceId());
-        TravelRoute route = TravelRoute.createTravelRoute(schedule, place, schedule.getTravelRoutes().size() + 1);
-
+        TravelRoute route = TravelRoute.createTravelRoute(
+                schedule,
+                place,
+                schedule.getTravelRoutes().size() + 1
+        );
         travelRouteRepository.save(route);
+
+        schedule.increaseRouteVersion();
+
+        return RouteCreateResponse.of(schedule.getRouteVersion());
     }
 
     private TravelSchedule getSchedule(Long scheduleId){
