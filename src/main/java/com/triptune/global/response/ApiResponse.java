@@ -3,6 +3,7 @@ package com.triptune.global.response;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.triptune.global.message.SuccessCode;
 import com.triptune.global.response.page.PageResponse;
+import com.triptune.global.response.page.RoutePageResponse;
 import com.triptune.global.response.page.SchedulePageResponse;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -42,14 +43,21 @@ public class ApiResponse<T> {
     }
 
     public static <T> ApiResponse<PageResponse<T>> pageResponse(Page<T> object) {
-        return new ApiResponse<PageResponse<T>>(
+        return new ApiResponse<>(
                 SuccessCode.GENERAL_SUCCESS.getMessage(),
                 PageResponse.of(object)
         );
     }
 
+    public static <T> ApiResponse<RoutePageResponse<T>> routePageResponse(RoutePageResponse<T> object) {
+        return new ApiResponse<>(
+                SuccessCode.GENERAL_SUCCESS.getMessage(),
+                object
+        );
+    }
+
     public static <T> ApiResponse<SchedulePageResponse<T>> schedulePageResponse(SchedulePageResponse<T> object) {
-        return new ApiResponse<SchedulePageResponse<T>>(
+        return new ApiResponse<>(
                 SuccessCode.GENERAL_SUCCESS.getMessage(),
                 object
         );

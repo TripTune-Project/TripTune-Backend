@@ -12,6 +12,7 @@ import com.triptune.common.fixture.DistrictFixture;
 import com.triptune.global.exception.DataNotFoundException;
 import com.triptune.global.message.ErrorCode;
 import com.triptune.global.message.SuccessCode;
+import com.triptune.global.response.page.RoutePageResponse;
 import com.triptune.global.security.SecurityTestUtils;
 import com.triptune.global.security.jwt.JwtAuthFilter;
 import com.triptune.global.util.PageUtils;
@@ -20,6 +21,7 @@ import com.triptune.member.fixture.MemberFixture;
 import com.triptune.profile.entity.ProfileImage;
 import com.triptune.profile.fixture.ProfileImageFixture;
 import com.triptune.route.dto.request.RouteCreateRequest;
+import com.triptune.route.dto.response.RouteCreateResponse;
 import com.triptune.route.dto.response.RouteResponse;
 import com.triptune.attendee.exception.ForbiddenAttendeeException;
 import com.triptune.route.fixture.TravelRouteFixture;
@@ -128,13 +130,19 @@ public class TravelRouteControllerTest {
                 TravelRouteFixture.createRouteResponse(2, place1, "place1ThumbnailUrl"),
                 TravelRouteFixture.createRouteResponse(3, place2, "place2ThumbnailUrl")
         );
-        Page<RouteResponse> response = PageUtils.createPage(
+
+        Page<RouteResponse> pageResponse = PageUtils.createPage(
                 routeResponses,
                 PageUtils.defaultPageable(1),
                 routeResponses.size()
         );
 
-        given(travelRouteService.getRoutes(anyLong(), anyInt()))
+        RoutePageResponse<RouteResponse> response = RoutePageResponse.of(
+                3,
+                pageResponse
+        );
+
+        given(travelRouteService.getTravelRoutes(anyLong(), anyInt()))
                 .willReturn(response);
 
         // when, then
@@ -155,11 +163,20 @@ public class TravelRouteControllerTest {
 
     @Test
     @DisplayName("여행 루트의 마지막 여행지 추가")
-    void createLastRoute() throws Exception{
+    void createLastTravelRoute() throws Exception{
         // given
         SecurityTestUtils.mockAuthentication(member1);
 
-        RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(place3.getPlaceId());
+        RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(
+                place3.getPlaceId(),
+                3
+        );
+
+        RouteCreateResponse response = TravelRouteFixture.createRouteCreateResponse(4);
+
+        given(travelRouteService.createLastTravelRoute(eq(SCHEDULE_ID), eq(member1.getMemberId()), any(RouteCreateRequest.class)))
+                .willReturn(response);
+
 
         // when, then
         mockMvc.perform(post("/api/schedules/{scheduleId}/routes", SCHEDULE_ID)
@@ -168,16 +185,17 @@ public class TravelRouteControllerTest {
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()));
+                .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()))
+                .andExpect(jsonPath("$.data.routeVersion").value(4));
     }
 
 
     @Test
-    @DisplayName("여행 루트의 마지막 여행지 추가 시 여행지 ID null 값이 들어와 400 반환")
-    void createLastRoute_invalidNullPlaceId() throws Exception {
+    @DisplayName("여행 루트의 마지막 여행지 추가 시 여행 루트 버전에 null 값이 들어와 400 반환")
+    void createLastTravelRoute_invalidNullRouteVersion() throws Exception {
         // given
         SecurityTestUtils.mockAuthentication(member1);
-        RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(null);
+        RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(null, 3);
 
         // when, then
         mockMvc.perform(post("/api/schedules/{scheduleId}/routes", SCHEDULE_ID)
@@ -193,10 +211,10 @@ public class TravelRouteControllerTest {
     @ParameterizedTest
     @DisplayName("여행 루트의 마지막 여행지 추가 시 여행지 ID에 1 미만 값이 들어와 400 반환")
     @ValueSource(longs = {0L, -1L})
-    void createLastRoute_invalidMinPlaceId(Long input) throws Exception {
+    void createLastTravelRoute_invalidMinPlaceId(Long input) throws Exception {
         // given
         SecurityTestUtils.mockAuthentication(member1);
-        RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(input);
+        RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(input, 3);
 
         // when, then
         mockMvc.perform(post("/api/schedules/{scheduleId}/routes", SCHEDULE_ID)
@@ -209,15 +227,53 @@ public class TravelRouteControllerTest {
     }
 
 
+
     @Test
-    @DisplayName("여행 루트의 마지막 여행지 추가 시 일정 데이터 존재하지 않아 404 반환")
-    void createLastRoute_scheduleNotFound() throws Exception {
+    @DisplayName("여행 루트의 마지막 여행지 추가 시 여행지 ID null 값이 들어와 400 반환")
+    void createLastTravelRoute_invalidNullPlaceId() throws Exception {
         // given
         SecurityTestUtils.mockAuthentication(member1);
-        RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(place3.getPlaceId());
+        RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(place3.getPlaceId(), null);
+
+        // when, then
+        mockMvc.perform(post("/api/schedules/{scheduleId}/routes", SCHEDULE_ID)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andDo(print())
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value(containsString("여행 루트 버전은 필수 입력 값입니다.")));
+    }
+
+
+    @Test
+    @DisplayName("여행 루트의 마지막 여행지 추가 시 여행지 ID에 0 미만 값이 들어와 400 반환")
+    void createLastTravelRoute_invalidMinRouteVersion() throws Exception {
+        // given
+        SecurityTestUtils.mockAuthentication(member1);
+        RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(place3.getPlaceId(), -1);
+
+        // when, then
+        mockMvc.perform(post("/api/schedules/{scheduleId}/routes", SCHEDULE_ID)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andDo(print())
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value(containsString("여행 루트 버전은 0 이상의 값이어야 합니다.")));
+    }
+
+
+
+    @Test
+    @DisplayName("여행 루트의 마지막 여행지 추가 시 일정 데이터 존재하지 않아 404 반환")
+    void createLastTravelRoute_scheduleNotFound() throws Exception {
+        // given
+        SecurityTestUtils.mockAuthentication(member1);
+        RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(place3.getPlaceId(), 3);
 
         willThrow(new DataNotFoundException(ErrorCode.SCHEDULE_NOT_FOUND))
-                .given(travelRouteService).createLastRoute(anyLong(), anyLong(), any(RouteCreateRequest.class));
+                .given(travelRouteService).createLastTravelRoute(anyLong(), anyLong(), any(RouteCreateRequest.class));
 
         // when, then
         mockMvc.perform(post("/api/schedules/{scheduleId}/routes", 1000L)
@@ -232,16 +288,16 @@ public class TravelRouteControllerTest {
 
     @Test
     @DisplayName("여행 루트의 마지막 여행지 추가 시 참석자 데이터 존재하지 않아 404 반환")
-    void createLastRoute_attendeeNotFound() throws Exception {
+    void createLastTravelRoute_attendeeNotFound() throws Exception {
         // given
         ProfileImage profileImage = ProfileImageFixture.createProfileImage("memberImage");
         Member member = MemberFixture.createNativeTypeMemberWithId(1000L, "notMember@email.com", profileImage);
         SecurityTestUtils.mockAuthentication(member);
 
-        RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(place3.getPlaceId());
+        RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(place3.getPlaceId(), 3);
 
         willThrow(new DataNotFoundException(ErrorCode.ATTENDEE_NOT_FOUND))
-                .given(travelRouteService).createLastRoute(anyLong(), anyLong(), any(RouteCreateRequest.class));
+                .given(travelRouteService).createLastTravelRoute(anyLong(), anyLong(), any(RouteCreateRequest.class));
 
         // when, then
         mockMvc.perform(post("/api/schedules/{scheduleId}/routes", SCHEDULE_ID)
@@ -256,13 +312,13 @@ public class TravelRouteControllerTest {
 
     @Test
     @DisplayName("여행 루트의 마지막 여행지 추가 시 편집 권한이 없어서 403 반환")
-    void createLastRoute_forbiddenEdit() throws Exception{
+    void createLastTravelRoute_forbiddenEdit() throws Exception{
         // given
         SecurityTestUtils.mockAuthentication(member2);
-        RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(place3.getPlaceId());
+        RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(place3.getPlaceId(), 3);
 
         willThrow(new ForbiddenAttendeeException(ErrorCode.FORBIDDEN_EDIT_SCHEDULE))
-                .given(travelRouteService).createLastRoute(anyLong(), anyLong(), any(RouteCreateRequest.class));
+                .given(travelRouteService).createLastTravelRoute(anyLong(), anyLong(), any(RouteCreateRequest.class));
 
         // when, then
         mockMvc.perform(post("/api/schedules/{scheduleId}/routes", SCHEDULE_ID)
@@ -277,13 +333,13 @@ public class TravelRouteControllerTest {
 
     @Test
     @DisplayName("여행 루트의 마지막 여행지 추가 시 여행지 데이터 존재하지 않아 404 반환")
-    void createLastRoute_placeNotFound() throws Exception {
+    void createLastTravelRoute_placeNotFound() throws Exception {
         // given
         SecurityTestUtils.mockAuthentication(member1);
-        RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(1000L);
+        RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(1000L, 3);
 
         willThrow(new DataNotFoundException(ErrorCode.PLACE_NOT_FOUND))
-                .given(travelRouteService).createLastRoute(anyLong(), anyLong(), any(RouteCreateRequest.class));
+                .given(travelRouteService).createLastTravelRoute(anyLong(), anyLong(), any(RouteCreateRequest.class));
 
         // when, then
         mockMvc.perform(post("/api/schedules/{scheduleId}/routes", SCHEDULE_ID)

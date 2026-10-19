@@ -3,6 +3,7 @@ package com.triptune.schedule.dto.request;
 import com.triptune.global.validation.ValidScheduleDate;
 import com.triptune.route.dto.request.RouteRequest;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
@@ -27,15 +28,18 @@ public class ScheduleUpdateRequest implements ScheduleDate{
     @NotNull(message = "일정 종료 날짜는 필수 입력 값입니다.")
     private LocalDate endDate;
 
-    @Valid
-    private List<RouteRequest> travelRoutes = new ArrayList<>();
+
+    @NotNull(message = "일정 버전은 필수 입력 값입니다.")
+    @Min(value = 0, message = "일정 버전은 0 이상이어야 합니다.")
+    private Integer scheduleVersion;
+
 
     @Builder
-    public ScheduleUpdateRequest(String scheduleName, LocalDate startDate, LocalDate endDate, List<RouteRequest> travelRoutes) {
+    public ScheduleUpdateRequest(String scheduleName, LocalDate startDate, LocalDate endDate, Integer scheduleVersion) {
         this.scheduleName = scheduleName;
         this.startDate = startDate;
         this.endDate = endDate;
-        this.travelRoutes = (travelRoutes != null) ? travelRoutes : new ArrayList<>();
+        this.scheduleVersion = scheduleVersion;
     }
 
     @Override

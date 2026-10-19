@@ -20,18 +20,13 @@ import com.triptune.member.entity.Member;
 import com.triptune.member.fixture.MemberFixture;
 import com.triptune.profile.entity.ProfileImage;
 import com.triptune.profile.fixture.ProfileImageFixture;
-import com.triptune.route.dto.request.RouteRequest;
 import com.triptune.schedule.dto.request.ScheduleCreateRequest;
 import com.triptune.schedule.dto.request.ScheduleUpdateRequest;
-import com.triptune.schedule.dto.response.ScheduleOverviewResponse;
-import com.triptune.schedule.dto.response.ScheduleCreateResponse;
-import com.triptune.schedule.dto.response.ScheduleDetailResponse;
-import com.triptune.schedule.dto.response.ScheduleInfoResponse;
+import com.triptune.schedule.dto.response.*;
 import com.triptune.schedule.entity.TravelSchedule;
 import com.triptune.schedule.enums.ScheduleSearchType;
 import com.triptune.attendee.exception.ForbiddenAttendeeException;
 import com.triptune.schedule.exception.ForbiddenScheduleException;
-import com.triptune.route.fixture.TravelRouteFixture;
 import com.triptune.schedule.fixture.TravelScheduleFixture;
 import com.triptune.schedule.service.TravelScheduleService;
 import com.triptune.travel.dto.response.PlaceResponse;
@@ -75,6 +70,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc(addFilters = false)
 public class TravelScheduleControllerTest {
 
+    private static final String BASE_URL = "http://www.test.com";
+
     @Autowired private MockMvc mockMvc;
     @Autowired private ObjectMapper objectMapper;
 
@@ -116,7 +113,7 @@ public class TravelScheduleControllerTest {
                 "여행지1"
         );
         TravelImage place1Thumb = TravelImageFixture.createTravelImage(place1WithThumb, "test1", true);
-        place1ThumbUrl = "http://test.com/" + place1Thumb.getS3ObjectKey();
+        place1ThumbUrl = BASE_URL + place1Thumb.getS3ObjectKey();
 
         place2WithThumb = TravelPlaceFixture.createTravelPlaceWithId(
                 2L,
@@ -127,7 +124,7 @@ public class TravelScheduleControllerTest {
                 "여행지2"
         );
         TravelImage place2Thumb = TravelImageFixture.createTravelImage(place2WithThumb, "test1", true);
-        place2ThumbUrl = "http://test.com/" + place2Thumb.getS3ObjectKey();
+        place2ThumbUrl = BASE_URL + place2Thumb.getS3ObjectKey();
 
         placeWithoutThumb = TravelPlaceFixture.createTravelPlaceWithId(
                 3L,
@@ -504,7 +501,7 @@ public class TravelScheduleControllerTest {
         // given
         SecurityTestUtils.mockAuthentication(member1);
 
-        ScheduleCreateRequest request = TravelScheduleFixture.createScheduleRequest(
+        ScheduleCreateRequest request = TravelScheduleFixture.createScheduleCreateRequest(
                 "테스트",
                 LocalDate.now(),
                 LocalDate.now()
@@ -521,7 +518,9 @@ public class TravelScheduleControllerTest {
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()));
+                .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()))
+                .andExpect(jsonPath("$.data.scheduleVersion").value(0))
+                .andExpect(jsonPath("$.data.scheduleId").value(1L));
     }
 
     @ParameterizedTest
@@ -531,7 +530,7 @@ public class TravelScheduleControllerTest {
         // given
         SecurityTestUtils.mockAuthentication(member1);
 
-        ScheduleCreateRequest request = TravelScheduleFixture.createScheduleRequest(
+        ScheduleCreateRequest request = TravelScheduleFixture.createScheduleCreateRequest(
                 input,
                 LocalDate.now(),
                 LocalDate.now().plusDays(10)
@@ -553,7 +552,7 @@ public class TravelScheduleControllerTest {
         // given
         SecurityTestUtils.mockAuthentication(member1);
 
-        ScheduleCreateRequest request = TravelScheduleFixture.createScheduleRequest(
+        ScheduleCreateRequest request = TravelScheduleFixture.createScheduleCreateRequest(
                 null,
                 LocalDate.now(),
                 LocalDate.now().plusDays(10)
@@ -575,7 +574,7 @@ public class TravelScheduleControllerTest {
         // given
         SecurityTestUtils.mockAuthentication(member1);
 
-        ScheduleCreateRequest request = TravelScheduleFixture.createScheduleRequest(
+        ScheduleCreateRequest request = TravelScheduleFixture.createScheduleCreateRequest(
                 "테스트",
                 null,
                 LocalDate.now().plusDays(10)
@@ -597,7 +596,7 @@ public class TravelScheduleControllerTest {
         // given
         SecurityTestUtils.mockAuthentication(member1);
 
-        ScheduleCreateRequest request = TravelScheduleFixture.createScheduleRequest(
+        ScheduleCreateRequest request = TravelScheduleFixture.createScheduleCreateRequest(
                 "테스트",
                 LocalDate.now(),
                 null
@@ -620,7 +619,7 @@ public class TravelScheduleControllerTest {
         // given
         SecurityTestUtils.mockAuthentication(member1);
 
-        ScheduleCreateRequest request = TravelScheduleFixture.createScheduleRequest(
+        ScheduleCreateRequest request = TravelScheduleFixture.createScheduleCreateRequest(
                 "테스트",
                 LocalDate.now().plusDays(10),
                 LocalDate.now()
@@ -642,7 +641,10 @@ public class TravelScheduleControllerTest {
         // given
         SecurityTestUtils.mockAuthentication(member1);
 
-        TravelSchedule schedule = TravelScheduleFixture.createScheduleWithId(1L, "테스트1");
+        TravelSchedule schedule = TravelScheduleFixture.createScheduleWithId(
+                1L,
+                "테스트1"
+        );
 
         List<PlaceResponse> placeResponses = List.of(
                 TravelPlaceFixture.createPlaceResponse(place2WithThumb, place2ThumbUrl),
@@ -668,6 +670,7 @@ public class TravelScheduleControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.scheduleName").value(schedule.getScheduleName()))
+                .andExpect(jsonPath("$.data.scheduleVersion").value(0))
                 .andExpect(jsonPath("$.data.placeList.totalElements").value(3))
                 .andExpect(jsonPath("$.data.placeList.content[0].placeName").value(place2WithThumb.getPlaceName()))
                 .andExpect(jsonPath("$.data.placeList.content[0].thumbnailUrl").value(place2ThumbUrl))
@@ -683,7 +686,10 @@ public class TravelScheduleControllerTest {
         // given
         SecurityTestUtils.mockAuthentication(member1);
 
-        TravelSchedule schedule = TravelScheduleFixture.createScheduleWithId(1L, "테스트1");
+        TravelSchedule schedule = TravelScheduleFixture.createScheduleWithId(
+                1L,
+                "테스트1"
+        );
 
         Page<PlaceResponse> page = PageUtils.createPage(
                 Collections.emptyList(),
@@ -704,6 +710,7 @@ public class TravelScheduleControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.scheduleName").value(schedule.getScheduleName()))
+                .andExpect(jsonPath("$.data.scheduleVersion").value(schedule.getScheduleVersion()))
                 .andExpect(jsonPath("$.data.placeList.totalElements").value(0))
                 .andExpect(jsonPath("$.data.placeList.content").isEmpty());
     }
@@ -715,16 +722,17 @@ public class TravelScheduleControllerTest {
         // given
         SecurityTestUtils.mockAuthentication(member1);
 
-        RouteRequest routeRequest1 = TravelRouteFixture.createRouteRequest(1, place2WithThumb.getPlaceId());
-        RouteRequest routeRequest2 = TravelRouteFixture.createRouteRequest(2, placeWithoutThumb.getPlaceId());
-
-        ScheduleUpdateRequest request = TravelScheduleFixture.createUpdateScheduleRequest(
+        ScheduleUpdateRequest request = TravelScheduleFixture.createScheduleUpdateRequest(
                 "수정 테스트",
-                LocalDate.now().minusDays(2),
-                LocalDate.now().minusDays(1),
-                routeRequest1,
-                routeRequest2
+                LocalDate.now(),
+                LocalDate.now().plusDays(1),
+                3
         );
+
+        ScheduleUpdateResponse response = TravelScheduleFixture.createScheduleUpdateResponse(4);
+
+        given(travelScheduleService.updateSchedule(any(ScheduleUpdateRequest.class), eq(member1.getMemberId()), eq(1L)))
+                .willReturn(response);
 
         // when, then
         mockMvc.perform(patch("/api/schedules/{scheduleId}", 1L)
@@ -733,7 +741,8 @@ public class TravelScheduleControllerTest {
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()));
+                .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()))
+                .andExpect(jsonPath("$.data.scheduleVersion").value(4));
     }
 
     @ParameterizedTest
@@ -743,12 +752,11 @@ public class TravelScheduleControllerTest {
         // given
         SecurityTestUtils.mockAuthentication(member1);
 
-        ScheduleUpdateRequest request = TravelScheduleFixture.createUpdateScheduleRequest(
+        ScheduleUpdateRequest request = TravelScheduleFixture.createScheduleUpdateRequest(
                 input,
                 LocalDate.now(),
                 LocalDate.now().plusDays(1),
-                TravelRouteFixture.createRouteRequest(1, place1WithThumb.getPlaceId()),
-                TravelRouteFixture.createRouteRequest(2, placeWithoutThumb.getPlaceId())
+                3
         );
 
         // when, then
@@ -767,12 +775,11 @@ public class TravelScheduleControllerTest {
         // given
         SecurityTestUtils.mockAuthentication(member1);
 
-        ScheduleUpdateRequest request = TravelScheduleFixture.createUpdateScheduleRequest(
+        ScheduleUpdateRequest request = TravelScheduleFixture.createScheduleUpdateRequest(
                 null,
                 LocalDate.now(),
                 LocalDate.now().plusDays(1),
-                TravelRouteFixture.createRouteRequest(1, place1WithThumb.getPlaceId()),
-                TravelRouteFixture.createRouteRequest(2, placeWithoutThumb.getPlaceId())
+                3
         );
 
         // when, then
@@ -791,12 +798,11 @@ public class TravelScheduleControllerTest {
         // given
         SecurityTestUtils.mockAuthentication(member1);
 
-        ScheduleUpdateRequest request = TravelScheduleFixture.createUpdateScheduleRequest(
+        ScheduleUpdateRequest request = TravelScheduleFixture.createScheduleUpdateRequest(
                 "수정 테스트",
                 null,
                 LocalDate.now().plusDays(1),
-                TravelRouteFixture.createRouteRequest(1, place1WithThumb.getPlaceId()),
-                TravelRouteFixture.createRouteRequest(2, placeWithoutThumb.getPlaceId())
+                3
         );
 
         // when, then
@@ -816,12 +822,11 @@ public class TravelScheduleControllerTest {
         // given
         SecurityTestUtils.mockAuthentication(member1);
 
-        ScheduleUpdateRequest request = TravelScheduleFixture.createUpdateScheduleRequest(
+        ScheduleUpdateRequest request = TravelScheduleFixture.createScheduleUpdateRequest(
                 "수정 테스트",
                 LocalDate.now(),
                 null,
-                TravelRouteFixture.createRouteRequest(1, place1WithThumb.getPlaceId()),
-                TravelRouteFixture.createRouteRequest(2, placeWithoutThumb.getPlaceId())
+                3
         );
 
         // when, then
@@ -840,12 +845,11 @@ public class TravelScheduleControllerTest {
         // given
         SecurityTestUtils.mockAuthentication(member1);
 
-        ScheduleUpdateRequest request = TravelScheduleFixture.createUpdateScheduleRequest(
+        ScheduleUpdateRequest request = TravelScheduleFixture.createScheduleUpdateRequest(
                 "수정 테스트",
                 LocalDate.now().plusDays(1),
                 LocalDate.now(),
-                TravelRouteFixture.createRouteRequest(1, place1WithThumb.getPlaceId()),
-                TravelRouteFixture.createRouteRequest(2, placeWithoutThumb.getPlaceId())
+                3
         );
 
         // when, then
@@ -860,18 +864,16 @@ public class TravelScheduleControllerTest {
 
 
     @Test
-    @DisplayName("일정 수정 시 여행 루트 순서 null 값이 들어와 예외 발생")
-    void updateSchedule_invalidNullRouteOrder() throws Exception {
+    @DisplayName("일정 수정 시 버전에 null 값이 들어와 예외 발생")
+    void updateSchedule_invalidNullScheduleVersion() throws Exception {
         // given
         SecurityTestUtils.mockAuthentication(member1);
 
-        RouteRequest routeRequest = TravelRouteFixture.createRouteRequest(null, place2WithThumb.getPlaceId());
-
-        ScheduleUpdateRequest request = TravelScheduleFixture.createUpdateScheduleRequest(
+        ScheduleUpdateRequest request = TravelScheduleFixture.createScheduleUpdateRequest(
                 "수정 테스트",
                 LocalDate.now(),
-                LocalDate.now().plusDays(1),
-                routeRequest
+                LocalDate.now().plusDays(3),
+                null
         );
 
         // when, then
@@ -881,49 +883,21 @@ public class TravelScheduleControllerTest {
                 .andDo(print())
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.success").value(false))
-                .andExpect(jsonPath("$.message").value(containsString("여행 루트 순서는 필수 입력 값입니다.")));
+                .andExpect(jsonPath("$.message").value(containsString("일정 버전은 필수 입력 값입니다.")));
     }
 
-
-    @ParameterizedTest
-    @DisplayName("일정 수정 시 여행 루트 순서에 1 미만 값이 들어와 예외 발생")
-    @ValueSource(ints = {-1000, -1, 0})
-    void updateSchedule_invalidMinRouteOrder(Integer input) throws Exception {
-        // given
-        SecurityTestUtils.mockAuthentication(member1);
-
-        RouteRequest routeRequest = TravelRouteFixture.createRouteRequest(input, place2WithThumb.getPlaceId());
-
-        ScheduleUpdateRequest request = TravelScheduleFixture.createUpdateScheduleRequest(
-                "수정 테스트",
-                LocalDate.now(),
-                LocalDate.now().plusDays(1),
-                routeRequest
-        );
-
-        // when, then
-        mockMvc.perform(patch("/api/schedules/{scheduleId}", 1L)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andDo(print())
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.success").value(false))
-                .andExpect(jsonPath("$.message").value(containsString("여행 루트 순서는 1 이상의 값이어야 합니다.")));
-    }
 
     @Test
-    @DisplayName("일정 수정 시 여행 루트의 여행지 id에 null 값이 들어와 예외 발생")
-    void updateSchedule_invalidNullPlaceId() throws Exception {
+    @DisplayName("일정 수정 시 버전에 0 미만의 값이 들어와 예외 발생")
+    void updateSchedule_invalidMinScheduleVersion() throws Exception {
         // given
         SecurityTestUtils.mockAuthentication(member1);
 
-        RouteRequest routeRequest = TravelRouteFixture.createRouteRequest(1, null);
-
-        ScheduleUpdateRequest request = TravelScheduleFixture.createUpdateScheduleRequest(
+        ScheduleUpdateRequest request = TravelScheduleFixture.createScheduleUpdateRequest(
                 "수정 테스트",
                 LocalDate.now(),
-                LocalDate.now().plusDays(1),
-                routeRequest
+                LocalDate.now().plusDays(3),
+                -1
         );
 
         // when, then
@@ -933,34 +907,7 @@ public class TravelScheduleControllerTest {
                 .andDo(print())
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.success").value(false))
-                .andExpect(jsonPath("$.message").value(containsString("여행지 ID는 필수 입력 값입니다.")));
-    }
-
-
-    @ParameterizedTest
-    @DisplayName("일정 수정 시 여행 루트의 여행지 id에 1미만 값이 들어와 예외 발생")
-    @ValueSource(longs = {-1L, 0L})
-    void updateSchedule_invalidMinPlaceId(Long input) throws Exception {
-        // given
-        SecurityTestUtils.mockAuthentication(member1);
-
-        RouteRequest routeRequest = TravelRouteFixture.createRouteRequest(1, input);
-
-        ScheduleUpdateRequest request = TravelScheduleFixture.createUpdateScheduleRequest(
-                "수정 테스트",
-                LocalDate.now(),
-                LocalDate.now().plusDays(1),
-                routeRequest
-        );
-
-        // when, then
-        mockMvc.perform(patch("/api/schedules/{scheduleId}", 1L)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andDo(print())
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.success").value(false))
-                .andExpect(jsonPath("$.message").value(containsString("여행지 ID는 1 이상의 값이어야 합니다.")));
+                .andExpect(jsonPath("$.message").value(containsString("일정 버전은 0 이상이어야 합니다.")));
     }
 
 
@@ -970,11 +917,11 @@ public class TravelScheduleControllerTest {
         // given
         SecurityTestUtils.mockAuthentication(member2);
 
-        ScheduleUpdateRequest request = TravelScheduleFixture.createUpdateScheduleRequest(
+        ScheduleUpdateRequest request = TravelScheduleFixture.createScheduleUpdateRequest(
                 "수정 테스트",
                 LocalDate.now(),
                 LocalDate.now().plusDays(1),
-                TravelRouteFixture.createRouteRequest(1, place1WithThumb.getPlaceId())
+                3
         );
 
         willThrow(new ForbiddenAttendeeException(ErrorCode.FORBIDDEN_EDIT_SCHEDULE))

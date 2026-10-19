@@ -19,11 +19,9 @@ import com.triptune.member.repository.MemberRepository;
 import com.triptune.profile.entity.ProfileImage;
 import com.triptune.profile.fixture.ProfileImageFixture;
 import com.triptune.profile.repository.ProfileImageRepository;
-import com.triptune.route.dto.request.RouteRequest;
 import com.triptune.schedule.dto.request.ScheduleCreateRequest;
 import com.triptune.schedule.dto.request.ScheduleUpdateRequest;
 import com.triptune.chat.entity.ChatMessage;
-import com.triptune.route.entity.TravelRoute;
 import com.triptune.schedule.entity.TravelSchedule;
 import com.triptune.attendee.enums.AttendeeRole;
 import com.triptune.schedule.enums.ScheduleSearchType;
@@ -60,6 +58,7 @@ import static com.triptune.attendee.enums.AttendeePermission.CHAT;
 import static com.triptune.attendee.enums.AttendeePermission.READ;
 import static com.triptune.travel.enums.ThemeType.ATTRACTIONS;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -571,7 +570,7 @@ public class TravelScheduleIntegrationTest {
     @DisplayName("일정 생성")
     void createSchedule() throws Exception{
         // given
-        ScheduleCreateRequest request = TravelScheduleFixture.createScheduleRequest(
+        ScheduleCreateRequest request = TravelScheduleFixture.createScheduleCreateRequest(
                 "테스트",
                 LocalDate.now(),
                 LocalDate.now()
@@ -585,7 +584,9 @@ public class TravelScheduleIntegrationTest {
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()));
+                .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()))
+                .andExpect(jsonPath("$.data.scheduleVersion").value(0))
+                .andExpect(jsonPath("$.data.scheduleId", notNullValue()));
 
         // then
         em.flush();
@@ -593,6 +594,8 @@ public class TravelScheduleIntegrationTest {
 
         TravelSchedule createdSchedule = travelScheduleRepository.findAll().get(0);
         assertThat(createdSchedule.getScheduleName()).isEqualTo(request.getScheduleName());
+        assertThat(createdSchedule.getScheduleVersion()).isZero();
+        assertThat(createdSchedule.getRouteVersion()).isZero();
         assertThat(createdSchedule.getStartDate()).isEqualTo(request.getStartDate());
     }
 
@@ -601,7 +604,9 @@ public class TravelScheduleIntegrationTest {
     @DisplayName("일정 상세 조회")
     void getScheduleDetail() throws Exception {
         // given
-        TravelSchedule schedule = travelScheduleRepository.save(TravelScheduleFixture.createSchedule("테스트1"));
+        TravelSchedule schedule = travelScheduleRepository.save(
+                TravelScheduleFixture.createSchedule("테스트1")
+        );
 
         travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorAttendee(schedule, member1));
         travelAttendeeRepository.save(TravelAttendeeFixture.createGuestAttendee(schedule, member2, READ));
@@ -619,6 +624,7 @@ public class TravelScheduleIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.scheduleName").value(schedule.getScheduleName()))
+                .andExpect(jsonPath("$.data.scheduleVersion").value(schedule.getScheduleVersion()))
                 .andExpect(jsonPath("$.data.placeList.totalElements").value(3))
                 .andExpect(jsonPath("$.data.placeList.content[0].placeName").value(place2WithThumb.getPlaceName()))
                 .andExpect(jsonPath("$.data.placeList.content[0].thumbnailUrl").value(place2ThumbUrl))
@@ -626,31 +632,6 @@ public class TravelScheduleIntegrationTest {
                 .andExpect(jsonPath("$.data.placeList.content[1].thumbnailUrl").value(place1ThumbUrl))
                 .andExpect(jsonPath("$.data.placeList.content[2].placeName").value(placeWithoutThumb.getPlaceName()))
                 .andExpect(jsonPath("$.data.placeList.content[2].thumbnailUrl", nullValue()));
-    }
-
-    @Test
-    @DisplayName("일정 상세 조회 시 여행지 데이터 존재하지 않는 경우")
-    void getScheduleDetail_emptyPlaces() throws Exception {
-        // given
-        travelImageRepository.deleteAll();
-        travelPlaceRepository.deleteAll();
-
-        TravelSchedule schedule = travelScheduleRepository.save(TravelScheduleFixture.createSchedule("테스트1"));
-
-        travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorAttendee(schedule, member1));
-        travelAttendeeRepository.save(TravelAttendeeFixture.createGuestAttendee(schedule, member2, READ));
-
-        SecurityTestUtils.mockAuthentication(member1);
-
-        // when, then
-        mockMvc.perform(get("/api/schedules/{scheduleId}", schedule.getScheduleId())
-                        .param("page", "1"))
-                .andDo(print())
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.scheduleName").value(schedule.getScheduleName()))
-                .andExpect(jsonPath("$.data.placeList.totalElements").value(0))
-                .andExpect(jsonPath("$.data.placeList.content").isEmpty());
     }
 
     @Test
@@ -697,19 +678,11 @@ public class TravelScheduleIntegrationTest {
         travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorAttendee(schedule, member1));
         travelAttendeeRepository.save(TravelAttendeeFixture.createGuestAttendee(schedule, member2, READ));
 
-        travelRouteRepository.save(TravelRouteFixture.createRoute(schedule, place1WithThumb, 1));
-        travelRouteRepository.save(TravelRouteFixture.createRoute(schedule, placeWithoutThumb, 2));
-        travelRouteRepository.save(TravelRouteFixture.createRoute(schedule, place2WithThumb, 3));
-
-        RouteRequest routeRequest1 = TravelRouteFixture.createRouteRequest(1, place2WithThumb.getPlaceId());
-        RouteRequest routeRequest2 = TravelRouteFixture.createRouteRequest(2, placeWithoutThumb.getPlaceId());
-
-        ScheduleUpdateRequest request = TravelScheduleFixture.createUpdateScheduleRequest(
+        ScheduleUpdateRequest request = TravelScheduleFixture.createScheduleUpdateRequest(
                 "수정 테스트",
                 LocalDate.now().minusDays(2),
                 LocalDate.now().minusDays(1),
-                routeRequest1,
-                routeRequest2
+                0
         );
 
         SecurityTestUtils.mockAuthentication(member1);
@@ -721,59 +694,17 @@ public class TravelScheduleIntegrationTest {
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()));
+                .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()))
+                .andExpect(jsonPath("$.data.scheduleVersion").value(1));
 
-        // then
-        em.flush();
-        em.clear();
 
-        TravelSchedule updatedSchedule = travelScheduleRepository.findAll().get(0);
+        TravelSchedule updatedSchedule = travelScheduleRepository.findById(schedule.getScheduleId()).orElseThrow();
         assertThat(updatedSchedule.getScheduleName()).isEqualTo(request.getScheduleName());
         assertThat(updatedSchedule.getStartDate()).isEqualTo(request.getStartDate());
         assertThat(updatedSchedule.getEndDate()).isEqualTo(request.getEndDate());
-        assertThat(updatedSchedule.getTravelRoutes()).hasSize(2);
-        assertThat(updatedSchedule.getTravelRoutes())
-                .extracting(TravelRoute::getRouteOrder)
-                .containsExactly(1, 2);
+        assertThat(updatedSchedule.getScheduleVersion()).isEqualTo(1);
+        assertThat(updatedSchedule.getRouteVersion()).isZero();
 
-    }
-
-
-    @Test
-    @DisplayName("일정 수정 시 여행 루트 없는 경우")
-    void updateSchedule_emptyRoutes() throws Exception {
-        // given
-        TravelSchedule schedule = travelScheduleRepository.save(TravelScheduleFixture.createSchedule("테스트1"));
-
-        travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorAttendee(schedule, member1));
-        travelAttendeeRepository.save(TravelAttendeeFixture.createGuestAttendee(schedule, member2, READ));
-
-        ScheduleUpdateRequest request = TravelScheduleFixture.createUpdateScheduleRequest(
-                "수정 테스트",
-                LocalDate.now(),
-                LocalDate.now().plusDays(1)
-        );
-
-        SecurityTestUtils.mockAuthentication(member1);
-
-        // when
-        mockMvc.perform(patch("/api/schedules/{scheduleId}", schedule.getScheduleId())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andDo(print())
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()));
-
-        // then
-        em.flush();
-        em.clear();
-
-        TravelSchedule updatedSchedule = travelScheduleRepository.findAll().get(0);
-        assertThat(updatedSchedule.getScheduleName()).isEqualTo(request.getScheduleName());
-        assertThat(updatedSchedule.getStartDate()).isEqualTo(request.getStartDate());
-        assertThat(updatedSchedule.getEndDate()).isEqualTo(request.getEndDate());
-        assertThat(updatedSchedule.getTravelRoutes()).hasSize(0);
     }
 
 
@@ -786,11 +717,11 @@ public class TravelScheduleIntegrationTest {
         travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorAttendee(schedule, member1));
         travelAttendeeRepository.save(TravelAttendeeFixture.createGuestAttendee(schedule, member2, READ));
 
-        ScheduleUpdateRequest request = TravelScheduleFixture.createUpdateScheduleRequest(
+        ScheduleUpdateRequest request = TravelScheduleFixture.createScheduleUpdateRequest(
                 "수정 테스트",
                 LocalDate.now(),
                 LocalDate.now().plusDays(1),
-                TravelRouteFixture.createRouteRequest(1, place1WithThumb.getPlaceId())
+                3
         );
 
         SecurityTestUtils.mockAuthentication(member3);
@@ -815,11 +746,11 @@ public class TravelScheduleIntegrationTest {
         travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorAttendee(schedule, member1));
         travelAttendeeRepository.save(TravelAttendeeFixture.createGuestAttendee(schedule, member2, READ));
 
-        ScheduleUpdateRequest request = TravelScheduleFixture.createUpdateScheduleRequest(
+        ScheduleUpdateRequest request = TravelScheduleFixture.createScheduleUpdateRequest(
                 "수정 테스트",
                 LocalDate.now(),
                 LocalDate.now().plusDays(1),
-                TravelRouteFixture.createRouteRequest(1, place1WithThumb.getPlaceId())
+                3
         );
 
         SecurityTestUtils.mockAuthentication(member2);

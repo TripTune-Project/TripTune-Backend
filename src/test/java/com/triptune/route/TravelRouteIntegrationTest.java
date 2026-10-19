@@ -53,6 +53,7 @@ import java.util.List;
 import static com.triptune.attendee.enums.AttendeePermission.READ;
 import static com.triptune.travel.enums.ThemeType.ATTRACTIONS;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -143,7 +144,7 @@ public class TravelRouteIntegrationTest {
 
     @Test
     @DisplayName("여행 루트 조회 성공")
-    void getRoutes() throws Exception {
+    void getTravelRoutes() throws Exception {
         // given
         TravelRoute route1 = travelRouteRepository.save(TravelRouteFixture.createRoute(schedule, place1, 1));
         TravelRoute route2 = travelRouteRepository.save(TravelRouteFixture.createRoute(schedule, place1, 2));
@@ -168,7 +169,7 @@ public class TravelRouteIntegrationTest {
 
     @Test
     @DisplayName("여행 루트 조회 시 저장된 여행 루트 데이터 없는 경우")
-    void getRoutes_withoutData() throws Exception {
+    void getTravelRoutes_emptyResult() throws Exception {
         // given
         SecurityTestUtils.mockAuthentication(member1);
 
@@ -184,7 +185,7 @@ public class TravelRouteIntegrationTest {
 
     @Test
     @DisplayName("여행 루트 조회 시 일정 데이터 존재하지 않아 예외 발생")
-    void getRoutes_scheduleNotFound() throws Exception {
+    void getTravelRoutes_scheduleNotFound() throws Exception {
         // given
         SecurityTestUtils.mockAuthentication(member1);
 
@@ -199,7 +200,7 @@ public class TravelRouteIntegrationTest {
 
     @Test
     @DisplayName("여행 루트 조회 시 해당 일정에 접근 권한이 없어 예외 발생")
-    void getRoutes_forbiddenScheduleAccess() throws Exception {
+    void getTravelRoutes_forbiddenScheduleAccess() throws Exception {
         // given
         ProfileImage profileImage3 = profileImageRepository.save(ProfileImageFixture.createProfileImage("test3"));
         Member member3 = memberRepository.save(MemberFixture.createNativeTypeMember("member3@email.com", profileImage3));
@@ -217,7 +218,7 @@ public class TravelRouteIntegrationTest {
 
     @Test
     @DisplayName("여행 루트의 마지막 여행지 추가")
-    void createLastRoute() throws Exception{
+    void createLastTravelRoute() throws Exception{
         // given
         travelRouteRepository.save(TravelRouteFixture.createRoute(schedule, place1, 1));
         travelRouteRepository.save(TravelRouteFixture.createRoute(schedule, place1, 2));
@@ -225,7 +226,10 @@ public class TravelRouteIntegrationTest {
 
         SecurityTestUtils.mockAuthentication(member1);
 
-        RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(place3.getPlaceId());
+        RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(
+                place3.getPlaceId(),
+                schedule.getRouteVersion()
+        );
 
         // when
         mockMvc.perform(post("/api/schedules/{scheduleId}/routes", schedule.getScheduleId())
@@ -234,7 +238,8 @@ public class TravelRouteIntegrationTest {
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()));
+                .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()))
+                .andExpect(jsonPath("$.data.routeVersion").value(1));
 
         // then
         em.flush();
@@ -242,15 +247,17 @@ public class TravelRouteIntegrationTest {
 
         List<TravelRoute> travelRoutes = travelRouteRepository.findAll();
         assertThat(travelRoutes).hasSize(4);
-        assertThat(travelRoutes.get(0).getRouteOrder()).isEqualTo(1);
-        assertThat(travelRoutes.get(0).getTravelPlace().getPlaceId()).isEqualTo(place1.getPlaceId());
-        assertThat(travelRoutes.get(1).getRouteOrder()).isEqualTo(2);
-        assertThat(travelRoutes.get(1).getTravelPlace().getPlaceId()).isEqualTo(place1.getPlaceId());
-        assertThat(travelRoutes.get(2).getRouteOrder()).isEqualTo(3);
-        assertThat(travelRoutes.get(2).getTravelPlace().getPlaceId()).isEqualTo(place2.getPlaceId());
-        assertThat(travelRoutes.get(3).getRouteOrder()).isEqualTo(4);
-        assertThat(travelRoutes.get(3).getTravelPlace().getPlaceId()).isEqualTo(place3.getPlaceId());
-
+        assertThat(travelRoutes)
+                .extracting(
+                        TravelRoute::getRouteOrder,
+                        r -> r.getTravelPlace().getPlaceId()
+                )
+                .containsExactly(
+                    tuple(1, place1.getPlaceId()),
+                    tuple(2, place1.getPlaceId()),
+                    tuple(3, place2.getPlaceId()),
+                    tuple(4, place3.getPlaceId())
+                );
     }
 
     @Test
@@ -258,7 +265,10 @@ public class TravelRouteIntegrationTest {
     void createLastRoute_emptyRouteList() throws Exception{
         // given
         SecurityTestUtils.mockAuthentication(member1);
-        RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(place3.getPlaceId());
+        RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(
+                place3.getPlaceId(),
+                schedule.getRouteVersion()
+        );
 
         // when, then
         mockMvc.perform(post("/api/schedules/{scheduleId}/routes", schedule.getScheduleId())
@@ -281,7 +291,10 @@ public class TravelRouteIntegrationTest {
     void createLastRoute_scheduleNotFound() throws Exception {
         // given
         SecurityTestUtils.mockAuthentication(member1);
-        RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(place3.getPlaceId());
+        RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(
+                place3.getPlaceId(),
+                schedule.getRouteVersion()
+        );
 
         // when, then
         mockMvc.perform(post("/api/schedules/{scheduleId}/routes", 1000L)
@@ -302,7 +315,10 @@ public class TravelRouteIntegrationTest {
         Member member = MemberFixture.createNativeTypeMemberWithId(1000L, "notMember@email.com", profileImage);
         SecurityTestUtils.mockAuthentication(member);
 
-        RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(place3.getPlaceId());
+        RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(
+                place3.getPlaceId(),
+                schedule.getRouteVersion()
+        );
 
         // when, then
         mockMvc.perform(post("/api/schedules/{scheduleId}/routes", schedule.getScheduleId())
@@ -320,7 +336,10 @@ public class TravelRouteIntegrationTest {
     void createLastRoute_placeNotFound() throws Exception {
         // given
         SecurityTestUtils.mockAuthentication(member1);
-        RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(1000L);
+        RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(
+                1000L,
+                schedule.getRouteVersion()
+        );
 
         // when, then
         mockMvc.perform(post("/api/schedules/{scheduleId}/routes", schedule.getScheduleId())

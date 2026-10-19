@@ -49,9 +49,6 @@ public class TravelRoute extends BaseCreatedEntity {
         travelSchedule.addTravelRoutes(this);
     }
 
-    protected void detachTravelSchedule(){
-        this.travelSchedule = null;
-    }
 
 
 
