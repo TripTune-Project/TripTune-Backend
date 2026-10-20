@@ -1,10 +1,11 @@
 package com.triptune.route.service;
 
+import com.triptune.global.exception.CustomBadRequestException;
 import com.triptune.global.response.page.RoutePageResponse;
 import com.triptune.global.s3.S3ObjectManager;
 import com.triptune.route.dto.request.RouteCreateRequest;
-import com.triptune.route.dto.request.RouteRequest;
-import com.triptune.route.dto.response.RouteCreateResponse;
+import com.triptune.route.dto.request.RouteUpdateRequest;
+import com.triptune.route.dto.response.RouteVersionResponse;
 import com.triptune.route.dto.response.RouteResponse;
 import com.triptune.attendee.entity.TravelAttendee;
 import com.triptune.route.entity.TravelRoute;
@@ -25,7 +26,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
+import java.util.*;
 
 @Service
 @Transactional(readOnly = true)
@@ -54,7 +55,7 @@ public class TravelRouteService {
     }
 
     @Transactional
-    public RouteCreateResponse createLastTravelRoute(Long scheduleId, Long memberId, RouteCreateRequest routeCreateRequest) {
+    public RouteVersionResponse createLastTravelRoute(Long scheduleId, Long memberId, RouteCreateRequest routeCreateRequest) {
         TravelSchedule schedule = getSchedule(scheduleId);
 
         validateEnableEdit(scheduleId, memberId);
@@ -69,13 +70,9 @@ public class TravelRouteService {
 
         schedule.increaseRouteVersion();
 
-        return RouteCreateResponse.of(schedule.getRouteVersion());
+        return RouteVersionResponse.of(schedule.getRouteVersion());
     }
 
-    private TravelSchedule getSchedule(Long scheduleId){
-        return travelScheduleRepository.findById(scheduleId)
-                .orElseThrow(() -> new DataNotFoundException(ErrorCode.SCHEDULE_NOT_FOUND));
-    }
 
     private void validateEnableEdit(Long scheduleId, Long memberId){
         TravelAttendee attendee = getAttendee(scheduleId, memberId);
@@ -97,21 +94,69 @@ public class TravelRouteService {
     }
 
     @Transactional
-    public void updateRouteInSchedule(TravelSchedule schedule, List<RouteRequest> routeRequests){
-        travelRouteRepository.deleteAllByScheduleId(schedule.getScheduleId());
-        schedule.getTravelRoutes().clear();
+    public RouteVersionResponse updateTravelRoute(Long scheduleId, RouteUpdateRequest routeUpdateRequest){
+        TravelSchedule schedule = getSchedule(scheduleId);
 
-        if(routeRequests == null || routeRequests.isEmpty()){
-            return;
+        List<Long> routeIds = routeUpdateRequest.getOrderedRouteIds();
+
+        List<TravelRoute> routes = travelRouteRepository.findAllByTravelSchedule_ScheduleId(scheduleId);
+        Map<Long, TravelRoute> routeMap = createRouteMap(routes);
+
+        validateRoutesIds(routeIds, routeMap.keySet());
+
+        for (int i = 0; i < routeIds.size(); i++) {
+            routeMap.get(routeIds.get(i)).changeRouteOrder(i+1);
         }
 
-        // TODO : 추후 수정
-        for(RouteRequest routeRequest : routeRequests){
-            TravelPlace place = getPlace(routeRequest.getPlaceId());
-            TravelRoute route = TravelRoute.createTravelRoute(schedule, place, routeRequest.getRouteOrder());
-            travelRouteRepository.save(route);
+        schedule.increaseRouteVersion();
+        return RouteVersionResponse.of(schedule.getRouteVersion());
+    }
+
+
+    private Map<Long, TravelRoute> createRouteMap(List<TravelRoute> routes){
+        Map<Long, TravelRoute> map = new HashMap<>();
+        for (TravelRoute route : routes) {
+            map.put(route.getRouteId(), route);
+        }
+
+        return map;
+    }
+
+    private void validateRoutesIds(List<Long> routeIds, Set<Long> routeMapKeySet) {
+        Set<Long> idSet = new HashSet<>(routeIds);
+
+        if (routeIds.isEmpty() || idSet.size() != routeIds.size() || !idSet.equals(routeMapKeySet)){
+            throw new CustomBadRequestException(ErrorCode.ROUTE_MISMATCH);
         }
     }
 
+    @Transactional
+    public RouteVersionResponse deleteTravelRoute(Long scheduleId, Long routeId, Integer routeVersion) {
+        TravelSchedule schedule = getSchedule(scheduleId);
+        TravelRoute deleteRoute = getRoute(scheduleId, routeId);
+
+        int deleteRouteOrder = deleteRoute.getRouteOrder();
+        travelRouteRepository.delete(deleteRoute);
+
+        List<TravelRoute> routes = travelRouteRepository.findRoutesAfterOrder(scheduleId, deleteRouteOrder);
+
+        for (TravelRoute route : routes) {
+            route.decreaseRouteOrder();
+        }
+
+        schedule.increaseRouteVersion();
+        return RouteVersionResponse.of(schedule.getRouteVersion());
+    }
+
+    private TravelRoute getRoute(Long scheduleId, Long routeId){
+        return travelRouteRepository.findByRouteIdAndTravelSchedule_ScheduleId(routeId, scheduleId)
+                .orElseThrow(() -> new DataNotFoundException(ErrorCode.ROUTE_NOT_FOUND));
+    }
+
+
+    private TravelSchedule getSchedule(Long scheduleId){
+        return travelScheduleRepository.findById(scheduleId)
+                .orElseThrow(() -> new DataNotFoundException(ErrorCode.SCHEDULE_NOT_FOUND));
+    }
 
 }

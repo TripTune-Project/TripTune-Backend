@@ -6,16 +6,16 @@ import lombok.NoArgsConstructor;
 
 @Getter
 @NoArgsConstructor
-public class RouteCreateResponse {
+public class RouteVersionResponse {
     private Integer routeVersion;
 
     @Builder
-    public RouteCreateResponse(Integer routeVersion) {
+    public RouteVersionResponse(Integer routeVersion) {
         this.routeVersion = routeVersion;
     }
 
-    public static RouteCreateResponse of(Integer routeVersion){
-        return RouteCreateResponse.builder()
+    public static RouteVersionResponse of(Integer routeVersion){
+        return RouteVersionResponse.builder()
                 .routeVersion(routeVersion)
                 .build();
     }

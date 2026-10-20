@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 public class RouteResponse {
+    private Long routeId;
     private int routeOrder;
     private Long placeId;
     private String country;
@@ -21,7 +22,8 @@ public class RouteResponse {
     private String thumbnailUrl;
 
     @Builder
-    public RouteResponse(int routeOrder, Long placeId, String country, String city, String district, String address, String detailAddress, double latitude, double longitude, String placeName, String thumbnailUrl) {
+    public RouteResponse(Long routeId, int routeOrder, Long placeId, String country, String city, String district, String address, String detailAddress, double latitude, double longitude, String placeName, String thumbnailUrl) {
+        this.routeId = routeId;
         this.routeOrder = routeOrder;
         this.placeId = placeId;
         this.country = country;
@@ -38,6 +40,7 @@ public class RouteResponse {
 
     public static RouteResponse of(RouteQueryDto routeQueryDto, String thumbnailUrl){
         return RouteResponse.builder()
+                .routeId(routeQueryDto.getRouteId())
                 .routeOrder(routeQueryDto.getRouteOrder())
                 .placeId(routeQueryDto.getPlaceId())
                 .country(routeQueryDto.getCountry())

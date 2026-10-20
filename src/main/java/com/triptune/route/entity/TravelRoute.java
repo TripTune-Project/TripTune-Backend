@@ -50,6 +50,11 @@ public class TravelRoute extends BaseCreatedEntity {
     }
 
 
+    public void changeRouteOrder(int order) {
+        this.routeOrder = order;
+    }
 
-
+    public void decreaseRouteOrder() {
+        this.routeOrder--;
+    }
 }

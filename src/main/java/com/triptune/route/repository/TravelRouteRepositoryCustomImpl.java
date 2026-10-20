@@ -6,6 +6,7 @@ import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.JPQLQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.triptune.global.util.PageUtils;
+import com.triptune.route.entity.TravelRoute;
 import com.triptune.route.repository.dto.RouteQueryDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -25,10 +26,10 @@ public class TravelRouteRepositoryCustomImpl implements TravelRouteRepositoryCus
 
     @Override
     public Page<RouteQueryDto> findAllByScheduleId(Pageable pageable, Long scheduleId) {
-        BooleanExpression expression = travelRoute.travelSchedule.scheduleId.eq(scheduleId);
 
         List<RouteQueryDto> contents = jpaQueryFactory
                 .select(Projections.constructor(RouteQueryDto.class,
+                        travelRoute.routeId,
                         travelRoute.routeOrder,
                         travelRoute.travelPlace.placeId,
                         travelRoute.travelPlace.country.countryName,
@@ -41,17 +42,17 @@ public class TravelRouteRepositoryCustomImpl implements TravelRouteRepositoryCus
                         travelRoute.travelPlace.placeName,
                         findThumbnailS3ObjectKey()))
                 .from(travelRoute)
-                .where(expression)
+                .where(scheduleIdEq(scheduleId))
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .orderBy(travelRoute.routeOrder.asc())
                 .fetch();
 
-        int totalElements = countTotalElements(expression);
+        int totalElements = countTotalElements(scheduleId);
         return PageUtils.createPage(contents, pageable, totalElements);
     }
 
-    public JPQLQuery<String> findThumbnailS3ObjectKey(){
+    private JPQLQuery<String> findThumbnailS3ObjectKey(){
         return JPAExpressions
                 .select(travelImage.s3ObjectKey)
                 .from(travelImage)
@@ -60,16 +61,31 @@ public class TravelRouteRepositoryCustomImpl implements TravelRouteRepositoryCus
                 .limit(1);
     }
 
-    @Override
-    public Integer countTotalElements(BooleanExpression expression){
+    private Integer countTotalElements(Long scheduleId){
         Long totalElements = jpaQueryFactory
                 .select(travelRoute.count())
                 .from(travelRoute)
-                .where(expression)
+                .where(scheduleIdEq(scheduleId))
                 .fetchOne();
 
         if (totalElements == null) totalElements = 0L;
 
         return totalElements.intValue();
     }
+
+    @Override
+    public List<TravelRoute> findRoutesAfterOrder(Long scheduleId, Integer routeOrder) {
+        return jpaQueryFactory.select(travelRoute)
+                .from(travelRoute)
+                .where(scheduleIdEq(scheduleId),
+                        travelRoute.routeOrder.gt(routeOrder))
+                .orderBy(travelRoute.routeOrder.asc())
+                .fetch();
+    }
+
+
+    private BooleanExpression scheduleIdEq(Long scheduleId){
+        return travelRoute.travelSchedule.scheduleId.eq(scheduleId);
+    }
+
 }

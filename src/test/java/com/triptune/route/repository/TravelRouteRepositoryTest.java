@@ -31,10 +31,12 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 
+import java.util.Collections;
 import java.util.List;
 
 import static com.triptune.travel.enums.ThemeType.ATTRACTIONS;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
 
 @DataJpaTest
 @Import({QuerydslConfig.class, JpaConfig.class})
@@ -110,6 +112,32 @@ class TravelRouteRepositoryTest  {
         assertThat(travelRoutes).doesNotContain(route3);
         assertThat(travelRoutes).doesNotContain(route4);
         assertThat(travelRoutes.get(0).getRouteId()).isEqualTo(otherRoute.getRouteId());
+    }
+
+    @Test
+    @DisplayName("특정 여행루트 순서 이후 여행루트 데이터 조회")
+    void findRoutesAfterOrder() {
+        // given
+        TravelRoute route1 = travelRouteRepository.save(TravelRouteFixture.createRoute(schedule, place, 1));
+        TravelRoute route2 = travelRouteRepository.save(TravelRouteFixture.createRoute(schedule, place, 2));
+        TravelRoute route3 = travelRouteRepository.save(TravelRouteFixture.createRoute(schedule, place, 3));
+        TravelRoute route4 = travelRouteRepository.save(TravelRouteFixture.createRoute(schedule, place, 4));
+
+
+        // when
+        List<TravelRoute> response = travelRouteRepository.findRoutesAfterOrder(schedule.getScheduleId(), route2.getRouteOrder());
+
+        // then
+        assertThat(response).hasSize(2);
+        assertThat(response)
+                .extracting(
+                        TravelRoute::getRouteId,
+                        TravelRoute::getRouteOrder
+                )
+                .containsExactly(
+                        tuple(route3.getRouteId(), route3.getRouteOrder()),
+                        tuple(route4.getRouteId(), route4.getRouteOrder())
+                );
     }
 
 }
