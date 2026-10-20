@@ -70,10 +70,10 @@ public class TravelAttendeeService {
 
         String profileUrl = getProfileUrl(guest.getMemberId());
 
-        publisher.publishEvent(new ScheduleEvent<>(
+        publisher.publishEvent(ScheduleEvent.withNickname(
                 scheduleId,
                 ScheduleEventType.ATTENDEE_ADDED,
-                ScheduleEventType.ATTENDEE_ADDED.format(guest.getNickname()),
+                guest.getNickname(),
                 AttendeeCreatedResponse.of(attendee, profileUrl)
             )
         );
@@ -133,13 +133,12 @@ public class TravelAttendeeService {
 
         attendee.updatePermission(permissionRequest.getPermission());
 
-        publisher.publishEvent(new ScheduleEvent<>(
+        publisher.publishEvent(ScheduleEvent.withPermission(
                 scheduleId,
                 ScheduleEventType.ATTENDEE_PERMISSION_UPDATED,
-                ScheduleEventType.ATTENDEE_PERMISSION_UPDATED.format(
-                        attendee.getMember().getNickname(),
-                        permissionRequest.getPermission()),
-                new AttendeePermissionResponse(attendee.getAttendeeId(), permissionRequest.getPermission())
+                attendee.getMember().getNickname(),
+                permissionRequest.getPermission(),
+                AttendeePermissionResponse.from(attendee)
             )
         );
     }
@@ -157,10 +156,10 @@ public class TravelAttendeeService {
         String nickname = attendee.getMember().getNickname();
         travelAttendeeRepository.deleteById(attendeeId);
 
-        publisher.publishEvent(new ScheduleEvent<>(
+        publisher.publishEvent(ScheduleEvent.withNickname(
                 scheduleId,
                 ScheduleEventType.ATTENDEE_LEFT,
-                ScheduleEventType.ATTENDEE_LEFT.format(nickname),
+                nickname,
                 new AttendeeRemovalResponse(attendeeId)
             )
         );
@@ -181,10 +180,10 @@ public class TravelAttendeeService {
         String nickname = attendee.getMember().getNickname();
         travelAttendeeRepository.delete(attendee);
 
-        publisher.publishEvent(new ScheduleEvent<>(
+        publisher.publishEvent(ScheduleEvent.withNickname(
                 scheduleId,
                 ScheduleEventType.ATTENDEE_REMOVED,
-                ScheduleEventType.ATTENDEE_REMOVED.format(nickname),
+                nickname,
                 new AttendeeRemovalResponse(attendeeId)
             )
         );

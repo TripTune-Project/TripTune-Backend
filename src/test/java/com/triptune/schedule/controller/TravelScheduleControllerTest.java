@@ -722,14 +722,15 @@ public class TravelScheduleControllerTest {
         // given
         SecurityTestUtils.mockAuthentication(member1);
 
+        int scheduleVersion = 3;
         ScheduleUpdateRequest request = TravelScheduleFixture.createScheduleUpdateRequest(
                 "수정 테스트",
                 LocalDate.now(),
                 LocalDate.now().plusDays(1),
-                3
+                scheduleVersion
         );
 
-        ScheduleUpdateResponse response = TravelScheduleFixture.createScheduleUpdateResponse(4);
+        ScheduleUpdateResponse response = TravelScheduleFixture.createScheduleUpdateResponse(scheduleVersion+1);
 
         given(travelScheduleService.updateSchedule(any(ScheduleUpdateRequest.class), eq(member1.getMemberId()), eq(1L)))
                 .willReturn(response);
@@ -742,7 +743,7 @@ public class TravelScheduleControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()))
-                .andExpect(jsonPath("$.data.scheduleVersion").value(4));
+                .andExpect(jsonPath("$.data.scheduleVersion").value(scheduleVersion+1));
     }
 
     @ParameterizedTest

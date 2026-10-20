@@ -678,14 +678,17 @@ public class TravelScheduleIntegrationTest {
         travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorAttendee(schedule, member1));
         travelAttendeeRepository.save(TravelAttendeeFixture.createGuestAttendee(schedule, member2, READ));
 
+        int scheduleVersion = schedule.getScheduleVersion();
+
         ScheduleUpdateRequest request = TravelScheduleFixture.createScheduleUpdateRequest(
                 "수정 테스트",
                 LocalDate.now().minusDays(2),
                 LocalDate.now().minusDays(1),
-                0
+                scheduleVersion
         );
 
         SecurityTestUtils.mockAuthentication(member1);
+
 
         // when
         mockMvc.perform(patch("/api/schedules/{scheduleId}", schedule.getScheduleId())
@@ -695,14 +698,14 @@ public class TravelScheduleIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()))
-                .andExpect(jsonPath("$.data.scheduleVersion").value(1));
+                .andExpect(jsonPath("$.data.scheduleVersion").value(scheduleVersion+1));
 
 
         TravelSchedule updatedSchedule = travelScheduleRepository.findById(schedule.getScheduleId()).orElseThrow();
         assertThat(updatedSchedule.getScheduleName()).isEqualTo(request.getScheduleName());
         assertThat(updatedSchedule.getStartDate()).isEqualTo(request.getStartDate());
         assertThat(updatedSchedule.getEndDate()).isEqualTo(request.getEndDate());
-        assertThat(updatedSchedule.getScheduleVersion()).isEqualTo(1);
+        assertThat(updatedSchedule.getScheduleVersion()).isEqualTo(scheduleVersion+1);
         assertThat(updatedSchedule.getRouteVersion()).isZero();
 
     }

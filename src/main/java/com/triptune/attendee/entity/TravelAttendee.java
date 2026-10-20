@@ -76,10 +76,6 @@ public class TravelAttendee extends BaseTimeEntity {
         this.permission = permission;
     }
 
-    public void updateRole(AttendeeRole role){
-        this.role = role;
-    }
-
     public boolean isEnableChat() {
         return permission.isEnableChat();
     }

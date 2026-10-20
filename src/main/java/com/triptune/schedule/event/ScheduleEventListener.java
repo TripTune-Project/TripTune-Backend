@@ -15,13 +15,13 @@ public class ScheduleEventListener {
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handle(ScheduleEvent<?> event){
         ScheduleEventResponse<Object> eventResponse = ScheduleEventResponse.of(
-                event.eventType(),
-                event.message(),
-                event.data()
+                event.getEventType(),
+                event.getMessage(),
+                event.getData()
         );
 
         messagingTemplate.convertAndSend(
-                "/sub/schedules/" + event.scheduleId() + "/events",
+                "/sub/schedules/" + event.getScheduleId() + "/events",
                 eventResponse
         );
     }
