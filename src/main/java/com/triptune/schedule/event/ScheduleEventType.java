@@ -5,6 +5,11 @@ import lombok.AllArgsConstructor;
 
 @AllArgsConstructor
 public enum ScheduleEventType {
+    // 일정
+    SCHEDULE_UPDATED(null),
+
+
+    // 참석자
     ATTENDEE_ADDED("%s님이 일정에 참여했습니다."),
     ATTENDEE_REMOVED("%s님이 일정에서 내보내졌습니다."),
     ATTENDEE_LEFT("%s님이 일정에서 나갔습니다."),

@@ -6,6 +6,10 @@ import com.triptune.member.repository.MemberRepository;
 import com.triptune.route.repository.TravelRouteRepository;
 import com.triptune.route.service.TravelRouteService;
 import com.triptune.schedule.dto.response.*;
+import com.triptune.schedule.event.ScheduleEvent;
+import com.triptune.schedule.event.ScheduleEventListener;
+import com.triptune.schedule.event.ScheduleEventType;
+import com.triptune.schedule.event.dto.ScheduleUpdateEventResponse;
 import com.triptune.schedule.repository.dto.ScheduleInfoQueryDto;
 import com.triptune.attendee.service.dto.AuthorDTO;
 import com.triptune.schedule.dto.request.ScheduleCreateRequest;
@@ -27,6 +31,7 @@ import com.triptune.global.util.PageUtils;
 import com.triptune.travel.repository.dto.PlaceQueryDto;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -46,9 +51,8 @@ public class TravelScheduleService {
     private final TravelAttendeeRepository travelAttendeeRepository;
     private final TravelPlaceRepository travelPlaceRepository;
     private final ChatMessageRepository chatMessageRepository;
-    private final TravelRouteService travelRouteService;
     private final S3ObjectManager s3ObjectManager;
-    private final EntityManager em;
+    private final ApplicationEventPublisher publisher;
 
     public SchedulePageResponse<ScheduleInfoResponse> getAllSchedules(int page, Long memberId) {
         Pageable pageable = PageUtils.schedulePageable(page);
@@ -176,6 +180,14 @@ public class TravelScheduleService {
                 scheduleUpdateRequest.getStartDate(),
                 scheduleUpdateRequest.getEndDate()
         );
+
+        schedule.increaseScheduleVersion();
+
+        publisher.publishEvent(ScheduleEvent.of(
+                scheduleId,
+                ScheduleEventType.SCHEDULE_UPDATED,
+                ScheduleUpdateEventResponse.from(schedule)
+        ));
 
         return ScheduleUpdateResponse.of(schedule.getScheduleVersion());
     }
