@@ -68,6 +68,9 @@ public enum ErrorCode {
     FORBIDDEN_UPDATE_ATTENDEE_PERMISSION(HttpStatus.FORBIDDEN, "일정 접근 권한은 작성자만 수정 가능합니다."),
     FORBIDDEN_REMOVE_ATTENDEE(HttpStatus.FORBIDDEN, "일정 내보내기는 작성자만 가능합니다."),
 
+    // 여행 루트
+    ROUTE_NOT_FOUND(HttpStatus.NOT_FOUND, "여행 루트 정보를 찾을 수 없습니다."),
+    ROUTE_MISMATCH(HttpStatus.BAD_REQUEST, "요청한 여행루트가 저장된 여행루트와 일치하지 않습니다."),
 
     // 채팅
     FORBIDDEN_CHAT_ATTENDEE(HttpStatus.FORBIDDEN, "채팅 권한이 없는 회원 입니다."),

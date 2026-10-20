@@ -5,10 +5,7 @@ import com.triptune.common.entity.ApiContentType;
 import com.triptune.common.entity.City;
 import com.triptune.common.entity.Country;
 import com.triptune.common.entity.District;
-import com.triptune.common.fixture.ApiContentTypeFixture;
-import com.triptune.common.fixture.CityFixture;
-import com.triptune.common.fixture.CountryFixture;
-import com.triptune.common.fixture.DistrictFixture;
+import com.triptune.common.fixture.*;
 import com.triptune.common.repository.ApiContentTypeRepository;
 import com.triptune.common.repository.CityRepository;
 import com.triptune.common.repository.CountryRepository;
@@ -23,6 +20,8 @@ import com.triptune.profile.entity.ProfileImage;
 import com.triptune.profile.fixture.ProfileImageFixture;
 import com.triptune.profile.repository.ProfileImageRepository;
 import com.triptune.route.dto.request.RouteCreateRequest;
+import com.triptune.route.dto.request.RouteUpdateRequest;
+import com.triptune.route.dto.response.RouteVersionResponse;
 import com.triptune.route.entity.TravelRoute;
 import com.triptune.schedule.entity.TravelSchedule;
 import com.triptune.attendee.fixture.TravelAttendeeFixture;
@@ -31,6 +30,7 @@ import com.triptune.schedule.fixture.TravelScheduleFixture;
 import com.triptune.attendee.repository.TravelAttendeeRepository;
 import com.triptune.route.repository.TravelRouteRepository;
 import com.triptune.schedule.repository.TravelScheduleRepository;
+import com.triptune.travel.entity.TravelImage;
 import com.triptune.travel.entity.TravelPlace;
 import com.triptune.travel.fixture.TravelImageFixture;
 import com.triptune.travel.fixture.TravelPlaceFixture;
@@ -48,14 +48,21 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import static com.triptune.attendee.enums.AttendeePermission.READ;
 import static com.triptune.travel.enums.ThemeType.ATTRACTIONS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.nullValue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.BDDMockito.given;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -82,9 +89,12 @@ public class TravelRouteIntegrationTest {
 
     private TravelSchedule schedule;
 
-    private TravelPlace place1;
-    private TravelPlace place2;
-    private TravelPlace place3;
+    private TravelPlace place1WithThumb;
+    private TravelPlace place2WithThumb;
+    private TravelPlace place3WithoutThumb;
+
+    private String place1ThumbUrl;
+    private String place2ThumbUrl;
 
     private Member member1;
 
@@ -106,7 +116,7 @@ public class TravelRouteIntegrationTest {
         travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorAttendee(schedule, member1));
         travelAttendeeRepository.save(TravelAttendeeFixture.createGuestAttendee(schedule, member2, READ));
 
-        place1 = travelPlaceRepository.save(
+        place1WithThumb = travelPlaceRepository.save(
                 TravelPlaceFixture.createTravelPlace(
                         country,
                         city,
@@ -115,10 +125,11 @@ public class TravelRouteIntegrationTest {
                         "여행지1"
                 )
         );
-        travelImageRepository.save(TravelImageFixture.createTravelImage(place1, "test1", true));
-        travelImageRepository.save(TravelImageFixture.createTravelImage(place1, "test2", false));
+        TravelImage place1Thumb = travelImageRepository.save(TravelImageFixture.createTravelImage(place1WithThumb, "test1", true));
+        travelImageRepository.save(TravelImageFixture.createTravelImage(place1WithThumb, "test2", false));
+        place1ThumbUrl = S3Fixture.createS3ObjectUrl(place1Thumb.getS3ObjectKey());
 
-        place2 = travelPlaceRepository.save(
+        place2WithThumb = travelPlaceRepository.save(
                 TravelPlaceFixture.createTravelPlace(
                         country,
                         city,
@@ -127,10 +138,12 @@ public class TravelRouteIntegrationTest {
                         "여행지2"
                 )
         );
-        travelImageRepository.save(TravelImageFixture.createTravelImage(place2, "test1", true));
-        travelImageRepository.save(TravelImageFixture.createTravelImage(place2, "test2", false));
+        TravelImage place2Thumb = travelImageRepository.save(TravelImageFixture.createTravelImage(place2WithThumb, "test1", true));
+        travelImageRepository.save(TravelImageFixture.createTravelImage(place2WithThumb, "test2", false));
+        place2ThumbUrl = S3Fixture.createS3ObjectUrl(place2Thumb.getS3ObjectKey());
 
-        place3 = travelPlaceRepository.save(
+
+        place3WithoutThumb = travelPlaceRepository.save(
                 TravelPlaceFixture.createTravelPlace(
                         country,
                         city,
@@ -143,12 +156,12 @@ public class TravelRouteIntegrationTest {
 
 
     @Test
-    @DisplayName("여행 루트 조회 성공")
+    @DisplayName("여행 루트 조회")
     void getTravelRoutes() throws Exception {
         // given
-        TravelRoute route1 = travelRouteRepository.save(TravelRouteFixture.createRoute(schedule, place1, 1));
-        TravelRoute route2 = travelRouteRepository.save(TravelRouteFixture.createRoute(schedule, place1, 2));
-        TravelRoute route3 = travelRouteRepository.save(TravelRouteFixture.createRoute(schedule, place2, 3));
+        TravelRoute route1 = travelRouteRepository.save(TravelRouteFixture.createRoute(schedule, place1WithThumb, 1));
+        TravelRoute route2 = travelRouteRepository.save(TravelRouteFixture.createRoute(schedule, place2WithThumb, 2));
+        TravelRoute route3 = travelRouteRepository.save(TravelRouteFixture.createRoute(schedule, place3WithoutThumb, 3));
 
         SecurityTestUtils.mockAuthentication(member1);
 
@@ -159,12 +172,16 @@ public class TravelRouteIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.totalElements").value(3))
+                .andExpect(jsonPath("$.data.content[0].routeId").value(route1.getRouteId()))
                 .andExpect(jsonPath("$.data.content[0].routeOrder").value(route1.getRouteOrder()))
-                .andExpect(jsonPath("$.data.content[0].placeName").value(place1.getPlaceName()))
+                .andExpect(jsonPath("$.data.content[0].placeName").value(place1WithThumb.getPlaceName()))
+                .andExpect(jsonPath("$.data.content[0].thumbnailUrl").value(place1ThumbUrl))
                 .andExpect(jsonPath("$.data.content[1].routeOrder").value(route2.getRouteOrder()))
-                .andExpect(jsonPath("$.data.content[1].placeName").value(place1.getPlaceName()))
+                .andExpect(jsonPath("$.data.content[1].placeName").value(place2WithThumb.getPlaceName()))
+                .andExpect(jsonPath("$.data.content[1].thumbnailUrl").value(place2ThumbUrl))
                 .andExpect(jsonPath("$.data.content[2].routeOrder").value(route3.getRouteOrder()))
-                .andExpect(jsonPath("$.data.content[2].placeName").value(place2.getPlaceName()));
+                .andExpect(jsonPath("$.data.content[2].placeName").value(place3WithoutThumb.getPlaceName()))
+                .andExpect(jsonPath("$.data.content[2].thumbnailUrl", nullValue()));
     }
 
     @Test
@@ -220,14 +237,14 @@ public class TravelRouteIntegrationTest {
     @DisplayName("여행 루트의 마지막 여행지 추가")
     void createLastTravelRoute() throws Exception{
         // given
-        travelRouteRepository.save(TravelRouteFixture.createRoute(schedule, place1, 1));
-        travelRouteRepository.save(TravelRouteFixture.createRoute(schedule, place1, 2));
-        travelRouteRepository.save(TravelRouteFixture.createRoute(schedule, place2, 3));
-
         SecurityTestUtils.mockAuthentication(member1);
 
+        travelRouteRepository.save(TravelRouteFixture.createRoute(schedule, place1WithThumb, 1));
+        travelRouteRepository.save(TravelRouteFixture.createRoute(schedule, place1WithThumb, 2));
+        travelRouteRepository.save(TravelRouteFixture.createRoute(schedule, place2WithThumb, 3));
+
         RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(
-                place3.getPlaceId(),
+                place3WithoutThumb.getPlaceId(),
                 schedule.getRouteVersion()
         );
 
@@ -245,7 +262,7 @@ public class TravelRouteIntegrationTest {
         em.flush();
         em.clear();
 
-        List<TravelRoute> travelRoutes = travelRouteRepository.findAll();
+        List<TravelRoute> travelRoutes = travelRouteRepository.findAllByTravelSchedule_ScheduleId(schedule.getScheduleId());
         assertThat(travelRoutes).hasSize(4);
         assertThat(travelRoutes)
                 .extracting(
@@ -253,10 +270,10 @@ public class TravelRouteIntegrationTest {
                         r -> r.getTravelPlace().getPlaceId()
                 )
                 .containsExactly(
-                    tuple(1, place1.getPlaceId()),
-                    tuple(2, place1.getPlaceId()),
-                    tuple(3, place2.getPlaceId()),
-                    tuple(4, place3.getPlaceId())
+                    tuple(1, place1WithThumb.getPlaceId()),
+                    tuple(2, place1WithThumb.getPlaceId()),
+                    tuple(3, place2WithThumb.getPlaceId()),
+                    tuple(4, place3WithoutThumb.getPlaceId())
                 );
     }
 
@@ -266,7 +283,7 @@ public class TravelRouteIntegrationTest {
         // given
         SecurityTestUtils.mockAuthentication(member1);
         RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(
-                place3.getPlaceId(),
+                place3WithoutThumb.getPlaceId(),
                 schedule.getRouteVersion()
         );
 
@@ -279,10 +296,10 @@ public class TravelRouteIntegrationTest {
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()));
 
-        List<TravelRoute> travelRoutes = travelRouteRepository.findAll();
+        List<TravelRoute> travelRoutes = travelRouteRepository.findAllByTravelSchedule_ScheduleId(schedule.getScheduleId());
         assertThat(travelRoutes).hasSize(1);
         assertThat(travelRoutes.get(0).getRouteOrder()).isEqualTo(1);
-        assertThat(travelRoutes.get(0).getTravelPlace().getPlaceId()).isEqualTo(place3.getPlaceId());
+        assertThat(travelRoutes.get(0).getTravelPlace().getPlaceId()).isEqualTo(place3WithoutThumb.getPlaceId());
 
     }
 
@@ -292,7 +309,7 @@ public class TravelRouteIntegrationTest {
         // given
         SecurityTestUtils.mockAuthentication(member1);
         RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(
-                place3.getPlaceId(),
+                place3WithoutThumb.getPlaceId(),
                 schedule.getRouteVersion()
         );
 
@@ -316,7 +333,7 @@ public class TravelRouteIntegrationTest {
         SecurityTestUtils.mockAuthentication(member);
 
         RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(
-                place3.getPlaceId(),
+                place3WithoutThumb.getPlaceId(),
                 schedule.getRouteVersion()
         );
 
@@ -352,4 +369,339 @@ public class TravelRouteIntegrationTest {
     }
 
 
+    @Test
+    @DisplayName("여행 루트 수정")
+    void updateTravelRoute() throws Exception{
+        // given
+        SecurityTestUtils.mockAuthentication(member1);
+
+        TravelRoute route1 = travelRouteRepository.save(TravelRouteFixture.createRoute(schedule, place1WithThumb, 1));
+        TravelRoute route2 = travelRouteRepository.save(TravelRouteFixture.createRoute(schedule, place1WithThumb, 2));
+        TravelRoute route3 = travelRouteRepository.save(TravelRouteFixture.createRoute(schedule, place2WithThumb, 3));
+
+        List<Long> routeIds = new ArrayList<>(List.of(route3.getRouteId(), route2.getRouteId(), route1.getRouteId()));
+        RouteUpdateRequest request = TravelRouteFixture.createRouteUpdateRequest(0, routeIds);
+
+        // when, then
+        mockMvc.perform(patch("/api/schedules/{scheduleId}/routes", schedule.getScheduleId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()))
+                .andExpect(jsonPath("$.data.routeVersion").value(1));
+
+        List<TravelRoute> travelRoutes = travelRouteRepository.findAllByTravelSchedule_ScheduleId(schedule.getScheduleId());
+        assertThat(travelRoutes).hasSize(3);
+        assertThat(travelRoutes)
+                .extracting(
+                        TravelRoute::getRouteOrder,
+                        r -> r.getTravelPlace().getPlaceId()
+                )
+                .containsExactly(
+                        tuple(3, place1WithThumb.getPlaceId()),
+                        tuple(2, place1WithThumb.getPlaceId()),
+                        tuple(1, place2WithThumb.getPlaceId())
+                );
+    }
+
+
+    @Test
+    @DisplayName("여행 루트 수정 - 저장된 데이터 1개인 경우")
+    void updateTravelRoute_one() throws Exception{
+        // given
+        SecurityTestUtils.mockAuthentication(member1);
+
+        TravelRoute route1 = travelRouteRepository.save(TravelRouteFixture.createRoute(schedule, place1WithThumb, 1));
+
+        List<Long> routeIds = new ArrayList<>(List.of(route1.getRouteId()));
+        RouteUpdateRequest request = TravelRouteFixture.createRouteUpdateRequest(0, routeIds);
+
+        // when, then
+        mockMvc.perform(patch("/api/schedules/{scheduleId}/routes", schedule.getScheduleId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()))
+                .andExpect(jsonPath("$.data.routeVersion").value(1));
+
+        List<TravelRoute> travelRoutes = travelRouteRepository.findAllByTravelSchedule_ScheduleId(schedule.getScheduleId());
+        assertThat(travelRoutes).hasSize(1);
+        assertThat(travelRoutes.get(0).getRouteOrder()).isEqualTo(1);
+        assertThat(travelRoutes.get(0).getRouteId()).isEqualTo(route1.getRouteId());
+    }
+
+
+    @Test
+    @DisplayName("여행 루트 수정 시 저장된 데이터 갯수와 일치하지 않아 예외 발생")
+    void updateTravelRoute_sizeMismatch() throws Exception {
+        // given
+        SecurityTestUtils.mockAuthentication(member1);
+
+        TravelRoute route1 = travelRouteRepository.save(TravelRouteFixture.createRoute(schedule, place1WithThumb, 1));
+        TravelRoute route2 = travelRouteRepository.save(TravelRouteFixture.createRoute(schedule, place1WithThumb, 2));
+
+        List<Long> routeIds = new ArrayList<>(List.of(3L, route2.getRouteId(), route1.getRouteId()));
+        RouteUpdateRequest request = TravelRouteFixture.createRouteUpdateRequest(0, routeIds);
+
+        // when, then
+        mockMvc.perform(patch("/api/schedules/{scheduleId}/routes", schedule.getScheduleId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andDo(print())
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value(containsString(ErrorCode.ROUTE_MISMATCH.getMessage())));
+    }
+
+
+    @Test
+    @DisplayName("여행 루트 수정 시 저장된 데이터와 일치하지 않아 예외 발생")
+    void updateTravelRoute_savedMismatch()  throws Exception {
+        // given
+        SecurityTestUtils.mockAuthentication(member1);
+
+        TravelRoute route1 = travelRouteRepository.save(TravelRouteFixture.createRoute(schedule, place1WithThumb, 1));
+        travelRouteRepository.save(TravelRouteFixture.createRoute(schedule, place1WithThumb, 2));
+
+        List<Long> routeIds = new ArrayList<>(List.of(1004L, route1.getRouteId()));
+        RouteUpdateRequest request = TravelRouteFixture.createRouteUpdateRequest(0, routeIds);
+
+
+        // when, then
+        mockMvc.perform(patch("/api/schedules/{scheduleId}/routes", schedule.getScheduleId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andDo(print())
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value(ErrorCode.ROUTE_MISMATCH.getMessage()));
+    }
+
+    @Test
+    @DisplayName("여행 루트 수정 시 요청값에 중복이 들어와 예외 발생")
+    void updateTravelRoute_duplicatedRouteId() throws Exception {
+        // given
+        SecurityTestUtils.mockAuthentication(member1);
+
+        TravelRoute route1 = travelRouteRepository.save(TravelRouteFixture.createRoute(schedule, place1WithThumb, 1));
+
+        List<Long> routeIds = new ArrayList<>(List.of(route1.getRouteId(), route1.getRouteId()));
+        RouteUpdateRequest request = TravelRouteFixture.createRouteUpdateRequest(0, routeIds);
+
+
+        // when, then
+        mockMvc.perform(patch("/api/schedules/{scheduleId}/routes", schedule.getScheduleId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andDo(print())
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value(ErrorCode.ROUTE_MISMATCH.getMessage()));
+    }
+
+
+    @Test
+    @DisplayName("여행 루트 수정 시 저장된 데이터가 없어 예외 발생")
+    void updateTravelRoute_emptySavedRoute() throws Exception{
+        // given
+        SecurityTestUtils.mockAuthentication(member1);
+
+        List<Long> routeIds = new ArrayList<>(List.of(1L, 2L, 3L));
+        RouteUpdateRequest request = TravelRouteFixture.createRouteUpdateRequest(0, routeIds);
+
+        // when, then
+        mockMvc.perform(patch("/api/schedules/{scheduleId}/routes", schedule.getScheduleId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andDo(print())
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value(ErrorCode.ROUTE_MISMATCH.getMessage()));
+
+    }
+
+
+    @Test
+    @DisplayName("여행 루트 수정 시 빈 리스트 요청으로 예외 발생")
+    void updateTravelRoute_emptyRouteIds() throws Exception{
+        // given
+        SecurityTestUtils.mockAuthentication(member1);
+
+        travelRouteRepository.save(TravelRouteFixture.createRoute(schedule, place1WithThumb, 1));
+        travelRouteRepository.save(TravelRouteFixture.createRoute(schedule, place1WithThumb, 2));
+        travelRouteRepository.save(TravelRouteFixture.createRoute(schedule, place2WithThumb, 3));
+
+        List<Long> routeIds = Collections.emptyList();
+        RouteUpdateRequest request = TravelRouteFixture.createRouteUpdateRequest(0, routeIds);
+
+        // when, then
+        mockMvc.perform(patch("/api/schedules/{scheduleId}/routes", schedule.getScheduleId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andDo(print())
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value(ErrorCode.ROUTE_MISMATCH.getMessage()));
+
+    }
+
+    @Test
+    @DisplayName("여행 루트 수정 시 저장된 데이터와 요청에 빈 리스트로 예외 발생")
+    void updateTravelRoute_emptySavedRouteAndRouteIds() throws Exception{
+        // given
+        SecurityTestUtils.mockAuthentication(member1);
+
+        List<Long> routeIds = Collections.emptyList();
+        RouteUpdateRequest request = TravelRouteFixture.createRouteUpdateRequest(0, routeIds);
+
+        // when, then
+        mockMvc.perform(patch("/api/schedules/{scheduleId}/routes", schedule.getScheduleId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andDo(print())
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value(ErrorCode.ROUTE_MISMATCH.getMessage()));
+
+    }
+
+
+    @Test
+    @DisplayName("여행 루트 삭제 - 첫번째 위치한 여행루트인 경우")
+    void deleteTravelRoute_first() throws Exception{
+        // given
+        SecurityTestUtils.mockAuthentication(member1);
+        Integer routeVersion = schedule.getRouteVersion();
+
+        TravelRoute route1 = travelRouteRepository.save(TravelRouteFixture.createRoute(schedule, place1WithThumb, 1));
+        TravelRoute route2 = travelRouteRepository.save(TravelRouteFixture.createRoute(schedule, place2WithThumb, 2));
+        TravelRoute route3 = travelRouteRepository.save(TravelRouteFixture.createRoute(schedule, place3WithoutThumb, 3));
+
+        // when, then
+        mockMvc.perform(delete("/api/schedules/{scheduleId}/routes/{routeId}"
+                        , schedule.getScheduleId(), route1.getRouteId())
+                        .param("routeVersion", String.valueOf(routeVersion)))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()))
+                .andExpect(jsonPath("$.data.routeVersion").value(routeVersion+1));
+
+        List<TravelRoute> routes = travelRouteRepository.findAllByTravelSchedule_ScheduleId(schedule.getScheduleId());
+        assertThat(routes).hasSize(2);
+        assertThat(routes).doesNotContain(route1);
+        assertThat(routes)
+                .extracting(
+                        TravelRoute::getRouteId,
+                        TravelRoute::getRouteOrder
+                )
+                .containsExactly(
+                        tuple(route2.getRouteId(), 1),
+                        tuple(route3.getRouteId(), 2)
+                );
+
+    }
+
+
+    @Test
+    @DisplayName("여행 루트 삭제 - 중간에 위치한 여행루트인 경우")
+    void deleteTravelRoute_middle() throws Exception{
+        // given
+        SecurityTestUtils.mockAuthentication(member1);
+        Integer routeVersion = schedule.getRouteVersion();
+
+        TravelRoute route1 = travelRouteRepository.save(TravelRouteFixture.createRoute(schedule, place1WithThumb, 1));
+        TravelRoute route2 = travelRouteRepository.save(TravelRouteFixture.createRoute(schedule, place2WithThumb, 2));
+        TravelRoute route3 = travelRouteRepository.save(TravelRouteFixture.createRoute(schedule, place3WithoutThumb, 3));
+
+        // when, then
+        mockMvc.perform(delete("/api/schedules/{scheduleId}/routes/{routeId}"
+                        , schedule.getScheduleId(), route2.getRouteId())
+                        .param("routeVersion", String.valueOf(routeVersion)))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()))
+                .andExpect(jsonPath("$.data.routeVersion").value(routeVersion+1));
+
+        List<TravelRoute> routes = travelRouteRepository.findAllByTravelSchedule_ScheduleId(schedule.getScheduleId());
+        assertThat(routes).hasSize(2);
+        assertThat(routes).doesNotContain(route2);
+        assertThat(routes)
+                .extracting(
+                        TravelRoute::getRouteId,
+                        TravelRoute::getRouteOrder
+                )
+                .containsExactly(
+                        tuple(route1.getRouteId(), 1),
+                        tuple(route3.getRouteId(), 2)
+                );
+
+    }
+
+
+    @Test
+    @DisplayName("여행 루트 삭제 - 마지막에 위치한 여행루트인 경우")
+    void deleteTravelRoute_last() throws Exception{
+        // given
+        SecurityTestUtils.mockAuthentication(member1);
+        Integer routeVersion = schedule.getRouteVersion();
+
+        TravelRoute route1 = travelRouteRepository.save(TravelRouteFixture.createRoute(schedule, place1WithThumb, 1));
+        TravelRoute route2 = travelRouteRepository.save(TravelRouteFixture.createRoute(schedule, place2WithThumb, 2));
+        TravelRoute route3 = travelRouteRepository.save(TravelRouteFixture.createRoute(schedule, place3WithoutThumb, 3));
+
+        // when, then
+        mockMvc.perform(delete("/api/schedules/{scheduleId}/routes/{routeId}"
+                        , schedule.getScheduleId(), route3.getRouteId())
+                        .param("routeVersion", String.valueOf(routeVersion)))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()))
+                .andExpect(jsonPath("$.data.routeVersion").value(routeVersion+1));
+
+        List<TravelRoute> routes = travelRouteRepository.findAllByTravelSchedule_ScheduleId(schedule.getScheduleId());
+        assertThat(routes).hasSize(2);
+        assertThat(routes).doesNotContain(route3);
+        assertThat(routes)
+                .extracting(
+                        TravelRoute::getRouteId,
+                        TravelRoute::getRouteOrder
+                )
+                .containsExactly(
+                        tuple(route1.getRouteId(), 1),
+                        tuple(route2.getRouteId(), 2)
+                );
+
+    }
+
+
+
+    @Test
+    @DisplayName("여행 루트 삭제 - 저장된 여행루트 데이터가 1개인 경우")
+    void deleteTravelRoute_one() throws Exception{
+        // given
+        SecurityTestUtils.mockAuthentication(member1);
+        Integer routeVersion = schedule.getRouteVersion();
+
+        TravelRoute route = travelRouteRepository.save(TravelRouteFixture.createRoute(schedule, place1WithThumb, 1));
+
+        // when, then
+        mockMvc.perform(delete("/api/schedules/{scheduleId}/routes/{routeId}"
+                        , schedule.getScheduleId(), route.getRouteId())
+                        .param("routeVersion", String.valueOf(routeVersion)))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()))
+                .andExpect(jsonPath("$.data.routeVersion").value(routeVersion+1));
+
+        List<TravelRoute> routes = travelRouteRepository.findAllByTravelSchedule_ScheduleId(schedule.getScheduleId());
+        assertThat(routes).hasSize(0);
+    }
 }

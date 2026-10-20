@@ -53,6 +53,7 @@ public class TravelScheduleFixture {
     }
 
 
+
     public static ScheduleCreateRequest createScheduleCreateRequest(String scheduleName, LocalDate startDate, LocalDate endDate) {
         return ScheduleCreateRequest.builder()
                 .scheduleName(scheduleName)
@@ -135,4 +136,5 @@ public class TravelScheduleFixture {
         return ScheduleDetailResponse.from(schedule, placeResponse);
 
     }
+
 }

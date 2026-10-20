@@ -2,6 +2,7 @@ package com.triptune.route.service;
 
 import com.triptune.common.entity.*;
 import com.triptune.common.fixture.*;
+import com.triptune.global.exception.CustomBadRequestException;
 import com.triptune.global.response.page.RoutePageResponse;
 import com.triptune.global.s3.S3ObjectManager;
 import com.triptune.member.entity.Member;
@@ -9,11 +10,11 @@ import com.triptune.member.fixture.MemberFixture;
 import com.triptune.profile.entity.ProfileImage;
 import com.triptune.profile.fixture.ProfileImageFixture;
 import com.triptune.attendee.fixture.TravelAttendeeFixture;
-import com.triptune.route.dto.response.RouteCreateResponse;
+import com.triptune.route.dto.request.RouteUpdateRequest;
+import com.triptune.route.dto.response.RouteVersionResponse;
 import com.triptune.route.fixture.TravelRouteFixture;
 import com.triptune.schedule.fixture.TravelScheduleFixture;
 import com.triptune.route.dto.request.RouteCreateRequest;
-import com.triptune.route.dto.request.RouteRequest;
 import com.triptune.route.dto.response.RouteResponse;
 import com.triptune.attendee.entity.TravelAttendee;
 import com.triptune.route.entity.TravelRoute;
@@ -50,7 +51,7 @@ import static org.assertj.core.groups.Tuple.tuple;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class TravelRouteServiceTest {
@@ -96,7 +97,6 @@ public class TravelRouteServiceTest {
                 "여행지1"
         );
         place1Thumb = TravelImageFixture.createTravelImage(place1WithThumb, "test1", true);
-        TravelImageFixture.createTravelImage(place1WithThumb, "test2", false);
         place1ThumbUrl = S3Fixture.createS3ObjectUrl(place1Thumb.getS3ObjectKey());
 
         place2WithThumb = TravelPlaceFixture.createTravelPlaceWithId(
@@ -108,7 +108,6 @@ public class TravelRouteServiceTest {
                 "여행지2"
         );
         place2Thumb = TravelImageFixture.createTravelImage(place2WithThumb, "test2", true);
-        TravelImageFixture.createTravelImage(place2WithThumb, "test2", false);
         place2ThumbUrl = S3Fixture.createS3ObjectUrl(place1Thumb.getS3ObjectKey());
 
         place3WithoutThumb = TravelPlaceFixture.createTravelPlaceWithId(
@@ -238,7 +237,7 @@ public class TravelRouteServiceTest {
                 .thenReturn(Optional.of(place3WithoutThumb));
 
         // when
-        RouteCreateResponse response = travelRouteService.createLastTravelRoute(1L, 1L, request);
+        RouteVersionResponse response = travelRouteService.createLastTravelRoute(1L, 1L, request);
 
         // then
         List<TravelRoute> routes = schedule.getTravelRoutes();
@@ -265,7 +264,7 @@ public class TravelRouteServiceTest {
                 .thenReturn(Optional.of(place3WithoutThumb));
 
         // when
-        RouteCreateResponse response = travelRouteService.createLastTravelRoute(1L, 1L, request);
+        RouteVersionResponse response = travelRouteService.createLastTravelRoute(1L, 1L, request);
 
         // then
         assertThat(schedule.getTravelRoutes().size()).isEqualTo(1);
@@ -370,56 +369,327 @@ public class TravelRouteServiceTest {
 
 
     @Test
-    @DisplayName("여행 루트 수정 시 기존에 저장된 여행 루트가 존재하는 경우")
-    void updateTravelRoute_existedTravelRoute(){
-        TravelRouteFixture.createRoute(schedule, place1WithThumb, 1);
-        TravelRouteFixture.createRoute(schedule, place1WithThumb, 2);
-        TravelRouteFixture.createRoute(schedule, place2WithThumb, 3);
+    @DisplayName("여행 루트 수정")
+    void updateTravelRoute() {
+        TravelRoute route1 = TravelRouteFixture.createRouteWithId(1L, schedule, place1WithThumb, 1);
+        TravelRoute route2 = TravelRouteFixture.createRouteWithId(2L, schedule, place1WithThumb, 2);
+        TravelRoute route3 = TravelRouteFixture.createRouteWithId(3L, schedule, place2WithThumb, 3);
 
-        RouteRequest routeRequest1 = TravelRouteFixture.createRouteRequest(1, place1WithThumb.getPlaceId());
-        RouteRequest routeRequest2 = TravelRouteFixture.createRouteRequest(2, place2WithThumb.getPlaceId());
+        List<TravelRoute> routes = new ArrayList<>(List.of(route1, route2, route3));
 
-        List<RouteRequest> routeRequests = new ArrayList<>(List.of(
-                routeRequest1,
-                routeRequest2
-        ));
+        List<Long> routeIds = new ArrayList<>(List.of(route3.getRouteId(), route2.getRouteId(), route1.getRouteId()));
+        RouteUpdateRequest request = TravelRouteFixture.createRouteUpdateRequest(2, routeIds);
 
-        when(travelPlaceRepository.findById(anyLong()))
-                .thenReturn(Optional.of(place1WithThumb))
-                .thenReturn(Optional.of(place2WithThumb));
+        when(travelScheduleRepository.findById(anyLong()))
+                .thenReturn(Optional.of(schedule));
+        when(travelRouteRepository.findAllByTravelSchedule_ScheduleId(anyLong()))
+                .thenReturn(routes);
 
         // when
-        assertDoesNotThrow(() -> travelRouteService.updateRouteInSchedule(schedule, routeRequests));
+        RouteVersionResponse response = travelRouteService.updateTravelRoute(schedule.getScheduleId(), request);
 
         // then
-        assertThat(schedule.getTravelRoutes()).hasSize(2);
-        assertThat(schedule.getTravelRoutes())
-                .extracting(TravelRoute::getRouteOrder)
-                .containsExactly(1, 2);
+        assertThat(response.getRouteVersion()).isEqualTo(3);
+        assertThat(route3.getRouteOrder()).isEqualTo(1);
+        assertThat(route2.getRouteOrder()).isEqualTo(2);
+        assertThat(route1.getRouteOrder()).isEqualTo(3);
     }
 
 
     @Test
-    @DisplayName("여행 루트에 저장된 여행지 데이터가 없어 예외 발생")
-    void updateSchedule_placeNotFoundInTravelRoute(){
-        // given
-        TravelSchedule schedule = TravelScheduleFixture.createSchedule("테스트");
+    @DisplayName("여행 루트 수정 - 저장된 데이터 1개인 경우")
+    void updateTravelRoute_one() {
+        TravelRoute route1 = TravelRouteFixture.createRouteWithId(1L, schedule, place1WithThumb, 1);
 
-        List<RouteRequest> routes = new ArrayList<>(List.of(
-                TravelRouteFixture.createRouteRequest(1, place1WithThumb.getPlaceId()),
-                TravelRouteFixture.createRouteRequest(2, place2WithThumb.getPlaceId())
-        ));
+        List<TravelRoute> routes = new ArrayList<>(List.of(route1));
 
-        when(travelPlaceRepository.findById(anyLong()))
-                .thenReturn(Optional.ofNullable(place1WithThumb))
+        List<Long> routeIds = new ArrayList<>(List.of(route1.getRouteId()));
+        RouteUpdateRequest request = TravelRouteFixture.createRouteUpdateRequest(2, routeIds);
+
+        when(travelScheduleRepository.findById(anyLong()))
+                .thenReturn(Optional.of(schedule));
+        when(travelRouteRepository.findAllByTravelSchedule_ScheduleId(anyLong()))
+                .thenReturn(routes);
+
+        // when
+        RouteVersionResponse response = travelRouteService.updateTravelRoute(schedule.getScheduleId(), request);
+
+        // then
+        assertThat(response.getRouteVersion()).isEqualTo(3);
+        assertThat(route1.getRouteOrder()).isEqualTo(1);
+    }
+
+
+
+    @Test
+    @DisplayName("여행 루트 수정 시 일정 데이터 존재하지 않아 예외 발생")
+    void updateTravelRoute_scheduleNotFound() {
+        List<Long> routeIds = new ArrayList<>(List.of(3L, 2L, 1L));
+        RouteUpdateRequest request = TravelRouteFixture.createRouteUpdateRequest(2, routeIds);
+
+        when(travelScheduleRepository.findById(anyLong()))
                 .thenReturn(Optional.empty());
 
         // when
         DataNotFoundException fail = assertThrows(DataNotFoundException.class,
-                () -> travelRouteService.updateRouteInSchedule(schedule, routes));
+                () -> travelRouteService.updateTravelRoute(schedule.getScheduleId(), request));
 
         // then
-        assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.PLACE_NOT_FOUND);
+        assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.SCHEDULE_NOT_FOUND);
     }
+
+
+
+    @Test
+    @DisplayName("여행 루트 수정 시 저장된 데이터 갯수와 일치하지 않아 예외 발생")
+    void updateTravelRoute_sizeMismatch() {
+        List<TravelRoute> routes = new ArrayList<>(List.of(
+                TravelRouteFixture.createRouteWithId(1L, schedule, place1WithThumb, 1),
+                TravelRouteFixture.createRouteWithId(2L, schedule, place1WithThumb, 2))
+        );
+
+        List<Long> routeIds = new ArrayList<>(List.of(3L, 2L, 1L));
+        RouteUpdateRequest request = TravelRouteFixture.createRouteUpdateRequest(2, routeIds);
+
+        when(travelScheduleRepository.findById(anyLong()))
+                .thenReturn(Optional.of(schedule));
+        when(travelRouteRepository.findAllByTravelSchedule_ScheduleId(anyLong()))
+                .thenReturn(routes);
+
+        // when
+        CustomBadRequestException fail = assertThrows(CustomBadRequestException.class,
+                () -> travelRouteService.updateTravelRoute(schedule.getScheduleId(), request));
+
+        // then
+        assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.ROUTE_MISMATCH);
+    }
+
+    @Test
+    @DisplayName("여행 루트 수정 시 저장된 데이터와 일치하지 않아 예외 발생")
+    void updateTravelRoute_savedMismatch() {
+        List<TravelRoute> routes = new ArrayList<>(List.of(
+                TravelRouteFixture.createRouteWithId(1L, schedule, place1WithThumb, 1),
+                TravelRouteFixture.createRouteWithId(2L, schedule, place1WithThumb, 2))
+        );
+
+        List<Long> routeIds = new ArrayList<>(List.of(1004L, 1L));
+        RouteUpdateRequest request = TravelRouteFixture.createRouteUpdateRequest(2, routeIds);
+
+        when(travelScheduleRepository.findById(anyLong()))
+                .thenReturn(Optional.of(schedule));
+        when(travelRouteRepository.findAllByTravelSchedule_ScheduleId(anyLong()))
+                .thenReturn(routes);
+
+        // when
+        CustomBadRequestException fail = assertThrows(CustomBadRequestException.class,
+                () -> travelRouteService.updateTravelRoute(schedule.getScheduleId(), request));
+
+        // then
+        assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.ROUTE_MISMATCH);
+    }
+
+
+    @Test
+    @DisplayName("여행 루트 수정 시 요청값에 중복이 들어와 예외 발생")
+    void updateTravelRoute_duplicatedRouteIds() {
+        List<TravelRoute> routes = new ArrayList<>(List.of(
+                TravelRouteFixture.createRouteWithId(1L, schedule, place1WithThumb, 1),
+                TravelRouteFixture.createRouteWithId(2L, schedule, place1WithThumb, 2))
+        );
+
+        List<Long> routeIds = new ArrayList<>(List.of(1L, 1L));
+        RouteUpdateRequest request = TravelRouteFixture.createRouteUpdateRequest(2, routeIds);
+
+        when(travelScheduleRepository.findById(anyLong()))
+                .thenReturn(Optional.of(schedule));
+        when(travelRouteRepository.findAllByTravelSchedule_ScheduleId(anyLong()))
+                .thenReturn(routes);
+
+        // when
+        CustomBadRequestException fail = assertThrows(CustomBadRequestException.class,
+                () -> travelRouteService.updateTravelRoute(schedule.getScheduleId(), request));
+
+        // then
+        assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.ROUTE_MISMATCH);
+    }
+
+
+    @Test
+    @DisplayName("여행 루트 수정 시 여행 루트 ID 목록 리스트가 비어있는 경우 예외 발생")
+    void updateTravelRoute_emptyRouteIds() {
+        List<TravelRoute> routes = new ArrayList<>(List.of(
+                TravelRouteFixture.createRouteWithId(1L, schedule, place1WithThumb, 1),
+                TravelRouteFixture.createRouteWithId(2L, schedule, place1WithThumb, 2))
+        );
+
+        List<Long> routeIds = Collections.emptyList();
+        RouteUpdateRequest request = TravelRouteFixture.createRouteUpdateRequest(2, routeIds);
+
+        when(travelScheduleRepository.findById(anyLong()))
+                .thenReturn(Optional.of(schedule));
+        when(travelRouteRepository.findAllByTravelSchedule_ScheduleId(anyLong()))
+                .thenReturn(routes);
+
+        // when
+        CustomBadRequestException fail = assertThrows(CustomBadRequestException.class,
+                () -> travelRouteService.updateTravelRoute(schedule.getScheduleId(), request));
+
+        // then
+        assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.ROUTE_MISMATCH);
+    }
+
+
+    @Test
+    @DisplayName("여행 루트 수정 시 저장된 여행 루트가 없는 경우 예외 발생")
+    void updateTravelRoute_emptySavedRoutes() {
+        List<Long> routeIds = new ArrayList<>(List.of(1L, 2L));
+        RouteUpdateRequest request = TravelRouteFixture.createRouteUpdateRequest(2, routeIds);
+
+        when(travelScheduleRepository.findById(anyLong()))
+                .thenReturn(Optional.of(schedule));
+        when(travelRouteRepository.findAllByTravelSchedule_ScheduleId(anyLong()))
+                .thenReturn(Collections.emptyList());
+
+        // when
+        CustomBadRequestException fail = assertThrows(CustomBadRequestException.class,
+                () -> travelRouteService.updateTravelRoute(schedule.getScheduleId(), request));
+
+        // then
+        assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.ROUTE_MISMATCH);
+    }
+
+
+    @Test
+    @DisplayName("여행 루트 수정 시 저장된 여행 루트가 없고 요청에 빈 리스트로 예외 발생")
+    void updateTravelRoute_emptySavedRoutesAndRouteIds() {
+        List<Long> routeIds = Collections.emptyList();
+        RouteUpdateRequest request = TravelRouteFixture.createRouteUpdateRequest(2, routeIds);
+
+        when(travelScheduleRepository.findById(anyLong()))
+                .thenReturn(Optional.of(schedule));
+        when(travelRouteRepository.findAllByTravelSchedule_ScheduleId(anyLong()))
+                .thenReturn(Collections.emptyList());
+
+        // when
+        CustomBadRequestException fail = assertThrows(CustomBadRequestException.class,
+                () -> travelRouteService.updateTravelRoute(schedule.getScheduleId(), request));
+
+        // then
+        assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.ROUTE_MISMATCH);
+    }
+
+    @Test
+    @DisplayName("여행 루트 삭제 - 첫번째 위치한 여행루트인 경우")
+    void deleteTravelRoute_first() {
+        TravelRoute route1 = TravelRouteFixture.createRouteWithId(1L, schedule, place1WithThumb, 1);
+        TravelRoute route2 = TravelRouteFixture.createRouteWithId(2L, schedule, place1WithThumb, 2);
+        TravelRoute route3 = TravelRouteFixture.createRouteWithId(3L, schedule, place2WithThumb, 3);
+
+        List<TravelRoute> routes = new ArrayList<>(List.of(route2, route3));
+
+        when(travelScheduleRepository.findById(anyLong()))
+                .thenReturn(Optional.of(schedule));
+        when(travelRouteRepository.findByRouteIdAndTravelSchedule_ScheduleId(anyLong(), anyLong()))
+                .thenReturn(Optional.of(route1));
+        when(travelRouteRepository.findRoutesAfterOrder(anyLong(), anyInt()))
+                .thenReturn(routes);
+
+        // when
+        RouteVersionResponse response = travelRouteService.deleteTravelRoute(schedule.getScheduleId(), route1.getRouteId(), schedule.getRouteVersion());
+
+        // then
+        verify(travelRouteRepository, times(1)).delete(route1);
+        assertThat(response.getRouteVersion()).isEqualTo(3);
+        assertThat(route2.getRouteOrder()).isEqualTo(1);
+        assertThat(route3.getRouteOrder()).isEqualTo(2);
+    }
+
+
+    @Test
+    @DisplayName("여행 루트 삭제 - 중간에 위치한 여행루트인 경우")
+    void deleteTravelRoute_middle() {
+        TravelRoute route1 = TravelRouteFixture.createRouteWithId(1L, schedule, place1WithThumb, 1);
+        TravelRoute route2 = TravelRouteFixture.createRouteWithId(2L, schedule, place1WithThumb, 2);
+        TravelRoute route3 = TravelRouteFixture.createRouteWithId(3L, schedule, place2WithThumb, 3);
+
+        List<TravelRoute> routes = new ArrayList<>(List.of(route3));
+
+        when(travelScheduleRepository.findById(anyLong()))
+                .thenReturn(Optional.of(schedule));
+        when(travelRouteRepository.findByRouteIdAndTravelSchedule_ScheduleId(anyLong(), anyLong()))
+                .thenReturn(Optional.of(route2));
+        when(travelRouteRepository.findRoutesAfterOrder(anyLong(), anyInt()))
+                .thenReturn(routes);
+
+        // when
+        RouteVersionResponse response = travelRouteService.deleteTravelRoute(schedule.getScheduleId(), route2.getRouteId(), schedule.getRouteVersion());
+
+        // then
+        verify(travelRouteRepository, times(1)).delete(route2);
+        assertThat(response.getRouteVersion()).isEqualTo(3);
+        assertThat(route1.getRouteOrder()).isEqualTo(1);
+        assertThat(route3.getRouteOrder()).isEqualTo(2);
+    }
+
+
+    @Test
+    @DisplayName("여행 루트 삭제 - 마지막에 위치한 여행루트인 경우")
+    void deleteTravelRoute_last() {
+        TravelRoute route1 = TravelRouteFixture.createRouteWithId(1L, schedule, place1WithThumb, 1);
+        TravelRoute route2 = TravelRouteFixture.createRouteWithId(2L, schedule, place1WithThumb, 2);
+        TravelRoute route3 = TravelRouteFixture.createRouteWithId(3L, schedule, place2WithThumb, 3);
+
+        List<TravelRoute> routes = Collections.emptyList();
+
+        when(travelScheduleRepository.findById(anyLong()))
+                .thenReturn(Optional.of(schedule));
+        when(travelRouteRepository.findByRouteIdAndTravelSchedule_ScheduleId(anyLong(), anyLong()))
+                .thenReturn(Optional.of(route3));
+        when(travelRouteRepository.findRoutesAfterOrder(anyLong(), anyInt()))
+                .thenReturn(routes);
+
+        // when
+        RouteVersionResponse response = travelRouteService.deleteTravelRoute(schedule.getScheduleId(), route3.getRouteId(), schedule.getRouteVersion());
+
+        // then
+        verify(travelRouteRepository, times(1)).delete(route3);
+        assertThat(response.getRouteVersion()).isEqualTo(3);
+        assertThat(route1.getRouteOrder()).isEqualTo(1);
+        assertThat(route2.getRouteOrder()).isEqualTo(2);
+    }
+
+
+    @Test
+    @DisplayName("여행 루트 삭제 시 일정 데이터 존재하지 않아 예외 발생")
+    void deleteTravelRoute_scheduleNotFound() {
+        when(travelScheduleRepository.findById(anyLong()))
+                .thenReturn(Optional.empty());
+
+        // when
+        DataNotFoundException fail = assertThrows(DataNotFoundException.class,
+                () -> travelRouteService.deleteTravelRoute(schedule.getScheduleId(), 1L, schedule.getRouteVersion()));
+
+        // then
+        assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.SCHEDULE_NOT_FOUND);
+    }
+
+
+    @Test
+    @DisplayName("여행 루트 삭제 시 여행 루트를 찾을 수 없어 예외 발생")
+    void deleteTravelRoute_routeNotFound() {
+        when(travelScheduleRepository.findById(anyLong()))
+                .thenReturn(Optional.of(schedule));
+        when(travelRouteRepository.findByRouteIdAndTravelSchedule_ScheduleId(anyLong(), anyLong()))
+                .thenReturn(Optional.empty());
+
+        // when
+        DataNotFoundException fail = assertThrows(DataNotFoundException.class,
+                () -> travelRouteService.deleteTravelRoute(schedule.getScheduleId(), 1004L, schedule.getRouteVersion()));
+
+        // then
+        assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.ROUTE_NOT_FOUND);
+    }
+
+
 
 }

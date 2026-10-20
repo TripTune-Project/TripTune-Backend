@@ -5,10 +5,7 @@ import com.triptune.common.entity.ApiContentType;
 import com.triptune.common.entity.City;
 import com.triptune.common.entity.Country;
 import com.triptune.common.entity.District;
-import com.triptune.common.fixture.ApiContentTypeFixture;
-import com.triptune.common.fixture.CityFixture;
-import com.triptune.common.fixture.CountryFixture;
-import com.triptune.common.fixture.DistrictFixture;
+import com.triptune.common.fixture.*;
 import com.triptune.global.exception.DataNotFoundException;
 import com.triptune.global.message.ErrorCode;
 import com.triptune.global.message.SuccessCode;
@@ -21,12 +18,18 @@ import com.triptune.member.fixture.MemberFixture;
 import com.triptune.profile.entity.ProfileImage;
 import com.triptune.profile.fixture.ProfileImageFixture;
 import com.triptune.route.dto.request.RouteCreateRequest;
-import com.triptune.route.dto.response.RouteCreateResponse;
+import com.triptune.route.dto.request.RouteUpdateRequest;
+import com.triptune.route.dto.response.RouteVersionResponse;
 import com.triptune.route.dto.response.RouteResponse;
 import com.triptune.attendee.exception.ForbiddenAttendeeException;
+import com.triptune.route.entity.TravelRoute;
 import com.triptune.route.fixture.TravelRouteFixture;
 import com.triptune.route.service.TravelRouteService;
+import com.triptune.schedule.entity.TravelSchedule;
+import com.triptune.schedule.fixture.TravelScheduleFixture;
+import com.triptune.travel.entity.TravelImage;
 import com.triptune.travel.entity.TravelPlace;
+import com.triptune.travel.fixture.TravelImageFixture;
 import com.triptune.travel.fixture.TravelPlaceFixture;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -41,15 +44,16 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static com.triptune.travel.enums.ThemeType.ATTRACTIONS;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willThrow;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -58,7 +62,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc(addFilters = false)
 public class TravelRouteControllerTest {
 
-    private static final Long SCHEDULE_ID = 1L;
 
     @Autowired private MockMvc mockMvc;
     @Autowired private ObjectMapper objectMapper;
@@ -66,13 +69,17 @@ public class TravelRouteControllerTest {
     @MockBean private JwtAuthFilter jwtAuthFilter;
     @MockBean private TravelRouteService travelRouteService;
 
-    private TravelPlace place1;
-    private TravelPlace place2;
-    private TravelPlace place3;
+    private TravelPlace place1WithThumb;
+    private TravelPlace place2WithThumb;
+    private TravelPlace place3WithoutThumb;
+
+    private String place1ThumbUrl;
+    private String place2ThumbUrl;
 
     private Member member1;
     private Member member2;
 
+    private TravelSchedule schedule;
 
     @BeforeEach
     void setUp(){
@@ -92,7 +99,7 @@ public class TravelRouteControllerTest {
                 ProfileImageFixture.createProfileImage("test2")
         );
 
-        place1 = TravelPlaceFixture.createTravelPlaceWithId(
+        place1WithThumb = TravelPlaceFixture.createTravelPlaceWithId(
                 1L,
                 country,
                 city,
@@ -100,7 +107,10 @@ public class TravelRouteControllerTest {
                 apiContentType,
                 "여행지1"
         );
-        place2 = TravelPlaceFixture.createTravelPlaceWithId(
+        TravelImage place1Thumb = TravelImageFixture.createTravelImage(place1WithThumb, "test1", true);
+        place1ThumbUrl = S3Fixture.createS3ObjectUrl(place1Thumb.getS3ObjectKey());
+
+        place2WithThumb = TravelPlaceFixture.createTravelPlaceWithId(
                 2L,
                 country,
                 city,
@@ -108,7 +118,10 @@ public class TravelRouteControllerTest {
                 apiContentType,
                 "여행지2"
         );
-        place3 = TravelPlaceFixture.createTravelPlaceWithId(
+        TravelImage place2Thumb = TravelImageFixture.createTravelImage(place2WithThumb, "test2", true);
+        place2ThumbUrl = S3Fixture.createS3ObjectUrl(place2Thumb.getS3ObjectKey());
+
+        place3WithoutThumb = TravelPlaceFixture.createTravelPlaceWithId(
                 3L,
                 country,
                 city,
@@ -116,19 +129,26 @@ public class TravelRouteControllerTest {
                 apiContentType,
                 "여행지3"
         );
+
+        schedule = TravelScheduleFixture.createScheduleWithIdAndVersion(
+                1L,
+                "테스트1",
+                1,
+                2
+        );
     }
 
 
     @Test
-    @DisplayName("여행 루트 조회 성공")
+    @DisplayName("여행 루트 조회")
     void getRoutes() throws Exception {
         // given
         SecurityTestUtils.mockAuthentication(member1);
 
         List<RouteResponse> routeResponses = List.of(
-                TravelRouteFixture.createRouteResponse(1, place1, "place1ThumbnailUrl"),
-                TravelRouteFixture.createRouteResponse(2, place1, "place1ThumbnailUrl"),
-                TravelRouteFixture.createRouteResponse(3, place2, "place2ThumbnailUrl")
+                TravelRouteFixture.createRouteResponse(1, place1WithThumb, place1ThumbUrl),
+                TravelRouteFixture.createRouteResponse(2, place2WithThumb, place2ThumbUrl),
+                TravelRouteFixture.createRouteResponse(3, place3WithoutThumb, null)
         );
 
         Page<RouteResponse> pageResponse = PageUtils.createPage(
@@ -146,18 +166,21 @@ public class TravelRouteControllerTest {
                 .willReturn(response);
 
         // when, then
-        mockMvc.perform(get("/api/schedules/{scheduleId}/routes", SCHEDULE_ID)
+        mockMvc.perform(get("/api/schedules/{scheduleId}/routes", schedule.getScheduleId())
                         .param("page", "1"))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.totalElements").value(3))
                 .andExpect(jsonPath("$.data.content[0].routeOrder").value(1))
-                .andExpect(jsonPath("$.data.content[0].placeName").value(place1.getPlaceName()))
+                .andExpect(jsonPath("$.data.content[0].placeName").value(place1WithThumb.getPlaceName()))
+                .andExpect(jsonPath("$.data.content[0].thumbnailUrl").value(place1ThumbUrl))
                 .andExpect(jsonPath("$.data.content[1].routeOrder").value(2))
-                .andExpect(jsonPath("$.data.content[1].placeName").value(place1.getPlaceName()))
+                .andExpect(jsonPath("$.data.content[1].placeName").value(place2WithThumb.getPlaceName()))
+                .andExpect(jsonPath("$.data.content[1].thumbnailUrl").value(place2ThumbUrl))
                 .andExpect(jsonPath("$.data.content[2].routeOrder").value(3))
-                .andExpect(jsonPath("$.data.content[2].placeName").value(place2.getPlaceName()));
+                .andExpect(jsonPath("$.data.content[2].placeName").value(place3WithoutThumb.getPlaceName()))
+                .andExpect(jsonPath("$.data.content[2].thumbnailUrl", nullValue()));
     }
 
 
@@ -168,18 +191,18 @@ public class TravelRouteControllerTest {
         SecurityTestUtils.mockAuthentication(member1);
 
         RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(
-                place3.getPlaceId(),
+                place1WithThumb.getPlaceId(),
                 3
         );
 
-        RouteCreateResponse response = TravelRouteFixture.createRouteCreateResponse(4);
+        RouteVersionResponse response = TravelRouteFixture.createRouteCreateResponse(4);
 
-        given(travelRouteService.createLastTravelRoute(eq(SCHEDULE_ID), eq(member1.getMemberId()), any(RouteCreateRequest.class)))
+        given(travelRouteService.createLastTravelRoute(eq(schedule.getScheduleId()), eq(member1.getMemberId()), any(RouteCreateRequest.class)))
                 .willReturn(response);
 
 
         // when, then
-        mockMvc.perform(post("/api/schedules/{scheduleId}/routes", SCHEDULE_ID)
+        mockMvc.perform(post("/api/schedules/{scheduleId}/routes", schedule.getScheduleId())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
@@ -198,7 +221,7 @@ public class TravelRouteControllerTest {
         RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(null, 3);
 
         // when, then
-        mockMvc.perform(post("/api/schedules/{scheduleId}/routes", SCHEDULE_ID)
+        mockMvc.perform(post("/api/schedules/{scheduleId}/routes", schedule.getScheduleId())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
@@ -217,7 +240,7 @@ public class TravelRouteControllerTest {
         RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(input, 3);
 
         // when, then
-        mockMvc.perform(post("/api/schedules/{scheduleId}/routes", SCHEDULE_ID)
+        mockMvc.perform(post("/api/schedules/{scheduleId}/routes", schedule.getScheduleId())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
@@ -233,10 +256,10 @@ public class TravelRouteControllerTest {
     void createLastTravelRoute_invalidNullPlaceId() throws Exception {
         // given
         SecurityTestUtils.mockAuthentication(member1);
-        RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(place3.getPlaceId(), null);
+        RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(place3WithoutThumb.getPlaceId(), null);
 
         // when, then
-        mockMvc.perform(post("/api/schedules/{scheduleId}/routes", SCHEDULE_ID)
+        mockMvc.perform(post("/api/schedules/{scheduleId}/routes", schedule.getScheduleId())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
@@ -251,10 +274,10 @@ public class TravelRouteControllerTest {
     void createLastTravelRoute_invalidMinRouteVersion() throws Exception {
         // given
         SecurityTestUtils.mockAuthentication(member1);
-        RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(place3.getPlaceId(), -1);
+        RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(place3WithoutThumb.getPlaceId(), -1);
 
         // when, then
-        mockMvc.perform(post("/api/schedules/{scheduleId}/routes", SCHEDULE_ID)
+        mockMvc.perform(post("/api/schedules/{scheduleId}/routes", schedule.getScheduleId())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
@@ -270,7 +293,7 @@ public class TravelRouteControllerTest {
     void createLastTravelRoute_scheduleNotFound() throws Exception {
         // given
         SecurityTestUtils.mockAuthentication(member1);
-        RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(place3.getPlaceId(), 3);
+        RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(place3WithoutThumb.getPlaceId(), 3);
 
         willThrow(new DataNotFoundException(ErrorCode.SCHEDULE_NOT_FOUND))
                 .given(travelRouteService).createLastTravelRoute(anyLong(), anyLong(), any(RouteCreateRequest.class));
@@ -294,13 +317,13 @@ public class TravelRouteControllerTest {
         Member member = MemberFixture.createNativeTypeMemberWithId(1000L, "notMember@email.com", profileImage);
         SecurityTestUtils.mockAuthentication(member);
 
-        RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(place3.getPlaceId(), 3);
+        RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(place3WithoutThumb.getPlaceId(), 3);
 
         willThrow(new DataNotFoundException(ErrorCode.ATTENDEE_NOT_FOUND))
                 .given(travelRouteService).createLastTravelRoute(anyLong(), anyLong(), any(RouteCreateRequest.class));
 
         // when, then
-        mockMvc.perform(post("/api/schedules/{scheduleId}/routes", SCHEDULE_ID)
+        mockMvc.perform(post("/api/schedules/{scheduleId}/routes", schedule.getScheduleId())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
@@ -315,13 +338,13 @@ public class TravelRouteControllerTest {
     void createLastTravelRoute_forbiddenEdit() throws Exception{
         // given
         SecurityTestUtils.mockAuthentication(member2);
-        RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(place3.getPlaceId(), 3);
+        RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(place3WithoutThumb.getPlaceId(), 3);
 
         willThrow(new ForbiddenAttendeeException(ErrorCode.FORBIDDEN_EDIT_SCHEDULE))
                 .given(travelRouteService).createLastTravelRoute(anyLong(), anyLong(), any(RouteCreateRequest.class));
 
         // when, then
-        mockMvc.perform(post("/api/schedules/{scheduleId}/routes", SCHEDULE_ID)
+        mockMvc.perform(post("/api/schedules/{scheduleId}/routes", schedule.getScheduleId())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
@@ -342,13 +365,152 @@ public class TravelRouteControllerTest {
                 .given(travelRouteService).createLastTravelRoute(anyLong(), anyLong(), any(RouteCreateRequest.class));
 
         // when, then
-        mockMvc.perform(post("/api/schedules/{scheduleId}/routes", SCHEDULE_ID)
+        mockMvc.perform(post("/api/schedules/{scheduleId}/routes", schedule.getScheduleId())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value(ErrorCode.PLACE_NOT_FOUND.getMessage()));
+    }
+
+
+    @Test
+    @DisplayName("여행 루트 수정")
+    void updateTravelRoute() throws Exception{
+        // given
+        SecurityTestUtils.mockAuthentication(member1);
+
+        List<Long> routeIds = new ArrayList<>(List.of(3L, 2L, 1L));
+        RouteUpdateRequest request = TravelRouteFixture.createRouteUpdateRequest(3, routeIds);
+
+        RouteVersionResponse response = TravelRouteFixture.createRouteCreateResponse(4);
+
+        given(travelRouteService.updateTravelRoute(eq(schedule.getScheduleId()), any(RouteUpdateRequest.class)))
+                .willReturn(response);
+
+
+        // when, then
+        mockMvc.perform(patch("/api/schedules/{scheduleId}/routes", schedule.getScheduleId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()))
+                .andExpect(jsonPath("$.data.routeVersion").value(4));
+    }
+
+
+    @Test
+    @DisplayName("여행 루트 수정 시 여행 루트 버전에 null 값이 들어와 400 반환")
+    void updateTravelRoute_invalidNullRouteVersion() throws Exception {
+        // given
+        SecurityTestUtils.mockAuthentication(member1);
+
+        List<Long> routeIds = new ArrayList<>(List.of(3L, 2L, 1L));
+        RouteUpdateRequest request = TravelRouteFixture.createRouteUpdateRequest(null, routeIds);
+
+        // when, then
+        mockMvc.perform(patch("/api/schedules/{scheduleId}/routes", schedule.getScheduleId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andDo(print())
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value("여행 루트 버전은 필수 입력 값입니다."));
+    }
+
+
+    @Test
+    @DisplayName("여행 루트 수정 시 여행 루트 ID 리스트에 null 값이 들어와 400 반환")
+    void updateTravelRoute_invalidNullOrderedRouteIds() throws Exception {
+        // given
+        SecurityTestUtils.mockAuthentication(member1);
+
+        RouteUpdateRequest request = TravelRouteFixture.createRouteUpdateRequest(3, null);
+
+
+        // when, then
+        mockMvc.perform(patch("/api/schedules/{scheduleId}/routes", schedule.getScheduleId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andDo(print())
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value(containsString("여행 루트 ID는 필수 입력 값입니다.")));
+    }
+
+
+    @Test
+    @DisplayName("여행 루트 삭제")
+    void deleteTravelRoute() throws Exception{
+        // given
+        SecurityTestUtils.mockAuthentication(member1);
+        Integer routeVersion = schedule.getRouteVersion();
+
+        TravelRoute route = TravelRouteFixture.createRouteWithId(
+                1L,
+                schedule,
+                place1WithThumb,
+                1
+        );
+
+        RouteVersionResponse response = TravelRouteFixture.createRouteCreateResponse(routeVersion+1);
+
+        given(travelRouteService.deleteTravelRoute(eq(schedule.getScheduleId()), eq(route.getRouteId()), eq(routeVersion)))
+                .willReturn(response);
+
+
+        // when, then
+        mockMvc.perform(delete("/api/schedules/{scheduleId}/routes/{routeId}"
+                        , schedule.getScheduleId(), route.getRouteId())
+                        .param("routeVersion", String.valueOf(routeVersion)))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()))
+                .andExpect(jsonPath("$.data.routeVersion").value(routeVersion+1));
+    }
+
+    @Test
+    @DisplayName("여행 루트 삭제 시 일정 데이터 존재하지 않아 예외 발생")
+    void deleteTravelRoute_scheduleNotFound() throws Exception{
+        // given
+        SecurityTestUtils.mockAuthentication(member1);
+
+        willThrow(new DataNotFoundException(ErrorCode.SCHEDULE_NOT_FOUND))
+                .given(travelRouteService).deleteTravelRoute(eq(1004L), eq(1L), eq(1));
+
+        // when, then
+        mockMvc.perform(delete("/api/schedules/{scheduleId}/routes/{routeId}"
+                        , 1004L, 1L)
+                        .param("routeVersion", String.valueOf(1)))
+                .andDo(print())
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value(ErrorCode.SCHEDULE_NOT_FOUND.getMessage()));
+    }
+
+
+    @Test
+    @DisplayName("여행 루트 삭제 시 여행루트 데이터 존재하지 않아 예외 발생")
+    void deleteTravelRoute_routeNotFound() throws Exception{
+        // given
+        SecurityTestUtils.mockAuthentication(member1);
+        Integer routeVersion = schedule.getRouteVersion();
+
+        willThrow(new DataNotFoundException(ErrorCode.SCHEDULE_NOT_FOUND))
+                .given(travelRouteService).deleteTravelRoute(eq(schedule.getScheduleId()), eq(1004L), eq(routeVersion));
+
+        // when, then
+        mockMvc.perform(delete("/api/schedules/{scheduleId}/routes/{routeId}"
+                        , schedule.getScheduleId(), 1004L)
+                        .param("routeVersion", String.valueOf(routeVersion)))
+                .andDo(print())
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value(ErrorCode.SCHEDULE_NOT_FOUND.getMessage()));
     }
 
 

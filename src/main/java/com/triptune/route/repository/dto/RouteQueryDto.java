@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 public class RouteQueryDto {
+    private Long routeId;
     private int routeOrder;
     private Long placeId;
     private String country;
@@ -20,7 +21,8 @@ public class RouteQueryDto {
     private String thumbnailS3ObjectKey;
 
     @Builder
-    public RouteQueryDto(int routeOrder, Long placeId, String country, String city, String district, String address, String detailAddress, Double latitude, Double longitude, String placeName, String thumbnailS3ObjectKey) {
+    public RouteQueryDto(Long routeId, int routeOrder, Long placeId, String country, String city, String district, String address, String detailAddress, Double latitude, Double longitude, String placeName, String thumbnailS3ObjectKey) {
+        this.routeId = routeId;
         this.routeOrder = routeOrder;
         this.placeId = placeId;
         this.country = country;
