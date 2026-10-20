@@ -141,6 +141,8 @@ public class TravelRouteServiceTest {
     @DisplayName("여행 루트 조회")
     void getTravelRoutes(){
         // given
+        int routeVersion = schedule.getRouteVersion();
+
         TravelRoute route1 = TravelRouteFixture.createRoute(schedule, place1WithThumb, 1);
         TravelRoute route2 = TravelRouteFixture.createRoute(schedule, place1WithThumb, 2);
         TravelRoute route3 = TravelRouteFixture.createRoute(schedule, place2WithThumb, 3);
@@ -155,7 +157,7 @@ public class TravelRouteServiceTest {
         Page<RouteQueryDto> pageResponse = PageUtils.createPage(routes, pageable, routes.size());
 
         when(travelScheduleRepository.findRouteVersionById(eq(schedule.getScheduleId())))
-                .thenReturn(Optional.of(schedule.getRouteVersion()));
+                .thenReturn(Optional.of(routeVersion));
         when(travelRouteRepository.findAllByScheduleId(eq(pageable), eq(schedule.getScheduleId())))
                 .thenReturn(pageResponse);
         when(s3ObjectManager.generateS3ObjectUrl(eq(place1Thumb.getS3ObjectKey())))
@@ -168,7 +170,7 @@ public class TravelRouteServiceTest {
 
         // then
         assertThat(response.getTotalElements()).isEqualTo(schedule.getTravelRoutes().size());
-        assertThat(response.getRouteVersion()).isEqualTo(schedule.getRouteVersion());
+        assertThat(response.getRouteVersion()).isEqualTo(routeVersion);
         assertThat(response.getContent())
                 .extracting(
                         RouteResponse::getPlaceName,
@@ -220,13 +222,15 @@ public class TravelRouteServiceTest {
     @DisplayName("여행 루트 마지막 루트에 여행지 추가")
     void createLastTravelRoute(){
         // given
+        int routeVersion = schedule.getRouteVersion();
+
         TravelRouteFixture.createRoute(schedule, place1WithThumb, 1);
         TravelRouteFixture.createRoute(schedule, place2WithThumb, 2);
         TravelRouteFixture.createRoute(schedule, place2WithThumb, 3);
 
         RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(
                 place3WithoutThumb.getPlaceId(),
-                schedule.getRouteVersion()
+                routeVersion
         );
 
         when(travelScheduleRepository.findById(anyLong()))
@@ -241,19 +245,20 @@ public class TravelRouteServiceTest {
 
         // then
         List<TravelRoute> routes = schedule.getTravelRoutes();
-
         assertThat(routes.size()).isEqualTo(4);
         assertThat(routes.get(routes.size() - 1).getTravelPlace().getPlaceName()).isEqualTo(place3WithoutThumb.getPlaceName());
-        assertThat(response.getRouteVersion()).isEqualTo(3);
+        assertThat(response.getRouteVersion()).isEqualTo(routeVersion+1);
     }
 
     @Test
     @DisplayName("여행 루트 마지막 루트에 여행지 추가 시 처음 저장인 경우")
     void createLastTravelRoute_first(){
         // given
+        int routeVersion = schedule.getRouteVersion();
+
         RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(
                 place3WithoutThumb.getPlaceId(),
-                schedule.getRouteVersion()
+                routeVersion
         );
 
         when(travelScheduleRepository.findById(anyLong()))
@@ -269,7 +274,7 @@ public class TravelRouteServiceTest {
         // then
         assertThat(schedule.getTravelRoutes().size()).isEqualTo(1);
         assertThat(schedule.getTravelRoutes().get(0).getTravelPlace().getPlaceName()).isEqualTo(place3WithoutThumb.getPlaceName());
-        assertThat(response.getRouteVersion()).isEqualTo(3);
+        assertThat(response.getRouteVersion()).isEqualTo(routeVersion+1);
     }
 
 
@@ -371,6 +376,8 @@ public class TravelRouteServiceTest {
     @Test
     @DisplayName("여행 루트 수정")
     void updateTravelRoute() {
+        int routeVersion = schedule.getRouteVersion();
+
         TravelRoute route1 = TravelRouteFixture.createRouteWithId(1L, schedule, place1WithThumb, 1);
         TravelRoute route2 = TravelRouteFixture.createRouteWithId(2L, schedule, place1WithThumb, 2);
         TravelRoute route3 = TravelRouteFixture.createRouteWithId(3L, schedule, place2WithThumb, 3);
@@ -389,7 +396,7 @@ public class TravelRouteServiceTest {
         RouteVersionResponse response = travelRouteService.updateTravelRoute(schedule.getScheduleId(), request);
 
         // then
-        assertThat(response.getRouteVersion()).isEqualTo(3);
+        assertThat(response.getRouteVersion()).isEqualTo(routeVersion+1);
         assertThat(route3.getRouteOrder()).isEqualTo(1);
         assertThat(route2.getRouteOrder()).isEqualTo(2);
         assertThat(route1.getRouteOrder()).isEqualTo(3);
@@ -399,6 +406,8 @@ public class TravelRouteServiceTest {
     @Test
     @DisplayName("여행 루트 수정 - 저장된 데이터 1개인 경우")
     void updateTravelRoute_one() {
+        int routeVersion = schedule.getRouteVersion();
+
         TravelRoute route1 = TravelRouteFixture.createRouteWithId(1L, schedule, place1WithThumb, 1);
 
         List<TravelRoute> routes = new ArrayList<>(List.of(route1));
@@ -415,7 +424,7 @@ public class TravelRouteServiceTest {
         RouteVersionResponse response = travelRouteService.updateTravelRoute(schedule.getScheduleId(), request);
 
         // then
-        assertThat(response.getRouteVersion()).isEqualTo(3);
+        assertThat(response.getRouteVersion()).isEqualTo(routeVersion+1);
         assertThat(route1.getRouteOrder()).isEqualTo(1);
     }
 
@@ -581,6 +590,8 @@ public class TravelRouteServiceTest {
     @Test
     @DisplayName("여행 루트 삭제 - 첫번째 위치한 여행루트인 경우")
     void deleteTravelRoute_first() {
+        int routeVersion = schedule.getRouteVersion();
+
         TravelRoute route1 = TravelRouteFixture.createRouteWithId(1L, schedule, place1WithThumb, 1);
         TravelRoute route2 = TravelRouteFixture.createRouteWithId(2L, schedule, place1WithThumb, 2);
         TravelRoute route3 = TravelRouteFixture.createRouteWithId(3L, schedule, place2WithThumb, 3);
@@ -595,11 +606,11 @@ public class TravelRouteServiceTest {
                 .thenReturn(routes);
 
         // when
-        RouteVersionResponse response = travelRouteService.deleteTravelRoute(schedule.getScheduleId(), route1.getRouteId(), schedule.getRouteVersion());
+        RouteVersionResponse response = travelRouteService.deleteTravelRoute(schedule.getScheduleId(), route1.getRouteId(), routeVersion);
 
         // then
         verify(travelRouteRepository, times(1)).delete(route1);
-        assertThat(response.getRouteVersion()).isEqualTo(3);
+        assertThat(response.getRouteVersion()).isEqualTo(routeVersion+1);
         assertThat(route2.getRouteOrder()).isEqualTo(1);
         assertThat(route3.getRouteOrder()).isEqualTo(2);
     }
@@ -608,6 +619,8 @@ public class TravelRouteServiceTest {
     @Test
     @DisplayName("여행 루트 삭제 - 중간에 위치한 여행루트인 경우")
     void deleteTravelRoute_middle() {
+        int routeVersion = schedule.getRouteVersion();
+
         TravelRoute route1 = TravelRouteFixture.createRouteWithId(1L, schedule, place1WithThumb, 1);
         TravelRoute route2 = TravelRouteFixture.createRouteWithId(2L, schedule, place1WithThumb, 2);
         TravelRoute route3 = TravelRouteFixture.createRouteWithId(3L, schedule, place2WithThumb, 3);
@@ -622,11 +635,11 @@ public class TravelRouteServiceTest {
                 .thenReturn(routes);
 
         // when
-        RouteVersionResponse response = travelRouteService.deleteTravelRoute(schedule.getScheduleId(), route2.getRouteId(), schedule.getRouteVersion());
+        RouteVersionResponse response = travelRouteService.deleteTravelRoute(schedule.getScheduleId(), route2.getRouteId(), routeVersion);
 
         // then
         verify(travelRouteRepository, times(1)).delete(route2);
-        assertThat(response.getRouteVersion()).isEqualTo(3);
+        assertThat(response.getRouteVersion()).isEqualTo(routeVersion+1);
         assertThat(route1.getRouteOrder()).isEqualTo(1);
         assertThat(route3.getRouteOrder()).isEqualTo(2);
     }
@@ -635,6 +648,8 @@ public class TravelRouteServiceTest {
     @Test
     @DisplayName("여행 루트 삭제 - 마지막에 위치한 여행루트인 경우")
     void deleteTravelRoute_last() {
+        int routeVersion = schedule.getRouteVersion();
+
         TravelRoute route1 = TravelRouteFixture.createRouteWithId(1L, schedule, place1WithThumb, 1);
         TravelRoute route2 = TravelRouteFixture.createRouteWithId(2L, schedule, place1WithThumb, 2);
         TravelRoute route3 = TravelRouteFixture.createRouteWithId(3L, schedule, place2WithThumb, 3);
@@ -649,11 +664,11 @@ public class TravelRouteServiceTest {
                 .thenReturn(routes);
 
         // when
-        RouteVersionResponse response = travelRouteService.deleteTravelRoute(schedule.getScheduleId(), route3.getRouteId(), schedule.getRouteVersion());
+        RouteVersionResponse response = travelRouteService.deleteTravelRoute(schedule.getScheduleId(), route3.getRouteId(), routeVersion);
 
         // then
         verify(travelRouteRepository, times(1)).delete(route3);
-        assertThat(response.getRouteVersion()).isEqualTo(3);
+        assertThat(response.getRouteVersion()).isEqualTo(routeVersion+1);
         assertThat(route1.getRouteOrder()).isEqualTo(1);
         assertThat(route2.getRouteOrder()).isEqualTo(2);
     }

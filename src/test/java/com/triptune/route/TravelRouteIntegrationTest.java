@@ -159,6 +159,8 @@ public class TravelRouteIntegrationTest {
     @DisplayName("여행 루트 조회")
     void getTravelRoutes() throws Exception {
         // given
+        int routeVersion = schedule.getRouteVersion();
+
         TravelRoute route1 = travelRouteRepository.save(TravelRouteFixture.createRoute(schedule, place1WithThumb, 1));
         TravelRoute route2 = travelRouteRepository.save(TravelRouteFixture.createRoute(schedule, place2WithThumb, 2));
         TravelRoute route3 = travelRouteRepository.save(TravelRouteFixture.createRoute(schedule, place3WithoutThumb, 3));
@@ -171,6 +173,7 @@ public class TravelRouteIntegrationTest {
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.routeVersion").value(routeVersion))
                 .andExpect(jsonPath("$.data.totalElements").value(3))
                 .andExpect(jsonPath("$.data.content[0].routeId").value(route1.getRouteId()))
                 .andExpect(jsonPath("$.data.content[0].routeOrder").value(route1.getRouteOrder()))
@@ -190,12 +193,15 @@ public class TravelRouteIntegrationTest {
         // given
         SecurityTestUtils.mockAuthentication(member1);
 
+        int routeVersion = schedule.getRouteVersion();
+
         // when, then
         mockMvc.perform(get("/api/schedules/{scheduleId}/routes", schedule.getScheduleId())
                         .param("page", "1"))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.routeVersion").value(routeVersion))
                 .andExpect(jsonPath("$.data.totalElements").value(0))
                 .andExpect(jsonPath("$.data.content").isEmpty());
     }
@@ -237,6 +243,8 @@ public class TravelRouteIntegrationTest {
     @DisplayName("여행 루트의 마지막 여행지 추가")
     void createLastTravelRoute() throws Exception{
         // given
+        int routeVersion = schedule.getRouteVersion();
+
         SecurityTestUtils.mockAuthentication(member1);
 
         travelRouteRepository.save(TravelRouteFixture.createRoute(schedule, place1WithThumb, 1));
@@ -245,7 +253,7 @@ public class TravelRouteIntegrationTest {
 
         RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(
                 place3WithoutThumb.getPlaceId(),
-                schedule.getRouteVersion()
+                routeVersion
         );
 
         // when
@@ -256,7 +264,7 @@ public class TravelRouteIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()))
-                .andExpect(jsonPath("$.data.routeVersion").value(1));
+                .andExpect(jsonPath("$.data.routeVersion").value(routeVersion+1));
 
         // then
         em.flush();
@@ -278,13 +286,15 @@ public class TravelRouteIntegrationTest {
     }
 
     @Test
-    @DisplayName("여행 루트의 마지막 여행지 추가 시 저장된 여행 루트가 없는 경우")
-    void createLastRoute_emptyRouteList() throws Exception{
+    @DisplayName("여행 루트의 마지막 여행지 추가 시 처음 저장인 경우")
+    void createLastRoute_first() throws Exception{
         // given
+        int routeVersion = schedule.getRouteVersion();
+
         SecurityTestUtils.mockAuthentication(member1);
         RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(
                 place3WithoutThumb.getPlaceId(),
-                schedule.getRouteVersion()
+                routeVersion
         );
 
         // when, then
@@ -294,7 +304,8 @@ public class TravelRouteIntegrationTest {
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()));
+                .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()))
+                .andExpect(jsonPath("$.data.routeVersion").value(routeVersion+1));
 
         List<TravelRoute> travelRoutes = travelRouteRepository.findAllByTravelSchedule_ScheduleId(schedule.getScheduleId());
         assertThat(travelRoutes).hasSize(1);
@@ -373,6 +384,8 @@ public class TravelRouteIntegrationTest {
     @DisplayName("여행 루트 수정")
     void updateTravelRoute() throws Exception{
         // given
+        int routeVersion = schedule.getRouteVersion();
+
         SecurityTestUtils.mockAuthentication(member1);
 
         TravelRoute route1 = travelRouteRepository.save(TravelRouteFixture.createRoute(schedule, place1WithThumb, 1));
@@ -380,7 +393,7 @@ public class TravelRouteIntegrationTest {
         TravelRoute route3 = travelRouteRepository.save(TravelRouteFixture.createRoute(schedule, place2WithThumb, 3));
 
         List<Long> routeIds = new ArrayList<>(List.of(route3.getRouteId(), route2.getRouteId(), route1.getRouteId()));
-        RouteUpdateRequest request = TravelRouteFixture.createRouteUpdateRequest(0, routeIds);
+        RouteUpdateRequest request = TravelRouteFixture.createRouteUpdateRequest(routeVersion, routeIds);
 
         // when, then
         mockMvc.perform(patch("/api/schedules/{scheduleId}/routes", schedule.getScheduleId())
@@ -390,7 +403,7 @@ public class TravelRouteIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()))
-                .andExpect(jsonPath("$.data.routeVersion").value(1));
+                .andExpect(jsonPath("$.data.routeVersion").value(routeVersion+1));
 
         List<TravelRoute> travelRoutes = travelRouteRepository.findAllByTravelSchedule_ScheduleId(schedule.getScheduleId());
         assertThat(travelRoutes).hasSize(3);
@@ -411,12 +424,14 @@ public class TravelRouteIntegrationTest {
     @DisplayName("여행 루트 수정 - 저장된 데이터 1개인 경우")
     void updateTravelRoute_one() throws Exception{
         // given
+        int routeVersion = schedule.getRouteVersion();
+
         SecurityTestUtils.mockAuthentication(member1);
 
         TravelRoute route1 = travelRouteRepository.save(TravelRouteFixture.createRoute(schedule, place1WithThumb, 1));
 
         List<Long> routeIds = new ArrayList<>(List.of(route1.getRouteId()));
-        RouteUpdateRequest request = TravelRouteFixture.createRouteUpdateRequest(0, routeIds);
+        RouteUpdateRequest request = TravelRouteFixture.createRouteUpdateRequest(routeVersion, routeIds);
 
         // when, then
         mockMvc.perform(patch("/api/schedules/{scheduleId}/routes", schedule.getScheduleId())
@@ -426,7 +441,7 @@ public class TravelRouteIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()))
-                .andExpect(jsonPath("$.data.routeVersion").value(1));
+                .andExpect(jsonPath("$.data.routeVersion").value(routeVersion+1));
 
         List<TravelRoute> travelRoutes = travelRouteRepository.findAllByTravelSchedule_ScheduleId(schedule.getScheduleId());
         assertThat(travelRoutes).hasSize(1);

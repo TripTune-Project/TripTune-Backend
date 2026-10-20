@@ -181,13 +181,12 @@ public class TravelScheduleService {
                 scheduleUpdateRequest.getEndDate()
         );
 
-        schedule.increaseScheduleVersion();
-
         publisher.publishEvent(ScheduleEvent.of(
                 scheduleId,
                 ScheduleEventType.SCHEDULE_UPDATED,
                 ScheduleUpdateEventResponse.from(schedule)
         ));
+
 
         return ScheduleUpdateResponse.of(schedule.getScheduleVersion());
     }

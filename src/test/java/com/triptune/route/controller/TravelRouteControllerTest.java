@@ -144,6 +144,7 @@ public class TravelRouteControllerTest {
     void getRoutes() throws Exception {
         // given
         SecurityTestUtils.mockAuthentication(member1);
+        int routeVersion = 3;
 
         List<RouteResponse> routeResponses = List.of(
                 TravelRouteFixture.createRouteResponse(1, place1WithThumb, place1ThumbUrl),
@@ -158,7 +159,7 @@ public class TravelRouteControllerTest {
         );
 
         RoutePageResponse<RouteResponse> response = RoutePageResponse.of(
-                3,
+                routeVersion,
                 pageResponse
         );
 
@@ -171,6 +172,7 @@ public class TravelRouteControllerTest {
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.routeVersion").value(routeVersion))
                 .andExpect(jsonPath("$.data.totalElements").value(3))
                 .andExpect(jsonPath("$.data.content[0].routeOrder").value(1))
                 .andExpect(jsonPath("$.data.content[0].placeName").value(place1WithThumb.getPlaceName()))
@@ -190,12 +192,14 @@ public class TravelRouteControllerTest {
         // given
         SecurityTestUtils.mockAuthentication(member1);
 
+        int routeVersion = 3;
+
         RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(
                 place1WithThumb.getPlaceId(),
-                3
+                routeVersion
         );
 
-        RouteVersionResponse response = TravelRouteFixture.createRouteCreateResponse(4);
+        RouteVersionResponse response = TravelRouteFixture.createRouteCreateResponse(routeVersion+1);
 
         given(travelRouteService.createLastTravelRoute(eq(schedule.getScheduleId()), eq(member1.getMemberId()), any(RouteCreateRequest.class)))
                 .willReturn(response);
@@ -209,7 +213,7 @@ public class TravelRouteControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()))
-                .andExpect(jsonPath("$.data.routeVersion").value(4));
+                .andExpect(jsonPath("$.data.routeVersion").value(routeVersion+1));
     }
 
 
@@ -380,11 +384,12 @@ public class TravelRouteControllerTest {
     void updateTravelRoute() throws Exception{
         // given
         SecurityTestUtils.mockAuthentication(member1);
+        int routeVersion = 3;
 
         List<Long> routeIds = new ArrayList<>(List.of(3L, 2L, 1L));
-        RouteUpdateRequest request = TravelRouteFixture.createRouteUpdateRequest(3, routeIds);
+        RouteUpdateRequest request = TravelRouteFixture.createRouteUpdateRequest(routeVersion, routeIds);
 
-        RouteVersionResponse response = TravelRouteFixture.createRouteCreateResponse(4);
+        RouteVersionResponse response = TravelRouteFixture.createRouteCreateResponse(routeVersion+1);
 
         given(travelRouteService.updateTravelRoute(eq(schedule.getScheduleId()), any(RouteUpdateRequest.class)))
                 .willReturn(response);
@@ -398,7 +403,7 @@ public class TravelRouteControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()))
-                .andExpect(jsonPath("$.data.routeVersion").value(4));
+                .andExpect(jsonPath("$.data.routeVersion").value(routeVersion+1));
     }
 
 

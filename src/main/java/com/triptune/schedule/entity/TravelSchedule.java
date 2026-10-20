@@ -75,9 +75,6 @@ public class TravelSchedule extends BaseTimeEntity {
         travelAttendees.add(travelAttendee);
     }
 
-    public void increaseScheduleVersion() {
-        this.scheduleVersion++;
-    }
 
     public void increaseRouteVersion() {
         this.routeVersion++;

@@ -44,6 +44,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -69,7 +70,7 @@ public class TravelScheduleServiceTest {
     @Mock private TravelRouteRepository travelRouteRepository;
     @Mock private ChatMessageRepository chatMessageRepository;
     @Mock private S3ObjectManager s3ObjectManager;
-    @Mock private EntityManager em;
+    @Mock private ApplicationEventPublisher publisher;
 
     private TravelPlace place1WithThumb;
     private TravelPlace place2WithThumb;
@@ -1167,6 +1168,8 @@ public class TravelScheduleServiceTest {
                 "당일 여행"
         );
 
+        int scheduleVersion = schedule.getScheduleVersion();
+
         TravelAttendeeFixture.createAuthorAttendee(schedule, authorMember);
         TravelAttendeeFixture.createGuestAttendee(schedule, guestMember, READ);
 
@@ -1174,7 +1177,7 @@ public class TravelScheduleServiceTest {
                 "수정 테스트",
                 LocalDate.now(),
                 LocalDate.now().plusDays(5),
-                3
+                scheduleVersion
         );
 
         when(travelScheduleRepository.findById(anyLong())).thenReturn(Optional.of(schedule));
@@ -1187,7 +1190,7 @@ public class TravelScheduleServiceTest {
         assertThat(schedule.getScheduleName()).isEqualTo(request.getScheduleName());
         assertThat(schedule.getStartDate()).isEqualTo(request.getStartDate());
         assertThat(schedule.getEndDate()).isEqualTo(request.getEndDate());
-        assertThat(response.getScheduleVersion()).isEqualTo(1);
+        assertThat(response.getScheduleVersion()).isEqualTo(scheduleVersion+1);
     }
 
 
