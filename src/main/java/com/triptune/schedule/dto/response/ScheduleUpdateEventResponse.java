@@ -1,4 +1,4 @@
-package com.triptune.schedule.event.dto;
+package com.triptune.schedule.dto.response;
 
 import com.triptune.schedule.entity.TravelSchedule;
 import java.time.LocalDate;

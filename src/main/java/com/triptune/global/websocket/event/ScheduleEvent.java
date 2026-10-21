@@ -1,6 +1,5 @@
-package com.triptune.schedule.event;
+package com.triptune.global.websocket.event;
 
-import com.triptune.attendee.enums.AttendeePermission;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -8,18 +7,18 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class ScheduleEvent<T> {
     private Long scheduleId;
-    private ScheduleEventType eventType;
+    private EventType eventType;
     private String message;
     private T data;
 
-    private ScheduleEvent(Long scheduleId, ScheduleEventType eventType, String message, T data) {
+    private ScheduleEvent(Long scheduleId, EventType eventType, String message, T data) {
         this.scheduleId = scheduleId;
         this.eventType = eventType;
         this.message = message;
         this.data = data;
     }
 
-    public static <T> ScheduleEvent<T> of(Long scheduleId, ScheduleEventType eventType, T data){
+    public static <T> ScheduleEvent<T> of(Long scheduleId, EventType eventType, T data){
         return new ScheduleEvent<>(
                 scheduleId,
                 eventType,
@@ -28,7 +27,7 @@ public class ScheduleEvent<T> {
         );
     }
 
-    public static <T> ScheduleEvent<T> withNickname(Long scheduleId, ScheduleEventType eventType, String nickname, T data){
+    public static <T> ScheduleEvent<T> withNickname(Long scheduleId, EventType eventType, String nickname, T data){
         return new ScheduleEvent<>(
                 scheduleId,
                 eventType,
@@ -38,7 +37,7 @@ public class ScheduleEvent<T> {
     }
 
 
-    public static <T> ScheduleEvent<T> withPermission(Long scheduleId, ScheduleEventType eventType, String nickname, AttendeePermission permission, T data){
+    public static <T> ScheduleEvent<T> withPermission(Long scheduleId, EventType eventType, String nickname, String permission, T data){
         return new ScheduleEvent<>(
                 scheduleId,
                 eventType,

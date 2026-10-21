@@ -1,4 +1,4 @@
-package com.triptune.schedule.event;
+package com.triptune.global.websocket.event;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -14,7 +14,7 @@ public class ScheduleEventListener {
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handle(ScheduleEvent<?> event){
-        ScheduleEventResponse<Object> eventResponse = ScheduleEventResponse.of(
+        EventResponse<Object> eventResponse = EventResponse.of(
                 event.getEventType(),
                 event.getMessage(),
                 event.getData()

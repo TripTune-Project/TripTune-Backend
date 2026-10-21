@@ -4,12 +4,10 @@ import com.triptune.global.s3.S3ObjectManager;
 import com.triptune.member.entity.Member;
 import com.triptune.member.repository.MemberRepository;
 import com.triptune.route.repository.TravelRouteRepository;
-import com.triptune.route.service.TravelRouteService;
 import com.triptune.schedule.dto.response.*;
-import com.triptune.schedule.event.ScheduleEvent;
-import com.triptune.schedule.event.ScheduleEventListener;
-import com.triptune.schedule.event.ScheduleEventType;
-import com.triptune.schedule.event.dto.ScheduleUpdateEventResponse;
+import com.triptune.global.websocket.event.ScheduleEvent;
+import com.triptune.global.websocket.event.EventType;
+import com.triptune.schedule.dto.response.ScheduleUpdateEventResponse;
 import com.triptune.schedule.repository.dto.ScheduleInfoQueryDto;
 import com.triptune.attendee.service.dto.AuthorDTO;
 import com.triptune.schedule.dto.request.ScheduleCreateRequest;
@@ -29,7 +27,6 @@ import com.triptune.global.response.page.PageResponse;
 import com.triptune.global.response.page.SchedulePageResponse;
 import com.triptune.global.util.PageUtils;
 import com.triptune.travel.repository.dto.PlaceQueryDto;
-import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
@@ -183,7 +180,7 @@ public class TravelScheduleService {
 
         publisher.publishEvent(ScheduleEvent.of(
                 scheduleId,
-                ScheduleEventType.SCHEDULE_UPDATED,
+                EventType.SCHEDULE_UPDATED,
                 ScheduleUpdateEventResponse.from(schedule)
         ));
 
