@@ -62,7 +62,10 @@ TripTune-Backend
 │   │   │   │   └── websocket/            # 실시간 통신(WebSocket) 설정
 │   │   │   ├── member/                   # 사용자 관련 기능
 │   │   │   ├── profile/                  # 프로필 이미지 관련 기능
-│   │   │   ├── schedule/                 # 일정 정보 관련 기능
+│   │   │   ├── schedule/                 # 일정 관련 기능
+│   │   │   ├── attendee/                 # 참석자 관련 기능
+│   │   │   ├── route/                    # 여행 루트 관련 기능
+│   │   │   ├── chat/                     # 채팅 관련 기능
 │   │   │   └── travel/                   # 여행지 관련 기능
 │   │   └── resources/
 │   │       ├── static/images/            # 이미지 파일

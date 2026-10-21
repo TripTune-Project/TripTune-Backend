@@ -3,8 +3,11 @@ package com.triptune.route.service;
 import com.triptune.global.exception.CustomBadRequestException;
 import com.triptune.global.response.page.RoutePageResponse;
 import com.triptune.global.s3.S3ObjectManager;
+import com.triptune.global.websocket.event.EventType;
+import com.triptune.global.websocket.event.ScheduleEvent;
 import com.triptune.route.dto.request.RouteCreateRequest;
 import com.triptune.route.dto.request.RouteUpdateRequest;
+import com.triptune.route.dto.response.RouteVersionEventResponse;
 import com.triptune.route.dto.response.RouteVersionResponse;
 import com.triptune.route.dto.response.RouteResponse;
 import com.triptune.attendee.entity.TravelAttendee;
@@ -21,12 +24,15 @@ import com.triptune.global.message.ErrorCode;
 import com.triptune.global.exception.DataNotFoundException;
 import com.triptune.global.util.PageUtils;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
+
+import static com.triptune.global.websocket.event.EventType.*;
 
 @Service
 @Transactional(readOnly = true)
@@ -38,6 +44,7 @@ public class TravelRouteService {
     private final TravelAttendeeRepository travelAttendeeRepository;
     private final TravelPlaceRepository travelPlaceRepository;
     private final S3ObjectManager s3ObjectManager;
+    private final ApplicationEventPublisher publisher;
 
     public RoutePageResponse<RouteResponse> getTravelRoutes(Long scheduleId, int page) {
         Integer routeVersion = travelScheduleRepository.findRouteVersionById(scheduleId)
@@ -69,6 +76,7 @@ public class TravelRouteService {
         travelRouteRepository.save(route);
 
         schedule.increaseRouteVersion();
+        publishRouteEvent(scheduleId, ROUTE_ADDED, schedule.getRouteVersion());
 
         return RouteVersionResponse.of(schedule.getRouteVersion());
     }
@@ -109,6 +117,8 @@ public class TravelRouteService {
         }
 
         schedule.increaseRouteVersion();
+        publishRouteEvent(scheduleId, ROUTE_UPDATED, schedule.getRouteVersion());
+
         return RouteVersionResponse.of(schedule.getRouteVersion());
     }
 
@@ -145,6 +155,8 @@ public class TravelRouteService {
         }
 
         schedule.increaseRouteVersion();
+        publishRouteEvent(scheduleId, ROUTE_DELETED, schedule.getRouteVersion());
+
         return RouteVersionResponse.of(schedule.getRouteVersion());
     }
 
@@ -157,6 +169,15 @@ public class TravelRouteService {
     private TravelSchedule getSchedule(Long scheduleId){
         return travelScheduleRepository.findById(scheduleId)
                 .orElseThrow(() -> new DataNotFoundException(ErrorCode.SCHEDULE_NOT_FOUND));
+    }
+
+
+    private void publishRouteEvent(Long scheduleId, EventType eventType, Integer routeVersion){
+        publisher.publishEvent(ScheduleEvent.of(
+                scheduleId,
+                eventType,
+                new RouteVersionEventResponse(routeVersion)
+        ));
     }
 
 }

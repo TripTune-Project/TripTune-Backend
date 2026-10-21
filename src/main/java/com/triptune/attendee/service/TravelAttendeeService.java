@@ -12,11 +12,11 @@ import com.triptune.attendee.dto.response.AttendeeResponse;
 import com.triptune.attendee.entity.TravelAttendee;
 import com.triptune.schedule.entity.TravelSchedule;
 import com.triptune.attendee.enums.AttendeeRole;
-import com.triptune.schedule.event.ScheduleEvent;
-import com.triptune.schedule.event.ScheduleEventType;
-import com.triptune.attendee.event.dto.AttendeeCreatedResponse;
-import com.triptune.attendee.event.dto.AttendeePermissionResponse;
-import com.triptune.attendee.event.dto.AttendeeRemovalResponse;
+import com.triptune.global.websocket.event.ScheduleEvent;
+import com.triptune.global.websocket.event.EventType;
+import com.triptune.attendee.dto.response.AttendeeCreateEventResponse;
+import com.triptune.attendee.dto.response.AttendeePermissionEventResponse;
+import com.triptune.attendee.dto.response.AttendeeRemoveEventResponse;
 import com.triptune.attendee.exception.ConflictAttendeeException;
 import com.triptune.attendee.exception.ForbiddenAttendeeException;
 import com.triptune.attendee.repository.TravelAttendeeRepository;
@@ -72,9 +72,9 @@ public class TravelAttendeeService {
 
         publisher.publishEvent(ScheduleEvent.withNickname(
                 scheduleId,
-                ScheduleEventType.ATTENDEE_ADDED,
+                EventType.ATTENDEE_ADDED,
                 guest.getNickname(),
-                AttendeeCreatedResponse.of(attendee, profileUrl)
+                AttendeeCreateEventResponse.of(attendee, profileUrl)
             )
         );
 
@@ -135,10 +135,10 @@ public class TravelAttendeeService {
 
         publisher.publishEvent(ScheduleEvent.withPermission(
                 scheduleId,
-                ScheduleEventType.ATTENDEE_PERMISSION_UPDATED,
+                EventType.ATTENDEE_PERMISSION_UPDATED,
                 attendee.getMember().getNickname(),
-                permissionRequest.getPermission(),
-                AttendeePermissionResponse.from(attendee)
+                attendee.getPermission().getDisplayName(),
+                AttendeePermissionEventResponse.from(attendee)
             )
         );
     }
@@ -158,9 +158,9 @@ public class TravelAttendeeService {
 
         publisher.publishEvent(ScheduleEvent.withNickname(
                 scheduleId,
-                ScheduleEventType.ATTENDEE_LEFT,
+                EventType.ATTENDEE_LEFT,
                 nickname,
-                new AttendeeRemovalResponse(attendeeId)
+                new AttendeeRemoveEventResponse(attendeeId)
             )
         );
     }
@@ -182,9 +182,9 @@ public class TravelAttendeeService {
 
         publisher.publishEvent(ScheduleEvent.withNickname(
                 scheduleId,
-                ScheduleEventType.ATTENDEE_REMOVED,
+                EventType.ATTENDEE_REMOVED,
                 nickname,
-                new AttendeeRemovalResponse(attendeeId)
+                new AttendeeRemoveEventResponse(attendeeId)
             )
         );
     }

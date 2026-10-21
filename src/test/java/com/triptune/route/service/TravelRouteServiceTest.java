@@ -41,6 +41,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -61,6 +62,7 @@ public class TravelRouteServiceTest {
     @Mock private TravelPlaceRepository travelPlaceRepository;
     @Mock private TravelAttendeeRepository travelAttendeeRepository;
     @Mock private S3ObjectManager s3ObjectManager;
+    @Mock private ApplicationEventPublisher publisher;
 
     private TravelSchedule schedule;
 

@@ -11,7 +11,7 @@ public enum AttendeePermission {
     READ(4, "읽기 허용", "편집 및 채팅 불가");
 
     private final int id;
-    private final String permission;
+    private final String displayName;
     private final String description;
 
     public boolean isEnableChat(){
@@ -21,7 +21,7 @@ public enum AttendeePermission {
         return this.equals(ALL) || this.equals(EDIT);
     }
 
-    public String getPermission(){
-        return permission;
+    public String getDisplayName(){
+        return displayName;
     }
 }
