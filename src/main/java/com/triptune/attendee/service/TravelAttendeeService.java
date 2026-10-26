@@ -192,7 +192,7 @@ public class TravelAttendeeService {
 
     private void validateAuthor(Long scheduleId, Long authorId, ErrorCode errorCode){
         boolean isAuthor =  travelAttendeeRepository
-                .existsByTravelSchedule_ScheduleIdAndMember_MemberIdAndRole(scheduleId, authorId, AttendeeRole.AUTHOR);
+                .existsAttendee(scheduleId, authorId, AttendeeRole.AUTHOR);
 
         if(!isAuthor){
             throw new ForbiddenAttendeeException(errorCode);

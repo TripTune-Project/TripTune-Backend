@@ -12,8 +12,8 @@ public class ErrorResponse  {
     private int errorCode;
     private String message;
 
-    @Builder
-    public ErrorResponse(int errorCode, String message) {
+
+    private ErrorResponse(int errorCode, String message) {
         this.success = false;
         this.errorCode = errorCode;
         this.message = message;

@@ -59,6 +59,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc(addFilters = false)
 public class MemberControllerTest {
 
+    private static final String ACCESS_TOKEN = "member_access_token";
+    private static final String REFRESH_TOKEN = "member_refresh_token";
+
     @Autowired private MockMvc mockMvc;
     @Autowired private ObjectMapper objectMapper;
 
@@ -392,7 +395,8 @@ public class MemberControllerTest {
         );
 
         willThrow(new DataExistException(ErrorCode.ALREADY_EXISTED_EMAIL))
-                .given(memberService).join(any(JoinRequest.class));
+                .given(memberService)
+                .join(any(JoinRequest.class));
 
         // when, then
         mockMvc.perform(post("/api/members/join")
@@ -416,7 +420,8 @@ public class MemberControllerTest {
         );
 
         willThrow(new EmailVerifyException(ErrorCode.NOT_VERIFIED_EMAIL))
-                .given(memberService).join(any(JoinRequest.class));
+                .given(memberService)
+                .join(any(JoinRequest.class));
 
         // when, then
         mockMvc.perform(post("/api/members/join")
@@ -435,12 +440,13 @@ public class MemberControllerTest {
         // given
         LoginRequest request = MemberFixture.createLoginRequest("member@email.com", "password12!@");
         LoginResult response = MemberFixture.createLoginResult(
-                "testAccessToken",
-                "testRefreshToken",
+                ACCESS_TOKEN,
+                REFRESH_TOKEN,
                 "닉네임"
         );
 
-        given(memberService.login(any(LoginRequest.class))).willReturn(response);
+        given(memberService.login(any(LoginRequest.class)))
+                .willReturn(response);
 
         // when
         mockMvc.perform(post("/api/members/login")
@@ -450,7 +456,7 @@ public class MemberControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()))
-                .andExpect(jsonPath("$.data.accessToken").value("testAccessToken"))
+                .andExpect(jsonPath("$.data.accessToken").value(ACCESS_TOKEN))
                 .andExpect(jsonPath("$.data.nickname").value("닉네임"));
 
         // then
@@ -552,7 +558,8 @@ public class MemberControllerTest {
         LoginRequest request = createLoginRequest("fail@email.com", "password12!@");
 
         willThrow(new FailLoginException(ErrorCode.FAILED_LOGIN))
-                .given(memberService).login(any(LoginRequest.class));
+                .given(memberService)
+                .login(any(LoginRequest.class));
 
         // when, then
         mockMvc.perform(post("/api/members/login")
@@ -571,7 +578,8 @@ public class MemberControllerTest {
         LoginRequest request = MemberFixture.createLoginRequest("member@email.com", "fail!@");
 
         willThrow(new FailLoginException(ErrorCode.FAILED_LOGIN))
-                .given(memberService).login(any(LoginRequest.class));
+                .given(memberService)
+                .login(any(LoginRequest.class));
 
         // when, then
         mockMvc.perform(post("/api/members/login")
@@ -588,15 +596,14 @@ public class MemberControllerTest {
     @DisplayName("로그아웃")
     void logout() throws Exception {
         // given
-        String accessToken = "testAccessToken";
         LogoutRequest request = MemberFixture.createLogoutRequest("닉네임12");
 
         given(jwtUtils.resolveToken(any(HttpServletRequest.class)))
-                .willReturn(accessToken);
+                .willReturn(ACCESS_TOKEN);
 
         // when
         mockMvc.perform(patch("/api/members/logout")
-                        .header("Authorization", "Bearer " + accessToken)
+                        .header("Authorization", "Bearer " + ACCESS_TOKEN)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
@@ -606,7 +613,7 @@ public class MemberControllerTest {
 
         // then
         verify(jwtUtils).resolveToken(any(HttpServletRequest.class));
-        verify(memberService).logout(any(LogoutRequest.class), eq(accessToken));
+        verify(memberService).logout(any(LogoutRequest.class), eq(ACCESS_TOKEN));
         verify(cookieUtils).deleteAllCookies(any(HttpServletResponse.class));
     }
 
@@ -616,12 +623,11 @@ public class MemberControllerTest {
     @ValueSource(strings = {"", " "})
     void logout_invalidNotBlankNickname(String input) throws Exception {
         // given
-        String accessToken = "testAccessToken";
         LogoutRequest request = MemberFixture.createLogoutRequest(input);
 
         // when, then
         mockMvc.perform(patch("/api/members/logout")
-                        .header("Authorization", "Bearer " + accessToken)
+                        .header("Authorization", "Bearer " + ACCESS_TOKEN)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
@@ -635,12 +641,11 @@ public class MemberControllerTest {
     @DisplayName("로그아웃 시 닉네임 null 값이 들어와 400 반환")
     void logout_invalidNullNickname() throws Exception {
         // given
-        String accessToken = "testAccessToken";
         LogoutRequest request = MemberFixture.createLogoutRequest(null);
 
         // when, then
         mockMvc.perform(patch("/api/members/logout")
-                        .header("Authorization", "Bearer " + accessToken)
+                        .header("Authorization", "Bearer " + ACCESS_TOKEN)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
@@ -654,12 +659,11 @@ public class MemberControllerTest {
     @ValueSource(strings = {"n", "닉", "1", "1@", "닉네임임임임임임임임임임임임임임", "@@@@@@@@@@@@@@@", "12345", "행복1"})
     void logout_invalidNickname(String input) throws Exception {
         // given
-        String accessToken = "testAccessToken";
         LogoutRequest request = MemberFixture.createLogoutRequest(input);
 
         // when, then
         mockMvc.perform(patch("/api/members/logout")
-                        .header("Authorization", "Bearer " + accessToken)
+                        .header("Authorization", "Bearer " + ACCESS_TOKEN)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
@@ -673,17 +677,17 @@ public class MemberControllerTest {
     @DisplayName("로그아웃 시 회원 데이터 없어 404 반환")
     void logout_memberNotFound() throws Exception {
         // given
-        String accessToken = "testAccessToken";
         LogoutRequest request = MemberFixture.createLogoutRequest("notMember");
 
         given(jwtUtils.resolveToken(any(HttpServletRequest.class)))
-                .willReturn(accessToken);
+                .willReturn(ACCESS_TOKEN);
         willThrow(new DataNotFoundException(ErrorCode.MEMBER_NOT_FOUND))
-                .given(memberService).logout(any(LogoutRequest.class), anyString());
+                .given(memberService)
+                .logout(any(LogoutRequest.class), eq(ACCESS_TOKEN));
 
         // when, then
         mockMvc.perform(patch("/api/members/logout")
-                        .header("Authorization", "Bearer " + accessToken)
+                        .header("Authorization", "Bearer " + ACCESS_TOKEN)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
@@ -696,12 +700,11 @@ public class MemberControllerTest {
     @DisplayName("토큰 갱신")
     void refreshToken() throws Exception {
         // given
-        String refreshToken = "testRefreshToken";
-        Cookie cookie = MemberFixture.createRefreshTokenCookie(refreshToken);
-        RefreshTokenResponse response = MemberFixture.createRefreshTokenResponse("testAccessToken");
+        Cookie cookie = MemberFixture.createRefreshTokenCookie(REFRESH_TOKEN);
+        RefreshTokenResponse response = MemberFixture.createRefreshTokenResponse(ACCESS_TOKEN);
 
         given(cookieUtils.getRefreshTokenFromCookie(any(HttpServletRequest.class)))
-                .willReturn(Optional.of(refreshToken));
+                .willReturn(Optional.of(REFRESH_TOKEN));
         given(memberService.refreshToken(anyString()))
                 .willReturn(response);
 
@@ -712,11 +715,11 @@ public class MemberControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()))
-                .andExpect(jsonPath("$.data.accessToken").isNotEmpty());
+                .andExpect(jsonPath("$.data.accessToken").value(ACCESS_TOKEN));
 
         // then
         verify(cookieUtils).getRefreshTokenFromCookie(any(HttpServletRequest.class));
-        verify(memberService).refreshToken(eq(refreshToken));
+        verify(memberService).refreshToken(eq(REFRESH_TOKEN));
     }
 
     @Test
@@ -740,7 +743,8 @@ public class MemberControllerTest {
         given(cookieUtils.getRefreshTokenFromCookie(any(HttpServletRequest.class)))
                 .willReturn(Optional.of(refreshToken));
         willThrow(new CustomJwtUnAuthorizedException(ErrorCode.EXPIRED_JWT_TOKEN))
-                .given(memberService).refreshToken(anyString());
+                .given(memberService)
+                .refreshToken(eq(refreshToken));
 
         // when, then
         mockMvc.perform(post("/api/members/refresh")
@@ -761,7 +765,8 @@ public class MemberControllerTest {
         given(cookieUtils.getRefreshTokenFromCookie(any(HttpServletRequest.class)))
                 .willReturn(Optional.of(refreshToken));
         willThrow(new DataNotFoundException(ErrorCode.MEMBER_NOT_FOUND))
-                .given(memberService).refreshToken(anyString());
+                .given(memberService)
+                .refreshToken(eq(refreshToken));
 
         // when, then
         mockMvc.perform(post("/api/members/refresh")
@@ -783,7 +788,8 @@ public class MemberControllerTest {
         given(cookieUtils.getRefreshTokenFromCookie(any(HttpServletRequest.class)))
                 .willReturn(Optional.of(refreshToken));
         willThrow(new CustomJwtUnAuthorizedException(ErrorCode.MISMATCH_REFRESH_TOKEN))
-                .given(memberService).refreshToken(refreshToken);
+                .given(memberService)
+                .refreshToken(eq(refreshToken));
 
         // when, then
         mockMvc.perform(post("/api/members/refresh")
@@ -873,7 +879,8 @@ public class MemberControllerTest {
         FindPasswordRequest request = MemberFixture.createFindPasswordRequest("notMember@email.com");
 
         willThrow(new DataNotFoundException(ErrorCode.MEMBER_NOT_FOUND))
-                .given(memberService).findPassword(any(FindPasswordRequest.class));
+                .given(memberService)
+                .findPassword(any(FindPasswordRequest.class));
 
         // when, then
         mockMvc.perform(post("/api/members/find-password")
@@ -896,7 +903,8 @@ public class MemberControllerTest {
                 "password12!@"
         );
 
-        given(redisService.getData(anyString())).willReturn("member@email.com");
+        given(redisService.getData(anyString()))
+                .willReturn("member@email.com");
 
         // when
         mockMvc.perform(patch("/api/members/reset-password")
@@ -1110,7 +1118,8 @@ public class MemberControllerTest {
         );
 
         willThrow(new InvalidPasswordResetTokenException(ErrorCode.INVALID_CHANGE_PASSWORD_TOKEN))
-                .given(memberService).resetPassword(any(ResetPasswordRequest.class));
+                .given(memberService)
+                .resetPassword(any(ResetPasswordRequest.class));
 
         // when, then
         mockMvc.perform(patch("/api/members/reset-password")
@@ -1133,10 +1142,12 @@ public class MemberControllerTest {
                 "password12!@"
         );
 
-        given(redisService.getData(anyString())).willReturn("noMember@email.com");
+        given(redisService.getData(anyString()))
+                .willReturn("noMember@email.com");
 
         willThrow(new DataNotFoundException(ErrorCode.MEMBER_NOT_FOUND))
-                .given(memberService).resetPassword(any(ResetPasswordRequest.class));
+                .given(memberService)
+                .resetPassword(any(ResetPasswordRequest.class));
 
         // when, then
         mockMvc.perform(patch("/api/members/reset-password")
@@ -1447,7 +1458,8 @@ public class MemberControllerTest {
         );
 
         willThrow(new DataNotFoundException(ErrorCode.MEMBER_NOT_FOUND))
-                .given(memberService).changePassword(anyLong(), any(ChangePasswordRequest.class));
+                .given(memberService)
+                .changePassword(eq(notMember.getMemberId()), any(ChangePasswordRequest.class));
 
         // when, then
         mockMvc.perform(patch("/api/members/change-password")
@@ -1478,7 +1490,8 @@ public class MemberControllerTest {
         );
 
         willThrow(new UnsupportedSocialMemberException(ErrorCode.SOCIAL_MEMBER_PASSWORD_CHANGE_NOT_ALLOWED))
-                .given(memberService).changePassword(anyLong(), any(ChangePasswordRequest.class));
+                .given(memberService)
+                .changePassword(eq(member.getMemberId()), any(ChangePasswordRequest.class));
 
         // when, then
         mockMvc.perform(patch("/api/members/change-password")
@@ -1509,7 +1522,8 @@ public class MemberControllerTest {
         );
 
         willThrow(new IncorrectPasswordException(ErrorCode.INCORRECT_PASSWORD))
-                .given(memberService).changePassword(anyLong(), any(ChangePasswordRequest.class));
+                .given(memberService)
+                .changePassword(eq(member.getMemberId()), any(ChangePasswordRequest.class));
 
         // when, then
         mockMvc.perform(patch("/api/members/change-password")
@@ -1537,7 +1551,8 @@ public class MemberControllerTest {
         String profileImageUrl = "http://test.com/memberImage";
         MemberInfoResponse response = MemberFixture.createMemberInfoResponse(member, profileImageUrl);
 
-        given(memberService.getMemberInfo(anyLong())).willReturn(response);
+        given(memberService.getMemberInfo(anyLong()))
+                .willReturn(response);
 
         // when
         mockMvc.perform(get("/api/members/info"))
@@ -1560,7 +1575,8 @@ public class MemberControllerTest {
         SecurityTestUtils.mockAuthentication(notMember);
 
         willThrow(new DataNotFoundException(ErrorCode.MEMBER_NOT_FOUND))
-                .given(memberService).getMemberInfo(anyLong());
+                .given(memberService)
+                .getMemberInfo(eq(notMember.getMemberId()));
 
         // when, then
         mockMvc.perform(get("/api/members/info"))
@@ -1671,7 +1687,8 @@ public class MemberControllerTest {
         ChangeNicknameRequest request = MemberFixture.createChangeNicknameRequest("newNickname");
 
         willThrow(new DataNotFoundException(ErrorCode.MEMBER_NOT_FOUND))
-                .given(memberService).changeNickname(anyLong(), any(ChangeNicknameRequest.class));
+                .given(memberService)
+                .changeNickname(eq(notMember.getMemberId()), any(ChangeNicknameRequest.class));
 
         // when, then
         mockMvc.perform(patch("/api/members/change-nickname")
@@ -1698,7 +1715,8 @@ public class MemberControllerTest {
         ChangeNicknameRequest request = MemberFixture.createChangeNicknameRequest(member.getNickname());
 
         willThrow(new DataExistException(ErrorCode.ALREADY_EXISTED_NICKNAME))
-                .given(memberService).changeNickname(anyLong(), any(ChangeNicknameRequest.class));
+                .given(memberService)
+                .changeNickname(eq(member.getMemberId()), any(ChangeNicknameRequest.class));
 
         // when, then
         mockMvc.perform(patch("/api/members/change-nickname")
@@ -1816,7 +1834,8 @@ public class MemberControllerTest {
         EmailRequest request = MemberFixture.createEmailRequest("member@email.com");
 
         willThrow(new DataExistException(ErrorCode.ALREADY_EXISTED_EMAIL))
-                .given(memberService).changeEmail(anyLong(), any(EmailRequest.class));
+                .given(memberService)
+                .changeEmail(eq(member.getMemberId()), any(EmailRequest.class));
 
         // when, then
         mockMvc.perform(patch("/api/members/change-email")
@@ -1845,7 +1864,8 @@ public class MemberControllerTest {
         given(redisService.getEmailData(any(), anyString()))
                 .willReturn(null);
         willThrow(new EmailVerifyException(ErrorCode.NOT_VERIFIED_EMAIL))
-                .given(memberService).changeEmail(anyLong(), any(EmailRequest.class));
+                .given(memberService)
+                .changeEmail(eq(member.getMemberId()), any(EmailRequest.class));
 
         // when, then
         mockMvc.perform(patch("/api/members/change-email")
@@ -1867,10 +1887,12 @@ public class MemberControllerTest {
 
         EmailRequest request = MemberFixture.createEmailRequest("changeEmail@email.com");
 
-        given(redisService.getEmailData(any(), anyString())).willReturn("true");
+        given(redisService.getEmailData(any(), anyString()))
+                .willReturn("true");
 
         willThrow(new DataNotFoundException(ErrorCode.MEMBER_NOT_FOUND))
-                .given(memberService).changeEmail(anyLong(), any(EmailRequest.class));
+                .given(memberService)
+                .changeEmail(eq(notMember.getMemberId()), any(EmailRequest.class));
 
         // when, then
         mockMvc.perform(patch("/api/members/change-email")
@@ -1906,7 +1928,6 @@ public class MemberControllerTest {
     @DisplayName("회원 탈퇴")
     void deactivateMember() throws Exception {
         // given
-        String accessToken = "testAccessToken";
         ProfileImage profileImage = ProfileImageFixture.createProfileImage("memberImage");
         Member member = MemberFixture.createNativeTypeMemberWithId(
                 1L,
@@ -1918,7 +1939,7 @@ public class MemberControllerTest {
         DeactivateRequest request = MemberFixture.createDeactivateRequest("password12!@");
 
         given(jwtUtils.resolveToken(any(HttpServletRequest.class)))
-                .willReturn(accessToken);
+                .willReturn(ACCESS_TOKEN);
 
         // when
         mockMvc.perform(patch("/api/members/deactivate")
@@ -1931,7 +1952,7 @@ public class MemberControllerTest {
 
         // then
         verify(jwtUtils).resolveToken(any(HttpServletRequest.class));
-        verify(memberService).deactivateMember(eq(member.getMemberId()), eq(accessToken), any(DeactivateRequest.class));
+        verify(memberService).deactivateMember(eq(member.getMemberId()), eq(ACCESS_TOKEN), any(DeactivateRequest.class));
         verify(cookieUtils).deleteAllCookies(any(HttpServletResponse.class));
     }
 
@@ -2012,9 +2033,14 @@ public class MemberControllerTest {
         DeactivateRequest request = MemberFixture.createDeactivateRequest("test123@");
 
         given(jwtUtils.resolveToken(any(HttpServletRequest.class)))
-                .willReturn("testAccessToken");
+                .willReturn(ACCESS_TOKEN);
         willThrow(new DataNotFoundException(ErrorCode.MEMBER_NOT_FOUND))
-                .given(memberService).deactivateMember(anyLong(), anyString(), any(DeactivateRequest.class));
+                .given(memberService)
+                .deactivateMember(
+                        eq(notMember.getMemberId()),
+                        eq(ACCESS_TOKEN),
+                        any(DeactivateRequest.class)
+                );
 
 
         // when, then
@@ -2043,9 +2069,14 @@ public class MemberControllerTest {
         DeactivateRequest request = MemberFixture.createDeactivateRequest("test123@");
 
         given(jwtUtils.resolveToken(any(HttpServletRequest.class)))
-                .willReturn("testAccessToken");
+                .willReturn(ACCESS_TOKEN);
         willThrow(new UnsupportedSocialMemberException(ErrorCode.SOCIAL_MEMBER_DEACTIVATE_NOT_ALLOWED))
-                .given(memberService).deactivateMember(anyLong(), anyString(), any(DeactivateRequest.class));
+                .given(memberService)
+                .deactivateMember(
+                        eq(member.getMemberId()),
+                        eq(ACCESS_TOKEN),
+                        any(DeactivateRequest.class)
+                );
 
         // when, then
         mockMvc.perform(patch("/api/members/deactivate")
@@ -2074,9 +2105,14 @@ public class MemberControllerTest {
         DeactivateRequest request = MemberFixture.createDeactivateRequest("incorrect12!@");
 
         given(jwtUtils.resolveToken(any(HttpServletRequest.class)))
-                .willReturn("testAccessToken");
+                .willReturn(ACCESS_TOKEN);
         willThrow(new IncorrectPasswordException(ErrorCode.INCORRECT_PASSWORD))
-                .given(memberService).deactivateMember(anyLong(), anyString(), any(DeactivateRequest.class));
+                .given(memberService)
+                .deactivateMember(
+                        eq(member.getMemberId()),
+                        eq(ACCESS_TOKEN),
+                        any(DeactivateRequest.class)
+                );
 
         // when, then
         mockMvc.perform(patch("/api/members/deactivate")

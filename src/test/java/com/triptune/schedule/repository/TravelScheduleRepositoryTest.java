@@ -4,6 +4,7 @@ import com.triptune.attendee.repository.TravelAttendeeRepository;
 import com.triptune.common.entity.*;
 import com.triptune.common.fixture.*;
 import com.triptune.common.repository.*;
+import com.triptune.global.websocket.event.ScheduleEvent;
 import com.triptune.member.entity.Member;
 import com.triptune.member.fixture.MemberFixture;
 import com.triptune.member.repository.MemberRepository;
@@ -32,11 +33,13 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.ActiveProfiles;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import static com.triptune.attendee.enums.AttendeePermission.*;
@@ -44,6 +47,9 @@ import static com.triptune.attendee.enums.AttendeeRole.*;
 import static java.lang.Thread.sleep;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 @DataJpaTest
 @Import({QuerydslConfig.class})
@@ -431,39 +437,6 @@ public class TravelScheduleRepositoryTest {
     }
 
     @Test
-    @DisplayName("일정 수정")
-    void updateTravelSchedule() {
-        // given
-        TravelSchedule savedSchedule = travelScheduleRepository.save(
-                TravelScheduleFixture.createSchedule("테스트 일정")
-        );
-
-        ScheduleUpdateRequest request = TravelScheduleFixture.createScheduleUpdateRequest(
-                "수정 테스트",
-                savedSchedule.getStartDate(),
-                savedSchedule.getEndDate(),
-                savedSchedule.getScheduleVersion()
-        );
-
-        // when
-        savedSchedule.updateSchedule(
-                request.getScheduleName(),
-                request.getStartDate(),
-                request.getEndDate()
-        );
-
-        // then
-        em.flush();
-        em.clear();
-
-        TravelSchedule findSchedule = travelScheduleRepository.findById(savedSchedule.getScheduleId()).orElseThrow();
-
-        assertThat(findSchedule.getScheduleName()).isEqualTo("수정 테스트");
-        assertThat(findSchedule.getScheduleVersion()).isEqualTo(1);
-        assertThat(findSchedule.getRouteVersion()).isZero();
-    }
-
-    @Test
     @DisplayName("routeVersion 조회")
     void findRouteVersionById() {
         // given
@@ -477,6 +450,59 @@ public class TravelScheduleRepositoryTest {
 
         // then
         assertThat(routeVersion).isZero();
+    }
+
+    @Test
+    @DisplayName("일정 수정")
+    void updateSchedule() {
+        // given
+        TravelSchedule savedSchedule = travelScheduleRepository.save(
+                TravelScheduleFixture.createSchedule("테스트 일정")
+        );
+
+        // when
+        int updated = travelScheduleRepository.updateSchedule(
+                savedSchedule.getScheduleId(),
+                "수정 테스트",
+                LocalDate.now(),
+                LocalDate.now().plusDays(3),
+                savedSchedule.getScheduleVersion()
+        );
+
+        // then
+        em.flush();
+        em.clear();
+
+        TravelSchedule findSchedule = travelScheduleRepository.findById(savedSchedule.getScheduleId()).orElseThrow();
+
+        assertThat(updated).isEqualTo(1);
+        assertThat(findSchedule.getScheduleName()).isEqualTo("수정 테스트");
+        assertThat(findSchedule.getScheduleVersion()).isEqualTo(1);
+        assertThat(findSchedule.getRouteVersion()).isZero();
+
+    }
+
+
+
+    @Test
+    @DisplayName("일정 수정 시 버전 충돌로 0 반환")
+    void updateSchedule_conflictScheduleVersion() {
+        // given
+        TravelSchedule savedSchedule = travelScheduleRepository.save(
+                TravelScheduleFixture.createSchedule("테스트 일정")
+        );
+
+        // when
+        int updated = travelScheduleRepository.updateSchedule(
+                savedSchedule.getScheduleId(),
+                "수정 테스트",
+                LocalDate.now(),
+                LocalDate.now().plusDays(3),
+                1
+        );
+
+        // then
+        assertThat(updated).isEqualTo(0);
     }
 
 

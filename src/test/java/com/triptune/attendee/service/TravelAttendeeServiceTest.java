@@ -143,12 +143,16 @@ public class TravelAttendeeServiceTest {
 
         AttendeeRequest attendeeRequest = TravelAttendeeFixture.createAttendeeRequest(newMember.getEmail(), AttendeePermission.CHAT);
 
-        when(travelAttendeeRepository.countByTravelSchedule_ScheduleId(anyLong())).thenReturn(4);
-        when(travelAttendeeRepository.existsByTravelSchedule_ScheduleIdAndMember_MemberIdAndRole(anyLong(), anyLong(), any(AttendeeRole.class)))
+        when(travelAttendeeRepository.countByTravelSchedule_ScheduleId(anyLong()))
+                .thenReturn(4);
+        when(travelAttendeeRepository.existsAttendee(anyLong(), anyLong(), any(AttendeeRole.class)))
                 .thenReturn(true);
-        when(travelScheduleRepository.findById(anyLong())).thenReturn(Optional.of(schedule));
-        when(memberRepository.findByEmail(anyString())).thenReturn(Optional.of(newMember));
-        when(travelAttendeeRepository.existsByTravelSchedule_ScheduleIdAndMember_MemberId(anyLong(), anyLong())).thenReturn(false);
+        when(travelScheduleRepository.findById(anyLong()))
+                .thenReturn(Optional.of(schedule));
+        when(memberRepository.findByEmail(anyString()))
+                .thenReturn(Optional.of(newMember));
+        when(travelAttendeeRepository.existsByTravelSchedule_ScheduleIdAndMember_MemberId(anyLong(), anyLong()))
+                .thenReturn(false);
 
 
         // when, then
@@ -180,8 +184,9 @@ public class TravelAttendeeServiceTest {
         // given
         AttendeeRequest attendeeRequest = TravelAttendeeFixture.createAttendeeRequest(member3.getEmail(), AttendeePermission.CHAT);
 
-        when(travelAttendeeRepository.countByTravelSchedule_ScheduleId(anyLong())).thenReturn(4);
-        when(travelAttendeeRepository.existsByTravelSchedule_ScheduleIdAndMember_MemberIdAndRole(anyLong(), anyLong(), any(AttendeeRole.class)))
+        when(travelAttendeeRepository.countByTravelSchedule_ScheduleId(anyLong()))
+                .thenReturn(4);
+        when(travelAttendeeRepository.existsAttendee(anyLong(), anyLong(), any(AttendeeRole.class)))
                 .thenReturn(false);
 
         // when, then
@@ -199,10 +204,12 @@ public class TravelAttendeeServiceTest {
         // given
         AttendeeRequest attendeeRequest = TravelAttendeeFixture.createAttendeeRequest(member3.getEmail(), AttendeePermission.CHAT);
 
-        when(travelAttendeeRepository.countByTravelSchedule_ScheduleId(anyLong())).thenReturn(4);
-        when(travelAttendeeRepository.existsByTravelSchedule_ScheduleIdAndMember_MemberIdAndRole(anyLong(), anyLong(), any(AttendeeRole.class)))
+        when(travelAttendeeRepository.countByTravelSchedule_ScheduleId(anyLong()))
+                .thenReturn(4);
+        when(travelAttendeeRepository.existsAttendee(anyLong(), anyLong(), any(AttendeeRole.class)))
                 .thenReturn(true);
-        when(travelScheduleRepository.findById(anyLong())).thenReturn(Optional.empty());
+        when(travelScheduleRepository.findById(anyLong()))
+                .thenReturn(Optional.empty());
 
         // when, then
         DataNotFoundException fail = assertThrows(DataNotFoundException.class,
@@ -218,11 +225,14 @@ public class TravelAttendeeServiceTest {
         // given
         AttendeeRequest attendeeRequest = TravelAttendeeFixture.createAttendeeRequest(member3.getEmail(), AttendeePermission.CHAT);
 
-        when(travelAttendeeRepository.countByTravelSchedule_ScheduleId(anyLong())).thenReturn(4);
-        when(travelAttendeeRepository.existsByTravelSchedule_ScheduleIdAndMember_MemberIdAndRole(anyLong(), anyLong(), any(AttendeeRole.class)))
+        when(travelAttendeeRepository.countByTravelSchedule_ScheduleId(anyLong()))
+                .thenReturn(4);
+        when(travelAttendeeRepository.existsAttendee(anyLong(), anyLong(), any(AttendeeRole.class)))
                 .thenReturn(true);
-        when(travelScheduleRepository.findById(anyLong())).thenReturn(Optional.of(schedule));
-        when(memberRepository.findByEmail(anyString())).thenReturn(Optional.empty());
+        when(travelScheduleRepository.findById(anyLong()))
+                .thenReturn(Optional.of(schedule));
+        when(memberRepository.findByEmail(anyString()))
+                .thenReturn(Optional.empty());
 
         // when, then
         DataNotFoundException fail = assertThrows(DataNotFoundException.class,
@@ -241,12 +251,16 @@ public class TravelAttendeeServiceTest {
 
         AttendeeRequest attendeeRequest = TravelAttendeeFixture.createAttendeeRequest(newMember.getEmail(), AttendeePermission.CHAT);
 
-        when(travelAttendeeRepository.countByTravelSchedule_ScheduleId(anyLong())).thenReturn(4);
-        when(travelAttendeeRepository.existsByTravelSchedule_ScheduleIdAndMember_MemberIdAndRole(anyLong(), anyLong(), any(AttendeeRole.class)))
+        when(travelAttendeeRepository.countByTravelSchedule_ScheduleId(anyLong()))
+                .thenReturn(4);
+        when(travelAttendeeRepository.existsAttendee(anyLong(), anyLong(), any(AttendeeRole.class)))
                 .thenReturn(true);
-        when(travelScheduleRepository.findById(anyLong())).thenReturn(Optional.of(schedule));
-        when(memberRepository.findByEmail(anyString())).thenReturn(Optional.of(newMember));
-        when(travelAttendeeRepository.existsByTravelSchedule_ScheduleIdAndMember_MemberId(anyLong(), anyLong())).thenReturn(true);
+        when(travelScheduleRepository.findById(anyLong()))
+                .thenReturn(Optional.of(schedule));
+        when(memberRepository.findByEmail(anyString())).
+                thenReturn(Optional.of(newMember));
+        when(travelAttendeeRepository.existsByTravelSchedule_ScheduleIdAndMember_MemberId(anyLong(), anyLong()))
+                .thenReturn(true);
 
 
         // when, then
@@ -267,7 +281,7 @@ public class TravelAttendeeServiceTest {
 
         AttendeePermissionRequest request = TravelAttendeeFixture.createAttendeePermissionRequest(AttendeePermission.READ);
 
-        when(travelAttendeeRepository.existsByTravelSchedule_ScheduleIdAndMember_MemberIdAndRole(anyLong(), anyLong(), any(AttendeeRole.class)))
+        when(travelAttendeeRepository.existsAttendee(anyLong(), anyLong(), any(AttendeeRole.class)))
                 .thenReturn(true);
         when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndAttendeeId(anyLong(), anyLong()))
                 .thenReturn(Optional.of(guest));
@@ -295,7 +309,8 @@ public class TravelAttendeeServiceTest {
 
         AttendeePermissionRequest request = TravelAttendeeFixture.createAttendeePermissionRequest(AttendeePermission.READ);
 
-        when(travelAttendeeRepository.existsByTravelSchedule_ScheduleIdAndMember_MemberIdAndRole(anyLong(), anyLong(), any())).thenReturn(false);
+        when(travelAttendeeRepository.existsAttendee(anyLong(), anyLong(), any()))
+                .thenReturn(false);
 
         // when
         ForbiddenAttendeeException fail = assertThrows(ForbiddenAttendeeException.class,
@@ -317,7 +332,7 @@ public class TravelAttendeeServiceTest {
         // given
         AttendeePermissionRequest request = TravelAttendeeFixture.createAttendeePermissionRequest(AttendeePermission.READ);
 
-        when(travelAttendeeRepository.existsByTravelSchedule_ScheduleIdAndMember_MemberIdAndRole(anyLong(), anyLong(), any()))
+        when(travelAttendeeRepository.existsAttendee(anyLong(), anyLong(), any()))
                 .thenReturn(true);
         when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndAttendeeId(anyLong(), anyLong()))
                 .thenReturn(Optional.empty());
@@ -346,7 +361,7 @@ public class TravelAttendeeServiceTest {
 
         AttendeePermissionRequest request = TravelAttendeeFixture.createAttendeePermissionRequest(AttendeePermission.READ);
 
-        when(travelAttendeeRepository.existsByTravelSchedule_ScheduleIdAndMember_MemberIdAndRole(anyLong(), anyLong(), any()))
+        when(travelAttendeeRepository.existsAttendee(anyLong(), anyLong(), any()))
                 .thenReturn(true);
         when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndAttendeeId(anyLong(), anyLong()))
                 .thenReturn(Optional.of(author));
@@ -380,7 +395,7 @@ public class TravelAttendeeServiceTest {
         travelAttendeeService.leaveAttendee(1L, 2L);
 
         // then
-        verify(travelAttendeeRepository, times(1)).deleteById(any());
+        verify(travelAttendeeRepository).deleteById(any());
     }
 
     @Test
@@ -423,7 +438,7 @@ public class TravelAttendeeServiceTest {
         Member guestMember = MemberFixture.createNativeTypeMemberWithId(2L, "guestMember@email.com", profileImage);
         TravelAttendee guest = TravelAttendeeFixture.createGuestAttendeeWithId(1L, schedule, guestMember, AttendeePermission.READ);
 
-        when(travelAttendeeRepository.existsByTravelSchedule_ScheduleIdAndMember_MemberIdAndRole(anyLong(), anyLong(), any()))
+        when(travelAttendeeRepository.existsAttendee(anyLong(), anyLong(), any()))
                 .thenReturn(true);
         when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndAttendeeId(anyLong(), anyLong()))
                 .thenReturn(Optional.of(guest));
@@ -442,7 +457,7 @@ public class TravelAttendeeServiceTest {
         // given
         TravelAttendee guest = TravelAttendeeFixture.createGuestAttendee(schedule, member2, AttendeePermission.READ);
 
-        when(travelAttendeeRepository.existsByTravelSchedule_ScheduleIdAndMember_MemberIdAndRole(anyLong(), anyLong(), any()))
+        when(travelAttendeeRepository.existsAttendee(anyLong(), anyLong(), any()))
                 .thenReturn(false);
 
         // when
@@ -461,7 +476,7 @@ public class TravelAttendeeServiceTest {
     @DisplayName("일정 내보내기 시 참석자를 찾을 수 없어 예외 발생")
     void removeAttendee_attendeeNotFound(){
         // given
-        when(travelAttendeeRepository.existsByTravelSchedule_ScheduleIdAndMember_MemberIdAndRole(anyLong(), anyLong(), any()))
+        when(travelAttendeeRepository.existsAttendee(anyLong(), anyLong(), any()))
                 .thenReturn(true);
 
         when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndAttendeeId(eq(1L), eq(1000L)))
@@ -487,7 +502,7 @@ public class TravelAttendeeServiceTest {
         Member removeMember = MemberFixture.createNativeTypeMemberWithId(1L, "removeMember@email.com", profileImage);
         TravelAttendee author = TravelAttendeeFixture.createAuthorAttendeeWithId(1L, schedule, removeMember);
 
-        when(travelAttendeeRepository.existsByTravelSchedule_ScheduleIdAndMember_MemberIdAndRole(anyLong(), anyLong(), any(AttendeeRole.class)))
+        when(travelAttendeeRepository.existsAttendee(anyLong(), anyLong(), any(AttendeeRole.class)))
                 .thenReturn(true);
         when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndAttendeeId(anyLong(), anyLong()))
                 .thenReturn(Optional.of(author));

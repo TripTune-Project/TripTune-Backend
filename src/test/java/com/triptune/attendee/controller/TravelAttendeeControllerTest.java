@@ -38,8 +38,7 @@ import java.util.List;
 import static com.triptune.attendee.enums.AttendeePermission.CHAT;
 import static com.triptune.attendee.enums.AttendeePermission.READ;
 import static org.hamcrest.Matchers.containsString;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willThrow;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -50,8 +49,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(TravelAttendeeController.class)
 @AutoConfigureMockMvc(addFilters = false)
 public class TravelAttendeeControllerTest {
-
-    private static final Long SCHEDULE_ID = 1L;
 
     @Autowired private MockMvc mockMvc;
     @Autowired private ObjectMapper objectMapper;
@@ -65,6 +62,7 @@ public class TravelAttendeeControllerTest {
     private String member1ProfileUrl;
     private String member2ProfileUrl;
 
+    private TravelSchedule schedule;
 
     @BeforeEach
     void setUp(){
@@ -75,6 +73,8 @@ public class TravelAttendeeControllerTest {
         ProfileImage profileImage2 = ProfileImageFixture.createProfileImage("member2Image");
         member2 = MemberFixture.createNativeTypeMemberWithId(2L, "member2@email.com", profileImage2);
         member2ProfileUrl = S3Fixture.createS3ObjectUrl(profileImage2.getS3ObjectKey());
+
+        schedule = TravelScheduleFixture.createScheduleWithId(1L, "테스트 여행");
     }
 
     @Test
@@ -92,7 +92,7 @@ public class TravelAttendeeControllerTest {
 
         SecurityTestUtils.mockAuthentication(member1);
 
-        given(travelAttendeeService.getAttendeesByScheduleId(anyLong()))
+        given(travelAttendeeService.getAttendeesByScheduleId(eq(schedule.getScheduleId())))
                 .willReturn(response);
 
         // when, then
@@ -119,7 +119,7 @@ public class TravelAttendeeControllerTest {
         SecurityTestUtils.mockAuthentication(member1);
 
         // when, then
-        mockMvc.perform(post("/api/schedules/{scheduleId}/attendees", SCHEDULE_ID)
+        mockMvc.perform(post("/api/schedules/{scheduleId}/attendees", schedule.getScheduleId())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
@@ -139,7 +139,7 @@ public class TravelAttendeeControllerTest {
         SecurityTestUtils.mockAuthentication(member1);
 
         // when, then
-        mockMvc.perform(post("/api/schedules/{scheduleId}/attendees", SCHEDULE_ID)
+        mockMvc.perform(post("/api/schedules/{scheduleId}/attendees", schedule.getScheduleId())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
@@ -156,7 +156,7 @@ public class TravelAttendeeControllerTest {
         SecurityTestUtils.mockAuthentication(member1);
 
         // when, then
-        mockMvc.perform(post("/api/schedules/{scheduleId}/attendees", SCHEDULE_ID)
+        mockMvc.perform(post("/api/schedules/{scheduleId}/attendees", schedule.getScheduleId())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
@@ -175,7 +175,7 @@ public class TravelAttendeeControllerTest {
         SecurityTestUtils.mockAuthentication(member1);
 
         // when, then
-        mockMvc.perform(post("/api/schedules/{scheduleId}/attendees", SCHEDULE_ID)
+        mockMvc.perform(post("/api/schedules/{scheduleId}/attendees", schedule.getScheduleId())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
@@ -192,7 +192,7 @@ public class TravelAttendeeControllerTest {
         SecurityTestUtils.mockAuthentication(member1);
 
         // when, then
-        mockMvc.perform(post("/api/schedules/{scheduleId}/attendees", SCHEDULE_ID)
+        mockMvc.perform(post("/api/schedules/{scheduleId}/attendees", schedule.getScheduleId())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
@@ -209,10 +209,15 @@ public class TravelAttendeeControllerTest {
         SecurityTestUtils.mockAuthentication(member1);
 
         willThrow(new ConflictAttendeeException(ErrorCode.OVER_ATTENDEE_NUMBER))
-                .given(travelAttendeeService).createAttendee(anyLong(), anyLong(), any(AttendeeRequest.class));
+                .given(travelAttendeeService)
+                .createAttendee(
+                        eq(schedule.getScheduleId()),
+                        eq(member1.getMemberId()),
+                        any(AttendeeRequest.class)
+                );
 
         // when, then
-        mockMvc.perform(post("/api/schedules/{scheduleId}/attendees", SCHEDULE_ID)
+        mockMvc.perform(post("/api/schedules/{scheduleId}/attendees", schedule.getScheduleId())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
@@ -230,10 +235,15 @@ public class TravelAttendeeControllerTest {
         SecurityTestUtils.mockAuthentication(member2);
 
         willThrow(new ForbiddenAttendeeException(ErrorCode.FORBIDDEN_SHARE_ATTENDEE))
-                .given(travelAttendeeService).createAttendee(anyLong(), anyLong(), any(AttendeeRequest.class));
+                .given(travelAttendeeService)
+                .createAttendee(
+                        eq(schedule.getScheduleId()),
+                        eq(member2.getMemberId()),
+                        any(AttendeeRequest.class)
+                );
 
         // when, then
-        mockMvc.perform(post("/api/schedules/{scheduleId}/attendees", SCHEDULE_ID)
+        mockMvc.perform(post("/api/schedules/{scheduleId}/attendees", schedule.getScheduleId())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
@@ -251,10 +261,15 @@ public class TravelAttendeeControllerTest {
         SecurityTestUtils.mockAuthentication(member1);
 
         willThrow(new DataNotFoundException(ErrorCode.MEMBER_NOT_FOUND))
-                .given(travelAttendeeService).createAttendee(anyLong(), anyLong(), any(AttendeeRequest.class));
+                .given(travelAttendeeService)
+                .createAttendee(
+                        eq(schedule.getScheduleId()),
+                        eq(member1.getMemberId()),
+                        any(AttendeeRequest.class)
+                );
 
         // when, then
-        mockMvc.perform(post("/api/schedules/{scheduleId}/attendees", SCHEDULE_ID)
+        mockMvc.perform(post("/api/schedules/{scheduleId}/attendees", schedule.getScheduleId())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
@@ -272,11 +287,16 @@ public class TravelAttendeeControllerTest {
         SecurityTestUtils.mockAuthentication(member1);
 
         willThrow(new ConflictAttendeeException(ErrorCode.ALREADY_ATTENDEE))
-                .given(travelAttendeeService).createAttendee(anyLong(), anyLong(), any(AttendeeRequest.class));
+                .given(travelAttendeeService)
+                .createAttendee(
+                        eq(schedule.getScheduleId()),
+                        eq(member1.getMemberId()),
+                        any(AttendeeRequest.class)
+                );
 
 
         // when, then
-        mockMvc.perform(post("/api/schedules/{scheduleId}/attendees", SCHEDULE_ID)
+        mockMvc.perform(post("/api/schedules/{scheduleId}/attendees", schedule.getScheduleId())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
@@ -290,12 +310,14 @@ public class TravelAttendeeControllerTest {
     @DisplayName("일정 참석자 접근 권한 수정")
     void updateAttendeePermission() throws Exception{
         // given
-        AttendeePermissionRequest request = TravelAttendeeFixture.createAttendeePermissionRequest(CHAT);
         SecurityTestUtils.mockAuthentication(member1);
+
+        TravelAttendee guest1 = TravelAttendeeFixture.createGuestAttendeeWithId(1L, schedule, member2, READ);
+        AttendeePermissionRequest request = TravelAttendeeFixture.createAttendeePermissionRequest(CHAT);
 
         // when, then
         mockMvc.perform(patch("/api/schedules/{scheduleId}/attendees/{attendeeId}",
-                        SCHEDULE_ID, member2.getMemberId())
+                        schedule.getScheduleId(), guest1.getAttendeeId())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
@@ -314,7 +336,7 @@ public class TravelAttendeeControllerTest {
 
         // when, then
         mockMvc.perform(patch("/api/schedules/{scheduleId}/attendees/{attendeeId}",
-                        SCHEDULE_ID, member2.getMemberId())
+                        schedule.getScheduleId(), 1L)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
@@ -327,15 +349,22 @@ public class TravelAttendeeControllerTest {
     @DisplayName("일정 참석자 접근 권한 수정 시 요청자가 작성자가 아니여서 403 반환")
     void updateAttendeePermission_forbiddenNotAuthor() throws Exception{
         // given
-        AttendeePermissionRequest request = TravelAttendeeFixture.createAttendeePermissionRequest(CHAT);
         SecurityTestUtils.mockAuthentication(member2);
 
+        AttendeePermissionRequest request = TravelAttendeeFixture.createAttendeePermissionRequest(CHAT);
+
         willThrow(new ForbiddenAttendeeException(ErrorCode.FORBIDDEN_UPDATE_ATTENDEE_PERMISSION))
-                .given(travelAttendeeService).updateAttendeePermission(any(AttendeePermissionRequest.class), anyLong(), anyLong(), anyLong());
+                .given(travelAttendeeService)
+                .updateAttendeePermission(
+                        any(AttendeePermissionRequest.class),
+                        eq(schedule.getScheduleId()),
+                        eq(member2.getMemberId()),
+                        eq(1L)
+                );
 
         // when, then
         mockMvc.perform(patch("/api/schedules/{scheduleId}/attendees/{attendeeId}",
-                        SCHEDULE_ID, member1.getMemberId())
+                        schedule.getScheduleId(), 1L)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
@@ -352,12 +381,18 @@ public class TravelAttendeeControllerTest {
         SecurityTestUtils.mockAuthentication(member1);
 
         willThrow(new DataNotFoundException(ErrorCode.ATTENDEE_NOT_FOUND))
-                .given(travelAttendeeService).updateAttendeePermission(any(AttendeePermissionRequest.class), anyLong(), anyLong(), anyLong());
+                .given(travelAttendeeService)
+                .updateAttendeePermission(
+                        any(AttendeePermissionRequest.class),
+                        eq(schedule.getScheduleId()),
+                        eq(member1.getMemberId()),
+                        eq(1000L)
+                );
 
 
         // when, then
         mockMvc.perform(patch("/api/schedules/{scheduleId}/attendees/{attendeeId}",
-                        SCHEDULE_ID, 1000L)
+                        schedule.getScheduleId(), 1000L)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
@@ -371,20 +406,22 @@ public class TravelAttendeeControllerTest {
     @DisplayName("일정 참석자 접근 권한 수정 시 작성자 접근 권한 수정 시도로 403 반환")
     void updateAttendeePermission_forbiddenUpdateAuthorPermission() throws Exception{
         // given
-        AttendeePermissionRequest request = TravelAttendeeFixture.createAttendeePermissionRequest(CHAT);
         SecurityTestUtils.mockAuthentication(member1);
+        TravelAttendee author = TravelAttendeeFixture.createAuthorAttendeeWithId(1L, schedule, member1);
+        AttendeePermissionRequest request = TravelAttendeeFixture.createAttendeePermissionRequest(CHAT);
+
 
         willThrow(new ForbiddenAttendeeException(ErrorCode.FORBIDDEN_UPDATE_AUTHOR_PERMISSION))
                 .given(travelAttendeeService).updateAttendeePermission(
                         any(AttendeePermissionRequest.class),
-                        anyLong(),
-                        anyLong(),
-                        anyLong()
+                        eq(schedule.getScheduleId()),
+                        eq(member1.getMemberId()),
+                        eq(author.getAttendeeId())
                 );
 
         // when, then
         mockMvc.perform(patch("/api/schedules/{scheduleId}/attendees/{attendeeId}",
-                        SCHEDULE_ID, member1.getMemberId())
+                        schedule.getScheduleId(), author.getAttendeeId())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
@@ -400,7 +437,7 @@ public class TravelAttendeeControllerTest {
         SecurityTestUtils.mockAuthentication(member2);
 
         // when, then
-        mockMvc.perform(delete("/api/schedules/{scheduleId}/attendees", SCHEDULE_ID))
+        mockMvc.perform(delete("/api/schedules/{scheduleId}/attendees", schedule.getScheduleId()))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
@@ -415,10 +452,11 @@ public class TravelAttendeeControllerTest {
         SecurityTestUtils.mockAuthentication(member1);
 
         willThrow(new ForbiddenAttendeeException(ErrorCode.FORBIDDEN_LEAVE_AUTHOR))
-                .given(travelAttendeeService).leaveAttendee(anyLong(), anyLong());
+                .given(travelAttendeeService)
+                .leaveAttendee(eq(schedule.getScheduleId()), eq(member1.getMemberId()));
 
         // when, then
-        mockMvc.perform(delete("/api/schedules/{scheduleId}/attendees", SCHEDULE_ID))
+        mockMvc.perform(delete("/api/schedules/{scheduleId}/attendees", schedule.getScheduleId()))
                 .andDo(print())
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.success").value(false))
@@ -434,7 +472,7 @@ public class TravelAttendeeControllerTest {
 
         // when, then
         mockMvc.perform(delete("/api/schedules/{scheduleId}/attendees/{attendeeId}",
-                        SCHEDULE_ID, member2.getMemberId()))
+                        schedule.getScheduleId(), 2L))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
@@ -450,11 +488,16 @@ public class TravelAttendeeControllerTest {
         SecurityTestUtils.mockAuthentication(member2);
 
         willThrow(new ForbiddenAttendeeException(ErrorCode.FORBIDDEN_REMOVE_ATTENDEE))
-                .given(travelAttendeeService).removeAttendee(anyLong(), anyLong(), anyLong());
+                .given(travelAttendeeService)
+                .removeAttendee(
+                        eq(schedule.getScheduleId()),
+                        eq(member2.getMemberId()),
+                        eq(1L)
+                );
 
         // when, then
         mockMvc.perform(delete("/api/schedules/{scheduleId}/attendees/{attendeeId}",
-                        SCHEDULE_ID, member1.getMemberId()))
+                        schedule.getScheduleId(), 1L))
                 .andDo(print())
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.success").value(false))
@@ -468,11 +511,16 @@ public class TravelAttendeeControllerTest {
         SecurityTestUtils.mockAuthentication(member1);
 
         willThrow(new DataNotFoundException(ErrorCode.ATTENDEE_NOT_FOUND))
-                .given(travelAttendeeService).removeAttendee(anyLong(), anyLong(), anyLong());
+                .given(travelAttendeeService)
+                .removeAttendee(
+                        eq(schedule.getScheduleId()),
+                        eq(member1.getMemberId()),
+                        eq(1004L)
+                );
 
         // when, then
         mockMvc.perform(delete("/api/schedules/{scheduleId}/attendees/{attendeeId}",
-                        SCHEDULE_ID, 1000L))
+                        schedule.getScheduleId(), 1004L))
                 .andDo(print())
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.success").value(false))
@@ -484,14 +532,20 @@ public class TravelAttendeeControllerTest {
     void removeAttendee_forbiddenRemoveAuthor() throws Exception{
         // given
         SecurityTestUtils.mockAuthentication(member1);
+        TravelAttendee author = TravelAttendeeFixture.createAuthorAttendeeWithId(1L, schedule, member1);
 
         willThrow(new ForbiddenAttendeeException(ErrorCode.FORBIDDEN_LEAVE_AUTHOR))
-                .given(travelAttendeeService).removeAttendee(anyLong(), anyLong(), anyLong());
+                .given(travelAttendeeService)
+                .removeAttendee(
+                        eq(schedule.getScheduleId()),
+                        eq(member1.getMemberId()),
+                        eq(author.getAttendeeId())
+                );
 
 
         // when, then
         mockMvc.perform(delete("/api/schedules/{scheduleId}/attendees/{attendeeId}",
-                        SCHEDULE_ID, member1.getMemberId()))
+                        schedule.getScheduleId(), author.getAttendeeId()))
                 .andDo(print())
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.success").value(false))

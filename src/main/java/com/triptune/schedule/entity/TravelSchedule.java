@@ -5,11 +5,14 @@ import com.triptune.common.entity.BaseTimeEntity;
 import com.triptune.route.entity.TravelRoute;
 import com.triptune.schedule.dto.request.ScheduleUpdateRequest;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Entity
 @Getter
@@ -80,4 +83,7 @@ public class TravelSchedule extends BaseTimeEntity {
         this.routeVersion++;
     }
 
+    public boolean isValidScheduleVersion (Integer scheduleVersion) {
+        return this.scheduleVersion.equals(scheduleVersion);
+    }
 }

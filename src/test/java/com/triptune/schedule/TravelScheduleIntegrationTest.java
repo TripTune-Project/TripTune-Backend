@@ -700,6 +700,8 @@ public class TravelScheduleIntegrationTest {
                 .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()))
                 .andExpect(jsonPath("$.data.scheduleVersion").value(scheduleVersion+1));
 
+        em.flush();
+        em.clear();
 
         TravelSchedule updatedSchedule = travelScheduleRepository.findById(schedule.getScheduleId()).orElseThrow();
         assertThat(updatedSchedule.getScheduleName()).isEqualTo(request.getScheduleName());
@@ -766,6 +768,53 @@ public class TravelScheduleIntegrationTest {
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value(ErrorCode.FORBIDDEN_EDIT_SCHEDULE.getMessage()));
+    }
+
+
+
+
+    @Test
+    @DisplayName("일정 수정 시 버전 충돌로 예외 발생")
+    void updateSchedule_conflictScheduleVersion() throws Exception {
+        // given
+        TravelSchedule schedule = travelScheduleRepository.save(TravelScheduleFixture.createSchedule("수정 전 테스트"));
+
+        travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorAttendee(schedule, member1));
+        travelAttendeeRepository.save(TravelAttendeeFixture.createGuestAttendee(schedule, member2, READ));
+
+        ScheduleUpdateRequest request = TravelScheduleFixture.createScheduleUpdateRequest(
+                "수정 테스트",
+                LocalDate.now().minusDays(2),
+                LocalDate.now().minusDays(1),
+                schedule.getScheduleVersion()+1
+        );
+
+        SecurityTestUtils.mockAuthentication(member1);
+
+
+        // when
+        mockMvc.perform(patch("/api/schedules/{scheduleId}", schedule.getScheduleId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andDo(print())
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value(ErrorCode.CONFLICT_SCHEDULE_VERSION.getMessage()))
+                .andExpect(jsonPath("$.data.scheduleName").value(schedule.getScheduleName()))
+                .andExpect(jsonPath("$.data.startDate").value(schedule.getStartDate().toString()))
+                .andExpect(jsonPath("$.data.endDate").value(schedule.getEndDate().toString()))
+                .andExpect(jsonPath("$.data.scheduleVersion").value(schedule.getScheduleVersion()));
+
+        em.flush();
+        em.clear();
+
+        TravelSchedule updatedSchedule = travelScheduleRepository.findById(schedule.getScheduleId()).orElseThrow();
+        assertThat(updatedSchedule.getScheduleName()).isEqualTo(schedule.getScheduleName());
+        assertThat(updatedSchedule.getStartDate()).isEqualTo(schedule.getStartDate());
+        assertThat(updatedSchedule.getEndDate()).isEqualTo(schedule.getEndDate());
+        assertThat(updatedSchedule.getScheduleVersion()).isEqualTo(schedule.getScheduleVersion());
+        assertThat(updatedSchedule.getRouteVersion()).isZero();
+
     }
 
 

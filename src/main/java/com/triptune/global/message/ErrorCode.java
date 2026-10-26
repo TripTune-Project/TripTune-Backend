@@ -57,6 +57,7 @@ public enum ErrorCode {
     FORBIDDEN_ACCESS_SCHEDULE(HttpStatus.FORBIDDEN, "해당 일정에 접근 권한이 없는 회원 입니다."),
     FORBIDDEN_EDIT_SCHEDULE(HttpStatus.FORBIDDEN, "해당 일정에 편집 권한이 없는 회원 입니다."),
     FORBIDDEN_DELETE_SCHEDULE(HttpStatus.FORBIDDEN, "해당 일정에 삭제 권한이 없는 회원 입니다."),
+    CONFLICT_SCHEDULE_VERSION(HttpStatus.CONFLICT,"일정이 변경되었습니다. 최신 정보를 확인해주세요." ),
 
     // 일정 참석
     ATTENDEE_NOT_FOUND(HttpStatus.NOT_FOUND, "참석자 정보를 찾을 수 없습니다."),
@@ -71,6 +72,7 @@ public enum ErrorCode {
     // 여행 루트
     ROUTE_NOT_FOUND(HttpStatus.NOT_FOUND, "여행 루트 정보를 찾을 수 없습니다."),
     ROUTE_MISMATCH(HttpStatus.BAD_REQUEST, "요청한 여행루트가 저장된 여행루트와 일치하지 않습니다."),
+    CONFLICT_ROUTE_VERSION(HttpStatus.CONFLICT,"여행 루트가 변경되었습니다. 최신 정보를 확인해주세요." ),
 
     // 채팅
     FORBIDDEN_CHAT_ATTENDEE(HttpStatus.FORBIDDEN, "채팅 권한이 없는 회원 입니다."),

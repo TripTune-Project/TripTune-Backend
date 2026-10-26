@@ -2,6 +2,7 @@ package com.triptune.schedule.service;
 
 import com.triptune.common.entity.*;
 import com.triptune.common.fixture.*;
+import com.triptune.schedule.exception.ConflictScheduleVersionException;
 import com.triptune.global.s3.S3ObjectManager;
 import com.triptune.member.entity.Member;
 import com.triptune.member.fixture.MemberFixture;
@@ -36,7 +37,6 @@ import com.triptune.global.exception.DataNotFoundException;
 import com.triptune.global.response.page.SchedulePageResponse;
 import com.triptune.global.util.PageUtils;
 import com.triptune.travel.repository.dto.PlaceQueryDto;
-import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -131,7 +131,7 @@ public class TravelScheduleServiceTest {
 
     @Test
     @DisplayName("내 일정 목록 조회")
-    void getAllSchedules(){
+    void getAllTravelSchedules(){
         // given
         Member currentMember = MemberFixture.createNativeTypeMemberWithId(1L, "currentMember@email.com", defaultImage);
         Member guestMember = MemberFixture.createNativeTypeMemberWithId(2L, "guestMember@email.com", defaultImage);
@@ -167,7 +167,7 @@ public class TravelScheduleServiceTest {
         when(s3ObjectManager.generateS3ObjectUrl(place1Thumb.getS3ObjectKey())).thenReturn(place1ThumbUrl);
 
         // when
-        SchedulePageResponse<ScheduleInfoResponse> response = travelScheduleService.getAllSchedules(1, currentMember.getMemberId());
+        SchedulePageResponse<ScheduleInfoResponse> response = travelScheduleService.getAllTravelSchedules(1, currentMember.getMemberId());
 
         // then
         assertThat(response.getTotalElements()).isEqualTo(3);
@@ -201,7 +201,7 @@ public class TravelScheduleServiceTest {
 
     @Test
     @DisplayName("내 일정 목록 조회 시 공유된 일정이 없는 경우")
-    void getAllSchedules_noSharedScheduleData(){
+    void getAllTravelSchedules_noSharedScheduleData(){
         // given
         Member currentMember = MemberFixture.createNativeTypeMemberWithId(1L, "currentMember@email.com", defaultImage);
 
@@ -216,7 +216,7 @@ public class TravelScheduleServiceTest {
         when(travelScheduleRepository.countSharedTravelSchedules(anyLong())).thenReturn(0);
 
         // when
-        SchedulePageResponse<ScheduleInfoResponse> response = travelScheduleService.getAllSchedules(1, currentMember.getMemberId());
+        SchedulePageResponse<ScheduleInfoResponse> response = travelScheduleService.getAllTravelSchedules(1, currentMember.getMemberId());
 
         // then
         List<ScheduleInfoResponse> content = response.getContent();
@@ -229,7 +229,7 @@ public class TravelScheduleServiceTest {
 
     @Test
     @DisplayName("내 일정 목록 조회 시 일정 데이터 없는 경우")
-    void getAllSchedules_noScheduleData(){
+    void getAllTravelSchedules_noScheduleData(){
         // given
         Pageable pageable = PageUtils.schedulePageable(1);
         Page<ScheduleInfoQueryDto> emptySchedulePage = PageUtils.createPage(Collections.emptyList(), pageable, 0);
@@ -239,7 +239,7 @@ public class TravelScheduleServiceTest {
         when(travelScheduleRepository.countSharedTravelSchedules(anyLong())).thenReturn(2);
 
         // when
-        SchedulePageResponse<ScheduleInfoResponse> response = travelScheduleService.getAllSchedules(1, 1L);
+        SchedulePageResponse<ScheduleInfoResponse> response = travelScheduleService.getAllTravelSchedules(1, 1L);
 
         // then
         assertThat(response.getTotalElements()).isEqualTo(0);
@@ -251,7 +251,7 @@ public class TravelScheduleServiceTest {
 
     @Test
     @DisplayName("내 일정 목록 조회 시 이미지 썸네일 없는 경우")
-    void getAllSchedules_noImageThumbnail(){
+    void getAllTravelSchedules_noImageThumbnail(){
         // given
         Member currentMember = MemberFixture.createNativeTypeMemberWithId(1L, "currentMember@email.com", defaultImage);
         Member guestMember = MemberFixture.createNativeTypeMemberWithId(2L, "guestMember@email.com", defaultImage);
@@ -282,7 +282,7 @@ public class TravelScheduleServiceTest {
         when(travelScheduleRepository.countSharedTravelSchedules(anyLong())).thenReturn(2);
 
         // when
-        SchedulePageResponse<ScheduleInfoResponse> response = travelScheduleService.getAllSchedules(1, currentMember.getMemberId());
+        SchedulePageResponse<ScheduleInfoResponse> response = travelScheduleService.getAllTravelSchedules(1, currentMember.getMemberId());
 
         // then
         assertThat(response.getTotalElements()).isEqualTo(3);
@@ -318,7 +318,7 @@ public class TravelScheduleServiceTest {
 
     @Test
     @DisplayName("내 일정 목록 조회 시 여행 루트 없는 경우")
-    void getAllSchedules_noTravelRoute(){
+    void getAllTravelSchedules_noTravelRoute(){
         // given
         Member currentMember = MemberFixture.createNativeTypeMemberWithId(1L, "currentMember@email.com", defaultImage);
         Member guestMember = MemberFixture.createNativeTypeMemberWithId(2L, "guestMember@email.com", defaultImage);
@@ -347,7 +347,7 @@ public class TravelScheduleServiceTest {
         when(travelScheduleRepository.countSharedTravelSchedules(anyLong())).thenReturn(2);
 
         // when
-        SchedulePageResponse<ScheduleInfoResponse> response = travelScheduleService.getAllSchedules(1, currentMember.getMemberId());
+        SchedulePageResponse<ScheduleInfoResponse> response = travelScheduleService.getAllTravelSchedules(1, currentMember.getMemberId());
 
         // then
         assertThat(response.getTotalElements()).isEqualTo(3);
@@ -382,7 +382,7 @@ public class TravelScheduleServiceTest {
 
     @Test
     @DisplayName("공유된 일정 목록 조회")
-    void getSharedSchedules(){
+    void getSharedTravelSchedules(){
         // given
         Member currentMember = MemberFixture.createNativeTypeMemberWithId(1L, "currentMember@email.com", defaultImage);
         Member guestMember = MemberFixture.createNativeTypeMemberWithId(2L, "guestMember@email.com", defaultImage);
@@ -414,7 +414,7 @@ public class TravelScheduleServiceTest {
         when(s3ObjectManager.generateS3ObjectUrl(place1Thumb.getS3ObjectKey())).thenReturn(place1ThumbUrl);
 
         // when
-        SchedulePageResponse<ScheduleInfoResponse> response = travelScheduleService.getSharedSchedules(1, currentMember.getMemberId());
+        SchedulePageResponse<ScheduleInfoResponse> response = travelScheduleService.getSharedTravelSchedules(1, currentMember.getMemberId());
 
         // then
         assertThat(response.getTotalElements()).isEqualTo(3);
@@ -442,7 +442,7 @@ public class TravelScheduleServiceTest {
 
     @Test
     @DisplayName("공유된 일정 목록 조회 시 일정 데이터 없는 경우")
-    void getSharedSchedules_noScheduleData(){
+    void getSharedTravelSchedules_noScheduleData(){
         // given
         Pageable pageable = PageUtils.schedulePageable(1);
         Page<ScheduleInfoQueryDto> emptySchedulePage = PageUtils.createPage(Collections.emptyList(), pageable, 0);
@@ -451,7 +451,7 @@ public class TravelScheduleServiceTest {
         when(travelScheduleRepository.countTravelSchedules(anyLong())).thenReturn(2);
 
         // when
-        SchedulePageResponse<ScheduleInfoResponse> response = travelScheduleService.getSharedSchedules(1, 1L);
+        SchedulePageResponse<ScheduleInfoResponse> response = travelScheduleService.getSharedTravelSchedules(1, 1L);
 
         // then
         assertThat(response.getTotalElements()).isEqualTo(2);
@@ -462,7 +462,7 @@ public class TravelScheduleServiceTest {
 
     @Test
     @DisplayName("공유된 일정 목록 조회 시 이미지 썸네일 데이터 없는 경우")
-    void getSharedSchedules_noImageThumbnail(){
+    void getSharedTravelSchedules_noImageThumbnail(){
         // given
         Member currentMember = MemberFixture.createNativeTypeMemberWithId(1L, "currentMember@email.com", defaultImage);
         Member guestMember = MemberFixture.createNativeTypeMemberWithId(2L, "guestMember@email.com", defaultImage);
@@ -488,7 +488,7 @@ public class TravelScheduleServiceTest {
         when(travelScheduleRepository.countTravelSchedules(anyLong())).thenReturn(3);
 
         // when
-        SchedulePageResponse<ScheduleInfoResponse> response = travelScheduleService.getSharedSchedules(1, currentMember.getMemberId());
+        SchedulePageResponse<ScheduleInfoResponse> response = travelScheduleService.getSharedTravelSchedules(1, currentMember.getMemberId());
 
         // then
         assertThat(response.getTotalElements()).isEqualTo(3);
@@ -516,7 +516,7 @@ public class TravelScheduleServiceTest {
 
     @Test
     @DisplayName("공유된 일정 목록 조회 시 여행 루트 없는 경우")
-    void getSharedSchedules_noTravelRoutes(){
+    void getSharedTravelSchedules_noTravelRoutes(){
         // given
         Member currentMember = MemberFixture.createNativeTypeMemberWithId(1L, "currentMember@email.com", defaultImage);
         Member guestMember = MemberFixture.createNativeTypeMemberWithId(2L, "guestMember@email.com", defaultImage);
@@ -541,7 +541,7 @@ public class TravelScheduleServiceTest {
         when(travelScheduleRepository.countTravelSchedules(anyLong())).thenReturn(3);
 
         // when
-        SchedulePageResponse<ScheduleInfoResponse> response = travelScheduleService.getSharedSchedules(1, currentMember.getMemberId());
+        SchedulePageResponse<ScheduleInfoResponse> response = travelScheduleService.getSharedTravelSchedules(1, currentMember.getMemberId());
 
         // then
         assertThat(response.getTotalElements()).isEqualTo(3);
@@ -569,7 +569,7 @@ public class TravelScheduleServiceTest {
 
     @Test
     @DisplayName("수정 권한 있는 내 일정 목록 조회")
-    void getEnableEditSchedules(){
+    void getEnableEditTravelSchedules(){
         // given
         TravelSchedule schedule1 = TravelScheduleFixture.createScheduleWithId(1L, "당일 여행");
         TravelAttendeeFixture.createAuthorAttendee(schedule1, member1);
@@ -593,7 +593,7 @@ public class TravelScheduleServiceTest {
         when(travelAttendeeRepository.findAuthorNicknameByScheduleId(anyLong())).thenReturn(member1.getNickname());
 
         // when
-        Page<ScheduleOverviewResponse> response = travelScheduleService.getEnableEditSchedules(1, 1L);
+        Page<ScheduleOverviewResponse> response = travelScheduleService.getEnableEditTravelSchedules(1, 1L);
 
         // then
         List<ScheduleOverviewResponse> content = response.getContent();
@@ -627,7 +627,7 @@ public class TravelScheduleServiceTest {
         when(travelScheduleRepository.findEnableEditTravelSchedules(any(), anyLong())).thenReturn(schedulePage);
 
         // when
-        Page<ScheduleOverviewResponse> response = travelScheduleService.getEnableEditSchedules(1, 1L);
+        Page<ScheduleOverviewResponse> response = travelScheduleService.getEnableEditTravelSchedules(1, 1L);
 
         // then
         assertThat(response.getTotalElements()).isZero();
@@ -636,7 +636,7 @@ public class TravelScheduleServiceTest {
 
     @Test
     @DisplayName("내 일정 검색")
-    void searchAllSchedules(){
+    void searchAllTravelSchedules(){
         // given
         Member currentMember = MemberFixture.createNativeTypeMemberWithId(1L, "currentMember@email.com", defaultImage);
         Member guestMember = MemberFixture.createNativeTypeMemberWithId(2L, "guestMember@email.com", defaultImage);
@@ -665,7 +665,7 @@ public class TravelScheduleServiceTest {
 
         // when
         SchedulePageResponse<ScheduleInfoResponse> response
-                = travelScheduleService.searchAllSchedules(1, keyword, currentMember.getMemberId());
+                = travelScheduleService.searchAllTravelSchedules(1, keyword, currentMember.getMemberId());
 
         // then
         assertThat(response.getTotalElements()).isEqualTo(2);
@@ -686,7 +686,7 @@ public class TravelScheduleServiceTest {
 
     @Test
     @DisplayName("내 일정 검색 시 공유된 일정이 없는 경우")
-    void searchAllSchedules_noSharedSchedule(){
+    void searchAllTravelSchedules_noSharedSchedule(){
         // given
         Member currentMember = MemberFixture.createNativeTypeMemberWithId(1L, "currentMember@email.com", defaultImage);
 
@@ -712,7 +712,7 @@ public class TravelScheduleServiceTest {
 
         // when
         SchedulePageResponse<ScheduleInfoResponse> response
-                = travelScheduleService.searchAllSchedules(1, keyword, currentMember.getMemberId());
+                = travelScheduleService.searchAllTravelSchedules(1, keyword, currentMember.getMemberId());
 
         // then
         List<ScheduleInfoResponse> content = response.getContent();
@@ -726,7 +726,7 @@ public class TravelScheduleServiceTest {
 
     @Test
     @DisplayName("내 일정 검색 시 검색 결과가 없는 경우")
-    void searchAllSchedules_emptyResult(){
+    void searchAllTravelSchedules_emptyResult(){
         // given
         String keyword = "ㅁㄴㅇㄹ";
 
@@ -737,7 +737,7 @@ public class TravelScheduleServiceTest {
         when(travelScheduleRepository.countSharedTravelSchedules(anyLong())).thenReturn(2);
 
         // when
-        SchedulePageResponse<ScheduleInfoResponse> response = travelScheduleService.searchAllSchedules(1, keyword, 1L);
+        SchedulePageResponse<ScheduleInfoResponse> response = travelScheduleService.searchAllTravelSchedules(1, keyword, 1L);
 
         // then
         assertThat(response.getTotalElements()).isEqualTo(0);
@@ -747,7 +747,7 @@ public class TravelScheduleServiceTest {
 
     @Test
     @DisplayName("내 일정 검색 시 이미지 썸네일 없는 경우")
-    void searchAllSchedules_noImageThumbnail(){
+    void searchAllTravelSchedules_noImageThumbnail(){
         // given
         Member currentMember = MemberFixture.createNativeTypeMemberWithId(1L, "currentMember@email.com", defaultImage);
         Member guestMember = MemberFixture.createNativeTypeMemberWithId(2L, "guestMember@email.com", defaultImage);
@@ -778,7 +778,7 @@ public class TravelScheduleServiceTest {
 
         // when
         SchedulePageResponse<ScheduleInfoResponse> response
-                = travelScheduleService.searchAllSchedules(1, keyword, currentMember.getMemberId());
+                = travelScheduleService.searchAllTravelSchedules(1, keyword, currentMember.getMemberId());
 
         // then
         assertThat(response.getTotalElements()).isEqualTo(2);
@@ -806,7 +806,7 @@ public class TravelScheduleServiceTest {
 
     @Test
     @DisplayName("내 일정 검색 시 여행 루트 없는 경우")
-    void searchAllSchedules_noTravelRoutes(){
+    void searchAllTravelSchedules_noTravelRoutes(){
         // given
         Member currentMember = MemberFixture.createNativeTypeMemberWithId(1L, "currentMember@email.com", defaultImage);
         Member guestMember = MemberFixture.createNativeTypeMemberWithId(2L, "guestMember@email.com", defaultImage);
@@ -829,7 +829,7 @@ public class TravelScheduleServiceTest {
 
         // when
         SchedulePageResponse<ScheduleInfoResponse> response
-                = travelScheduleService.searchAllSchedules(1, keyword, currentMember.getMemberId());
+                = travelScheduleService.searchAllTravelSchedules(1, keyword, currentMember.getMemberId());
 
         // then
         List<ScheduleInfoResponse> content = response.getContent();
@@ -844,7 +844,7 @@ public class TravelScheduleServiceTest {
 
     @Test
     @DisplayName("공유된 일정 검색")
-    void searchSharedSchedules(){
+    void searchSharedTravelSchedules(){
         // given
         Member currentMember = MemberFixture.createNativeTypeMemberWithId(1L, "currentMember@email.com", defaultImage);
         Member guestMember = MemberFixture.createNativeTypeMemberWithId(2L, "guestMember@email.com", defaultImage);
@@ -876,7 +876,7 @@ public class TravelScheduleServiceTest {
 
         // when
         SchedulePageResponse<ScheduleInfoResponse> response
-                = travelScheduleService.searchSharedSchedules(1, keyword, currentMember.getMemberId());
+                = travelScheduleService.searchSharedTravelSchedules(1, keyword, currentMember.getMemberId());
 
         // then
         assertThat(response.getTotalElements()).isEqualTo(2);
@@ -904,7 +904,7 @@ public class TravelScheduleServiceTest {
 
     @Test
     @DisplayName("공유된 일정 검색 시 일정 데이터 없는 경우")
-    void searchSharedSchedules_noScheduleData(){
+    void searchSharedTravelSchedules_noScheduleData(){
         // given
         String keyword = "테스트";
         Pageable pageable = PageUtils.schedulePageable(1);
@@ -914,7 +914,7 @@ public class TravelScheduleServiceTest {
         when(travelScheduleRepository.countTravelSchedules(anyLong())).thenReturn(2);
 
         // when
-        SchedulePageResponse<ScheduleInfoResponse> response = travelScheduleService.searchSharedSchedules(1, keyword, 1L);
+        SchedulePageResponse<ScheduleInfoResponse> response = travelScheduleService.searchSharedTravelSchedules(1, keyword, 1L);
 
         // then
         assertThat(response.getTotalElements()).isEqualTo(2);
@@ -924,7 +924,7 @@ public class TravelScheduleServiceTest {
 
     @Test
     @DisplayName("공유된 일정 검색 시 이미지 썸네일 없는 경우")
-    void searchSharedSchedules_noImageThumbnail(){
+    void searchSharedTravelSchedules_noImageThumbnail(){
         // given
         Member currentMember = MemberFixture.createNativeTypeMemberWithId(1L, "currentMember@email.com", defaultImage);
         Member guestMember = MemberFixture.createNativeTypeMemberWithId(2L, "guestMember@email.com", defaultImage);
@@ -954,7 +954,7 @@ public class TravelScheduleServiceTest {
 
         // when
         SchedulePageResponse<ScheduleInfoResponse> response
-                = travelScheduleService.searchSharedSchedules(1, keyword, currentMember.getMemberId());
+                = travelScheduleService.searchSharedTravelSchedules(1, keyword, currentMember.getMemberId());
 
         // then
         assertThat(response.getTotalElements()).isEqualTo(3);
@@ -983,7 +983,7 @@ public class TravelScheduleServiceTest {
 
     @Test
     @DisplayName("공유된 일정 검색 시 여행 루트 없는 경우")
-    void searchSharedSchedules_noTravelRoutes(){
+    void searchSharedTravelSchedules_noTravelRoutes(){
         // given
         Member currentMember = MemberFixture.createNativeTypeMemberWithId(1L, "currentMember@email.com", defaultImage);
         Member guestMember = MemberFixture.createNativeTypeMemberWithId(2L, "guestMember@email.com", defaultImage);
@@ -1007,7 +1007,7 @@ public class TravelScheduleServiceTest {
 
         // when
         SchedulePageResponse<ScheduleInfoResponse> response
-                = travelScheduleService.searchSharedSchedules(1, keyword, currentMember.getMemberId());
+                = travelScheduleService.searchSharedTravelSchedules(1, keyword, currentMember.getMemberId());
 
         // then
         List<ScheduleInfoResponse> content = response.getContent();
@@ -1023,7 +1023,7 @@ public class TravelScheduleServiceTest {
 
     @Test
     @DisplayName("일정 생성")
-    void createSchedule(){
+    void createTravelSchedule(){
         // given
         TravelSchedule schedule = TravelScheduleFixture.createSchedule("당일 여행");
         TravelAttendeeFixture.createAuthorAttendee(schedule, member1);
@@ -1038,16 +1038,16 @@ public class TravelScheduleServiceTest {
         when(travelScheduleRepository.save(any())).thenReturn(schedule);
 
         // when
-        ScheduleCreateResponse response = travelScheduleService.createSchedule(request, 1L);
+        ScheduleCreateResponse response = travelScheduleService.createTravelSchedule(request, 1L);
 
         // then
-        verify(memberRepository, times(1)).findById(anyLong());
-        verify(travelScheduleRepository, times(1)).save(any());
+        verify(memberRepository).findById(anyLong());
+        verify(travelScheduleRepository).save(any());
     }
 
     @Test
     @DisplayName("일정 생성 시 저장된 회원 정보 없어 예외 발생")
-    void createSchedule_memberNotFound(){
+    void createTravelSchedule_memberNotFound(){
         // given
         ScheduleCreateRequest request = TravelScheduleFixture.createScheduleCreateRequest(
                 "테스트",
@@ -1059,7 +1059,7 @@ public class TravelScheduleServiceTest {
 
         // when
         DataNotFoundException fail = assertThrows(DataNotFoundException.class,
-                () -> travelScheduleService.createSchedule(request, 1000L));
+                () -> travelScheduleService.createTravelSchedule(request, 1000L));
 
         // then
         assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.MEMBER_NOT_FOUND);
@@ -1158,7 +1158,7 @@ public class TravelScheduleServiceTest {
 
     @Test
     @DisplayName("일정 수정")
-    void updateSchedule(){
+    void updateTravelSchedule(){
         // given
         Member authorMember = MemberFixture.createNativeTypeMemberWithId(1L, "authorMember@email.com", defaultImage);
         Member guestMember = MemberFixture.createNativeTypeMemberWithId(2L, "guestMember@email.com", defaultImage);
@@ -1180,23 +1180,22 @@ public class TravelScheduleServiceTest {
                 scheduleVersion
         );
 
-        when(travelScheduleRepository.findById(anyLong())).thenReturn(Optional.of(schedule));
-
+        when(travelScheduleRepository.findById(anyLong()))
+                .thenReturn(Optional.of(schedule));
+        when(travelScheduleRepository.updateSchedule(anyLong(), anyString(), any(), any(), anyInt()))
+                .thenReturn(1);
 
         // when
-        ScheduleUpdateResponse response = travelScheduleService.updateSchedule(request, authorMember.getMemberId(), schedule.getScheduleId());
+        ScheduleUpdateResponse response = travelScheduleService.updateTravelSchedule(request, authorMember.getMemberId(), schedule.getScheduleId());
 
         // then
-        assertThat(schedule.getScheduleName()).isEqualTo(request.getScheduleName());
-        assertThat(schedule.getStartDate()).isEqualTo(request.getStartDate());
-        assertThat(schedule.getEndDate()).isEqualTo(request.getEndDate());
         assertThat(response.getScheduleVersion()).isEqualTo(scheduleVersion+1);
     }
 
 
     @Test
     @DisplayName("일정 수정 시 일정 데이터 없어 예외 발생")
-    void updateSchedule_scheduleNotFound(){
+    void updateSchedule_Travel_scheduleNotFound(){
         // given
         ScheduleUpdateRequest request = TravelScheduleFixture.createScheduleUpdateRequest(
                 "수정 테스트",
@@ -1209,7 +1208,7 @@ public class TravelScheduleServiceTest {
 
         // when
         DataNotFoundException fail = assertThrows(DataNotFoundException.class,
-                () -> travelScheduleService.updateSchedule(request, 1L, 1000L));
+                () -> travelScheduleService.updateTravelSchedule(request, 1L, 1000L));
 
         // then
         assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.SCHEDULE_NOT_FOUND);
@@ -1218,7 +1217,7 @@ public class TravelScheduleServiceTest {
 
     @Test
     @DisplayName("일정 수정 시 요청 회원에게 접근 권한이 없어 예외 발생")
-    void updateSchedule_forbiddenTravelSchedule(){
+    void updateSchedule_forbiddenTravelTravelSchedule(){
         // given
         TravelSchedule schedule = TravelScheduleFixture.createScheduleWithId(1L, "당일 여행");
 
@@ -1235,7 +1234,7 @@ public class TravelScheduleServiceTest {
 
         // when
         ForbiddenScheduleException fail = assertThrows(ForbiddenScheduleException.class,
-                () -> travelScheduleService.updateSchedule(request, 1004L, 1L));
+                () -> travelScheduleService.updateTravelSchedule(request, 1004L, 1L));
 
         // then
         assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.FORBIDDEN_ACCESS_SCHEDULE);
@@ -1244,7 +1243,7 @@ public class TravelScheduleServiceTest {
 
     @Test
     @DisplayName("일정 수정 시 요청 회원에게 수정 권한이 없어 예외 발생")
-    void updateSchedule_forbiddenEdit(){
+    void updateTravelSchedule_forbiddenEdit(){
         // given
         Member authorMember = MemberFixture.createNativeTypeMemberWithId(1L, "authorMember@email.com", defaultImage);
         Member guestMember = MemberFixture.createNativeTypeMemberWithId(2L, "guestMember@email.com", defaultImage);
@@ -1265,7 +1264,7 @@ public class TravelScheduleServiceTest {
 
         // when
         ForbiddenScheduleException fail = assertThrows(ForbiddenScheduleException.class,
-                () -> travelScheduleService.updateSchedule(request, guestMember.getMemberId(), schedule.getScheduleId()));
+                () -> travelScheduleService.updateTravelSchedule(request, guestMember.getMemberId(), schedule.getScheduleId()));
 
         // then
         assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.FORBIDDEN_EDIT_SCHEDULE);
@@ -1273,9 +1272,85 @@ public class TravelScheduleServiceTest {
     }
 
 
+
+    @Test
+    @DisplayName("일정 수정 시 요청 값에서 버전 충돌로 예외 발생")
+    void updateTravelSchedule_conflictScheduleVersion_byRequest(){
+        // given
+        Member authorMember = MemberFixture.createNativeTypeMemberWithId(1L, "authorMember@email.com", defaultImage);
+        Member guestMember = MemberFixture.createNativeTypeMemberWithId(2L, "guestMember@email.com", defaultImage);
+
+        TravelSchedule schedule = TravelScheduleFixture.createScheduleWithId(
+                1L,
+                "당일 여행"
+        );
+
+        TravelAttendeeFixture.createAuthorAttendee(schedule, authorMember);
+        TravelAttendeeFixture.createGuestAttendee(schedule, guestMember, READ);
+
+        ScheduleUpdateRequest request = TravelScheduleFixture.createScheduleUpdateRequest(
+                "수정 테스트",
+                LocalDate.now(),
+                LocalDate.now().plusDays(5),
+                schedule.getScheduleVersion()+1
+        );
+
+        when(travelScheduleRepository.findById(anyLong()))
+                .thenReturn(Optional.of(schedule));
+
+        // when
+        ConflictScheduleVersionException fail = assertThrows(ConflictScheduleVersionException.class,
+                () -> travelScheduleService.updateTravelSchedule(request, authorMember.getMemberId(), schedule.getScheduleId()));
+
+        // then
+        assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.CONFLICT_SCHEDULE_VERSION);
+        assertThat(fail.getEventResponse().scheduleName()).isEqualTo(schedule.getScheduleName());
+        assertThat(fail.getEventResponse().startDate()).isEqualTo(schedule.getStartDate());
+        assertThat(fail.getEventResponse().endDate()).isEqualTo(schedule.getEndDate());
+        assertThat(fail.getEventResponse().scheduleVersion()).isEqualTo(schedule.getScheduleVersion());
+    }
+
+
+
+    @Test
+    @DisplayName("일정 수정 시 UPDATE 쿼리에서 버전 충돌로 예외 발생")
+    void updateTravelSchedule_conflictScheduleVersion_bySQL(){
+        // given
+        Member authorMember = MemberFixture.createNativeTypeMemberWithId(1L, "authorMember@email.com", defaultImage);
+        Member guestMember = MemberFixture.createNativeTypeMemberWithId(2L, "guestMember@email.com", defaultImage);
+
+        TravelSchedule schedule = TravelScheduleFixture.createScheduleWithId(
+                1L,
+                "당일 여행"
+        );
+
+        TravelAttendeeFixture.createAuthorAttendee(schedule, authorMember);
+        TravelAttendeeFixture.createGuestAttendee(schedule, guestMember, READ);
+
+        ScheduleUpdateRequest request = TravelScheduleFixture.createScheduleUpdateRequest(
+                "수정 테스트",
+                LocalDate.now(),
+                LocalDate.now().plusDays(5),
+                schedule.getScheduleVersion()
+        );
+
+        when(travelScheduleRepository.findById(anyLong()))
+                .thenReturn(Optional.of(schedule));
+        when(travelScheduleRepository.updateSchedule(anyLong(), anyString(), any(), any(), anyInt()))
+                .thenReturn(0);
+
+        // when
+        ConflictScheduleVersionException fail = assertThrows(ConflictScheduleVersionException.class,
+                () -> travelScheduleService.updateTravelSchedule(request, authorMember.getMemberId(), schedule.getScheduleId()));
+
+        // then
+        assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.CONFLICT_SCHEDULE_VERSION);
+    }
+
+
     @Test
     @DisplayName("일정 삭제")
-    void deleteSchedule(){
+    void deleteTravelSchedule(){
         // given
         TravelSchedule schedule = TravelScheduleFixture.createScheduleWithId(1L, "당일 여행");
 
@@ -1296,15 +1371,15 @@ public class TravelScheduleServiceTest {
         when(chatMessageRepository.findAllByScheduleId(anyLong())).thenReturn(chatMessages);
 
         // when
-        assertDoesNotThrow(() -> travelScheduleService.deleteSchedule(1L, 1L));
+        assertDoesNotThrow(() -> travelScheduleService.deleteTravelSchedule(1L, 1L));
 
         // then
-        verify(chatMessageRepository, times(1)).deleteAllByScheduleId(1L);
+        verify(chatMessageRepository).deleteAllByScheduleId(1L);
     }
 
     @Test
     @DisplayName("일정 삭제 시 채팅 메시지 없는 경우")
-    void deleteSchedule_noChatMessageData(){
+    void deleteTravelSchedule_noChatMessageData(){
         // given
         TravelSchedule schedule = TravelScheduleFixture.createScheduleWithId(1L, "당일 여행");
 
@@ -1320,7 +1395,7 @@ public class TravelScheduleServiceTest {
         when(chatMessageRepository.findAllByScheduleId(anyLong())).thenReturn(Collections.emptyList());
 
         // when
-        assertDoesNotThrow(() -> travelScheduleService.deleteSchedule(1L, 1L));
+        assertDoesNotThrow(() -> travelScheduleService.deleteTravelSchedule(1L, 1L));
 
         // then
         verify(chatMessageRepository, times(0)).deleteAllByScheduleId(1L);
@@ -1328,7 +1403,7 @@ public class TravelScheduleServiceTest {
 
     @Test
     @DisplayName("일정 삭제 시 작성자가 아닌 회원의 삭제 요청으로 인해 예외 발생")
-    void deleteSchedule_notAuthor_forbiddenTravelSchedule(){
+    void deleteSchedule_notAuthor_forbiddenTravelTravelSchedule(){
         // given
         TravelSchedule schedule = TravelScheduleFixture.createScheduleWithId(1L, "당일 여행");
 
@@ -1344,7 +1419,7 @@ public class TravelScheduleServiceTest {
 
         // when
         ForbiddenScheduleException fail = assertThrows(ForbiddenScheduleException.class,
-                () -> travelScheduleService.deleteSchedule(1L, 2L));
+                () -> travelScheduleService.deleteTravelSchedule(1L, 2L));
 
         assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.FORBIDDEN_DELETE_SCHEDULE);
     }

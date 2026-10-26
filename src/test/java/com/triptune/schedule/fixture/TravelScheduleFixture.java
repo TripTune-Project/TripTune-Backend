@@ -137,4 +137,7 @@ public class TravelScheduleFixture {
 
     }
 
+    public static ScheduleUpdateEventResponse createScheduleUpdateEventResponse(TravelSchedule schedule) {
+        return ScheduleUpdateEventResponse.from(schedule);
+    }
 }
