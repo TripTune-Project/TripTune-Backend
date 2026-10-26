@@ -1,16 +1,16 @@
 package com.triptune.attendee.repository;
 
+import com.triptune.attendee.entity.TravelAttendee;
+import com.triptune.attendee.fixture.TravelAttendeeFixture;
+import com.triptune.global.config.QuerydslConfig;
 import com.triptune.member.entity.Member;
 import com.triptune.member.fixture.MemberFixture;
 import com.triptune.member.repository.MemberRepository;
 import com.triptune.profile.entity.ProfileImage;
 import com.triptune.profile.fixture.ProfileImageFixture;
 import com.triptune.profile.repository.ProfileImageRepository;
-import com.triptune.attendee.fixture.TravelAttendeeFixture;
-import com.triptune.schedule.fixture.TravelScheduleFixture;
-import com.triptune.attendee.entity.TravelAttendee;
 import com.triptune.schedule.entity.TravelSchedule;
-import com.triptune.global.config.QuerydslConfig;
+import com.triptune.schedule.fixture.TravelScheduleFixture;
 import com.triptune.schedule.repository.TravelScheduleRepository;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
@@ -23,7 +23,10 @@ import org.springframework.test.context.ActiveProfiles;
 
 import java.util.List;
 
-import static com.triptune.attendee.enums.AttendeePermission.*;
+import static com.triptune.attendee.enums.AttendeePermission.ALL;
+import static com.triptune.attendee.enums.AttendeePermission.READ;
+import static com.triptune.attendee.enums.AttendeeRole.AUTHOR;
+import static com.triptune.attendee.enums.AttendeeRole.GUEST;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DataJpaTest
@@ -75,6 +78,7 @@ public class TravelAttendeeRepositoryTest {
         assertThat(guest.getCreatedAt()).isEqualTo(guest.getUpdatedAt());
     }
 
+
     @Test
     @DisplayName("일정 참가자인지 확인 true 반환")
     void existsAttendee_true(){
@@ -84,7 +88,7 @@ public class TravelAttendeeRepositoryTest {
         travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorAttendee(schedule3, member2));
 
         // when
-        boolean response = travelAttendeeRepository.existsByTravelSchedule_ScheduleIdAndMember_MemberId(schedule1.getScheduleId(), member1.getMemberId());
+        boolean response = travelAttendeeRepository.existsAttendee(schedule1.getScheduleId(), member1.getMemberId(), AUTHOR);
 
         // then
         assertThat(response).isTrue();
@@ -99,7 +103,7 @@ public class TravelAttendeeRepositoryTest {
         travelAttendeeRepository.save(TravelAttendeeFixture.createAuthorAttendee(schedule3, member2));
 
         // when
-        boolean response = travelAttendeeRepository.existsByTravelSchedule_ScheduleIdAndMember_MemberId(schedule1.getScheduleId(), member2.getMemberId());
+        boolean response = travelAttendeeRepository.existsAttendee(schedule1.getScheduleId(), member2.getMemberId(), GUEST);
 
         // then
         assertThat(response).isFalse();

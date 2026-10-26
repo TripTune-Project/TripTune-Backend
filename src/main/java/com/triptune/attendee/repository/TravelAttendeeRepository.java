@@ -20,6 +20,16 @@ public interface TravelAttendeeRepository extends JpaRepository<TravelAttendee, 
     Optional<TravelAttendee> findByTravelSchedule_ScheduleIdAndAttendeeId(@Param("scheduleId") Long scheduleId, @Param("attendeeId") Long attendeeId);
 
 
+    @Query("""
+        select count(ta) > 0
+        from TravelAttendee ta
+        where ta.travelSchedule.scheduleId = :scheduleId
+            and ta.member.memberId = :memberId
+            and ta.role = :role
+    """)
+    boolean existsAttendee(@Param("scheduleId") Long scheduleId, @Param("memberId") Long memberId, @Param("role") AttendeeRole role);
+
+
     @Modifying
     @Query("select a from TravelAttendee a where a.travelSchedule.scheduleId = :scheduleId")
     List<TravelAttendee> findAllByScheduleId(@Param("scheduleId") Long scheduleId);

@@ -611,7 +611,7 @@ public class TravelRouteServiceTest {
         RouteVersionResponse response = travelRouteService.deleteTravelRoute(schedule.getScheduleId(), route1.getRouteId(), routeVersion);
 
         // then
-        verify(travelRouteRepository, times(1)).delete(route1);
+        verify(travelRouteRepository).delete(route1);
         assertThat(response.getRouteVersion()).isEqualTo(routeVersion+1);
         assertThat(route2.getRouteOrder()).isEqualTo(1);
         assertThat(route3.getRouteOrder()).isEqualTo(2);
@@ -640,7 +640,7 @@ public class TravelRouteServiceTest {
         RouteVersionResponse response = travelRouteService.deleteTravelRoute(schedule.getScheduleId(), route2.getRouteId(), routeVersion);
 
         // then
-        verify(travelRouteRepository, times(1)).delete(route2);
+        verify(travelRouteRepository).delete(route2);
         assertThat(response.getRouteVersion()).isEqualTo(routeVersion+1);
         assertThat(route1.getRouteOrder()).isEqualTo(1);
         assertThat(route3.getRouteOrder()).isEqualTo(2);
@@ -669,7 +669,7 @@ public class TravelRouteServiceTest {
         RouteVersionResponse response = travelRouteService.deleteTravelRoute(schedule.getScheduleId(), route3.getRouteId(), routeVersion);
 
         // then
-        verify(travelRouteRepository, times(1)).delete(route3);
+        verify(travelRouteRepository).delete(route3);
         assertThat(response.getRouteVersion()).isEqualTo(routeVersion+1);
         assertThat(route1.getRouteOrder()).isEqualTo(1);
         assertThat(route2.getRouteOrder()).isEqualTo(2);

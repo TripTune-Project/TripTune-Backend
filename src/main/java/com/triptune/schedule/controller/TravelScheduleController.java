@@ -31,7 +31,7 @@ public class TravelScheduleController {
     @Operation(summary = "전체 일정 목록 조회", description = "작성한 전체 일정을 조회합니다.")
     public ApiResponse<SchedulePageResponse<ScheduleInfoResponse>> getAllSchedules(@AuthenticationPrincipal(expression = "memberId") Long memberId,
                                                                                    @RequestParam(name = "page") int page){
-        SchedulePageResponse<ScheduleInfoResponse> response = travelScheduleService.getAllSchedules(page, memberId);
+        SchedulePageResponse<ScheduleInfoResponse> response = travelScheduleService.getAllTravelSchedules(page, memberId);
         return ApiResponse.schedulePageResponse(response);
     }
 
@@ -39,7 +39,7 @@ public class TravelScheduleController {
     @Operation(summary = "공유된 일정 목록 조회", description = "작성한 일정 중 공유된 일정을 조회합니다.")
     public ApiResponse<SchedulePageResponse<ScheduleInfoResponse>> getSharedSchedules(@AuthenticationPrincipal(expression = "memberId") Long memberId,
                                                                                       @RequestParam(name = "page") int page){
-        SchedulePageResponse<ScheduleInfoResponse> response = travelScheduleService.getSharedSchedules(page, memberId);
+        SchedulePageResponse<ScheduleInfoResponse> response = travelScheduleService.getSharedTravelSchedules(page, memberId);
         return ApiResponse.schedulePageResponse(response);
     }
 
@@ -47,7 +47,7 @@ public class TravelScheduleController {
     @Operation(summary = "수정 권한 있는 일정 목록 조회", description = "작성한 일정 중 수정 권한이 있는 일정을 필요 데이터로 구성해 조회합니다.")
     public ApiResponse<PageResponse<ScheduleOverviewResponse>> getEnableEditSchedules(@AuthenticationPrincipal(expression = "memberId") Long memberId,
                                                                                       @RequestParam(name = "page") int page){
-        Page<ScheduleOverviewResponse> response = travelScheduleService.getEnableEditSchedules(page, memberId);
+        Page<ScheduleOverviewResponse> response = travelScheduleService.getEnableEditTravelSchedules(page, memberId);
 
         return ApiResponse.pageResponse(response);
     }
@@ -62,8 +62,8 @@ public class TravelScheduleController {
 
         SchedulePageResponse<ScheduleInfoResponse> response =
                 searchType.isAll()
-                ? travelScheduleService.searchAllSchedules(page, keyword, memberId)
-                : travelScheduleService.searchSharedSchedules(page, keyword, memberId);
+                ? travelScheduleService.searchAllTravelSchedules(page, keyword, memberId)
+                : travelScheduleService.searchSharedTravelSchedules(page, keyword, memberId);
 
         return ApiResponse.schedulePageResponse(response);
     }
@@ -73,7 +73,7 @@ public class TravelScheduleController {
     @Operation(summary = "일정 생성", description = "여행 이름, 날짜를 선택해 일정을 생성합니다.")
     public ApiResponse<ScheduleCreateResponse> createSchedule(@AuthenticationPrincipal(expression = "memberId") Long memberId,
                                                               @Valid @RequestBody ScheduleCreateRequest scheduleCreateRequest){
-        ScheduleCreateResponse response = travelScheduleService.createSchedule(scheduleCreateRequest, memberId);
+        ScheduleCreateResponse response = travelScheduleService.createTravelSchedule(scheduleCreateRequest, memberId);
         return ApiResponse.dataResponse(response);
     }
 
@@ -94,7 +94,7 @@ public class TravelScheduleController {
     public ApiResponse<ScheduleUpdateResponse> updateSchedule(@Valid @RequestBody ScheduleUpdateRequest scheduleUpdateRequest,
                                                             @AuthenticationPrincipal(expression = "memberId") Long memberId,
                                                             @PathVariable(name = "scheduleId") Long scheduleId){
-        ScheduleUpdateResponse response = travelScheduleService.updateSchedule(scheduleUpdateRequest, memberId, scheduleId);
+        ScheduleUpdateResponse response = travelScheduleService.updateTravelSchedule(scheduleUpdateRequest, memberId, scheduleId);
         return ApiResponse.dataResponse(response);
     }
 
@@ -103,7 +103,7 @@ public class TravelScheduleController {
     @Operation(summary = "일정 삭제", description = "일정을 삭제합니다.")
     public ApiResponse<?> deleteSchedule(@AuthenticationPrincipal(expression = "memberId") Long memberId,
                                          @PathVariable(name = "scheduleId") Long scheduleId){
-        travelScheduleService.deleteSchedule(scheduleId, memberId);
+        travelScheduleService.deleteTravelSchedule(scheduleId, memberId);
         return ApiResponse.okResponse();
     }
 

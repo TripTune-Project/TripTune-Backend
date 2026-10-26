@@ -150,7 +150,7 @@ public class MemberServiceTest {
         assertDoesNotThrow(() -> memberService.join(request));
 
         // then
-        verify(memberRepository, times(1)).save(any(Member.class));
+        verify(memberRepository).save(any(Member.class));
     }
 
 
@@ -316,7 +316,7 @@ public class MemberServiceTest {
 
         // then
         assertThat(member.getRefreshToken()).isNull();
-        verify(redisService, times(1)).saveExpiredData(accessToken, "logout", 3600);
+        verify(redisService).saveExpiredData(accessToken, "logout", 3600);
     }
 
 
@@ -335,7 +335,7 @@ public class MemberServiceTest {
 
         // then
         assertThat(member.getRefreshToken()).isNull();
-        verify(redisService, times(1)).saveExpiredData(accessToken, "logout", 3600);
+        verify(redisService).saveExpiredData(accessToken, "logout", 3600);
     }
 
     @Test
@@ -353,7 +353,7 @@ public class MemberServiceTest {
 
         // then
         assertThat(member.getRefreshToken()).isNull();
-        verify(redisService, times(1)).saveExpiredData(accessToken, "logout", 3600);
+        verify(redisService).saveExpiredData(accessToken, "logout", 3600);
     }
 
     @Test
@@ -460,7 +460,7 @@ public class MemberServiceTest {
         assertDoesNotThrow(() -> memberService.findPassword(request));
 
         // then
-        verify(emailService, times(1)).sendResetPasswordEmail(request);
+        verify(emailService).sendResetPasswordEmail(request);
     }
 
     @Test
@@ -496,8 +496,8 @@ public class MemberServiceTest {
         memberService.resetPassword(request);
 
         // then
-        verify(redisService, times(1)).getData(passwordToken);
-        verify(memberRepository, times(1)).findByEmail(member.getEmail());
+        verify(redisService).getData(passwordToken);
+        verify(memberRepository).findByEmail(member.getEmail());
         assertThat(member.getPassword()).isEqualTo(request.getPassword());
         assertThat(member.getJoinType()).isEqualTo(JoinType.NATIVE);
     }
@@ -518,8 +518,8 @@ public class MemberServiceTest {
         memberService.resetPassword(request);
 
         // then
-        verify(redisService, times(1)).getData(passwordToken);
-        verify(memberRepository, times(1)).findByEmail(member.getEmail());
+        verify(redisService).getData(passwordToken);
+        verify(memberRepository).findByEmail(member.getEmail());
         assertThat(member.getPassword()).isEqualTo(request.getPassword());
         assertThat(member.getJoinType()).isEqualTo(JoinType.BOTH);
     }
@@ -540,8 +540,8 @@ public class MemberServiceTest {
         memberService.resetPassword(request);
 
         // then
-        verify(redisService, times(1)).getData(passwordToken);
-        verify(memberRepository, times(1)).findByEmail(member.getEmail());
+        verify(redisService).getData(passwordToken);
+        verify(memberRepository).findByEmail(member.getEmail());
         assertThat(member.getPassword()).isEqualTo(request.getPassword());
         assertThat(member.getJoinType()).isEqualTo(JoinType.BOTH);
 

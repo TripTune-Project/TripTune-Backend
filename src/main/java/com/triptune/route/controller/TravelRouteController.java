@@ -1,18 +1,17 @@
 package com.triptune.route.controller;
 
+import com.triptune.global.aop.AttendeeCheck;
+import com.triptune.global.response.ApiResponse;
 import com.triptune.global.response.page.RoutePageResponse;
 import com.triptune.route.dto.request.RouteCreateRequest;
 import com.triptune.route.dto.request.RouteUpdateRequest;
-import com.triptune.route.dto.response.RouteVersionResponse;
 import com.triptune.route.dto.response.RouteResponse;
+import com.triptune.route.dto.response.RouteVersionResponse;
 import com.triptune.route.service.TravelRouteService;
-import com.triptune.global.aop.AttendeeCheck;
-import com.triptune.global.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.repository.query.Param;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -31,7 +30,7 @@ public class TravelRouteController {
                                                                    @RequestParam(name = "page") int page){
         RoutePageResponse<RouteResponse> response = travelRouteService.getTravelRoutes(scheduleId, page);
 
-        return ApiResponse.dataResponse(response);
+        return ApiResponse.routePageResponse(response);
     }
 
 
@@ -51,7 +50,7 @@ public class TravelRouteController {
         RouteVersionResponse response = travelRouteService.updateTravelRoute(scheduleId, routeUpdateRequest);
         return ApiResponse.dataResponse(response);
     }
-//
+
     @DeleteMapping("/routes/{routeId}")
     @Operation(summary = "여행 루트 삭제", description = "특정 여행 루트를 삭제합니다.")
     public ApiResponse<RouteVersionResponse> deleteTravelRoute(@PathVariable(name = "scheduleId") Long scheduleId,

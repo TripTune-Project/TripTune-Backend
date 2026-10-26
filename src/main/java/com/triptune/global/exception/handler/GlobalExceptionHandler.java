@@ -1,9 +1,10 @@
 package com.triptune.global.exception.handler;
 
 import com.triptune.global.exception.BusinessException;
+import com.triptune.global.response.ErrorDataResponse;
 import com.triptune.global.response.ErrorResponse;
 import com.triptune.global.security.jwt.exception.CustomJwtUnAuthorizedException;
-import com.triptune.chat.exception.ChatException;
+import com.triptune.schedule.exception.ConflictScheduleVersionException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -11,8 +12,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.messaging.handler.annotation.MessageExceptionHandler;
-import org.springframework.messaging.simp.annotation.SendToUser;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -40,6 +39,15 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleBusinessException(BusinessException ex, HttpServletRequest request){
         log.warn("[{}] at {}: {}", ex.getClass().getSimpleName(), request.getRequestURI(), ex.getMessage());
         return new ResponseEntity<>(ErrorResponse.of(ex.getErrorCode()), ex.getErrorCode().getStatus());
+    }
+
+    @ExceptionHandler(ConflictScheduleVersionException.class)
+    public ResponseEntity<ErrorDataResponse> handleConflictScheduleVersionException(ConflictScheduleVersionException ex, HttpServletRequest request){
+        log.warn("[ConflictScheduleVersionException] at {}: {}", request.getRequestURI(), ex.getMessage());
+        return new ResponseEntity<>(
+                ErrorDataResponse.of(ex.getErrorCode(), ex.getEventResponse()),
+                ex.getErrorCode().getStatus()
+        );
     }
 
 
@@ -88,16 +96,5 @@ public class GlobalExceptionHandler {
         response.sendRedirect(notFoundErrorURL);
     }
 
-    /**
-     * WebSocket 채팅 예외 처리
-     * - Http 응답 구조 사용 안함
-     * - 메시지 큐(/queue/errors) 로 에러 전달
-     */
-    @MessageExceptionHandler(ChatException.class)
-    @SendToUser(destinations = "/queue/errors", broadcast = false)
-    public ErrorResponse handleForbiddenChatException(ChatException ex){
-        log.warn("[{}]: {}", ex.getClass().getSimpleName(), ex.getMessage());
-        return ErrorResponse.of(ex.getErrorCode());
-    }
 
 }

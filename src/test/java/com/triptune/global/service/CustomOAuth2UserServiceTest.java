@@ -190,7 +190,7 @@ class CustomOAuth2UserServiceTest  {
         assertThat(response.getProfileImage().getS3ObjectKey()).isEqualTo(defaultImage.getS3ObjectKey());
         assertThat(response.getJoinType()).isEqualTo(JoinType.BOTH);
 
-        verify(socialMemberRepository, times(1)).save(any());
+        verify(socialMemberRepository).save(any());
     }
 
     @Test
@@ -214,7 +214,7 @@ class CustomOAuth2UserServiceTest  {
         assertThat(response.getProfileImage().getS3ObjectKey()).isEqualTo(defaultImage.getS3ObjectKey());
         assertThat(response.getJoinType()).isEqualTo(JoinType.BOTH);
 
-        verify(socialMemberRepository, times(1)).save(any());
+        verify(socialMemberRepository).save(any());
     }
 
     @Test
@@ -238,7 +238,7 @@ class CustomOAuth2UserServiceTest  {
         assertThat(response.getProfileImage().getS3ObjectKey()).isEqualTo(defaultImage.getS3ObjectKey());
         assertThat(response.getJoinType()).isEqualTo(JoinType.SOCIAL);
 
-        verify(socialMemberRepository, times(1)).save(any());
+        verify(socialMemberRepository).save(any());
     }
 
     @Test
@@ -262,7 +262,7 @@ class CustomOAuth2UserServiceTest  {
         assertThat(response.getProfileImage().getS3ObjectKey()).isEqualTo(defaultImage.getS3ObjectKey());
         assertThat(response.getJoinType()).isEqualTo(JoinType.BOTH);
 
-        verify(socialMemberRepository, times(1)).save(any());
+        verify(socialMemberRepository).save(any());
     }
 
 
@@ -287,7 +287,7 @@ class CustomOAuth2UserServiceTest  {
         assertThat(response.getProfileImage().getS3ObjectKey()).isEqualTo(defaultImage.getS3ObjectKey());
         assertThat(response.getJoinType()).isEqualTo(JoinType.SOCIAL);
 
-        verify(socialMemberRepository, times(1)).save(any());
+        verify(socialMemberRepository).save(any());
     }
 
     @Test
@@ -310,7 +310,7 @@ class CustomOAuth2UserServiceTest  {
         assertThat(response.getProfileImage().getS3ObjectKey()).isEqualTo(defaultImage.getS3ObjectKey());
         assertThat(response.getJoinType()).isEqualTo(JoinType.SOCIAL);
 
-        verify(socialMemberRepository, times(1)).save(any());
+        verify(socialMemberRepository).save(any());
     }
 
     @Test
@@ -422,7 +422,7 @@ class CustomOAuth2UserServiceTest  {
         assertThat(response.getProfileImage().getS3ObjectKey()).isEqualTo(defaultImage.getS3ObjectKey());
         assertThat(response.getJoinType()).isEqualTo(JoinType.SOCIAL);
 
-        verify(socialMemberRepository, times(1)).save(any());
+        verify(socialMemberRepository).save(any());
     }
 
     @Test
@@ -447,7 +447,7 @@ class CustomOAuth2UserServiceTest  {
         assertThat(response.getProfileImage().getS3ObjectKey()).isEqualTo(defaultImage.getS3ObjectKey());
         assertThat(response.getJoinType()).isEqualTo(JoinType.SOCIAL);
 
-        verify(socialMemberRepository, times(1)).save(any());
+        verify(socialMemberRepository).save(any());
     }
 
     @Test
@@ -468,7 +468,7 @@ class CustomOAuth2UserServiceTest  {
         assertThat(response.getProfileImage().getS3ObjectKey()).isEqualTo(defaultImage.getS3ObjectKey());
         assertThat(response.getJoinType()).isEqualTo(JoinType.BOTH);
 
-        verify(socialMemberRepository, times(1)).save(any());
+        verify(socialMemberRepository).save(any());
     }
 
     @Test
@@ -489,7 +489,7 @@ class CustomOAuth2UserServiceTest  {
         assertThat(response.getProfileImage().getS3ObjectKey()).isEqualTo(defaultImage.getS3ObjectKey());
         assertThat(response.getJoinType()).isEqualTo(JoinType.BOTH);
 
-        verify(socialMemberRepository, times(1)).save(any());
+        verify(socialMemberRepository).save(any());
     }
 
     @Test
@@ -510,7 +510,7 @@ class CustomOAuth2UserServiceTest  {
         assertThat(response.getProfileImage().getS3ObjectKey()).isEqualTo(defaultImage.getS3ObjectKey());
         assertThat(response.getJoinType()).isEqualTo(JoinType.SOCIAL);
 
-        verify(socialMemberRepository, times(1)).save(any());
+        verify(socialMemberRepository).save(any());
     }
 
     @Test
@@ -531,7 +531,7 @@ class CustomOAuth2UserServiceTest  {
         assertThat(response.getProfileImage().getS3ObjectKey()).isEqualTo(defaultImage.getS3ObjectKey());
         assertThat(response.getJoinType()).isEqualTo(JoinType.BOTH);
 
-        verify(socialMemberRepository, times(1)).save(any());
+        verify(socialMemberRepository).save(any());
     }
 
 
@@ -554,7 +554,7 @@ class CustomOAuth2UserServiceTest  {
         assertThat(response.getProfileImage().getS3ObjectKey()).isEqualTo(defaultImage.getS3ObjectKey());
         assertThat(response.getJoinType()).isEqualTo(JoinType.SOCIAL);
 
-        verify(socialMemberRepository, times(1)).save(any());
+        verify(socialMemberRepository).save(any());
     }
 
 
@@ -577,7 +577,7 @@ class CustomOAuth2UserServiceTest  {
         assertThat(response.getProfileImage().getS3ObjectKey()).isEqualTo(defaultImage.getS3ObjectKey());
         assertThat(response.getJoinType()).isEqualTo(JoinType.SOCIAL);
 
-        verify(socialMemberRepository, times(1)).save(any());
+        verify(socialMemberRepository).save(any());
     }
 
 

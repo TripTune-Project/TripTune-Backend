@@ -1,5 +1,6 @@
 package com.triptune.schedule.service;
 
+import com.triptune.schedule.exception.ConflictScheduleVersionException;
 import com.triptune.global.s3.S3ObjectManager;
 import com.triptune.member.entity.Member;
 import com.triptune.member.repository.MemberRepository;
@@ -51,7 +52,7 @@ public class TravelScheduleService {
     private final S3ObjectManager s3ObjectManager;
     private final ApplicationEventPublisher publisher;
 
-    public SchedulePageResponse<ScheduleInfoResponse> getAllSchedules(int page, Long memberId) {
+    public SchedulePageResponse<ScheduleInfoResponse> getAllTravelSchedules(int page, Long memberId) {
         Pageable pageable = PageUtils.schedulePageable(page);
         Page<ScheduleInfoQueryDto> schedulePage = travelScheduleRepository.findTravelSchedules(pageable, memberId);
         Page<ScheduleInfoResponse> pageResult = toScheduleInfoPage(schedulePage);
@@ -62,7 +63,7 @@ public class TravelScheduleService {
     }
 
 
-    public SchedulePageResponse<ScheduleInfoResponse> getSharedSchedules(int page, Long memberId) {
+    public SchedulePageResponse<ScheduleInfoResponse> getSharedTravelSchedules(int page, Long memberId) {
         Pageable pageable = PageUtils.schedulePageable(page);
         Page<ScheduleInfoQueryDto> schedulePage = travelScheduleRepository.findSharedTravelSchedules(pageable, memberId);
         Page<ScheduleInfoResponse> pageResult = toScheduleInfoPage(schedulePage);
@@ -73,7 +74,7 @@ public class TravelScheduleService {
     }
 
 
-    public Page<ScheduleOverviewResponse> getEnableEditSchedules(int page, Long memberId) {
+    public Page<ScheduleOverviewResponse> getEnableEditTravelSchedules(int page, Long memberId) {
         Pageable pageable = PageUtils.scheduleModalPageable(page);
 
         return travelScheduleRepository.findEnableEditTravelSchedules(pageable, memberId)
@@ -84,7 +85,7 @@ public class TravelScheduleService {
     }
 
 
-    public SchedulePageResponse<ScheduleInfoResponse> searchAllSchedules(int page, String keyword, Long memberId) {
+    public SchedulePageResponse<ScheduleInfoResponse> searchAllTravelSchedules(int page, String keyword, Long memberId) {
         Pageable pageable = PageUtils.schedulePageable(page);
         Page<ScheduleInfoQueryDto> schedulePage = travelScheduleRepository.searchTravelSchedules(pageable, keyword, memberId);
         Page<ScheduleInfoResponse> pageResult = toScheduleInfoPage(schedulePage);
@@ -96,7 +97,7 @@ public class TravelScheduleService {
     }
 
 
-    public SchedulePageResponse<ScheduleInfoResponse> searchSharedSchedules(int page, String keyword, Long memberId) {
+    public SchedulePageResponse<ScheduleInfoResponse> searchSharedTravelSchedules(int page, String keyword, Long memberId) {
         Pageable pageable = PageUtils.schedulePageable(page);
         Page<ScheduleInfoQueryDto> schedulePage = travelScheduleRepository.searchSharedTravelSchedules(pageable, keyword, memberId);
         Page<ScheduleInfoResponse> pageResult = toScheduleInfoPage(schedulePage);
@@ -126,11 +127,11 @@ public class TravelScheduleService {
 
 
     @Transactional
-    public ScheduleCreateResponse createSchedule(ScheduleCreateRequest scheduleCreateRequest, Long memberId){
+    public ScheduleCreateResponse createTravelSchedule(ScheduleCreateRequest createRequest, Long memberId){
         TravelSchedule schedule = TravelSchedule.createTravelSchedule(
-                scheduleCreateRequest.getScheduleName(),
-                scheduleCreateRequest.getStartDate(),
-                scheduleCreateRequest.getEndDate()
+                createRequest.getScheduleName(),
+                createRequest.getStartDate(),
+                createRequest.getEndDate()
         );
         travelScheduleRepository.save(schedule);
 
@@ -167,27 +168,38 @@ public class TravelScheduleService {
 
 
     @Transactional
-    public ScheduleUpdateResponse updateSchedule(ScheduleUpdateRequest scheduleUpdateRequest, Long memberId, Long scheduleId) {
+    public ScheduleUpdateResponse updateTravelSchedule(ScheduleUpdateRequest updateRequest, Long memberId, Long scheduleId) {
         TravelSchedule schedule = getSchedule(scheduleId);
         TravelAttendee attendee = getAttendeeInfo(schedule, memberId);
-        validateEditPermission(attendee);
 
-        schedule.updateSchedule(
-                scheduleUpdateRequest.getScheduleName(),
-                scheduleUpdateRequest.getStartDate(),
-                scheduleUpdateRequest.getEndDate()
+        validateEditPermission(attendee);
+        validateScheduleVersion(schedule, updateRequest.getScheduleVersion());
+
+        int updated = travelScheduleRepository.updateSchedule(
+                scheduleId,
+                updateRequest.getScheduleName(),
+                updateRequest.getStartDate(),
+                updateRequest.getEndDate(),
+                updateRequest.getScheduleVersion()
         );
+
+        if (updated == 0){
+            throw new ConflictScheduleVersionException(
+                    ErrorCode.CONFLICT_SCHEDULE_VERSION,
+                    ScheduleUpdateEventResponse.from(schedule)
+            );
+        }
+
+        int newScheduleVersion = updateRequest.getScheduleVersion() + 1;
 
         publisher.publishEvent(ScheduleEvent.of(
                 scheduleId,
                 EventType.SCHEDULE_UPDATED,
-                ScheduleUpdateEventResponse.from(schedule)
+                ScheduleUpdateEventResponse.from(updateRequest, newScheduleVersion)
         ));
 
-
-        return ScheduleUpdateResponse.of(schedule.getScheduleVersion());
+        return ScheduleUpdateResponse.of(newScheduleVersion);
     }
-
 
     private TravelSchedule getSchedule(Long scheduleId){
         return travelScheduleRepository.findById(scheduleId)
@@ -202,7 +214,6 @@ public class TravelScheduleService {
 
     }
 
-
     private void validateEditPermission(TravelAttendee attendee){
         if (!attendee.getPermission().isEnableEdit()){
             throw new ForbiddenScheduleException(ErrorCode.FORBIDDEN_EDIT_SCHEDULE);
@@ -210,8 +221,17 @@ public class TravelScheduleService {
     }
 
 
+    private void validateScheduleVersion(TravelSchedule schedule, Integer newScheduleVersion) {
+        if (!schedule.isValidScheduleVersion(newScheduleVersion)){
+            throw new ConflictScheduleVersionException(
+                    ErrorCode.CONFLICT_SCHEDULE_VERSION,
+                    ScheduleUpdateEventResponse.from(schedule)
+            );
+        }
+    }
+
     @Transactional
-    public void deleteSchedule(Long scheduleId, Long memberId) {
+    public void deleteTravelSchedule(Long scheduleId, Long memberId) {
         TravelAttendee attendee = getAttendee(scheduleId, memberId);
 
         if (!attendee.getRole().isAuthor()){

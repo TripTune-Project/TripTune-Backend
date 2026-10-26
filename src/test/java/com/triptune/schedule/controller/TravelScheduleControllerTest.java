@@ -1,6 +1,7 @@
 package com.triptune.schedule.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.triptune.attendee.exception.ForbiddenAttendeeException;
 import com.triptune.common.entity.ApiContentType;
 import com.triptune.common.entity.City;
 import com.triptune.common.entity.Country;
@@ -9,6 +10,7 @@ import com.triptune.common.fixture.ApiContentTypeFixture;
 import com.triptune.common.fixture.CityFixture;
 import com.triptune.common.fixture.CountryFixture;
 import com.triptune.common.fixture.DistrictFixture;
+import com.triptune.schedule.exception.ConflictScheduleVersionException;
 import com.triptune.global.message.ErrorCode;
 import com.triptune.global.message.SuccessCode;
 import com.triptune.global.response.page.PageResponse;
@@ -25,7 +27,6 @@ import com.triptune.schedule.dto.request.ScheduleUpdateRequest;
 import com.triptune.schedule.dto.response.*;
 import com.triptune.schedule.entity.TravelSchedule;
 import com.triptune.schedule.enums.ScheduleSearchType;
-import com.triptune.attendee.exception.ForbiddenAttendeeException;
 import com.triptune.schedule.exception.ForbiddenScheduleException;
 import com.triptune.schedule.fixture.TravelScheduleFixture;
 import com.triptune.schedule.service.TravelScheduleService;
@@ -60,7 +61,6 @@ import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willThrow;
-import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -139,7 +139,7 @@ public class TravelScheduleControllerTest {
 
     @Test
     @DisplayName("전체 일정 목록 조회")
-    void getAllSchedules() throws Exception {
+    void getAllTravelSchedules() throws Exception {
         // given
         SecurityTestUtils.mockAuthentication(member1);
 
@@ -160,7 +160,7 @@ public class TravelScheduleControllerTest {
         );
         SchedulePageResponse<ScheduleInfoResponse> response = SchedulePageResponse.of(page, 3, 2);
 
-        given(travelScheduleService.getAllSchedules(anyInt(), anyLong()))
+        given(travelScheduleService.getAllTravelSchedules(anyInt(), anyLong()))
                 .willReturn(response);
 
 
@@ -186,7 +186,7 @@ public class TravelScheduleControllerTest {
 
     @Test
     @DisplayName("전체 일정 목록 조회 시 데이터 없는 경우")
-    void getAllSchedules_emptyResult() throws Exception {
+    void getAllTravelSchedules_emptyResult() throws Exception {
         // given
         SecurityTestUtils.mockAuthentication(member1);
 
@@ -197,7 +197,7 @@ public class TravelScheduleControllerTest {
         );
         SchedulePageResponse<ScheduleInfoResponse> response = SchedulePageResponse.of(page, 0, 0);
 
-        given(travelScheduleService.getAllSchedules(anyInt(), anyLong()))
+        given(travelScheduleService.getAllTravelSchedules(anyInt(), anyLong()))
                 .willReturn(response);
 
         // when, then
@@ -213,7 +213,7 @@ public class TravelScheduleControllerTest {
 
     @Test
     @DisplayName("공유된 일정 목록 조회")
-    void getSharedSchedules() throws Exception {
+    void getSharedTravelSchedules() throws Exception {
         // given
         SecurityTestUtils.mockAuthentication(member1);
 
@@ -232,7 +232,7 @@ public class TravelScheduleControllerTest {
         );
         SchedulePageResponse<ScheduleInfoResponse> response = SchedulePageResponse.of(page, 3, 2);
 
-        given(travelScheduleService.getSharedSchedules(anyInt(), anyLong()))
+        given(travelScheduleService.getSharedTravelSchedules(anyInt(), anyLong()))
                 .willReturn(response);
 
 
@@ -255,7 +255,7 @@ public class TravelScheduleControllerTest {
 
     @Test
     @DisplayName("공유된 일정 목록 조회 시 데이터 없는 경우")
-    void getSharedSchedules_emptyResult() throws Exception {
+    void getSharedTravelSchedules_emptyResult() throws Exception {
         // given
         SecurityTestUtils.mockAuthentication(member1);
 
@@ -266,7 +266,7 @@ public class TravelScheduleControllerTest {
         );
         SchedulePageResponse<ScheduleInfoResponse> response = SchedulePageResponse.of(page, 0, 0);
 
-        given(travelScheduleService.getSharedSchedules(anyInt(), anyLong()))
+        given(travelScheduleService.getSharedTravelSchedules(anyInt(), anyLong()))
                 .willReturn(response);
 
         // when, then
@@ -283,7 +283,7 @@ public class TravelScheduleControllerTest {
 
     @Test
     @DisplayName("수정 권한 있는 내 일정 조회")
-    void getEnableEditSchedules() throws Exception {
+    void getEnableEditTravelSchedules() throws Exception {
         // given
         SecurityTestUtils.mockAuthentication(member1);
 
@@ -301,7 +301,7 @@ public class TravelScheduleControllerTest {
                 overviewResponse.size()
         );
 
-        given(travelScheduleService.getEnableEditSchedules(anyInt(), anyLong()))
+        given(travelScheduleService.getEnableEditTravelSchedules(anyInt(), anyLong()))
                 .willReturn(response);
 
         // when, then
@@ -319,7 +319,7 @@ public class TravelScheduleControllerTest {
 
     @Test
     @DisplayName("수정 권한 있는 일정 조회 시 일정 데이터가 없는 경우")
-    void getEnableEditSchedules_emptyResult() throws Exception {
+    void getEnableEditTravelSchedules_emptyResult() throws Exception {
         // given
         SecurityTestUtils.mockAuthentication(member1);
 
@@ -329,7 +329,7 @@ public class TravelScheduleControllerTest {
                 0
         );
 
-        given(travelScheduleService.getEnableEditSchedules(anyInt(), anyLong()))
+        given(travelScheduleService.getEnableEditTravelSchedules(anyInt(), anyLong()))
                 .willReturn(response);
 
         // when, then
@@ -345,7 +345,7 @@ public class TravelScheduleControllerTest {
 
     @Test
     @DisplayName("전체 일정 검색")
-    void searchSchedules() throws Exception {
+    void searchTravelSchedules() throws Exception {
         // given
         SecurityTestUtils.mockAuthentication(member1);
 
@@ -361,7 +361,7 @@ public class TravelScheduleControllerTest {
         );
         SchedulePageResponse<ScheduleInfoResponse> response = SchedulePageResponse.of(page, 3, 2);
 
-        given(travelScheduleService.searchAllSchedules(anyInt(), eq("1"), anyLong()))
+        given(travelScheduleService.searchAllTravelSchedules(anyInt(), eq("1"), anyLong()))
                 .willReturn(response);
 
         // when, then
@@ -383,7 +383,7 @@ public class TravelScheduleControllerTest {
 
     @Test
     @DisplayName("전체 일정 검색 시 검색 결과 없는 경우")
-    void searchSchedules_emptyResult() throws Exception {
+    void searchTravelSchedules_emptyResult() throws Exception {
         // given
         SecurityTestUtils.mockAuthentication(member1);
 
@@ -394,7 +394,7 @@ public class TravelScheduleControllerTest {
         );
         SchedulePageResponse<ScheduleInfoResponse> response = SchedulePageResponse.of(page, 3, 2);
 
-        given(travelScheduleService.searchAllSchedules(anyInt(), eq("ㅁㄴㅇㄹ"), anyLong()))
+        given(travelScheduleService.searchAllTravelSchedules(anyInt(), eq("ㅁㄴㅇㄹ"), anyLong()))
                 .willReturn(response);
 
 
@@ -413,7 +413,7 @@ public class TravelScheduleControllerTest {
 
     @Test
     @DisplayName("공유된 일정 검색")
-    void searchSharedSchedules() throws Exception {
+    void searchSharedTravelSchedules() throws Exception {
         // given
         SecurityTestUtils.mockAuthentication(member1);
 
@@ -429,7 +429,7 @@ public class TravelScheduleControllerTest {
         );
         SchedulePageResponse<ScheduleInfoResponse> response = SchedulePageResponse.of(page, 3, 2);
 
-        given(travelScheduleService.searchSharedSchedules(anyInt(), eq("테스트"), anyLong()))
+        given(travelScheduleService.searchSharedTravelSchedules(anyInt(), eq("테스트"), anyLong()))
                 .willReturn(response);
 
         // when, then
@@ -451,7 +451,7 @@ public class TravelScheduleControllerTest {
 
     @Test
     @DisplayName("공유된 일정 검색 시 검색 결과 없는 경우")
-    void searchSharedSchedules_emptyResult() throws Exception {
+    void searchSharedTravelSchedules_emptyResult() throws Exception {
         // given
         SecurityTestUtils.mockAuthentication(member1);
 
@@ -462,7 +462,7 @@ public class TravelScheduleControllerTest {
         );
         SchedulePageResponse<ScheduleInfoResponse> response = SchedulePageResponse.of(page, 3, 2);
 
-        given(travelScheduleService.searchSharedSchedules(anyInt(), eq("테스트3"), anyLong()))
+        given(travelScheduleService.searchSharedTravelSchedules(anyInt(), eq("테스트3"), anyLong()))
                 .willReturn(response);
 
         // when, then
@@ -480,7 +480,7 @@ public class TravelScheduleControllerTest {
 
     @Test
     @DisplayName("전체, 공유된 일정 검색 시 검색 타입이 없어 예외 발생")
-    void searchSchedules_illegalSearchType() throws Exception {
+    void searchTravelSchedules_illegalSearchType() throws Exception {
         // given
         SecurityTestUtils.mockAuthentication(member1);
 
@@ -497,7 +497,7 @@ public class TravelScheduleControllerTest {
 
     @Test
     @DisplayName("일정 생성")
-    void createSchedule() throws Exception{
+    void createTravelSchedule() throws Exception{
         // given
         SecurityTestUtils.mockAuthentication(member1);
 
@@ -508,7 +508,7 @@ public class TravelScheduleControllerTest {
         );
         ScheduleCreateResponse response = TravelScheduleFixture.createScheduleCreateResponse(1L);
 
-        given(travelScheduleService.createSchedule(any(ScheduleCreateRequest.class), anyLong()))
+        given(travelScheduleService.createTravelSchedule(any(ScheduleCreateRequest.class), anyLong()))
                 .willReturn(response);
 
         // when, then
@@ -526,7 +526,7 @@ public class TravelScheduleControllerTest {
     @ParameterizedTest
     @DisplayName("일정 생성 시 일정명 빈 값으로 예외 발생")
     @ValueSource(strings = {"", " "})
-    void createSchedule_invalidNotBlankScheduleName(String input) throws Exception {
+    void createTravelSchedule_invalidNotBlankScheduleName(String input) throws Exception {
         // given
         SecurityTestUtils.mockAuthentication(member1);
 
@@ -548,7 +548,7 @@ public class TravelScheduleControllerTest {
 
     @Test
     @DisplayName("일정 생성 시 일정명 null 값이 들어와 예외 발생")
-    void createSchedule_invalidNullScheduleName() throws Exception {
+    void createTravelSchedule_invalidNullScheduleName() throws Exception {
         // given
         SecurityTestUtils.mockAuthentication(member1);
 
@@ -570,7 +570,7 @@ public class TravelScheduleControllerTest {
 
     @Test
     @DisplayName("일정 생성 시 일정 시작일 null 값이 들어와 예외 발생")
-    void createSchedule_invalidNullStartDate() throws Exception {
+    void createTravelSchedule_invalidNullStartDate() throws Exception {
         // given
         SecurityTestUtils.mockAuthentication(member1);
 
@@ -592,7 +592,7 @@ public class TravelScheduleControllerTest {
 
     @Test
     @DisplayName("일정 생성 시 일정 종료일 null 값이 들어와 예외 발생")
-    void createSchedule_invalidNullEndDate() throws Exception {
+    void createTravelSchedule_invalidNullEndDate() throws Exception {
         // given
         SecurityTestUtils.mockAuthentication(member1);
 
@@ -615,7 +615,7 @@ public class TravelScheduleControllerTest {
 
     @Test
     @DisplayName("일정 생성 시 일정 생성일이 종료일 이후 날짜로 예외 발생")
-    void createSchedule_invalidStartDateAfterEndDate() throws Exception {
+    void createTravelSchedule_invalidStartDateAfterEndDate() throws Exception {
         // given
         SecurityTestUtils.mockAuthentication(member1);
 
@@ -637,7 +637,7 @@ public class TravelScheduleControllerTest {
 
     @Test
     @DisplayName("일정 상세 조회")
-    void getScheduleDetail() throws Exception {
+    void getTravelScheduleDetail() throws Exception {
         // given
         SecurityTestUtils.mockAuthentication(member1);
 
@@ -682,7 +682,7 @@ public class TravelScheduleControllerTest {
 
     @Test
     @DisplayName("일정 상세 조회 시 여행지 데이터 존재하지 않는 경우")
-    void getScheduleDetail_emptyPlaces() throws Exception {
+    void getTravelScheduleDetail_emptyPlaces() throws Exception {
         // given
         SecurityTestUtils.mockAuthentication(member1);
 
@@ -718,7 +718,7 @@ public class TravelScheduleControllerTest {
 
     @Test
     @DisplayName("일정 수정")
-    void updateSchedule() throws Exception {
+    void updateTravelSchedule() throws Exception {
         // given
         SecurityTestUtils.mockAuthentication(member1);
 
@@ -732,7 +732,7 @@ public class TravelScheduleControllerTest {
 
         ScheduleUpdateResponse response = TravelScheduleFixture.createScheduleUpdateResponse(scheduleVersion+1);
 
-        given(travelScheduleService.updateSchedule(any(ScheduleUpdateRequest.class), eq(member1.getMemberId()), eq(1L)))
+        given(travelScheduleService.updateTravelSchedule(any(ScheduleUpdateRequest.class), eq(member1.getMemberId()), eq(1L)))
                 .willReturn(response);
 
         // when, then
@@ -749,7 +749,7 @@ public class TravelScheduleControllerTest {
     @ParameterizedTest
     @DisplayName("일정 수정 시 일정명 빈 값으로 예외 발생")
     @ValueSource(strings = {"", " "})
-    void updateSchedule_invalidNotBlankScheduleName(String input) throws Exception {
+    void updateTravelSchedule_invalidNotBlankScheduleName(String input) throws Exception {
         // given
         SecurityTestUtils.mockAuthentication(member1);
 
@@ -772,7 +772,7 @@ public class TravelScheduleControllerTest {
 
     @Test
     @DisplayName("일정 수정 시 일정명 null 값이 들어와 예외 발생")
-    void updateSchedule_invalidNullScheduleName() throws Exception {
+    void updateTravelSchedule_invalidNullScheduleName() throws Exception {
         // given
         SecurityTestUtils.mockAuthentication(member1);
 
@@ -795,7 +795,7 @@ public class TravelScheduleControllerTest {
 
     @Test
     @DisplayName("일정 수정 시 일정 시작일 null 값이 들어와 예외 발생")
-    void updateSchedule_invalidNullStartDate() throws Exception {
+    void updateTravelSchedule_invalidNullStartDate() throws Exception {
         // given
         SecurityTestUtils.mockAuthentication(member1);
 
@@ -819,7 +819,7 @@ public class TravelScheduleControllerTest {
 
     @Test
     @DisplayName("일정 수정 시 일정 종료일 null 값이 들어와 예외 발생")
-    void updateSchedule_invalidNullEndDate() throws Exception {
+    void updateTravelSchedule_invalidNullEndDate() throws Exception {
         // given
         SecurityTestUtils.mockAuthentication(member1);
 
@@ -842,7 +842,7 @@ public class TravelScheduleControllerTest {
 
     @Test
     @DisplayName("일정 수정 시 일정 생성일이 종료일 이후 날짜로 예외 발생")
-    void updateSchedule_invalidStartDateAfterEndDate() throws Exception {
+    void updateTravelSchedule_invalidStartDateAfterEndDate() throws Exception {
         // given
         SecurityTestUtils.mockAuthentication(member1);
 
@@ -866,7 +866,7 @@ public class TravelScheduleControllerTest {
 
     @Test
     @DisplayName("일정 수정 시 버전에 null 값이 들어와 예외 발생")
-    void updateSchedule_invalidNullScheduleVersion() throws Exception {
+    void updateTravelSchedule_invalidNullScheduleVersion() throws Exception {
         // given
         SecurityTestUtils.mockAuthentication(member1);
 
@@ -890,7 +890,7 @@ public class TravelScheduleControllerTest {
 
     @Test
     @DisplayName("일정 수정 시 버전에 0 미만의 값이 들어와 예외 발생")
-    void updateSchedule_invalidMinScheduleVersion() throws Exception {
+    void updateTravelSchedule_invalidMinScheduleVersion() throws Exception {
         // given
         SecurityTestUtils.mockAuthentication(member1);
 
@@ -914,7 +914,7 @@ public class TravelScheduleControllerTest {
 
     @Test
     @DisplayName("일정 수정 시 수정 권한이 없어 예외 발생")
-    void updateSchedule_forbiddenEdit() throws Exception {
+    void updateTravelSchedule_forbiddenEdit() throws Exception {
         // given
         SecurityTestUtils.mockAuthentication(member2);
 
@@ -926,7 +926,12 @@ public class TravelScheduleControllerTest {
         );
 
         willThrow(new ForbiddenAttendeeException(ErrorCode.FORBIDDEN_EDIT_SCHEDULE))
-                .given(travelScheduleService).updateSchedule(any(ScheduleUpdateRequest.class), anyLong(), anyLong());
+                .given(travelScheduleService)
+                .updateTravelSchedule(
+                        any(ScheduleUpdateRequest.class),
+                        anyLong(),
+                        anyLong()
+                );
 
         // when, then
         mockMvc.perform(patch("/api/schedules/{scheduleId}", 1L)
@@ -939,9 +944,50 @@ public class TravelScheduleControllerTest {
     }
 
 
+
+    @Test
+    @DisplayName("일정 수정 시 버전 정보 충돌로 예외 발생")
+    void updateTravelSchedule_conflictScheduleVersion() throws Exception {
+        // given
+        SecurityTestUtils.mockAuthentication(member1);
+
+        TravelSchedule schedule = TravelScheduleFixture.createScheduleWithId(1L, "수정 전 일정");
+
+        ScheduleUpdateRequest request = TravelScheduleFixture.createScheduleUpdateRequest(
+                "수정 테스트",
+                LocalDate.now(),
+                LocalDate.now().plusDays(1),
+                schedule.getScheduleVersion()+1
+        );
+
+        ScheduleUpdateEventResponse exResponse = TravelScheduleFixture.createScheduleUpdateEventResponse(schedule);
+
+        willThrow(new ConflictScheduleVersionException(ErrorCode.CONFLICT_SCHEDULE_VERSION, exResponse))
+                .given(travelScheduleService)
+                .updateTravelSchedule(
+                        any(ScheduleUpdateRequest.class),
+                        eq(member1.getMemberId()),
+                        eq(schedule.getScheduleId())
+                );
+
+        // when, then
+        mockMvc.perform(patch("/api/schedules/{scheduleId}", schedule.getScheduleId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andDo(print())
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value(ErrorCode.CONFLICT_SCHEDULE_VERSION.getMessage()))
+                .andExpect(jsonPath("$.data.scheduleName").value(schedule.getScheduleName()))
+                .andExpect(jsonPath("$.data.startDate").value(schedule.getStartDate().toString()))
+                .andExpect(jsonPath("$.data.endDate").value(schedule.getEndDate().toString()))
+                .andExpect(jsonPath("$.data.scheduleVersion").value(schedule.getScheduleVersion()));
+    }
+
+
     @Test
     @DisplayName("일정 삭제")
-    void deleteSchedule() throws Exception {
+    void deleteTravelSchedule() throws Exception {
         // given
         SecurityTestUtils.mockAuthentication(member1);
 
@@ -957,12 +1003,13 @@ public class TravelScheduleControllerTest {
 
     @Test
     @DisplayName("일정 삭제 시 삭제 권한이 없는 회원 요청으로 예외 발생")
-    void deleteSchedule_forbiddenSchedule() throws Exception {
+    void deleteTravelSchedule_forbiddenSchedule() throws Exception {
         // given
         SecurityTestUtils.mockAuthentication(member2);
 
         willThrow(new ForbiddenScheduleException(ErrorCode.FORBIDDEN_DELETE_SCHEDULE))
-                .given(travelScheduleService).deleteSchedule(anyLong(), anyLong());
+                .given(travelScheduleService)
+                .deleteTravelSchedule(anyLong(), anyLong());
 
         // when, then
         mockMvc.perform(delete("/api/schedules/{scheduleId}", 1L))
