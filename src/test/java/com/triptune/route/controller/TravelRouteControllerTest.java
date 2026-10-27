@@ -163,7 +163,7 @@ public class TravelRouteControllerTest {
                 pageResponse
         );
 
-        given(travelRouteService.getTravelRoutes(anyLong(), anyInt()))
+        given(travelRouteService.getTravelRoutes(schedule.getScheduleId(), 1))
                 .willReturn(response);
 
         // when, then
@@ -300,10 +300,15 @@ public class TravelRouteControllerTest {
         RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(place3WithoutThumb.getPlaceId(), 3);
 
         willThrow(new DataNotFoundException(ErrorCode.SCHEDULE_NOT_FOUND))
-                .given(travelRouteService).createLastTravelRoute(anyLong(), anyLong(), any(RouteCreateRequest.class));
+                .given(travelRouteService)
+                .createLastTravelRoute(
+                        eq(1004L),
+                        eq(member1.getMemberId()),
+                        any(RouteCreateRequest.class)
+                );
 
         // when, then
-        mockMvc.perform(post("/api/schedules/{scheduleId}/routes", 1000L)
+        mockMvc.perform(post("/api/schedules/{scheduleId}/routes", 1004L)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
@@ -318,13 +323,18 @@ public class TravelRouteControllerTest {
     void createLastTravelRoute_attendeeNotFound() throws Exception {
         // given
         ProfileImage profileImage = ProfileImageFixture.createProfileImage("memberImage");
-        Member member = MemberFixture.createNativeTypeMemberWithId(1000L, "notMember@email.com", profileImage);
-        SecurityTestUtils.mockAuthentication(member);
+        Member notMember = MemberFixture.createNativeTypeMemberWithId(1004L, "notMember@email.com", profileImage);
+        SecurityTestUtils.mockAuthentication(notMember);
 
         RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(place3WithoutThumb.getPlaceId(), 3);
 
         willThrow(new DataNotFoundException(ErrorCode.ATTENDEE_NOT_FOUND))
-                .given(travelRouteService).createLastTravelRoute(anyLong(), anyLong(), any(RouteCreateRequest.class));
+                .given(travelRouteService)
+                .createLastTravelRoute(
+                        eq(schedule.getScheduleId()),
+                        eq(notMember.getMemberId()),
+                        any(RouteCreateRequest.class)
+                );
 
         // when, then
         mockMvc.perform(post("/api/schedules/{scheduleId}/routes", schedule.getScheduleId())
@@ -345,7 +355,12 @@ public class TravelRouteControllerTest {
         RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(place3WithoutThumb.getPlaceId(), 3);
 
         willThrow(new ForbiddenAttendeeException(ErrorCode.FORBIDDEN_EDIT_SCHEDULE))
-                .given(travelRouteService).createLastTravelRoute(anyLong(), anyLong(), any(RouteCreateRequest.class));
+                .given(travelRouteService)
+                .createLastTravelRoute(
+                        eq(schedule.getScheduleId()),
+                        eq(member2.getMemberId()),
+                        any(RouteCreateRequest.class)
+                );
 
         // when, then
         mockMvc.perform(post("/api/schedules/{scheduleId}/routes", schedule.getScheduleId())
@@ -363,10 +378,15 @@ public class TravelRouteControllerTest {
     void createLastTravelRoute_placeNotFound() throws Exception {
         // given
         SecurityTestUtils.mockAuthentication(member1);
-        RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(1000L, 3);
+        RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(1004L, 3);
 
         willThrow(new DataNotFoundException(ErrorCode.PLACE_NOT_FOUND))
-                .given(travelRouteService).createLastTravelRoute(anyLong(), anyLong(), any(RouteCreateRequest.class));
+                .given(travelRouteService)
+                .createLastTravelRoute(
+                        eq(schedule.getScheduleId()),
+                        eq(member1.getMemberId()),
+                        any(RouteCreateRequest.class)
+                );
 
         // when, then
         mockMvc.perform(post("/api/schedules/{scheduleId}/routes", schedule.getScheduleId())
@@ -485,7 +505,12 @@ public class TravelRouteControllerTest {
         SecurityTestUtils.mockAuthentication(member1);
 
         willThrow(new DataNotFoundException(ErrorCode.SCHEDULE_NOT_FOUND))
-                .given(travelRouteService).deleteTravelRoute(eq(1004L), eq(1L), eq(1));
+                .given(travelRouteService)
+                .deleteTravelRoute(
+                        eq(1004L),
+                        eq(1L),
+                        eq(1)
+                );
 
         // when, then
         mockMvc.perform(delete("/api/schedules/{scheduleId}/routes/{routeId}"
@@ -506,7 +531,12 @@ public class TravelRouteControllerTest {
         Integer routeVersion = schedule.getRouteVersion();
 
         willThrow(new DataNotFoundException(ErrorCode.SCHEDULE_NOT_FOUND))
-                .given(travelRouteService).deleteTravelRoute(eq(schedule.getScheduleId()), eq(1004L), eq(routeVersion));
+                .given(travelRouteService)
+                .deleteTravelRoute(
+                        eq(schedule.getScheduleId()),
+                        eq(1004L),
+                        eq(routeVersion)
+                );
 
         // when, then
         mockMvc.perform(delete("/api/schedules/{scheduleId}/routes/{routeId}"

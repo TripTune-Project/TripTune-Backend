@@ -756,7 +756,8 @@ public class TravelPlaceControllerTest {
     void getTravelDetails_placeNotFound() throws Exception {
         // given
         willThrow(new DataNotFoundException(ErrorCode.DATA_NOT_FOUND))
-                .given(travelPlaceService).getTravelPlaceDetails(eq(1000L), isNull());
+                .given(travelPlaceService)
+                .getTravelPlaceDetails(eq(1000L), isNull());
 
         // when, then
         mockMvc.perform(get("/api/travels/{placeId}", 1000L))

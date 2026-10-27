@@ -301,7 +301,7 @@ public class TravelScheduleControllerTest {
                 overviewResponse.size()
         );
 
-        given(travelScheduleService.getEnableEditTravelSchedules(anyInt(), anyLong()))
+        given(travelScheduleService.getEnableEditTravelSchedules(eq(1), eq(member1.getMemberId())))
                 .willReturn(response);
 
         // when, then
@@ -313,8 +313,10 @@ public class TravelScheduleControllerTest {
                 .andExpect(jsonPath("$.data.totalElements").value(2))
                 .andExpect(jsonPath("$.data.content[0].scheduleName").value(schedule2.getScheduleName()))
                 .andExpect(jsonPath("$.data.content[0].author").value(member2.getNickname()))
+                .andExpect(jsonPath("$.data.content[0].routeVersion").value(schedule2.getRouteVersion()))
                 .andExpect(jsonPath("$.data.content[1].scheduleName").value(schedule1.getScheduleName()))
-                .andExpect(jsonPath("$.data.content[1].author").value(member1.getNickname()));
+                .andExpect(jsonPath("$.data.content[1].author").value(member1.getNickname()))
+                .andExpect(jsonPath("$.data.content[1].routeVersion").value(schedule2.getRouteVersion()));
     }
 
     @Test
@@ -929,8 +931,8 @@ public class TravelScheduleControllerTest {
                 .given(travelScheduleService)
                 .updateTravelSchedule(
                         any(ScheduleUpdateRequest.class),
-                        anyLong(),
-                        anyLong()
+                        eq(member2.getMemberId()),
+                        eq(1L)
                 );
 
         // when, then
@@ -1009,7 +1011,7 @@ public class TravelScheduleControllerTest {
 
         willThrow(new ForbiddenScheduleException(ErrorCode.FORBIDDEN_DELETE_SCHEDULE))
                 .given(travelScheduleService)
-                .deleteTravelSchedule(anyLong(), anyLong());
+                .deleteTravelSchedule(eq(1L), eq(member2.getMemberId()));
 
         // when, then
         mockMvc.perform(delete("/api/schedules/{scheduleId}", 1L))
