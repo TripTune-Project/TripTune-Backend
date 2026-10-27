@@ -13,11 +13,21 @@ import java.util.Optional;
 @Repository
 public interface TravelRouteRepository extends JpaRepository<TravelRoute, Long>, TravelRouteRepositoryCustom{
 
+    List<TravelRoute> findAllByTravelSchedule_ScheduleId(@Param("scheduleId") Long scheduleId);
+    Optional<TravelRoute> findByRouteIdAndTravelSchedule_ScheduleId(Long routeId, Long scheduleId);
+
     @Modifying
     @Query("delete from TravelRoute r where r.travelSchedule.scheduleId = :scheduleId")
     void deleteAllByScheduleId(@Param("scheduleId") Long scheduleId);
 
-    List<TravelRoute> findAllByTravelSchedule_ScheduleId(@Param("scheduleId") Long scheduleId);
+    @Modifying
+    @Query(value = """
+        insert into travel_route (schedule_id, place_id, route_order)
+        select :scheduleId, :placeId, coalesce(max(route_order), 0) + 1
+        from travel_route
+        where schedule_id = :scheduleId
+    """, nativeQuery = true)
+    void insertTravelRoute(@Param("scheduleId") Long scheduleId, @Param("placeId") Long placeId);
 
-    Optional<TravelRoute> findByRouteIdAndTravelSchedule_ScheduleId(Long routeId, Long scheduleId);
+
 }

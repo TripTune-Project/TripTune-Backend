@@ -12,6 +12,7 @@ import com.triptune.profile.fixture.ProfileImageFixture;
 import com.triptune.attendee.fixture.TravelAttendeeFixture;
 import com.triptune.route.dto.request.RouteUpdateRequest;
 import com.triptune.route.dto.response.RouteVersionResponse;
+import com.triptune.route.exception.ConflictRouteVersionException;
 import com.triptune.route.fixture.TravelRouteFixture;
 import com.triptune.schedule.fixture.TravelScheduleFixture;
 import com.triptune.route.dto.request.RouteCreateRequest;
@@ -221,7 +222,7 @@ public class TravelRouteServiceTest {
     }
 
     @Test
-    @DisplayName("여행 루트 마지막 루트에 여행지 추가")
+    @DisplayName("여행 루트 생성")
     void createLastTravelRoute(){
         // given
         int routeVersion = schedule.getRouteVersion();
@@ -235,25 +236,25 @@ public class TravelRouteServiceTest {
                 routeVersion
         );
 
-        when(travelScheduleRepository.findById(anyLong()))
+        when(travelScheduleRepository.findById(1L))
                 .thenReturn(Optional.of(schedule));
-        when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_MemberId(anyLong(), anyLong()))
+        when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_MemberId(1L, 1L))
                 .thenReturn(Optional.of(author));
-        when(travelPlaceRepository.findById(anyLong()))
+        when(travelPlaceRepository.findById(place3WithoutThumb.getPlaceId()))
                 .thenReturn(Optional.of(place3WithoutThumb));
+        when(travelScheduleRepository.increaseRouteVersion(1L, routeVersion))
+                .thenReturn(1);
 
         // when
         RouteVersionResponse response = travelRouteService.createLastTravelRoute(1L, 1L, request);
 
         // then
-        List<TravelRoute> routes = schedule.getTravelRoutes();
-        assertThat(routes.size()).isEqualTo(4);
-        assertThat(routes.get(routes.size() - 1).getTravelPlace().getPlaceName()).isEqualTo(place3WithoutThumb.getPlaceName());
         assertThat(response.getRouteVersion()).isEqualTo(routeVersion+1);
+        verify(travelRouteRepository).insertTravelRoute(1L, place3WithoutThumb.getPlaceId());
     }
 
     @Test
-    @DisplayName("여행 루트 마지막 루트에 여행지 추가 시 처음 저장인 경우")
+    @DisplayName("여행 루트 생성 시 처음 저장인 경우")
     void createLastTravelRoute_first(){
         // given
         int routeVersion = schedule.getRouteVersion();
@@ -263,20 +264,21 @@ public class TravelRouteServiceTest {
                 routeVersion
         );
 
-        when(travelScheduleRepository.findById(anyLong()))
+        when(travelScheduleRepository.findById(1L))
                 .thenReturn(Optional.of(schedule));
-        when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_MemberId(anyLong(), anyLong()))
+        when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_MemberId(1L, 1L))
                 .thenReturn(Optional.of(author));
-        when(travelPlaceRepository.findById(anyLong()))
+        when(travelPlaceRepository.findById(place3WithoutThumb.getPlaceId()))
                 .thenReturn(Optional.of(place3WithoutThumb));
+        when(travelScheduleRepository.increaseRouteVersion(1L, routeVersion))
+                .thenReturn(1);
 
         // when
         RouteVersionResponse response = travelRouteService.createLastTravelRoute(1L, 1L, request);
 
         // then
-        assertThat(schedule.getTravelRoutes().size()).isEqualTo(1);
-        assertThat(schedule.getTravelRoutes().get(0).getTravelPlace().getPlaceName()).isEqualTo(place3WithoutThumb.getPlaceName());
         assertThat(response.getRouteVersion()).isEqualTo(routeVersion+1);
+        verify(travelRouteRepository).insertTravelRoute(1L, place3WithoutThumb.getPlaceId());
     }
 
 
@@ -302,7 +304,7 @@ public class TravelRouteServiceTest {
     }
 
     @Test
-    @DisplayName("여행 루트 마지막 루트에 여행지 추가 시 참석자 정보가 없어 예외 발생")
+    @DisplayName("여행 루트 생성 시 참석자 정보가 없어 예외 발생")
     void createLastTravelRoute_attendeeNotFound(){
         // given
         RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(
@@ -326,7 +328,7 @@ public class TravelRouteServiceTest {
     }
 
     @Test
-    @DisplayName("여행 루트 마지막 루트에 여행지 추가 시 편집 권한이 없어 예외 발생")
+    @DisplayName("여행 루트 생성 시 편집 권한이 없어 예외 발생")
     void createLastTravelRoute_forbiddenEdit(){
         // given
         RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(
@@ -350,7 +352,7 @@ public class TravelRouteServiceTest {
 
 
     @Test
-    @DisplayName("여행 루트 마지막 루트에 여행지 추가 시 여행지 데이터 없어 예외 발생")
+    @DisplayName("여행 루트 생성 시 여행지 데이터 없어 예외 발생")
     void createLastTravelRoute_placeNotFound(){
         // given
         RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(
@@ -376,6 +378,69 @@ public class TravelRouteServiceTest {
 
 
     @Test
+    @DisplayName("여행 루트 생성 시 요청값에서 여행루트 충돌로 예외 발생")
+    void createLastTravelRoute_conflictRequestRouteVersion(){
+        // given
+        int routeVersion = schedule.getRouteVersion();
+
+        TravelRouteFixture.createRoute(schedule, place1WithThumb, 1);
+        TravelRouteFixture.createRoute(schedule, place2WithThumb, 2);
+        TravelRouteFixture.createRoute(schedule, place2WithThumb, 3);
+
+        RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(
+                place3WithoutThumb.getPlaceId(),
+                routeVersion+1
+        );
+
+        when(travelScheduleRepository.findById(1L))
+                .thenReturn(Optional.of(schedule));
+        when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_MemberId(1L, 1L))
+                .thenReturn(Optional.of(author));
+
+        // when
+        ConflictRouteVersionException fail = assertThrows(ConflictRouteVersionException.class,
+                () -> travelRouteService.createLastTravelRoute(1L, 1L, request));
+
+        // then
+        assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.CONFLICT_ROUTE_VERSION);
+    }
+
+
+    @Test
+    @DisplayName("여행 루트 생성 시 여행루트 증가에서 충돌로 예외 발생")
+    void createLastTravelRoute_conflictSQLRouteVersion(){
+        // given
+        int routeVersion = schedule.getRouteVersion();
+
+        TravelRouteFixture.createRoute(schedule, place1WithThumb, 1);
+        TravelRouteFixture.createRoute(schedule, place2WithThumb, 2);
+        TravelRouteFixture.createRoute(schedule, place2WithThumb, 3);
+
+        RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(
+                place3WithoutThumb.getPlaceId(),
+                routeVersion
+        );
+
+        when(travelScheduleRepository.findById(1L))
+                .thenReturn(Optional.of(schedule));
+        when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_MemberId(1L, 1L))
+                .thenReturn(Optional.of(author));
+        when(travelPlaceRepository.findById(place3WithoutThumb.getPlaceId()))
+                .thenReturn(Optional.of(place3WithoutThumb));
+        when(travelScheduleRepository.increaseRouteVersion(1L, routeVersion))
+                .thenReturn(0);
+
+        // when
+        ConflictRouteVersionException fail = assertThrows(ConflictRouteVersionException.class,
+                () -> travelRouteService.createLastTravelRoute(1L, 1L, request));
+
+        // then
+        assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.CONFLICT_ROUTE_VERSION);
+    }
+
+
+
+    @Test
     @DisplayName("여행 루트 수정")
     void updateTravelRoute() {
         int routeVersion = schedule.getRouteVersion();
@@ -387,12 +452,14 @@ public class TravelRouteServiceTest {
         List<TravelRoute> routes = new ArrayList<>(List.of(route1, route2, route3));
 
         List<Long> routeIds = new ArrayList<>(List.of(route3.getRouteId(), route2.getRouteId(), route1.getRouteId()));
-        RouteUpdateRequest request = TravelRouteFixture.createRouteUpdateRequest(2, routeIds);
+        RouteUpdateRequest request = TravelRouteFixture.createRouteUpdateRequest(routeVersion, routeIds);
 
-        when(travelScheduleRepository.findById(anyLong()))
+        when(travelScheduleRepository.findById(schedule.getScheduleId()))
                 .thenReturn(Optional.of(schedule));
-        when(travelRouteRepository.findAllByTravelSchedule_ScheduleId(anyLong()))
+        when(travelRouteRepository.findAllByTravelSchedule_ScheduleId(schedule.getScheduleId()))
                 .thenReturn(routes);
+        when(travelScheduleRepository.increaseRouteVersion(schedule.getScheduleId(), routeVersion))
+                .thenReturn(1);
 
         // when
         RouteVersionResponse response = travelRouteService.updateTravelRoute(schedule.getScheduleId(), request);
@@ -411,16 +478,17 @@ public class TravelRouteServiceTest {
         int routeVersion = schedule.getRouteVersion();
 
         TravelRoute route1 = TravelRouteFixture.createRouteWithId(1L, schedule, place1WithThumb, 1);
-
         List<TravelRoute> routes = new ArrayList<>(List.of(route1));
 
         List<Long> routeIds = new ArrayList<>(List.of(route1.getRouteId()));
-        RouteUpdateRequest request = TravelRouteFixture.createRouteUpdateRequest(2, routeIds);
+        RouteUpdateRequest request = TravelRouteFixture.createRouteUpdateRequest(routeVersion, routeIds);
 
-        when(travelScheduleRepository.findById(anyLong()))
+        when(travelScheduleRepository.findById(schedule.getScheduleId()))
                 .thenReturn(Optional.of(schedule));
-        when(travelRouteRepository.findAllByTravelSchedule_ScheduleId(anyLong()))
+        when(travelRouteRepository.findAllByTravelSchedule_ScheduleId(schedule.getScheduleId()))
                 .thenReturn(routes);
+        when(travelScheduleRepository.increaseRouteVersion(schedule.getScheduleId(), routeVersion))
+                .thenReturn(1);
 
         // when
         RouteVersionResponse response = travelRouteService.updateTravelRoute(schedule.getScheduleId(), request);
@@ -589,6 +657,56 @@ public class TravelRouteServiceTest {
         assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.ROUTE_MISMATCH);
     }
 
+
+    @Test
+    @DisplayName("여행 루트 수정 시 요청에 여행 루트 버전 충돌로 예외 발생")
+    void updateTravelRoute_conflictRequestRouteVersion() {
+        int routeVersion = schedule.getRouteVersion();
+
+        List<Long> routeIds = new ArrayList<>(List.of(1L, 2L, 3L));
+        RouteUpdateRequest request = TravelRouteFixture.createRouteUpdateRequest(routeVersion+1, routeIds);
+
+        when(travelScheduleRepository.findById(schedule.getScheduleId()))
+                .thenReturn(Optional.of(schedule));
+
+        // when
+        ConflictRouteVersionException fail = assertThrows(ConflictRouteVersionException.class,
+                () -> travelRouteService.updateTravelRoute(schedule.getScheduleId(), request));
+
+        // then
+        assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.CONFLICT_ROUTE_VERSION);
+    }
+
+
+    @Test
+    @DisplayName("여행 루트 수정 시 쿼리에 여행 루트 충돌로 예외 발생")
+    void updateTravelRoute_conflictSQLRouteVersion() {
+        int routeVersion = schedule.getRouteVersion();
+
+        TravelRoute route1 = TravelRouteFixture.createRouteWithId(1L, schedule, place1WithThumb, 1);
+        TravelRoute route2 = TravelRouteFixture.createRouteWithId(2L, schedule, place1WithThumb, 2);
+        TravelRoute route3 = TravelRouteFixture.createRouteWithId(3L, schedule, place2WithThumb, 3);
+
+        List<TravelRoute> routes = new ArrayList<>(List.of(route1, route2, route3));
+
+        List<Long> routeIds = new ArrayList<>(List.of(route3.getRouteId(), route2.getRouteId(), route1.getRouteId()));
+        RouteUpdateRequest request = TravelRouteFixture.createRouteUpdateRequest(routeVersion, routeIds);
+
+        when(travelScheduleRepository.findById(schedule.getScheduleId()))
+                .thenReturn(Optional.of(schedule));
+        when(travelRouteRepository.findAllByTravelSchedule_ScheduleId(schedule.getScheduleId()))
+                .thenReturn(routes);
+        when(travelScheduleRepository.increaseRouteVersion(schedule.getScheduleId(), routeVersion))
+                .thenReturn(0);
+
+        // when
+        ConflictRouteVersionException fail = assertThrows(ConflictRouteVersionException.class,
+                () -> travelRouteService.updateTravelRoute(schedule.getScheduleId(), request));
+
+        // then
+        assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.CONFLICT_ROUTE_VERSION);
+    }
+
     @Test
     @DisplayName("여행 루트 삭제 - 첫번째 위치한 여행루트인 경우")
     void deleteTravelRoute_first() {
@@ -600,15 +718,18 @@ public class TravelRouteServiceTest {
 
         List<TravelRoute> routes = new ArrayList<>(List.of(route2, route3));
 
-        when(travelScheduleRepository.findById(anyLong()))
+        when(travelScheduleRepository.findById(schedule.getScheduleId()))
                 .thenReturn(Optional.of(schedule));
-        when(travelRouteRepository.findByRouteIdAndTravelSchedule_ScheduleId(anyLong(), anyLong()))
+        when(travelRouteRepository.findByRouteIdAndTravelSchedule_ScheduleId(route1.getRouteId(), schedule.getScheduleId()))
                 .thenReturn(Optional.of(route1));
-        when(travelRouteRepository.findRoutesAfterOrder(anyLong(), anyInt()))
+        when(travelScheduleRepository.increaseRouteVersion(schedule.getScheduleId(), routeVersion))
+                .thenReturn(1);
+        when(travelRouteRepository.findRoutesAfterOrder(schedule.getScheduleId(), route1.getRouteOrder()))
                 .thenReturn(routes);
 
         // when
-        RouteVersionResponse response = travelRouteService.deleteTravelRoute(schedule.getScheduleId(), route1.getRouteId(), routeVersion);
+        RouteVersionResponse response
+                = travelRouteService.deleteTravelRoute(schedule.getScheduleId(), route1.getRouteId(), routeVersion);
 
         // then
         verify(travelRouteRepository).delete(route1);
@@ -629,15 +750,19 @@ public class TravelRouteServiceTest {
 
         List<TravelRoute> routes = new ArrayList<>(List.of(route3));
 
-        when(travelScheduleRepository.findById(anyLong()))
+
+        when(travelScheduleRepository.findById(schedule.getScheduleId()))
                 .thenReturn(Optional.of(schedule));
-        when(travelRouteRepository.findByRouteIdAndTravelSchedule_ScheduleId(anyLong(), anyLong()))
+        when(travelRouteRepository.findByRouteIdAndTravelSchedule_ScheduleId(route2.getRouteId(), schedule.getScheduleId()))
                 .thenReturn(Optional.of(route2));
-        when(travelRouteRepository.findRoutesAfterOrder(anyLong(), anyInt()))
+        when(travelScheduleRepository.increaseRouteVersion(schedule.getScheduleId(), routeVersion))
+                .thenReturn(1);
+        when(travelRouteRepository.findRoutesAfterOrder(schedule.getScheduleId(), route2.getRouteOrder()))
                 .thenReturn(routes);
 
         // when
-        RouteVersionResponse response = travelRouteService.deleteTravelRoute(schedule.getScheduleId(), route2.getRouteId(), routeVersion);
+        RouteVersionResponse response
+                = travelRouteService.deleteTravelRoute(schedule.getScheduleId(), route2.getRouteId(), routeVersion);
 
         // then
         verify(travelRouteRepository).delete(route2);
@@ -658,15 +783,18 @@ public class TravelRouteServiceTest {
 
         List<TravelRoute> routes = Collections.emptyList();
 
-        when(travelScheduleRepository.findById(anyLong()))
+        when(travelScheduleRepository.findById(schedule.getScheduleId()))
                 .thenReturn(Optional.of(schedule));
-        when(travelRouteRepository.findByRouteIdAndTravelSchedule_ScheduleId(anyLong(), anyLong()))
+        when(travelRouteRepository.findByRouteIdAndTravelSchedule_ScheduleId(route3.getRouteId(), schedule.getScheduleId()))
                 .thenReturn(Optional.of(route3));
-        when(travelRouteRepository.findRoutesAfterOrder(anyLong(), anyInt()))
+        when(travelScheduleRepository.increaseRouteVersion(schedule.getScheduleId(), routeVersion))
+                .thenReturn(1);
+        when(travelRouteRepository.findRoutesAfterOrder(schedule.getScheduleId(), route3.getRouteOrder()))
                 .thenReturn(routes);
 
         // when
-        RouteVersionResponse response = travelRouteService.deleteTravelRoute(schedule.getScheduleId(), route3.getRouteId(), routeVersion);
+        RouteVersionResponse response
+                = travelRouteService.deleteTravelRoute(schedule.getScheduleId(), route3.getRouteId(), routeVersion);
 
         // then
         verify(travelRouteRepository).delete(route3);
@@ -679,7 +807,7 @@ public class TravelRouteServiceTest {
     @Test
     @DisplayName("여행 루트 삭제 시 일정 데이터 존재하지 않아 예외 발생")
     void deleteTravelRoute_scheduleNotFound() {
-        when(travelScheduleRepository.findById(anyLong()))
+        when(travelScheduleRepository.findById(schedule.getScheduleId()))
                 .thenReturn(Optional.empty());
 
         // when
@@ -694,9 +822,9 @@ public class TravelRouteServiceTest {
     @Test
     @DisplayName("여행 루트 삭제 시 여행 루트를 찾을 수 없어 예외 발생")
     void deleteTravelRoute_routeNotFound() {
-        when(travelScheduleRepository.findById(anyLong()))
+        when(travelScheduleRepository.findById(schedule.getScheduleId()))
                 .thenReturn(Optional.of(schedule));
-        when(travelRouteRepository.findByRouteIdAndTravelSchedule_ScheduleId(anyLong(), anyLong()))
+        when(travelRouteRepository.findByRouteIdAndTravelSchedule_ScheduleId(1004L, schedule.getScheduleId()))
                 .thenReturn(Optional.empty());
 
         // when
@@ -708,5 +836,43 @@ public class TravelRouteServiceTest {
     }
 
 
+    @Test
+    @DisplayName("여행 루트 삭제 시 요청값에 여행루트 버전 충돌로 예외 발생")
+    void deleteTravelRoute_conflictRequestRouteVersion() {
+        // given
+        int routeVersion = schedule.getRouteVersion();
+        TravelRoute route1 = TravelRouteFixture.createRouteWithId(1L, schedule, place1WithThumb, 1);
 
+        when(travelScheduleRepository.findById(schedule.getScheduleId()))
+                .thenReturn(Optional.of(schedule));
+
+        // when
+        ConflictRouteVersionException fail = assertThrows(ConflictRouteVersionException.class,
+                () -> travelRouteService.deleteTravelRoute(schedule.getScheduleId(), route1.getRouteId(), routeVersion+1));
+
+        // then
+        assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.CONFLICT_ROUTE_VERSION);
+    }
+
+
+    @Test
+    @DisplayName("여행 루트 삭제 시 쿼리에서 여행루트 버전 충돌로 예외 발생")
+    void deleteTravelRoute_conflictSQLRouteVersion() {
+        int routeVersion = schedule.getRouteVersion();
+        TravelRoute route1 = TravelRouteFixture.createRouteWithId(1L, schedule, place1WithThumb, 1);
+
+        when(travelScheduleRepository.findById(schedule.getScheduleId()))
+                .thenReturn(Optional.of(schedule));
+        when(travelRouteRepository.findByRouteIdAndTravelSchedule_ScheduleId(route1.getRouteId(), schedule.getScheduleId()))
+                .thenReturn(Optional.of(route1));
+        when(travelScheduleRepository.increaseRouteVersion(schedule.getScheduleId(), routeVersion))
+                .thenReturn(0);
+
+        // when
+        ConflictRouteVersionException fail = assertThrows(ConflictRouteVersionException.class,
+                () -> travelRouteService.deleteTravelRoute(schedule.getScheduleId(), route1.getRouteId(), routeVersion));
+
+        // then
+        assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.CONFLICT_ROUTE_VERSION);
+    }
 }

@@ -86,4 +86,8 @@ public class TravelSchedule extends BaseTimeEntity {
     public boolean isValidScheduleVersion (Integer scheduleVersion) {
         return this.scheduleVersion.equals(scheduleVersion);
     }
+
+    public boolean isValidRouteVersion(Integer routeVersion) {
+        return this.routeVersion.equals(routeVersion);
+    }
 }
