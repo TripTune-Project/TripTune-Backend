@@ -15,22 +15,26 @@ public class ScheduleOverviewResponse {
     private LocalDate startDate;
     private LocalDate endDate;
     private String author;
+    private Integer routeVersion;
 
     @Builder
-    public ScheduleOverviewResponse(Long scheduleId, String scheduleName, LocalDate startDate, LocalDate endDate, String author) {
+    public ScheduleOverviewResponse(Long scheduleId, String scheduleName, LocalDate startDate, LocalDate endDate, String author, Integer routeVersion) {
         this.scheduleId = scheduleId;
         this.scheduleName = scheduleName;
         this.startDate = startDate;
         this.endDate = endDate;
         this.author = author;
+        this.routeVersion = routeVersion;
     }
 
-    public static ScheduleOverviewResponse from(TravelSchedule travelSchedule, String author){
+    public static ScheduleOverviewResponse from(TravelSchedule schedule, String author){
         return ScheduleOverviewResponse.builder()
-                .scheduleId(travelSchedule.getScheduleId())
-                .scheduleName(travelSchedule.getScheduleName())
-                .startDate(travelSchedule.getStartDate())
-                .endDate(travelSchedule.getEndDate())
-                .author(author).build();
+                .scheduleId(schedule.getScheduleId())
+                .scheduleName(schedule.getScheduleName())
+                .startDate(schedule.getStartDate())
+                .endDate(schedule.getEndDate())
+                .author(author)
+                .routeVersion(schedule.getRouteVersion())
+                .build();
     }
 }

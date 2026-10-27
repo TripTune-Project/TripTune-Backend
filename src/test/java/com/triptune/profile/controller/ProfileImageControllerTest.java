@@ -104,7 +104,8 @@ class ProfileImageControllerTest {
         );
 
         willThrow(new FileBadRequestException(ErrorCode.INVALID_EXTENSION))
-                .given(profileImageService).updateProfileImage(eq(1L), any(MultipartFile.class));
+                .given(profileImageService)
+                .updateProfileImage(eq(1L), any(MultipartFile.class));
 
         // when
         mockMvc.perform(multipart(HttpMethod.PATCH,"/api/profiles")

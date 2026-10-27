@@ -117,14 +117,7 @@ public class TravelScheduleFixture {
     }
 
     public static ScheduleOverviewResponse createOverviewScheduleResponse(TravelSchedule schedule, String author) {
-        return ScheduleOverviewResponse
-                .builder()
-                .scheduleId(schedule.getScheduleId())
-                .scheduleName(schedule.getScheduleName())
-                .startDate(schedule.getStartDate())
-                .endDate(schedule.getEndDate())
-                .author(author)
-                .build();
+        return ScheduleOverviewResponse.from(schedule, author);
     }
 
     public static ScheduleCreateResponse createScheduleCreateResponse(Long scheduleId) {

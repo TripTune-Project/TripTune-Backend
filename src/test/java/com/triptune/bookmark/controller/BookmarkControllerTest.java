@@ -25,8 +25,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -117,7 +116,8 @@ class BookmarkControllerTest{
         BookmarkRequest request = BookmarkFixture.createBookmarkRequest(1L);
 
         willThrow(new DataExistException(ErrorCode.ALREADY_EXISTED_BOOKMARK))
-                .given(bookmarkService).createBookmark(anyLong(), any());
+                .given(bookmarkService)
+                .createBookmark(eq(member.getMemberId()), any(BookmarkRequest.class));
 
         // when, then
         mockMvc.perform(post("/api/bookmarks")
@@ -137,7 +137,8 @@ class BookmarkControllerTest{
         BookmarkRequest request = BookmarkFixture.createBookmarkRequest(1L);
 
         willThrow(new DataNotFoundException(ErrorCode.MEMBER_NOT_FOUND))
-                .given(bookmarkService).createBookmark(anyLong(), any());
+                .given(bookmarkService)
+                .createBookmark(eq(member.getMemberId()), any(BookmarkRequest.class));
 
         // when, then
         mockMvc.perform(post("/api/bookmarks")
@@ -155,8 +156,9 @@ class BookmarkControllerTest{
         // given
         BookmarkRequest request = BookmarkFixture.createBookmarkRequest(1000L);
 
-        willThrow( new DataNotFoundException(ErrorCode.PLACE_NOT_FOUND))
-                .given(bookmarkService).createBookmark(anyLong(), any());
+        willThrow(new DataNotFoundException(ErrorCode.PLACE_NOT_FOUND))
+                .given(bookmarkService)
+                .createBookmark(eq(member.getMemberId()), any(BookmarkRequest.class));
 
         // when, then
         mockMvc.perform(post("/api/bookmarks")
@@ -188,10 +190,11 @@ class BookmarkControllerTest{
     void deleteBookmark_bookmarkNotFound() throws Exception{
         // given
         willThrow(new DataNotFoundException(ErrorCode.BOOKMARK_NOT_FOUND))
-                .given(bookmarkService).deleteBookmark(anyLong(), anyLong());
+                .given(bookmarkService)
+                .deleteBookmark(eq(member.getMemberId()), eq(1004L));
 
         // when, then
-        mockMvc.perform(delete("/api/bookmarks/{placeId}", 1000L))
+        mockMvc.perform(delete("/api/bookmarks/{placeId}", 1004L))
                 .andDo(print())
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.success").value(false))
