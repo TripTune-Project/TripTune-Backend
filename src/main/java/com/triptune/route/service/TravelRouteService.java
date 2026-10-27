@@ -12,6 +12,7 @@ import com.triptune.route.dto.response.RouteVersionResponse;
 import com.triptune.route.dto.response.RouteResponse;
 import com.triptune.attendee.entity.TravelAttendee;
 import com.triptune.route.entity.TravelRoute;
+import com.triptune.route.exception.ConflictRouteVersionException;
 import com.triptune.schedule.entity.TravelSchedule;
 import com.triptune.schedule.exception.ForbiddenScheduleException;
 import com.triptune.attendee.repository.TravelAttendeeRepository;
@@ -62,23 +63,25 @@ public class TravelRouteService {
     }
 
     @Transactional
-    public RouteVersionResponse createLastTravelRoute(Long scheduleId, Long memberId, RouteCreateRequest routeCreateRequest) {
+    public RouteVersionResponse createLastTravelRoute(Long scheduleId, Long memberId, RouteCreateRequest createRequest) {
         TravelSchedule schedule = getSchedule(scheduleId);
 
         validateEnableEdit(scheduleId, memberId);
+        validateRouteVersion(schedule, createRequest.getRouteVersion());
 
-        TravelPlace place = getPlace(routeCreateRequest.getPlaceId());
-        TravelRoute route = TravelRoute.createTravelRoute(
-                schedule,
-                place,
-                schedule.getTravelRoutes().size() + 1
+        TravelPlace place = getPlace(createRequest.getPlaceId());
+
+        int newRouteVersion = createRequest.getRouteVersion() + 1;
+        increaseRouteVersion(scheduleId, createRequest.getRouteVersion());
+
+        travelRouteRepository.insertTravelRoute(
+                scheduleId,
+                place.getPlaceId()
         );
-        travelRouteRepository.save(route);
 
-        schedule.increaseRouteVersion();
-        publishRouteEvent(scheduleId, ROUTE_ADDED, schedule.getRouteVersion());
+        publishRouteEvent(scheduleId, ROUTE_ADDED, newRouteVersion);
 
-        return RouteVersionResponse.of(schedule.getRouteVersion());
+        return RouteVersionResponse.of(newRouteVersion);
     }
 
 
@@ -101,25 +104,29 @@ public class TravelRouteService {
                 .orElseThrow(() -> new DataNotFoundException(ErrorCode.PLACE_NOT_FOUND));
     }
 
-    @Transactional
-    public RouteVersionResponse updateTravelRoute(Long scheduleId, RouteUpdateRequest routeUpdateRequest){
-        TravelSchedule schedule = getSchedule(scheduleId);
 
-        List<Long> routeIds = routeUpdateRequest.getOrderedRouteIds();
+    @Transactional
+    public RouteVersionResponse updateTravelRoute(Long scheduleId, RouteUpdateRequest updateRequest){
+        TravelSchedule schedule = getSchedule(scheduleId);
+        validateRouteVersion(schedule, updateRequest.getRouteVersion());
+
+        List<Long> routeIds = updateRequest.getOrderedRouteIds();
 
         List<TravelRoute> routes = travelRouteRepository.findAllByTravelSchedule_ScheduleId(scheduleId);
         Map<Long, TravelRoute> routeMap = createRouteMap(routes);
 
         validateRoutesIds(routeIds, routeMap.keySet());
 
+        int newRouteVersion = updateRequest.getRouteVersion() + 1;
+        increaseRouteVersion(scheduleId, updateRequest.getRouteVersion());
+
         for (int i = 0; i < routeIds.size(); i++) {
             routeMap.get(routeIds.get(i)).changeRouteOrder(i+1);
         }
 
-        schedule.increaseRouteVersion();
-        publishRouteEvent(scheduleId, ROUTE_UPDATED, schedule.getRouteVersion());
+        publishRouteEvent(scheduleId, ROUTE_UPDATED, newRouteVersion);
 
-        return RouteVersionResponse.of(schedule.getRouteVersion());
+        return RouteVersionResponse.of(newRouteVersion);
     }
 
 
@@ -143,21 +150,24 @@ public class TravelRouteService {
     @Transactional
     public RouteVersionResponse deleteTravelRoute(Long scheduleId, Long routeId, Integer routeVersion) {
         TravelSchedule schedule = getSchedule(scheduleId);
+        validateRouteVersion(schedule, routeVersion);
+
         TravelRoute deleteRoute = getRoute(scheduleId, routeId);
+
+        int newRouteVersion = routeVersion + 1;
+        increaseRouteVersion(scheduleId, routeVersion);
 
         int deleteRouteOrder = deleteRoute.getRouteOrder();
         travelRouteRepository.delete(deleteRoute);
 
         List<TravelRoute> routes = travelRouteRepository.findRoutesAfterOrder(scheduleId, deleteRouteOrder);
-
         for (TravelRoute route : routes) {
             route.decreaseRouteOrder();
         }
 
-        schedule.increaseRouteVersion();
-        publishRouteEvent(scheduleId, ROUTE_DELETED, schedule.getRouteVersion());
+        publishRouteEvent(scheduleId, ROUTE_DELETED, newRouteVersion);
 
-        return RouteVersionResponse.of(schedule.getRouteVersion());
+        return RouteVersionResponse.of(newRouteVersion);
     }
 
     private TravelRoute getRoute(Long scheduleId, Long routeId){
@@ -169,6 +179,21 @@ public class TravelRouteService {
     private TravelSchedule getSchedule(Long scheduleId){
         return travelScheduleRepository.findById(scheduleId)
                 .orElseThrow(() -> new DataNotFoundException(ErrorCode.SCHEDULE_NOT_FOUND));
+    }
+
+
+    private void validateRouteVersion(TravelSchedule schedule, int requestRouteVersion) {
+        if(!schedule.isValidRouteVersion(requestRouteVersion)){
+            throw new ConflictRouteVersionException(ErrorCode.CONFLICT_ROUTE_VERSION);
+        }
+    }
+
+
+    private void increaseRouteVersion(Long scheduleId, Integer routeVersion) {
+        int updated = travelScheduleRepository.increaseRouteVersion(scheduleId, routeVersion);
+        if (updated == 0) {
+            throw new ConflictRouteVersionException(ErrorCode.CONFLICT_ROUTE_VERSION);
+        }
     }
 
 

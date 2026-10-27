@@ -506,4 +506,51 @@ public class TravelScheduleRepositoryTest {
     }
 
 
+    @Test
+    @DisplayName("여행루트 버전 증가")
+    void increaseRouteVersion() {
+        // given
+        TravelSchedule savedSchedule = travelScheduleRepository.save(
+                TravelScheduleFixture.createSchedule("테스트 일정")
+        );
+
+        // when
+        int updated = travelScheduleRepository.increaseRouteVersion(
+                savedSchedule.getScheduleId(),
+                savedSchedule.getScheduleVersion()
+        );
+
+        // then
+        em.flush();
+        em.clear();
+
+        TravelSchedule findSchedule = travelScheduleRepository.findById(savedSchedule.getScheduleId()).orElseThrow();
+
+        assertThat(updated).isEqualTo(1);
+        assertThat(findSchedule.getScheduleVersion()).isZero();
+        assertThat(findSchedule.getRouteVersion()).isEqualTo(1);
+
+    }
+
+
+
+    @Test
+    @DisplayName("여행루트 버전 증가 시 버전 충돌로 0 반환")
+    void increaseRouteVersion_conflictRouteVersion() {
+        // given
+        TravelSchedule savedSchedule = travelScheduleRepository.save(
+                TravelScheduleFixture.createSchedule("테스트 일정")
+        );
+
+        // when
+        int updated = travelScheduleRepository.increaseRouteVersion(
+                savedSchedule.getScheduleId(),
+                1
+        );
+
+        // then
+        assertThat(updated).isEqualTo(0);
+    }
+
+
 }

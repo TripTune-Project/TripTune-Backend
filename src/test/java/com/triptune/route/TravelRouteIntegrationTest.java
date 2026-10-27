@@ -23,6 +23,7 @@ import com.triptune.route.dto.request.RouteCreateRequest;
 import com.triptune.route.dto.request.RouteUpdateRequest;
 import com.triptune.route.dto.response.RouteVersionResponse;
 import com.triptune.route.entity.TravelRoute;
+import com.triptune.route.exception.ConflictRouteVersionException;
 import com.triptune.schedule.entity.TravelSchedule;
 import com.triptune.attendee.fixture.TravelAttendeeFixture;
 import com.triptune.route.fixture.TravelRouteFixture;
@@ -61,6 +62,7 @@ import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.willThrow;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -152,6 +154,8 @@ public class TravelRouteIntegrationTest {
                         "여행지3"
                 )
         );
+
+        SecurityTestUtils.mockAuthentication(member1);
     }
 
 
@@ -164,8 +168,6 @@ public class TravelRouteIntegrationTest {
         TravelRoute route1 = travelRouteRepository.save(TravelRouteFixture.createRoute(schedule, place1WithThumb, 1));
         TravelRoute route2 = travelRouteRepository.save(TravelRouteFixture.createRoute(schedule, place2WithThumb, 2));
         TravelRoute route3 = travelRouteRepository.save(TravelRouteFixture.createRoute(schedule, place3WithoutThumb, 3));
-
-        SecurityTestUtils.mockAuthentication(member1);
 
         // when, then
         mockMvc.perform(get("/api/schedules/{scheduleId}/routes", schedule.getScheduleId())
@@ -191,8 +193,6 @@ public class TravelRouteIntegrationTest {
     @DisplayName("여행 루트 조회 시 저장된 여행 루트 데이터 없는 경우")
     void getTravelRoutes_emptyResult() throws Exception {
         // given
-        SecurityTestUtils.mockAuthentication(member1);
-
         int routeVersion = schedule.getRouteVersion();
 
         // when, then
@@ -210,8 +210,6 @@ public class TravelRouteIntegrationTest {
     @DisplayName("여행 루트 조회 시 일정 데이터 존재하지 않아 예외 발생")
     void getTravelRoutes_scheduleNotFound() throws Exception {
         // given
-        SecurityTestUtils.mockAuthentication(member1);
-
         // when, then
         mockMvc.perform(get("/api/schedules/{scheduleId}/routes", 1000L)
                         .param("page", "1"))
@@ -240,12 +238,10 @@ public class TravelRouteIntegrationTest {
     }
 
     @Test
-    @DisplayName("여행 루트의 마지막 여행지 추가")
+    @DisplayName("여행 루트 생성")
     void createLastTravelRoute() throws Exception{
         // given
         int routeVersion = schedule.getRouteVersion();
-
-        SecurityTestUtils.mockAuthentication(member1);
 
         travelRouteRepository.save(TravelRouteFixture.createRoute(schedule, place1WithThumb, 1));
         travelRouteRepository.save(TravelRouteFixture.createRoute(schedule, place1WithThumb, 2));
@@ -286,12 +282,11 @@ public class TravelRouteIntegrationTest {
     }
 
     @Test
-    @DisplayName("여행 루트의 마지막 여행지 추가 시 처음 저장인 경우")
+    @DisplayName("여행 루트 생성 시 처음 저장인 경우")
     void createLastRoute_first() throws Exception{
         // given
         int routeVersion = schedule.getRouteVersion();
 
-        SecurityTestUtils.mockAuthentication(member1);
         RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(
                 place3WithoutThumb.getPlaceId(),
                 routeVersion
@@ -315,10 +310,9 @@ public class TravelRouteIntegrationTest {
     }
 
     @Test
-    @DisplayName("여행 루트의 마지막 여행지 추가 시 일정 데이터 존재하지 않아 예외 발생")
+    @DisplayName("여행 루트 생성 시 일정 데이터 존재하지 않아 예외 발생")
     void createLastRoute_scheduleNotFound() throws Exception {
         // given
-        SecurityTestUtils.mockAuthentication(member1);
         RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(
                 place3WithoutThumb.getPlaceId(),
                 schedule.getRouteVersion()
@@ -336,7 +330,7 @@ public class TravelRouteIntegrationTest {
 
 
     @Test
-    @DisplayName("여행 루트의 마지막 여행지 추가 시 참석자 데이터 존재하지 않아 예외 발생")
+    @DisplayName("여행 루트 생성 시 참석자 데이터 존재하지 않아 예외 발생")
     void createLastRoute_attendeeNotFound() throws Exception {
         // given
         ProfileImage profileImage = ProfileImageFixture.createProfileImage("memberImage");
@@ -360,10 +354,9 @@ public class TravelRouteIntegrationTest {
 
 
     @Test
-    @DisplayName("여행 루트의 마지막 여행지 추가 시 여행지 데이터 존재하지 않아 예외 발생")
+    @DisplayName("여행 루트 생성 시 여행지 데이터 존재하지 않아 예외 발생")
     void createLastRoute_placeNotFound() throws Exception {
         // given
-        SecurityTestUtils.mockAuthentication(member1);
         RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(
                 1000L,
                 schedule.getRouteVersion()
@@ -381,12 +374,29 @@ public class TravelRouteIntegrationTest {
 
 
     @Test
+    @DisplayName("여행 루트 생성 시 여행 루트 버전 충돌로 409 반환")
+    void createLastTravelRoute_conflictRouteVersion() throws Exception {
+        // given
+        RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(
+                place3WithoutThumb.getPlaceId(),
+                schedule.getRouteVersion()+1
+        );
+
+        // when, then
+        mockMvc.perform(post("/api/schedules/{scheduleId}/routes", schedule.getScheduleId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andDo(print())
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value(ErrorCode.CONFLICT_ROUTE_VERSION.getMessage()));
+    }
+
+    @Test
     @DisplayName("여행 루트 수정")
     void updateTravelRoute() throws Exception{
         // given
         int routeVersion = schedule.getRouteVersion();
-
-        SecurityTestUtils.mockAuthentication(member1);
 
         TravelRoute route1 = travelRouteRepository.save(TravelRouteFixture.createRoute(schedule, place1WithThumb, 1));
         TravelRoute route2 = travelRouteRepository.save(TravelRouteFixture.createRoute(schedule, place1WithThumb, 2));
@@ -426,8 +436,6 @@ public class TravelRouteIntegrationTest {
         // given
         int routeVersion = schedule.getRouteVersion();
 
-        SecurityTestUtils.mockAuthentication(member1);
-
         TravelRoute route1 = travelRouteRepository.save(TravelRouteFixture.createRoute(schedule, place1WithThumb, 1));
 
         List<Long> routeIds = new ArrayList<>(List.of(route1.getRouteId()));
@@ -454,8 +462,6 @@ public class TravelRouteIntegrationTest {
     @DisplayName("여행 루트 수정 시 저장된 데이터 갯수와 일치하지 않아 예외 발생")
     void updateTravelRoute_sizeMismatch() throws Exception {
         // given
-        SecurityTestUtils.mockAuthentication(member1);
-
         TravelRoute route1 = travelRouteRepository.save(TravelRouteFixture.createRoute(schedule, place1WithThumb, 1));
         TravelRoute route2 = travelRouteRepository.save(TravelRouteFixture.createRoute(schedule, place1WithThumb, 2));
 
@@ -477,8 +483,6 @@ public class TravelRouteIntegrationTest {
     @DisplayName("여행 루트 수정 시 저장된 데이터와 일치하지 않아 예외 발생")
     void updateTravelRoute_savedMismatch()  throws Exception {
         // given
-        SecurityTestUtils.mockAuthentication(member1);
-
         TravelRoute route1 = travelRouteRepository.save(TravelRouteFixture.createRoute(schedule, place1WithThumb, 1));
         travelRouteRepository.save(TravelRouteFixture.createRoute(schedule, place1WithThumb, 2));
 
@@ -500,8 +504,6 @@ public class TravelRouteIntegrationTest {
     @DisplayName("여행 루트 수정 시 요청값에 중복이 들어와 예외 발생")
     void updateTravelRoute_duplicatedRouteId() throws Exception {
         // given
-        SecurityTestUtils.mockAuthentication(member1);
-
         TravelRoute route1 = travelRouteRepository.save(TravelRouteFixture.createRoute(schedule, place1WithThumb, 1));
 
         List<Long> routeIds = new ArrayList<>(List.of(route1.getRouteId(), route1.getRouteId()));
@@ -523,8 +525,6 @@ public class TravelRouteIntegrationTest {
     @DisplayName("여행 루트 수정 시 저장된 데이터가 없어 예외 발생")
     void updateTravelRoute_emptySavedRoute() throws Exception{
         // given
-        SecurityTestUtils.mockAuthentication(member1);
-
         List<Long> routeIds = new ArrayList<>(List.of(1L, 2L, 3L));
         RouteUpdateRequest request = TravelRouteFixture.createRouteUpdateRequest(0, routeIds);
 
@@ -544,8 +544,6 @@ public class TravelRouteIntegrationTest {
     @DisplayName("여행 루트 수정 시 빈 리스트 요청으로 예외 발생")
     void updateTravelRoute_emptyRouteIds() throws Exception{
         // given
-        SecurityTestUtils.mockAuthentication(member1);
-
         travelRouteRepository.save(TravelRouteFixture.createRoute(schedule, place1WithThumb, 1));
         travelRouteRepository.save(TravelRouteFixture.createRoute(schedule, place1WithThumb, 2));
         travelRouteRepository.save(TravelRouteFixture.createRoute(schedule, place2WithThumb, 3));
@@ -568,8 +566,6 @@ public class TravelRouteIntegrationTest {
     @DisplayName("여행 루트 수정 시 저장된 데이터와 요청에 빈 리스트로 예외 발생")
     void updateTravelRoute_emptySavedRouteAndRouteIds() throws Exception{
         // given
-        SecurityTestUtils.mockAuthentication(member1);
-
         List<Long> routeIds = Collections.emptyList();
         RouteUpdateRequest request = TravelRouteFixture.createRouteUpdateRequest(0, routeIds);
 
@@ -586,10 +582,35 @@ public class TravelRouteIntegrationTest {
 
 
     @Test
+    @DisplayName("여행 루트 수정 시 여행 루트 버전 충돌로 409 반환")
+    void updateTravelRoute_conflictRouteVersion() throws Exception{
+        // given
+        TravelRoute route1 = travelRouteRepository.save(TravelRouteFixture.createRoute(schedule, place1WithThumb, 1));
+        TravelRoute route2 = travelRouteRepository.save(TravelRouteFixture.createRoute(schedule, place1WithThumb, 2));
+        TravelRoute route3 = travelRouteRepository.save(TravelRouteFixture.createRoute(schedule, place2WithThumb, 3));
+
+        List<Long> routeIds = new ArrayList<>(List.of(route3.getRouteId(), route2.getRouteId(), route1.getRouteId()));
+        RouteUpdateRequest request = TravelRouteFixture.createRouteUpdateRequest(
+                schedule.getRouteVersion()+1,
+                routeIds
+        );
+
+        // when, then
+        mockMvc.perform(patch("/api/schedules/{scheduleId}/routes", schedule.getScheduleId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andDo(print())
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value(ErrorCode.CONFLICT_ROUTE_VERSION.getMessage()));
+
+    }
+
+
+    @Test
     @DisplayName("여행 루트 삭제 - 첫번째 위치한 여행루트인 경우")
     void deleteTravelRoute_first() throws Exception{
         // given
-        SecurityTestUtils.mockAuthentication(member1);
         Integer routeVersion = schedule.getRouteVersion();
 
         TravelRoute route1 = travelRouteRepository.save(TravelRouteFixture.createRoute(schedule, place1WithThumb, 1));
@@ -626,7 +647,6 @@ public class TravelRouteIntegrationTest {
     @DisplayName("여행 루트 삭제 - 중간에 위치한 여행루트인 경우")
     void deleteTravelRoute_middle() throws Exception{
         // given
-        SecurityTestUtils.mockAuthentication(member1);
         Integer routeVersion = schedule.getRouteVersion();
 
         TravelRoute route1 = travelRouteRepository.save(TravelRouteFixture.createRoute(schedule, place1WithThumb, 1));
@@ -663,7 +683,6 @@ public class TravelRouteIntegrationTest {
     @DisplayName("여행 루트 삭제 - 마지막에 위치한 여행루트인 경우")
     void deleteTravelRoute_last() throws Exception{
         // given
-        SecurityTestUtils.mockAuthentication(member1);
         Integer routeVersion = schedule.getRouteVersion();
 
         TravelRoute route1 = travelRouteRepository.save(TravelRouteFixture.createRoute(schedule, place1WithThumb, 1));
@@ -701,7 +720,6 @@ public class TravelRouteIntegrationTest {
     @DisplayName("여행 루트 삭제 - 저장된 여행루트 데이터가 1개인 경우")
     void deleteTravelRoute_one() throws Exception{
         // given
-        SecurityTestUtils.mockAuthentication(member1);
         Integer routeVersion = schedule.getRouteVersion();
 
         TravelRoute route = travelRouteRepository.save(TravelRouteFixture.createRoute(schedule, place1WithThumb, 1));
@@ -719,4 +737,23 @@ public class TravelRouteIntegrationTest {
         List<TravelRoute> routes = travelRouteRepository.findAllByTravelSchedule_ScheduleId(schedule.getScheduleId());
         assertThat(routes).hasSize(0);
     }
+
+
+
+    @Test
+    @DisplayName("여행 루트 삭제 시 여행 루트 버전 충돌로 예외 발생")
+    void deleteTravelRoute_conflictRouteVersion() throws Exception{
+        // given
+        Integer routeVersion = schedule.getRouteVersion()+1;
+
+        // when, then
+        mockMvc.perform(delete("/api/schedules/{scheduleId}/routes/{routeId}"
+                        , schedule.getScheduleId(), 1L)
+                        .param("routeVersion", String.valueOf(routeVersion)))
+                .andDo(print())
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value(ErrorCode.CONFLICT_ROUTE_VERSION.getMessage()));
+    }
+
 }

@@ -1,7 +1,9 @@
 package com.triptune.schedule.repository;
 
 import com.triptune.schedule.entity.TravelSchedule;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -32,4 +34,16 @@ public interface TravelScheduleRepository extends JpaRepository<TravelSchedule, 
                         @Param("startDate") LocalDate startDate,
                         @Param("endDate") LocalDate endDate,
                         @Param("scheduleVersion") int scheduleVersion);
+
+
+    @Modifying
+    @Query("""
+        update TravelSchedule s
+        set s.routeVersion = :routeVersion + 1
+        where s.scheduleId = :scheduleId
+            and s.routeVersion = :routeVersion
+    """)
+    int increaseRouteVersion(@Param("scheduleId") Long scheduleId, @Param("routeVersion") int routeVersion);
+
+
 }

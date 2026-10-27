@@ -55,7 +55,7 @@ public class TravelRouteController {
     @Operation(summary = "여행 루트 삭제", description = "특정 여행 루트를 삭제합니다.")
     public ApiResponse<RouteVersionResponse> deleteTravelRoute(@PathVariable(name = "scheduleId") Long scheduleId,
                                                                @PathVariable(name = "routeId") Long routeId,
-                                                               @RequestParam("routeVersion") Integer routeVersion){
+                                                               @RequestParam("routeVersion") int routeVersion){
         RouteVersionResponse response = travelRouteService.deleteTravelRoute(scheduleId, routeId, routeVersion);
         return ApiResponse.dataResponse(response);
     }

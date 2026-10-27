@@ -74,16 +74,30 @@ class TravelRouteRepositoryTest  {
 
     @Test
     @DisplayName("여행 루트 생성")
-    void createTravelRoute() {
+    void insertTravelRoute() {
         // given
-        TravelRoute route = TravelRouteFixture.createRoute(schedule, place, 1);
-
         // when
-        travelRouteRepository.save(route);
+        travelRouteRepository.insertTravelRoute(schedule.getScheduleId(), place.getPlaceId());
+        travelRouteRepository.insertTravelRoute(schedule.getScheduleId(), place.getPlaceId());
+        travelRouteRepository.insertTravelRoute(schedule.getScheduleId(), place.getPlaceId());
 
         // then
-        assertThat(route.getRouteId()).isNotNull();
-        assertThat(route.getCreatedAt()).isNotNull();
+        em.flush();
+        em.clear();
+
+        List<TravelRoute> routes = travelRouteRepository.findAllByTravelSchedule_ScheduleId(schedule.getScheduleId());
+        assertThat(routes).hasSize(3);
+        assertThat(routes)
+                .extracting(
+                        s -> s.getTravelSchedule().getScheduleId(),
+                        s -> s.getTravelPlace().getPlaceId(),
+                        TravelRoute::getRouteOrder
+                )
+                .containsExactly(
+                        tuple(schedule.getScheduleId(), place.getPlaceId(), 1),
+                        tuple(schedule.getScheduleId(), place.getPlaceId(), 2),
+                        tuple(schedule.getScheduleId(), place.getPlaceId(), 3)
+                );
     }
 
     @Test
