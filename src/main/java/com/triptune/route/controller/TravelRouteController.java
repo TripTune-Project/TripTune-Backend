@@ -36,10 +36,10 @@ public class TravelRouteController {
 
     @PostMapping("/routes")
     @Operation(summary = "여행 루트 추가", description = "여행 루트의 마지막에 여행지를 추가합니다.")
-    public ApiResponse<RouteVersionResponse> createLastTravelRoute(@AuthenticationPrincipal(expression = "memberId") Long memberId,
-                                                                   @PathVariable(name = "scheduleId") Long scheduleId,
-                                                                   @Valid @RequestBody RouteCreateRequest routeCreateRequest){
-        RouteVersionResponse response = travelRouteService.createLastTravelRoute(scheduleId, memberId, routeCreateRequest);
+    public ApiResponse<RouteVersionResponse> createTravelRoute(@AuthenticationPrincipal(expression = "memberId") Long memberId,
+                                                               @PathVariable(name = "scheduleId") Long scheduleId,
+                                                               @Valid @RequestBody RouteCreateRequest routeCreateRequest){
+        RouteVersionResponse response = travelRouteService.createTravelRoute(scheduleId, memberId, routeCreateRequest);
         return ApiResponse.dataResponse(response);
     }
 

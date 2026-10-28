@@ -223,7 +223,7 @@ public class TravelRouteServiceTest {
 
     @Test
     @DisplayName("여행 루트 생성")
-    void createLastTravelRoute(){
+    void createTravelRoute(){
         // given
         int routeVersion = schedule.getRouteVersion();
 
@@ -246,7 +246,7 @@ public class TravelRouteServiceTest {
                 .thenReturn(1);
 
         // when
-        RouteVersionResponse response = travelRouteService.createLastTravelRoute(1L, 1L, request);
+        RouteVersionResponse response = travelRouteService.createTravelRoute(1L, 1L, request);
 
         // then
         assertThat(response.getRouteVersion()).isEqualTo(routeVersion+1);
@@ -255,7 +255,7 @@ public class TravelRouteServiceTest {
 
     @Test
     @DisplayName("여행 루트 생성 시 처음 저장인 경우")
-    void createLastTravelRoute_first(){
+    void createTravelRoute_first(){
         // given
         int routeVersion = schedule.getRouteVersion();
 
@@ -274,7 +274,7 @@ public class TravelRouteServiceTest {
                 .thenReturn(1);
 
         // when
-        RouteVersionResponse response = travelRouteService.createLastTravelRoute(1L, 1L, request);
+        RouteVersionResponse response = travelRouteService.createTravelRoute(1L, 1L, request);
 
         // then
         assertThat(response.getRouteVersion()).isEqualTo(routeVersion+1);
@@ -284,7 +284,7 @@ public class TravelRouteServiceTest {
 
     @Test
     @DisplayName("여행 루트 마지막 루트에 여행지 추가 시 일정 데이터 없어 예외 발생")
-    void createLastTravelRoute_scheduleNotFound(){
+    void createTravelRoute_scheduleNotFound(){
         // given
         RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(
                 place3WithoutThumb.getPlaceId(),
@@ -296,7 +296,7 @@ public class TravelRouteServiceTest {
 
         // when
         DataNotFoundException fail = assertThrows(DataNotFoundException.class,
-                () -> travelRouteService.createLastTravelRoute(0L, member1.getMemberId(), request));
+                () -> travelRouteService.createTravelRoute(0L, member1.getMemberId(), request));
 
         // then
         assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.SCHEDULE_NOT_FOUND);
@@ -305,7 +305,7 @@ public class TravelRouteServiceTest {
 
     @Test
     @DisplayName("여행 루트 생성 시 참석자 정보가 없어 예외 발생")
-    void createLastTravelRoute_attendeeNotFound(){
+    void createTravelRoute_attendeeNotFound(){
         // given
         RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(
                 place3WithoutThumb.getPlaceId(),
@@ -320,7 +320,7 @@ public class TravelRouteServiceTest {
 
         // when
         DataNotFoundException fail = assertThrows(DataNotFoundException.class,
-                () -> travelRouteService.createLastTravelRoute(schedule.getScheduleId(), 0L, request));
+                () -> travelRouteService.createTravelRoute(schedule.getScheduleId(), 0L, request));
 
         // then
         assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.ATTENDEE_NOT_FOUND);
@@ -329,7 +329,7 @@ public class TravelRouteServiceTest {
 
     @Test
     @DisplayName("여행 루트 생성 시 편집 권한이 없어 예외 발생")
-    void createLastTravelRoute_forbiddenEdit(){
+    void createTravelRoute_forbiddenEdit(){
         // given
         RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(
                 place3WithoutThumb.getPlaceId(),
@@ -343,7 +343,7 @@ public class TravelRouteServiceTest {
 
         // when
         ForbiddenScheduleException fail = assertThrows(ForbiddenScheduleException.class,
-                () -> travelRouteService.createLastTravelRoute(1L, 2L, request));
+                () -> travelRouteService.createTravelRoute(1L, 2L, request));
 
         // then
         assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.FORBIDDEN_EDIT_SCHEDULE);
@@ -353,7 +353,7 @@ public class TravelRouteServiceTest {
 
     @Test
     @DisplayName("여행 루트 생성 시 여행지 데이터 없어 예외 발생")
-    void createLastTravelRoute_placeNotFound(){
+    void createTravelRoute_placeNotFound(){
         // given
         RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(
                 place3WithoutThumb.getPlaceId(),
@@ -369,7 +369,7 @@ public class TravelRouteServiceTest {
 
         // when
         DataNotFoundException fail = assertThrows(DataNotFoundException.class,
-                () -> travelRouteService.createLastTravelRoute(1L, 1L, request));
+                () -> travelRouteService.createTravelRoute(1L, 1L, request));
 
         // then
         assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.PLACE_NOT_FOUND);
@@ -379,7 +379,7 @@ public class TravelRouteServiceTest {
 
     @Test
     @DisplayName("여행 루트 생성 시 요청값에서 여행루트 충돌로 예외 발생")
-    void createLastTravelRoute_conflictRequestRouteVersion(){
+    void createTravelRoute_conflictRequestRouteVersion(){
         // given
         int routeVersion = schedule.getRouteVersion();
 
@@ -399,7 +399,7 @@ public class TravelRouteServiceTest {
 
         // when
         ConflictRouteVersionException fail = assertThrows(ConflictRouteVersionException.class,
-                () -> travelRouteService.createLastTravelRoute(1L, 1L, request));
+                () -> travelRouteService.createTravelRoute(1L, 1L, request));
 
         // then
         assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.CONFLICT_ROUTE_VERSION);
@@ -408,7 +408,7 @@ public class TravelRouteServiceTest {
 
     @Test
     @DisplayName("여행 루트 생성 시 여행루트 증가에서 충돌로 예외 발생")
-    void createLastTravelRoute_conflictSQLRouteVersion(){
+    void createTravelRoute_conflictSQLRouteVersion(){
         // given
         int routeVersion = schedule.getRouteVersion();
 
@@ -432,7 +432,7 @@ public class TravelRouteServiceTest {
 
         // when
         ConflictRouteVersionException fail = assertThrows(ConflictRouteVersionException.class,
-                () -> travelRouteService.createLastTravelRoute(1L, 1L, request));
+                () -> travelRouteService.createTravelRoute(1L, 1L, request));
 
         // then
         assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.CONFLICT_ROUTE_VERSION);

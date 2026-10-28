@@ -189,7 +189,7 @@ public class TravelRouteControllerTest {
 
     @Test
     @DisplayName("여행 루트 생성")
-    void createLastTravelRoute() throws Exception{
+    void createTravelRoute() throws Exception{
         // given
         int routeVersion = 3;
 
@@ -200,7 +200,7 @@ public class TravelRouteControllerTest {
 
         RouteVersionResponse response = TravelRouteFixture.createRouteCreateResponse(routeVersion+1);
 
-        given(travelRouteService.createLastTravelRoute(eq(schedule.getScheduleId()), eq(member1.getMemberId()), any(RouteCreateRequest.class)))
+        given(travelRouteService.createTravelRoute(eq(schedule.getScheduleId()), eq(member1.getMemberId()), any(RouteCreateRequest.class)))
                 .willReturn(response);
 
 
@@ -218,7 +218,7 @@ public class TravelRouteControllerTest {
 
     @Test
     @DisplayName("여행 루트 생성 시 여행 루트 버전에 null 값이 들어와 400 반환")
-    void createLastTravelRoute_invalidNullRouteVersion() throws Exception {
+    void createTravelRoute_invalidNullRouteVersion() throws Exception {
         // given
         RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(null, 3);
 
@@ -236,7 +236,7 @@ public class TravelRouteControllerTest {
     @ParameterizedTest
     @DisplayName("여행 루트 생성 시 여행지 ID에 1 미만 값이 들어와 400 반환")
     @ValueSource(longs = {0L, -1L})
-    void createLastTravelRoute_invalidMinPlaceId(Long input) throws Exception {
+    void createTravelRoute_invalidMinPlaceId(Long input) throws Exception {
         // given
         RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(input, 3);
 
@@ -254,7 +254,7 @@ public class TravelRouteControllerTest {
 
     @Test
     @DisplayName("여행 루트 생성 시 여행지 ID null 값이 들어와 400 반환")
-    void createLastTravelRoute_invalidNullPlaceId() throws Exception {
+    void createTravelRoute_invalidNullPlaceId() throws Exception {
         // given
         RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(place3WithoutThumb.getPlaceId(), null);
 
@@ -271,7 +271,7 @@ public class TravelRouteControllerTest {
 
     @Test
     @DisplayName("여행 루트 생성 시 여행지 ID에 0 미만 값이 들어와 400 반환")
-    void createLastTravelRoute_invalidMinRouteVersion() throws Exception {
+    void createTravelRoute_invalidMinRouteVersion() throws Exception {
         // given
         RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(place3WithoutThumb.getPlaceId(), -1);
 
@@ -289,13 +289,13 @@ public class TravelRouteControllerTest {
 
     @Test
     @DisplayName("여행 루트 생성 시 일정 데이터 존재하지 않아 404 반환")
-    void createLastTravelRoute_scheduleNotFound() throws Exception {
+    void createTravelRoute_scheduleNotFound() throws Exception {
         // given
         RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(place3WithoutThumb.getPlaceId(), 3);
 
         willThrow(new DataNotFoundException(ErrorCode.SCHEDULE_NOT_FOUND))
                 .given(travelRouteService)
-                .createLastTravelRoute(
+                .createTravelRoute(
                         eq(1004L),
                         eq(member1.getMemberId()),
                         any(RouteCreateRequest.class)
@@ -314,7 +314,7 @@ public class TravelRouteControllerTest {
 
     @Test
     @DisplayName("여행 루트 생성 시 참석자 데이터 존재하지 않아 404 반환")
-    void createLastTravelRoute_attendeeNotFound() throws Exception {
+    void createTravelRoute_attendeeNotFound() throws Exception {
         // given
         ProfileImage profileImage = ProfileImageFixture.createProfileImage("memberImage");
         Member notMember = MemberFixture.createNativeTypeMemberWithId(1004L, "notMember@email.com", profileImage);
@@ -324,7 +324,7 @@ public class TravelRouteControllerTest {
 
         willThrow(new DataNotFoundException(ErrorCode.ATTENDEE_NOT_FOUND))
                 .given(travelRouteService)
-                .createLastTravelRoute(
+                .createTravelRoute(
                         eq(schedule.getScheduleId()),
                         eq(notMember.getMemberId()),
                         any(RouteCreateRequest.class)
@@ -343,14 +343,14 @@ public class TravelRouteControllerTest {
 
     @Test
     @DisplayName("여행 루트 생성 시 편집 권한이 없어서 403 반환")
-    void createLastTravelRoute_forbiddenEdit() throws Exception{
+    void createTravelRoute_forbiddenEdit() throws Exception{
         // given
         SecurityTestUtils.mockAuthentication(member2);
         RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(place3WithoutThumb.getPlaceId(), 3);
 
         willThrow(new ForbiddenAttendeeException(ErrorCode.FORBIDDEN_EDIT_SCHEDULE))
                 .given(travelRouteService)
-                .createLastTravelRoute(
+                .createTravelRoute(
                         eq(schedule.getScheduleId()),
                         eq(member2.getMemberId()),
                         any(RouteCreateRequest.class)
@@ -369,13 +369,13 @@ public class TravelRouteControllerTest {
 
     @Test
     @DisplayName("여행 루트 생성 시 여행지 데이터 존재하지 않아 404 반환")
-    void createLastTravelRoute_placeNotFound() throws Exception {
+    void createTravelRoute_placeNotFound() throws Exception {
         // given
         RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(1004L, 3);
 
         willThrow(new DataNotFoundException(ErrorCode.PLACE_NOT_FOUND))
                 .given(travelRouteService)
-                .createLastTravelRoute(
+                .createTravelRoute(
                         eq(schedule.getScheduleId()),
                         eq(member1.getMemberId()),
                         any(RouteCreateRequest.class)
@@ -394,14 +394,14 @@ public class TravelRouteControllerTest {
 
     @Test
     @DisplayName("여행 루트 생성 시 요청에 여행 루트 버전 충돌로 409 반환")
-    void createLastTravelRoute_conflictRequestRouteVersion() throws Exception {
+    void createTravelRoute_conflictRequestRouteVersion() throws Exception {
         // given
         RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(
                 place3WithoutThumb.getPlaceId(), 1004);
 
         willThrow(new ConflictRouteVersionException(ErrorCode.CONFLICT_ROUTE_VERSION))
                 .given(travelRouteService)
-                .createLastTravelRoute(
+                .createTravelRoute(
                         eq(schedule.getScheduleId()),
                         eq(member1.getMemberId()),
                         any(RouteCreateRequest.class)
@@ -420,14 +420,14 @@ public class TravelRouteControllerTest {
 
     @Test
     @DisplayName("여행 루트 생성 시 쿼리에서 여행 루트 버전 충돌로 409 반환")
-    void createLastTravelRoute_conflictSQLRouteVersion() throws Exception {
+    void createTravelRoute_conflictSQLRouteVersion() throws Exception {
         // given
         RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(
                 place3WithoutThumb.getPlaceId(), schedule.getRouteVersion());
 
         willThrow(new ConflictRouteVersionException(ErrorCode.CONFLICT_ROUTE_VERSION))
                 .given(travelRouteService)
-                .createLastTravelRoute(
+                .createTravelRoute(
                         eq(schedule.getScheduleId()),
                         eq(member1.getMemberId()),
                         any(RouteCreateRequest.class)
