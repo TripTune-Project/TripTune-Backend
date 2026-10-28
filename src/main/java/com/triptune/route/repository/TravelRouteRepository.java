@@ -22,8 +22,8 @@ public interface TravelRouteRepository extends JpaRepository<TravelRoute, Long>,
 
     @Modifying
     @Query(value = """
-        insert into travel_route (schedule_id, place_id, route_order)
-        select :scheduleId, :placeId, coalesce(max(route_order), 0) + 1
+        insert into travel_route (schedule_id, place_id, route_order, created_at)
+        select :scheduleId, :placeId, coalesce(max(route_order), 0) + 1, now()
         from travel_route
         where schedule_id = :scheduleId
     """, nativeQuery = true)

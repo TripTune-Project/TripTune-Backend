@@ -98,6 +98,10 @@ class TravelRouteRepositoryTest  {
                         tuple(schedule.getScheduleId(), place.getPlaceId(), 2),
                         tuple(schedule.getScheduleId(), place.getPlaceId(), 3)
                 );
+
+        assertThat(routes.get(0).getCreatedAt()).isNotNull();
+        assertThat(routes.get(1).getCreatedAt()).isNotNull();
+        assertThat(routes.get(2).getCreatedAt()).isNotNull();
     }
 
     @Test

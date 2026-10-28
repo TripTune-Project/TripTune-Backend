@@ -63,7 +63,7 @@ public class TravelRouteService {
     }
 
     @Transactional
-    public RouteVersionResponse createLastTravelRoute(Long scheduleId, Long memberId, RouteCreateRequest createRequest) {
+    public RouteVersionResponse createTravelRoute(Long scheduleId, Long memberId, RouteCreateRequest createRequest) {
         TravelSchedule schedule = getSchedule(scheduleId);
 
         validateEnableEdit(scheduleId, memberId);

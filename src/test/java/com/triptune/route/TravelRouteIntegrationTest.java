@@ -239,7 +239,7 @@ public class TravelRouteIntegrationTest {
 
     @Test
     @DisplayName("여행 루트 생성")
-    void createLastTravelRoute() throws Exception{
+    void createTravelRoute() throws Exception{
         // given
         int routeVersion = schedule.getRouteVersion();
 
@@ -283,7 +283,7 @@ public class TravelRouteIntegrationTest {
 
     @Test
     @DisplayName("여행 루트 생성 시 처음 저장인 경우")
-    void createLastRoute_first() throws Exception{
+    void createTravelRoute_first() throws Exception{
         // given
         int routeVersion = schedule.getRouteVersion();
 
@@ -311,7 +311,7 @@ public class TravelRouteIntegrationTest {
 
     @Test
     @DisplayName("여행 루트 생성 시 일정 데이터 존재하지 않아 예외 발생")
-    void createLastRoute_scheduleNotFound() throws Exception {
+    void createTravelRoute_scheduleNotFound() throws Exception {
         // given
         RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(
                 place3WithoutThumb.getPlaceId(),
@@ -331,7 +331,7 @@ public class TravelRouteIntegrationTest {
 
     @Test
     @DisplayName("여행 루트 생성 시 참석자 데이터 존재하지 않아 예외 발생")
-    void createLastRoute_attendeeNotFound() throws Exception {
+    void createTravelRoute_attendeeNotFound() throws Exception {
         // given
         ProfileImage profileImage = ProfileImageFixture.createProfileImage("memberImage");
         Member member = MemberFixture.createNativeTypeMemberWithId(1000L, "notMember@email.com", profileImage);
@@ -355,7 +355,7 @@ public class TravelRouteIntegrationTest {
 
     @Test
     @DisplayName("여행 루트 생성 시 여행지 데이터 존재하지 않아 예외 발생")
-    void createLastRoute_placeNotFound() throws Exception {
+    void createTravelRoute_placeNotFound() throws Exception {
         // given
         RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(
                 1000L,
@@ -375,7 +375,7 @@ public class TravelRouteIntegrationTest {
 
     @Test
     @DisplayName("여행 루트 생성 시 여행 루트 버전 충돌로 409 반환")
-    void createLastTravelRoute_conflictRouteVersion() throws Exception {
+    void createTravelRoute_conflictRouteVersion() throws Exception {
         // given
         RouteCreateRequest request = TravelRouteFixture.createRouteCreateRequest(
                 place3WithoutThumb.getPlaceId(),
