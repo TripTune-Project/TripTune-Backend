@@ -75,19 +75,13 @@ public class TravelRouteService {
         int newRouteVersion = createRequest.getRouteVersion() + 1;
         increaseRouteVersion(scheduleId, createRequest.getRouteVersion());
 
-
         int lastOrder = travelRouteRepository.findLastRouteOrder(scheduleId);
-        TravelRoute savedRoute = travelRouteRepository.save(
-                TravelRoute.createTravelRoute(
-                    schedule,
-                    place,
-                    lastOrder + 1
-                )
-        );
+        TravelRoute route = TravelRoute.createTravelRoute(schedule, place, lastOrder + 1);
+        travelRouteRepository.save(route);
 
         publishRouteEvent(scheduleId, ROUTE_ADDED, newRouteVersion);
 
-        return RouteCreateResponse.of(savedRoute.getRouteId(), newRouteVersion);
+        return RouteCreateResponse.of(route.getRouteId(), newRouteVersion);
     }
 
 

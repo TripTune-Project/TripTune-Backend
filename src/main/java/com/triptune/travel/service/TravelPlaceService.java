@@ -34,24 +34,24 @@ public class TravelPlaceService {
     private final S3ObjectManager s3ObjectManager;
 
 
-    public Page<PlaceDistanceResponse> getNearByTravelPlaces(int page, Long memberId, PlaceLocationRequest placeLocationRequest) {
+    public Page<PlaceDistanceResponse> getNearByTravelPlaces(int page, Long memberId, PlaceLocationRequest locationRequest) {
         Pageable pageable = PageUtils.defaultPageable(page);
-        Page<PlaceDistanceQueryDto> placePage = travelPlaceRepository.findNearByTravelPlaces(pageable, placeLocationRequest, RADIUS_SIZE);
+        Page<PlaceDistanceQueryDto> placePage = travelPlaceRepository.findNearByTravelPlaces(pageable, locationRequest, RADIUS_SIZE);
         return toPlaceDistanceResponse(placePage, memberId);
 
     }
 
 
-    public Page<PlaceDistanceResponse> searchTravelPlacesWithLocation(int page, Long memberId, PlaceSearchRequest placeSearchRequest) {
+    public Page<PlaceDistanceResponse> searchTravelPlacesWithLocation(int page, Long memberId, PlaceSearchRequest searchRequest) {
         Pageable pageable = PageUtils.defaultPageable(page);
-        Page<PlaceDistanceQueryDto> placePage = travelPlaceRepository.searchTravelPlacesWithLocation(pageable, placeSearchRequest);
+        Page<PlaceDistanceQueryDto> placePage = travelPlaceRepository.searchTravelPlacesWithLocation(pageable, searchRequest);
         return toPlaceDistanceResponse(placePage, memberId);
     }
 
 
-    public Page<PlaceDistanceResponse> searchTravelPlacesWithoutLocation(int page, Long memberId, PlaceSearchRequest placeSearchRequest) {
+    public Page<PlaceDistanceResponse> searchTravelPlacesWithoutLocation(int page, Long memberId, PlaceSearchRequest searchRequest) {
         Pageable pageable = PageUtils.defaultPageable(page);
-        Page<PlaceDistanceQueryDto> placePage = travelPlaceRepository.searchTravelPlacesWithoutLocation(pageable, placeSearchRequest.getKeyword());
+        Page<PlaceDistanceQueryDto> placePage = travelPlaceRepository.searchTravelPlacesWithoutLocation(pageable, searchRequest.getKeyword());
         return toPlaceDistanceResponse(placePage, memberId);
     }
 

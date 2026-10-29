@@ -1,6 +1,6 @@
 package com.triptune.bookmark.fixture;
 
-import com.triptune.bookmark.dto.request.BookmarkRequest;
+import com.triptune.bookmark.dto.request.BookmarkCreateRequest;
 import com.triptune.bookmark.entity.Bookmark;
 import com.triptune.bookmark.repository.dto.PlaceBookmarkQueryDto;
 import com.triptune.member.entity.Member;
@@ -21,8 +21,8 @@ public class BookmarkFixture {
         return bookmark;
     }
 
-    public static BookmarkRequest createBookmarkRequest(Long placeId){
-        return BookmarkRequest.builder()
+    public static BookmarkCreateRequest createBookmarkRequest(Long placeId){
+        return BookmarkCreateRequest.builder()
                 .placeId(placeId)
                 .build();
     }

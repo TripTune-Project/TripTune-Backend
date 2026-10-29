@@ -30,24 +30,24 @@ public class TravelPlaceController {
 
     @PostMapping
     @Operation(summary = "현재 위치와 가까운 여행지 목록 조회", description = "여행지 탐색 메뉴에서 회원의 현재 위치와 가까운 여행지 목록을 제공한다.")
-    public ApiResponse<PageResponse<PlaceDistanceResponse>> getNearByTravelPlaces(@RequestBody @Valid PlaceLocationRequest placeLocationRequest,
-                                                                         @RequestParam int page){
+    public ApiResponse<PageResponse<PlaceDistanceResponse>> getNearByTravelPlaces(@RequestBody @Valid PlaceLocationRequest locationRequest,
+                                                                                    @RequestParam int page){
         Long memberId = SecurityUtils.getAuthenticateMemberId();
-        Page<PlaceDistanceResponse> response = travelPlaceService.getNearByTravelPlaces(page, memberId, placeLocationRequest);
+        Page<PlaceDistanceResponse> response = travelPlaceService.getNearByTravelPlaces(page, memberId, locationRequest);
         return ApiResponse.pageResponse(response);
     }
 
 
     @PostMapping("/search")
     @Operation(summary = "여행지 검색", description = "여행지 탐색 메뉴에서 여행지를 검색한다.")
-    public ApiResponse<PageResponse<PlaceDistanceResponse>> searchTravelPlaces(@RequestBody @Valid PlaceSearchRequest placeSearchRequest,
+    public ApiResponse<PageResponse<PlaceDistanceResponse>> searchTravelPlaces(@RequestBody @Valid PlaceSearchRequest searchRequest,
                                                                                 @RequestParam int page){
         Long memberId = SecurityUtils.getAuthenticateMemberId();
-        boolean hasLocation = placeSearchRequest.getLatitude() != null && placeSearchRequest.getLongitude() != null;
+        boolean hasLocation = searchRequest.getLatitude() != null && searchRequest.getLongitude() != null;
 
         Page<PlaceDistanceResponse> response = hasLocation
-                ? travelPlaceService.searchTravelPlacesWithLocation(page, memberId, placeSearchRequest)
-                : travelPlaceService.searchTravelPlacesWithoutLocation(page, memberId, placeSearchRequest);
+                ? travelPlaceService.searchTravelPlacesWithLocation(page, memberId, searchRequest)
+                : travelPlaceService.searchTravelPlacesWithoutLocation(page, memberId, searchRequest);
 
         return ApiResponse.pageResponse(response);
     }

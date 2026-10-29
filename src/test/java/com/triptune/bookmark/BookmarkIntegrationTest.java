@@ -1,7 +1,7 @@
 package com.triptune.bookmark;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.triptune.bookmark.dto.request.BookmarkRequest;
+import com.triptune.bookmark.dto.request.BookmarkCreateRequest;
 import com.triptune.bookmark.fixture.BookmarkFixture;
 import com.triptune.bookmark.repository.BookmarkRepository;
 import com.triptune.common.entity.ApiContentType;
@@ -16,10 +16,8 @@ import com.triptune.common.repository.ApiContentTypeRepository;
 import com.triptune.common.repository.CityRepository;
 import com.triptune.common.repository.CountryRepository;
 import com.triptune.common.repository.DistrictRepository;
-import com.triptune.global.message.ErrorCode;
 import com.triptune.global.message.SuccessCode;
 import com.triptune.global.security.SecurityTestUtils;
-import com.triptune.global.security.jwt.JwtUtils;
 import com.triptune.member.entity.Member;
 import com.triptune.member.fixture.MemberFixture;
 import com.triptune.member.repository.MemberRepository;
@@ -34,8 +32,6 @@ import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -98,7 +94,7 @@ class BookmarkIntegrationTest {
         Member member = memberRepository.save(MemberFixture.createNativeTypeMember("member@email.com", defaultImage));
         SecurityTestUtils.mockAuthentication(member);
 
-        BookmarkRequest request = BookmarkFixture.createBookmarkRequest(place.getPlaceId());
+        BookmarkCreateRequest request = BookmarkFixture.createBookmarkRequest(place.getPlaceId());
 
         // when, then
         mockMvc.perform(post("/api/bookmarks")
