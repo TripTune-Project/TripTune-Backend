@@ -7,6 +7,7 @@ import com.triptune.global.websocket.event.EventType;
 import com.triptune.global.websocket.event.ScheduleEvent;
 import com.triptune.route.dto.request.RouteCreateRequest;
 import com.triptune.route.dto.request.RouteUpdateRequest;
+import com.triptune.route.dto.response.RouteCreateResponse;
 import com.triptune.route.dto.response.RouteVersionEventResponse;
 import com.triptune.route.dto.response.RouteVersionResponse;
 import com.triptune.route.dto.response.RouteResponse;
@@ -63,7 +64,7 @@ public class TravelRouteService {
     }
 
     @Transactional
-    public RouteVersionResponse createTravelRoute(Long scheduleId, Long memberId, RouteCreateRequest createRequest) {
+    public RouteCreateResponse createTravelRoute(Long scheduleId, Long memberId, RouteCreateRequest createRequest) {
         TravelSchedule schedule = getSchedule(scheduleId);
 
         validateEnableEdit(scheduleId, memberId);
@@ -74,14 +75,19 @@ public class TravelRouteService {
         int newRouteVersion = createRequest.getRouteVersion() + 1;
         increaseRouteVersion(scheduleId, createRequest.getRouteVersion());
 
-        travelRouteRepository.insertTravelRoute(
-                scheduleId,
-                place.getPlaceId()
+
+        int lastOrder = travelRouteRepository.findLastRouteOrder(scheduleId);
+        TravelRoute savedRoute = travelRouteRepository.save(
+                TravelRoute.createTravelRoute(
+                    schedule,
+                    place,
+                    lastOrder + 1
+                )
         );
 
         publishRouteEvent(scheduleId, ROUTE_ADDED, newRouteVersion);
 
-        return RouteVersionResponse.of(newRouteVersion);
+        return RouteCreateResponse.of(savedRoute.getRouteId(), newRouteVersion);
     }
 
 

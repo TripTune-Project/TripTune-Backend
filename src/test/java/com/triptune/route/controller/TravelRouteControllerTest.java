@@ -19,6 +19,7 @@ import com.triptune.profile.entity.ProfileImage;
 import com.triptune.profile.fixture.ProfileImageFixture;
 import com.triptune.route.dto.request.RouteCreateRequest;
 import com.triptune.route.dto.request.RouteUpdateRequest;
+import com.triptune.route.dto.response.RouteCreateResponse;
 import com.triptune.route.dto.response.RouteVersionResponse;
 import com.triptune.route.dto.response.RouteResponse;
 import com.triptune.attendee.exception.ForbiddenAttendeeException;
@@ -186,7 +187,6 @@ public class TravelRouteControllerTest {
                 .andExpect(jsonPath("$.data.content[2].thumbnailUrl", nullValue()));
     }
 
-
     @Test
     @DisplayName("여행 루트 생성")
     void createTravelRoute() throws Exception{
@@ -198,7 +198,7 @@ public class TravelRouteControllerTest {
                 routeVersion
         );
 
-        RouteVersionResponse response = TravelRouteFixture.createRouteCreateResponse(routeVersion+1);
+        RouteCreateResponse response = TravelRouteFixture.createRouteCreateResponse(1L, routeVersion+1);
 
         given(travelRouteService.createTravelRoute(eq(schedule.getScheduleId()), eq(member1.getMemberId()), any(RouteCreateRequest.class)))
                 .willReturn(response);
@@ -454,7 +454,7 @@ public class TravelRouteControllerTest {
         List<Long> routeIds = new ArrayList<>(List.of(3L, 2L, 1L));
         RouteUpdateRequest request = TravelRouteFixture.createRouteUpdateRequest(routeVersion, routeIds);
 
-        RouteVersionResponse response = TravelRouteFixture.createRouteCreateResponse(routeVersion+1);
+        RouteVersionResponse response = TravelRouteFixture.createRouteVersionResponse(routeVersion+1);
 
         given(travelRouteService.updateTravelRoute(eq(schedule.getScheduleId()), any(RouteUpdateRequest.class)))
                 .willReturn(response);
@@ -547,7 +547,7 @@ public class TravelRouteControllerTest {
                 1
         );
 
-        RouteVersionResponse response = TravelRouteFixture.createRouteCreateResponse(routeVersion+1);
+        RouteVersionResponse response = TravelRouteFixture.createRouteVersionResponse(routeVersion+1);
 
         given(travelRouteService.deleteTravelRoute(schedule.getScheduleId(), route.getRouteId(), routeVersion))
                 .willReturn(response);

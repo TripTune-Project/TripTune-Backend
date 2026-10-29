@@ -73,35 +73,31 @@ class TravelRouteRepositoryTest  {
 
 
     @Test
-    @DisplayName("여행 루트 생성")
-    void insertTravelRoute() {
+    @DisplayName("여행 루트 마지막 순서 조회 - 저장된 데이터 없는 경우")
+    void findLastRouteOrder_emptyData() {
         // given
         // when
-        travelRouteRepository.insertTravelRoute(schedule.getScheduleId(), place.getPlaceId());
-        travelRouteRepository.insertTravelRoute(schedule.getScheduleId(), place.getPlaceId());
-        travelRouteRepository.insertTravelRoute(schedule.getScheduleId(), place.getPlaceId());
+        int lastOrder = travelRouteRepository.findLastRouteOrder(schedule.getScheduleId());
 
         // then
-        em.flush();
-        em.clear();
+        assertThat(lastOrder).isEqualTo(0);
+    }
 
-        List<TravelRoute> routes = travelRouteRepository.findAllByTravelSchedule_ScheduleId(schedule.getScheduleId());
-        assertThat(routes).hasSize(3);
-        assertThat(routes)
-                .extracting(
-                        s -> s.getTravelSchedule().getScheduleId(),
-                        s -> s.getTravelPlace().getPlaceId(),
-                        TravelRoute::getRouteOrder
-                )
-                .containsExactly(
-                        tuple(schedule.getScheduleId(), place.getPlaceId(), 1),
-                        tuple(schedule.getScheduleId(), place.getPlaceId(), 2),
-                        tuple(schedule.getScheduleId(), place.getPlaceId(), 3)
-                );
 
-        assertThat(routes.get(0).getCreatedAt()).isNotNull();
-        assertThat(routes.get(1).getCreatedAt()).isNotNull();
-        assertThat(routes.get(2).getCreatedAt()).isNotNull();
+    @Test
+    @DisplayName("여행 루트 마지막 순서 조회 - 저장된 데이터 있는 경우")
+    void findLastRouteOrder_savedData() {
+        // given
+        travelRouteRepository.save(TravelRouteFixture.createRoute(schedule, place, 1));
+        travelRouteRepository.save(TravelRouteFixture.createRoute(schedule, place, 2));
+        travelRouteRepository.save(TravelRouteFixture.createRoute(schedule, place, 3));
+        travelRouteRepository.save(TravelRouteFixture.createRoute(schedule, place, 4));
+
+        // when
+        int lastOrder = travelRouteRepository.findLastRouteOrder(schedule.getScheduleId());
+
+        // then
+        assertThat(lastOrder).isEqualTo(4);
     }
 
     @Test

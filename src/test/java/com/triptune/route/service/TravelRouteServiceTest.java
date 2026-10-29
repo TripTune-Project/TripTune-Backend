@@ -11,6 +11,7 @@ import com.triptune.profile.entity.ProfileImage;
 import com.triptune.profile.fixture.ProfileImageFixture;
 import com.triptune.attendee.fixture.TravelAttendeeFixture;
 import com.triptune.route.dto.request.RouteUpdateRequest;
+import com.triptune.route.dto.response.RouteCreateResponse;
 import com.triptune.route.dto.response.RouteVersionResponse;
 import com.triptune.route.exception.ConflictRouteVersionException;
 import com.triptune.route.fixture.TravelRouteFixture;
@@ -159,13 +160,13 @@ public class TravelRouteServiceTest {
 
         Page<RouteQueryDto> pageResponse = PageUtils.createPage(routes, pageable, routes.size());
 
-        when(travelScheduleRepository.findRouteVersionById(eq(schedule.getScheduleId())))
+        when(travelScheduleRepository.findRouteVersionById(schedule.getScheduleId()))
                 .thenReturn(Optional.of(routeVersion));
-        when(travelRouteRepository.findAllByScheduleId(eq(pageable), eq(schedule.getScheduleId())))
+        when(travelRouteRepository.findAllByScheduleId(any(Pageable.class), eq(schedule.getScheduleId())))
                 .thenReturn(pageResponse);
-        when(s3ObjectManager.generateS3ObjectUrl(eq(place1Thumb.getS3ObjectKey())))
+        when(s3ObjectManager.generateS3ObjectUrl(place1Thumb.getS3ObjectKey()))
                 .thenReturn(place1ThumbUrl);
-        when(s3ObjectManager.generateS3ObjectUrl(eq(place2Thumb.getS3ObjectKey())))
+        when(s3ObjectManager.generateS3ObjectUrl(place2Thumb.getS3ObjectKey()))
                 .thenReturn(place2ThumbUrl);
 
         // when
@@ -192,11 +193,12 @@ public class TravelRouteServiceTest {
     @DisplayName("여행 루트 조회 시 여행지 데이터 없는 경우")
     void getTravelRoutes_scheduleNotFound(){
         // given
-        when(travelScheduleRepository.findRouteVersionById(eq(schedule.getScheduleId())))
+        when(travelScheduleRepository.findRouteVersionById(schedule.getScheduleId()))
                 .thenReturn(Optional.empty());
 
         // when
-        DataNotFoundException fail = assertThrows(DataNotFoundException.class, () -> travelRouteService.getTravelRoutes(schedule.getScheduleId(), 1));
+        DataNotFoundException fail = assertThrows(DataNotFoundException.class,
+                () -> travelRouteService.getTravelRoutes(schedule.getScheduleId(), 1));
 
         // then
         assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.SCHEDULE_NOT_FOUND);
@@ -206,12 +208,16 @@ public class TravelRouteServiceTest {
     @DisplayName("여행 루트 조회 시 저장된 여행 루트 데이터 없는 경우")
     void getTravelRoutes_emptyResult(){
         // given
-        Pageable pageable = PageUtils.defaultPageable(1);
+        Page<RouteQueryDto> page = PageUtils.createPage(
+                Collections.emptyList(),
+                PageUtils.defaultPageable(1),
+                0
+        );
 
-        when(travelScheduleRepository.findRouteVersionById(eq(schedule.getScheduleId())))
+        when(travelScheduleRepository.findRouteVersionById(schedule.getScheduleId()))
                 .thenReturn(Optional.of(schedule.getRouteVersion()));
-        when(travelRouteRepository.findAllByScheduleId(eq(pageable), eq(schedule.getScheduleId())))
-                .thenReturn(PageUtils.createPage(Collections.emptyList(), pageable, 0));
+        when(travelRouteRepository.findAllByScheduleId(any(Pageable.class), eq(schedule.getScheduleId())))
+                .thenReturn(page);
 
         // when
         RoutePageResponse<RouteResponse> response = travelRouteService.getTravelRoutes(schedule.getScheduleId(), 1);
@@ -236,21 +242,25 @@ public class TravelRouteServiceTest {
                 routeVersion
         );
 
-        when(travelScheduleRepository.findById(1L))
+        when(travelScheduleRepository.findById(schedule.getScheduleId()))
                 .thenReturn(Optional.of(schedule));
-        when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_MemberId(1L, 1L))
+        when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_MemberId(schedule.getScheduleId(), member1.getMemberId()))
                 .thenReturn(Optional.of(author));
         when(travelPlaceRepository.findById(place3WithoutThumb.getPlaceId()))
                 .thenReturn(Optional.of(place3WithoutThumb));
-        when(travelScheduleRepository.increaseRouteVersion(1L, routeVersion))
+        when(travelScheduleRepository.increaseRouteVersion(schedule.getScheduleId(), routeVersion))
                 .thenReturn(1);
+        when(travelRouteRepository.findLastRouteOrder(schedule.getScheduleId()))
+                .thenReturn(3);
+        when(travelRouteRepository.save(any(TravelRoute.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
 
         // when
-        RouteVersionResponse response = travelRouteService.createTravelRoute(1L, 1L, request);
+        RouteCreateResponse response
+                = travelRouteService.createTravelRoute(schedule.getScheduleId(), member1.getMemberId(), request);
 
         // then
         assertThat(response.getRouteVersion()).isEqualTo(routeVersion+1);
-        verify(travelRouteRepository).insertTravelRoute(1L, place3WithoutThumb.getPlaceId());
     }
 
     @Test
@@ -264,21 +274,25 @@ public class TravelRouteServiceTest {
                 routeVersion
         );
 
-        when(travelScheduleRepository.findById(1L))
+        when(travelScheduleRepository.findById(schedule.getScheduleId()))
                 .thenReturn(Optional.of(schedule));
-        when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_MemberId(1L, 1L))
+        when(travelAttendeeRepository.findByTravelSchedule_ScheduleIdAndMember_MemberId(schedule.getScheduleId(), member1.getMemberId()))
                 .thenReturn(Optional.of(author));
         when(travelPlaceRepository.findById(place3WithoutThumb.getPlaceId()))
                 .thenReturn(Optional.of(place3WithoutThumb));
-        when(travelScheduleRepository.increaseRouteVersion(1L, routeVersion))
+        when(travelScheduleRepository.increaseRouteVersion(schedule.getScheduleId(), routeVersion))
                 .thenReturn(1);
+        when(travelRouteRepository.findLastRouteOrder(schedule.getScheduleId()))
+                .thenReturn(0);
+        when(travelRouteRepository.save(any(TravelRoute.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
 
         // when
-        RouteVersionResponse response = travelRouteService.createTravelRoute(1L, 1L, request);
+        RouteCreateResponse response
+                = travelRouteService.createTravelRoute(schedule.getScheduleId(), member1.getMemberId(), request);
 
         // then
         assertThat(response.getRouteVersion()).isEqualTo(routeVersion+1);
-        verify(travelRouteRepository).insertTravelRoute(1L, place3WithoutThumb.getPlaceId());
     }
 
 
@@ -291,12 +305,12 @@ public class TravelRouteServiceTest {
                 schedule.getRouteVersion()
         );
 
-        when(travelScheduleRepository.findById(anyLong()))
+        when(travelScheduleRepository.findById(1004L))
                 .thenReturn(Optional.empty());
 
         // when
         DataNotFoundException fail = assertThrows(DataNotFoundException.class,
-                () -> travelRouteService.createTravelRoute(0L, member1.getMemberId(), request));
+                () -> travelRouteService.createTravelRoute(1004L, member1.getMemberId(), request));
 
         // then
         assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.SCHEDULE_NOT_FOUND);

@@ -2,6 +2,7 @@ package com.triptune.route.fixture;
 
 import com.triptune.route.dto.request.RouteCreateRequest;
 import com.triptune.route.dto.request.RouteUpdateRequest;
+import com.triptune.route.dto.response.RouteCreateResponse;
 import com.triptune.route.dto.response.RouteResponse;
 import com.triptune.route.dto.response.RouteVersionResponse;
 import com.triptune.route.entity.TravelRoute;
@@ -74,7 +75,14 @@ public class TravelRouteFixture {
 
     }
 
-    public static RouteVersionResponse createRouteCreateResponse(int routeVersion) {
+    public static RouteCreateResponse createRouteCreateResponse(Long routeId, int routeVersion) {
+        return RouteCreateResponse.builder()
+                .routeId(routeId)
+                .routeVersion(routeVersion)
+                .build();
+    }
+
+    public static RouteVersionResponse createRouteVersionResponse(int routeVersion) {
         return RouteVersionResponse.builder()
                 .routeVersion(routeVersion)
                 .build();
