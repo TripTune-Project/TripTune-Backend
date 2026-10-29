@@ -48,8 +48,14 @@ export default function(data) {
     );
 
     check(res, {
-        '여행 루트 조회': (r) => r.status === 200,
+        '여행 루트 조회 성공': (r) => r.status === 200,
     });
+
+
+    if (res.status !== 200) {
+        console.log(`status: ${res.status}, body: ${res.body}`);
+    }
+
 
     sleep(1);
 }
