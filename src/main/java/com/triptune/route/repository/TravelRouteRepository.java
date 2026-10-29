@@ -20,14 +20,10 @@ public interface TravelRouteRepository extends JpaRepository<TravelRoute, Long>,
     @Query("delete from TravelRoute r where r.travelSchedule.scheduleId = :scheduleId")
     void deleteAllByScheduleId(@Param("scheduleId") Long scheduleId);
 
-    @Modifying
-    @Query(value = """
-        insert into travel_route (schedule_id, place_id, route_order, created_at)
-        select :scheduleId, :placeId, coalesce(max(route_order), 0) + 1, now()
-        from travel_route
-        where schedule_id = :scheduleId
-    """, nativeQuery = true)
-    void insertTravelRoute(@Param("scheduleId") Long scheduleId, @Param("placeId") Long placeId);
-
-
+    @Query("""
+        select coalesce(max(r.routeOrder), 0)
+        from TravelRoute r
+        where r.travelSchedule.scheduleId = :scheduleId
+    """)
+    int findLastRouteOrder(@Param("scheduleId") Long scheduleId);
 }

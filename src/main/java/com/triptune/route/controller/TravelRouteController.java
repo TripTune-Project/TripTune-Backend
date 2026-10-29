@@ -5,6 +5,7 @@ import com.triptune.global.response.ApiResponse;
 import com.triptune.global.response.page.RoutePageResponse;
 import com.triptune.route.dto.request.RouteCreateRequest;
 import com.triptune.route.dto.request.RouteUpdateRequest;
+import com.triptune.route.dto.response.RouteCreateResponse;
 import com.triptune.route.dto.response.RouteResponse;
 import com.triptune.route.dto.response.RouteVersionResponse;
 import com.triptune.route.service.TravelRouteService;
@@ -36,17 +37,17 @@ public class TravelRouteController {
 
     @PostMapping("/routes")
     @Operation(summary = "여행 루트 추가", description = "여행 루트의 마지막에 여행지를 추가합니다.")
-    public ApiResponse<RouteVersionResponse> createTravelRoute(@AuthenticationPrincipal(expression = "memberId") Long memberId,
-                                                               @PathVariable(name = "scheduleId") Long scheduleId,
-                                                               @Valid @RequestBody RouteCreateRequest routeCreateRequest){
-        RouteVersionResponse response = travelRouteService.createTravelRoute(scheduleId, memberId, routeCreateRequest);
+    public ApiResponse<RouteCreateResponse> createTravelRoute(@AuthenticationPrincipal(expression = "memberId") Long memberId,
+                                                              @PathVariable(name = "scheduleId") Long scheduleId,
+                                                              @Valid @RequestBody RouteCreateRequest routeCreateRequest){
+        RouteCreateResponse response = travelRouteService.createTravelRoute(scheduleId, memberId, routeCreateRequest);
         return ApiResponse.dataResponse(response);
     }
 
     @PatchMapping("/routes")
     @Operation(summary = "여행 루트 수정", description = "여행 루트 순서를 수정합니다.")
     public ApiResponse<RouteVersionResponse> updateTravelRoute(@PathVariable(name = "scheduleId") Long scheduleId,
-                                                                @Valid @RequestBody RouteUpdateRequest routeUpdateRequest){
+                                                               @Valid @RequestBody RouteUpdateRequest routeUpdateRequest){
         RouteVersionResponse response = travelRouteService.updateTravelRoute(scheduleId, routeUpdateRequest);
         return ApiResponse.dataResponse(response);
     }
