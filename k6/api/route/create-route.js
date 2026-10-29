@@ -124,21 +124,25 @@ export default function(data) {
 
     sleep(1);
 }
+export function teardown(data) {
+    let successCount = 0;
 
-export function teardown(data){
-    for (const scheduleId of data.scheduleIds){
+    for (const scheduleId of data.scheduleIds) {
         const res = http.del(
             `${BASE_URL}/api/schedules/${scheduleId}`,
             null,
             authHeaders(data.accessToken)
         );
 
-        if (res.status !== 200 && res.status !== 204){
+        if (res.status === 200 || res.status === 204) {
+            successCount++;
+        } else {
             console.log(`일정 ${scheduleId} 삭제 실패: ${res.status}`);
         }
     }
 
-    check(null, {
-        "테스트 데이터 정리 완료": () => true,
+    check(successCount, {
+        [`테스트 데이터 정리 성공 (${data.scheduleIds.length}개)`]:
+            (count) => count === data.scheduleIds.length,
     });
 }
