@@ -33,8 +33,10 @@
 
 ### 4. Route
 ```powershell
-.\k6\scripts\route\run-get-routes.ps1
 .\k6\scripts\route\run-create-route.ps1
+.\k6\scripts\route\run-get-routes.ps1
+.\k6\scripts\route\run-update-route.ps1
+.\k6\scripts\route\run-delete-route.ps1
 ```
 
 ### 5. Chat
