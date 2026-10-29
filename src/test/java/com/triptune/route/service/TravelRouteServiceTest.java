@@ -252,8 +252,6 @@ public class TravelRouteServiceTest {
                 .thenReturn(1);
         when(travelRouteRepository.findLastRouteOrder(schedule.getScheduleId()))
                 .thenReturn(3);
-        when(travelRouteRepository.save(any(TravelRoute.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
 
         // when
         RouteCreateResponse response
@@ -284,8 +282,6 @@ public class TravelRouteServiceTest {
                 .thenReturn(1);
         when(travelRouteRepository.findLastRouteOrder(schedule.getScheduleId()))
                 .thenReturn(0);
-        when(travelRouteRepository.save(any(TravelRoute.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
 
         // when
         RouteCreateResponse response

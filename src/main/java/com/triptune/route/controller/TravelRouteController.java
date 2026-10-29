@@ -39,16 +39,16 @@ public class TravelRouteController {
     @Operation(summary = "여행 루트 추가", description = "여행 루트의 마지막에 여행지를 추가합니다.")
     public ApiResponse<RouteCreateResponse> createTravelRoute(@AuthenticationPrincipal(expression = "memberId") Long memberId,
                                                               @PathVariable(name = "scheduleId") Long scheduleId,
-                                                              @Valid @RequestBody RouteCreateRequest routeCreateRequest){
-        RouteCreateResponse response = travelRouteService.createTravelRoute(scheduleId, memberId, routeCreateRequest);
+                                                              @Valid @RequestBody RouteCreateRequest createRequest){
+        RouteCreateResponse response = travelRouteService.createTravelRoute(scheduleId, memberId, createRequest);
         return ApiResponse.dataResponse(response);
     }
 
     @PatchMapping("/routes")
     @Operation(summary = "여행 루트 수정", description = "여행 루트 순서를 수정합니다.")
     public ApiResponse<RouteVersionResponse> updateTravelRoute(@PathVariable(name = "scheduleId") Long scheduleId,
-                                                               @Valid @RequestBody RouteUpdateRequest routeUpdateRequest){
-        RouteVersionResponse response = travelRouteService.updateTravelRoute(scheduleId, routeUpdateRequest);
+                                                               @Valid @RequestBody RouteUpdateRequest updateRequest){
+        RouteVersionResponse response = travelRouteService.updateTravelRoute(scheduleId, updateRequest);
         return ApiResponse.dataResponse(response);
     }
 

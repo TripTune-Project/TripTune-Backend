@@ -203,7 +203,6 @@ public class TravelRouteControllerTest {
         given(travelRouteService.createTravelRoute(eq(schedule.getScheduleId()), eq(member1.getMemberId()), any(RouteCreateRequest.class)))
                 .willReturn(response);
 
-
         // when, then
         mockMvc.perform(post("/api/schedules/{scheduleId}/routes", schedule.getScheduleId())
                         .contentType(MediaType.APPLICATION_JSON)
@@ -212,6 +211,7 @@ public class TravelRouteControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()))
+                .andExpect(jsonPath("$.data.routeId").value(1L))
                 .andExpect(jsonPath("$.data.routeVersion").value(routeVersion+1));
     }
 

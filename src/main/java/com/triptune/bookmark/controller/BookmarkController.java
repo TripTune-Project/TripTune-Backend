@@ -1,6 +1,6 @@
 package com.triptune.bookmark.controller;
 
-import com.triptune.bookmark.dto.request.BookmarkRequest;
+import com.triptune.bookmark.dto.request.BookmarkCreateRequest;
 import com.triptune.bookmark.service.BookmarkService;
 import com.triptune.global.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -21,8 +21,8 @@ public class BookmarkController {
     @PostMapping
     @Operation(summary = "북마크 추가", description = "북마크를 추가합니다.")
     public ApiResponse<?> createBookmark(@AuthenticationPrincipal(expression = "memberId") Long memberId,
-                                         @Valid @RequestBody BookmarkRequest bookmarkRequest){
-        bookmarkService.createBookmark(memberId, bookmarkRequest);
+                                         @Valid @RequestBody BookmarkCreateRequest createRequest){
+        bookmarkService.createBookmark(memberId, createRequest);
 
         return ApiResponse.okResponse();
     }

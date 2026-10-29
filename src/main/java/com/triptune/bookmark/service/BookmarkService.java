@@ -1,15 +1,15 @@
 package com.triptune.bookmark.service;
 
-import com.triptune.bookmark.dto.request.BookmarkRequest;
+import com.triptune.bookmark.dto.request.BookmarkCreateRequest;
 import com.triptune.bookmark.entity.Bookmark;
 import com.triptune.bookmark.repository.BookmarkRepository;
+import com.triptune.global.exception.DataExistException;
+import com.triptune.global.exception.DataNotFoundException;
+import com.triptune.global.message.ErrorCode;
 import com.triptune.member.entity.Member;
 import com.triptune.member.repository.MemberRepository;
 import com.triptune.travel.entity.TravelPlace;
 import com.triptune.travel.repository.TravelPlaceRepository;
-import com.triptune.global.message.ErrorCode;
-import com.triptune.global.exception.DataExistException;
-import com.triptune.global.exception.DataNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,13 +24,13 @@ public class BookmarkService {
     private final BookmarkRepository bookmarkRepository;
 
     @Transactional
-    public void createBookmark(Long memberId, BookmarkRequest bookmarkRequest) {
-        if (isExistBookmark(memberId, bookmarkRequest.getPlaceId())){
+    public void createBookmark(Long memberId, BookmarkCreateRequest createRequest) {
+        if (isExistBookmark(memberId, createRequest.getPlaceId())){
             throw new DataExistException(ErrorCode.ALREADY_EXISTED_BOOKMARK);
         }
 
         Member member = getMember(memberId);
-        TravelPlace travelPlace = getPlace(bookmarkRequest.getPlaceId());
+        TravelPlace travelPlace = getPlace(createRequest.getPlaceId());
 
         Bookmark bookmark = Bookmark.createBookmark(member, travelPlace);
         bookmarkRepository.save(bookmark);

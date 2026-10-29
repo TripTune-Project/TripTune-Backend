@@ -1,7 +1,7 @@
 package com.triptune.bookmark.service;
 
 import com.triptune.bookmark.fixture.BookmarkFixture;
-import com.triptune.bookmark.dto.request.BookmarkRequest;
+import com.triptune.bookmark.dto.request.BookmarkCreateRequest;
 import com.triptune.bookmark.repository.BookmarkRepository;
 import com.triptune.common.entity.*;
 import com.triptune.common.fixture.*;
@@ -76,7 +76,7 @@ public class BookmarkServiceTest  {
     void createBookmark(){
         // given
         Long travelPlace1Id = 1L;
-        BookmarkRequest request = BookmarkFixture.createBookmarkRequest(travelPlace1Id);
+        BookmarkCreateRequest request = BookmarkFixture.createBookmarkRequest(travelPlace1Id);
 
         when(bookmarkRepository.existsByMember_MemberIdAndTravelPlace_PlaceId(anyLong(), anyLong())).thenReturn(false);
         when(memberRepository.findById(anyLong())).thenReturn(Optional.of(member));
@@ -94,7 +94,7 @@ public class BookmarkServiceTest  {
     void createBookmark_alreadyBookmarked(){
         // given
         Long travelPlace1Id = 1L;
-        BookmarkRequest request = BookmarkFixture.createBookmarkRequest(travelPlace1Id);
+        BookmarkCreateRequest request = BookmarkFixture.createBookmarkRequest(travelPlace1Id);
 
         when(bookmarkRepository.existsByMember_MemberIdAndTravelPlace_PlaceId(anyLong(), anyLong())).thenReturn(true);
 
@@ -111,7 +111,7 @@ public class BookmarkServiceTest  {
     void createBookmark_memberNotFound(){
         // given
         Long travelPlace1Id = 1L;
-        BookmarkRequest request = BookmarkFixture.createBookmarkRequest(travelPlace1Id);
+        BookmarkCreateRequest request = BookmarkFixture.createBookmarkRequest(travelPlace1Id);
 
         when(bookmarkRepository.existsByMember_MemberIdAndTravelPlace_PlaceId(anyLong(), anyLong())).thenReturn(false);
         when(memberRepository.findById(anyLong())).thenReturn(Optional.empty());
@@ -129,7 +129,7 @@ public class BookmarkServiceTest  {
     void createBookmark_placeNotFound(){
         // given
         Long travelPlace1Id = 1L;
-        BookmarkRequest request = BookmarkFixture.createBookmarkRequest(travelPlace1Id);
+        BookmarkCreateRequest request = BookmarkFixture.createBookmarkRequest(travelPlace1Id);
 
         when(bookmarkRepository.existsByMember_MemberIdAndTravelPlace_PlaceId(anyLong(), anyLong())).thenReturn(false);
         when(memberRepository.findById(anyLong())).thenReturn(Optional.of(member));

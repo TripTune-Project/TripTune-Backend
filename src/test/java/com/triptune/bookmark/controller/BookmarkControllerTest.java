@@ -1,7 +1,7 @@
 package com.triptune.bookmark.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.triptune.bookmark.dto.request.BookmarkRequest;
+import com.triptune.bookmark.dto.request.BookmarkCreateRequest;
 import com.triptune.bookmark.fixture.BookmarkFixture;
 import com.triptune.bookmark.service.BookmarkService;
 import com.triptune.global.exception.DataExistException;
@@ -60,7 +60,7 @@ class BookmarkControllerTest{
     @DisplayName("북마크 추가")
     void createBookmark() throws Exception{
         // given
-        BookmarkRequest request = BookmarkFixture.createBookmarkRequest(1L);
+        BookmarkCreateRequest request = BookmarkFixture.createBookmarkRequest(1L);
 
         // when, then
         mockMvc.perform(post("/api/bookmarks")
@@ -79,7 +79,7 @@ class BookmarkControllerTest{
     @ValueSource(longs = {0L, -1L, Long.MIN_VALUE})
     void createBookmark_invalidMinPlaceId(Long input) throws Exception {
         // given
-        BookmarkRequest request = BookmarkFixture.createBookmarkRequest(input);
+        BookmarkCreateRequest request = BookmarkFixture.createBookmarkRequest(input);
 
         // when,  then
         mockMvc.perform(post("/api/bookmarks")
@@ -95,7 +95,7 @@ class BookmarkControllerTest{
     @DisplayName("북마크 생성 시 placeId 값이 null 로 400 반환")
     void createBookmark_invalidNullPlaceId() throws Exception{
         // given
-        BookmarkRequest request = BookmarkFixture.createBookmarkRequest(null);
+        BookmarkCreateRequest request = BookmarkFixture.createBookmarkRequest(null);
 
         // when, then
         mockMvc.perform(post("/api/bookmarks")
@@ -113,11 +113,11 @@ class BookmarkControllerTest{
     @DisplayName("북마크 추가 시 이미 북마크로 등록되어 있어 409 반환")
     void createBookmark_alreadyBookmarked() throws Exception{
         // given
-        BookmarkRequest request = BookmarkFixture.createBookmarkRequest(1L);
+        BookmarkCreateRequest request = BookmarkFixture.createBookmarkRequest(1L);
 
         willThrow(new DataExistException(ErrorCode.ALREADY_EXISTED_BOOKMARK))
                 .given(bookmarkService)
-                .createBookmark(eq(member.getMemberId()), any(BookmarkRequest.class));
+                .createBookmark(eq(member.getMemberId()), any(BookmarkCreateRequest.class));
 
         // when, then
         mockMvc.perform(post("/api/bookmarks")
@@ -134,11 +134,11 @@ class BookmarkControllerTest{
     @DisplayName("북마크 추가 시 회원 데이터 없어 404 반환")
     void createBookmark_memberNotFound() throws Exception{
         // given
-        BookmarkRequest request = BookmarkFixture.createBookmarkRequest(1L);
+        BookmarkCreateRequest request = BookmarkFixture.createBookmarkRequest(1L);
 
         willThrow(new DataNotFoundException(ErrorCode.MEMBER_NOT_FOUND))
                 .given(bookmarkService)
-                .createBookmark(eq(member.getMemberId()), any(BookmarkRequest.class));
+                .createBookmark(eq(member.getMemberId()), any(BookmarkCreateRequest.class));
 
         // when, then
         mockMvc.perform(post("/api/bookmarks")
@@ -154,11 +154,11 @@ class BookmarkControllerTest{
     @DisplayName("북마크 추가 시 여행지 데이터 없어 404 반환")
     void createBookmark_placeNotFound() throws Exception{
         // given
-        BookmarkRequest request = BookmarkFixture.createBookmarkRequest(1000L);
+        BookmarkCreateRequest request = BookmarkFixture.createBookmarkRequest(1000L);
 
         willThrow(new DataNotFoundException(ErrorCode.PLACE_NOT_FOUND))
                 .given(bookmarkService)
-                .createBookmark(eq(member.getMemberId()), any(BookmarkRequest.class));
+                .createBookmark(eq(member.getMemberId()), any(BookmarkCreateRequest.class));
 
         // when, then
         mockMvc.perform(post("/api/bookmarks")

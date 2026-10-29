@@ -55,8 +55,7 @@ import static com.triptune.attendee.enums.AttendeePermission.READ;
 import static com.triptune.travel.enums.ThemeType.ATTRACTIONS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.nullValue;
+import static org.hamcrest.Matchers.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.willThrow;
@@ -257,6 +256,7 @@ public class TravelRouteIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()))
+                .andExpect(jsonPath("$.data.routeId", notNullValue()))
                 .andExpect(jsonPath("$.data.routeVersion").value(routeVersion+1));
 
         // then
@@ -297,6 +297,7 @@ public class TravelRouteIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value(SuccessCode.GENERAL_SUCCESS.getMessage()))
+                .andExpect(jsonPath("$.data.routeId", notNullValue()))
                 .andExpect(jsonPath("$.data.routeVersion").value(routeVersion+1));
 
         List<TravelRoute> travelRoutes = travelRouteRepository.findAllByTravelSchedule_ScheduleId(schedule.getScheduleId());
