@@ -46,28 +46,7 @@ export default function(data) {
             scheduleName: "수정 테스트",
             startDate: '2026-10-09',
             endDate: '2026-10-10',
-            "travelRoutes": [
-                {
-                    "routeOrder": 1,
-                    "placeId": 1
-                },
-                {
-                    "routeOrder": 2,
-                    "placeId": 2
-                },
-                {
-                    "routeOrder": 3,
-                    "placeId": 3
-                },
-                {
-                    "routeOrder": 4,
-                    "placeId": 4
-                },
-                {
-                    "routeOrder": 5,
-                    "placeId": 5
-                }
-            ]
+            scheduleVersion : 10
         }),
         {
             headers: {

@@ -1,4 +1,4 @@
-## ps1 파일 실행 방법
+..## ps1 파일 실행 방법
 터미널에서 실행하며 현재 디렉토리 위치를 루트에서 수행해야함
 ```powershell
 .\k6\scripts\디렉토리명\파일명.ps1
@@ -34,7 +34,7 @@
 ### 4. Route
 ```powershell
 .\k6\scripts\route\run-get-routes.ps1
-.\k6\scripts\route\run-create-last-route.ps1
+.\k6\scripts\route\run-create-route.ps1
 ```
 
 ### 5. Chat
