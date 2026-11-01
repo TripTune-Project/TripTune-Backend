@@ -1,5 +1,5 @@
 import http from 'k6/http';
-import { check, sleep } from 'k6';
+import { check } from 'k6';
 
 const BASE_URL = __ENV.BASE_URL;
 
@@ -13,13 +13,16 @@ const members = open('../../data/test_member_list.csv')
     })
 
 export const options = {
-    setupTimeout: '120s',
-    stages: [
-        { duration: '30s', target: 10 },
-        { duration: '30s', target: 100 },
-        { duration: '3m', target: 100 },
-        { duration: '30s', target: 0 },
-    ],
+     scenarios: {
+        token_refresh: {
+            executor: 'constant-arrival-rate',
+            rate: 250,               // 초당 요청 횟수
+            timeUnit: '1s',
+            duration: '2m',
+            preAllocatedVUs: 250,    // rate랑 같게
+            maxVUs: 500,             // rate의 2배
+        },
+    },
     thresholds: {
         http_req_failed: ['rate<0.01'],
         http_req_duration: ['p(95)<500'],
@@ -76,5 +79,4 @@ export default function(data) {
         console.log(`status: ${res.status}, body: ${res.body}`);
     }
 
-    sleep(1);
 }

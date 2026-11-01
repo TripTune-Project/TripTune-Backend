@@ -1,5 +1,6 @@
 import http from 'k6/http';
-import { check, sleep } from 'k6';
+import exec from 'k6/execution';
+import { check } from 'k6';
 
 const BASE_URL = __ENV.BASE_URL;
 
@@ -13,13 +14,16 @@ const members = open('../../data/test_member_list.csv')
     })
 
 export const options = {
-    setupTimeout: '120s',
-    stages: [
-        { duration: '30s', target: 3 },
-        { duration: '30s', target: 30 },
-        { duration: '3m', target: 30 },
-        { duration: '30s', target: 0 },
-    ],
+    scenarios: {
+        login_logout: {
+            executor: 'constant-arrival-rate',
+            rate: 15,                  // 초당 요청 횟수
+            timeUnit: '1s',
+            duration: '2m',
+            preAllocatedVUs: 15,       // rate랑 같게
+            maxVUs: 30,                // rate의 2배
+        },
+    },
     thresholds: {
         http_req_failed: ['rate<0.01'],
         'http_req_duration{name:login}': ['p(95)<5000'],
@@ -29,7 +33,7 @@ export const options = {
 
 
 export default function() {
-    const acc = members[(__VU - 1) % members.length];
+    const acc = members[exec.scenario.iterationInTest % members.length];
 
     // 로그인
     const loginRes = http.post(
@@ -77,5 +81,4 @@ export default function() {
         console.log(`status: ${logoutRes.status}, body: ${logoutRes.body}`);
     }
 
-    sleep(1);
 }
