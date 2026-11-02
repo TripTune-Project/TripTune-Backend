@@ -25,7 +25,8 @@ public interface TravelScheduleRepository extends JpaRepository<TravelSchedule, 
         set s.scheduleName = :scheduleName,
             s.startDate = :startDate,
             s.endDate = :endDate,
-            s.scheduleVersion = :scheduleVersion + 1
+            s.scheduleVersion = :scheduleVersion + 1,
+            s.updatedAt = now()
         where s.scheduleId = :scheduleId
             and s.scheduleVersion = :scheduleVersion
     """)
