@@ -18,17 +18,17 @@ public class ScheduleDetailResponse {
     private LocalDate endDate;
     private Integer scheduleVersion;
     private LocalDateTime createdAt;
-    private LocalDateTime updateAt;
+    private LocalDateTime updatedAt;
     private PageResponse<PlaceResponse> placeList;
 
     @Builder
-    public ScheduleDetailResponse(String scheduleName, LocalDate startDate, LocalDate endDate, Integer scheduleVersion, LocalDateTime createdAt, LocalDateTime updateAt, PageResponse<PlaceResponse> placeList) {
+    public ScheduleDetailResponse(String scheduleName, LocalDate startDate, LocalDate endDate, Integer scheduleVersion, LocalDateTime createdAt, LocalDateTime updatedAt, PageResponse<PlaceResponse> placeList) {
         this.scheduleName = scheduleName;
         this.startDate = startDate;
         this.endDate = endDate;
         this.scheduleVersion = scheduleVersion;
         this.createdAt = createdAt;
-        this.updateAt = updateAt;
+        this.updatedAt = updatedAt;
         this.placeList = placeList;
     }
 
@@ -39,7 +39,7 @@ public class ScheduleDetailResponse {
                 .endDate(schedule.getEndDate())
                 .scheduleVersion(schedule.getScheduleVersion())
                 .createdAt(schedule.getCreatedAt())
-                .updateAt(schedule.getUpdatedAt())
+                .updatedAt(schedule.getUpdatedAt())
                 .placeList(placeResponse)
                 .build();
     }

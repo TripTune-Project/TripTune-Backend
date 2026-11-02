@@ -479,6 +479,7 @@ public class TravelScheduleRepositoryTest {
         assertThat(findSchedule.getScheduleName()).isEqualTo("수정 테스트");
         assertThat(findSchedule.getScheduleVersion()).isEqualTo(1);
         assertThat(findSchedule.getRouteVersion()).isZero();
+        assertThat(findSchedule.getUpdatedAt()).isNotEqualTo(findSchedule.getCreatedAt());
 
     }
 
