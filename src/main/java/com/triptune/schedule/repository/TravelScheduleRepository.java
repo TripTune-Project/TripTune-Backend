@@ -40,7 +40,8 @@ public interface TravelScheduleRepository extends JpaRepository<TravelSchedule, 
     @Modifying
     @Query("""
         update TravelSchedule s
-        set s.routeVersion = :routeVersion + 1
+        set s.routeVersion = :routeVersion + 1,
+            s.updatedAt = now()
         where s.scheduleId = :scheduleId
             and s.routeVersion = :routeVersion
     """)
