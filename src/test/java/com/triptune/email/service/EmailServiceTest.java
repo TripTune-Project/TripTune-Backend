@@ -4,6 +4,7 @@ import com.triptune.email.fixture.EmailFixture;
 import com.triptune.email.dto.request.VerifyAuthRequest;
 import com.triptune.email.exception.EmailVerifyException;
 import com.triptune.global.message.ErrorCode;
+import com.triptune.global.redis.enums.RedisKeyType;
 import com.triptune.member.repository.MemberRepository;
 import com.triptune.global.redis.RedisService;
 import org.junit.jupiter.api.DisplayName;
@@ -38,7 +39,8 @@ public class EmailServiceTest {
         // given
         VerifyAuthRequest request = EmailFixture.createVerifyAuthRequest("member@email.com", "Abcd123");
 
-        when(redisService.getData(any(), anyString())).thenReturn("Abcd123");
+        when(redisService.getData(RedisKeyType.EMAIL_AUTH_CODE, request.getEmail()))
+                .thenReturn("Abcd123");
 
         // when, then
         assertDoesNotThrow(() -> emailService.verifyAuthCode(request));
@@ -50,7 +52,8 @@ public class EmailServiceTest {
         // given
         VerifyAuthRequest request = EmailFixture.createVerifyAuthRequest("member@email.com", "Abcd123");
 
-        when(redisService.getData(any(), anyString())).thenReturn(null);
+        when(redisService.getData(RedisKeyType.EMAIL_AUTH_CODE, request.getEmail()))
+                .thenReturn(null);
 
         // when
         EmailVerifyException fail = assertThrows(EmailVerifyException.class, () -> emailService.verifyAuthCode(request));
@@ -65,7 +68,8 @@ public class EmailServiceTest {
         // given
         VerifyAuthRequest request = EmailFixture.createVerifyAuthRequest("member@email.com", "Abcd123");
 
-        when(redisService.getData(any(), anyString())).thenReturn("abcd123");
+        when(redisService.getData(RedisKeyType.EMAIL_AUTH_CODE, request.getEmail()))
+                .thenReturn("abcd123");
 
         // when
         EmailVerifyException fail = assertThrows(EmailVerifyException.class, () -> emailService.verifyAuthCode(request));

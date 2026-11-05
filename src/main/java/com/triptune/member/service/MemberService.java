@@ -134,7 +134,7 @@ public class MemberService {
     private void validateSavedRefreshToken(Long memberId, String refreshToken){
         String savedRefreshToken = redisService.getData(RedisKeyType.LOGIN, memberId);
 
-        if(!savedRefreshToken.equals(refreshToken)){
+        if(!refreshToken.equals(savedRefreshToken)){
             throw new CustomJwtUnAuthorizedException(ErrorCode.MISMATCH_REFRESH_TOKEN);
         }
     }
