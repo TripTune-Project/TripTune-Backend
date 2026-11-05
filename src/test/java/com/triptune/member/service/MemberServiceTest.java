@@ -471,6 +471,28 @@ public class MemberServiceTest {
 
 
     @Test
+    @DisplayName("토큰 갱신 시 redis에 조회 결과 없어 예외 발생")
+    void refreshToken_emptyRedis() {
+        // given
+        String notEqualRefreshToken = "NotEqualRefreshToken";
+
+        Member member = MemberFixture.createNativeTypeMember("member@email.com", profileImage);
+
+        when(jwtUtils.getMemberIdByToken(notEqualRefreshToken))
+                .thenReturn(member.getMemberId());
+        when(redisService.getData(LOGIN, member.getMemberId()))
+                .thenReturn(null);
+
+        // when
+        CustomJwtUnAuthorizedException fail = assertThrows(CustomJwtUnAuthorizedException.class,
+                () -> memberService.refreshToken(notEqualRefreshToken));
+
+        // then
+        assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.MISMATCH_REFRESH_TOKEN);
+    }
+
+
+    @Test
     @DisplayName("토큰 갱신 시 저장된 refresh token 과 요청 refresh token 이 불일치해 예외 발생")
     void refreshToken_misMatchRefreshToken() {
         // given
@@ -611,6 +633,32 @@ public class MemberServiceTest {
     @Test
     @DisplayName("비밀번호 초기화 시 비밀번호 토큰 유효 시간이 만료되어 예외 발생")
     void resetPassword_expiredResetPasswordToken(){
+        // given
+        Member member = MemberFixture.createBothTypeMember("member@email.com", profileImage);
+
+        ResetPasswordRequest request = MemberFixture.createResetPasswordRequest(
+                PASSWORD_TOKEN,
+                "password12!@",
+                "password12!@"
+        );
+
+        when(jwtUtils.getSubject(PASSWORD_TOKEN))
+                .thenReturn(member.getEmail());
+        when(redisService.getData(RESET_PASSWORD, member.getEmail()))
+                .thenReturn(null);
+
+        // when
+        InvalidPasswordResetTokenException fail = assertThrows(InvalidPasswordResetTokenException.class,
+                () -> memberService.resetPassword(request));
+
+        // then
+        assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.INVALID_CHANGE_PASSWORD_TOKEN);
+    }
+
+
+    @Test
+    @DisplayName("비밀번호 초기화 시 redis 에 조회 결과 없어 예외 발생")
+    void resetPassword_emptyRedisData(){
         // given
         Member member = MemberFixture.createBothTypeMember("member@email.com", profileImage);
 
