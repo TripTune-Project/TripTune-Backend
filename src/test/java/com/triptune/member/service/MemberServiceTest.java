@@ -1,19 +1,29 @@
 package com.triptune.member.service;
 
-import com.triptune.bookmark.enums.BookmarkSortType;
+import com.triptune.attendee.entity.TravelAttendee;
+import com.triptune.attendee.enums.AttendeePermission;
+import com.triptune.attendee.fixture.TravelAttendeeFixture;
+import com.triptune.attendee.repository.TravelAttendeeRepository;
 import com.triptune.bookmark.fixture.BookmarkFixture;
 import com.triptune.bookmark.repository.BookmarkRepository;
 import com.triptune.bookmark.repository.dto.PlaceBookmarkQueryDto;
-import com.triptune.common.entity.*;
+import com.triptune.chat.repository.ChatMessageRepository;
+import com.triptune.common.entity.ApiContentType;
+import com.triptune.common.entity.City;
+import com.triptune.common.entity.Country;
+import com.triptune.common.entity.District;
 import com.triptune.common.fixture.*;
 import com.triptune.email.dto.request.EmailRequest;
 import com.triptune.email.exception.EmailVerifyException;
 import com.triptune.email.service.EmailService;
+import com.triptune.global.exception.DataExistException;
+import com.triptune.global.exception.DataNotFoundException;
+import com.triptune.global.message.ErrorCode;
+import com.triptune.global.redis.RedisService;
 import com.triptune.global.s3.S3ObjectManager;
-import com.triptune.member.exception.InvalidPasswordResetTokenException;
-import com.triptune.member.fixture.MemberFixture;
-import com.triptune.member.fixture.SocialMemberFixture;
-import com.triptune.member.service.dto.LoginResult;
+import com.triptune.global.security.jwt.JwtUtils;
+import com.triptune.global.security.jwt.exception.CustomJwtUnAuthorizedException;
+import com.triptune.global.util.PageUtils;
 import com.triptune.member.dto.request.*;
 import com.triptune.member.dto.response.MemberInfoResponse;
 import com.triptune.member.dto.response.RefreshTokenResponse;
@@ -21,32 +31,24 @@ import com.triptune.member.entity.Member;
 import com.triptune.member.enums.DeactivateValue;
 import com.triptune.member.enums.JoinType;
 import com.triptune.member.enums.SocialType;
-import com.triptune.member.exception.IncorrectPasswordException;
 import com.triptune.member.exception.FailLoginException;
+import com.triptune.member.exception.IncorrectPasswordException;
+import com.triptune.member.exception.InvalidPasswordResetTokenException;
 import com.triptune.member.exception.UnsupportedSocialMemberException;
+import com.triptune.member.fixture.MemberFixture;
+import com.triptune.member.fixture.SocialMemberFixture;
 import com.triptune.member.repository.MemberRepository;
+import com.triptune.member.service.dto.LoginResult;
 import com.triptune.profile.entity.ProfileImage;
 import com.triptune.profile.fixture.ProfileImageFixture;
 import com.triptune.profile.service.ProfileImageService;
-import com.triptune.attendee.entity.TravelAttendee;
-import com.triptune.schedule.entity.TravelSchedule;
-import com.triptune.attendee.enums.AttendeePermission;
-import com.triptune.attendee.fixture.TravelAttendeeFixture;
-import com.triptune.schedule.fixture.TravelScheduleFixture;
-import com.triptune.chat.repository.ChatMessageRepository;
-import com.triptune.attendee.repository.TravelAttendeeRepository;
 import com.triptune.route.repository.TravelRouteRepository;
+import com.triptune.schedule.entity.TravelSchedule;
+import com.triptune.schedule.fixture.TravelScheduleFixture;
 import com.triptune.schedule.repository.TravelScheduleRepository;
 import com.triptune.travel.dto.response.PlaceBookmarkResponse;
 import com.triptune.travel.entity.TravelImage;
 import com.triptune.travel.entity.TravelPlace;
-import com.triptune.global.message.ErrorCode;
-import com.triptune.global.security.jwt.exception.CustomJwtUnAuthorizedException;
-import com.triptune.global.exception.DataExistException;
-import com.triptune.global.exception.DataNotFoundException;
-import com.triptune.global.security.jwt.JwtUtils;
-import com.triptune.global.util.PageUtils;
-import com.triptune.global.redis.RedisService;
 import com.triptune.travel.enums.ThemeType;
 import com.triptune.travel.fixture.TravelImageFixture;
 import com.triptune.travel.fixture.TravelPlaceFixture;
@@ -67,7 +69,11 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import static org.assertj.core.api.Assertions.*;
+import static com.triptune.bookmark.enums.BookmarkSortType.NAME;
+import static com.triptune.bookmark.enums.BookmarkSortType.NEWEST;
+import static com.triptune.global.redis.enums.RedisKeyType.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.*;
@@ -75,6 +81,10 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class MemberServiceTest {
+    private final String ACCESS_TOKEN = "MemberAccessToken";
+    private final String REFRESH_TOKEN = "MemberRefreshToken";
+    private final String PASSWORD_TOKEN = "MemberPasswordToken";
+
     @InjectMocks private MemberService memberService;
     @Mock private MemberRepository memberRepository;
     @Mock private JwtUtils jwtUtils;
@@ -88,10 +98,6 @@ public class MemberServiceTest {
     @Mock private TravelScheduleRepository travelScheduleRepository;
     @Mock private BookmarkRepository bookmarkRepository;
     @Mock private S3ObjectManager s3ObjectManager;
-
-    private final String accessToken = "MemberAccessToken";
-    private final String refreshToken = "MemberRefreshToken";
-    private final String passwordToken = "MemberPasswordToken";
 
     private ProfileImage profileImage;
 
@@ -140,11 +146,14 @@ public class MemberServiceTest {
                 "nickname"
         );
 
-        when(memberRepository.existsByEmail(anyString())).thenReturn(false);
-        when(memberRepository.existsByNickname(anyString())).thenReturn(false);
-        when(memberRepository.existsByEmail(anyString())).thenReturn(false);
-        when(redisService.getEmailData(any(), anyString())).thenReturn("true");
-        when(profileImageService.saveDefaultProfileImage()).thenReturn(ProfileImageFixture.createProfileImage("test.jpg"));
+        when(memberRepository.existsByEmail(request.getEmail()))
+                .thenReturn(false);
+        when(memberRepository.existsByNickname(request.getNickname()))
+                .thenReturn(false);
+        when(redisService.getData(eq(EMAIL_VERIFIED), anyString()))
+                .thenReturn(EMAIL_VERIFIED_VALUE);
+        when(profileImageService.saveDefaultProfileImage())
+                .thenReturn(ProfileImageFixture.createProfileImage("test.jpg"));
 
         // when
         assertDoesNotThrow(() -> memberService.join(request));
@@ -165,10 +174,12 @@ public class MemberServiceTest {
                 "nickname"
         );
 
-        when(memberRepository.existsByEmail(anyString())).thenReturn(true);
+        when(memberRepository.existsByEmail(request.getEmail()))
+                .thenReturn(true);
 
         // when
-        DataExistException fail = assertThrows(DataExistException.class, () -> memberService.join(request));
+        DataExistException fail = assertThrows(DataExistException.class,
+                () -> memberService.join(request));
 
         // then
         verify(memberRepository, times(0)).save(any(Member.class));
@@ -186,11 +197,14 @@ public class MemberServiceTest {
                 "nickname"
         );
 
-        when(memberRepository.existsByEmail(anyString())).thenReturn(false);
-        when(memberRepository.existsByNickname(anyString())).thenReturn(true);
+        when(memberRepository.existsByEmail(request.getEmail()))
+                .thenReturn(false);
+        when(memberRepository.existsByNickname(request.getNickname()))
+                .thenReturn(true);
 
         // when
-        DataExistException fail = assertThrows(DataExistException.class, () -> memberService.join(request));
+        DataExistException fail = assertThrows(DataExistException.class,
+                () -> memberService.join(request));
 
         // then
         verify(memberRepository, times(0)).save(any());
@@ -210,12 +224,16 @@ public class MemberServiceTest {
                 "nickname"
         );
 
-        when(memberRepository.existsByEmail(anyString())).thenReturn(false);
-        when(memberRepository.existsByNickname(anyString())).thenReturn(false);
-        when(redisService.getEmailData(any(), anyString())).thenReturn(null);
+        when(memberRepository.existsByEmail(request.getEmail()))
+                .thenReturn(false);
+        when(memberRepository.existsByNickname(request.getNickname()))
+                .thenReturn(false);
+        when(redisService.getData(eq(EMAIL_VERIFIED), anyString()))
+                .thenReturn(null);
 
         // when
-        EmailVerifyException fail = assertThrows(EmailVerifyException.class, () -> memberService.join(request));
+        EmailVerifyException fail = assertThrows(EmailVerifyException.class,
+                () -> memberService.join(request));
 
         // then
         assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.NOT_VERIFIED_EMAIL);
@@ -228,20 +246,25 @@ public class MemberServiceTest {
         // given
         Member member = MemberFixture.createNativeTypeMemberWithId(1L, "member@email.com", profileImage);
 
-        LoginRequest request = MemberFixture.createLoginRequest(member.getEmail(), passwordToken);
+        LoginRequest request = MemberFixture.createLoginRequest(member.getEmail(), member.getPassword());
 
-        when(memberRepository.findByEmail(anyString())).thenReturn(Optional.of(member));
-        when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
-        when(jwtUtils.createAccessToken(anyLong())).thenReturn(accessToken);
-        when(jwtUtils.createRefreshToken(anyLong())).thenReturn(refreshToken);
+        when(memberRepository.findByEmail(member.getEmail()))
+                .thenReturn(Optional.of(member));
+        when(passwordEncoder.matches(member.getPassword(), request.getPassword()))
+                .thenReturn(true);
+        when(jwtUtils.createAccessToken(member.getMemberId()))
+                .thenReturn(ACCESS_TOKEN);
+        when(jwtUtils.createRefreshToken(member.getMemberId()))
+                .thenReturn(REFRESH_TOKEN);
 
         // when
         LoginResult response = memberService.login(request);
 
         // then
+        verify(redisService).save(eq(LOGIN), eq(member.getMemberId()), eq(REFRESH_TOKEN), anyLong());
         assertThat(response.nickname()).isEqualTo(member.getNickname());
-        assertThat(response.accessToken()).isEqualTo(accessToken);
-        assertThat(response.refreshToken()).isEqualTo(refreshToken);
+        assertThat(response.accessToken()).isEqualTo(ACCESS_TOKEN);
+        assertThat(response.refreshToken()).isEqualTo(REFRESH_TOKEN);
     }
 
     @Test
@@ -250,29 +273,35 @@ public class MemberServiceTest {
         // given
         Member member = MemberFixture.createBothTypeMemberWithId(1L, "member@email.com", profileImage);
 
-        LoginRequest request = MemberFixture.createLoginRequest(member.getEmail(), passwordToken);
+        LoginRequest request = MemberFixture.createLoginRequest(member.getEmail(), member.getPassword());
 
-        when(memberRepository.findByEmail(anyString())).thenReturn(Optional.of(member));
-        when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
-        when(jwtUtils.createAccessToken(anyLong())).thenReturn(accessToken);
-        when(jwtUtils.createRefreshToken(anyLong())).thenReturn(refreshToken);
+        when(memberRepository.findByEmail(request.getEmail()))
+                .thenReturn(Optional.of(member));
+        when(passwordEncoder.matches(member.getPassword(), request.getPassword()))
+                .thenReturn(true);
+        when(jwtUtils.createAccessToken(member.getMemberId()))
+                .thenReturn(ACCESS_TOKEN);
+        when(jwtUtils.createRefreshToken(member.getMemberId()))
+                .thenReturn(REFRESH_TOKEN);
 
         // when
         LoginResult response = memberService.login(request);
 
         // then
+        verify(redisService).save(eq(LOGIN), eq(member.getMemberId()), eq(REFRESH_TOKEN), anyLong());
         assertThat(response.nickname()).isEqualTo(member.getNickname());
-        assertThat(response.accessToken()).isEqualTo(accessToken);
-        assertThat(response.refreshToken()).isEqualTo(refreshToken);
+        assertThat(response.accessToken()).isEqualTo(ACCESS_TOKEN);
+        assertThat(response.refreshToken()).isEqualTo(REFRESH_TOKEN);
     }
 
     @Test
     @DisplayName("로그인 시 회원 데이터 없어 예외 발생")
     void login_memberNotFound(){
         // given
-        LoginRequest request = MemberFixture.createLoginRequest("notMember@email.com", passwordToken);
+        LoginRequest request = MemberFixture.createLoginRequest("notMember@email.com", PASSWORD_TOKEN);
 
-        when(memberRepository.findByEmail(anyString())).thenReturn(Optional.empty());
+        when(memberRepository.findByEmail(request.getEmail()))
+                .thenReturn(Optional.empty());
 
         // when
         FailLoginException fail = assertThrows(FailLoginException.class,
@@ -288,10 +317,12 @@ public class MemberServiceTest {
         // given
         Member member = MemberFixture.createNativeTypeMember("member@email.com", profileImage);
 
-        LoginRequest request = MemberFixture.createLoginRequest(member.getEmail(), passwordToken);
+        LoginRequest request = MemberFixture.createLoginRequest(member.getEmail(), "notEqualPassword");
 
-        when(memberRepository.findByEmail(anyString())).thenReturn(Optional.of(member));
-        when(passwordEncoder.matches(anyString(), anyString())).thenReturn(false);
+        when(memberRepository.findByEmail(request.getEmail()))
+                .thenReturn(Optional.of(member));
+        when(passwordEncoder.matches(request.getPassword(), member.getPassword()))
+                .thenReturn(false);
 
         // when
         FailLoginException fail = assertThrows(FailLoginException.class,
@@ -305,18 +336,19 @@ public class MemberServiceTest {
     @DisplayName("일반 회원 로그아웃")
     void logout_nativeMember(){
         // given
-        Member member = MemberFixture.createNativeTypeMember("member@email.com", profileImage);
+        Member member = MemberFixture.createNativeTypeMemberWithId(1L, "member@email.com", profileImage);
 
         LogoutRequest request = MemberFixture.createLogoutRequest(member.getNickname());
 
-        when(memberRepository.findByNickname(anyString())).thenReturn(Optional.of(member));
+        when(memberRepository.findByNickname(member.getNickname()))
+                .thenReturn(Optional.of(member));
 
         // when
-        memberService.logout(request, accessToken);
+        memberService.logout(request, ACCESS_TOKEN);
 
         // then
-        assertThat(member.getRefreshToken()).isNull();
-        verify(redisService).saveExpiredData(accessToken, "logout", 3600);
+        verify(redisService).deleteData(LOGIN, member.getMemberId());
+        verify(redisService).save(eq(LOGOUT), eq(member.getMemberId()), eq(ACCESS_TOKEN), anyLong());
     }
 
 
@@ -324,36 +356,38 @@ public class MemberServiceTest {
     @DisplayName("소셜 회원 로그아웃")
     void logout_socialMember(){
         // given
-        Member member = MemberFixture.createSocialTypeMember("member@email.com", profileImage);
+        Member member = MemberFixture.createSocialTypeMemberWithId(1L, "member@email.com", profileImage);
 
         LogoutRequest request = MemberFixture.createLogoutRequest(member.getNickname());
 
-        when(memberRepository.findByNickname(anyString())).thenReturn(Optional.of(member));
+        when(memberRepository.findByNickname(member.getNickname()))
+                .thenReturn(Optional.of(member));
 
         // when
-        memberService.logout(request, accessToken);
+        memberService.logout(request, ACCESS_TOKEN);
 
         // then
-        assertThat(member.getRefreshToken()).isNull();
-        verify(redisService).saveExpiredData(accessToken, "logout", 3600);
+        verify(redisService).deleteData(LOGIN, member.getMemberId());
+        verify(redisService).save(eq(LOGOUT), eq(member.getMemberId()), eq(ACCESS_TOKEN), anyLong());
     }
 
     @Test
     @DisplayName("통합 회원 로그아웃")
     void logout_bothMember(){
         // given
-        Member member = MemberFixture.createBothTypeMember("member@email.com", profileImage);
+        Member member = MemberFixture.createBothTypeMemberWithId(1L, "member@email.com", profileImage);
 
         LogoutRequest request = MemberFixture.createLogoutRequest(member.getNickname());
 
-        when(memberRepository.findByNickname(anyString())).thenReturn(Optional.of(member));
+        when(memberRepository.findByNickname(member.getNickname()))
+                .thenReturn(Optional.of(member));
 
         // when
-        memberService.logout(request, accessToken);
+        memberService.logout(request, ACCESS_TOKEN);
 
         // then
-        assertThat(member.getRefreshToken()).isNull();
-        verify(redisService).saveExpiredData(accessToken, "logout", 3600);
+        verify(redisService).deleteData(LOGIN, member.getMemberId());
+        verify(redisService).save(eq(LOGOUT), eq(member.getMemberId()), eq(ACCESS_TOKEN), anyLong());
     }
 
     @Test
@@ -362,11 +396,12 @@ public class MemberServiceTest {
         // given
         LogoutRequest request = MemberFixture.createLogoutRequest("notMember");
 
-        when(memberRepository.findByNickname(anyString())).thenReturn(Optional.empty());
+        when(memberRepository.findByNickname(anyString()))
+                .thenReturn(Optional.empty());
 
         // when
         DataNotFoundException fail = assertThrows(DataNotFoundException.class,
-                () -> memberService.logout(request, accessToken));
+                () -> memberService.logout(request, ACCESS_TOKEN));
 
 
         // then
@@ -379,14 +414,16 @@ public class MemberServiceTest {
     void refreshToken_nativeMember(){
         // given
         Member member = MemberFixture.createNativeTypeMemberWithId(1L, "member@email.com", profileImage);
-        member.updateRefreshToken(refreshToken);
 
-        when(jwtUtils.getMemberIdByToken(anyString())).thenReturn(member.getMemberId());
-        when(memberRepository.findById(any())).thenReturn(Optional.of(member));
-        when(jwtUtils.createAccessToken(anyLong())).thenReturn(accessToken);
+        when(jwtUtils.getMemberIdByToken(REFRESH_TOKEN))
+                .thenReturn(member.getMemberId());
+        when(redisService.getData(LOGIN, member.getMemberId()))
+                .thenReturn(REFRESH_TOKEN);
+        when(jwtUtils.createAccessToken(member.getMemberId()))
+                .thenReturn(ACCESS_TOKEN);
 
         // when
-        RefreshTokenResponse response = memberService.refreshToken(refreshToken);
+        RefreshTokenResponse response = memberService.refreshToken(REFRESH_TOKEN);
 
         // then
         assertThat(response.getAccessToken()).isNotNull();
@@ -397,14 +434,16 @@ public class MemberServiceTest {
     void refreshToken_socialMember(){
         // given
         Member member = MemberFixture.createSocialTypeMemberWithId(1L, "member@email.com", profileImage);
-        member.updateRefreshToken(refreshToken);
 
-        when(jwtUtils.getMemberIdByToken(anyString())).thenReturn(member.getMemberId());
-        when(memberRepository.findById(any())).thenReturn(Optional.of(member));
-        when(jwtUtils.createAccessToken(anyLong())).thenReturn(accessToken);
+        when(jwtUtils.getMemberIdByToken(REFRESH_TOKEN))
+                .thenReturn(member.getMemberId());
+        when(redisService.getData(LOGIN, member.getMemberId()))
+                .thenReturn(REFRESH_TOKEN);
+        when(jwtUtils.createAccessToken(member.getMemberId()))
+                .thenReturn(ACCESS_TOKEN);
 
         // when
-        RefreshTokenResponse response = memberService.refreshToken(refreshToken);
+        RefreshTokenResponse response = memberService.refreshToken(REFRESH_TOKEN);
 
         // then
         assertThat(response.getAccessToken()).isNotNull();
@@ -415,14 +454,16 @@ public class MemberServiceTest {
     void refreshToken_bothMember(){
         // given
         Member member = MemberFixture.createBothTypeMemberWithId(1L, "member@email.com", profileImage);
-        member.updateRefreshToken(refreshToken);
 
-        when(jwtUtils.getMemberIdByToken(anyString())).thenReturn(member.getMemberId());
-        when(memberRepository.findById(any())).thenReturn(Optional.of(member));
-        when(jwtUtils.createAccessToken(anyLong())).thenReturn(accessToken);
+        when(jwtUtils.getMemberIdByToken(REFRESH_TOKEN))
+                .thenReturn(member.getMemberId());
+        when(redisService.getData(LOGIN, member.getMemberId()))
+                .thenReturn(REFRESH_TOKEN);
+        when(jwtUtils.createAccessToken(member.getMemberId()))
+                .thenReturn(ACCESS_TOKEN);
 
         // when
-        RefreshTokenResponse response = memberService.refreshToken(refreshToken);
+        RefreshTokenResponse response = memberService.refreshToken(REFRESH_TOKEN);
 
         // then
         assertThat(response.getAccessToken()).isNotNull();
@@ -437,8 +478,10 @@ public class MemberServiceTest {
 
         Member member = MemberFixture.createNativeTypeMember("member@email.com", profileImage);
 
-        when(jwtUtils.getMemberIdByToken(anyString())).thenReturn(member.getMemberId());
-        when(memberRepository.findById(any())).thenReturn(Optional.of(member));
+        when(jwtUtils.getMemberIdByToken(notEqualRefreshToken))
+                .thenReturn(member.getMemberId());
+        when(redisService.getData(LOGIN, member.getMemberId()))
+                .thenReturn(REFRESH_TOKEN);
 
         // when
         CustomJwtUnAuthorizedException fail = assertThrows(CustomJwtUnAuthorizedException.class,
@@ -486,18 +529,25 @@ public class MemberServiceTest {
         // given
         Member member = MemberFixture.createNativeTypeMember("member@email.com", profileImage);
 
-        ResetPasswordRequest request = MemberFixture.createResetPasswordRequest(passwordToken, "password12!@", "password12!@");
+        ResetPasswordRequest request = MemberFixture.createResetPasswordRequest(
+                PASSWORD_TOKEN,
+                "password12!@",
+                "password12!@"
+        );
 
-        when(redisService.getData(anyString())).thenReturn(member.getEmail());
-        when(memberRepository.findByEmail(anyString())).thenReturn(Optional.of(member));
-        when(passwordEncoder.encode(anyString())).thenReturn(request.getPassword());
+        when(jwtUtils.getSubject(PASSWORD_TOKEN))
+                .thenReturn(member.getEmail());
+        when(redisService.getData(RESET_PASSWORD, member.getEmail()))
+                .thenReturn(PASSWORD_TOKEN);
+        when(memberRepository.findByEmail(member.getEmail()))
+                .thenReturn(Optional.of(member));
+        when(passwordEncoder.encode(anyString()))
+                .thenReturn(request.getPassword());
 
         // when
         memberService.resetPassword(request);
 
         // then
-        verify(redisService).getData(passwordToken);
-        verify(memberRepository).findByEmail(member.getEmail());
         assertThat(member.getPassword()).isEqualTo(request.getPassword());
         assertThat(member.getJoinType()).isEqualTo(JoinType.NATIVE);
     }
@@ -508,18 +558,25 @@ public class MemberServiceTest {
         // given
         Member member = MemberFixture.createSocialTypeMember("member@email.com", profileImage);
 
-        ResetPasswordRequest request = MemberFixture.createResetPasswordRequest(passwordToken, "password12!@", "password12!@");
+        ResetPasswordRequest request = MemberFixture.createResetPasswordRequest(
+                PASSWORD_TOKEN,
+                "password12!@",
+                "password12!@"
+        );
 
-        when(redisService.getData(anyString())).thenReturn(member.getEmail());
-        when(memberRepository.findByEmail(anyString())).thenReturn(Optional.of(member));
-        when(passwordEncoder.encode(anyString())).thenReturn(request.getPassword());
+        when(jwtUtils.getSubject(PASSWORD_TOKEN))
+                .thenReturn(member.getEmail());
+        when(redisService.getData(RESET_PASSWORD, member.getEmail()))
+                .thenReturn(PASSWORD_TOKEN);
+        when(memberRepository.findByEmail(member.getEmail()))
+                .thenReturn(Optional.of(member));
+        when(passwordEncoder.encode(anyString()))
+                .thenReturn(request.getPassword());
 
         // when
         memberService.resetPassword(request);
 
         // then
-        verify(redisService).getData(passwordToken);
-        verify(memberRepository).findByEmail(member.getEmail());
         assertThat(member.getPassword()).isEqualTo(request.getPassword());
         assertThat(member.getJoinType()).isEqualTo(JoinType.BOTH);
     }
@@ -530,30 +587,68 @@ public class MemberServiceTest {
         // given
         Member member = MemberFixture.createBothTypeMember("member@email.com", profileImage);
 
-        ResetPasswordRequest request = MemberFixture.createResetPasswordRequest(passwordToken, "password12!@", "password12!@");
+        ResetPasswordRequest request = MemberFixture.createResetPasswordRequest(PASSWORD_TOKEN, "password12!@", "password12!@");
 
-        when(redisService.getData(anyString())).thenReturn(member.getEmail());
-        when(memberRepository.findByEmail(anyString())).thenReturn(Optional.of(member));
-        when(passwordEncoder.encode(anyString())).thenReturn(request.getPassword());
+        when(jwtUtils.getSubject(PASSWORD_TOKEN))
+                .thenReturn(member.getEmail());
+        when(redisService.getData(RESET_PASSWORD, member.getEmail()))
+                .thenReturn(PASSWORD_TOKEN);
+        when(memberRepository.findByEmail(member.getEmail()))
+                .thenReturn(Optional.of(member));
+        when(passwordEncoder.encode(anyString()))
+                .thenReturn(request.getPassword());
 
         // when
         memberService.resetPassword(request);
 
         // then
-        verify(redisService).getData(passwordToken);
-        verify(memberRepository).findByEmail(member.getEmail());
         assertThat(member.getPassword()).isEqualTo(request.getPassword());
         assertThat(member.getJoinType()).isEqualTo(JoinType.BOTH);
 
     }
 
+
     @Test
     @DisplayName("비밀번호 초기화 시 비밀번호 토큰 유효 시간이 만료되어 예외 발생")
     void resetPassword_expiredResetPasswordToken(){
         // given
-        ResetPasswordRequest request = MemberFixture.createResetPasswordRequest(passwordToken, "password12!@", "password12!@");
+        Member member = MemberFixture.createBothTypeMember("member@email.com", profileImage);
 
-        when(redisService.getData(anyString())).thenReturn(null);
+        ResetPasswordRequest request = MemberFixture.createResetPasswordRequest(
+                PASSWORD_TOKEN,
+                "password12!@",
+                "password12!@"
+        );
+
+        when(jwtUtils.getSubject(PASSWORD_TOKEN))
+                .thenReturn(member.getEmail());
+        when(redisService.getData(RESET_PASSWORD, member.getEmail()))
+                .thenReturn(null);
+
+        // when
+        InvalidPasswordResetTokenException fail = assertThrows(InvalidPasswordResetTokenException.class,
+                () -> memberService.resetPassword(request));
+
+        // then
+        assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.INVALID_CHANGE_PASSWORD_TOKEN);
+    }
+
+    @Test
+    @DisplayName("비밀번호 초기화 시 비밀번호 토큰 값이 달라 예외 발생")
+    void resetPassword_notMatchPasswordToken(){
+        // given
+        Member member = MemberFixture.createBothTypeMember("member@email.com", profileImage);
+
+        ResetPasswordRequest request = MemberFixture.createResetPasswordRequest(
+                PASSWORD_TOKEN,
+                "password12!@",
+                "password12!@"
+        );
+
+        when(jwtUtils.getSubject(PASSWORD_TOKEN))
+                .thenReturn(member.getEmail());
+        when(redisService.getData(RESET_PASSWORD, member.getEmail()))
+                .thenReturn("notMatchPasswordToken");
 
         // when
         InvalidPasswordResetTokenException fail = assertThrows(InvalidPasswordResetTokenException.class,
@@ -567,10 +662,19 @@ public class MemberServiceTest {
     @DisplayName("비밀번호 초기화 시 회원 정보를 찾을 수 없어 예외 발생")
     void resetPassword_memberNotFound(){
         // given
-        ResetPasswordRequest request = MemberFixture.createResetPasswordRequest(passwordToken, "password12!@", "password12!@");
+        String notMemberEmail = "notMember@email.com";
+        ResetPasswordRequest request = MemberFixture.createResetPasswordRequest(
+                PASSWORD_TOKEN,
+                "password12!@",
+                "password12!@"
+        );
 
-        when(redisService.getData(anyString())).thenReturn("notMember@email.com");
-        when(memberRepository.findByEmail(anyString())).thenReturn(Optional.empty());
+        when(jwtUtils.getSubject(PASSWORD_TOKEN))
+                .thenReturn(notMemberEmail);
+        when(redisService.getData(RESET_PASSWORD, notMemberEmail))
+                .thenReturn(PASSWORD_TOKEN);
+        when(memberRepository.findByEmail(notMemberEmail))
+                .thenReturn(Optional.empty());
 
         // when
         DataNotFoundException fail = assertThrows(DataNotFoundException.class,
@@ -589,11 +693,18 @@ public class MemberServiceTest {
 
         Member member = MemberFixture.createNativeTypeMember("member@email.com", profileImage);
 
-        ChangePasswordRequest request = MemberFixture.createChangePasswordRequest(member.getPassword(), "test123!", "test123!");
+        ChangePasswordRequest request = MemberFixture.createChangePasswordRequest(
+                member.getPassword(),
+                "test123!",
+                "test123!"
+        );
 
-        when(memberRepository.findById(anyLong())).thenReturn(Optional.of(member));
-        when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
-        when(passwordEncoder.encode(anyString())).thenReturn(encodedNewPassword);
+        when(memberRepository.findById(1L))
+                .thenReturn(Optional.of(member));
+        when(passwordEncoder.matches(request.getNowPassword(), member.getPassword()))
+                .thenReturn(true);
+        when(passwordEncoder.encode(anyString()))
+                .thenReturn(encodedNewPassword);
 
         // when, then
         assertDoesNotThrow(() -> memberService.changePassword(1L, request));
@@ -612,11 +723,18 @@ public class MemberServiceTest {
 
         Member member = MemberFixture.createBothTypeMember("member@email.com", profileImage);
 
-        ChangePasswordRequest request = MemberFixture.createChangePasswordRequest(member.getPassword(), "test123!", "test123!");
+        ChangePasswordRequest request = MemberFixture.createChangePasswordRequest(
+                member.getPassword(),
+                "test123!",
+                "test123!"
+        );
 
-        when(memberRepository.findById(anyLong())).thenReturn(Optional.of(member));
-        when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
-        when(passwordEncoder.encode(anyString())).thenReturn(encodedNewPassword);
+        when(memberRepository.findById(1L))
+                .thenReturn(Optional.of(member));
+        when(passwordEncoder.matches(request.getNowPassword(), member.getPassword()))
+                .thenReturn(true);
+        when(passwordEncoder.encode(request.getNewPassword()))
+                .thenReturn(encodedNewPassword);
 
         // when, then
         assertDoesNotThrow(() -> memberService.changePassword(1L, request));
@@ -631,13 +749,18 @@ public class MemberServiceTest {
     @DisplayName("비밀번호 변경 시 회원 정보 찾을 수 없어 예외 발생")
     void changePassword_memberNotFound(){
         // given
-        ChangePasswordRequest request = MemberFixture.createChangePasswordRequest("test123@", "test123!", "test123!");
+        ChangePasswordRequest request = MemberFixture.createChangePasswordRequest(
+                "test123@",
+                "test123!",
+                "test123!"
+        );
 
-        when(memberRepository.findById(anyLong())).thenReturn(Optional.empty());
+        when(memberRepository.findById(1004L))
+                .thenReturn(Optional.empty());
 
         // when
         DataNotFoundException fail = assertThrows(DataNotFoundException.class,
-                () -> memberService.changePassword(1000L, request));
+                () -> memberService.changePassword(1004L, request));
 
         // then
         assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.MEMBER_NOT_FOUND);
@@ -649,9 +772,14 @@ public class MemberServiceTest {
         // given
         Member member = MemberFixture.createSocialTypeMember("member@email.com", profileImage);
 
-        ChangePasswordRequest request = MemberFixture.createChangePasswordRequest("test123@", "test123!", "test123!");
+        ChangePasswordRequest request = MemberFixture.createChangePasswordRequest(
+                "test123@",
+                "test123!",
+                "test123!"
+        );
 
-        when(memberRepository.findById(anyLong())).thenReturn(Optional.of(member));
+        when(memberRepository.findById(1L))
+                .thenReturn(Optional.of(member));
 
         // when
         UnsupportedSocialMemberException fail = assertThrows(UnsupportedSocialMemberException.class,
@@ -668,10 +796,16 @@ public class MemberServiceTest {
         // given
         Member member = MemberFixture.createNativeTypeMember("member@email.com", profileImage);
 
-        ChangePasswordRequest request = MemberFixture.createChangePasswordRequest("incorrect123@", "test123!", "test123!");
+        ChangePasswordRequest request = MemberFixture.createChangePasswordRequest(
+                "incorrect123@",
+                "test123!",
+                "test123!"
+        );
 
-        when(memberRepository.findById(anyLong())).thenReturn(Optional.of(member));
-        when(passwordEncoder.matches(anyString(), anyString())).thenReturn(false);
+        when(memberRepository.findById(1L))
+                .thenReturn(Optional.of(member));
+        when(passwordEncoder.matches(request.getNowPassword(), member.getPassword()))
+                .thenReturn(false);
 
         // when
         IncorrectPasswordException fail = assertThrows(IncorrectPasswordException.class,
@@ -688,8 +822,10 @@ public class MemberServiceTest {
         Member member = MemberFixture.createNativeTypeMember("member@email.com", profileImage);
         String profileUrl = S3Fixture.createS3ObjectUrl(profileImage.getS3ObjectKey());
 
-        when(memberRepository.findById(anyLong())).thenReturn(Optional.of(member));
-        when(s3ObjectManager.generateS3ObjectUrl(anyString())).thenReturn(profileUrl);
+        when(memberRepository.findById(1L))
+                .thenReturn(Optional.of(member));
+        when(s3ObjectManager.generateS3ObjectUrl(profileImage.getS3ObjectKey()))
+                .thenReturn(profileUrl);
 
         // when
         MemberInfoResponse response = memberService.getMemberInfo(1L);
@@ -707,8 +843,10 @@ public class MemberServiceTest {
         Member member = MemberFixture.createSocialTypeMember("member@email.com", profileImage);;
         String profileUrl = S3Fixture.createS3ObjectUrl(profileImage.getS3ObjectKey());
 
-        when(memberRepository.findById(anyLong())).thenReturn(Optional.of(member));
-        when(s3ObjectManager.generateS3ObjectUrl(anyString())).thenReturn(profileUrl);
+        when(memberRepository.findById(1L))
+                .thenReturn(Optional.of(member));
+        when(s3ObjectManager.generateS3ObjectUrl(profileImage.getS3ObjectKey()))
+                .thenReturn(profileUrl);
 
         // when
         MemberInfoResponse response = memberService.getMemberInfo(1L);
@@ -727,8 +865,10 @@ public class MemberServiceTest {
         Member member = MemberFixture.createBothTypeMember("member@email.com", profileImage);;
         String profileUrl = S3Fixture.createS3ObjectUrl(profileImage.getS3ObjectKey());
 
-        when(memberRepository.findById(anyLong())).thenReturn(Optional.of(member));
-        when(s3ObjectManager.generateS3ObjectUrl(anyString())).thenReturn(profileUrl);
+        when(memberRepository.findById(1L))
+                .thenReturn(Optional.of(member));
+        when(s3ObjectManager.generateS3ObjectUrl(profileImage.getS3ObjectKey()))
+                .thenReturn(profileUrl);
 
         // when
         MemberInfoResponse response = memberService.getMemberInfo(1L);
@@ -743,7 +883,8 @@ public class MemberServiceTest {
     @DisplayName("회원 정보 조회 시 회원 데이터가 없어 예외 발생")
     void getMemberInfo_memberNotFound(){
         // given
-        when(memberRepository.findById(anyLong())).thenReturn(Optional.empty());
+        when(memberRepository.findById(1000L))
+                .thenReturn(Optional.empty());
 
         // when
         DataNotFoundException fail = assertThrows(DataNotFoundException.class,
@@ -761,8 +902,10 @@ public class MemberServiceTest {
 
         ChangeNicknameRequest request = MemberFixture.createChangeNicknameRequest("newNickname");
 
-        when(memberRepository.existsByNickname(request.getNickname())).thenReturn(false);
-        when(memberRepository.findById(anyLong())).thenReturn(Optional.of(member));
+        when(memberRepository.existsByNickname(request.getNickname()))
+                .thenReturn(false);
+        when(memberRepository.findById(1L))
+                .thenReturn(Optional.of(member));
 
         // when
         assertDoesNotThrow(() -> memberService.changeNickname(1L, request));
@@ -780,8 +923,10 @@ public class MemberServiceTest {
 
         ChangeNicknameRequest request = MemberFixture.createChangeNicknameRequest("newNickname");
 
-        when(memberRepository.existsByNickname(request.getNickname())).thenReturn(false);
-        when(memberRepository.findById(anyLong())).thenReturn(Optional.of(member));
+        when(memberRepository.existsByNickname(request.getNickname()))
+                .thenReturn(false);
+        when(memberRepository.findById(1L))
+                .thenReturn(Optional.of(member));
 
         // when
         assertDoesNotThrow(() -> memberService.changeNickname(1L, request));
@@ -799,8 +944,10 @@ public class MemberServiceTest {
 
         ChangeNicknameRequest request = MemberFixture.createChangeNicknameRequest("newNickname");
 
-        when(memberRepository.existsByNickname(request.getNickname())).thenReturn(false);
-        when(memberRepository.findById(anyLong())).thenReturn(Optional.of(member));
+        when(memberRepository.existsByNickname(request.getNickname()))
+                .thenReturn(false);
+        when(memberRepository.findById(1L))
+                .thenReturn(Optional.of(member));
 
         // when
         assertDoesNotThrow(() -> memberService.changeNickname(1L, request));
@@ -818,7 +965,8 @@ public class MemberServiceTest {
 
         ChangeNicknameRequest request = MemberFixture.createChangeNicknameRequest("newNickname");
 
-        when(memberRepository.existsByNickname(anyString())).thenReturn(true);
+        when(memberRepository.existsByNickname(request.getNickname()))
+                .thenReturn(true);
 
         // when
         DataExistException fail = assertThrows(DataExistException.class,
@@ -834,8 +982,10 @@ public class MemberServiceTest {
         // given
         ChangeNicknameRequest request = MemberFixture.createChangeNicknameRequest("newNickname");
 
-        when(memberRepository.existsByNickname(request.getNickname())).thenReturn(false);
-        when(memberRepository.findById(anyLong())).thenReturn(Optional.empty());
+        when(memberRepository.existsByNickname(request.getNickname()))
+                .thenReturn(false);
+        when(memberRepository.findById(1000L)).
+                thenReturn(Optional.empty());
 
         // when
         DataNotFoundException fail = assertThrows(DataNotFoundException.class,
@@ -854,9 +1004,12 @@ public class MemberServiceTest {
 
         EmailRequest request = MemberFixture.createEmailRequest("changeMember@email.com");
 
-        when(memberRepository.findById(anyLong())).thenReturn(Optional.of(member));
-        when(memberRepository.existsByEmail(anyString())).thenReturn(false);
-        when(redisService.getEmailData(any(), anyString())).thenReturn("true");
+        when(memberRepository.findById(1L))
+                .thenReturn(Optional.of(member));
+        when(memberRepository.existsByEmail(request.getEmail()))
+                .thenReturn(false);
+        when(redisService.getData(eq(EMAIL_VERIFIED), anyString()))
+                .thenReturn(EMAIL_VERIFIED_VALUE);
 
         // when
         assertDoesNotThrow(() -> memberService.changeEmail(1L, request));
@@ -874,9 +1027,12 @@ public class MemberServiceTest {
 
         EmailRequest request = MemberFixture.createEmailRequest("changeMember@email.com");
 
-        when(memberRepository.findById(anyLong())).thenReturn(Optional.of(member));
-        when(memberRepository.existsByEmail(anyString())).thenReturn(false);
-        when(redisService.getEmailData(any(), anyString())).thenReturn("true");
+        when(memberRepository.findById(1L))
+                .thenReturn(Optional.of(member));
+        when(memberRepository.existsByEmail(request.getEmail()))
+                .thenReturn(false);
+        when(redisService.getData(eq(EMAIL_VERIFIED), anyString()))
+                .thenReturn(EMAIL_VERIFIED_VALUE);
 
         // when
         assertThatCode(() -> memberService.changeEmail(1L, request))
@@ -895,9 +1051,12 @@ public class MemberServiceTest {
 
         EmailRequest request = MemberFixture.createEmailRequest("changeMember@email.com");
 
-        when(memberRepository.findById(anyLong())).thenReturn(Optional.of(member));
-        when(memberRepository.existsByEmail(anyString())).thenReturn(false);
-        when(redisService.getEmailData(any(), anyString())).thenReturn("true");
+        when(memberRepository.findById(1L))
+                .thenReturn(Optional.of(member));
+        when(memberRepository.existsByEmail(request.getEmail()))
+                .thenReturn(false);
+        when(redisService.getData(eq(EMAIL_VERIFIED), anyString()))
+                .thenReturn(EMAIL_VERIFIED_VALUE);
 
         // when
         assertThatCode(() -> memberService.changeEmail(1L, request))
@@ -916,7 +1075,8 @@ public class MemberServiceTest {
 
         EmailRequest request = MemberFixture.createEmailRequest("changeMember@email.com");
 
-        when(memberRepository.existsByEmail(anyString())).thenReturn(true);
+        when(memberRepository.existsByEmail(request.getEmail()))
+                .thenReturn(true);
 
         // when
         DataExistException fail = assertThrows(DataExistException.class,
@@ -935,8 +1095,10 @@ public class MemberServiceTest {
 
         EmailRequest request = MemberFixture.createEmailRequest("changeMember@email.com");
 
-        when(memberRepository.existsByEmail(anyString())).thenReturn(false);
-        when(redisService.getEmailData(any(), anyString())).thenReturn(null);
+        when(memberRepository.existsByEmail(request.getEmail()))
+                .thenReturn(false);
+        when(redisService.getData(eq(EMAIL_VERIFIED), anyString()))
+                .thenReturn(null);
 
         // when
         EmailVerifyException fail = assertThrows(EmailVerifyException.class,
@@ -952,9 +1114,12 @@ public class MemberServiceTest {
         // given
         EmailRequest request = MemberFixture.createEmailRequest("changeMember@email.com");
 
-        when(memberRepository.existsByEmail(anyString())).thenReturn(false);
-        when(redisService.getEmailData(any(), anyString())).thenReturn("true");
-        when(memberRepository.findById(anyLong())).thenReturn(Optional.empty());
+        when(memberRepository.existsByEmail(request.getEmail()))
+                .thenReturn(false);
+        when(redisService.getData(eq(EMAIL_VERIFIED), anyString()))
+                .thenReturn(EMAIL_VERIFIED_VALUE);
+        when(memberRepository.findById(1000L))
+                .thenReturn(Optional.empty());
 
 
         // when
@@ -977,12 +1142,15 @@ public class MemberServiceTest {
         );
         Page<PlaceBookmarkQueryDto> travelPlacePage = PageUtils.createPage(travelPlaces, pageable, travelPlaces.size());
 
-        when(bookmarkRepository.findSortedMemberBookmarks(anyLong(), any(), any())).thenReturn(travelPlacePage);
-        when(s3ObjectManager.generateS3ObjectUrl(place1Thumb.getS3ObjectKey())).thenReturn(place1ThumbUrl);
-        when(s3ObjectManager.generateS3ObjectUrl(place2Thumb.getS3ObjectKey())).thenReturn(place2ThumbUrl);
+        when(bookmarkRepository.findSortedMemberBookmarks(eq(1L), any(Pageable.class), eq(NEWEST)))
+                .thenReturn(travelPlacePage);
+        when(s3ObjectManager.generateS3ObjectUrl(place1Thumb.getS3ObjectKey()))
+                .thenReturn(place1ThumbUrl);
+        when(s3ObjectManager.generateS3ObjectUrl(place2Thumb.getS3ObjectKey()))
+                .thenReturn(place2ThumbUrl);
 
         // when
-        Page<PlaceBookmarkResponse> response = memberService.getMemberBookmarks(1, 1L, BookmarkSortType.NEWEST);
+        Page<PlaceBookmarkResponse> response = memberService.getMemberBookmarks(1, 1L, NEWEST);
 
         // then
 
@@ -1009,12 +1177,15 @@ public class MemberServiceTest {
         );
         Page<PlaceBookmarkQueryDto> travelPlacePage = PageUtils.createPage(travelPlaces, pageable, travelPlaces.size());
 
-        when(bookmarkRepository.findSortedMemberBookmarks(anyLong(), any(), any())).thenReturn(travelPlacePage);
-        when(s3ObjectManager.generateS3ObjectUrl(place1Thumb.getS3ObjectKey())).thenReturn(place1ThumbUrl);
-        when(s3ObjectManager.generateS3ObjectUrl(place2Thumb.getS3ObjectKey())).thenReturn(place2ThumbUrl);
+        when(bookmarkRepository.findSortedMemberBookmarks(eq(1L), any(Pageable.class), eq(NAME)))
+                .thenReturn(travelPlacePage);
+        when(s3ObjectManager.generateS3ObjectUrl(place1Thumb.getS3ObjectKey())
+        ).thenReturn(place1ThumbUrl);
+        when(s3ObjectManager.generateS3ObjectUrl(place2Thumb.getS3ObjectKey()))
+                .thenReturn(place2ThumbUrl);
 
         // when
-        Page<PlaceBookmarkResponse> response = memberService.getMemberBookmarks(1, 1L, BookmarkSortType.NAME);
+        Page<PlaceBookmarkResponse> response = memberService.getMemberBookmarks(1, 1L, NAME);
 
         // then
 
@@ -1036,11 +1207,11 @@ public class MemberServiceTest {
         Pageable pageable = PageUtils.bookmarkPageable(1);
         Page<PlaceBookmarkQueryDto> travelPlacePage = PageUtils.createPage(Collections.emptyList(), pageable, 0);
 
-        when(bookmarkRepository.findSortedMemberBookmarks(anyLong(), any(), any()))
+        when(bookmarkRepository.findSortedMemberBookmarks(eq(1L), any(Pageable.class), eq(NAME)))
                 .thenReturn(travelPlacePage);
 
         // when
-        Page<PlaceBookmarkResponse> response = memberService.getMemberBookmarks(1, 1L, BookmarkSortType.NAME);
+        Page<PlaceBookmarkResponse> response = memberService.getMemberBookmarks(1, 1L, NAME);
 
         // then
         assertThat(response.getTotalElements()).isEqualTo(0);
@@ -1055,7 +1226,7 @@ public class MemberServiceTest {
         TravelSchedule schedule1 = TravelScheduleFixture.createSchedule("테스트1");
         TravelSchedule schedule2 = TravelScheduleFixture.createSchedule("테스트2");
 
-        Member member = MemberFixture.createNativeTypeMember("member@email.com", profileImage);
+        Member member = MemberFixture.createNativeTypeMemberWithId(1L, "member@email.com", profileImage);
 
         List<TravelAttendee> attendees = List.of(
                 TravelAttendeeFixture.createAuthorAttendee(schedule1, member),
@@ -1064,15 +1235,20 @@ public class MemberServiceTest {
 
         DeactivateRequest request = MemberFixture.createDeactivateRequest(member.getPassword());
 
-        when(memberRepository.findByIdWithSocialMembers(anyLong())).thenReturn(Optional.of(member));
-        when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
-        when(travelAttendeeRepository.findAllByMemberId(anyLong())).thenReturn(attendees);
+        when(memberRepository.findByIdWithSocialMembers(1L))
+                .thenReturn(Optional.of(member));
+        when(passwordEncoder.matches(member.getPassword(), request.getPassword()))
+                .thenReturn(true);
+        when(travelAttendeeRepository.findAllByMemberId(1L))
+                .thenReturn(attendees);
 
         // when
-        assertDoesNotThrow(() -> memberService.deactivateMember(1L, accessToken, request));
+        assertDoesNotThrow(() -> memberService.deactivateMember(1L, ACCESS_TOKEN, request));
 
 
         // then
+        verify(redisService).deleteData(LOGIN, member.getMemberId());
+        verify(redisService).save(eq(LOGOUT), eq(member.getMemberId()), eq(ACCESS_TOKEN), anyLong());
         assertThat(member.getEmail()).isEqualTo(DeactivateValue.DEACTIVATE.name());
         assertThat(member.getPassword()).isEqualTo(DeactivateValue.DEACTIVATE.name());
         assertThat(member.getNickname()).isEqualTo(DeactivateValue.DEACTIVATE.name());
@@ -1088,7 +1264,7 @@ public class MemberServiceTest {
         TravelSchedule schedule1 = TravelScheduleFixture.createSchedule("테스트1");
         TravelSchedule schedule2 = TravelScheduleFixture.createSchedule("테스트2");
 
-        Member member = MemberFixture.createNativeTypeMember("member@email.com", profileImage);
+        Member member = MemberFixture.createNativeTypeMemberWithId(1L, "member@email.com", profileImage);
 
         List<TravelAttendee> attendees = List.of(
                 TravelAttendeeFixture.createAuthorAttendee(schedule1, member),
@@ -1097,16 +1273,21 @@ public class MemberServiceTest {
 
         DeactivateRequest request = MemberFixture.createDeactivateRequest(member.getPassword());
 
-        when(memberRepository.findByIdWithSocialMembers(anyLong())).thenReturn(Optional.of(member));
-        when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
-        when(travelAttendeeRepository.findAllByMemberId(anyLong())).thenReturn(attendees);
+        when(memberRepository.findByIdWithSocialMembers(1L))
+                .thenReturn(Optional.of(member));
+        when(passwordEncoder.matches(member.getPassword(), request.getPassword()))
+                .thenReturn(true);
+        when(travelAttendeeRepository.findAllByMemberId(1L))
+                .thenReturn(attendees);
 
         // when
         assertDoesNotThrow(
-                () -> memberService.deactivateMember(1L, accessToken, request));
+                () -> memberService.deactivateMember(1L, ACCESS_TOKEN, request));
 
 
         // then
+        verify(redisService).deleteData(LOGIN, member.getMemberId());
+        verify(redisService).save(eq(LOGOUT), eq(member.getMemberId()), eq(ACCESS_TOKEN), anyLong());
         assertThat(member.getEmail()).isEqualTo(DeactivateValue.DEACTIVATE.name());
         assertThat(member.getPassword()).isEqualTo(DeactivateValue.DEACTIVATE.name());
         assertThat(member.getNickname()).isEqualTo(DeactivateValue.DEACTIVATE.name());
@@ -1123,7 +1304,7 @@ public class MemberServiceTest {
         TravelSchedule schedule1 = TravelScheduleFixture.createSchedule("테스트1");
         TravelSchedule schedule2 = TravelScheduleFixture.createSchedule("테스트2");
 
-        Member member = MemberFixture.createNativeTypeMember("member@email.com", profileImage);
+        Member member = MemberFixture.createNativeTypeMemberWithId(1L, "member@email.com", profileImage);
 
         List<TravelAttendee> attendees = List.of(
                 TravelAttendeeFixture.createGuestAttendee(schedule1, member, AttendeePermission.ALL),
@@ -1132,16 +1313,21 @@ public class MemberServiceTest {
 
         DeactivateRequest request = MemberFixture.createDeactivateRequest(member.getPassword());
 
-        when(memberRepository.findByIdWithSocialMembers(anyLong())).thenReturn(Optional.of(member));
-        when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
-        when(travelAttendeeRepository.findAllByMemberId(anyLong())).thenReturn(attendees);
+        when(memberRepository.findByIdWithSocialMembers(1L))
+                .thenReturn(Optional.of(member));
+        when(passwordEncoder.matches(member.getPassword(), request.getPassword()))
+                .thenReturn(true);
+        when(travelAttendeeRepository.findAllByMemberId(1L))
+                .thenReturn(attendees);
 
         // when
         assertDoesNotThrow(
-                () -> memberService.deactivateMember(1L, accessToken, request));
+                () -> memberService.deactivateMember(1L, ACCESS_TOKEN, request));
 
 
         // then
+        verify(redisService).deleteData(LOGIN, member.getMemberId());
+        verify(redisService).save(eq(LOGOUT), eq(member.getMemberId()), eq(ACCESS_TOKEN), anyLong());
         assertThat(member.getEmail()).isEqualTo(DeactivateValue.DEACTIVATE.name());
         assertThat(member.getPassword()).isEqualTo(DeactivateValue.DEACTIVATE.name());
         assertThat(member.getNickname()).isEqualTo(DeactivateValue.DEACTIVATE.name());
@@ -1156,7 +1342,7 @@ public class MemberServiceTest {
         TravelSchedule schedule1 = TravelScheduleFixture.createSchedule("테스트1");
         TravelSchedule schedule2 = TravelScheduleFixture.createSchedule("테스트2");
 
-        Member member = MemberFixture.createBothTypeMember("member@email.com", profileImage);
+        Member member = MemberFixture.createBothTypeMemberWithId(1L, "member@email.com", profileImage);
 
         SocialMemberFixture.createSocialMember(member, SocialType.KAKAO, "kakao");
         SocialMemberFixture.createSocialMember(member, SocialType.NAVER, "naver");
@@ -1168,16 +1354,21 @@ public class MemberServiceTest {
 
         DeactivateRequest request = MemberFixture.createDeactivateRequest(member.getPassword());
 
-        when(memberRepository.findByIdWithSocialMembers(anyLong())).thenReturn(Optional.of(member));
-        when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
-        when(travelAttendeeRepository.findAllByMemberId(anyLong())).thenReturn(attendees);
+        when(memberRepository.findByIdWithSocialMembers(1L))
+                .thenReturn(Optional.of(member));
+        when(passwordEncoder.matches(member.getPassword(), request.getPassword()))
+                .thenReturn(true);
+        when(travelAttendeeRepository.findAllByMemberId(1L))
+                .thenReturn(attendees);
 
         // when
         assertDoesNotThrow(
-                () -> memberService.deactivateMember(1L, accessToken, request));
+                () -> memberService.deactivateMember(1L, ACCESS_TOKEN, request));
 
 
         // then
+        verify(redisService).deleteData(LOGIN, member.getMemberId());
+        verify(redisService).save(eq(LOGOUT), eq(member.getMemberId()), eq(ACCESS_TOKEN), anyLong());
         assertThat(member.getEmail()).isEqualTo(DeactivateValue.DEACTIVATE.name());
         assertThat(member.getPassword()).isEqualTo(DeactivateValue.DEACTIVATE.name());
         assertThat(member.getNickname()).isEqualTo(DeactivateValue.DEACTIVATE.name());
@@ -1191,20 +1382,25 @@ public class MemberServiceTest {
     @DisplayName("회원 탈퇴 시 일정 데이터가 존재하지 않는 경우")
     void deactivateMember_emptySchedule(){
         // given
-        Member member = MemberFixture.createNativeTypeMember("member@email.com", profileImage);
+        Member member = MemberFixture.createNativeTypeMemberWithId(1L, "member@email.com", profileImage);
 
         DeactivateRequest request = MemberFixture.createDeactivateRequest(member.getPassword());
 
-        when(memberRepository.findByIdWithSocialMembers(anyLong())).thenReturn(Optional.of(member));
-        when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
-        when(travelAttendeeRepository.findAllByMemberId(anyLong())).thenReturn(new ArrayList<>());
+        when(memberRepository.findByIdWithSocialMembers(1L))
+                .thenReturn(Optional.of(member));
+        when(passwordEncoder.matches(member.getPassword(), request.getPassword()))
+                .thenReturn(true);
+        when(travelAttendeeRepository.findAllByMemberId(1L))
+                .thenReturn(new ArrayList<>());
 
         // when
         assertDoesNotThrow(
-                () -> memberService.deactivateMember(1L, accessToken, request));
+                () -> memberService.deactivateMember(1L, ACCESS_TOKEN, request));
 
 
         // then
+        verify(redisService).deleteData(LOGIN, member.getMemberId());
+        verify(redisService).save(eq(LOGOUT), eq(member.getMemberId()), eq(ACCESS_TOKEN), anyLong());
         assertThat(member.getEmail()).isEqualTo(DeactivateValue.DEACTIVATE.name());
         assertThat(member.getPassword()).isEqualTo(DeactivateValue.DEACTIVATE.name());
         assertThat(member.getNickname()).isEqualTo(DeactivateValue.DEACTIVATE.name());
@@ -1218,11 +1414,12 @@ public class MemberServiceTest {
         // given
         DeactivateRequest request = MemberFixture.createDeactivateRequest("notMember12!@");
 
-        when(memberRepository.findByIdWithSocialMembers(anyLong())).thenReturn(Optional.empty());
+        when(memberRepository.findByIdWithSocialMembers(1000L))
+                .thenReturn(Optional.empty());
 
         // when
         DataNotFoundException fail = assertThrows(DataNotFoundException.class,
-                () -> memberService.deactivateMember(1000L, accessToken, request));
+                () -> memberService.deactivateMember(1000L, ACCESS_TOKEN, request));
 
         // then
         assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.MEMBER_NOT_FOUND);
@@ -1240,11 +1437,12 @@ public class MemberServiceTest {
 
         DeactivateRequest request = MemberFixture.createDeactivateRequest("incorrect_password");
 
-        when(memberRepository.findByIdWithSocialMembers(anyLong())).thenReturn(Optional.of(member));
+        when(memberRepository.findByIdWithSocialMembers(1L))
+                .thenReturn(Optional.of(member));
 
         // when
         UnsupportedSocialMemberException fail = assertThrows(UnsupportedSocialMemberException.class,
-                () -> memberService.deactivateMember(1L, accessToken, request));
+                () -> memberService.deactivateMember(1L, ACCESS_TOKEN, request));
 
         // then
         assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.SOCIAL_MEMBER_DEACTIVATE_NOT_ALLOWED);
@@ -1256,16 +1454,18 @@ public class MemberServiceTest {
     @DisplayName("회원 탈퇴 요청 시 비밀번호가 맞지 않아 예외 발생")
     void deactivateMember_incorrectPassword(){
         // given
-        Member member = MemberFixture.createNativeTypeMember("member@email.com", profileImage);
+        Member member = MemberFixture.createNativeTypeMemberWithId(1L, "member@email.com", profileImage);
 
         DeactivateRequest request = MemberFixture.createDeactivateRequest("incorrect_password");
 
-        when(memberRepository.findByIdWithSocialMembers(anyLong())).thenReturn(Optional.of(member));
-        when(passwordEncoder.matches(anyString(), anyString())).thenReturn(false);
+        when(memberRepository.findByIdWithSocialMembers(1L))
+                .thenReturn(Optional.of(member));
+        when(passwordEncoder.matches(request.getPassword(), member.getPassword()))
+                .thenReturn(false);
 
         // when
         IncorrectPasswordException fail = assertThrows(IncorrectPasswordException.class,
-                () -> memberService.deactivateMember(1L, accessToken, request));
+                () -> memberService.deactivateMember(1L, ACCESS_TOKEN, request));
 
         // then
         assertThat(fail.getErrorCode()).isEqualTo(ErrorCode.INCORRECT_PASSWORD);

@@ -20,9 +20,10 @@ spring:
   jwt:
     secret: testsecretkeyforjwttestonly123456789101112131415
     token:
-      access-expiration-time: 3600000
-      refresh-expiration-time: 604800000
-      password-expiration-time: 3600000
+      access-token-ttl: 3600000       # 1시간
+      refresh-token-ttl: 604800000    # 7일
+      password-token-ttl: 3600000     # 1시간
+      logout-token-ttl: 3600000       # 1시간
 
   data:
     mongodb:

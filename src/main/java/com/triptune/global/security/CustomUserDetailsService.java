@@ -25,6 +25,10 @@ public class CustomUserDetailsService implements UserDetailsService {
         Member member = memberRepository.findById(id)
                 .orElseThrow(() -> new DataNotFoundException(ErrorCode.MEMBER_NOT_FOUND));
 
-        return new CustomUserDetails(member);
+        return new CustomUserDetails(
+                member.getMemberId(),
+                member.getNickname(),
+                member.getPassword()
+        );
     }
 }

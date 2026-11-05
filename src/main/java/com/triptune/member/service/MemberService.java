@@ -9,7 +9,7 @@ import com.triptune.email.service.EmailService;
 import com.triptune.global.exception.DataExistException;
 import com.triptune.global.exception.DataNotFoundException;
 import com.triptune.global.redis.RedisService;
-import com.triptune.global.redis.eums.RedisKeyType;
+import com.triptune.global.redis.enums.RedisKeyType;
 import com.triptune.global.message.ErrorCode;
 import com.triptune.global.s3.S3ObjectManager;
 import com.triptune.global.security.jwt.exception.CustomJwtUnAuthorizedException;
@@ -50,7 +50,6 @@ import java.util.List;
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class MemberService {
-    private static final int LOGOUT_DURATION = 3600;
 
     private final MemberRepository memberRepository;
     private final EmailService emailService;
@@ -89,13 +88,20 @@ public class MemberService {
         Member member = memberRepository.findByEmail(loginRequest.getEmail())
                 .orElseThrow(() -> new FailLoginException(ErrorCode.FAILED_LOGIN));
 
-        validatePassword(loginRequest.getPassword(), member.getPassword(),
-                new FailLoginException(ErrorCode.FAILED_LOGIN));
+        if(!passwordEncoder.matches(loginRequest.getPassword(), member.getPassword())){
+            throw new FailLoginException(ErrorCode.FAILED_LOGIN);
+        }
 
         String accessToken = jwtUtils.createAccessToken(member.getMemberId());
         String refreshToken = jwtUtils.createRefreshToken(member.getMemberId());
 
-        member.updateRefreshToken(refreshToken);
+        redisService.save(
+                RedisKeyType.LOGIN,
+                member.getMemberId(),
+                refreshToken,
+                jwtUtils.getRefreshTokenTtlSeconds()
+        );
+
         return new LoginResult(accessToken, refreshToken, member.getNickname());
     }
 
@@ -103,9 +109,7 @@ public class MemberService {
     @Transactional
     public void logout(LogoutRequest logoutRequest, String accessToken) {
         Member member = getMemberByNickname(logoutRequest.getNickname());
-        member.logout();
-
-        redisService.saveExpiredData(accessToken, "logout", LOGOUT_DURATION);
+        redisMemberLogout(member.getMemberId(), accessToken, member);
     }
 
     private Member getMemberByNickname(String nickname){
@@ -118,18 +122,19 @@ public class MemberService {
         jwtUtils.validateToken(refreshToken);
         Long memberId = jwtUtils.getMemberIdByToken(refreshToken);
 
-        Member member = getMemberById(memberId);
-        validateSavedRefreshToken(member, refreshToken);
+        validateSavedRefreshToken(memberId, refreshToken);
 
-        String newAccessToken = jwtUtils.createAccessToken(member.getMemberId());
-        log.info("access token 재발급 완료 - memberId: {}", member.getMemberId());
+        String newAccessToken = jwtUtils.createAccessToken(memberId);
+        log.info("access token 재발급 완료 - memberId: {}", memberId);
 
         return RefreshTokenResponse.of(newAccessToken);
     }
 
 
-    private void validateSavedRefreshToken(Member member, String refreshToken){
-        if(!member.isMatchRefreshToken(refreshToken)){
+    private void validateSavedRefreshToken(Long memberId, String refreshToken){
+        String savedRefreshToken = redisService.getData(RedisKeyType.LOGIN, memberId);
+
+        if(!savedRefreshToken.equals(refreshToken)){
             throw new CustomJwtUnAuthorizedException(ErrorCode.MISMATCH_REFRESH_TOKEN);
         }
     }
@@ -144,16 +149,25 @@ public class MemberService {
     }
 
     @Transactional
-    public void resetPassword(ResetPasswordRequest resetPasswordRequest) {
-        String email = redisService.getData(resetPasswordRequest.getPasswordToken());
+    public void resetPassword(ResetPasswordRequest passwordRequest) {
+        String passwordToken = passwordRequest.getPasswordToken();
 
-        if (email == null) {
-            throw new InvalidPasswordResetTokenException(ErrorCode.INVALID_CHANGE_PASSWORD_TOKEN);
-        }
+        jwtUtils.validateToken(passwordToken);
+        String email = jwtUtils.getSubject(passwordToken);
+
+        validateResetPasswordToken(email, passwordToken);
 
         Member member = getMemberByEmail(email);
-        String encodedPassword = passwordEncoder.encode(resetPasswordRequest.getPassword());
+        String encodedPassword = passwordEncoder.encode(passwordRequest.getPassword());
         member.resetPassword(encodedPassword);
+    }
+
+    private void validateResetPasswordToken(String email, String passwordToken) {
+        String savedPasswordToken = redisService.getData(RedisKeyType.RESET_PASSWORD, email);
+
+        if (!passwordToken.equals(savedPasswordToken)) {
+            throw new InvalidPasswordResetTokenException(ErrorCode.INVALID_CHANGE_PASSWORD_TOKEN);
+        }
     }
 
 
@@ -167,9 +181,10 @@ public class MemberService {
         Member member = getMemberById(memberId);
 
         validateSocialMember(member, ErrorCode.SOCIAL_MEMBER_PASSWORD_CHANGE_NOT_ALLOWED);
-        validatePassword(passwordRequest.getNowPassword(),
-                member.getPassword(),
-                new IncorrectPasswordException(ErrorCode.INCORRECT_PASSWORD));
+
+        if(!passwordEncoder.matches(passwordRequest.getNowPassword(), member.getPassword())){
+            throw new IncorrectPasswordException(ErrorCode.INCORRECT_PASSWORD);
+        }
 
         member.updatePassword(passwordEncoder.encode(passwordRequest.getNewPassword()));
     }
@@ -206,9 +221,9 @@ public class MemberService {
     }
 
     private void validateVerifiedEmail(String email){
-        String isVerified = redisService.getEmailData(RedisKeyType.VERIFIED, email);
+        String isVerified = redisService.getData(RedisKeyType.EMAIL_VERIFIED, email);
 
-        if(isVerified == null || !isVerified.equals("true")){
+        if(isVerified == null || !isVerified.equals(RedisKeyType.EMAIL_VERIFIED_VALUE)){
             throw new EmailVerifyException(ErrorCode.NOT_VERIFIED_EMAIL);
         }
     }
@@ -235,8 +250,9 @@ public class MemberService {
 
         // 2. 소셜 회원인지, 비밀번호 맞는지 먼저 확인
         validateSocialMember(member, ErrorCode.SOCIAL_MEMBER_DEACTIVATE_NOT_ALLOWED);
-        validatePassword(deactivateRequest.getPassword(), member.getPassword(),
-                new IncorrectPasswordException(ErrorCode.INCORRECT_PASSWORD));
+        if(!passwordEncoder.matches(deactivateRequest.getPassword(), member.getPassword())){
+            throw new IncorrectPasswordException(ErrorCode.INCORRECT_PASSWORD);
+        }
 
         // 3. 프로필 이미지 기본으로 변경
         profileImageService.updateDefaultProfileImage(member);
@@ -261,8 +277,7 @@ public class MemberService {
         member.deactivate();
 
         // 7. 로그아웃
-        member.logout();
-        redisService.saveExpiredData(accessToken, "logout", LOGOUT_DURATION);
+        redisMemberLogout(memberId, accessToken, member);
     }
 
     @Nonnull
@@ -297,11 +312,18 @@ public class MemberService {
                 .orElseThrow(() -> new DataNotFoundException(ErrorCode.MEMBER_NOT_FOUND));
     }
 
-    private void validatePassword(String rawPassword, String encodedPassword, RuntimeException exception){
-        if(!passwordEncoder.matches(rawPassword, encodedPassword)){
-            throw exception;
-        }
+
+
+    private void redisMemberLogout(Long memberId, String accessToken, Member member) {
+        redisService.deleteData(RedisKeyType.LOGIN, memberId);
+        redisService.save(
+                RedisKeyType.LOGOUT,
+                member.getMemberId(),
+                accessToken,
+                jwtUtils.getLogoutTtlSeconds()
+        );
     }
+
 
 
 

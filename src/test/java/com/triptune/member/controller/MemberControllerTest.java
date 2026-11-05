@@ -8,6 +8,7 @@ import com.triptune.global.exception.DataNotFoundException;
 import com.triptune.global.message.ErrorCode;
 import com.triptune.global.message.SuccessCode;
 import com.triptune.global.redis.RedisService;
+import com.triptune.global.redis.enums.RedisKeyType;
 import com.triptune.global.security.CookieType;
 import com.triptune.global.security.SecurityTestUtils;
 import com.triptune.global.security.jwt.JwtAuthFilter;
@@ -39,11 +40,12 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Optional;
 
+import static com.triptune.global.redis.enums.RedisKeyType.EMAIL_VERIFIED_VALUE;
+import static com.triptune.global.redis.enums.RedisKeyType.RESET_PASSWORD;
 import static com.triptune.member.fixture.MemberFixture.createLoginRequest;
 import static org.hamcrest.Matchers.containsString;
 import static org.mockito.ArgumentMatchers.*;
@@ -903,7 +905,7 @@ public class MemberControllerTest {
                 "password12!@"
         );
 
-        given(redisService.getData(anyString()))
+        given(redisService.getData(eq(RESET_PASSWORD), anyString()))
                 .willReturn("member@email.com");
 
         // when
@@ -1142,7 +1144,7 @@ public class MemberControllerTest {
                 "password12!@"
         );
 
-        given(redisService.getData(anyString()))
+        given(redisService.getData(eq(RESET_PASSWORD), anyString()))
                 .willReturn("noMember@email.com");
 
         willThrow(new DataNotFoundException(ErrorCode.MEMBER_NOT_FOUND))
@@ -1743,8 +1745,8 @@ public class MemberControllerTest {
 
         EmailRequest request = MemberFixture.createEmailRequest("changeEmail@email.com");
 
-        given(redisService.getEmailData(any(), anyString()))
-                .willReturn("true");
+        given(redisService.getData(any(), anyString()))
+                .willReturn(EMAIL_VERIFIED_VALUE);
 
         // when
         mockMvc.perform(patch("/api/members/change-email")
@@ -1861,7 +1863,7 @@ public class MemberControllerTest {
 
         EmailRequest request = MemberFixture.createEmailRequest("changeEmail@email.com");
 
-        given(redisService.getEmailData(any(), anyString()))
+        given(redisService.getData(any(), anyString()))
                 .willReturn(null);
         willThrow(new EmailVerifyException(ErrorCode.NOT_VERIFIED_EMAIL))
                 .given(memberService)
@@ -1887,8 +1889,8 @@ public class MemberControllerTest {
 
         EmailRequest request = MemberFixture.createEmailRequest("changeEmail@email.com");
 
-        given(redisService.getEmailData(any(), anyString()))
-                .willReturn("true");
+        given(redisService.getData(any(), anyString()))
+                .willReturn(EMAIL_VERIFIED_VALUE);
 
         willThrow(new DataNotFoundException(ErrorCode.MEMBER_NOT_FOUND))
                 .given(memberService)

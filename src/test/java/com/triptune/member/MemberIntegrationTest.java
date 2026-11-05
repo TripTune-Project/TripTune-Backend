@@ -17,6 +17,7 @@ import com.triptune.email.service.EmailService;
 import com.triptune.global.message.ErrorCode;
 import com.triptune.global.message.SuccessCode;
 import com.triptune.global.redis.RedisService;
+import com.triptune.global.redis.enums.RedisKeyType;
 import com.triptune.global.s3.S3ObjectManager;
 import com.triptune.global.s3.S3Service;
 import com.triptune.global.security.CookieType;
@@ -74,10 +75,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import static com.triptune.global.redis.enums.RedisKeyType.*;
 import static com.triptune.member.fixture.MemberFixture.createLoginRequest;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -179,7 +180,8 @@ public class MemberIntegrationTest {
     @DisplayName("회원가입")
     void join() throws Exception {
         // given
-        when(redisService.getEmailData(any(), anyString())).thenReturn("true");
+        when(redisService.getData(eq(EMAIL_VERIFIED), anyString()))
+                .thenReturn(EMAIL_VERIFIED_VALUE);
 
         JoinRequest request = MemberFixture.createMemberRequest(
                 "member@email.com",
@@ -319,15 +321,42 @@ public class MemberIntegrationTest {
         );
     }
 
+
+    @Test
+    @DisplayName("로그아웃 시 이미 로그아웃 한 회원이라서 401 반환")
+    void logout_alreadyLogout() throws Exception {
+        // given
+        Member member = memberRepository.save(MemberFixture.createNativeTypeMember("member@email.com", profileImage));
+        String accessToken = jwtUtils.createAccessToken(member.getMemberId());
+
+        LogoutRequest request = MemberFixture.createLogoutRequest(member.getNickname());
+
+        when(redisService.getData(LOGOUT, String.valueOf(member.getMemberId())))
+                .thenReturn(accessToken);
+
+        // when
+        mockMvc.perform(patch("/api/members/logout")
+                        .header("Authorization", "Bearer " + accessToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andDo(print())
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value(ErrorCode.BLACKLIST_TOKEN.getMessage()));
+
+    }
+
     @Test
     @DisplayName("토큰 갱신")
     void refreshToken() throws Exception {
         // given
         Member member = memberRepository.save(MemberFixture.createNativeTypeMember("member@email.com", profileImage));
         String refreshToken = jwtUtils.createRefreshToken(member.getMemberId());
-        member.updateRefreshToken(refreshToken);
 
         Cookie cookie = MemberFixture.createRefreshTokenCookie(refreshToken);
+
+        when(redisService.getData(LOGIN, member.getMemberId()))
+                .thenReturn(refreshToken);
 
         // when, then
         mockMvc.perform(post("/api/members/refresh")
@@ -347,6 +376,7 @@ public class MemberIntegrationTest {
         String refreshToken = jwtUtils.createToken("ExpiredRefreshToken", -604800000);
         Cookie cookie = MemberFixture.createRefreshTokenCookie(refreshToken);
 
+
         // when, then
         mockMvc.perform(post("/api/members/refresh")
                         .cookie(cookie))
@@ -364,6 +394,9 @@ public class MemberIntegrationTest {
         String refreshToken = jwtUtils.createRefreshToken(member.getMemberId());
 
         Cookie cookie = MemberFixture.createRefreshTokenCookie(refreshToken);
+
+        when(redisService.getData(LOGIN, member.getMemberId()))
+                .thenReturn("notEqualRefreshToken");
 
         // when, then
         mockMvc.perform(post("/api/members/refresh")
@@ -412,9 +445,15 @@ public class MemberIntegrationTest {
                 profileImage
         ));
 
-        ResetPasswordRequest request = MemberFixture.createResetPasswordRequest("changePassword", "password12!@", "password12!@");
+        String passwordToken = jwtUtils.createPasswordToken(member.getEmail());
+        ResetPasswordRequest request = MemberFixture.createResetPasswordRequest(
+                passwordToken,
+                "password12!@",
+                "password12!@"
+        );
 
-        when(redisService.getData(anyString())).thenReturn(member.getEmail());
+        when(redisService.getData(RESET_PASSWORD, member.getEmail()))
+                .thenReturn(passwordToken);
 
         // when
         mockMvc.perform(patch("/api/members/reset-password")
@@ -447,9 +486,15 @@ public class MemberIntegrationTest {
                 "member"
         ));
 
-        ResetPasswordRequest request = MemberFixture.createResetPasswordRequest("changePassword", "password12!@", "password12!@");
+        String passwordToken = jwtUtils.createPasswordToken(member.getEmail());
+        ResetPasswordRequest request = MemberFixture.createResetPasswordRequest(
+                passwordToken,
+                "password12!@",
+                "password12!@"
+        );
 
-        when(redisService.getData(anyString())).thenReturn(member.getEmail());
+        when(redisService.getData(RESET_PASSWORD, member.getEmail()))
+                .thenReturn(passwordToken);
 
         // when, then
         mockMvc.perform(patch("/api/members/reset-password")
@@ -484,9 +529,14 @@ public class MemberIntegrationTest {
                 "member"
         ));
 
-        ResetPasswordRequest request = MemberFixture.createResetPasswordRequest("changePassword", "password12!@", "password12!@");
+        String passwordToken = jwtUtils.createPasswordToken(member.getEmail());
+        ResetPasswordRequest request = MemberFixture.createResetPasswordRequest(
+                passwordToken,
+                "password12!@",
+                "password12!@");
 
-        when(redisService.getData(anyString())).thenReturn(member.getEmail());
+        when(redisService.getData(RESET_PASSWORD, member.getEmail()))
+                .thenReturn(passwordToken);
 
         // when, then
         mockMvc.perform(patch("/api/members/reset-password")
@@ -524,6 +574,7 @@ public class MemberIntegrationTest {
                 "password12!@",
                 "password12!@"
         );
+
 
         // when
         mockMvc.perform(patch("/api/members/change-password")
@@ -661,7 +712,8 @@ public class MemberIntegrationTest {
 
         EmailRequest request = MemberFixture.createEmailRequest("changeEmail@email.com");
 
-        when(redisService.getEmailData(any(), anyString())).thenReturn("true");
+        when(redisService.getData(eq(EMAIL_VERIFIED), anyString()))
+                .thenReturn(EMAIL_VERIFIED_VALUE);
 
         // when
         mockMvc.perform(patch("/api/members/change-email")
@@ -820,6 +872,7 @@ public class MemberIntegrationTest {
                 profileImage
         ));
         Long memberId = member.getMemberId();
+        String accessToken = jwtUtils.createAccessToken(memberId);
 
         TravelSchedule schedule1 = travelScheduleRepository.save(TravelScheduleFixture.createSchedule("테스트1"));
         TravelSchedule schedule2 = travelScheduleRepository.save(TravelScheduleFixture.createSchedule("테스트2"));
@@ -844,12 +897,11 @@ public class MemberIntegrationTest {
                 BookmarkFixture.createBookmark(member, place1)
         ));
 
-        SecurityTestUtils.mockAuthentication(member);
-
         DeactivateRequest request = MemberFixture.createDeactivateRequest(password);
 
         // when
         MvcResult result = mockMvc.perform(patch("/api/members/deactivate")
+                        .header("Authorization", "Bearer " + accessToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
@@ -886,15 +938,16 @@ public class MemberIntegrationTest {
         assertThat(deactivatedMember.getNickname()).isEqualTo(DeactivateValue.DEACTIVATE.name());
         assertThat(deactivatedMember.getEmail()).isEqualTo(DeactivateValue.DEACTIVATE.name());
         assertThat(deactivatedMember.getPassword()).isEqualTo(DeactivateValue.DEACTIVATE.name());
-        assertThat(deactivatedMember.getRefreshToken()).isNull();
         assertThat(deactivatedMember.getCreatedAt()).isNotEqualTo(deactivatedMember.getUpdatedAt());
         assertThat(deactivatedMember.isActive()).isFalse();
-
 
         assertThat(bookmarkRepository.findAll()).isEmpty();
         assertThat(travelAttendeeRepository.findAll()).isEmpty();
         assertThat(travelRouteRepository.findAll()).isEmpty();
         assertThat(chatMessageRepository.findAll()).isEmpty();
+
+        verify(redisService).deleteData(LOGIN, member.getMemberId());
+        verify(redisService).save(eq(LOGOUT), eq(member.getMemberId()), eq(accessToken), anyLong());
         verify(s3Service).deleteS3File(anyString());
     }
 
@@ -910,6 +963,7 @@ public class MemberIntegrationTest {
                 profileImage
         ));
         Long memberId = member.getMemberId();
+        String accessToken = jwtUtils.createAccessToken(memberId);
 
         TravelSchedule schedule = travelScheduleRepository.save(TravelScheduleFixture.createSchedule("테스트1"));
 
@@ -932,12 +986,11 @@ public class MemberIntegrationTest {
                 BookmarkFixture.createBookmark(member, place1)
         ));
 
-        SecurityTestUtils.mockAuthentication(member);
-
         DeactivateRequest request = MemberFixture.createDeactivateRequest(password);
 
         // when
         MvcResult result = mockMvc.perform(patch("/api/members/deactivate")
+                        .header("Authorization", "Bearer " + accessToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
@@ -971,7 +1024,6 @@ public class MemberIntegrationTest {
         assertThat(deactivatedMember.getNickname()).isEqualTo(DeactivateValue.DEACTIVATE.name());
         assertThat(deactivatedMember.getEmail()).isEqualTo(DeactivateValue.DEACTIVATE.name());
         assertThat(deactivatedMember.getPassword()).isEqualTo(DeactivateValue.DEACTIVATE.name());
-        assertThat(deactivatedMember.getRefreshToken()).isNull();
         assertThat(deactivatedMember.getCreatedAt()).isNotEqualTo(deactivatedMember.getUpdatedAt());
         assertThat(deactivatedMember.isActive()).isFalse();
 
@@ -981,6 +1033,9 @@ public class MemberIntegrationTest {
         assertThat(travelRouteRepository.findAll()).isEmpty();
         assertThat(travelScheduleRepository.findAll()).isEmpty();
         assertThat(chatMessageRepository.findAll()).isEmpty();
+
+        verify(redisService).deleteData(LOGIN, member.getMemberId());
+        verify(redisService).save(eq(LOGOUT), eq(member.getMemberId()), eq(accessToken), anyLong());
         verify(s3Service).deleteS3File(anyString());
     }
 
@@ -996,6 +1051,7 @@ public class MemberIntegrationTest {
                 profileImage
         ));
         Long memberId = member.getMemberId();
+        String accessToken = jwtUtils.createAccessToken(memberId);
 
         TravelSchedule schedule = travelScheduleRepository.save(TravelScheduleFixture.createSchedule("테스트1"));
 
@@ -1018,12 +1074,11 @@ public class MemberIntegrationTest {
                 BookmarkFixture.createBookmark(member, place1)
         ));
 
-        SecurityTestUtils.mockAuthentication(member);
-
         DeactivateRequest request = MemberFixture.createDeactivateRequest(password);
 
         // when
         MvcResult result = mockMvc.perform(patch("/api/members/deactivate")
+                        .header("Authorization", "Bearer " + accessToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
@@ -1060,7 +1115,6 @@ public class MemberIntegrationTest {
         assertThat(deactivatedMember.getNickname()).isEqualTo(DeactivateValue.DEACTIVATE.name());
         assertThat(deactivatedMember.getEmail()).isEqualTo(DeactivateValue.DEACTIVATE.name());
         assertThat(deactivatedMember.getPassword()).isEqualTo(DeactivateValue.DEACTIVATE.name());
-        assertThat(deactivatedMember.getRefreshToken()).isNull();
         assertThat(deactivatedMember.getCreatedAt()).isNotEqualTo(deactivatedMember.getUpdatedAt());
         assertThat(deactivatedMember.isActive()).isFalse();
 
@@ -1070,9 +1124,11 @@ public class MemberIntegrationTest {
         List<ChatMessage> chatMessages = chatMessageRepository.findAllByScheduleId(schedule.getScheduleId());
         assertThat(chatMessages).hasSize(2);
 
-
         assertThat(bookmarkRepository.findAll()).isEmpty();
         assertThat(travelAttendeeRepository.findAll()).isEmpty();
+
+        verify(redisService).deleteData(LOGIN, member.getMemberId());
+        verify(redisService).save(eq(LOGOUT), eq(member.getMemberId()), eq(accessToken), anyLong());
         verify(s3Service).deleteS3File(anyString());
     }
 
@@ -1089,6 +1145,7 @@ public class MemberIntegrationTest {
                 profileImage
         ));
         Long memberId = member.getMemberId();
+        String accessToken = jwtUtils.createAccessToken(memberId);
 
         socialMemberRepository.saveAll(List.of(
                 SocialMemberFixture.createSocialMember(member, SocialType.KAKAO, "kakao"),
@@ -1118,12 +1175,12 @@ public class MemberIntegrationTest {
                 BookmarkFixture.createBookmark(member, place1)
         ));
 
-        SecurityTestUtils.mockAuthentication(member);
 
         DeactivateRequest request = MemberFixture.createDeactivateRequest(password);
 
         // when
         MvcResult result = mockMvc.perform(patch("/api/members/deactivate")
+                        .header("Authorization", "Bearer " + accessToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
@@ -1160,7 +1217,6 @@ public class MemberIntegrationTest {
         assertThat(deactivatedMember.getNickname()).isEqualTo(DeactivateValue.DEACTIVATE.name());
         assertThat(deactivatedMember.getEmail()).isEqualTo(DeactivateValue.DEACTIVATE.name());
         assertThat(deactivatedMember.getPassword()).isEqualTo(DeactivateValue.DEACTIVATE.name());
-        assertThat(deactivatedMember.getRefreshToken()).isNull();
         assertThat(deactivatedMember.getCreatedAt()).isNotEqualTo(deactivatedMember.getUpdatedAt());
         assertThat(deactivatedMember.isActive()).isFalse();
 
@@ -1175,6 +1231,9 @@ public class MemberIntegrationTest {
         assertThat(travelAttendeeRepository.findAll()).isEmpty();
         assertThat(travelRouteRepository.findAll()).isEmpty();
         assertThat(chatMessageRepository.findAll()).isEmpty();
+
+        verify(redisService).deleteData(LOGIN, member.getMemberId());
+        verify(redisService).save(eq(LOGOUT), eq(member.getMemberId()), eq(accessToken), anyLong());
         verify(s3Service).deleteS3File(anyString());
     }
 
@@ -1191,18 +1250,18 @@ public class MemberIntegrationTest {
                 profileImage
         ));
         Long memberId = member.getMemberId();
+        String accessToken = jwtUtils.createAccessToken(memberId);
 
         bookmarkRepository.saveAll(List.of(
                 BookmarkFixture.createBookmark(member, place1),
                 BookmarkFixture.createBookmark(member, place1)
         ));
 
-        SecurityTestUtils.mockAuthentication(member);
-
         DeactivateRequest request = MemberFixture.createDeactivateRequest(password);
 
         // when
         MvcResult result = mockMvc.perform(patch("/api/members/deactivate")
+                        .header("Authorization", "Bearer " + accessToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
@@ -1237,12 +1296,13 @@ public class MemberIntegrationTest {
         assertThat(deactivatedMember.getNickname()).isEqualTo(DeactivateValue.DEACTIVATE.name());
         assertThat(deactivatedMember.getEmail()).isEqualTo(DeactivateValue.DEACTIVATE.name());
         assertThat(deactivatedMember.getPassword()).isEqualTo(DeactivateValue.DEACTIVATE.name());
-        assertThat(deactivatedMember.getRefreshToken()).isNull();
         assertThat(deactivatedMember.getCreatedAt()).isNotEqualTo(deactivatedMember.getUpdatedAt());
         assertThat(deactivatedMember.isActive()).isFalse();
 
-
         assertThat(bookmarkRepository.findAll()).isEmpty();
+
+        verify(redisService).deleteData(LOGIN, member.getMemberId());
+        verify(redisService).save(eq(LOGOUT), eq(member.getMemberId()), eq(accessToken), anyLong());
         verify(s3Service).deleteS3File(anyString());
     }
 

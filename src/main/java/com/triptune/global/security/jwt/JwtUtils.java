@@ -3,6 +3,7 @@ package com.triptune.global.security.jwt;
 import com.triptune.global.redis.RedisService;
 import com.triptune.chat.exception.CustomJwtUnAuthorizedChatException;
 import com.triptune.global.message.ErrorCode;
+import com.triptune.global.redis.enums.RedisKeyType;
 import com.triptune.global.security.jwt.exception.CustomJwtUnAuthorizedException;
 import com.triptune.global.security.CustomUserDetailsService;
 import io.jsonwebtoken.*;
@@ -31,14 +32,17 @@ public class JwtUtils {
     private final CustomUserDetailsService userDetailsService;
     private final RedisService redisService;
 
-    @Value("${spring.jwt.token.access-expiration-time}")
-    private long accessExpirationTime;
+    @Value("${spring.jwt.token.access-token-ttl}")
+    private long accessTokenTtl;
 
-    @Value("${spring.jwt.token.refresh-expiration-time}")
-    private long refreshExpirationTime;
+    @Value("${spring.jwt.token.refresh-token-ttl}")
+    private long refreshTokenTtl;
 
-    @Value("${spring.jwt.token.password-expiration-time}")
-    private long passwordExpirationTime;
+    @Value("${spring.jwt.token.password-token-ttl}")
+    private long passwordTokenTtl;
+
+    @Value("${spring.jwt.token.logout-token-ttl}")
+    private long logoutTokenTtl;
 
     public JwtUtils(@Value("${spring.jwt.secret}") String secretKey, CustomUserDetailsService userDetailsService, RedisService redisService){
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);
@@ -64,9 +68,10 @@ public class JwtUtils {
 
     public void validateToken(String token) {
         try {
-            Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
+            String memberId = getSubject(token);
+            String blacklisted = redisService.getData(RedisKeyType.LOGOUT, memberId);
 
-            if(redisService.existData(token)){
+            if(token.equals(blacklisted)){
                 throw new CustomJwtUnAuthorizedException(ErrorCode.BLACKLIST_TOKEN);
             }
 
@@ -83,9 +88,10 @@ public class JwtUtils {
 
     public void validateChatToken(String token) {
         try {
-            Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
+            String memberId = getSubject(token);
+            String blacklisted = redisService.getData(RedisKeyType.LOGOUT, memberId);
 
-            if(redisService.existData(token)){
+            if(token.equals(blacklisted)){
                 throw new CustomJwtUnAuthorizedChatException(ErrorCode.BLACKLIST_TOKEN);
             }
 
@@ -113,6 +119,10 @@ public class JwtUtils {
         return subject != null ? Long.parseLong(subject) : null;
     }
 
+    public String getSubject(String token){
+        return parseClaims(token).getSubject();
+    }
+
     private Claims parseClaims(String token){
         return Jwts.parserBuilder()
                .setSigningKey(key)
@@ -121,31 +131,37 @@ public class JwtUtils {
                .getBody();
    }
 
-   public String createAccessToken(Long memberId){
-        return createToken(memberId.toString(), accessExpirationTime);
-   }
-
-   public String createRefreshToken(Long memberId){
-        return createToken(memberId.toString(), refreshExpirationTime);
-   }
-
-   public String createPasswordToken(String email){
-        return createToken(email, passwordExpirationTime);
+    public String createAccessToken(Long memberId){
+        return createToken(memberId.toString(), accessTokenTtl);
     }
 
-   public String createToken(String subject, long expirationTime){
-       Claims claims = Jwts.claims().setSubject(subject);
-       Date now = new Date();
-       Date expireDate = new Date(now.getTime() + expirationTime);
+    public String createRefreshToken(Long memberId){
+        return createToken(memberId.toString(), refreshTokenTtl);
+    }
 
-       return Jwts.builder()
-               .setClaims(claims)
-               .setIssuedAt(now)
-               .setExpiration(expireDate)
-               .signWith(key, SignatureAlgorithm.HS256)
-               .compact();
-   }
+    public String createPasswordToken(String email){
+        return createToken(email, passwordTokenTtl);
+    }
+
+    public String createToken(String subject, long expirationTime){
+        Claims claims = Jwts.claims().setSubject(subject);
+        Date now = new Date();
+        Date expireDate = new Date(now.getTime() + expirationTime);
+
+        return Jwts.builder()
+                .setClaims(claims)
+                .setIssuedAt(now)
+                .setExpiration(expireDate)
+                .signWith(key, SignatureAlgorithm.HS256)
+                .compact();
+    }
+
+    public long getRefreshTokenTtlSeconds() {
+        return refreshTokenTtl / 1000;   // 밀리초 → 초
+    }
 
 
-
+    public long getLogoutTtlSeconds() {
+        return logoutTokenTtl / 1000;
+    }
 }

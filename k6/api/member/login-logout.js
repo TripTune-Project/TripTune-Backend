@@ -17,11 +17,11 @@ export const options = {
     scenarios: {
         login_logout: {
             executor: 'constant-arrival-rate',
-            rate: 15,                  // 초당 요청 횟수
+            rate: 20,                  // 초당 요청 횟수
             timeUnit: '1s',
             duration: '2m',
-            preAllocatedVUs: 15,       // rate랑 같게
-            maxVUs: 30,                // rate의 2배
+            preAllocatedVUs: 20,       // rate랑 같게
+            maxVUs: 40,                // rate의 2배
         },
     },
     thresholds: {

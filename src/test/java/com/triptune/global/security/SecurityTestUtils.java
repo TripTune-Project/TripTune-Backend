@@ -8,7 +8,11 @@ import org.springframework.security.core.context.SecurityContextHolder;
 public class SecurityTestUtils {
 
     public static void mockAuthentication(Member member){
-        CustomUserDetails userDetails = new CustomUserDetails(member);
+        CustomUserDetails userDetails = new CustomUserDetails(
+                member.getMemberId(),
+                member.getNickname(),
+                member.getPassword()
+        );
         Authentication auth = new UsernamePasswordAuthenticationToken(
                 userDetails,
                 null,

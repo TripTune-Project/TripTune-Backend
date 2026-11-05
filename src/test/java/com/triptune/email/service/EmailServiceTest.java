@@ -38,7 +38,7 @@ public class EmailServiceTest {
         // given
         VerifyAuthRequest request = EmailFixture.createVerifyAuthRequest("member@email.com", "Abcd123");
 
-        when(redisService.getEmailData(any(), anyString())).thenReturn("Abcd123");
+        when(redisService.getData(any(), anyString())).thenReturn("Abcd123");
 
         // when, then
         assertDoesNotThrow(() -> emailService.verifyAuthCode(request));
@@ -50,7 +50,7 @@ public class EmailServiceTest {
         // given
         VerifyAuthRequest request = EmailFixture.createVerifyAuthRequest("member@email.com", "Abcd123");
 
-        when(redisService.getEmailData(any(), anyString())).thenReturn(null);
+        when(redisService.getData(any(), anyString())).thenReturn(null);
 
         // when
         EmailVerifyException fail = assertThrows(EmailVerifyException.class, () -> emailService.verifyAuthCode(request));
@@ -65,7 +65,7 @@ public class EmailServiceTest {
         // given
         VerifyAuthRequest request = EmailFixture.createVerifyAuthRequest("member@email.com", "Abcd123");
 
-        when(redisService.getEmailData(any(), anyString())).thenReturn("abcd123");
+        when(redisService.getData(any(), anyString())).thenReturn("abcd123");
 
         // when
         EmailVerifyException fail = assertThrows(EmailVerifyException.class, () -> emailService.verifyAuthCode(request));
