@@ -7,7 +7,7 @@ import com.triptune.email.exception.EmailVerifyException;
 import com.triptune.global.message.ErrorCode;
 import com.triptune.global.exception.DataExistException;
 import com.triptune.member.dto.request.FindPasswordRequest;
-import com.triptune.global.redis.eums.RedisKeyType;
+import com.triptune.global.redis.enums.RedisKeyType;
 import com.triptune.global.security.jwt.JwtUtils;
 import com.triptune.global.redis.RedisService;
 import com.triptune.member.repository.MemberRepository;
@@ -26,6 +26,8 @@ import org.thymeleaf.context.Context;
 
 import java.util.Map;
 import java.util.Random;
+
+import static com.triptune.global.redis.enums.RedisKeyType.EMAIL_VERIFIED_VALUE;
 
 @Slf4j
 @Service
@@ -82,7 +84,12 @@ public class EmailService {
         MimeMessage emailForm = createEmailTemplate(templateRequest);
 
         javaMailSender.send(emailForm);
-        redisService.saveEmailData(RedisKeyType.AUTH_CODE, email, authCode, certificationDuration);
+        redisService.save(
+                RedisKeyType.EMAIL_AUTH_CODE,
+                email,
+                authCode,
+                certificationDuration
+        );
 
         log.info("인증 이메일 전송 완료 : {}", email);
     }
@@ -95,8 +102,8 @@ public class EmailService {
     }
 
     private void deleteAuthCodeIfExists(String email){
-        if(redisService.existEmailData(RedisKeyType.AUTH_CODE, email)){
-            redisService.deleteEmailData(RedisKeyType.AUTH_CODE, email);
+        if(redisService.existData(RedisKeyType.EMAIL_AUTH_CODE, email)){
+            redisService.deleteData(RedisKeyType.EMAIL_AUTH_CODE, email);
         }
     }
 
@@ -112,14 +119,19 @@ public class EmailService {
 
 
     public void verifyAuthCode(VerifyAuthRequest verifyAuthRequest){
-        String savedAuthCode = redisService.getEmailData(RedisKeyType.AUTH_CODE, verifyAuthRequest.getEmail());
+        String savedAuthCode = redisService.getData(RedisKeyType.EMAIL_AUTH_CODE, verifyAuthRequest.getEmail());
         if(savedAuthCode == null){
             throw new EmailVerifyException(ErrorCode.INVALID_AUTH_CODE);
         }
 
         validateAuthCode(verifyAuthRequest.getAuthCode(), savedAuthCode);
 
-        redisService.saveEmailData(RedisKeyType.VERIFIED, verifyAuthRequest.getEmail(), "true", verificationDuration);
+        redisService.save(
+                RedisKeyType.EMAIL_VERIFIED,
+                verifyAuthRequest.getEmail(),
+                RedisKeyType.EMAIL_VERIFIED_VALUE,
+                verificationDuration
+        );
     }
 
     private static void validateAuthCode(String authCode, String savedAuthCode) {
@@ -129,13 +141,13 @@ public class EmailService {
     }
 
 
-    public void sendResetPasswordEmail(FindPasswordRequest findPasswordRequest) throws MessagingException {
-        String passwordToken = jwtUtils.createPasswordToken(findPasswordRequest.getEmail());
+    public void sendResetPasswordEmail(FindPasswordRequest passwordRequest) throws MessagingException {
+        String passwordToken = jwtUtils.createPasswordToken(passwordRequest.getEmail());
         String resetPasswordURL = passwordURL + passwordToken;
 
         EmailTemplateRequest templateRequest = new EmailTemplateRequest(
                 "[TripTune] 비밀번호 재설정을 위한 안내 메일입니다.",
-                findPasswordRequest.getEmail(),
+                passwordRequest.getEmail(),
                 Map.of("resetPasswordURL", resetPasswordURL),
                 "reset-password-email"
         );
@@ -143,9 +155,14 @@ public class EmailService {
         MimeMessage emailForm = createEmailTemplate(templateRequest);
 
         javaMailSender.send(emailForm);
-        redisService.saveExpiredData(passwordToken, findPasswordRequest.getEmail(), resetPasswordDuration);
+        redisService.save(
+                RedisKeyType.RESET_PASSWORD,
+                passwordRequest.getEmail(),
+                passwordToken,
+                resetPasswordDuration
+        );
 
-        log.info("비밀번호 초기화 이메일 전송 완료 : {}", findPasswordRequest.getEmail());
+        log.info("비밀번호 초기화 이메일 전송 완료 : {}", passwordRequest.getEmail());
     }
 
     private MimeMessage createEmailTemplate(EmailTemplateRequest templateRequest) throws MessagingException {

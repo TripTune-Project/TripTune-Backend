@@ -1,36 +1,34 @@
 package com.triptune.global.security;
 
-import com.triptune.member.entity.Member;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
 public class CustomUserDetails implements UserDetails, OAuth2User {
 
-    private final Member member;
     private final Long memberId;
+    private final String nickname;
+    private final String password;
     private final Map<String, Object> attributes;
 
-    public CustomUserDetails(Member member) {
-        this.member = member;
-        this.memberId = member.getMemberId();
-        this.attributes = new HashMap<>();
-    }
 
-    public CustomUserDetails(Member member, Map<String, Object> attributes) {
-        this.member = member;
-        this.memberId = member.getMemberId();
-        this.attributes = attributes;
-    }
-
-    public CustomUserDetails(Member member, Long memberId, Map<String, Object> attributes) {
-        this.member = member;
+    public CustomUserDetails(Long memberId, String nickname, String password, Map<String, Object> attributes) {
         this.memberId = memberId;
+        this.nickname = nickname;
+        this.password = password;
         this.attributes = attributes;
+    }
+
+    public CustomUserDetails(Long memberId, String nickname, String password) {
+        this.memberId = memberId;
+        this.nickname = nickname;
+        this.password = password;
+        this.attributes = new HashMap<>();
     }
 
     @Override
@@ -40,12 +38,12 @@ public class CustomUserDetails implements UserDetails, OAuth2User {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return null;
+        return Collections.emptyList();
     }
 
     @Override
     public String getPassword() {
-        return member.getPassword();
+        return this.password;
     }
 
     @Override
@@ -75,15 +73,12 @@ public class CustomUserDetails implements UserDetails, OAuth2User {
 
     @Override
     public String getName() {
-        return member.getNickname();
+        return this.nickname;
     }
 
-    public String getRefreshToken(){
-        return member.getRefreshToken();
-    }
 
     public Long getMemberId(){
-        return memberId;
+        return this.memberId;
     }
 
 }

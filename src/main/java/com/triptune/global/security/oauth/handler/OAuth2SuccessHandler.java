@@ -1,5 +1,7 @@
 package com.triptune.global.security.oauth.handler;
 
+import com.triptune.global.redis.RedisService;
+import com.triptune.global.redis.enums.RedisKeyType;
 import com.triptune.global.security.CookieType;
 import com.triptune.global.security.CustomUserDetails;
 import com.triptune.global.security.jwt.JwtUtils;
@@ -25,6 +27,7 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
 
     private final JwtUtils jwtUtils;
     private final CookieUtils cookieUtils;
+    private final RedisService redisService;
 
     @Value("${app.frontend.main.url}")
     private String redirectURL;
@@ -40,7 +43,15 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
 
         String encodeNickname = URLEncoder.encode(userDetails.getName(), StandardCharsets.UTF_8);
         addCookie(response, CookieType.NICKNAME, encodeNickname);
-        addCookie(response, CookieType.REFRESH_TOKEN, userDetails.getRefreshToken());
+
+        String refreshToken = jwtUtils.createRefreshToken(userDetails.getMemberId());
+        redisService.save(
+                RedisKeyType.LOGIN,
+                userDetails.getMemberId(),
+                refreshToken,
+                jwtUtils.getRefreshTokenTtlSeconds()
+        );
+        addCookie(response, CookieType.REFRESH_TOKEN, refreshToken);
 
         log.info("[Set-Cookie] accessToken | maxAge={}s | HttpOnly={}",
                 CookieType.ACCESS_TOKEN.getMaxAgeSeconds(), CookieType.ACCESS_TOKEN.isHttpOnly());

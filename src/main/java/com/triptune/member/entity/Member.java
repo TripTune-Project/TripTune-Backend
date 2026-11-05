@@ -35,9 +35,6 @@ public class Member extends BaseTimeEntity {
     @Column(name = "nickname", unique = true)
     private String nickname;
 
-    @Column(name = "refresh_token")
-    private String refreshToken;
-
     @Enumerated(EnumType.STRING)
     @Column(name = "join_type")
     private JoinType joinType;
@@ -92,14 +89,6 @@ public class Member extends BaseTimeEntity {
         profileImage.assignMember(this);
     }
 
-    public boolean isMatchRefreshToken(String refreshToken){
-        return refreshToken != null && refreshToken.equals(this.refreshToken);
-    }
-
-    public void updateRefreshToken(String refreshToken) {
-        this.refreshToken = refreshToken;
-    }
-
     public void updatePassword(String password) {
         this.password = password;
     }
@@ -119,7 +108,6 @@ public class Member extends BaseTimeEntity {
         this.nickname = deactivation;
         this.email = deactivation;
         this.password = deactivation;
-        this.refreshToken = null;
         this.isActive = false;
 
         for (SocialMember socialMember : socialMembers) {
@@ -163,7 +151,4 @@ public class Member extends BaseTimeEntity {
         this.socialMembers.add(socialMember);
     }
 
-    public void logout() {
-        this.refreshToken = null;
-    }
 }
