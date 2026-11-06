@@ -127,3 +127,9 @@ app:
         - ${CORS_ALLOWED_ORIGIN_2}
         - ${CORS_ALLOWED_ORIGIN_3}
         - ${CORS_ALLOWED_ORIGIN_4}
+
+logging:
+  level:
+    org:
+      hibernate:
+        SQL: INFO
