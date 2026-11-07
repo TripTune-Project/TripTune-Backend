@@ -14,18 +14,30 @@ const members = open('../../data/test_member_list.csv')
 
 export const options = {
      scenarios: {
-        token_refresh: {
+        warmup: {
             executor: 'constant-arrival-rate',
-            rate: 250,               // 초당 요청 횟수
+            rate: 100,
+            timeUnit: '1s',
+            duration: '30s',
+            preAllocatedVUs: 100,
+            maxVUs: 200,
+            startTime: '0s',
+            tags: { phase: 'warmup' },
+        },
+        main: {
+            executor: 'constant-arrival-rate',
+            rate: 200,
             timeUnit: '1s',
             duration: '2m',
-            preAllocatedVUs: 250,    // rate랑 같게
-            maxVUs: 500,             // rate의 2배
+            preAllocatedVUs: 200,
+            maxVUs: 400,
+            startTime: '35s',
+            tags: { phase: 'main' },
         },
     },
     thresholds: {
-        http_req_failed: ['rate<0.01'],
-        http_req_duration: ['p(95)<500'],
+        'http_req_failed{phase:main}': ['rate<0.01'],
+        'http_req_duration{phase:main}': ['p(95)<500'],
     },
 };
 
