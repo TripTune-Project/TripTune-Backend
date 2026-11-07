@@ -1,11 +1,11 @@
 import http from 'k6/http';
-import { check, sleep } from 'k6';
+import { check } from 'k6';
 import { Rate, Counter } from 'k6/metrics';
 
 const BASE_URL = __ENV.BASE_URL;
 const EMAIL = __ENV.EMAIL;
 const PASSWORD = __ENV.PASSWORD;
-const SCHEDULE_COUNT = 30;      // VU 숫자
+const SCHEDULE_COUNT = 300;       // warmup maxVUs + main maxVUs
 const ROUTE_COUNT = 3;
 const PLACE_IDS = [1, 2, 3];
 
@@ -16,16 +16,33 @@ const conflictCount = new Counter('route_update_conflicts');
 
 
 export const options = {
-    stages: [
-        { duration: '30s', target: 3 },
-        { duration: '30s', target: 30 },
-        { duration: '3m', target: 30 },
-        { duration: '30s', target: 0 },
-    ],
+    setupTimeout: '900s',
+    scenarios: {
+        warmup: {
+            executor: 'constant-arrival-rate',
+            rate: 25,
+            timeUnit: '1s',
+            duration: '30s',
+            preAllocatedVUs: 25,
+            maxVUs: 50,
+            startTime: '0s',
+            tags: { phase: 'warmup' },
+        },
+        main: {
+            executor: 'constant-arrival-rate',
+            rate: 50,
+            timeUnit: '1s',
+            duration: '2m',
+            preAllocatedVUs: 50,
+            maxVUs: 100,
+            startTime: '35s',
+            tags: { phase: 'main' },
+        },
+    },
     thresholds: {
-        http_req_failed: ['rate<0.01'],
-        http_req_duration: ['p(95)<500'],
-        route_update_success: ['rate>0.99'],
+        'http_req_failed{name:route_update,phase:main}': ['rate<0.01'],
+        'http_req_duration{name:route_update,phase:main}': ['p(95)<500'],
+        'route_update_success{phase:main}': ['rate>0.99'],
     },
 };
 
@@ -152,7 +169,6 @@ export default function(data) {
         console.log(`여행 루트 수정 실패: status: ${res.status}, body: ${res.body}`);
     }
 
-    sleep(1);
 }
 export function teardown(data) {
     let successCount = 0;
