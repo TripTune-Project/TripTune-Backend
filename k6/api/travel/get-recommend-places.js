@@ -7,21 +7,21 @@ export const options = {
     scenarios: {
         warmup: {
             executor: 'constant-arrival-rate',
-            rate: 50,
+            rate: 14,
             timeUnit: '1s',
             duration: '30s',
-            preAllocatedVUs: 50,
-            maxVUs: 100,
+            preAllocatedVUs: 14,
+            maxVUs: 28,
             startTime: '0s',
             tags: { phase: 'warmup' },
         },
         main: {
             executor: 'constant-arrival-rate',
-            rate: 100,
+            rate: 28,
             timeUnit: '1s',
             duration: '2m',
-            preAllocatedVUs: 100,
-            maxVUs: 200,
+            preAllocatedVUs: 28,
+            maxVUs: 56,
             startTime: '35s',
             tags: { phase: 'main' },
         },
@@ -35,7 +35,7 @@ export const options = {
 
 export default function() {
     const res = http.get(
-        `${BASE_URL}/api/travels/recommend?theme=all`
+        `${BASE_URL}/api/travels/recommend?theme=culture`
     );
 
     check(res, {

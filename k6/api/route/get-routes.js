@@ -9,21 +9,21 @@ export const options = {
     scenarios: {
         warmup: {
             executor: 'constant-arrival-rate',
-            rate: 25,
+            rate: 24,
             timeUnit: '1s',
             duration: '30s',
-            preAllocatedVUs: 25,
-            maxVUs: 50,
+            preAllocatedVUs: 24,
+            maxVUs: 47,
             startTime: '0s',
             tags: { phase: 'warmup' },
         },
         main: {
             executor: 'constant-arrival-rate',
-            rate: 50,
+            rate: 47,
             timeUnit: '1s',
             duration: '2m',
-            preAllocatedVUs: 50,
-            maxVUs: 100,
+            preAllocatedVUs: 47,
+            maxVUs: 94,
             startTime: '35s',
             tags: { phase: 'main' },
         },
@@ -57,7 +57,7 @@ export function setup(){
 
 export default function(data) {
     const res = http.get(
-        `${BASE_URL}/api/schedules/42/routes?page=1`,
+        `${BASE_URL}/api/schedules/5250/routes?page=1`,
         {
             headers: { Authorization: `Bearer ${data.accessToken}` }
         }

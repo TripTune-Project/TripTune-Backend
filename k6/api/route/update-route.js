@@ -5,7 +5,7 @@ import { Rate, Counter } from 'k6/metrics';
 const BASE_URL = __ENV.BASE_URL;
 const EMAIL = __ENV.EMAIL;
 const PASSWORD = __ENV.PASSWORD;
-const SCHEDULE_COUNT = 300;       // warmup maxVUs + main maxVUs
+const SCHEDULE_COUNT = 441;       // warmup maxVUs + main maxVUs
 const ROUTE_COUNT = 3;
 const PLACE_IDS = [1, 2, 3];
 
@@ -20,21 +20,21 @@ export const options = {
     scenarios: {
         warmup: {
             executor: 'constant-arrival-rate',
-            rate: 25,
+            rate: 74,
             timeUnit: '1s',
             duration: '30s',
-            preAllocatedVUs: 25,
-            maxVUs: 50,
+            preAllocatedVUs: 74,
+            maxVUs: 147,
             startTime: '0s',
             tags: { phase: 'warmup' },
         },
         main: {
             executor: 'constant-arrival-rate',
-            rate: 50,
+            rate: 147,
             timeUnit: '1s',
             duration: '2m',
-            preAllocatedVUs: 50,
-            maxVUs: 100,
+            preAllocatedVUs: 147,
+            maxVUs: 294,
             startTime: '35s',
             tags: { phase: 'main' },
         },
