@@ -38,12 +38,7 @@
 .\k6\scripts\route\run-update-route.ps1
 ```
 
-### 5. Chat
-```powershell
-.\k6\scripts\chat\run-get-chats.ps1
-```
-
-### 6. Travel
+### 5. Travel
 ```powershell
 .\k6\scripts\travel\run-get-nearby-places-guest.ps1
 .\k6\scripts\travel\run-get-nearby-places-member.ps1
