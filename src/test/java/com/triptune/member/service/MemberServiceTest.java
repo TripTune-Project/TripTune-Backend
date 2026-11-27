@@ -69,6 +69,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+import static com.triptune.attendee.enums.AttendeePermission.*;
 import static com.triptune.bookmark.enums.BookmarkSortType.NAME;
 import static com.triptune.bookmark.enums.BookmarkSortType.NEWEST;
 import static com.triptune.global.redis.enums.RedisKeyType.*;
@@ -1275,10 +1276,12 @@ public class MemberServiceTest {
         TravelSchedule schedule2 = TravelScheduleFixture.createSchedule("테스트2");
 
         Member member = MemberFixture.createNativeTypeMemberWithId(1L, "member@email.com", profileImage);
+        Member guest = MemberFixture.createNativeTypeMemberWithId(2L, "guest@email.com", profileImage);
 
         List<TravelAttendee> attendees = List.of(
                 TravelAttendeeFixture.createAuthorAttendee(schedule1, member),
-                TravelAttendeeFixture.createGuestAttendee(schedule2, member, AttendeePermission.READ)
+                TravelAttendeeFixture.createGuestAttendee(schedule1, guest, EDIT),
+                TravelAttendeeFixture.createGuestAttendee(schedule2, member, READ)
         );
 
         DeactivateRequest request = MemberFixture.createDeactivateRequest(member.getPassword());
@@ -1355,8 +1358,8 @@ public class MemberServiceTest {
         Member member = MemberFixture.createNativeTypeMemberWithId(1L, "member@email.com", profileImage);
 
         List<TravelAttendee> attendees = List.of(
-                TravelAttendeeFixture.createGuestAttendee(schedule1, member, AttendeePermission.ALL),
-                TravelAttendeeFixture.createGuestAttendee(schedule2, member, AttendeePermission.READ)
+                TravelAttendeeFixture.createGuestAttendee(schedule1, member, ALL),
+                TravelAttendeeFixture.createGuestAttendee(schedule2, member, READ)
         );
 
         DeactivateRequest request = MemberFixture.createDeactivateRequest(member.getPassword());
@@ -1397,7 +1400,7 @@ public class MemberServiceTest {
 
         List<TravelAttendee> attendees = List.of(
                 TravelAttendeeFixture.createAuthorAttendee(schedule1, member),
-                TravelAttendeeFixture.createGuestAttendee(schedule2, member, AttendeePermission.READ)
+                TravelAttendeeFixture.createGuestAttendee(schedule2, member, READ)
         );
 
         DeactivateRequest request = MemberFixture.createDeactivateRequest(member.getPassword());

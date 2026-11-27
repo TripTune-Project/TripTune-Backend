@@ -19,9 +19,6 @@ public class ProfileImage extends BaseTimeEntity {
     @Column(name = "profile_image_id")
     private Long profileImageId;
 
-    @OneToOne(mappedBy = "profileImage", fetch = FetchType.LAZY)
-    private Member member;
-
     @Column(name = "s3_object_key")
     private String s3ObjectKey;
 
@@ -73,9 +70,6 @@ public class ProfileImage extends BaseTimeEntity {
         this.fileSize = imageProperties.size();
     }
 
-    public void assignMember(Member member){
-        this.member = member;
-    }
 
     public boolean isDefaultImage(String s3ObjectKey) {
         return this.s3ObjectKey.equals(s3ObjectKey);

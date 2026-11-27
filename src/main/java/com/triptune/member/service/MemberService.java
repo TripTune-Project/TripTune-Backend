@@ -245,7 +245,7 @@ public class MemberService {
 
     @Transactional
     public void deactivateMember(Long memberId, String accessToken, DeactivateRequest deactivateRequest) {
-        // 1. 회원 비밀번호 확인
+        // 1. 회원 조회
         Member member = getMemberWithSocialMembers(memberId);
 
         // 2. 소셜 회원인지, 비밀번호 맞는지 먼저 확인
@@ -257,18 +257,8 @@ public class MemberService {
         // 3. 프로필 이미지 기본으로 변경
         profileImageService.updateDefaultProfileImage(member);
 
-        // 4-1. 작성자인 경우 참석자, 일정, 채팅방 삭제
-        // 4-2. 참석자인 경우 참석자 삭제
-        List<TravelAttendee> attendees = travelAttendeeRepository.findAllByMemberId(memberId);
-
-        List<Long> authorScheduleIds = extractAuthorScheduleId(attendees);
-        travelAttendeeRepository.deleteAll(attendees);
-
-        for (Long scheduleId : authorScheduleIds) {
-            chatMessageRepository.deleteAllByScheduleId(scheduleId);
-            travelRouteRepository.deleteAllByScheduleId(scheduleId);
-            travelScheduleRepository.deleteById(scheduleId);
-        }
+        // 4. 일정 관련 데이터 삭제
+        deleteMemberSchedules(memberId);
 
         // 5. 북마크 삭제
         bookmarkRepository.deleteAllByMemberId(memberId);
@@ -278,6 +268,22 @@ public class MemberService {
 
         // 7. 로그아웃
         redisMemberLogout(memberId, accessToken, member);
+    }
+
+    private void deleteMemberSchedules(Long memberId) {
+        List<TravelAttendee> myAttendees = travelAttendeeRepository.findAllByMemberId(memberId);
+        List<Long> authorScheduleIds = extractAuthorScheduleId(myAttendees);
+
+        // 내가 참석자로 있는 일정에서 내 데이터 삭제
+        travelAttendeeRepository.deleteAll(myAttendees);
+
+        // 내가 작성자인 일정 관련 정보 통째로 삭제 : 채팅, 여행 루트, 참석자, 일정
+        for (Long scheduleId : authorScheduleIds) {
+            chatMessageRepository.deleteAllByScheduleId(scheduleId);
+            travelRouteRepository.deleteAllByScheduleId(scheduleId);
+            travelAttendeeRepository.deleteAllByScheduleId(scheduleId);
+            travelScheduleRepository.deleteById(scheduleId);
+        }
     }
 
     @Nonnull

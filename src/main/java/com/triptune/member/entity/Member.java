@@ -86,7 +86,6 @@ public class Member extends BaseTimeEntity {
 
     private void initProfileImage(ProfileImage profileImage) {
         this.profileImage = profileImage;
-        profileImage.assignMember(this);
     }
 
     public void updatePassword(String password) {
@@ -113,14 +112,6 @@ public class Member extends BaseTimeEntity {
         for (SocialMember socialMember : socialMembers) {
             socialMember.deactivate();
         }
-    }
-
-    public void updateProfileImage(ProfileImage newProfileImage) {
-        // 기존 이미지와 관계 끊기
-        this.profileImage.assignMember(null);
-
-        this.profileImage = newProfileImage;
-        newProfileImage.assignMember(this);
     }
 
 

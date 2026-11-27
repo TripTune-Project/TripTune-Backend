@@ -75,6 +75,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import static com.triptune.attendee.enums.AttendeePermission.*;
 import static com.triptune.global.redis.enums.RedisKeyType.*;
 import static com.triptune.member.fixture.MemberFixture.createLoginRequest;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -871,6 +872,14 @@ public class MemberIntegrationTest {
                 encodedPassword,
                 profileImage
         ));
+
+        ProfileImage guestImage = profileImageRepository.save(ProfileImageFixture.createProfileImage("guestImage"));
+        Member guest = memberRepository.save(MemberFixture.createNativeTypeMember(
+                "guest@email.com",
+                encodedPassword,
+                guestImage
+        ));
+
         Long memberId = member.getMemberId();
         String accessToken = jwtUtils.createAccessToken(memberId);
 
@@ -884,7 +893,8 @@ public class MemberIntegrationTest {
 
         travelAttendeeRepository.saveAll(List.of(
                 TravelAttendeeFixture.createAuthorAttendee(schedule1, member),
-                TravelAttendeeFixture.createGuestAttendee(schedule2, member, AttendeePermission.READ)
+                TravelAttendeeFixture.createGuestAttendee(schedule1, guest, EDIT),
+                TravelAttendeeFixture.createGuestAttendee(schedule2, member, READ)
         ));
 
         chatMessageRepository.saveAll(List.of(
@@ -1061,7 +1071,7 @@ public class MemberIntegrationTest {
         ));
 
         travelAttendeeRepository.save(
-                TravelAttendeeFixture.createGuestAttendee(schedule, member, AttendeePermission.READ)
+                TravelAttendeeFixture.createGuestAttendee(schedule, member, READ)
         );
 
         chatMessageRepository.saveAll(List.of(
@@ -1162,7 +1172,7 @@ public class MemberIntegrationTest {
 
         travelAttendeeRepository.saveAll(List.of(
                 TravelAttendeeFixture.createAuthorAttendee(schedule1, member),
-                TravelAttendeeFixture.createGuestAttendee(schedule2, member, AttendeePermission.READ)
+                TravelAttendeeFixture.createGuestAttendee(schedule2, member, READ)
         ));
 
         chatMessageRepository.saveAll(List.of(
